@@ -130,9 +130,27 @@ class Queue extends BaseController
         $data = ['status' => $status];
         if ($status == 'departed') {
             $data['departure_time'] = date('Y-m-d H:i:s');
+            $data['position'] = 0; // Remove from active positions
         }
 
+        // Use transaction to prevent race conditions during position reordering
+        $db = \Config\Database::connect();
+        $db->transStart();
+
         $this->queueModel->update($id, $data);
+
+        // Reorder positions if departed or canceled
+        if ($status == 'departed' || $status == 'canceled') {
+            $remainingQueue = $this->queueModel->whereIn('status', ['waiting', 'boarding'])
+                                               ->orderBy('position', 'ASC')
+                                               ->findAll();
+            $pos = 1;
+            foreach ($remainingQueue as $item) {
+                $this->queueModel->update($item['id'], ['position' => $pos++]);
+            }
+        }
+
+        $db->transComplete();
 
         // Log history
         $this->historyModel->insert([
@@ -170,7 +188,7 @@ class Queue extends BaseController
         }
 
         $ref = $this->request->getVar('ref');
-        $redirectUrl = $ref === 'dashboard' ? 'admin/dashboard' : 'staff/queue';
+        $redirectUrl = $ref === 'dashboard' ? 'staff/dashboard' : 'staff/queue';
         return redirect()->to(base_url($redirectUrl))->with('success', 'Status updated.');
     }
     public function updatePassengers($id, $action)
@@ -224,7 +242,7 @@ class Queue extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'new_count' => $newCount,
-                'capacity' => $vehicle['capacity'],
+                'capacity' => (int)$vehicle['capacity'],
                 'is_full' => (int)$newCount >= (int)$vehicle['capacity']
             ]);
         }

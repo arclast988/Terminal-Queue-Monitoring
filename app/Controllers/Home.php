@@ -4,16 +4,13 @@ namespace App\Controllers;
 
 use App\Models\QueueModel;
 use App\Models\AnnouncementModel;
-use App\Models\DepartureRuleModel;
 
 class Home extends BaseController
 {
     public function index()
     {
-        $queueModel1 = new QueueModel();
-        $queueModel2 = new QueueModel();
+        $queueModel = new QueueModel();
         $routeModel = new \App\Models\RouteModel();
-        $departureRuleModel = new DepartureRuleModel();
 
         $announcements = [];
         try {
@@ -23,10 +20,7 @@ class Home extends BaseController
             // Table may not exist yet; show guest page without announcements
         }
 
-        // Load all departure rules
-        $departureRules = $departureRuleModel->orderBy('time_from', 'ASC')->findAll();
-
-        $active_queue = $queueModel1->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
+        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
             ->whereIn('queue.status', ['waiting', 'boarding'])
@@ -34,18 +28,17 @@ class Home extends BaseController
             ->findAll();
 
 
-
         $data = [
             'title' => 'Live Terminal Monitor',
             'active_queue' => $active_queue,
-            'recent_departures' => $queueModel2->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, routes.origin, routes.destination')
+            'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, routes.origin, routes.destination')
                 ->join('vehicles', 'vehicles.id = queue.vehicle_id')
                 ->join('routes', 'routes.id = queue.route_id')
                 ->where('queue.status', 'departed')
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
                 ->findAll(),
-            'total_departures_today' => $queueModel2->where('status', 'departed')
+            'total_departures_today' => $queueModel->where('status', 'departed')
                 ->where('DATE(departure_time)', date('Y-m-d'))
                 ->countAllResults(),
             'routes' => $routeModel->orderBy('destination', 'ASC')->findAll(),
@@ -58,9 +51,6 @@ class Home extends BaseController
     public function status()
     {
         $queueModel = new QueueModel();
-        $departureRuleModel = new DepartureRuleModel();
-        
-        $departureRules = $departureRuleModel->orderBy('time_from', 'ASC')->findAll();
 
         $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')

@@ -3,10 +3,13 @@
 <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">System Activity Logs</h1>
     <div>
-        <a href="<?= base_url('admin/logs/clear') ?>" class="btn btn-danger"
-            onclick="return confirm('Are you sure you want to clear all logs? This action cannot be undone.')">
-            <i class="fas fa-trash"></i> Clear All Logs
-        </a>
+        <form action="<?= base_url('admin/logs/clear') ?>" method="post" class="d-inline"
+            onsubmit="return confirm('Are you sure you want to clear all logs? This action cannot be undone.')">
+            <?= csrf_field() ?>
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Clear All Logs
+            </button>
+        </form>
     </div>
 </div>
 
@@ -41,11 +44,13 @@
                                 <td><?= esc($log['action']) ?></td>
                                 <td><?= esc($log['details']) ?></td>
                                 <td>
-                                    <a href="<?= base_url('admin/logs/delete/' . $log['id']) ?>"
-                                        class="btn btn-sm btn-outline-danger"
-                                        onclick="return confirm('Delete this log entry?')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                    <form action="<?= base_url('admin/logs/delete/' . $log['id']) ?>" method="post" class="d-inline"
+                                        onsubmit="return confirm('Delete this log entry?')">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

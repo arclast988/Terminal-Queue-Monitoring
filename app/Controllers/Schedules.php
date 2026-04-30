@@ -11,8 +11,6 @@ class Schedules extends BaseController
 {
     public function index()
     {
-        // Suppress warnings that might appear as a pink strip
-        error_reporting(0);
 
         $queueModel = new QueueModel();
         $routeModel = new RouteModel();
@@ -127,7 +125,6 @@ class Schedules extends BaseController
      */
     public function status()
     {
-        error_reporting(0);
 
         $queueModel = new QueueModel();
 

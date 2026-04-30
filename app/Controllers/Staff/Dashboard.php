@@ -23,7 +23,7 @@ class Dashboard extends BaseController
         }
 
         $data = [
-            'title' => 'Staff Dashboard',
+            'title' => 'Dispatcher Dashboard',
             'announcements' => $announcements,
             'active_queue_count' => $queueModel->whereIn('status', ['waiting', 'boarding'])->countAllResults(),
             'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type')

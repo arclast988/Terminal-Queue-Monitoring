@@ -10,11 +10,11 @@
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
+    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
+    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
 <?php endif; ?>
 
 <div class="card shadow">
@@ -50,10 +50,12 @@
                                         class="btn btn-sm btn-warning">
                                         <i class="bi bi-pencil"></i>
                                     </a>
-                                    <a href="<?= base_url('admin/announcements/delete/' . $a['id']) ?>"
-                                        class="btn btn-sm btn-danger" onclick="return confirm('Delete this announcement?');">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
+                                    <form action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

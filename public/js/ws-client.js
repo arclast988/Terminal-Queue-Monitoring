@@ -5,8 +5,7 @@
  * pages in the application. Features:
  *   • Exponential backoff reconnect (max 15s)
  *   • Polling fallback when WS is disconnected
- *   • Duplicate connection guard
- *   • Event callback registration
+ *   • Event callback registration (updateable)
  *   • Tab-visibility awareness (pauses reconnect when hidden)
  *   • Consistent console logging
  *
@@ -23,7 +22,7 @@
     'use strict';
 
     var WS_PORT = 8081;
-    var MIN_RETRY = 2000;
+    var MIN_RETRY = 1000;
     var MAX_RETRY = 15000;
     var RETRY_MULTIPLIER = 1.5;
 
@@ -161,6 +160,9 @@
     window.QueueWS = {
         /**
          * Initialize the WebSocket connection.
+         * Can be called multiple times — subsequent calls update the config
+         * without creating duplicate connections.
+         *
          * @param {Object} config
          * @param {Function} config.onQueueUpdate    - Called on queue_update messages.
          * @param {Function} [config.onMessage]      - Called on ANY message (generic handler).
@@ -170,12 +172,24 @@
          */
         init: function(config) {
             if (_initialized) {
-                logWarn('WS', 'Already initialized — skipping duplicate init()');
+                // Already connected — just update the callbacks
+                _config = config || {};
+                logOk('WS', 'Config updated (connection already active)');
                 return;
             }
             _initialized = true;
             _config = config || {};
             connect();
+        },
+
+        /**
+         * Update callbacks without reinitializing the connection.
+         * @param {Object} config - Same shape as init() config.
+         */
+        updateConfig: function(config) {
+            if (config) {
+                _config = config;
+            }
         },
 
         /** Returns true if the WebSocket is currently connected. */

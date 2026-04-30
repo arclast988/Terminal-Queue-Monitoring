@@ -11,7 +11,7 @@ $routes->get('/', 'Home::index');
 $routes->get('login', 'Auth::index');
 $routes->post('login', 'Auth::login');
 $routes->get('logout', 'Auth::logout');
-$routes->get('seed-users', 'Auth::seedUsers');
+// seed-users route removed for security — use CLI: php spark db:seed UserSeeder
 $routes->get('guest', 'Home::index');
 $routes->get('status', 'Home::status');
 $routes->get('search', 'Search::index');
@@ -31,7 +31,7 @@ $routes->group('admin/routes', ['filter' => 'auth:admin,staff'], function($route
     $routes->post('store', 'Admin\Routes::store');
     $routes->get('edit/(:num)', 'Admin\Routes::edit/$1');
     $routes->post('update/(:num)', 'Admin\Routes::update/$1');
-    $routes->get('delete/(:num)', 'Admin\Routes::delete/$1');
+    $routes->post('delete/(:num)', 'Admin\Routes::delete/$1');
 });
 
 // Vehicle Register (Accessible by both Admin and Staff)
@@ -40,7 +40,7 @@ $routes->group('admin/vehicles', ['filter' => 'auth:admin,staff'], function($rou
     $routes->get('edit/(:num)', 'Admin\Vehicles::edit/$1');
     $routes->post('store', 'Admin\Vehicles::store');
     $routes->post('update/(:num)', 'Admin\Vehicles::update/$1');
-    $routes->get('delete/(:num)', 'Admin\Vehicles::delete/$1');
+    $routes->post('delete/(:num)', 'Admin\Vehicles::delete/$1');
 });
 
 // Announcements (Accessible by both Admin and Staff)
@@ -50,7 +50,7 @@ $routes->group('admin/announcements', ['filter' => 'auth:admin,staff'], function
     $routes->post('store', 'Admin\Announcements::store');
     $routes->get('edit/(:num)', 'Admin\Announcements::edit/$1');
     $routes->post('update/(:num)', 'Admin\Announcements::update/$1');
-    $routes->get('delete/(:num)', 'Admin\Announcements::delete/$1');
+    $routes->post('delete/(:num)', 'Admin\Announcements::delete/$1');
 });
 
 // Protected Routes
@@ -63,7 +63,7 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('users/store', 'Admin\Users::store');
     $routes->get('users/edit/(:num)', 'Admin\Users::edit/$1');
     $routes->post('users/update/(:num)', 'Admin\Users::update/$1');
-    $routes->get('users/delete/(:num)', 'Admin\Users::delete/$1');
+    $routes->post('users/delete/(:num)', 'Admin\Users::delete/$1');
 
     // Terminals
     $routes->get('terminals', 'Admin\Terminals::index');
@@ -71,13 +71,13 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('terminals/store', 'Admin\Terminals::store');
     $routes->get('terminals/edit/(:num)', 'Admin\Terminals::edit/$1');
     $routes->post('terminals/update/(:num)', 'Admin\Terminals::update/$1');
-    $routes->get('terminals/delete/(:num)', 'Admin\Terminals::delete/$1');
+    $routes->post('terminals/delete/(:num)', 'Admin\Terminals::delete/$1');
 
     // Queue
     $routes->get('queue', 'Admin\Queue::index');
     $routes->post('queue/add', 'Admin\Queue::add');
-    $routes->get('queue/update/(:num)/(:segment)', 'Admin\Queue::update/$1/$2');
-    $routes->get('queue/updatePassengers/(:num)/(:segment)', 'Admin\Queue::updatePassengers/$1/$2');
+    $routes->post('queue/update/(:num)/(:segment)', 'Admin\Queue::update/$1/$2');
+    $routes->post('queue/updatePassengers/(:num)/(:segment)', 'Admin\Queue::updatePassengers/$1/$2');
     $routes->post('queue/setPassengers/(:num)', 'Admin\Queue::setPassengers/$1');
 
     // History
@@ -87,8 +87,8 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
 
     // Logs
     $routes->get('logs', 'Admin\Logs::index');
-    $routes->get('logs/delete/(:num)', 'Admin\Logs::delete/$1');
-    $routes->get('logs/clear', 'Admin\Logs::clear');
+    $routes->post('logs/delete/(:num)', 'Admin\Logs::delete/$1');
+    $routes->post('logs/clear', 'Admin\Logs::clear');
 
 
     // Departure Rules
@@ -97,7 +97,7 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('departure-rules/store', 'Admin\DepartureRules::store');
     $routes->get('departure-rules/edit/(:num)', 'Admin\DepartureRules::edit/$1');
     $routes->post('departure-rules/update/(:num)', 'Admin\DepartureRules::update/$1');
-    $routes->get('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
+    $routes->post('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
 });
 
 $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
@@ -106,8 +106,8 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     // Queue
     $routes->get('queue', 'Staff\Queue::index');
     $routes->post('queue/add', 'Staff\Queue::add');
-    $routes->get('queue/update/(:num)/(:segment)', 'Staff\Queue::updateStatus/$1/$2');
-    $routes->get('queue/updatePassengers/(:num)/(:segment)', 'Staff\Queue::updatePassengers/$1/$2');
+    $routes->post('queue/update/(:num)/(:segment)', 'Staff\Queue::updateStatus/$1/$2');
+    $routes->post('queue/updatePassengers/(:num)/(:segment)', 'Staff\Queue::updatePassengers/$1/$2');
     $routes->post('queue/setPassengers/(:num)', 'Staff\Queue::setPassengers/$1');
 
     // Departure Rules (staff view-only access)

@@ -554,7 +554,7 @@
                     </a>
                 </div>
 
-        <!-- STAFF NAVIGATION -->
+        <!-- DISPATCHER NAVIGATION -->
             <?php elseif ($role == 'staff'): ?>
                 <a href="<?= base_url('staff/dashboard') ?>">Dashboard</a>
                 <a href="<?= base_url('admin/vehicles') ?>">Vehicle Register</a>
@@ -566,8 +566,8 @@
 
                 <div class="admin-profile">
                     <div class="profile-info">
-                        <span class="profile-name"><?= session()->get('full_name') ?? 'Staff Member' ?></span>
-                        <span class="profile-role">Staff</span>
+                        <span class="profile-name"><?= session()->get('full_name') ?? 'Dispatcher' ?></span>
+                        <span class="profile-role">Dispatcher</span>
                     </div>
                     <a href="<?= base_url('logout') ?>" class="logout-btn-custom">
                         <i class="fas fa-sign-out-alt"></i> Logout

@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'Terminal Monitoring System' ?></title>
+    <meta name="csrf-token" content="<?= csrf_hash() ?>">
+    <meta name="csrf-header" content="<?= csrf_header() ?>">
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

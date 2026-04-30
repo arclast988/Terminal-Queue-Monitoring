@@ -117,7 +117,7 @@
 <?php if (session()->getFlashdata('success')): ?>
     <div class="alert alert-success alert-dismissible" role="alert">
         <i class="bi bi-check-circle-fill me-2"></i>
-        <?= session()->getFlashdata('success') ?>
+        <?= esc(session()->getFlashdata('success')) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
@@ -125,7 +125,7 @@
 <?php if (session()->getFlashdata('warning')): ?>
     <div class="alert alert-warning alert-dismissible" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <strong>Already Queued!</strong> <?= session()->getFlashdata('warning') ?>
+        <strong>Already Queued!</strong> <?= esc(session()->getFlashdata('warning')) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
@@ -133,7 +133,7 @@
 <?php if (session()->getFlashdata('error')): ?>
     <div class="alert alert-danger alert-dismissible" role="alert">
         <i class="bi bi-x-circle-fill me-2"></i>
-        <?= session()->getFlashdata('error') ?>
+        <?= esc(session()->getFlashdata('error')) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
@@ -280,6 +280,7 @@
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
     <div class="modal-dialog">
         <form action="<?= base_url('admin/queue/add') ?>" method="post">
+            <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Add Vehicle to Queue</h5>
@@ -291,7 +292,7 @@
                         <select name="vehicle_id" class="form-select" required>
                             <option value="">-- Choose Vehicle --</option>
                             <?php foreach ($vehicles as $v): ?>
-                                <option value="<?= $v['id'] ?>"><?= $v['plate_number'] ?> (<?= ucfirst($v['type']) ?>)
+                                <option value="<?= $v['id'] ?>"><?= esc($v['plate_number']) ?> (<?= ucfirst(esc($v['type'])) ?>)
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -301,7 +302,7 @@
                         <select name="route_id" class="form-select" required>
                             <option value="">-- Choose Route --</option>
                             <?php foreach ($routes as $r): ?>
-                                <option value="<?= $r['id'] ?>"><?= $r['destination'] ?> (<?= $r['origin'] ?>)</option>
+                                <option value="<?= $r['id'] ?>"><?= esc($r['destination']) ?> (<?= esc($r['origin']) ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -359,9 +360,25 @@
 
         var updateUrl = '<?= base_url('admin/queue/update') ?>/' + id + '/' + status;
 
-        fetch(updateUrl, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        // Read CSRF token from meta tag
+        var csrfToken = '';
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
+
+        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+        fetch(updateUrl, { method: 'POST', headers: headers })
+        .then(function(r) {
+            if (!r.ok) throw new Error('Request failed');
+            return r.json ? r.json() : r.text();
+        })
         .then(function() {
-            QueueSync.refresh();
+            // Force a full HTML refresh — pollAPI only detects add/remove, not status changes
+            window.location.reload();
+        })
+        .catch(function() {
+            window.location.reload();
         });
     }
 

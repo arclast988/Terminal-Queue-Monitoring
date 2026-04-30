@@ -1143,6 +1143,14 @@
             });
         }
 
+        // Fingerprint cache to avoid flickering DOM rewrites when data hasn't changed
+        var _lastQueueFingerprint = '';
+        var _lastDeptFingerprint  = '';
+
+        function makeFingerprint(arr) {
+            return JSON.stringify(arr);
+        }
+
         // Fetch status for real-time sync
         function fetchStatus() {
             if (_fetchPending) return;
@@ -1154,91 +1162,95 @@
                 return response.json();
             })
             .then(function(data) {
-                // Update stats
+                // Update stats (lightweight text-only, no flicker)
                 var countQueued = document.getElementById('count-queued');
                 var countDepartures = document.getElementById('count-departures');
                 if (countQueued) countQueued.innerText = data.active_queue.length;
                 if (countDepartures) countDepartures.innerText = data.total_departures_today;
-                
-                // Update Queue List
-                var queueList = document.getElementById('queueList');
-                if (data.active_queue.length > 0) {
-                    var queueHtml = '';
-                    data.active_queue.forEach(function(item) {
-                        var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
-                        var progressColor = percent >= 100 ? '#e53e3e' : 'var(--primary)';
-                        var fullBadge = Number(item.current_passengers) >= Number(item.capacity) ? '<span class="badge bg-danger" style="font-size: 10px; padding: 2px 8px; border-radius: 10px;">FULL</span>' : '';
-                        
-                        var statusText = 'Waiting';
-                        if (item.status === 'departed') statusText = 'Departed';
-                        else if (item.status === 'boarding') statusText = item.current_passengers + '/' + item.capacity + ' passengers';
 
-                        var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
-                        var vType = (item.vehicle_type || '').toLowerCase();
-                        var imgFile = imgMap[vType] || 'van.png';
-                        
-                        var posBadge = (vType !== 'jeepney') ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size: 13px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1;">#' + item.position + '</span>' : '';
-
-                        queueHtml += '<div class="queue-card">' +
-                            '<div style="position: relative; width: 75px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">' +
-                                '<img src="<?= base_url('images/') ?>' + imgFile + '" alt="' + vType + '" style="width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">' +
-                                posBadge +
-                            '</div>' +
-                            '<div class="queue-details">' +
-                                '<div class="q-info">' +
-                                    '<h4>' + item.plate_number + '</h4>' +
-                                    '<div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">' +
-                                        '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>' +
-                                        '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>' +
-                                    '</div>' +
-                                    '<div class="capacity-info" style="margin-top: 5px;">' +
-                                        '<div style="display: flex; align-items: center; gap: 10px;">' +
-                                            '<i class="fas fa-users" style="color: var(--primary);"></i>' +
-                                            '<span style="font-size: 13px; font-weight: 600; color: var(--text-main);">' + item.current_passengers + ' / ' + item.capacity + ' Onboard</span>' +
-                                            fullBadge +
-                                        '</div>' +
-                                        '<div class="progress" style="height: 6px; width: 150px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden;">' +
-                                            '<div class="progress-bar" style="width: ' + percent + '%; height: 100%; background: ' + progressColor + '; transition: width 0.3s ease;"></div>' +
-                                        '</div>' +
-                                    '</div>' +
-                                '</div>' +
-                                '<div class="q-meta" style="text-align: center;">' +
-                                    '<small class="text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Est. Departure</small>' +
-                                    '<div style="background: #4a5c7a; color: white; padding: 12px 16px; border-radius: 12px; font-size: 18px; font-weight: 700; margin-bottom: 8px;">' +
-                                        (item.estimated_departure_formatted || '--:-- --') +
-                                    '</div>' +
-                                    (item.status !== 'departed' && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '') +
-                                    '<div style="font-size: 13px; color: #1565c0; font-weight: 600; margin-top: 4px;">' + statusText + '</div>' +
-                                '</div>' +
-                            '</div>' +
-                        '</div>';
-                    });
-                    queueList.innerHTML = queueHtml;
-                } else {
-                    queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
-                }
-                
-                // Update Departures List
-                var deptList = document.getElementById('deptList');
-                if (data.recent_departures.length > 0) {
-                    var deptHtml = '';
-                    data.recent_departures.forEach(function(dept) {
-                        var url = '<?= base_url('schedules?destination=') ?>' + encodeURIComponent(dept.destination);
-                        deptHtml += '<a href="' + url + '" class="fare-item" style="text-decoration: none;">' +
-                            '<div>' +
-                                '<div class="f-dest">' + dept.origin + ' - ' + dept.destination + '</div>' +
-                                '<div class="f-type">' + dept.plate_number + '</div>' +
-                            '</div>' +
-                            '<div class="f-price" style="font-size: 14px;">' + dept.departure_time_formatted + '</div>' +
-                        '</a>';
-                    });
-                    deptList.innerHTML = deptHtml;
-                } else {
-                    deptList.innerHTML = '<p class="text-muted text-center py-3">No recent departures.</p>';
+                // Only rewrite Queue DOM if data actually changed
+                var queueFP = makeFingerprint(data.active_queue);
+                if (queueFP !== _lastQueueFingerprint) {
+                    _lastQueueFingerprint = queueFP;
+                    var queueList = document.getElementById('queueList');
+                    if (data.active_queue.length > 0) {
+                        var queueHtml = '';
+                        data.active_queue.forEach(function(item) {
+                            var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
+                            var progressColor = percent >= 100 ? '#e53e3e' : 'var(--primary)';
+                            var fullBadge = Number(item.current_passengers) >= Number(item.capacity)
+                                ? '<span class="badge bg-danger" style="font-size:10px;padding:2px 8px;border-radius:10px;">FULL</span>' : '';
+                            var statusText = 'Waiting';
+                            if (item.status === 'departed') statusText = 'Departed';
+                            else if (item.status === 'boarding') statusText = item.current_passengers + '/' + item.capacity + ' passengers';
+                            var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
+                            var vType = (item.vehicle_type || '').toLowerCase();
+                            var imgFile = imgMap[vType] || 'van.png';
+                            var posBadge = (vType !== 'jeepney')
+                                ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size:13px;font-weight:800;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:1;">#' + item.position + '</span>' : '';
+                            queueHtml += '<div class="queue-card">'
+                                + '<div style="position:relative;width:75px;flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
+                                +   '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
+                                +   posBadge
+                                + '</div>'
+                                + '<div class="queue-details">'
+                                +   '<div class="q-info">'
+                                +     '<h4>' + item.plate_number + '</h4>'
+                                +     '<div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">'
+                                +       '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>'
+                                +       '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>'
+                                +     '</div>'
+                                +     '<div class="capacity-info" style="margin-top:5px;">'
+                                +       '<div style="display:flex;align-items:center;gap:10px;">'
+                                +         '<i class="fas fa-users" style="color:var(--primary);"></i>'
+                                +         '<span style="font-size:13px;font-weight:600;color:var(--text-main);">' + item.current_passengers + ' / ' + item.capacity + ' Onboard</span>'
+                                +         fullBadge
+                                +       '</div>'
+                                +       '<div class="progress" style="height:6px;width:150px;background:#eee;border-radius:10px;margin-top:5px;overflow:hidden;">'
+                                +         '<div class="progress-bar" style="width:' + percent + '%;height:100%;background:' + progressColor + ';transition:width 0.3s ease;"></div>'
+                                +       '</div>'
+                                +     '</div>'
+                                +   '</div>'
+                                +   '<div class="q-meta" style="text-align:center;">'
+                                +     '<small class="text-muted" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Est. Departure</small>'
+                                +     '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
+                                +       (item.estimated_departure_formatted || '--:-- --')
+                                +     '</div>'
+                                +     (item.status !== 'departed' && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
+                                +     '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'
+                                +   '</div>'
+                                + '</div>'
+                                + '</div>';
+                        });
+                        queueList.innerHTML = queueHtml;
+                    } else {
+                        queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
+                    }
+                    observeItems();
                 }
 
-                // Observe new items
-                observeItems();
+                // Only rewrite Departures DOM if data changed
+                var deptFP = makeFingerprint(data.recent_departures);
+                if (deptFP !== _lastDeptFingerprint) {
+                    _lastDeptFingerprint = deptFP;
+                    var deptList = document.getElementById('deptList');
+                    if (data.recent_departures.length > 0) {
+                        var deptHtml = '';
+                        data.recent_departures.forEach(function(dept) {
+                            var url = '<?= base_url("schedules?destination=") ?>' + encodeURIComponent(dept.destination);
+                            deptHtml += '<a href="' + url + '" class="fare-item" style="text-decoration:none;">'
+                                + '<div>'
+                                +   '<div class="f-dest">' + dept.origin + ' - ' + dept.destination + '</div>'
+                                +   '<div class="f-type">' + dept.plate_number + '</div>'
+                                + '</div>'
+                                + '<div class="f-price" style="font-size:14px;">' + dept.departure_time_formatted + '</div>'
+                                + '</a>';
+                        });
+                        deptList.innerHTML = deptHtml;
+                    } else {
+                        deptList.innerHTML = '<p class="text-muted text-center py-3">No recent departures.</p>';
+                    }
+                }
             })
             .catch(function(error) {
                 console.error('Error fetching status:', error);
@@ -1280,10 +1292,10 @@
             });
         }
 
-        // Initialize real-time sync (WS-only, custom refresh via fetchStatus)
+        // Initialize real-time sync (polling + WebSocket)
+        // Polls every 5s as fallback, WebSocket provides instant updates
         QueueSync.init({
-            onlyWS:        true,
-            pollInterval:  20000,
+            pollInterval:  3000,
             customRefresh: fetchStatus,
             customWSHandler: function() { fetchStatus(); }
         });

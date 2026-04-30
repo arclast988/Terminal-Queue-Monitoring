@@ -71,32 +71,37 @@ abstract class BaseController extends Controller
     protected function broadcastUpdate(string $type, array $data = []): void
     {
         $now = microtime(true);
-        // Save the latest sync version to a file
+        // Write sync token — the polling mechanism on all clients checks this
         @file_put_contents(WRITEPATH . 'sync_token.txt', $now);
+
+        // Only attempt WebSocket broadcast if the server is confirmed running
+        // (indicated by the presence of a PID file written by the WS server on startup)
+        $pidFile = WRITEPATH . 'ws_server.pid';
+        if (!file_exists($pidFile)) {
+            return; // No WS server running — polling handles sync
+        }
 
         $msgId = bin2hex(random_bytes(4));
         $payload = json_encode([
             'broadcast_id' => $msgId,
-            'sync_token' => $now,
-            'type' => $type,
-            'data' => $data,
-            'timestamp' => date('Y-m-d H:i:s'),
-            'source' => php_uname('n')
+            'sync_token'   => $now,
+            'type'         => $type,
+            'data'         => $data,
+            'timestamp'    => date('Y-m-d H:i:s'),
         ]);
 
         try {
-            // Attempt to connect to the broadcast port (8082)
-            $fp = @fsockopen('127.0.0.1', 8082, $errno, $errstr, 0.5); 
+            $fp = @stream_socket_client(
+                'tcp://127.0.0.1:8082', $errno, $errstr, 0,
+                STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT
+            );
             if ($fp) {
-                fwrite($fp, $payload);
-                fflush($fp);
-                fclose($fp);
-                log_message('debug', "WS Broadcast Success [$msgId]: $type (Token: $now)");
-            } else {
-                log_message('error', "WS Broadcast Connection Failed: $errstr ($errno). Is 'php spark ws:serve' running?");
+                stream_set_timeout($fp, 0, 200000);
+                @fwrite($fp, $payload);
+                @fclose($fp);
             }
         } catch (\Throwable $e) {
-            log_message('error', "WS Broadcast Exception: " . $e->getMessage());
+            // Silent fail — polling fallback is always active
         }
     }
 }

@@ -99,12 +99,22 @@
 
         var url = _config.setUrl.replace('{id}', id);
 
+        // Read CSRF token from meta tag
+        var csrfToken = '';
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
+
+        var headers = {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (csrfToken) {
+            headers['X-CSRF-TOKEN'] = csrfToken;
+        }
+
         fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: headers,
             body: JSON.stringify({ count: count })
         })
         .then(function(response) { return response.json(); })

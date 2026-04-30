@@ -18,11 +18,11 @@
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
+    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
+    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
 <?php endif; ?>
 
 <div class="card shadow">
@@ -51,9 +51,12 @@
                                         <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <a href="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this rule?');">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form action="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this rule?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-sm btn-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">View Only</span>
                                     <?php endif; ?>

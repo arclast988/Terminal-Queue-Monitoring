@@ -141,20 +141,29 @@
                                         </button>
                                         <ul class="dropdown-menu">
                                             <?php if ($item['status'] == 'waiting'): ?>
-                                                <li><a class="dropdown-item"
-                                                        href="<?= base_url('admin/queue/update/' . $item['id'] . '/boarding') ?>?ref=dashboard">Start
-                                                        Boarding</a></li>
+                                                <li>
+                                                    <form action="<?= base_url('admin/queue/update/' . $item['id'] . '/boarding') ?>?ref=dashboard" method="post">
+                                                        <?= csrf_field() ?>
+                                                        <button type="submit" class="dropdown-item">Start Boarding</button>
+                                                    </form>
+                                                </li>
                                             <?php elseif ($item['status'] == 'boarding'): ?>
-                                                <li><a class="dropdown-item"
-                                                        href="<?= base_url('admin/queue/update/' . $item['id'] . '/departed') ?>?ref=dashboard">Depart
-                                                        Vehicle</a></li>
+                                                <li>
+                                                    <form action="<?= base_url('admin/queue/update/' . $item['id'] . '/departed') ?>?ref=dashboard" method="post">
+                                                        <?= csrf_field() ?>
+                                                        <button type="submit" class="dropdown-item">Depart Vehicle</button>
+                                                    </form>
+                                                </li>
                                             <?php endif; ?>
                                             <li>
                                                 <hr class="dropdown-divider">
                                             </li>
-                                            <li><a class="dropdown-item text-danger"
-                                                    href="<?= base_url('admin/queue/update/' . $item['id'] . '/canceled') ?>?ref=dashboard"
-                                                    onclick="return confirm('Cancel trip?');">Cancel Trip</a></li>
+                                            <li>
+                                                <form action="<?= base_url('admin/queue/update/' . $item['id'] . '/canceled') ?>?ref=dashboard" method="post" onsubmit="return confirm('Cancel trip?');">
+                                                    <?= csrf_field() ?>
+                                                    <button type="submit" class="dropdown-item text-danger">Cancel Trip</button>
+                                                </form>
+                                            </li>
                                         </ul>
                                     </div>
                                 </td>
@@ -230,7 +239,7 @@
     // Initialize real-time sync (polling + WebSocket)
     QueueSync.init({
         apiUrl:        '<?= base_url('api/queue-status') ?>',
-        pollInterval:  5000,
+        pollInterval:  3000,
         refreshUrl:    '<?= base_url('admin/dashboard') ?>',
         tableSelector: 'table tbody',
         extraRefresh:  function(newDoc) {

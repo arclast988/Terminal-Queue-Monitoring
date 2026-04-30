@@ -42,9 +42,19 @@ class Queue extends BaseController
 
     public function add()
     {
-        $vehicleId = $this->request->getPost('vehicle_id');
-        $routeId = $this->request->getPost('route_id');
-        $waitSeconds = $this->request->getPost('wait_minutes') * 60;
+        // Validate input
+        $rules = [
+            'vehicle_id'   => 'required|integer',
+            'route_id'     => 'required|integer',
+            'wait_minutes' => 'required|integer',
+        ];
+        if (!$this->validate($rules)) {
+            return redirect()->back()->with('error', 'Invalid input. Please fill all fields correctly.');
+        }
+
+        $vehicleId  = (int)$this->request->getPost('vehicle_id');
+        $routeId    = (int)$this->request->getPost('route_id');
+        $waitMinutes = (int)$this->request->getPost('wait_minutes');
 
         // Check if vehicle is already in queue
         $existing = $this->queueModel->where('vehicle_id', $vehicleId)
@@ -54,13 +64,16 @@ class Queue extends BaseController
             return redirect()->back()->with('warning', 'This vehicle is already in the queue.');
         }
 
+        $vehicle = $this->vehicleModel->find($vehicleId);
+        $platNumber = $vehicle ? $vehicle['plate_number'] : $vehicleId;
+
         $lastPosition = $this->queueModel->whereIn('status', ['waiting', 'boarding'])
                                          ->orderBy('position', 'DESC')
                                          ->first();
         $newPosition = ($lastPosition) ? $lastPosition['position'] + 1 : 1;
 
         $now = date('Y-m-d H:i:s');
-        $estDep = date('Y-m-d H:i:s', time() + $waitSeconds);
+        $estDep = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
 
         $this->queueModel->insert([
             'vehicle_id' => $vehicleId,
@@ -71,11 +84,9 @@ class Queue extends BaseController
             'estimated_departure' => $estDep
         ]);
 
-        $this->logModel->insert([
-            'user_id' => session()->get('id'),
-            'action' => 'Queue Add',
-            'details' => "Vehicle $vehicleId added to queue (Admin)"
-        ]);
+        $route = $this->routeModel->find($routeId);
+        $dest = $route ? $route['destination'] : $routeId;
+        $this->logActivity('Add to queue', "Added $platNumber to queue for $dest.");
 
         $this->broadcastUpdate('queue_update', ['action' => 'add', 'role' => 'admin']);
 
@@ -84,8 +95,20 @@ class Queue extends BaseController
 
     public function update($id, $status)
     {
+        // Validate status against allowed values
+        $validStatuses = ['waiting', 'boarding', 'departed', 'canceled'];
+        if (!in_array($status, $validStatuses)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Invalid status']);
+            }
+            return redirect()->back()->with('error', 'Invalid status value.');
+        }
+
         $queueItem = $this->queueModel->find($id);
         if (!$queueItem) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Item not found']);
+            }
             return redirect()->back()->with('error', 'Item not found');
         }
 
@@ -94,6 +117,10 @@ class Queue extends BaseController
             $updateData['departure_time'] = date('Y-m-d H:i:s');
             $updateData['position'] = 0; // Remove from active positions
         }
+
+        // Use transaction to prevent race conditions during position reordering
+        $db = \Config\Database::connect();
+        $db->transStart();
 
         $this->queueModel->update($id, $updateData);
 
@@ -108,11 +135,9 @@ class Queue extends BaseController
             }
         }
 
-        $this->logModel->insert([
-            'user_id' => session()->get('id'),
-            'action' => 'Queue Status Update',
-            'details' => "Queue ID $id status changed to $status (Admin)"
-        ]);
+        $db->transComplete();
+
+        $this->logActivity('Queue Status Update', "Queue ID $id status changed to $status (Admin)");
 
         $this->broadcastUpdate('queue_update', ['action' => 'status_change', 'id' => $id, 'new_status' => $status, 'role' => 'admin']);
 

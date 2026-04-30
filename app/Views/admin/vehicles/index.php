@@ -5,11 +5,11 @@
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
+    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
+    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('errors')): ?>
@@ -167,9 +167,12 @@
                                         <a href="<?= base_url('admin/vehicles/edit/'.$vehicle['id']) ?>" class="btn btn-outline-primary" title="Edit vehicle">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
-                                        <a href="<?= base_url('admin/vehicles/delete/'.$vehicle['id']) ?>" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to delete this vehicle?');" title="Delete vehicle">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </a>
+                                        <form action="<?= base_url('admin/vehicles/delete/'.$vehicle['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete vehicle">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

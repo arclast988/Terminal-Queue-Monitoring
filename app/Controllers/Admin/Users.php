@@ -93,6 +93,11 @@ class Users extends BaseController
 
     public function delete($id)
     {
+        // Prevent admin from deleting their own account
+        if ((int)$id === (int)session()->get('id')) {
+            return redirect()->to('/admin/users')->with('error', 'You cannot delete your own account.');
+        }
+
         $model = new UserModel();
         $model->delete($id);
         return redirect()->to('/admin/users')->with('success', 'User deleted successfully.');

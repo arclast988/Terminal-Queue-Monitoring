@@ -39,7 +39,7 @@
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role" required>
-                            <option value="staff" <?= $user['role'] == 'staff' ? 'selected' : '' ?>>Staff</option>
+                            <option value="staff" <?= $user['role'] == 'staff' ? 'selected' : '' ?>>Dispatcher</option>
                             <option value="admin" <?= $user['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
                         </select>
                     </div>

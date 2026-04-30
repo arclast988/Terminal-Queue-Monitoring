@@ -32,6 +32,6 @@ desktop.ini
 .idea/
 
 # --- DATABASE ---
-*.sql
+# Keep jeepneynvans.sql tracked for auto-import
 *.sqlite
 *.db

@@ -12,6 +12,7 @@
  *   • Visibility-aware: pauses polling when tab is hidden
  *   • Modal re-mounting after table refresh
  *   • Integrates with QueueWS for instant WebSocket updates
+ *   • ALWAYS polls as fallback — WebSocket is the fast-path
  *
  * Usage:
  *   QueueSync.init({
@@ -21,7 +22,9 @@
  *       tableSelector:    '#adminQueueTable tbody',
  *       modalSelector:    '[id^="confirmDepartModal"]',
  *       extraRefresh:     function(newDoc) { ... },  // optional
- *       onlyWS:           false                      // true = skip API polling
+ *       onlyWS:           false,                     // ignored — polling always runs
+ *       customRefresh:    function() { ... },         // optional override
+ *       customWSHandler:  function(msg) { ... }       // optional override
  *   });
  */
 (function(window) {
@@ -165,11 +168,23 @@
         .catch(function() { /* silent fail on poll */ });
     }
 
+    /* ── Unified poll/refresh function ── */
+    // Determines which refresh strategy to use based on config
+    function doRefresh() {
+        if (_config && _config.customRefresh) {
+            _config.customRefresh();
+        } else if (_config && _config.apiUrl) {
+            pollAPI();
+        } else {
+            ajaxRefresh();
+        }
+    }
+
     function startPolling() {
-        if (_pollTimer || !_config || !_config.apiUrl) return;
-        var interval = _config.pollInterval || 3000;
+        if (_pollTimer) return;
+        var interval = _config ? (_config.pollInterval || 3000) : 3000;
         _pollTimer = setInterval(function() {
-            if (!_paused) pollAPI();
+            if (!_paused) doRefresh();
         }, interval);
     }
 
@@ -180,6 +195,13 @@
         }
     }
 
+    // Reset the poll timer (called after a WS message to avoid
+    // double-fetching — we just got fresh data via WS)
+    function resetPollTimer() {
+        stopPolling();
+        startPolling();
+    }
+
     /* ── Visibility change handler ── */
 
     function onVisibilityChange() {
@@ -187,8 +209,8 @@
             _paused = true;
         } else {
             _paused = false;
-            // Immediately poll on return to tab
-            if (_config && _config.apiUrl) pollAPI();
+            // Immediately refresh on return to tab
+            doRefresh();
         }
     }
 
@@ -202,16 +224,19 @@
             var newCount = parseInt(data.new_count, 10);
             var capacity = parseInt(data.capacity, 10);
             if (id && !isNaN(newCount) && !isNaN(capacity)) {
-                var found = updatePassengerUI(id, newCount, capacity);
+                updatePassengerUI(id, newCount, capacity);
                 // If element not found, do full refresh
                 if (!getCountSpan(id)) {
-                    ajaxRefresh();
+                    doRefresh();
                 }
             }
         } else {
             // Status change, queue add/remove — do full refresh
-            ajaxRefresh();
+            doRefresh();
         }
+
+        // Reset the poll timer since we just got fresh data
+        resetPollTimer();
     }
 
     /* ── Public API ── */
@@ -221,12 +246,12 @@
          * Initialize sync for the current page.
          * @param {Object} cfg
          * @param {string}   cfg.apiUrl         - JSON API URL for polling (e.g. '/api/queue-status')
-         * @param {number}   [cfg.pollInterval] - Polling interval in ms (default 3000)
+         * @param {number}   [cfg.pollInterval] - Polling interval in ms (default 5000)
          * @param {string}   cfg.refreshUrl     - URL to fetch HTML for full table refresh
          * @param {string}   [cfg.tableSelector]- CSS selector for the <tbody> to replace
          * @param {string}   [cfg.modalSelector]- CSS selector for modals to re-mount
          * @param {Function} [cfg.extraRefresh] - Extra callback(newDoc) after AJAX refresh
-         * @param {boolean}  [cfg.onlyWS]       - If true, skip API polling; rely only on WS + manual refresh
+         * @param {boolean}  [cfg.onlyWS]       - DEPRECATED: polling always runs as fallback
          * @param {Function} [cfg.customWSHandler] - Override the default WS message handler
          * @param {Function} [cfg.customRefresh]   - Override the default AJAX refresh entirely
          */
@@ -236,29 +261,33 @@
             // Hook visibility change
             document.addEventListener('visibilitychange', onVisibilityChange);
 
-            // Start API polling (unless onlyWS)
-            if (!_config.onlyWS && _config.apiUrl) {
-                startPolling();
-            }
+            // ALWAYS start polling — this is the guaranteed fallback
+            startPolling();
 
-            // Initialize WebSocket
+            // Initialize WebSocket (fast-path for instant updates)
             if (typeof QueueWS !== 'undefined') {
                 try {
+                    var wsHandler = _config.customWSHandler
+                        ? function(message) {
+                            _config.customWSHandler(message);
+                            resetPollTimer();
+                        }
+                        : handleWSMessage;
+
                     QueueWS.init({
-                        onQueueUpdate: _config.customWSHandler || handleWSMessage,
-                        pollingFallback: function() {
-                            if (_config.customRefresh) {
-                                _config.customRefresh();
-                            } else if (_config.apiUrl) {
-                                pollAPI();
-                            } else {
-                                ajaxRefresh();
-                            }
+                        onQueueUpdate: wsHandler,
+                        onConnected: function() {
+                            // Immediately fetch fresh data on WS connect
+                            doRefresh();
                         },
-                        pollingInterval: _config.onlyWS ? (_config.pollInterval || 20000) : 30000
+                        pollingFallback: function() {
+                            doRefresh();
+                        },
+                        pollingInterval: 30000
                     });
                 } catch(e) {
                     // WebSocket not available — polling handles it
+                    console.warn('[QueueSync] WebSocket init failed, polling is active as fallback.');
                 }
             }
         },
@@ -266,13 +295,9 @@
         /** Manually update passenger count in the UI */
         updatePassengerUI: updatePassengerUI,
 
-        /** Manually trigger a full AJAX refresh */
+        /** Manually trigger a full refresh */
         refresh: function() {
-            if (_config && _config.customRefresh) {
-                _config.customRefresh();
-            } else {
-                ajaxRefresh();
-            }
+            doRefresh();
         },
 
         /** Stop all polling and listeners */
