@@ -1,26 +1,20 @@
-# --- PHP/CodeIgniter Specific ---
+# --- PHP/CodeIgniter Runtime ---
 writable/session/*
 !writable/session/index.html
 !writable/session/.gitkeep
 writable/cache/*
-writable/logs/*
-writable/debugbar/*
+!writable/cache/index.html
+writable/logs/*.log
+writable/debugbar/*.json
+writable/sync_token.txt
+writable/ws_server.pid
 
-# --- USER UPLOADS & TEMP FILES ---
-# Prevent uploading user images, documents, or temporary tokens
+# --- USER UPLOADS ---
 writable/uploads/*
 !writable/uploads/index.html
 !writable/uploads/.gitkeep
-writable/sync_token.txt
 
-# --- SENSITIVE DATA (CRITICAL) ---
-.env
-.env.local
-config.php
-*.pem
-*.key
-
-# --- DEPENDENCIES (CRITICAL) ---
+# --- DEPENDENCIES ---
 vendor/
 node_modules/
 
@@ -31,7 +25,6 @@ desktop.ini
 .vscode/
 .idea/
 
-# --- DATABASE ---
-# Keep jeepneynvans.sql tracked for auto-import
+# --- SQLite databases ---
 *.sqlite
 *.db
