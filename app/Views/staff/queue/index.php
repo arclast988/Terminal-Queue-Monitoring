@@ -139,6 +139,35 @@
         opacity: 0.8;
     }
 
+    /* Departure Warning Modal Centering */
+    #departureWarningModal.fade.show {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 1080 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.1) !important;
+        pointer-events: none !important;
+    }
+
+    #departureWarningModal .modal-dialog {
+        position: relative !important;
+        margin: auto !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: auto !important;
+    }
+
 
 </style>
 
@@ -175,105 +204,115 @@
     </div>
 <?php endif; ?>
 
-<div class="card border-0">
-    <div class="card-body p-3">
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Pos</th>
-                        <th>Vehicle</th>
-                        <th>Route (Origin - Dest)</th>
-                        <th>Passengers</th>
-                        <th>Arrival / Est. Departure</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($queue) && is_array($queue)): ?>
-                        <?php foreach ($queue as $item): ?>
-                            <tr>
-                                <td class="fw-bold text-center">#<?= $item['position'] ?></td>
-                                <td class="fw-bold">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <?php 
-                                            $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                            $imgFile = $imgMap[$item['vehicle_type']] ?? 'van.png';
-                                        ?>
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($item['vehicle_type']) ?>" style="height:45px; width:auto;">
-                                        <div>
-                                            <?= esc($item['plate_number']) ?>
-                                            <br><small class="text-muted">Cap: <?= $item['capacity'] ?></small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td><?= esc($item['origin']) ?> - <?= esc($item['destination']) ?></td>
-                                <td class="text-center text-nowrap"> <!-- Prevent wrapping -->
-                                    <div class="d-flex align-items-center justify-content-center gap-1"> <!-- Tighter gap -->
-                                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
-                                            class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-dash-lg"></i>
-                                        </button>
-                                        <span id="passenger-count-<?= $item['id'] ?>"
-                                            class="fw-bold fs-5 <?= (int)$item['current_passengers'] >= (int)$item['capacity'] ? 'text-danger' : '' ?>" style="min-width: 55px;">
-                                            <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
-                                        </span>
-                                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
-                                            class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'max')"
-                                            class="btn btn-sm btn-primary" title="Set to maximum capacity">
-                                            MAX
-                                        </button>
-                                    </div>
-                                    <span id="full-badge-<?= $item['id'] ?>" class="badge bg-danger mt-1" style="<?= (int)$item['current_passengers'] >= (int)$item['capacity'] ? '' : 'display:none;' ?>">FULL</span>
-                                </td>
-                                <td>
-                                    <small class="text-muted d-block">Arr: <?= date('h:i A', strtotime($item['arrival_time'])) ?></small>
-                                    <span class="fw-bold text-primary">Est: <?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A' ?></span>
-                                </td>
-                                <td>
-                                    <?php if ($item['status'] == 'waiting'): ?>
-                                        <span class="badge bg-warning text-dark">Waiting</span>
-                                    <?php elseif ($item['status'] == 'boarding'): ?>
-                                        <span class="badge bg-info text-dark">Boarding</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-nowrap"> <!-- Prevent button stacking -->
-                                    <?php if ($item['status'] == 'waiting'): ?>
-                                        <button onclick="updateStatus(<?= $item['id'] ?>, 'boarding', null, this)"
-                                            class="btn btn-sm btn-primary px-3">
-                                            Start Boarding
-                                        </button>
-                                    <?php elseif ($item['status'] == 'boarding'): ?>
-                                        <button type="button" class="btn btn-sm btn-success px-3" data-bs-toggle="modal" data-bs-target="#confirmDepartModal<?= $item['id'] ?>">
-                                            Depart
-                                        </button>
-                                    <?php endif; ?>
+<div class="queue-list" id="queue-list">
+    <?php if (!empty($queue) && is_array($queue)): ?>
+        <?php foreach ($queue as $item): ?>
+            <?php
+                $isFull = (int)$item['current_passengers'] >= (int)$item['capacity'];
+                $isBoarding = $item['status'] === 'boarding';
+                $isWaiting  = $item['status'] === 'waiting';
+            ?>
+            <div class="q-card mb-3" id="card-<?= $item['id'] ?>">
 
-                                    <button onclick="if(confirm('Cancel this trip?')) updateStatus(<?= $item['id'] ?>, 'canceled', null, this)"
-                                        class="btn btn-sm btn-danger px-2 ms-1">
-                                        Cancel
-                                    </button>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                <!-- Header row: position badge + plate + status -->
+                <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
+                    <span class="q-pos badge bg-secondary-subtle text-secondary rounded-pill">#<?= $item['position'] ?></span>
+                    <?php
+                        $imgMap  = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
+                        $imgFile = $imgMap[$item['vehicle_type']] ?? 'van.png';
+                    ?>
+                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($item['vehicle_type']) ?>" style="height:32px;width:auto;">
+                    <span class="fw-semibold flex-grow-1"><?= esc($item['plate_number']) ?>
+                        <small class="text-muted fw-normal"><?= ucfirst($item['vehicle_type']) ?></small>
+                    </span>
+                    <?php if ($isWaiting): ?>
+                        <span class="badge bg-warning text-dark rounded-pill">Waiting</span>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                                Queue is currently empty.
-                            </td>
-                        </tr>
+                        <span class="badge bg-info text-dark rounded-pill">Boarding</span>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
+
+                <!-- Info grid -->
+                <div class="row g-0 px-3 pt-2 pb-1">
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Route</div>
+                        <div class="fw-semibold small"><?= esc($item['origin']) ?> &rarr; <?= esc($item['destination']) ?></div>
+                    </div>
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Arrived</div>
+                        <div class="fw-semibold small"><?= date('h:i A', strtotime($item['arrival_time'])) ?></div>
+                    </div>
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Est. departure</div>
+                        <div class="fw-semibold small text-primary">
+                            <?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A' ?>
+                        </div>
+                    </div>
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Capacity</div>
+                        <div class="fw-semibold small"><?= $item['capacity'] ?> seats</div>
+                    </div>
+                </div>
+
+                <!-- Passenger counter -->
+                <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex align-items-center gap-2">
+                    <span class="text-muted small flex-shrink-0">Passengers</span>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
+                            class="btn btn-danger rounded-circle" style="width:36px;height:36px;padding:0;font-size:18px;line-height:1;">
+                            &minus;
+                        </button>
+                        <span id="passenger-count-<?= $item['id'] ?>"
+                            class="fw-bold <?= $isFull ? 'text-danger' : '' ?>" style="min-width:64px;text-align:center;font-size:15px;">
+                            <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
+                            <?php if ($isFull): ?><br><span class="badge bg-danger" style="font-size:9px;">FULL</span><?php endif; ?>
+                        </span>
+                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
+                            class="btn btn-success rounded-circle" style="width:36px;height:36px;padding:0;font-size:18px;line-height:1;">
+                            &#43;
+                        </button>
+                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'max')"
+                            class="btn btn-danger" style="font-size:11px;padding:5px 10px;">MAX</button>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex gap-2 px-3 pb-3">
+                    <?php if ($isWaiting): ?>
+                        <button onclick="updateStatus(<?= $item['id'] ?>, 'boarding', null, this)"
+                            class="btn btn-primary flex-fill" style="white-space:nowrap;">
+                            Start Boarding
+                        </button>
+                    <?php elseif ($isBoarding): ?>
+                        <button type="button" class="btn btn-success flex-fill" style="white-space:nowrap;"
+                            data-bs-toggle="modal" data-bs-target="#confirmDepartModal<?= $item['id'] ?>">
+                            Depart
+                        </button>
+                    <?php endif; ?>
+                    <button onclick="if(confirm('Cancel this trip?')) updateStatus(<?= $item['id'] ?>, 'canceled', null, this)"
+                        class="btn btn-outline-danger flex-fill" style="white-space:nowrap;">
+                        Cancel
+                    </button>
+                </div>
+
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            Queue is currently empty.
         </div>
-    </div>
+    <?php endif; ?>
 </div>
 
+<style>
+.q-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+</style>
 <!-- Depart Confirmation Modals - Placed at page level for proper positioning -->
 <?php if (!empty($queue) && is_array($queue)): ?>
     <?php foreach ($queue as $item): ?>
@@ -351,10 +390,28 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-danger">Add to Queue</button>
+                    <button type="submit" class="btn btn-danger" id="submitToQueueBtn">Add to Queue</button>
                 </div>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Departure Warning Modal -->
+<div class="modal fade" id="departureWarningModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-warning shadow">
+            <div class="modal-body p-4 text-center">
+                <i class="bi bi-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold mb-2">Wait a moment!</h5>
+                <p class="text-muted small mb-3" id="departureWarningMessage">
+                    This vehicle just departed recently.
+                </p>
+                <button type="button" class="btn btn-warning w-100 fw-semibold" data-bs-dismiss="modal">
+                    Understood
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -419,6 +476,41 @@
         refreshUrl:    '<?= base_url('staff/queue') ?>',
         tableSelector: 'table tbody',
         modalSelector: '[id^="confirmDepartModal"]'
+    });
+
+    // Handle Add to Queue Form Validation
+    document.addEventListener('DOMContentLoaded', function() {
+        var addForm = document.querySelector('#addToQueueModal form');
+        var warningModal = new bootstrap.Modal(document.getElementById('departureWarningModal'));
+        var warningMsg = document.getElementById('departureWarningMessage');
+        var submitBtn = document.getElementById('submitToQueueBtn');
+
+        if (addForm) {
+            addForm.addEventListener('submit', function(e) {
+                var vehicleId = addForm.querySelector('select[name="vehicle_id"]').value;
+                if (!vehicleId) return;
+
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
+
+                fetch('<?= base_url('api/check-vehicle-availability') ?>/' + vehicleId)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && !data.available) {
+                            warningMsg.textContent = data.message;
+                            warningModal.show();
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = 'Add to Queue';
+                        } else {
+                            addForm.submit();
+                        }
+                    })
+                    .catch(() => {
+                        addForm.submit(); // Proceed if check fails for any reason
+                    });
+            });
+        }
     });
 </script>
 

@@ -23,6 +23,7 @@ $routes->post('contact/send', 'Contact::send');
 
 // Public API for real-time queue sync (no auth required - read-only)
 $routes->get('api/queue-status', 'Api\QueueStatus::index');
+$routes->get('api/check-vehicle-availability/(:num)', 'Api\QueueStatus::checkAvailability/$1');
 
 // Route Management (Accessible by both Admin and Staff)
 $routes->group('admin/routes', ['filter' => 'auth:admin,staff'], function($routes) {
@@ -32,6 +33,10 @@ $routes->group('admin/routes', ['filter' => 'auth:admin,staff'], function($route
     $routes->get('edit/(:num)', 'Admin\Routes::edit/$1');
     $routes->post('update/(:num)', 'Admin\Routes::update/$1');
     $routes->post('delete/(:num)', 'Admin\Routes::delete/$1');
+
+    // Discount Management (Accessible by both Admin and Staff)
+    $routes->post('discounts/store', 'Admin\Routes::storeDiscount');
+    $routes->post('discounts/update/(:num)', 'Admin\Routes::updateDiscount/$1');
 });
 
 // Vehicle Register (Accessible by both Admin and Staff)

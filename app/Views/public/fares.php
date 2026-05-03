@@ -726,6 +726,49 @@
                 </div>
             </div>
         </div>
+
+        <!-- Passenger Discount Rates -->
+        <?php if (!empty($discounts)): ?>
+        <?php
+        $discountMeta = [
+            'pwd'            => ['icon' => 'fa-wheelchair',     'badge_class' => 'van-badge',     'label_color' => '#1565c0'],
+            'senior_citizen' => ['icon' => 'fa-user-shield',    'badge_class' => 'minibus-badge', 'label_color' => '#6a1b9a'],
+            'student'        => ['icon' => 'fa-graduation-cap', 'badge_class' => 'jeepney-badge', 'label_color' => '#e65100'],
+        ];
+        ?>
+        <div style="margin-bottom: 60px;">
+            <h3 style="font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-percent" style="color: var(--primary);"></i> Passenger Discount Rates
+            </h3>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
+                Show your valid ID to avail the discount on any route.
+            </p>
+            <div class="fares-grid">
+                <?php foreach ($discounts as $disc):
+                    if (!$disc['is_active']) continue;
+                    $meta = $discountMeta[$disc['type']] ?? ['icon' => 'fa-tag', 'badge_class' => 'van-badge', 'label_color' => '#1565c0'];
+                ?>
+                <div class="fare-card" style="text-align: center;">
+                    <div class="card-header">
+                        <h3>
+                            <i class="fas <?= $meta['icon'] ?>" style="color: <?= $meta['label_color'] ?>; font-size: 22px;"></i>
+                            <?= esc($disc['label']) ?>
+                        </h3>
+                        <span class="type-badge <?= $meta['badge_class'] ?>"><?= number_format($disc['discount_percent'], 0) ?>% OFF</span>
+                    </div>
+                    <div style="padding: 40px 20px;">
+                        <div style="font-size: 64px; font-weight: 800; color: <?= $meta['label_color'] ?>; line-height: 1;">
+                            <?= number_format($disc['discount_percent'], 0) ?><span style="font-size: 32px;">%</span>
+                        </div>
+                        <div style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">off the regular fare</div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+
+
     </div>
 
     <!-- Footer -->

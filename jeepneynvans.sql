@@ -511,6 +511,31 @@ INSERT INTO `vehicles` (`id`, `plate_number`, `driver_name`, `type`, `default_ro
 (8, 'sdaasd', 'ahhah', 'minibus', NULL, 23, '', NULL, 'active', '2026-03-24 22:22:24'),
 (9, 'HELO123', 'ahhah', 'jeepney', NULL, 20, '', NULL, 'active', '2026-04-06 11:27:07');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fare_discounts`
+--
+
+CREATE TABLE `fare_discounts` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `type` enum('pwd','senior_citizen','student') NOT NULL,
+  `label` varchar(100) NOT NULL,
+  `discount_percent` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `fare_discounts`
+--
+
+INSERT INTO `fare_discounts` (`id`, `type`, `label`, `discount_percent`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'pwd', 'PWD Discount', 20.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00'),
+(2, 'senior_citizen', 'Senior Citizen Discount', 20.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00'),
+(3, 'student', 'Student Discount', 15.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00');
+
 --
 -- Indexes for dumped tables
 --
@@ -521,6 +546,13 @@ INSERT INTO `vehicles` (`id`, `plate_number`, `driver_name`, `type`, `default_ro
 ALTER TABLE `announcements`
   ADD PRIMARY KEY (`id`),
   ADD KEY `announcements_is_active_index` (`is_active`);
+
+--
+-- Indexes for table `fare_discounts`
+--
+ALTER TABLE `fare_discounts`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `fare_discounts_type_unique` (`type`);
 
 --
 -- Indexes for table `departure_rules`
@@ -594,6 +626,12 @@ ALTER TABLE `vehicles`
 --
 ALTER TABLE `announcements`
   MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `fare_discounts`
+--
+ALTER TABLE `fare_discounts`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `departure_rules`

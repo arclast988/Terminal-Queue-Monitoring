@@ -46,4 +46,50 @@ class QueueStatus extends Controller
                 'ts'      => time()
             ]);
     }
+    public function checkAvailability($vehicleId)
+    {
+        $queueModel = new \App\Models\QueueModel();
+
+        // 1. Check if already in active queue
+        $existing = $queueModel->where('vehicle_id', $vehicleId)
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->first();
+
+        if ($existing) {
+            return $this->response->setJSON([
+                'success'   => true,
+                'available' => false,
+                'reason'    => 'already_queued',
+                'message'   => 'This vehicle is already in the queue.'
+            ]);
+        }
+
+        // 2. Check for recent departure (within 1 minute)
+        $oneMinuteAgo = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        $recentDeparture = $queueModel->where('vehicle_id', $vehicleId)
+            ->where('status', 'departed')
+            ->where('departure_time >=', $oneMinuteAgo)
+            ->orderBy('departure_time', 'DESC')
+            ->first();
+
+        if ($recentDeparture) {
+            $departTime = strtotime($recentDeparture['departure_time']);
+            $secondsAgo = time() - $departTime;
+            $waitRemaining = 60 - $secondsAgo;
+            
+            return $this->response->setJSON([
+                'success'   => true,
+                'available' => false,
+                'reason'    => 'recently_departed',
+                'message'   => "This vehicle departed only {$secondsAgo} seconds ago. Please wait another {$waitRemaining} seconds.",
+                'departure_time' => $recentDeparture['departure_time']
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'available' => true,
+            'message'   => 'Vehicle is available for queueing.'
+        ]);
+    }
 }

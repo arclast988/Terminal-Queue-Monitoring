@@ -68,6 +68,20 @@ class Queue extends BaseController
             $platNumber = $vehicle['plate_number'] ?? 'Vehicle';
             return redirect()->back()->with('warning', $platNumber . ' is already in the queue!');
         }
+        
+        // Check for recent departure (within 1 minute)
+        $oneMinuteAgo = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        $recentDeparture = $this->queueModel->where('vehicle_id', $vehicleId)
+            ->where('status', 'departed')
+            ->where('departure_time >=', $oneMinuteAgo)
+            ->orderBy('departure_time', 'DESC')
+            ->first();
+
+        if ($recentDeparture) {
+            $departTime = strtotime($recentDeparture['departure_time']);
+            $secondsAgo = time() - $departTime;
+            return redirect()->back()->with('error', 'This vehicle departed only ' . $secondsAgo . ' seconds ago. Please wait 1 minute before adding it back.');
+        }
 
         // Calculate next position
         $lastPosition = $this->queueModel->selectMax('position')->first();
