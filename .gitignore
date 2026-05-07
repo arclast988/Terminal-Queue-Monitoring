@@ -15,7 +15,6 @@ writable/uploads/*
 !writable/uploads/.gitkeep
 
 # --- DEPENDENCIES ---
-vendor/
 node_modules/
 
 # --- OS/System generated files ---
