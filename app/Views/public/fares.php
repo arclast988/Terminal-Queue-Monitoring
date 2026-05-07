@@ -635,7 +635,7 @@
     <!-- Main Content -->
     <div class="container">
 
-        <div class="fares-grid">
+        <div class="fares-grid" id="faresGrid">
             <!-- Van Routes -->
             <div class="fare-card">
                 <div class="card-header">
@@ -728,6 +728,7 @@
         </div>
 
         <!-- Passenger Discount Rates -->
+        <div id="discountSection">
         <?php if (!empty($discounts)): ?>
         <?php
         $discountMeta = [
@@ -767,6 +768,7 @@
             </div>
         </div>
         <?php endif; ?>
+        </div>
 
 
     </div>
@@ -787,6 +789,117 @@
         if (m) m.classList.toggle('open');
         if (o) o.classList.toggle('active');
     }
+
+    // ══════════════════════════════════════════════════
+    //  Auto-Refresh: Fare Rates + Discounts (every 10s)
+    // ══════════════════════════════════════════════════
+    var _fareFingerprint = '';
+    var _fareFetchPending = false;
+
+    function makeFP(obj) { return JSON.stringify(obj); }
+
+    function formatFare(n) {
+        return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function buildFareCard(type, label, badgeClass, imgSrc, routes) {
+        var html = '<div class="fare-card">'
+            + '<div class="card-header">'
+            + '<h3><img src="' + imgSrc + '" alt="' + label + '" style="width: 45px; height: auto; object-fit: contain;"> ' + label + '</h3>'
+            + '<span class="type-badge ' + badgeClass + '">' + type + '</span>'
+            + '</div>'
+            + '<div class="fare-list">';
+
+        if (routes.length > 0) {
+            routes.forEach(function(route) {
+                html += '<div class="fare-item">'
+                    + '<div class="dest-info">'
+                    + '<div class="f-dest">' + route.origin.toUpperCase() + ' - ' + route.destination.toUpperCase() + '</div>'
+                    + '<div class="f-origin">From: ' + route.origin + '</div>'
+                    + '</div>'
+                    + '<div class="price-tag">' + formatFare(route.fare) + '</div>'
+                    + '</div>';
+            });
+        } else {
+            html += '<p class="text-muted text-center py-5 px-5">No fares listed.</p>';
+        }
+
+        html += '</div></div>';
+        return html;
+    }
+
+    function buildDiscountCards(discounts) {
+        var metaMap = {
+            'pwd':            { icon: 'fa-wheelchair',     badge_class: 'van-badge',     label_color: '#1565c0' },
+            'senior_citizen': { icon: 'fa-user-shield',    badge_class: 'minibus-badge', label_color: '#6a1b9a' },
+            'student':        { icon: 'fa-graduation-cap', badge_class: 'jeepney-badge', label_color: '#e65100' }
+        };
+        var defaultMeta = { icon: 'fa-tag', badge_class: 'van-badge', label_color: '#1565c0' };
+
+        var html = '<div style="margin-bottom: 60px;">'
+            + '<h3 style="font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">'
+            + '<i class="fas fa-percent" style="color: var(--primary);"></i> Passenger Discount Rates</h3>'
+            + '<p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Show your valid ID to avail the discount on any route.</p>'
+            + '<div class="fares-grid">';
+
+        discounts.forEach(function(disc) {
+            var meta = metaMap[disc.type] || defaultMeta;
+            html += '<div class="fare-card" style="text-align: center;">'
+                + '<div class="card-header">'
+                + '<h3><i class="fas ' + meta.icon + '" style="color: ' + meta.label_color + '; font-size: 22px;"></i> ' + disc.label + '</h3>'
+                + '<span class="type-badge ' + meta.badge_class + '">' + Number(disc.discount_percent).toFixed(0) + '% OFF</span>'
+                + '</div>'
+                + '<div style="padding: 40px 20px;">'
+                + '<div style="font-size: 64px; font-weight: 800; color: ' + meta.label_color + '; line-height: 1;">'
+                + Number(disc.discount_percent).toFixed(0) + '<span style="font-size: 32px;">%</span></div>'
+                + '<div style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">off the regular fare</div>'
+                + '</div></div>';
+        });
+
+        html += '</div></div>';
+        return html;
+    }
+
+    function fetchFareData() {
+        if (_fareFetchPending) return;
+        _fareFetchPending = true;
+
+        fetch('<?= base_url('api/fares') ?>?_=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var fp = makeFP(data);
+            if (fp === _fareFingerprint) return; // No change
+            _fareFingerprint = fp;
+
+            var baseImgUrl = '<?= base_url("images/") ?>';
+
+            // Rebuild fare grid
+            var grid = document.getElementById('faresGrid');
+            if (grid) {
+                grid.innerHTML =
+                    buildFareCard('Express', 'Van Routes', 'van-badge', baseImgUrl + 'van.png', data.van_routes)
+                    + buildFareCard('Regular', 'Jeepney Routes', 'jeepney-badge', baseImgUrl + 'jeep.png', data.jeepney_routes)
+                    + buildFareCard('Standard', 'Mini Bus Routes', 'minibus-badge', baseImgUrl + 'minibus.png', data.minibus_routes);
+            }
+
+            // Rebuild discount section
+            var discSection = document.getElementById('discountSection');
+            if (discSection) {
+                if (data.discounts && data.discounts.length > 0) {
+                    discSection.innerHTML = buildDiscountCards(data.discounts);
+                    discSection.style.display = '';
+                } else {
+                    discSection.innerHTML = '';
+                    discSection.style.display = 'none';
+                }
+            }
+        })
+        .catch(function(err) { console.error('Fare fetch error:', err); })
+        .finally(function() { _fareFetchPending = false; });
+    }
+
+    // Poll every 10 seconds
+    setInterval(fetchFareData, 10000);
     </script>
 </body>
 

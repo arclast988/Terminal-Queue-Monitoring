@@ -74,3 +74,24 @@
 </div>
 
 <?= $this->include('templates/footer') ?>
+
+<script src="<?= base_url('js/ws-client.js') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js') ?>"></script>
+<script>
+    QueueSync.init({
+        pollInterval: 3000,
+        refreshUrl:   '<?= base_url('staff/dashboard') ?>',
+        tableSelector: '.table-hover tbody',
+        extraRefresh: function(newDoc) {
+            // Update Active in Queue count
+            var newCount = newDoc.querySelector('.card.bg-primary .card-body h2');
+            var curCount = document.querySelector('.card.bg-primary .card-body h2');
+            if (newCount && curCount) curCount.textContent = newCount.textContent;
+
+            // Update stat cards (terminal capacity, etc.)
+            var newCards = newDoc.querySelectorAll('.card.border-info .card-body');
+            var curCards = document.querySelectorAll('.card.border-info .card-body');
+            newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].innerHTML = card.innerHTML; });
+        }
+    });
+</script>

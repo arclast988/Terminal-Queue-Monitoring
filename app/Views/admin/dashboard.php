@@ -78,111 +78,7 @@
     </div>
 </div>
 
-<h2 class="mt-4"><i class="bi bi-list-ol"></i> Live Terminal Queue </h2>
-<div class="card shadow mb-4">
-    <div class="card-body p-0">
-        <div class="table-responsive-lg">
-            <table class="table table-bordered table-hover align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th class="text-center">Pos</th>
-                        <th>Vehicle</th>
-                        <th>Route (Origin - Dest)</th>
-                        <th>Est. Departure</th>
-                        <th class="text-center">Passengers Onboard</th>
-                        <th>Status</th>
-                        <th>Quick Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($queue)): ?>
-                        <?php foreach ($queue as $item): ?>
-                            <tr>
-                                <td class="fw-bold text-center">#<?= $item['position'] ?></td>
-                                <td>
-                                    <span class="fw-bold"><?= esc($item['plate_number']) ?></span>
-                                    <br><small class="text-muted">Max: <?= $item['capacity'] ?></small>
-                                </td>
-                                <td><?= esc($item['origin']) ?> - <?= esc($item['destination']) ?></td>
-                                <td>
-                                    <span class="fw-bold text-primary"><?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A' ?></span>
-                                </td>
-                                <td class="text-center">
-                                    <div class="d-flex align-items-center justify-content-center gap-2"
-                                        id="passenger-controls-<?= $item['id'] ?>">
-                                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
-                                            class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-dash-lg"></i>
-                                        </button>
-                                        <span
-                                            class="fw-bold fs-5 passenger-count <?= $item['current_passengers'] >= $item['capacity'] ? 'text-danger' : '' ?>">
-                                            <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
-                                        </span>
-                                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
-                                            class="btn btn-sm btn-outline-success">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                                    </div>
-                                    <span class="badge bg-danger full-badge"
-                                        style="<?= (int)$item['current_passengers'] >= (int)$item['capacity'] ? '' : 'display:none;' ?>">FULL
-                                        CAPACITY</span>
-                                </td>
-                                <td>
-                                    <span
-                                        class="badge <?= $item['status'] == 'boarding' ? 'bg-success' : 'bg-warning text-dark' ?>">
-                                        <?= strtoupper($item['status']) ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button"
-                                            data-bs-toggle="dropdown" data-bs-boundary="viewport">
-                                            Manage Status
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <?php if ($item['status'] == 'waiting'): ?>
-                                                <li>
-                                                    <form action="<?= base_url('admin/queue/update/' . $item['id'] . '/boarding') ?>?ref=dashboard" method="post">
-                                                        <?= csrf_field() ?>
-                                                        <button type="submit" class="dropdown-item">Start Boarding</button>
-                                                    </form>
-                                                </li>
-                                            <?php elseif ($item['status'] == 'boarding'): ?>
-                                                <li>
-                                                    <form action="<?= base_url('admin/queue/update/' . $item['id'] . '/departed') ?>?ref=dashboard" method="post">
-                                                        <?= csrf_field() ?>
-                                                        <button type="submit" class="dropdown-item">Depart Vehicle</button>
-                                                    </form>
-                                                </li>
-                                            <?php endif; ?>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <li>
-                                                <form action="<?= base_url('admin/queue/update/' . $item['id'] . '/canceled') ?>?ref=dashboard" method="post" onsubmit="return confirm('Cancel trip?');">
-                                                    <?= csrf_field() ?>
-                                                    <button type="submit" class="dropdown-item text-danger">Cancel Trip</button>
-                                                </form>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No vehicles currently in queue.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="card-footer bg-light text-end">
-        <a href="<?= base_url('admin/queue') ?>" class="btn btn-sm btn-primary">Full Queue Operations <i
-                class="bi bi-arrow-right"></i></a>
-    </div>
-</div>
+
 
 <h2 class="mt-4">Recent Activity </h2>
 <div class="card shadow-sm">
@@ -217,45 +113,20 @@
 <?= $this->include('templates/footer') ?>
 
 <script src="<?= base_url('js/ws-client.js') ?>"></script>
-<script src="<?= base_url('js/debounce-passengers.js') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js') ?>"></script>
 <script>
-    // Initialize debounced passenger controls
-    PassengerDebounce.init({
-        setUrl: '<?= base_url('admin/queue/setPassengers') ?>/{id}'
-    });
-
-    function updatePassengers(id, action) {
-        var container = document.getElementById('passenger-controls-' + id);
-        var countSpan = container ? container.querySelector('.passenger-count') : null;
-        var capacity = 0;
-        if (countSpan) {
-            var parts = countSpan.textContent.trim().split('/');
-            capacity = parseInt(parts[1], 10) || 0;
-        }
-        PassengerDebounce.adjust(id, action, capacity);
-    }
-
-    // Initialize real-time sync (polling + WebSocket)
     QueueSync.init({
-        apiUrl:        '<?= base_url('api/queue-status') ?>',
-        pollInterval:  3000,
-        refreshUrl:    '<?= base_url('admin/dashboard') ?>',
-        tableSelector: 'table tbody',
-        extraRefresh:  function(newDoc) {
-            // Update stat cards
-            var newCards = newDoc.querySelectorAll('.card.text-white h2');
-            var curCards = document.querySelectorAll('.card.text-white h2');
+        pollInterval: 5000,
+        refreshUrl:   '<?= base_url('admin/dashboard') ?>',
+        tableSelector: '.table-striped tbody',
+        extraRefresh: function(newDoc) {
+            // Update all stat cards
+            var newCards = newDoc.querySelectorAll('.card.text-white .card-body h2');
+            var curCards = document.querySelectorAll('.card.text-white .card-body h2');
             newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].textContent = card.textContent; });
-
-            // Update activity log
-            var newLogs = newDoc.querySelectorAll('.table-striped tbody');
-            var curLogs = document.querySelectorAll('.table-striped tbody');
-            if (newLogs[0] && curLogs[0]) curLogs[0].innerHTML = newLogs[0].innerHTML;
         }
     });
 </script>
-
 
 
 

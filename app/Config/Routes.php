@@ -18,6 +18,7 @@ $routes->get('search', 'Search::index');
 $routes->get('schedules', 'Schedules::index');
 $routes->get('schedules/status', 'Schedules::status');
 $routes->get('fares', 'Fares::index');
+$routes->get('api/fares', 'Fares::apiData');
 $routes->get('history', 'History::index');
 $routes->post('contact/send', 'Contact::send');
 
@@ -37,6 +38,7 @@ $routes->group('admin/routes', ['filter' => 'auth:admin,staff'], function($route
     // Discount Management (Accessible by both Admin and Staff)
     $routes->post('discounts/store', 'Admin\Routes::storeDiscount');
     $routes->post('discounts/update/(:num)', 'Admin\Routes::updateDiscount/$1');
+    $routes->post('discounts/delete/(:num)', 'Admin\Routes::deleteDiscount/$1');
 });
 
 // Vehicle Register (Accessible by both Admin and Staff)
@@ -77,13 +79,6 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('terminals/edit/(:num)', 'Admin\Terminals::edit/$1');
     $routes->post('terminals/update/(:num)', 'Admin\Terminals::update/$1');
     $routes->post('terminals/delete/(:num)', 'Admin\Terminals::delete/$1');
-
-    // Queue
-    $routes->get('queue', 'Admin\Queue::index');
-    $routes->post('queue/add', 'Admin\Queue::add');
-    $routes->post('queue/update/(:num)/(:segment)', 'Admin\Queue::update/$1/$2');
-    $routes->post('queue/updatePassengers/(:num)/(:segment)', 'Admin\Queue::updatePassengers/$1/$2');
-    $routes->post('queue/setPassengers/(:num)', 'Admin\Queue::setPassengers/$1');
 
     // History
     $routes->get('history', 'Admin\History::index');

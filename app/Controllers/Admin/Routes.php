@@ -233,7 +233,7 @@ class Routes extends BaseController
     public function storeDiscount()
     {
         $rules = [
-            'type'             => 'required|in_list[pwd,senior_citizen,student]',
+            'type'             => 'required|min_length[2]|max_length[50]|alpha_dash',
             'label'            => 'required|min_length[2]|max_length[100]',
             'discount_percent' => 'required|decimal|greater_than_equal_to[0]|less_than_equal_to[100]',
         ];
@@ -242,15 +242,41 @@ class Routes extends BaseController
             return redirect()->to('/fares')->with('errors', $this->validator->getErrors());
         }
 
+        $type = strtolower(trim($this->request->getPost('type')));
+
+        // Prevent duplicate types
+        $existing = $this->discountModel->where('type', $type)->first();
+        if ($existing) {
+            return redirect()->to('/fares')->with('error', 'A discount with type "' . $type . '" already exists. Please edit the existing one instead.');
+        }
+
         $this->discountModel->save([
-            'type'             => $this->request->getPost('type'),
+            'type'             => $type,
             'label'            => $this->request->getPost('label'),
             'discount_percent' => $this->request->getPost('discount_percent'),
             'is_active'        => 1,
         ]);
 
-        $this->logActivity('Add discount', $this->request->getPost('type') . ' discount added at ' . $this->request->getPost('discount_percent') . '%.');
+        $this->logActivity('Add discount', $this->request->getPost('label') . ' discount added at ' . $this->request->getPost('discount_percent') . '%.');
 
         return redirect()->to('/fares')->with('success', 'Discount added successfully.');
+    }
+
+    /**
+     * Delete a discount record.
+     */
+    public function deleteDiscount($id)
+    {
+        $discount = $this->discountModel->find($id);
+
+        if (!$discount) {
+            return redirect()->to('/fares')->with('error', 'Discount record not found.');
+        }
+
+        $this->discountModel->delete($id);
+
+        $this->logActivity('Delete discount', $discount['type'] . ' discount (' . $discount['label'] . ') deleted.');
+
+        return redirect()->to('/fares')->with('success', 'Discount deleted successfully.');
     }
 }

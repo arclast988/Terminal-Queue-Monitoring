@@ -539,7 +539,6 @@
 
                 <a href="<?= base_url('admin/announcements') ?>">Announcements</a>
                 <a href="<?= base_url('admin/logs') ?>">Logs</a>
-                <a href="<?= base_url('admin/queue') ?>">Queue Management</a>
                 <a href="<?= base_url('admin/history') ?>"><i class="fas fa-history"></i> History</a>
                 <a href="<?= base_url('schedules') ?>"><i class="fas fa-calendar-alt"></i> Schedules</a>
                 <a href="<?= base_url('fares') ?>"><i class="fas fa-tags"></i> Fares</a>

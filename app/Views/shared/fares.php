@@ -106,10 +106,18 @@ $fareTypes = [
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
                             <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
-                            <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>"
-                               class="btn btn-sm btn-outline-primary fare-action-btn" title="Edit Fare">
+                            <button type="button"
+                               class="btn btn-sm btn-outline-primary fare-action-btn" title="Edit Fare"
+                               data-bs-toggle="modal"
+                               data-bs-target="#editFareModal"
+                               data-id="<?= $route['id'] ?>"
+                               data-origin="<?= esc($route['origin']) ?>"
+                               data-destination="<?= esc($route['destination']) ?>"
+                               data-fare="<?= $route['fare'] ?>"
+                               data-vehicle-type="<?= esc($route['vehicle_type']) ?>"
+                               data-terminal-id="<?= $route['terminal_id'] ?>">
                                 <i class="fas fa-edit"></i>
-                            </a>
+                            </button>
                             <form action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline"
                                   onsubmit="return confirm('Delete this fare (<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>)?');">
                                 <?= csrf_field() ?>
@@ -135,33 +143,32 @@ $fareTypes = [
 <!-- ══════════════════════════════════════════════════ -->
 <!--  Discount Rates Section                           -->
 <!-- ══════════════════════════════════════════════════ -->
-<?php if (!empty($discounts)): ?>
 <?php
-$existingTypes = array_column($discounts ?? [], 'type');
-$allTypes      = ['pwd' => 'PWD', 'senior_citizen' => 'Senior Citizen', 'student' => 'Student'];
-$missingTypes  = array_diff(array_keys($allTypes), $existingTypes);
-
 $discountMeta = [
     'pwd'            => ['icon' => 'fa-wheelchair',     'badge' => '<span class="badge bg-info">PWD</span>'],
     'senior_citizen' => ['icon' => 'fa-user-shield',    'badge' => '<span class="badge" style="background:#6d28d9;">Senior Citizen</span>'],
     'student'        => ['icon' => 'fa-graduation-cap', 'badge' => '<span class="badge bg-warning text-dark">Student</span>'],
 ];
+$hasDiscounts = !empty($discounts);
+$isManager = in_array(session()->get('role'), ['admin', 'staff']);
 ?>
 
+<?php if ($hasDiscounts || $isManager): ?>
 <div class="px-3 mb-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h5 class="fw-bold mb-0"><i class="fas fa-percent me-2"></i>Passenger Discount Rates</h5>
-        <?php if (in_array(session()->get('role'), ['admin', 'staff']) && !empty($missingTypes)): ?>
+        <?php if ($isManager): ?>
         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDiscountModal">
-            <i class="fas fa-plus me-1"></i> Add Discount Type
+            <i class="fas fa-plus me-1"></i> Add Discount
         </button>
         <?php endif; ?>
     </div>
 
     <div class="row">
+        <?php if ($hasDiscounts): ?>
         <?php foreach ($discounts as $disc):
             if (!$disc['is_active']) continue;
-            $meta = $discountMeta[$disc['type']] ?? ['icon' => 'fa-tag', 'badge' => '<span class="badge bg-secondary">Discount</span>'];
+            $meta = $discountMeta[$disc['type']] ?? ['icon' => 'fa-tag', 'badge' => '<span class="badge bg-secondary">' . esc(ucwords(str_replace('_', ' ', $disc['type']))) . '</span>'];
         ?>
         <div class="col-lg-4 mb-4">
             <div class="card shadow-sm h-100 text-center">
@@ -178,8 +185,8 @@ $discountMeta = [
                     </div>
                     <div class="text-muted mt-2" style="font-size: 13px;">off the regular fare</div>
                 </div>
-                <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
-                <div class="card-footer bg-white">
+                <?php if ($isManager): ?>
+                <div class="card-footer bg-white d-flex justify-content-center gap-2">
                     <button class="btn btn-sm btn-outline-secondary"
                         data-bs-toggle="modal"
                         data-bs-target="#editDiscountModal"
@@ -189,11 +196,29 @@ $discountMeta = [
                         data-active="<?= $disc['is_active'] ?>">
                         <i class="fas fa-edit me-1"></i> Edit
                     </button>
+                    <form action="<?= base_url('admin/routes/discounts/delete/' . $disc['id']) ?>" method="post" class="d-inline"
+                          onsubmit="return confirm('Delete this discount (<?= esc($disc['label']) ?>)?');">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash-alt me-1"></i> Delete
+                        </button>
+                    </form>
                 </div>
                 <?php endif; ?>
             </div>
         </div>
         <?php endforeach; ?>
+        <?php else: ?>
+        <div class="col-12">
+            <div class="card shadow-sm text-center py-5">
+                <div class="card-body">
+                    <i class="fas fa-percent text-muted mb-3" style="font-size: 48px;"></i>
+                    <h5 class="text-muted">No Discounts Added Yet</h5>
+                    <p class="text-muted mb-0">Click the "Add Discount" button above to create your first passenger discount rate.</p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 </div>
 <?php endif; ?>
@@ -288,6 +313,75 @@ $discountMeta = [
   </div>
 </div>
 
+<!-- EDIT FARE MODAL -->
+<div class="modal fade" id="editFareModal" tabindex="-1" aria-labelledby="editFareModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-white">
+        <h5 class="modal-title fw-bold" id="editFareModalLabel"><i class="fas fa-edit me-2 text-primary"></i>Edit Fare</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editFareForm" method="post">
+          <?= csrf_field() ?>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Origin</label>
+            <input type="text" name="origin" id="edit_fare_origin" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Destination</label>
+            <input type="text" name="destination" id="edit_fare_destination" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Fare Amount (₱)</label>
+            <div class="input-group">
+              <span class="input-group-text">₱</span>
+              <input type="number" name="fare" id="edit_fare_amount" class="form-control" step="0.01" min="1" required>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-semibold mb-2">Vehicle Type</label>
+            <div class="d-flex gap-4 flex-wrap">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="vehicle_type" id="edit_van" value="van">
+                <label class="form-check-label" for="edit_van"><i class="fas fa-shuttle-van me-1 text-muted"></i> Van</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="vehicle_type" id="edit_jeepney" value="jeepney">
+                <label class="form-check-label" for="edit_jeepney"><i class="fas fa-bus me-1 text-muted"></i> Jeepney</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="vehicle_type" id="edit_minibus" value="minibus">
+                <label class="form-check-label" for="edit_minibus"><i class="fas fa-bus-alt me-1 text-muted"></i> Minibus</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Terminal</label>
+            <select name="terminal_id" id="edit_fare_terminal" class="form-select" required>
+              <option value="">— Select Terminal —</option>
+              <?php foreach ($terminals as $t): ?>
+                <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="d-grid mt-2">
+            <button type="submit" class="btn btn-primary fw-bold py-2">
+              <i class="fas fa-save me-2"></i>Update Fare
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT DISCOUNT MODAL -->
 <div class="modal fade" id="editDiscountModal" tabindex="-1" aria-labelledby="editDiscountModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -328,37 +422,34 @@ $discountMeta = [
   </div>
 </div>
 
-<!-- ADD DISCOUNT MODAL (for missing types) -->
-<?php if (!empty($missingTypes)): ?>
+<!-- ADD DISCOUNT MODAL -->
 <div class="modal fade" id="addDiscountModal" tabindex="-1" aria-labelledby="addDiscountModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-white">
-        <h5 class="modal-title fw-bold" id="addDiscountModalLabel"><i class="fas fa-plus me-2 text-primary"></i>Add Discount Type</h5>
+        <h5 class="modal-title fw-bold" id="addDiscountModalLabel"><i class="fas fa-plus me-2 text-primary"></i>Add New Discount</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form action="<?= base_url('admin/routes/discounts/store') ?>" method="post">
+        <form action="<?= base_url('admin/routes/discounts/store') ?>" method="post" id="addDiscountForm">
           <?= csrf_field() ?>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Discount Type</label>
-            <select name="type" class="form-select" required>
-              <option value="">— Select Type —</option>
-              <?php foreach ($missingTypes as $mt): ?>
-              <option value="<?= $mt ?>"><?= $allTypes[$mt] ?></option>
-              <?php endforeach; ?>
-            </select>
+            <label class="form-label fw-semibold">Discount Label</label>
+            <input type="text" name="label" id="add_disc_label" class="form-control" placeholder="e.g. PWD Discount, Military Discount" required maxlength="100">
+            <div class="form-text">The display name shown to users.</div>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Label</label>
-            <input type="text" name="label" class="form-control" placeholder="e.g. PWD Discount" required maxlength="100">
+            <label class="form-label fw-semibold">Type Key</label>
+            <input type="text" name="type" id="add_disc_type" class="form-control" placeholder="e.g. pwd, senior_citizen, military" required maxlength="50" pattern="[a-z0-9_]+" title="Only lowercase letters, numbers, and underscores">
+            <div class="form-text">Auto-generated from label. Use lowercase with underscores (e.g. <code>senior_citizen</code>).</div>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Discount Percentage (%)</label>
             <div class="input-group">
-              <input type="number" name="discount_percent" class="form-control" step="0.01" min="0" max="100" required>
+              <input type="number" name="discount_percent" class="form-control" step="0.01" min="0" max="100" placeholder="e.g. 20" required>
               <span class="input-group-text">%</span>
             </div>
+            <div class="form-text">Enter a value between 0 and 100.</div>
           </div>
           <div class="d-grid mt-2">
             <button type="submit" class="btn btn-primary fw-bold py-2"><i class="fas fa-save me-2"></i>Save Discount</button>
@@ -368,7 +459,6 @@ $discountMeta = [
     </div>
   </div>
 </div>
-<?php endif; ?>
 
 <?php endif; ?>
 
@@ -379,7 +469,7 @@ $discountMeta = [
 document.getElementById('addFareForm')?.addEventListener('submit', function(e) {
     const orig = document.getElementById('add_origin').value;
     const dest = document.getElementById('add_destination').value;
-    const vehicleType = document.querySelector('input[name="vehicle_type"]:checked')?.value;
+    const vehicleType = document.querySelector('#addFareForm input[name="vehicle_type"]:checked')?.value;
     
     if (orig && dest && orig === dest) {
         e.preventDefault();
@@ -414,7 +504,7 @@ if (addForm) {
         input.addEventListener('change', () => {
             const orig = document.getElementById('add_origin').value;
             const dest = document.getElementById('add_destination').value;
-            const type = document.querySelector('input[name="vehicle_type"]:checked')?.value;
+            const type = document.querySelector('#addFareForm input[name="vehicle_type"]:checked')?.value;
             const msgEl = document.getElementById('routeValidationMsg');
             const submitBtn = addForm.querySelector('button[type="submit"]');
 
@@ -427,6 +517,29 @@ if (addForm) {
                 submitBtn.disabled = false;
             }
         });
+    });
+}
+
+// Populate edit fare modal
+var editFareModal = document.getElementById('editFareModal');
+if (editFareModal) {
+    editFareModal.addEventListener('show.bs.modal', function(event) {
+        var btn = event.relatedTarget;
+        var id          = btn.getAttribute('data-id');
+        var origin      = btn.getAttribute('data-origin');
+        var destination = btn.getAttribute('data-destination');
+        var fare        = btn.getAttribute('data-fare');
+        var vehicleType = btn.getAttribute('data-vehicle-type');
+        var terminalId  = btn.getAttribute('data-terminal-id');
+        var form        = document.getElementById('editFareForm');
+        form.action     = '<?= base_url('admin/routes/update') ?>/' + id;
+        document.getElementById('edit_fare_origin').value      = origin;
+        document.getElementById('edit_fare_destination').value  = destination;
+        document.getElementById('edit_fare_amount').value       = fare;
+        document.getElementById('edit_fare_terminal').value     = terminalId;
+        // Set vehicle type radio
+        var radios = form.querySelectorAll('input[name="vehicle_type"]');
+        radios.forEach(function(r) { r.checked = (r.value === vehicleType); });
     });
 }
 
@@ -452,6 +565,19 @@ function filterFares() {
     const query = document.getElementById('fareSearch')?.value.toLowerCase() ?? '';
     document.querySelectorAll('.fare-item').forEach(item => {
         item.style.display = item.textContent.toLowerCase().includes(query) ? '' : 'none';
+    });
+}
+
+// Auto-generate type key from discount label
+var addDiscLabel = document.getElementById('add_disc_label');
+var addDiscType  = document.getElementById('add_disc_type');
+if (addDiscLabel && addDiscType) {
+    addDiscLabel.addEventListener('input', function() {
+        addDiscType.value = this.value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, '_');
     });
 }
 </script>

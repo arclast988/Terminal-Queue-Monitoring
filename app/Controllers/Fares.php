@@ -64,4 +64,29 @@ class Fares extends BaseController
         }
         return view('public/fares', $data);
     }
+
+    /**
+     * API endpoint: returns fare data as JSON for AJAX polling.
+     */
+    public function apiData()
+    {
+        $routeModel    = new RouteModel();
+        $discountModel = new FareDiscountModel();
+
+        $van_routes     = $routeModel->where('vehicle_type', 'van')->findAll();
+        $jeepney_routes = $routeModel->where('vehicle_type', 'jeepney')->findAll();
+        $minibus_routes = $routeModel->where('vehicle_type', 'minibus')->findAll();
+        $discounts      = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
+
+        return $this->response
+            ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->setHeader('Pragma', 'no-cache')
+            ->setHeader('Expires', '0')
+            ->setJSON([
+            'van_routes'     => $van_routes,
+            'jeepney_routes' => $jeepney_routes,
+            'minibus_routes' => $minibus_routes,
+            'discounts'      => $discounts,
+        ]);
+    }
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,16 +23,20 @@
             --text-muted: #66788a;
             --bg-body: #f5f7fa;
             --white: #ffffff;
-            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 15px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+            --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: 'Outfit', sans-serif; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
             background: var(--bg-body);
             color: var(--text-main);
             overflow-x: hidden;
@@ -78,8 +83,13 @@
         }
 
         @keyframes marquee {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-100%, 0); }
+            0% {
+                transform: translate(0, 0);
+            }
+
+            100% {
+                transform: translate(-100%, 0);
+            }
         }
 
         /* --- Header & Navigation --- */
@@ -130,9 +140,9 @@
             margin: 0;
         }
 
-        
-        
-        
+
+
+
 
         .nav-menu {
             display: flex;
@@ -175,12 +185,14 @@
             transition: var(--transition);
         }
 
-        .nav-menu a:hover, .nav-menu a.active {
+        .nav-menu a:hover,
+        .nav-menu a.active {
             color: var(--primary);
             background: rgba(21, 101, 192, 0.05);
         }
 
-        .nav-menu a:hover::after, .nav-menu a.active::after {
+        .nav-menu a:hover::after,
+        .nav-menu a.active::after {
             width: 100%;
         }
 
@@ -204,8 +216,13 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
-        .nav-menu a.login-btn.btn-success { background: #059669; }
-        .nav-menu a.login-btn.btn-success:hover { background: #047857 !important; }
+        .nav-menu a.login-btn.btn-success {
+            background: #059669;
+        }
+
+        .nav-menu a.login-btn.btn-success:hover {
+            background: #047857 !important;
+        }
 
         .lang-switcher {
             padding: 8px 12px;
@@ -269,9 +286,12 @@
         .hero::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.2) 0%, transparent 40%),
-                              radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 40%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
         }
 
         .hero h2 {
@@ -305,7 +325,7 @@
             border-radius: 50px;
             display: flex;
             box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .search-bar input {
@@ -375,10 +395,25 @@
             font-size: 24px;
         }
 
-        .si-blue { background: #e3f2fd; color: #1565c0; }
-        .si-gold { background: #fff8e1; color: #ffa000; }
-        .si-green { background: #e8f5e9; color: #2e7d32; }
-        .si-purple { background: #f3e5f5; color: #7b1fa2; }
+        .si-blue {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .si-gold {
+            background: #fff8e1;
+            color: #ffa000;
+        }
+
+        .si-green {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .si-purple {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
 
         .stat-info .value {
             font-size: 28px;
@@ -435,9 +470,20 @@
         }
 
         @keyframes pulse-dot {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+            }
         }
 
         /* --- Main Content Layout --- */
@@ -485,8 +531,16 @@
             box-shadow: 0 5px 15px rgba(255, 193, 7, 0.3);
         }
 
-        .queue-pos span:first-child { font-size: 10px; font-weight: 700; opacity: 0.8; }
-        .queue-pos span:last-child { font-size: 28px; font-weight: 800; }
+        .queue-pos span:first-child {
+            font-size: 10px;
+            font-weight: 700;
+            opacity: 0.8;
+        }
+
+        .queue-pos span:last-child {
+            font-size: 28px;
+            font-weight: 800;
+        }
 
         .queue-details {
             flex: 1;
@@ -534,26 +588,38 @@
             letter-spacing: 0.3px;
             transition: all 0.3s ease;
         }
+
         .countdown-timer.cd-plenty {
             background: #e8f5e9;
             color: #2e7d32;
         }
+
         .countdown-timer.cd-soon {
             background: #fff3e0;
             color: #e65100;
         }
+
         .countdown-timer.cd-imminent {
             background: #ffebee;
             color: #c62828;
             animation: cdPulse 1s ease-in-out infinite;
         }
+
         .countdown-timer.cd-passed {
             background: #e3f2fd;
             color: #1565c0;
         }
+
         @keyframes cdPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
         }
 
         .status-pill {
@@ -565,9 +631,20 @@
             letter-spacing: 0.5px;
         }
 
-        .sp-waiting { background: #fff3e0; color: #ef6c00; }
-        .sp-boarding { background: #e8f5e9; color: #2e7d32; }
-        .sp-ready { background: #e3f2fd; color: #1565c0; }
+        .sp-waiting {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .sp-boarding {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .sp-ready {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
 
         /* --- Right Sidebar (Fares) --- */
         .sidebar-section {
@@ -651,20 +728,33 @@
         }
 
         /* Custom Scrollbar for Fare List */
-        .fare-list::-webkit-scrollbar { width: 4px; }
-        .fare-list::-webkit-scrollbar-track { background: transparent; }
-        .fare-list::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
+        .fare-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .fare-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .fare-list::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
 
         /* --- Mobile Overlay --- */
         .nav-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
             z-index: 1002;
             display: none;
             opacity: 0;
             transition: var(--transition);
         }
+
         .nav-overlay.active {
             display: block;
             opacity: 1;
@@ -672,77 +762,237 @@
 
         /* --- Responsive Queries --- */
         @media (max-width: 1100px) {
-            .main-layout { grid-template-columns: 1fr; }
-            .sidebar-section { position: relative; top: 0; }
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-section {
+                position: relative;
+                top: 0;
+            }
         }
 
         @media (max-width: 992px) {
-            .header-info { display: none !important; }
+            .header-info {
+                display: none !important;
+            }
         }
 
         @media (max-width: 768px) {
-            .advisory-bar { padding: 8px 5%; font-size: 11px; }
-            header { padding: 10px 5%; min-height: 65px; border-bottom: 1px solid #eee; }
-            .logo { width: 40px; height: 40px; border-radius: 8px; }
-            .logo-text h1 { font-size: 15px; letter-spacing: -0.2px; }
-            .logo-text p { font-size: 8px; }
-            
+            .advisory-bar {
+                padding: 8px 5%;
+                font-size: 11px;
+            }
+
+            header {
+                padding: 10px 5%;
+                min-height: 65px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .logo {
+                width: 40px;
+                height: 40px;
+                border-radius: 8px;
+            }
+
+            .logo-text h1 {
+                font-size: 15px;
+                letter-spacing: -0.2px;
+            }
+
+            .logo-text p {
+                font-size: 8px;
+            }
+
             .nav-menu {
                 position: fixed;
-                top: 0; right: -100%;
-                width: 260px; height: 100vh;
+                top: 0;
+                right: -100%;
+                width: 260px;
+                height: 100vh;
                 background: white;
                 flex-direction: column;
                 justify-content: flex-start;
                 padding: 70px 25px 30px;
-                box-shadow: -5px 0 25px rgba(0,0,0,0.08);
+                box-shadow: -5px 0 25px rgba(0, 0, 0, 0.08);
                 transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 z-index: 1003;
                 gap: 12px;
             }
-            .nav-menu.open { right: 0; }
-            .nav-menu a { width: 100%; padding: 12px 18px; border-radius: 12px; background: #f8fafc; font-size: 15px; font-weight: 600; }
-            .nav-menu a.active { background: #e3f2fd; color: var(--primary); }
-            .nav-menu a.login-btn { background: #1e3a8a; color: white !important; text-align: center; justify-content: center; margin-top: 10px; margin-left: 0 !important; }
-            .nav-menu a.login-btn:hover, .nav-menu a.login-btn:active { background: #172554 !important; transform: scale(0.98); }
-            .nav-menu a.login-btn.btn-success { background: #059669; }
-            .nav-menu a.login-btn.btn-success:hover, .nav-menu a.login-btn.btn-success:active { background: #047857 !important; }
-            
-            .mobile-toggle { display: block; z-index: 1004; position: relative; }
-            
-            .hero { padding: 60px 5%; }
-            .hero h2 { font-size: 32px; }
-            .hero p { font-size: 15px; }
-            
-            .search-bar { padding: 5px; flex-direction: column; border-radius: 20px; }
-            .search-bar input { padding: 12px 15px; text-align: center; }
-            .search-bar button { padding: 12px; border-radius: 15px; width: 100%; }
-            
-            .container { width: 92%; margin-top: -30px; }
-            .stats-grid { grid-template-columns: 1fr; gap: 15px; }
-            .stat-card { padding: 20px; flex-direction: row; text-align: left; }
-            
+
+            .nav-menu.open {
+                right: 0;
+            }
+
+            .nav-menu a {
+                width: 100%;
+                padding: 12px 18px;
+                border-radius: 12px;
+                background: #f8fafc;
+                font-size: 15px;
+                font-weight: 600;
+            }
+
+            .nav-menu a.active {
+                background: #e3f2fd;
+                color: var(--primary);
+            }
+
+            .nav-menu a.login-btn {
+                background: #1e3a8a;
+                color: white !important;
+                text-align: center;
+                justify-content: center;
+                margin-top: 10px;
+                margin-left: 0 !important;
+            }
+
+            .nav-menu a.login-btn:hover,
+            .nav-menu a.login-btn:active {
+                background: #172554 !important;
+                transform: scale(0.98);
+            }
+
+            .nav-menu a.login-btn.btn-success {
+                background: #059669;
+            }
+
+            .nav-menu a.login-btn.btn-success:hover,
+            .nav-menu a.login-btn.btn-success:active {
+                background: #047857 !important;
+            }
+
+            .mobile-toggle {
+                display: block;
+                z-index: 1004;
+                position: relative;
+            }
+
+            .hero {
+                padding: 60px 5%;
+            }
+
+            .hero h2 {
+                font-size: 32px;
+            }
+
+            .hero p {
+                font-size: 15px;
+            }
+
+            .search-bar {
+                padding: 5px;
+                flex-direction: column;
+                border-radius: 20px;
+            }
+
+            .search-bar input {
+                padding: 12px 15px;
+                text-align: center;
+            }
+
+            .search-bar button {
+                padding: 12px;
+                border-radius: 15px;
+                width: 100%;
+            }
+
+            .container {
+                width: 92%;
+                margin-top: -30px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px;
+                flex-direction: row;
+                text-align: left;
+            }
+
             /* --- Targeted Horizontal Queue Card --- */
-            .queue-card { flex-direction: row; padding: 15px; gap: 12px; align-items: center; text-align: left; }
-            .queue-pos { width: 55px; height: 55px; border-radius: 14px; position: static; flex-shrink: 0; }
-            .queue-pos span:last-child { font-size: 22px; }
-            
-            .queue-details { grid-template-columns: 1fr; padding-top: 0; gap: 5px; }
-            .q-info h4 { font-size: 16px; font-weight: 700; margin: 0; }
-            .q-info p { font-size: 11px; }
-            .capacity-info .progress { width: 120px !important; }
-            
-            .q-meta { align-items: flex-end; flex-direction: column; border: none; padding: 0; width: auto; gap: 2px; }
-            .time-badge { font-size: 14px; margin-bottom: 0; }
-            .status-pill { padding: 4px 12px; font-size: 10px; }
-            
+            .queue-card {
+                flex-direction: row;
+                padding: 15px;
+                gap: 12px;
+                align-items: center;
+                text-align: left;
+            }
+
+            .queue-pos {
+                width: 55px;
+                height: 55px;
+                border-radius: 14px;
+                position: static;
+                flex-shrink: 0;
+            }
+
+            .queue-pos span:last-child {
+                font-size: 22px;
+            }
+
+            .queue-details {
+                grid-template-columns: 1fr;
+                padding-top: 0;
+                gap: 5px;
+            }
+
+            .q-info h4 {
+                font-size: 16px;
+                font-weight: 700;
+                margin: 0;
+            }
+
+            .q-info p {
+                font-size: 11px;
+            }
+
+            .capacity-info .progress {
+                width: 120px !important;
+            }
+
+            .q-meta {
+                align-items: flex-end;
+                flex-direction: column;
+                border: none;
+                padding: 0;
+                width: auto;
+                gap: 2px;
+            }
+
+            .time-badge {
+                font-size: 14px;
+                margin-bottom: 0;
+            }
+
+            .status-pill {
+                padding: 4px 12px;
+                font-size: 10px;
+            }
+
         }
 
         @media (max-width: 380px) {
-            .hero h2 { font-size: 20px; }
-            .stat-info .value { font-size: 16px; }
-            .queue-pos { width: 40px; height: 40px; }
-            .queue-pos span:last-child { font-size: 16px; }
+            .hero h2 {
+                font-size: 20px;
+            }
+
+            .stat-info .value {
+                font-size: 16px;
+            }
+
+            .queue-pos {
+                width: 40px;
+                height: 40px;
+            }
+
+            .queue-pos span:last-child {
+                font-size: 16px;
+            }
         }
 
         /* ------- Support Widget Styles ------- */
@@ -755,7 +1005,7 @@
 
         .support-widget {
             background: linear-gradient(135deg, #1a2a4a 0%, #243350 100%);
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 20px 16px;
             text-align: center;
@@ -772,34 +1022,75 @@
         .support-widget:hover {
             border-color: var(--accent);
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
 
         .support-widget .sw-icon {
-            width: 48px; height: 48px;
+            width: 48px;
+            height: 48px;
             border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 22px;
             margin-bottom: 4px;
         }
 
-        .support-widget .sw-icon.sw-blue  { background: rgba(37,99,235,.25); color: #60a5fa; }
-        .support-widget .sw-icon.sw-red   { background: rgba(220,38,38,.25); color: #f87171; }
-        .support-widget .sw-icon.sw-green { background: rgba(34,197,94,.25); color: #4ade80; }
-        .support-widget .sw-icon.sw-yellow { background: rgba(234,179,8,.25); color: #facc15; }
+        .support-widget .sw-icon.sw-blue {
+            background: rgba(37, 99, 235, .25);
+            color: #60a5fa;
+        }
 
-        .support-widget strong { font-size: 14px; font-weight: 700; display: block; }
-        .support-widget span   { font-size: 11px; opacity: .65; }
+        .support-widget .sw-icon.sw-red {
+            background: rgba(220, 38, 38, .25);
+            color: #f87171;
+        }
+
+        .support-widget .sw-icon.sw-green {
+            background: rgba(34, 197, 94, .25);
+            color: #4ade80;
+        }
+
+        .support-widget .sw-icon.sw-yellow {
+            background: rgba(234, 179, 8, .25);
+            color: #facc15;
+        }
+
+        .support-widget strong {
+            font-size: 14px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .support-widget span {
+            font-size: 11px;
+            opacity: .65;
+        }
 
 
         @media (max-width: 530px) {
-            .support-widget-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .support-widget { padding: 15px 10px; }
-            .support-widget .sw-icon { width: 40px; height: 40px; font-size: 18px; }
-            .support-widget strong { font-size: 13px; }
+            .support-widget-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .support-widget {
+                padding: 15px 10px;
+            }
+
+            .support-widget .sw-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .support-widget strong {
+                font-size: 13px;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- Mobile Overlay -->
@@ -830,7 +1121,8 @@
                 </div>
             </a>
 
-            <div class="header-info" style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-muted); border-left: 1px solid #eee; padding-left: 20px;">
+            <div class="header-info"
+                style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-muted); border-left: 1px solid #eee; padding-left: 20px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-map-marker-alt" style="color: #FF9800; font-size: 16px;"></i>
                     <span style="font-weight: 500;">Central Terminal, Palompon, Leyte</span>
@@ -843,26 +1135,35 @@
         </div>
 
         <div class="nav-menu" id="navMenu">
-            <a href="<?= base_url('guest') ?>" class="<?= current_url() == base_url('guest') ? 'active' : '' ?>"><i class="fas fa-home"></i> Home</a>
-            <a href="<?= base_url('schedules') ?>" class="<?= (strpos(uri_string(), 'schedules') !== false) ? 'active' : '' ?>"><i class="fas fa-calendar-alt"></i> Schedules</a>
-            <a href="<?= base_url('fares') ?>" class="<?= (strpos(uri_string(), 'fares') !== false) ? 'active' : '' ?>"><i class="fas fa-tags"></i> Fares</a>
-            
-            <div class="lang-switcher" style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted);">
+            <a href="<?= base_url('guest') ?>" class="<?= current_url() == base_url('guest') ? 'active' : '' ?>"><i
+                    class="fas fa-home"></i> Home</a>
+            <a href="<?= base_url('schedules') ?>"
+                class="<?= (strpos(uri_string(), 'schedules') !== false) ? 'active' : '' ?>"><i
+                    class="fas fa-calendar-alt"></i> Schedules</a>
+            <a href="<?= base_url('fares') ?>"
+                class="<?= (strpos(uri_string(), 'fares') !== false) ? 'active' : '' ?>"><i class="fas fa-tags"></i>
+                Fares</a>
+
+            <div class="lang-switcher"
+                style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted);">
                 <i class="fas fa-globe"></i>
                 <span>EN</span>
                 <i class="fas fa-chevron-down" style="font-size: 11px;"></i>
             </div>
 
             <?php if (session()->get('isLoggedIn')): ?>
-                <?php 
-                    $dashboardUrl = '/';
-                    if (session()->get('role') == 'admin') $dashboardUrl = '/admin/dashboard';
-                    elseif (session()->get('role') == 'staff') $dashboardUrl = '/staff/dashboard';
+                <?php
+                $dashboardUrl = '/';
+                if (session()->get('role') == 'admin')
+                    $dashboardUrl = '/admin/dashboard';
+                elseif (session()->get('role') == 'staff')
+                    $dashboardUrl = '/staff/dashboard';
                 ?>
                 <a href="<?= base_url($dashboardUrl) ?>" class="login-btn btn-success" style="margin-left: 10px;">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
-                <a href="<?= base_url('logout') ?>" style="color: #e53e3e; padding: 8px 15px; border-radius: 6px; transition: var(--transition); display: flex; align-items: center;">
+                <a href="<?= base_url('logout') ?>"
+                    style="color: #e53e3e; padding: 8px 15px; border-radius: 6px; transition: var(--transition); display: flex; align-items: center;">
                     <i class="fas fa-sign-out-alt"></i>
                 </a>
             <?php else: ?>
@@ -886,7 +1187,7 @@
     <section class="hero">
         <h2>Live Terminal Status</h2>
         <p>Monitor arrivals, departures, and current queue positions seamlessly from your device.</p>
-        
+
         <div class="search-container">
             <form action="<?= base_url('search') ?>" method="get" class="search-bar">
                 <input type="text" name="q" placeholder="Search by Plate Number, Destination, or Owner..." required>
@@ -944,20 +1245,24 @@
                         <?php foreach ($active_queue as $item): ?>
                             <div class="queue-card">
                                 <?php
-                                    $imgMap = [
-                                        'van' => 'van.png',
-                                        'jeepney' => 'jeep.png',
-                                        'minibus' => 'minibus.png'
-                                    ];
-                                    $vType = strtolower($item['vehicle_type'] ?? '');
-                                    $imgFile = $imgMap[$vType] ?? 'van.png';
+                                $imgMap = [
+                                    'van' => 'van.png',
+                                    'jeepney' => 'jeep.png',
+                                    'minibus' => 'minibus.png'
+                                ];
+                                $vType = strtolower($item['vehicle_type'] ?? '');
+                                $imgFile = $imgMap[$vType] ?? 'van.png';
                                 ?>
-                                <div style="position: relative; width: 75px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                                <div
+                                    style="position: relative; width: 75px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>"
+                                        style="width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                     <?php if ($vType !== 'jeepney'): ?>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size: 13px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1;">
-                                        #<?= $item['position'] ?>
-                                    </span>
+                                        <span
+                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2"
+                                            style="font-size: 13px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1;">
+                                            #<?= $item['position'] ?>
+                                        </span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="queue-details">
@@ -965,7 +1270,8 @@
                                         <h4><?= esc($item['plate_number']) ?></h4>
                                         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                                             <p><i class="fas fa-user"></i> <?= esc($item['driver_name'] ?? 'N/A') ?></p>
-                                            <p><i class="fas fa-map-marker-alt"></i> Route: <strong><?= esc($item['origin']) ?> - <?= esc($item['destination']) ?></strong></p>
+                                            <p><i class="fas fa-map-marker-alt"></i> Route: <strong><?= esc($item['origin']) ?>
+                                                    - <?= esc($item['destination']) ?></strong></p>
                                         </div>
                                         <div class="capacity-info" style="margin-top: 5px;">
                                             <div style="display: flex; align-items: center; gap: 10px;">
@@ -973,21 +1279,28 @@
                                                 <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
                                                     <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?> Onboard
                                                 </span>
-                                                <?php if ((int)$item['current_passengers'] >= (int)$item['capacity']): ?>
-                                                    <span class="badge bg-danger" style="font-size: 10px; padding: 2px 8px; border-radius: 10px;">FULL</span>
+                                                <?php if ((int) $item['current_passengers'] >= (int) $item['capacity']): ?>
+                                                    <span class="badge bg-danger"
+                                                        style="font-size: 10px; padding: 2px 8px; border-radius: 10px;">FULL</span>
                                                 <?php endif; ?>
                                             </div>
-                                            <div class="progress" style="height: 6px; width: 150px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden;">
+                                            <div class="progress"
+                                                style="height: 6px; width: 150px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden;">
                                                 <?php $percent = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100); ?>
-                                                <div class="progress-bar" style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#e53e3e' : 'var(--primary)' ?>; transition: width 0.3s ease;"></div>
+                                                <div class="progress-bar"
+                                                    style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#e53e3e' : 'var(--primary)' ?>; transition: width 0.3s ease;">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="q-meta" style="text-align: center;">
-                                        <small class="text-muted" style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Est. Departure</small>
-                                        <div style="background: #4a5c7a; color: white; padding: 12px 16px; border-radius: 12px; font-size: 18px; font-weight: 700; margin-bottom: 8px;">
-                                            <?php 
-                                            if ($item['status'] == 'departed' && $item['departure_time']): 
+                                        <small class="text-muted"
+                                            style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Est.
+                                            Departure</small>
+                                        <div
+                                            style="background: #4a5c7a; color: white; padding: 12px 16px; border-radius: 12px; font-size: 18px; font-weight: 700; margin-bottom: 8px;">
+                                            <?php
+                                            if ($item['status'] == 'departed' && $item['departure_time']):
                                                 echo date('h:i A', strtotime($item['departure_time']));
                                             elseif ($item['estimated_departure']):
                                                 echo date('h:i A', strtotime($item['estimated_departure']));
@@ -996,8 +1309,9 @@
                                             endif;
                                             ?>
                                         </div>
-                                        <?php if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])): ?>
-                                            <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
+                                        <?php if (in_array($item['status'], ['waiting', 'boarding']) && !empty($item['estimated_departure'])): ?>
+                                            <div class="countdown-timer"
+                                                data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
                                         <?php endif; ?>
                                         <div style="font-size: 13px; color: #1565c0; font-weight: 600; margin-top: 4px;">
                                             <?php if ($item['status'] == 'departed'): ?>
@@ -1024,7 +1338,7 @@
             <aside class="fares-section" id="fares-section">
                 <div class="sidebar-section">
                     <h3 class="sidebar-title"><i class="fas fa-paper-plane"></i> Recent Departures</h3>
-                    
+
                     <div class="fare-search">
                         <input type="text" id="deptSearch" placeholder="Filter departures...">
                     </div>
@@ -1032,7 +1346,8 @@
                     <div class="fare-list" id="deptList">
                         <?php if (!empty($recent_departures)): ?>
                             <?php foreach ($recent_departures as $dept): ?>
-                                <a href="<?= base_url('schedules?destination=' . urlencode($dept['destination'])) ?>" class="fare-item" style="text-decoration: none;">
+                                <a href="<?= base_url('schedules?destination=' . urlencode($dept['destination'])) ?>"
+                                    class="fare-item" style="text-decoration: none;">
                                     <div>
                                         <div class="f-dest"><?= esc($dept['origin']) ?> - <?= esc($dept['destination']) ?></div>
                                         <div class="f-type"><?= esc($dept['plate_number']) ?></div>
@@ -1047,18 +1362,20 @@
                         <?php endif; ?>
                     </div>
                     <div class="text-center mt-3">
-                        <a href="<?= base_url('history') ?>" class="btn btn-sm btn-outline-primary" style="font-size: 12px; font-weight: 600; text-decoration: none;">View All History</a>
+                        <a href="<?= base_url('history') ?>" class="btn btn-sm btn-outline-primary"
+                            style="font-size: 12px; font-weight: 600; text-decoration: none;">View All History</a>
                     </div>
                 </div>
 
                 <div class="sidebar-section mt-4" id="route-fares">
                     <h3 class="sidebar-title"><i class="fas fa-tags"></i> Route Fares</h3>
-                    <div class="fare-list">
+                    <div class="fare-list" id="routeFaresList">
                         <?php if (!empty($routes)): ?>
                             <?php foreach ($routes as $route): ?>
                                 <div class="fare-item">
                                     <div>
-                                        <div class="f-dest"><?= esc($route['origin']) ?> - <?= esc($route['destination']) ?></div>
+                                        <div class="f-dest"><?= esc($route['origin']) ?> - <?= esc($route['destination']) ?>
+                                        </div>
                                         <div class="f-type"><?= esc($route['vehicle_type']) ?></div>
                                     </div>
                                     <div class="f-price">₱<?= number_format($route['fare'], 0) ?></div>
@@ -1093,11 +1410,11 @@
             var clockEl = document.getElementById('headerClock');
             if (clockEl) {
                 var now = new Date();
-                clockEl.textContent = now.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit', 
-                    hour12: true 
+                clockEl.textContent = now.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
                 });
             }
         }
@@ -1105,7 +1422,7 @@
         updateClock();
 
         // Smooth Scrolling for Anchor Links
-        document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
                 var targetId = this.getAttribute('href').substring(1);
@@ -1122,8 +1439,8 @@
 
         // Add micro-interaction to queue cards on scroll
         var observerOptions = { threshold: 0.1 };
-        var observer = new IntersectionObserver(function(entries) {
-            entries.forEach(function(entry) {
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = "1";
                     entry.target.style.transform = "translateY(0)";
@@ -1132,7 +1449,7 @@
         }, observerOptions);
 
         function observeItems() {
-            document.querySelectorAll('.queue-card, .stat-card').forEach(function(el) {
+            document.querySelectorAll('.queue-card, .stat-card').forEach(function (el) {
                 if (!el.dataset.observed) {
                     el.dataset.observed = "true";
                     el.style.opacity = "0.7";
@@ -1145,7 +1462,8 @@
 
         // Fingerprint cache to avoid flickering DOM rewrites when data hasn't changed
         var _lastQueueFingerprint = '';
-        var _lastDeptFingerprint  = '';
+        var _lastDeptFingerprint = '';
+        var _lastRoutesFingerprint = '';
 
         function makeFingerprint(arr) {
             return JSON.stringify(arr);
@@ -1156,120 +1474,146 @@
             if (_fetchPending) return;
             _fetchPending = true;
 
-            fetch('<?= base_url('status') ?>')
-            .then(function(response) {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(function(data) {
-                // Update stats (lightweight text-only, no flicker)
-                var countQueued = document.getElementById('count-queued');
-                var countDepartures = document.getElementById('count-departures');
-                if (countQueued) countQueued.innerText = data.active_queue.length;
-                if (countDepartures) countDepartures.innerText = data.total_departures_today;
+            fetch('<?= base_url('status') ?>?_=' + Date.now())
+                .then(function (response) {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(function (data) {
+                    // Update stats (lightweight text-only, no flicker)
+                    var countQueued = document.getElementById('count-queued');
+                    var countDepartures = document.getElementById('count-departures');
+                    if (countQueued) countQueued.innerText = data.active_queue.length;
+                    if (countDepartures) countDepartures.innerText = data.total_departures_today;
 
-                // Only rewrite Queue DOM if data actually changed
-                var queueFP = makeFingerprint(data.active_queue);
-                if (queueFP !== _lastQueueFingerprint) {
-                    _lastQueueFingerprint = queueFP;
-                    var queueList = document.getElementById('queueList');
-                    if (data.active_queue.length > 0) {
-                        var queueHtml = '';
-                        data.active_queue.forEach(function(item) {
-                            var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
-                            var progressColor = percent >= 100 ? '#e53e3e' : 'var(--primary)';
-                            var fullBadge = Number(item.current_passengers) >= Number(item.capacity)
-                                ? '<span class="badge bg-danger" style="font-size:10px;padding:2px 8px;border-radius:10px;">FULL</span>' : '';
-                            var statusText = 'Waiting';
-                            if (item.status === 'departed') statusText = 'Departed';
-                            else if (item.status === 'boarding') statusText = item.current_passengers + '/' + item.capacity + ' passengers';
-                            var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
-                            var vType = (item.vehicle_type || '').toLowerCase();
-                            var imgFile = imgMap[vType] || 'van.png';
-                            var posBadge = (vType !== 'jeepney')
-                                ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size:13px;font-weight:800;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:1;">#' + item.position + '</span>' : '';
-                            queueHtml += '<div class="queue-card">'
-                                + '<div style="position:relative;width:75px;flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
-                                +   '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
-                                +   posBadge
-                                + '</div>'
-                                + '<div class="queue-details">'
-                                +   '<div class="q-info">'
-                                +     '<h4>' + item.plate_number + '</h4>'
-                                +     '<div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">'
-                                +       '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>'
-                                +       '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>'
-                                +     '</div>'
-                                +     '<div class="capacity-info" style="margin-top:5px;">'
-                                +       '<div style="display:flex;align-items:center;gap:10px;">'
-                                +         '<i class="fas fa-users" style="color:var(--primary);"></i>'
-                                +         '<span style="font-size:13px;font-weight:600;color:var(--text-main);">' + item.current_passengers + ' / ' + item.capacity + ' Onboard</span>'
-                                +         fullBadge
-                                +       '</div>'
-                                +       '<div class="progress" style="height:6px;width:150px;background:#eee;border-radius:10px;margin-top:5px;overflow:hidden;">'
-                                +         '<div class="progress-bar" style="width:' + percent + '%;height:100%;background:' + progressColor + ';transition:width 0.3s ease;"></div>'
-                                +       '</div>'
-                                +     '</div>'
-                                +   '</div>'
-                                +   '<div class="q-meta" style="text-align:center;">'
-                                +     '<small class="text-muted" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Est. Departure</small>'
-                                +     '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
-                                +       (item.estimated_departure_formatted || '--:-- --')
-                                +     '</div>'
-                                +     (item.status === 'boarding' && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
-                                +     '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'
-                                +   '</div>'
-                                + '</div>'
-                                + '</div>';
-                        });
-                        queueList.innerHTML = queueHtml;
-                    } else {
-                        queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
+                    // Only rewrite Queue DOM if data actually changed
+                    var queueFP = makeFingerprint(data.active_queue);
+                    if (queueFP !== _lastQueueFingerprint) {
+                        _lastQueueFingerprint = queueFP;
+                        var queueList = document.getElementById('queueList');
+                        if (data.active_queue.length > 0) {
+                            var queueHtml = '';
+                            data.active_queue.forEach(function (item) {
+                                var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
+                                var progressColor = percent >= 100 ? '#e53e3e' : 'var(--primary)';
+                                var fullBadge = Number(item.current_passengers) >= Number(item.capacity)
+                                    ? '<span class="badge bg-danger" style="font-size:10px;padding:2px 8px;border-radius:10px;">FULL</span>' : '';
+                                var statusText = 'Waiting';
+                                if (item.status === 'departed') statusText = 'Departed';
+                                else if (item.status === 'boarding') statusText = item.current_passengers + '/' + item.capacity + ' passengers';
+                                var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
+                                var vType = (item.vehicle_type || '').toLowerCase();
+                                var imgFile = imgMap[vType] || 'van.png';
+                                var posBadge = (vType !== 'jeepney')
+                                    ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size:13px;font-weight:800;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:1;">#' + item.position + '</span>' : '';
+                                queueHtml += '<div class="queue-card">'
+                                    + '<div style="position:relative;width:75px;flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
+                                    + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
+                                    + posBadge
+                                    + '</div>'
+                                    + '<div class="queue-details">'
+                                    + '<div class="q-info">'
+                                    + '<h4>' + item.plate_number + '</h4>'
+                                    + '<div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">'
+                                    + '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>'
+                                    + '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>'
+                                    + '</div>'
+                                    + '<div class="capacity-info" style="margin-top:5px;">'
+                                    + '<div style="display:flex;align-items:center;gap:10px;">'
+                                    + '<i class="fas fa-users" style="color:var(--primary);"></i>'
+                                    + '<span style="font-size:13px;font-weight:600;color:var(--text-main);">' + item.current_passengers + ' / ' + item.capacity + ' Onboard</span>'
+                                    + fullBadge
+                                    + '</div>'
+                                    + '<div class="progress" style="height:6px;width:150px;background:#eee;border-radius:10px;margin-top:5px;overflow:hidden;">'
+                                    + '<div class="progress-bar" style="width:' + percent + '%;height:100%;background:' + progressColor + ';transition:width 0.3s ease;"></div>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '<div class="q-meta" style="text-align:center;">'
+                                    + '<small class="text-muted" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Est. Departure</small>'
+                                    + '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
+                                    + (item.estimated_departure_formatted || '--:-- --')
+                                    + '</div>'
+                                    + ((item.status === 'waiting' || item.status === 'boarding') && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
+                                    + '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '</div>';
+                            });
+                            queueList.innerHTML = queueHtml;
+                        } else {
+                            queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
+                        }
+                        observeItems();
                     }
-                    observeItems();
-                }
 
-                // Only rewrite Departures DOM if data changed
-                var deptFP = makeFingerprint(data.recent_departures);
-                if (deptFP !== _lastDeptFingerprint) {
-                    _lastDeptFingerprint = deptFP;
-                    var deptList = document.getElementById('deptList');
-                    if (data.recent_departures.length > 0) {
-                        var deptHtml = '';
-                        data.recent_departures.forEach(function(dept) {
-                            var url = '<?= base_url("schedules?destination=") ?>' + encodeURIComponent(dept.destination);
-                            deptHtml += '<a href="' + url + '" class="fare-item" style="text-decoration:none;">'
-                                + '<div>'
-                                +   '<div class="f-dest">' + dept.origin + ' - ' + dept.destination + '</div>'
-                                +   '<div class="f-type">' + dept.plate_number + '</div>'
-                                + '</div>'
-                                + '<div class="f-price" style="font-size:14px;">' + dept.departure_time_formatted + '</div>'
-                                + '</a>';
-                        });
-                        deptList.innerHTML = deptHtml;
-                    } else {
-                        deptList.innerHTML = '<p class="text-muted text-center py-3">No recent departures.</p>';
+                    // Only rewrite Departures DOM if data changed
+                    var deptFP = makeFingerprint(data.recent_departures);
+                    if (deptFP !== _lastDeptFingerprint) {
+                        _lastDeptFingerprint = deptFP;
+                        var deptList = document.getElementById('deptList');
+                        if (data.recent_departures.length > 0) {
+                            var deptHtml = '';
+                            data.recent_departures.forEach(function (dept) {
+                                var url = '<?= base_url("schedules?destination=") ?>' + encodeURIComponent(dept.destination);
+                                deptHtml += '<a href="' + url + '" class="fare-item" style="text-decoration:none;">'
+                                    + '<div>'
+                                    + '<div class="f-dest">' + dept.origin + ' - ' + dept.destination + '</div>'
+                                    + '<div class="f-type">' + dept.plate_number + '</div>'
+                                    + '</div>'
+                                    + '<div class="f-price" style="font-size:14px;">' + dept.departure_time_formatted + '</div>'
+                                    + '</a>';
+                            });
+                            deptList.innerHTML = deptHtml;
+                        } else {
+                            deptList.innerHTML = '<p class="text-muted text-center py-3">No recent departures.</p>';
+                        }
                     }
-                }
-            })
-            .catch(function(error) {
-                console.error('Error fetching status:', error);
-            })
-            .finally(function() {
-                _fetchPending = false;
-            });
+
+                    // Update Route Fares sidebar if data changed
+                    if (data.routes) {
+                        var routesFP = makeFingerprint(data.routes);
+                        if (routesFP !== _lastRoutesFingerprint) {
+                            _lastRoutesFingerprint = routesFP;
+                            var faresList = document.getElementById('routeFaresList');
+                            if (faresList) {
+                                if (data.routes.length > 0) {
+                                    var faresHtml = '';
+                                    data.routes.forEach(function (route) {
+                                        faresHtml += '<div class="fare-item">'
+                                            + '<div>'
+                                            + '<div class="f-dest">' + route.origin + ' - ' + route.destination + '</div>'
+                                            + '<div class="f-type">' + route.vehicle_type + '</div>'
+                                            + '</div>'
+                                            + '<div class="f-price">₱' + Number(route.fare).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div>'
+                                            + '</div>';
+                                    });
+                                    faresList.innerHTML = faresHtml;
+                                } else {
+                                    faresList.innerHTML = '<p class="text-muted text-center py-3">No active routes.</p>';
+                                }
+                            }
+                        }
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error fetching status:', error);
+                })
+                .finally(function () {
+                    _fetchPending = false;
+                });
         }
 
         function toggleMenu() {
             var menu = document.getElementById('navMenu');
             var overlay = document.getElementById('navOverlay');
             var toggleIcon = document.querySelector('.mobile-toggle i');
-            
+
             if (!menu || !overlay || !toggleIcon) return;
 
             menu.classList.toggle('open');
             overlay.classList.toggle('active');
-            
+
             if (menu.classList.contains('open')) {
                 toggleIcon.classList.replace('fa-bars', 'fa-times');
                 document.body.style.overflow = 'hidden';
@@ -1282,10 +1626,10 @@
         // Local filtering for departure list
         var deptSearch = document.getElementById('deptSearch');
         if (deptSearch) {
-            deptSearch.addEventListener('input', function() {
+            deptSearch.addEventListener('input', function () {
                 var query = this.value.toLowerCase();
                 var depts = document.querySelectorAll('#deptList .fare-item');
-                depts.forEach(function(dept) {
+                depts.forEach(function (dept) {
                     var text = dept.innerText.toLowerCase();
                     dept.style.display = text.includes(query) ? 'flex' : 'none';
                 });
@@ -1295,9 +1639,9 @@
         // Initialize real-time sync (polling + WebSocket)
         // Polls every 5s as fallback, WebSocket provides instant updates
         QueueSync.init({
-            pollInterval:  3000,
+            pollInterval: 3000,
             customRefresh: fetchStatus,
-            customWSHandler: function() { fetchStatus(); }
+            customWSHandler: function () { fetchStatus(); }
         });
 
         fetchStatus(); // Initial fetch
@@ -1307,7 +1651,7 @@
         function updateCountdowns() {
             var timers = document.querySelectorAll('.countdown-timer[data-departure]');
             var now = new Date();
-            timers.forEach(function(el) {
+            timers.forEach(function (el) {
                 var dep = new Date(el.dataset.departure);
                 var diff = dep - now;
                 if (isNaN(dep.getTime())) { el.textContent = ''; return; }
@@ -1354,8 +1698,5 @@
         updateCountdowns();
     </script>
 </body>
+
 </html>
-
-
-
-

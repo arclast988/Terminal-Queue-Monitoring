@@ -233,7 +233,7 @@
     // Initialize real-time sync (polling + WebSocket)
     QueueSync.init({
         onlyWS:        true,
-        pollInterval:  20000,
+        pollInterval:  3000,
         refreshUrl:    window.location.href,
         tableSelector: 'table tbody',
         extraRefresh:  function(newDoc) {

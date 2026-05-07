@@ -951,7 +951,6 @@
         <script src="<?= base_url('js/ws-client.js') ?>"></script>
         <script src="<?= base_url('js/queue-sync.js') ?>"></script>
         <script>
-        var baseUrl = '<?= base_url() ?>';
         var currentType = '<?= esc($vehicle_type) ?>';
         var currentDest = '<?= esc($destination) ?>';
         var _fetchPending = false;
@@ -960,11 +959,13 @@
             if (_fetchPending) return;
             _fetchPending = true;
 
-            var url = new URL(baseUrl + '/schedules/status');
-            if (currentType) url.searchParams.append('type', currentType);
-            if (currentDest) url.searchParams.append('destination', currentDest);
+            var params = [];
+            if (currentType) params.push('type=' + encodeURIComponent(currentType));
+            if (currentDest) params.push('destination=' + encodeURIComponent(currentDest));
+            params.push('_=' + Date.now());
+            var fetchUrl = '<?= base_url('schedules/status') ?>?' + params.join('&');
 
-            fetch(url)
+            fetch(fetchUrl)
             .then(function(response) {
                 if (!response.ok) throw new Error('Network error');
                 return response.json();
@@ -984,12 +985,25 @@
 
         function renderSchedules(schedules) {
             var tbody = document.getElementById('scheduleTableBody');
-            if (!tbody) return;
+            var card = document.querySelector('.schedule-card');
+            if (!card) return;
+
             if (schedules.length === 0) {
-                var card = tbody.closest('.schedule-card');
-                if (card) card.innerHTML = '<div class="empty-state"><i class="far fa-calendar-times"></i><h4>No schedules available</h4></div>';
+                // Show empty state, remove table if it exists
+                card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">0 Found</span></div>'
+                    + '<div class="empty-state"><i class="far fa-calendar-times"></i><h4>No schedules available</h4></div>';
                 return;
             }
+
+            // If tbody doesn't exist (page loaded with empty state), create the table
+            if (!tbody) {
+                card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">' + schedules.length + ' Found</span></div>'
+                    + '<table class="schedule-table"><thead><tr>'
+                    + '<th>Queue #</th><th>Plate Number</th><th>Type</th><th>Route</th><th>Est. Departure</th><th>Status</th>'
+                    + '</tr></thead><tbody id="scheduleTableBody"></tbody></table>';
+                tbody = document.getElementById('scheduleTableBody');
+            }
+
             var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
             var statusClassMap = { 'scheduled': 'status-scheduled', 'waiting': 'status-waiting', 'boarding': 'status-boarding', 'departed': 'status-departed', 'canceled': 'status-canceled' };
             var html = '';
@@ -1008,7 +1022,7 @@
                 html += '<tr>' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + s.plate_number + '</span></td>' +
-                    '<td data-label="Type"><img src="' + baseUrl + '/images/' + imgFile + '" style="height:36px;width:auto"><small class="d-block" style="font-size:10px;color:#666">' + typeLabel + '</small></td>' +
+                    '<td data-label="Type"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"><small class="d-block" style="font-size:10px;color:#666">' + typeLabel + '</small></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +
@@ -1032,7 +1046,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             QueueSync.init({
                 onlyWS:        true,
-                pollInterval:  20000,
+                pollInterval:  3000,
                 customRefresh: fetchSchedulesStatus,
                 customWSHandler: function() { fetchSchedulesStatus(); }
             });

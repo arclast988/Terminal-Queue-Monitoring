@@ -16,7 +16,6 @@ class Dashboard extends BaseController
         $routeModel = new RouteModel();
         $userModel = new UserModel();
         $logModel = new LogModel();
-        $queueModel = new \App\Models\QueueModel();
 
         $data = [
             'title' => 'Admin Dashboard',
@@ -26,12 +25,6 @@ class Dashboard extends BaseController
                 'users'    => $userModel->countAll(),
                 'logs'     => $logModel->countAll()
             ],
-            'queue' => $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, routes.origin, routes.destination, vehicles.capacity')
-                                  ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                                  ->join('routes', 'routes.id = queue.route_id')
-                                  ->whereIn('queue.status', ['waiting', 'boarding'])
-                                  ->orderBy('queue.position', 'ASC')
-                                  ->findAll(),
             'recent_logs' => $logModel->select('logs.*, users.username')
                                      ->join('users', 'users.id = logs.user_id', 'left')
                                      ->orderBy('timestamp', 'DESC')
@@ -44,3 +37,4 @@ class Dashboard extends BaseController
         return view('admin/dashboard', $data);
     }
 }
+

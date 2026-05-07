@@ -82,11 +82,18 @@ class Home extends BaseController
 
         $syncToken = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
 
-        return $this->response->setJSON([
+        $routeModel = new \App\Models\RouteModel();
+
+        return $this->response
+            ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->setHeader('Pragma', 'no-cache')
+            ->setHeader('Expires', '0')
+            ->setJSON([
             'active_queue' => $active_queue,
             'recent_departures' => $recent_departures,
             'total_departures_today' => $total_departures_today,
-            'sync_token' => $syncToken
+            'sync_token' => $syncToken,
+            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll()
         ]);
     }
 }
