@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: jeepneynvans_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: intl, mbstring, mysqli, sqlite3
+        coverage: xdebug
+
+    - name: Get Composer Cache Directory
+      id: composer-cache
+      run: |
+        echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache Composer Dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    - name: Copy Environment File
+      run: cp env .env
+
+    - name: Install Dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Check PHP Syntax (Lint)
+      run: find . -name "*.php" ! -path "./vendor/*" -print0 | xargs -0 -n 1 -P 8 php -l
+
+    - name: Run Database Migrations
+      run: php spark migrate
+      env:
+        CI_ENVIRONMENT: testing
+        database.default.hostname: 127.0.0.1
+        database.default.database: jeepneynvans_test
+        database.default.username: root
+        database.default.password: root
+        database.default.DBDriver: MySQLi
+
+    - name: Run Tests
+      run: vendor/bin/phpunit
+      env:
+        CI_ENVIRONMENT: testing
+        database.tests.hostname: 127.0.0.1
+        database.tests.database: jeepneynvans_test
+        database.tests.username: root
+        database.tests.password: root
+        database.tests.DBDriver: MySQLi

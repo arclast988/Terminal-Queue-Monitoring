@@ -1,0 +1,29 @@
+# --- PHP/CodeIgniter Runtime ---
+writable/session/*
+!writable/session/index.html
+!writable/session/.gitkeep
+writable/cache/*
+!writable/cache/index.html
+writable/logs/*.log
+writable/debugbar/*.json
+writable/sync_token.txt
+writable/ws_server.pid
+
+# --- USER UPLOADS ---
+writable/uploads/*
+!writable/uploads/index.html
+!writable/uploads/.gitkeep
+
+# --- DEPENDENCIES ---
+node_modules/
+
+# --- OS/System generated files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# --- SQLite databases ---
+*.sqlite
+*.db

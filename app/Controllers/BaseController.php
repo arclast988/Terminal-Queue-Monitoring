@@ -1,0 +1,107 @@
+<?php
+
+namespace App\Controllers;
+
+use CodeIgniter\Controller;
+use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\HTTP\ResponseInterface;
+use Psr\Log\LoggerInterface;
+use App\Models\LogModel;
+
+/**
+ * BaseController provides a convenient place for loading components
+ * and performing functions that are needed by all your controllers.
+ *
+ * Extend this class in any new controllers:
+ * ```
+ *     class Home extends BaseController
+ * ```
+ *
+ * For security, be sure to declare any new methods as protected or private.
+ */
+abstract class BaseController extends Controller
+{
+    /**
+     * Be sure to declare properties for any property fetch you initialized.
+     * The creation of dynamic property is deprecated in PHP 8.2.
+     */
+
+    // protected $session;
+
+    /**
+     * @return void
+     */
+    public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)
+    {
+        // Load here all helpers you want to be available in your controllers that extend BaseController.
+        // Caution: Do not put the this below the parent::initController() call below.
+        // $this->helpers = ['form', 'url'];
+
+        // Caution: Do not edit this line.
+        parent::initController($request, $response, $logger);
+
+        // Preload any models, libraries, etc, here.
+        // $this->session = service('session');
+    }
+
+    /**
+     * Log an activity for the System Activity Log (admin). Safe if logs table missing.
+     */
+    protected function logActivity(string $action, string $details): void
+    {
+        $userId = session()->get('id');
+        if (!$userId && $action !== 'Login') {
+            return;
+        }
+        try {
+            $logModel = new LogModel();
+            $logModel->insert([
+                'user_id' => $userId,
+                'action' => $action,
+                'details' => $details
+            ]);
+        } catch (\Throwable $e) {
+            // Ignore if logs table missing or any DB error
+        }
+    }
+
+    /**
+     * Broadcast an update to the PHP WebSocket server.
+     */
+    protected function broadcastUpdate(string $type, array $data = []): void
+    {
+        $now = microtime(true);
+        // Write sync token — the polling mechanism on all clients checks this
+        @file_put_contents(WRITEPATH . 'sync_token.txt', $now);
+
+        // Only attempt WebSocket broadcast if the server is confirmed running
+        // (indicated by the presence of a PID file written by the WS server on startup)
+        $pidFile = WRITEPATH . 'ws_server.pid';
+        if (!file_exists($pidFile)) {
+            return; // No WS server running — polling handles sync
+        }
+
+        $msgId = bin2hex(random_bytes(4));
+        $payload = json_encode([
+            'broadcast_id' => $msgId,
+            'sync_token'   => $now,
+            'type'         => $type,
+            'data'         => $data,
+            'timestamp'    => date('Y-m-d H:i:s'),
+        ]);
+
+        try {
+            $fp = @stream_socket_client(
+                'tcp://127.0.0.1:8082', $errno, $errstr, 0,
+                STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT
+            );
+            if ($fp) {
+                stream_set_timeout($fp, 0, 200000);
+                @fwrite($fp, $payload);
+                @fclose($fp);
+            }
+        } catch (\Throwable $e) {
+            // Silent fail — polling fallback is always active
+        }
+    }
+}
