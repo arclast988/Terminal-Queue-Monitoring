@@ -270,6 +270,7 @@ body.admin-theme .page-hero .subtitle {
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
     overflow: hidden;
+    min-width: 0;
 }
 
 .card.text-white {
@@ -277,6 +278,7 @@ body.admin-theme .page-hero .subtitle {
     border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
     overflow: hidden;
+    min-width: 0;
 }
 
 .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger) {
@@ -323,6 +325,12 @@ body.admin-theme .page-hero .subtitle {
     border-collapse: collapse;
     border-spacing: 0;
     border: 1px solid #e2e8f0;
+    min-width: max-content;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table thead th {
@@ -392,6 +400,7 @@ body.admin-theme .page-hero .subtitle {
     font-size: 14px;
     pointer-events: auto !important;
     cursor: pointer !important;
+    white-space: normal !important;
 }
 
 .btn-primary {
@@ -604,6 +613,193 @@ body.modal-open .modal {
     pointer-events: auto !important;
     max-width: 500px !important;
     width: auto !important;
+}
+
+/* =================================================================
+   RESPONSIVE ADMIN LAYOUT
+   ================================================================= */
+
+body.admin-theme .main-content,
+body.staff-theme .main-content {
+    min-width: 0;
+}
+
+body.admin-theme .main-content > .d-flex.border-bottom,
+body.staff-theme .main-content > .d-flex.border-bottom {
+    flex-wrap: wrap !important;
+    gap: 0.75rem 1rem;
+}
+
+body.admin-theme .main-content > .d-flex.border-bottom .h2,
+body.staff-theme .main-content > .d-flex.border-bottom .h2,
+body.admin-theme .main-content > .d-flex.border-bottom h1,
+body.staff-theme .main-content > .d-flex.border-bottom h1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.admin-theme .btn-toolbar,
+body.staff-theme .btn-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+body.admin-theme .card-header.d-flex,
+body.staff-theme .card-header.d-flex,
+body.admin-theme .card-footer.d-flex,
+body.staff-theme .card-footer.d-flex,
+body.admin-theme .card-body .d-flex,
+body.staff-theme .card-body .d-flex {
+    min-width: 0;
+}
+
+body.admin-theme .card-header.d-flex,
+body.staff-theme .card-header.d-flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+body.admin-theme .input-group,
+body.staff-theme .input-group {
+    min-width: 0;
+}
+
+body.admin-theme .input-group .form-control,
+body.staff-theme .input-group .form-control,
+body.admin-theme .form-control,
+body.staff-theme .form-control,
+body.admin-theme .form-select,
+body.staff-theme .form-select {
+    min-width: 0;
+}
+
+body.admin-theme .badge,
+body.staff-theme .badge {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    line-height: 1.2;
+}
+
+body.admin-theme .table th,
+body.admin-theme .table td,
+body.staff-theme .table th,
+body.staff-theme .table td {
+    white-space: nowrap;
+}
+
+body.admin-theme .table .btn-group,
+body.staff-theme .table .btn-group {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+}
+
+body.admin-theme .table .btn-group > .btn,
+body.admin-theme .table .btn-group > form,
+body.staff-theme .table .btn-group > .btn,
+body.staff-theme .table .btn-group > form {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+    .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger),
+    .card-header.bg-dark,
+    .card-header.bg-primary,
+    .card-header.bg-info,
+    .card-header.bg-secondary,
+    .card-header.bg-success,
+    .card-header.bg-warning,
+    .card-header.bg-danger {
+        padding: 1rem !important;
+    }
+
+    .card-body,
+    .card.text-white .card-body {
+        padding: 1rem !important;
+    }
+
+    .card.text-white .card-body .d-flex {
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+
+    .card.text-white .card-body i.fs-1 {
+        font-size: 1.75rem !important;
+        flex: 0 0 auto;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: 0.75rem !important;
+    }
+
+    .modal-dialog {
+        width: calc(100% - 1.5rem) !important;
+        max-width: none !important;
+        margin: 0.75rem auto !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: none !important;
+    }
+}
+
+@media (max-width: 576px) {
+    body.admin-theme .main-content,
+    body.staff-theme .main-content {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    body.admin-theme .main-content > .d-flex.border-bottom,
+    body.staff-theme .main-content > .d-flex.border-bottom {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
+
+    body.admin-theme .main-content > .d-flex.border-bottom .btn-toolbar,
+    body.staff-theme .main-content > .d-flex.border-bottom .btn-toolbar,
+    body.admin-theme .main-content > .d-flex.border-bottom .btn,
+    body.staff-theme .main-content > .d-flex.border-bottom .btn {
+        width: 100%;
+    }
+
+    body.admin-theme .card-header.d-flex,
+    body.staff-theme .card-header.d-flex {
+        align-items: flex-start !important;
+        flex-direction: column;
+    }
+
+    body.admin-theme .btn-toolbar .btn,
+    body.staff-theme .btn-toolbar .btn,
+    body.admin-theme form .d-flex.gap-2 .btn,
+    body.staff-theme form .d-flex.gap-2 .btn {
+        flex: 1 1 100%;
+    }
+
+    body.admin-theme .pagination,
+    body.staff-theme .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    body.admin-theme .table .btn-group,
+    body.staff-theme .table .btn-group {
+        flex-direction: column;
+        width: max-content;
+    }
+
+    body.admin-theme .table .btn-group .btn,
+    body.staff-theme .table .btn-group .btn {
+        width: 100%;
+    }
 }
 
 .modal-header {

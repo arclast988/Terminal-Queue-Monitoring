@@ -6,6 +6,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 18px;
         position: fixed;
         top: 0;
         left: 0;
@@ -24,6 +25,8 @@
         gap: 12px;
         text-decoration: none;
         color: inherit;
+        min-width: 0;
+        flex: 0 0 auto;
     }
 
     .logo {
@@ -44,6 +47,7 @@
         line-height: 1.1;
         margin: 0;
         color: #1e293b;
+        white-space: nowrap;
     }
 
     .logo-text p {
@@ -52,12 +56,16 @@
         letter-spacing: 1px;
         text-transform: uppercase;
         margin: 0;
+        white-space: nowrap;
     }
 
     .nav-menu {
         display: flex;
-        gap: 25px;
+        gap: clamp(10px, 1.2vw, 20px);
         align-items: center;
+        justify-content: flex-end;
+        min-width: 0;
+        flex: 1 1 auto;
     }
 
     .nav-menu a {
@@ -69,6 +77,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        white-space: nowrap;
     }
 
     .nav-menu a i {
@@ -182,11 +191,12 @@
     .admin-profile {
         display: flex;
         align-items: center;
-        gap: 20px;
-        margin-left: 25px;
-        padding-left: 25px;
+        gap: 12px;
+        margin-left: 8px;
+        padding-left: 16px;
         border-left: 2px solid #e2e8f0 !important;
         height: 40px;
+        flex: 0 0 auto;
     }
 
     .profile-info {
@@ -202,6 +212,10 @@
         font-size: 15px;
         color: #1e293b;
         letter-spacing: -0.3px;
+        max-width: 170px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .profile-role {
@@ -244,7 +258,7 @@
         cursor: pointer;
     }
 
-    @media (max-width: 992px) {
+    @media (max-width: 1280px) {
         .nav-menu {
             /* Hidden off-screen right by default on mobile */
             position: fixed;
@@ -291,11 +305,27 @@
         .nav-menu .admin-profile {
             flex-direction: column;
             align-items: flex-start;
+            height: auto;
             border-left: none !important;
             border-top: 1px solid rgba(255,255,255,0.3);
             padding: 15px 0 0;
             margin: 10px 0 0;
             width: 100%;
+        }
+
+        .nav-menu a,
+        .dropbtn,
+        .logout-btn-custom {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .profile-info {
+            align-items: flex-start;
+        }
+
+        .profile-name {
+            max-width: 100%;
         }
 
         .mobile-toggle {
@@ -498,9 +528,35 @@
     }
 
     /* Override staff blue background inside menu on mobile */
-    @media (max-width: 768px) {
+    @media (max-width: 1280px) {
         body.staff-theme .nav-menu {
             background: #1565c0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        header {
+            padding-left: 14px;
+            padding-right: 14px;
+            gap: 10px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-text h1 {
+            font-size: 16px;
+        }
+
+        .logo-text p {
+            font-size: 9px;
+            letter-spacing: 0.6px;
+        }
+
+        .nav-menu {
+            width: min(86vw, 300px);
         }
     }
 </style>
@@ -619,7 +675,7 @@
 
     // Close menu if window is resized back to desktop
     window.addEventListener('resize', function() {
-        if (window.innerWidth > 992) {
+        if (window.innerWidth > 1280) {
             var menu    = document.querySelector('header .nav-menu');
             var overlay = document.getElementById('mobileNavOverlay');
             var icon    = document.getElementById('mobileMenuIcon');

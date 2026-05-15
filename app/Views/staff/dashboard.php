@@ -5,7 +5,7 @@
 </div>
 
 <div class="row">
-    <div class="col-md-4 mb-4">
+    <div class="col-12 col-md-6 col-xl-4 mb-4">
         <div class="card bg-primary text-white shadow">
             <div class="card-body">
                 <h6 class="text-uppercase small">Active in Queue</h6>
@@ -20,7 +20,7 @@
     </div>
     
     <?php foreach ($terminals as $terminal): ?>
-        <div class="col-md-4 mb-4">
+        <div class="col-12 col-md-6 col-xl-4 mb-4">
             <div class="card border-info shadow-sm">
                 <div class="card-body">
                     <h6 class="text-muted small text-uppercase"><?= esc($terminal['name']) ?></h6>

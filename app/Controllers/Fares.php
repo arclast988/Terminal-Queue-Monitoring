@@ -9,14 +9,21 @@ use App\Models\FareDiscountModel;
 
 class Fares extends BaseController
 {
-    public function index()
+    private function routesByVehicleType(string $vehicleType): array
     {
         $routeModel = new RouteModel();
 
+        return $routeModel->withFare()
+            ->where('routes.vehicle_type', $vehicleType)
+            ->findAll();
+    }
+
+    public function index()
+    {
         // Fetch routes grouped by vehicle type
-        $van_routes     = $routeModel->where('vehicle_type', 'van')->findAll();
-        $jeepney_routes = $routeModel->where('vehicle_type', 'jeepney')->findAll();
-        $minibus_routes = $routeModel->where('vehicle_type', 'minibus')->findAll();
+        $van_routes     = $this->routesByVehicleType('van');
+        $jeepney_routes = $this->routesByVehicleType('jeepney');
+        $minibus_routes = $this->routesByVehicleType('minibus');
 
         $announcements = [];
         try {
@@ -70,12 +77,11 @@ class Fares extends BaseController
      */
     public function apiData()
     {
-        $routeModel    = new RouteModel();
         $discountModel = new FareDiscountModel();
 
-        $van_routes     = $routeModel->where('vehicle_type', 'van')->findAll();
-        $jeepney_routes = $routeModel->where('vehicle_type', 'jeepney')->findAll();
-        $minibus_routes = $routeModel->where('vehicle_type', 'minibus')->findAll();
+        $van_routes     = $this->routesByVehicleType('van');
+        $jeepney_routes = $this->routesByVehicleType('jeepney');
+        $minibus_routes = $this->routesByVehicleType('minibus');
         $discounts      = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
 
         return $this->response

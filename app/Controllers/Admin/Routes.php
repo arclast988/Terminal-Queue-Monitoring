@@ -6,24 +6,28 @@ use App\Controllers\BaseController;
 use App\Models\RouteModel;
 use App\Models\TerminalModel;
 use App\Models\FareDiscountModel;
+use App\Models\FareModel;
 
 class Routes extends BaseController
 {
     protected $routeModel;
     protected $terminalModel;
     protected $discountModel;
+    protected $fareModel;
 
     public function __construct()
     {
         $this->routeModel    = new RouteModel();
         $this->terminalModel = new TerminalModel();
         $this->discountModel = new FareDiscountModel();
+        $this->fareModel     = new FareModel();
     }
 
     public function index()
     {
         // Join with terminals table to get terminal name
-        $routes = $this->routeModel->select('routes.*, terminals.name as terminal_name')
+        $routes = $this->routeModel->select('routes.*, fares.amount AS fare, terminals.name as terminal_name')
+                                   ->join('fares', 'fares.route_id = routes.id', 'left')
                                    ->join('terminals', 'terminals.id = routes.terminal_id')
                                    ->findAll();
 
@@ -102,14 +106,26 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', "This route ($origin → $destination) already exists for " . ucfirst($vehicleType) . ". Please edit the existing one instead of adding a new one.");
         }
 
-        // Create new record
-        $this->routeModel->save([
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $routeId = $this->routeModel->insert([
             'origin'       => $origin,
             'destination'  => $destination,
-            'fare'         => $fare,
             'terminal_id'  => $terminalId,
             'vehicle_type' => $vehicleType
+        ], true);
+
+        $this->fareModel->insert([
+            'route_id' => $routeId,
+            'amount'   => $fare,
         ]);
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            return redirect()->back()->withInput()->with('error', 'Failed to add route and fare.');
+        }
         
         $this->logActivity('Create route', "$origin → $destination ($vehicleType, ₱$fare).");
         $msg = 'New route and fare added successfully.';
@@ -119,7 +135,7 @@ class Routes extends BaseController
 
     public function edit($id)
     {
-        $route = $this->routeModel->find($id);
+        $route = $this->routeModel->withFare()->find($id);
 
         if (!$route) {
             return redirect()->to('/admin/routes')->with('error', 'Route not found.');
@@ -141,6 +157,12 @@ class Routes extends BaseController
 
     public function update($id)
     {
+        $existingRoute = $this->routeModel->withFare()->find($id);
+
+        if (!$existingRoute) {
+            return redirect()->to('/admin/routes')->with('error', 'Route not found.');
+        }
+
         $rules = [
             'origin'       => 'required|min_length[2]|max_length[100]',
             'destination'  => 'required|min_length[2]|max_length[100]',
@@ -156,6 +178,7 @@ class Routes extends BaseController
         $origin      = strtoupper(trim($this->request->getPost('origin')));
         $destination = strtoupper(trim($this->request->getPost('destination')));
         $vehicleType = $this->request->getPost('vehicle_type');
+        $newFare     = $this->request->getPost('fare');
 
         // Check if another route already exists with these new attributes (collision check)
         $collision = $this->routeModel->where('origin', $origin)
@@ -167,17 +190,45 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', "A route already exists for $origin → $destination ($vehicleType). Update that one instead.");
         }
 
+        $db = \Config\Database::connect();
+        $db->transStart();
+
         $this->routeModel->update($id, [
             'origin'       => $origin,
             'destination'  => $destination,
-            'fare'         => $this->request->getPost('fare'),
             'terminal_id'  => $this->request->getPost('terminal_id'),
             'vehicle_type' => $vehicleType
         ]);
 
-        $this->logActivity('Update route', "$origin → $destination ($vehicleType).");
+        $this->fareModel->upsertForRoute((int) $id, $newFare);
+
+        $db->transComplete();
+
+        if (!$db->transStatus()) {
+            return redirect()->back()->withInput()->with('error', 'Failed to update route and fare.');
+        }
+
+        $oldFare      = (float) ($existingRoute['fare'] ?? 0);
+        $newFareFloat = (float) $newFare;
+
+        if (abs($oldFare - $newFareFloat) > 0.00001) {
+            $this->logActivity(
+                'Update fare',
+                sprintf(
+                    '%s route fare changed. Before: PHP %s | After: PHP %s.',
+                    strtoupper($existingRoute['origin'] . ' to ' . $existingRoute['destination'] . ' (' . $existingRoute['vehicle_type'] . ')'),
+                    number_format($oldFare, 2),
+                    number_format($newFareFloat, 2)
+                )
+            );
+        } else {
+            $this->logActivity('Update route', $origin . ' to ' . $destination . ' (' . $vehicleType . ').');
+        }
 
         return redirect()->back()->with('success', 'Route updated successfully.');
+
+        $this->logActivity('Update route', "$origin → $destination ($vehicleType).");
+
     }
 
     public function delete($id)

@@ -1309,7 +1309,7 @@
                                             endif;
                                             ?>
                                         </div>
-                                        <?php if (in_array($item['status'], ['waiting', 'boarding']) && !empty($item['estimated_departure'])): ?>
+                                        <?php if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])): ?>
                                             <div class="countdown-timer"
                                                 data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
                                         <?php endif; ?>
@@ -1534,7 +1534,7 @@
                                     + '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
                                     + (item.estimated_departure_formatted || '--:-- --')
                                     + '</div>'
-                                    + ((item.status === 'waiting' || item.status === 'boarding') && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
+                                    + (item.status === 'boarding' && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
                                     + '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'
                                     + '</div>'
                                     + '</div>'

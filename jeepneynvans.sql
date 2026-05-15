@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 20, 2026 at 03:05 PM
+-- Generation Time: May 15, 2026 at 09:43 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -76,6 +76,57 @@ INSERT INTO `departure_rules` (`id`, `time_from`, `time_to`, `wait_minutes`, `la
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `fares`
+--
+
+CREATE TABLE `fares` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `route_id` int(11) UNSIGNED NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `fares`
+--
+
+INSERT INTO `fares` (`id`, `route_id`, `amount`, `created_at`, `updated_at`) VALUES
+(1, 1, 155.00, '2026-02-06 04:58:59', '2026-05-15 15:27:15'),
+(2, 2, 300.00, '2026-02-06 05:33:02', '2026-05-15 15:24:08'),
+(3, 3, 10.00, '2026-02-08 15:50:51', '2026-05-15 15:24:08'),
+(4, 4, 140.00, '2026-02-08 16:18:42', '2026-05-15 15:24:08'),
+(5, 7, 300.00, '2026-02-17 21:29:37', '2026-05-15 15:24:08'),
+(6, 8, 150.00, '2026-02-17 21:46:07', '2026-05-15 15:24:08');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `fare_discounts`
+--
+
+CREATE TABLE `fare_discounts` (
+  `id` int(11) UNSIGNED NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `label` varchar(100) NOT NULL,
+  `discount_percent` decimal(5,2) NOT NULL DEFAULT 0.00,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `fare_discounts`
+--
+
+INSERT INTO `fare_discounts` (`id`, `type`, `label`, `discount_percent`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'pwd', 'PWD Discount', 20.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00'),
+(2, 'senior_citizen', 'Senior Citizen Discount', 20.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00'),
+(3, 'student', 'Student Discount', 15.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `logs`
 --
 
@@ -86,6 +137,39 @@ CREATE TABLE `logs` (
   `details` text DEFAULT NULL,
   `timestamp` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `logs`
+--
+
+INSERT INTO `logs` (`id`, `user_id`, `action`, `details`, `timestamp`) VALUES
+(602, 1, 'Login', 'Admin logged in (admin123)', '2026-05-15 14:50:07'),
+(603, 1, 'Update route', 'PALOMPON → ORMOC (van).', '2026-05-15 14:51:36'),
+(604, 1, 'Logout', 'Admin admin123 logged out', '2026-05-15 15:06:57'),
+(605, 2, 'Login', 'Staff logged in (giogmarquez)', '2026-05-15 15:07:02'),
+(606, 2, 'Add to queue', 'Added 726 HOF to queue for ORMOC.', '2026-05-15 15:09:35'),
+(607, 2, 'Logout', 'Staff giogmarquez logged out', '2026-05-15 15:14:14'),
+(608, 1, 'Login', 'Admin logged in (admin123)', '2026-05-15 15:14:19'),
+(609, 1, 'Update route', 'PALOMPON → ORMOC (van).', '2026-05-15 15:15:15'),
+(610, 1, 'Update fare', 'PALOMPON TO ORMOC (VAN) route fare changed. Before: PHP 5.00 | After: PHP 155.00.', '2026-05-15 15:27:15'),
+(611, 1, 'Logout', 'Admin admin123 logged out', '2026-05-15 15:27:29'),
+(612, 2, 'Login', 'Staff logged in (giogmarquez)', '2026-05-15 15:27:33'),
+(613, 2, 'Logout', 'Staff giogmarquez logged out', '2026-05-15 15:31:24'),
+(614, 2, 'Login', 'Staff logged in (giogmarquez)', '2026-05-15 15:32:11'),
+(615, 2, 'Start Boarding', 'Start Boarding for 726 HOF (ORMOC).', '2026-05-15 15:32:19'),
+(616, 2, 'Logout', 'Staff giogmarquez logged out', '2026-05-15 15:32:23'),
+(617, 2, 'Login', 'Staff logged in (giogmarquez)', '2026-05-15 15:38:02'),
+(618, 2, 'Depart Vehicle', 'Depart Vehicle for 726 HOF (ORMOC).', '2026-05-15 15:38:05'),
+(619, 2, 'Add to queue', 'Added sdaasd to queue for ORMOC.', '2026-05-15 15:38:13'),
+(620, 2, 'Add to queue', 'Added HELO123 to queue for TACLOBAN.', '2026-05-15 15:38:20'),
+(621, 2, 'Logout', 'Staff giogmarquez logged out', '2026-05-15 15:38:22'),
+(622, 2, 'Login', 'Staff logged in (giogmarquez)', '2026-05-15 15:38:32'),
+(623, 2, 'Logout', 'Staff giogmarquez logged out', '2026-05-15 15:38:50'),
+(624, 2, 'Login', 'Staff logged in (giogmarquez)', '2026-05-15 15:38:56'),
+(625, 2, 'Start Boarding', 'Start Boarding for sdaasd (ORMOC).', '2026-05-15 15:38:59'),
+(626, 2, 'Logout', 'Staff giogmarquez logged out', '2026-05-15 15:39:00'),
+(627, 1, 'Login', 'Admin logged in (admin123)', '2026-05-15 15:40:32'),
+(628, 1, 'Logout', 'Admin admin123 logged out', '2026-05-15 15:42:09');
 
 -- --------------------------------------------------------
 
@@ -121,6 +205,15 @@ CREATE TABLE `queue` (
   `departure_time` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `queue`
+--
+
+INSERT INTO `queue` (`id`, `vehicle_id`, `route_id`, `status`, `current_passengers`, `position`, `arrival_time`, `estimated_departure`, `departure_time`) VALUES
+(70, 2, 1, 'departed', 16, 0, '2026-05-15 15:09:35', '2026-05-15 15:39:35', '2026-05-15 15:38:05'),
+(71, 8, 1, 'boarding', 0, 1, '2026-05-15 15:38:13', '2026-05-15 16:08:13', NULL),
+(72, 9, 2, 'waiting', 0, 2, '2026-05-15 15:38:20', '2026-05-15 16:08:20', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -131,7 +224,6 @@ CREATE TABLE `routes` (
   `id` int(11) UNSIGNED NOT NULL,
   `origin` varchar(100) NOT NULL,
   `destination` varchar(100) NOT NULL,
-  `fare` decimal(10,2) NOT NULL,
   `vehicle_type` enum('jeepney','van','minibus') NOT NULL DEFAULT 'van',
   `terminal_id` int(11) UNSIGNED NOT NULL,
   `created_at` datetime DEFAULT current_timestamp()
@@ -141,13 +233,13 @@ CREATE TABLE `routes` (
 -- Dumping data for table `routes`
 --
 
-INSERT INTO `routes` (`id`, `origin`, `destination`, `fare`, `vehicle_type`, `terminal_id`, `created_at`) VALUES
-(1, 'PALOMPON', 'ORMOC', 150.00, 'van', 1, '2026-02-06 04:58:59'),
-(2, 'PALOMPON', 'TACLOBAN', 300.00, 'van', 1, '2026-02-06 05:33:02'),
-(3, 'Palompon', 'Jordan', 10.00, 'van', 1, '2026-02-08 15:50:51'),
-(4, 'Palompon', 'San Isidro', 140.00, 'jeepney', 1, '2026-02-08 16:18:42'),
-(7, 'PALOMPON', 'TACLOBAN', 300.00, 'minibus', 1, '2026-02-17 21:29:37'),
-(8, 'PALOMPON', 'ORMOC', 150.00, 'minibus', 1, '2026-02-17 21:46:07');
+INSERT INTO `routes` (`id`, `origin`, `destination`, `vehicle_type`, `terminal_id`, `created_at`) VALUES
+(1, 'PALOMPON', 'ORMOC', 'van', 1, '2026-02-06 04:58:59'),
+(2, 'PALOMPON', 'TACLOBAN', 'van', 1, '2026-02-06 05:33:02'),
+(3, 'Palompon', 'Jordan', 'van', 1, '2026-02-08 15:50:51'),
+(4, 'Palompon', 'San Isidro', 'jeepney', 1, '2026-02-08 16:18:42'),
+(7, 'PALOMPON', 'TACLOBAN', 'minibus', 1, '2026-02-17 21:29:37'),
+(8, 'PALOMPON', 'ORMOC', 'minibus', 1, '2026-02-17 21:46:07');
 
 -- --------------------------------------------------------
 
@@ -183,6 +275,18 @@ CREATE TABLE `trip_status_history` (
   `timestamp` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_by_user_id` int(11) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `trip_status_history`
+--
+
+INSERT INTO `trip_status_history` (`id`, `queue_id`, `status`, `timestamp`, `updated_by_user_id`) VALUES
+(181, 70, 'arrived/waiting', '2026-05-15 15:09:35', 2),
+(182, 70, 'boarding', '2026-05-15 15:32:19', 2),
+(183, 70, 'departed', '2026-05-15 15:38:05', 2),
+(184, 71, 'arrived/waiting', '2026-05-15 15:38:13', 2),
+(185, 72, 'arrived/waiting', '2026-05-15 15:38:20', 2),
+(186, 71, 'boarding', '2026-05-15 15:38:59', 2);
 
 -- --------------------------------------------------------
 
@@ -242,31 +346,6 @@ INSERT INTO `vehicles` (`id`, `plate_number`, `driver_name`, `type`, `capacity`,
 (8, 'sdaasd', 'ahhah', 'minibus', 23, '', 'active', '2026-03-24 22:22:24'),
 (9, 'HELO123', 'ahhah', 'jeepney', 20, '', 'active', '2026-04-06 11:27:07');
 
--- --------------------------------------------------------
-
---
--- Table structure for table `fare_discounts`
---
-
-CREATE TABLE `fare_discounts` (
-  `id` int(11) UNSIGNED NOT NULL,
-  `type` varchar(50) NOT NULL,
-  `label` varchar(100) NOT NULL,
-  `discount_percent` decimal(5,2) NOT NULL DEFAULT 0.00,
-  `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `fare_discounts`
---
-
-INSERT INTO `fare_discounts` (`id`, `type`, `label`, `discount_percent`, `is_active`, `created_at`, `updated_at`) VALUES
-(1, 'pwd', 'PWD Discount', 20.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00'),
-(2, 'senior_citizen', 'Senior Citizen Discount', 20.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00'),
-(3, 'student', 'Student Discount', 15.00, 1, '2026-05-02 00:00:00', '2026-05-02 00:00:00');
-
 --
 -- Indexes for dumped tables
 --
@@ -279,17 +358,24 @@ ALTER TABLE `announcements`
   ADD KEY `announcements_is_active_index` (`is_active`);
 
 --
+-- Indexes for table `departure_rules`
+--
+ALTER TABLE `departure_rules`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `fares`
+--
+ALTER TABLE `fares`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `fares_route_id_unique` (`route_id`);
+
+--
 -- Indexes for table `fare_discounts`
 --
 ALTER TABLE `fare_discounts`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `fare_discounts_type_unique` (`type`);
-
---
--- Indexes for table `departure_rules`
---
-ALTER TABLE `departure_rules`
-  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `logs`
@@ -358,22 +444,28 @@ ALTER TABLE `announcements`
   MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT for table `fare_discounts`
---
-ALTER TABLE `fare_discounts`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
 -- AUTO_INCREMENT for table `departure_rules`
 --
 ALTER TABLE `departure_rules`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `fares`
+--
+ALTER TABLE `fares`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `fare_discounts`
+--
+ALTER TABLE `fare_discounts`
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=602;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=629;
 
 --
 -- AUTO_INCREMENT for table `migrations`
@@ -385,7 +477,7 @@ ALTER TABLE `migrations`
 -- AUTO_INCREMENT for table `queue`
 --
 ALTER TABLE `queue`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
 -- AUTO_INCREMENT for table `routes`
@@ -403,7 +495,7 @@ ALTER TABLE `terminals`
 -- AUTO_INCREMENT for table `trip_status_history`
 --
 ALTER TABLE `trip_status_history`
-  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=181;
+  MODIFY `id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=187;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -420,6 +512,12 @@ ALTER TABLE `vehicles`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `fares`
+--
+ALTER TABLE `fares`
+  ADD CONSTRAINT `fares_route_id_foreign` FOREIGN KEY (`route_id`) REFERENCES `routes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `logs`
@@ -446,8 +544,6 @@ ALTER TABLE `routes`
 ALTER TABLE `trip_status_history`
   ADD CONSTRAINT `trip_status_history_queue_id_foreign` FOREIGN KEY (`queue_id`) REFERENCES `queue` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `trip_status_history_updated_by_user_id_foreign` FOREIGN KEY (`updated_by_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
-
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

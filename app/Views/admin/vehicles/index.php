@@ -23,7 +23,7 @@
 <?php endif; ?>
 
 <!-- Add Vehicle Form -->
-<div class="card shadow mb-4">
+<div class="card shadow mb-4 vehicle-register-form">
     <div class="card-header">
         <i class="bi bi-plus-circle"></i> Register New Vehicle
     </div>
@@ -31,15 +31,15 @@
         <form action="<?= base_url('admin/vehicles/store') ?>" method="post">
             <?= csrf_field() ?>
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <label for="driver_name" class="form-label">Driver Name</label>
                     <input type="text" class="form-control" id="driver_name" name="driver_name" placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?>" required>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <label for="plate_number" class="form-label">Plate Number</label>
                     <input type="text" class="form-control" id="plate_number" name="plate_number" placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
                 </div>
-                <div class="col-md-2">
+                <div class="col-12 col-sm-6 col-xl-2">
                     <label for="type" class="form-label">Vehicle Type</label>
                     <select class="form-select" id="type" name="type" required>
                         <option value="jeepney" <?= old('type') == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
@@ -47,12 +47,12 @@
                         <option value="minibus" <?= old('type') == 'minibus' ? 'selected' : '' ?>>Minibus</option>
                     </select>
                 </div>
-                <div class="col-md-2">
+                <div class="col-12 col-sm-6 col-xl-2">
                     <label for="capacity" class="form-label">Capacity</label>
                     <input type="number" class="form-control" id="capacity" name="capacity" placeholder="e.g. 16" value="<?= old('capacity') ?>" min="1" required>
                 </div>
-                <div class="col-md-1">
-                    <button type="submit" class="btn btn-primary w-100">
+                <div class="col-12 col-sm-6 col-xl-2">
+                    <button type="submit" class="btn btn-primary w-100 vehicle-add-btn">
                         <i class="bi bi-plus-lg"></i> Add
                     </button>
                 </div>
@@ -88,7 +88,7 @@
             <i class="bi bi-grid-3x3-gap-fill"></i> All
             <span class="vf-count"><?= $totalVehicles ?></span>
         </button>
-        <span style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
+        <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
         <button type="button" class="vf-btn vf-jeepney" id="filter-btn-jeepney" onclick="filterVehicles('jeepney')">
             <img src="<?= base_url('images/jeep.png') ?>" alt="" style="height:18px; width:auto;"> Jeepney
             <span class="vf-count"><?= $countJeepney ?></span>
@@ -101,7 +101,7 @@
             <img src="<?= base_url('images/minibus.png') ?>" alt="" style="height:18px; width:auto;"> Minibus
             <span class="vf-count"><?= $countMinibus ?></span>
         </button>
-        <span style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
+        <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
         <button type="button" class="vf-btn vf-active-status" id="filter-btn-active" onclick="filterVehicles('active')">
             <i class="bi bi-check-circle-fill"></i> Active
             <span class="vf-count"><?= $countActive ?></span>
@@ -125,8 +125,8 @@
                 <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Driver Name</th>
                         <th>Plate Number</th>
+                        <th>Driver Name</th>
                         <th>Vehicle Type</th>
                         <th>Capacity</th>
                         <th>Status</th>
@@ -139,10 +139,10 @@
                         <?php foreach ($vehicles as $i => $vehicle): ?>
                             <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>">
                                 <td class="row-number"><?= $i + 1 ?></td>
-                                <td class="fw-bold"><?= esc($vehicle['driver_name']) ?></td>
                                 <td>
                                     <span class="fw-bold"><?= esc($vehicle['plate_number']) ?></span>
                                 </td>
+                                <td class="fw-bold"><?= esc($vehicle['driver_name']) ?></td>
                                 <td>
                                     <?php
                                         $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
@@ -165,12 +165,12 @@
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="<?= base_url('admin/vehicles/edit/'.$vehicle['id']) ?>" class="btn btn-outline-primary" title="Edit vehicle">
-                                            <i class="bi bi-pencil"></i> Edit
+                                            <i class="bi bi-pencil"></i> <span class="vehicle-action-label">Edit</span>
                                         </a>
                                         <form action="<?= base_url('admin/vehicles/delete/'.$vehicle['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-outline-danger" title="Delete vehicle">
-                                                <i class="bi bi-trash"></i> Delete
+                                                <i class="bi bi-trash"></i> <span class="vehicle-action-label">Delete</span>
                                             </button>
                                         </form>
                                     </div>
@@ -189,6 +189,30 @@
 </div>
 
 <style>
+    .vehicle-register-form .vehicle-add-btn {
+        min-height: 42px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    #vehicles-table {
+        width: 100%;
+    }
+
+    #vehicles-table th,
+    #vehicles-table td {
+        vertical-align: middle;
+    }
+
+    #vehicles-table .btn-group .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
     /* ── Vehicle Filter Buttons ── */
     .vf-btn {
         display: inline-flex !important;
@@ -276,6 +300,85 @@
 
     .vehicle-row-hidden {
         display: none !important;
+    }
+
+    @media (max-width: 991.98px) {
+        .vehicle-register-form .card-body {
+            padding: 1rem !important;
+        }
+
+        #vehicles-table {
+            min-width: 680px;
+            font-size: 13px;
+        }
+
+        #vehicles-table thead th,
+        #vehicles-table tbody td {
+            padding: 0.65rem 0.5rem !important;
+        }
+
+        #vehicles-table th:first-child,
+        #vehicles-table td.row-number {
+            width: 38px;
+            text-align: center;
+        }
+
+        #vehicles-table th:nth-child(4),
+        #vehicles-table td:nth-child(4) {
+            width: 86px;
+            text-align: center;
+        }
+
+        #vehicles-table th:nth-child(5),
+        #vehicles-table td:nth-child(5),
+        #vehicles-table th:nth-child(6),
+        #vehicles-table td:nth-child(6) {
+            width: 84px;
+            text-align: center;
+        }
+
+        #vehicles-table th:nth-child(8),
+        #vehicles-table td:nth-child(8) {
+            width: 88px;
+            text-align: center;
+        }
+
+        #vehicles-table .btn-group {
+            flex-direction: row !important;
+            gap: 0.35rem;
+        }
+
+        #vehicles-table .btn-group .btn {
+            width: 34px !important;
+            height: 34px;
+            padding: 0 !important;
+            border-radius: 6px !important;
+        }
+
+        #vehicles-table .btn-group form {
+            display: inline-flex !important;
+        }
+
+        .vehicle-action-label {
+            display: none;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .vf-divider {
+            display: none !important;
+        }
+
+        .vf-btn {
+            flex: 1 1 calc(50% - 0.5rem);
+            justify-content: center;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+
+        .vehicle-register-form .vehicle-add-btn {
+            width: 100%;
+        }
     }
 </style>
 

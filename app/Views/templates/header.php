@@ -310,6 +310,8 @@
         /* Reserve space for fixed header so content is not hidden underneath */
         .main-content {
             flex: 1;
+            width: 100%;
+            max-width: 100%;
             padding: 20px;
             padding-top: 72px;
             background-color: #f8fafc;
@@ -351,6 +353,29 @@
             max-width: 100% !important;
             padding-left: 24px !important;
             padding-right: 24px !important;
+        }
+
+        /* Mobile responsive main content padding */
+        @media (max-width: 768px) {
+            body.layout-lock header#site-header {
+                padding-left: 16px !important;
+                padding-right: 16px !important;
+            }
+
+            .main-content {
+                padding: 15px;
+                padding-top: 72px;
+            }
+
+            .row {
+                margin-left: -7.5px;
+                margin-right: -7.5px;
+            }
+
+            .row > * {
+                padding-left: 7.5px;
+                padding-right: 7.5px;
+            }
         }
 
         /* Custom badge colors */

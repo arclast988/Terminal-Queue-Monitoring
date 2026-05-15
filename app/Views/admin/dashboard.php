@@ -12,7 +12,7 @@
 <?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
 
 <div class="row">
-    <div class="col-md-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="card text-white bg-primary shadow">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -28,7 +28,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="card text-white bg-success shadow">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -44,7 +44,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="card text-white bg-info shadow">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
@@ -60,7 +60,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3 mb-4">
+    <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="card text-white bg-secondary shadow">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
