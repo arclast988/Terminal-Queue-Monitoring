@@ -41,15 +41,15 @@
                     <input type="text" class="form-control" id="plate_number" name="plate_number"
                         placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-2">
-                    <label for="type" class="form-label">Vehicle Type</label>
+                <div class="col-12 col-sm-6 col-xl-1">
+                    <label for="type" class="form-label">Type</label>
                     <select class="form-select" id="type" name="type" required>
                         <option value="jeepney" <?= old('type') == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
                         <option value="van" <?= old('type') == 'van' ? 'selected' : '' ?>>Van</option>
                         <option value="minibus" <?= old('type') == 'minibus' ? 'selected' : '' ?>>Minibus</option>
                     </select>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-2">
+                <div class="col-12 col-sm-6 col-xl-3">
                     <label for="route_id" class="form-label">Assigned Route</label>
                     <select class="form-select" id="route_id" name="route_id" required>
                         <option value="">-- Select Route --</option>
@@ -57,7 +57,7 @@
                             <?php foreach ($routes as $r): ?>
                                 <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
                                     <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
-                                    <?= strtoupper(esc($r['destination'])) ?> (<?= ucfirst(esc($r['vehicle_type'])) ?>)
+                                    <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?> (<?= ucfirst(esc($r['vehicle_type'])) ?>)
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -106,6 +106,10 @@ if (!empty($vehicles) && is_array($vehicles)) {
 <div class="mb-4">
     <!-- Filter Buttons Row -->
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="input-group input-group-sm me-3" style="max-width: 250px;">
+            <span class="input-group-text bg-white border-end-0" style="border-radius: 20px 0 0 20px;"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control border-start-0 ps-0" id="vehicle-search" placeholder="Search plate or driver..." onkeyup="filterVehicles(currentFilter)" style="border-radius: 0 20px 20px 0;">
+        </div>
         <span
             style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
             <i class="bi bi-funnel me-1"></i>Filter:
@@ -143,10 +147,8 @@ if (!empty($vehicles) && is_array($vehicles)) {
 <!-- Vehicles Table -->
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
-        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Vehicle
-            List</span>
-        <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all
-            <strong><?= $totalVehicles ?></strong> vehicles</span>
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Vehicle List</span>
+        <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all <strong><?= $totalVehicles ?></strong> vehicles</span>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -455,6 +457,8 @@ if (!empty($vehicles) && is_array($vehicles)) {
             'maintenance': 'Maintenance'
         };
 
+        const searchQuery = document.getElementById('vehicle-search') ? document.getElementById('vehicle-search').value.toLowerCase() : '';
+
         let visibleCount = 0;
         rows.forEach(row => {
             let show = false;
@@ -464,6 +468,13 @@ if (!empty($vehicles) && is_array($vehicles)) {
                 show = row.getAttribute('data-type') === filter;
             } else if (statusFilters.includes(filter)) {
                 show = row.getAttribute('data-status') === filter;
+            }
+
+            if (show && searchQuery) {
+                const textContent = row.textContent.toLowerCase();
+                if (!textContent.includes(searchQuery)) {
+                    show = false;
+                }
             }
 
             if (show) {

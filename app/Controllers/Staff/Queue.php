@@ -89,6 +89,7 @@ class Queue extends BaseController
                     ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination')
                     ->join('routes', 'routes.id = vehicles.route_id', 'left')
                     ->where('vehicles.status', 'active')
+                    ->where('vehicles.route_id IS NOT NULL')
                     ->whereIn('vehicles.route_id', $assignedRouteIds)
                     ->findAll();
             } else {
@@ -99,6 +100,7 @@ class Queue extends BaseController
                 ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination')
                 ->join('routes', 'routes.id = vehicles.route_id', 'left')
                 ->where('vehicles.status', 'active')
+                ->where('vehicles.route_id IS NOT NULL')
                 ->findAll();
         }
 

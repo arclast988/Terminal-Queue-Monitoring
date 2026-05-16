@@ -11,6 +11,28 @@
 
 <?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
 
+<?php if (!empty($unassignedVehicles)): ?>
+    <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <div>
+            <strong><?= $unassignedVehicles ?> vehicle<?= $unassignedVehicles > 1 ? 's have' : ' has' ?> no assigned route.</strong>
+            Please assign routes before queueing them.
+            <a href="<?= base_url('admin/vehicles') ?>" class="alert-link ms-1">Go to Vehicle Register →</a>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($unassignedStaff)): ?>
+    <div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        <div>
+            <strong><?= $unassignedStaff ?> dispatcher<?= $unassignedStaff > 1 ? 's have' : ' has' ?> no routes assigned.</strong>
+            They cannot manage any queue until routes are assigned.
+            <a href="<?= base_url('admin/users') ?>" class="alert-link ms-1">Go to User Management →</a>
+        </div>
+    </div>
+<?php endif; ?>
+
 <div class="row">
     <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="card text-white bg-primary shadow">

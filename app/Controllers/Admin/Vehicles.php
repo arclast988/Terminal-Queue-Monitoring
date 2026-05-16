@@ -67,8 +67,8 @@ class Vehicles extends BaseController
             'route_id'     => $routeId,
         ]);
 
-        $routeLabel = $route ? ($route['origin'] . ' → ' . $route['destination']) : 'N/A';
-        $this->logActivity('Register vehicle', 'Registered vehicle ' . $this->request->getPost('plate_number') . ' (' . $vehicleType . ') - Driver: ' . $this->request->getPost('driver_name') . ' - Route: ' . $routeLabel);
+        $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
+        $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $this->request->getPost('plate_number') . ' (' . $vehicleType . ') - Driver: ' . $this->request->getPost('driver_name') . ' - Route: ' . $routeLabel);
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle registered successfully.');
     }
@@ -126,7 +126,16 @@ class Vehicles extends BaseController
             'route_id'     => $routeId,
         ]);
 
-        $this->logActivity('Update vehicle', 'Updated vehicle ' . $this->request->getPost('plate_number'));
+        // Log route change details if route was reassigned
+        $oldRouteId = $vehicle['route_id'];
+        if ((string) $oldRouteId !== (string) $routeId) {
+            $oldRoute = $oldRouteId ? $this->routeModel->find($oldRouteId) : null;
+            $oldLabel = $oldRoute ? (strtoupper($oldRoute['origin']) . ' → ' . strtoupper($oldRoute['destination'])) : 'None';
+            $newLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'None';
+            $this->logActivity('Reassign vehicle route', 'Reassigned ' . $this->request->getPost('plate_number') . ' from ' . $oldLabel . ' to ' . $newLabel);
+        } else {
+            $this->logActivity('Update vehicle', 'Updated vehicle ' . $this->request->getPost('plate_number'));
+        }
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle updated successfully.');
     }

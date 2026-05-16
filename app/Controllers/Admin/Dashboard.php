@@ -7,6 +7,7 @@ use App\Models\VehicleModel;
 use App\Models\RouteModel;
 use App\Models\UserModel;
 use App\Models\LogModel;
+use App\Models\UserRouteModel;
 
 class Dashboard extends BaseController
 {
@@ -16,6 +17,20 @@ class Dashboard extends BaseController
         $routeModel = new RouteModel();
         $userModel = new UserModel();
         $logModel = new LogModel();
+        $userRouteModel = new UserRouteModel();
+
+        // Count vehicles with no assigned route
+        $unassignedVehicles = $vehicleModel->where('route_id IS NULL')->countAllResults();
+
+        // Count staff users with no route assignments
+        $staffUsers = $userModel->where('role', 'staff')->findAll();
+        $unassignedStaff = 0;
+        foreach ($staffUsers as $su) {
+            $routeIds = $userRouteModel->getRouteIdsForUser((int) $su['id']);
+            if (empty($routeIds)) {
+                $unassignedStaff++;
+            }
+        }
 
         $data = [
             'title' => 'Admin Dashboard',
@@ -25,6 +40,8 @@ class Dashboard extends BaseController
                 'users'    => $userModel->countAll(),
                 'logs'     => $logModel->countAll()
             ],
+            'unassignedVehicles' => $unassignedVehicles,
+            'unassignedStaff'    => $unassignedStaff,
             'recent_logs' => $logModel->select('logs.*, users.username')
                                      ->join('users', 'users.id = logs.user_id', 'left')
                                      ->orderBy('timestamp', 'DESC')
@@ -37,4 +54,5 @@ class Dashboard extends BaseController
         return view('admin/dashboard', $data);
     }
 }
+
 
