@@ -612,7 +612,6 @@
         <!-- DISPATCHER NAVIGATION -->
             <?php elseif ($role == 'staff'): ?>
                 <a href="<?= base_url('staff/dashboard') ?>">Dashboard</a>
-                <a href="<?= base_url('admin/vehicles') ?>">Vehicle Register</a>
                 <a href="<?= base_url('admin/announcements') ?>">Announcements</a>
                 <a href="<?= base_url('staff/queue') ?>">Queue Management</a>
                 <a href="<?= base_url('staff/departure-rules') ?>">Departure Rules</a>

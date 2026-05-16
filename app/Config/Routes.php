@@ -26,23 +26,25 @@ $routes->post('contact/send', 'Contact::send');
 $routes->get('api/queue-status', 'Api\QueueStatus::index');
 $routes->get('api/check-vehicle-availability/(:num)', 'Api\QueueStatus::checkAvailability/$1');
 
-// Route Management (Accessible by both Admin and Staff)
+// Route & Fare Management — View + Fare/Discount (Admin + Staff per DFD 2.3)
 $routes->group('admin/routes', ['filter' => 'auth:admin,staff'], function($routes) {
     $routes->get('', 'Admin\Routes::index');
+    // Fare & Discount Management (both roles per DFD 2.3)
+    $routes->post('discounts/store', 'Admin\Routes::storeDiscount');
+    $routes->post('discounts/update/(:num)', 'Admin\Routes::updateDiscount/$1');
+    $routes->post('discounts/delete/(:num)', 'Admin\Routes::deleteDiscount/$1');
+});
+// Route CRUD — Admin only (per DFD 2.1/2.2: only Admin inputs route records)
+$routes->group('admin/routes', ['filter' => 'auth:admin'], function($routes) {
     $routes->get('create', 'Admin\Routes::create');
     $routes->post('store', 'Admin\Routes::store');
     $routes->get('edit/(:num)', 'Admin\Routes::edit/$1');
     $routes->post('update/(:num)', 'Admin\Routes::update/$1');
     $routes->post('delete/(:num)', 'Admin\Routes::delete/$1');
-
-    // Discount Management (Accessible by both Admin and Staff)
-    $routes->post('discounts/store', 'Admin\Routes::storeDiscount');
-    $routes->post('discounts/update/(:num)', 'Admin\Routes::updateDiscount/$1');
-    $routes->post('discounts/delete/(:num)', 'Admin\Routes::deleteDiscount/$1');
 });
 
-// Vehicle Register (Accessible by both Admin and Staff)
-$routes->group('admin/vehicles', ['filter' => 'auth:admin,staff'], function($routes) {
+// Vehicle Register — Admin only (per DFD 2.1: only Admin inputs vehicle records)
+$routes->group('admin/vehicles', ['filter' => 'auth:admin'], function($routes) {
     $routes->get('', 'Admin\Vehicles::index');
     $routes->get('edit/(:num)', 'Admin\Vehicles::edit/$1');
     $routes->post('store', 'Admin\Vehicles::store');

@@ -98,35 +98,50 @@ $fareTypes = [
                 <?php $routes = ${$ft['key']}; ?>
                 <?php if (!empty($routes)): ?>
                     <?php foreach ($routes as $route): ?>
-                    <div class="list-group-item d-flex justify-content-between align-items-center fare-item">
-                        <div>
-                            <strong class="d-block"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
-                            <small class="text-muted">Regular Fare</small>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
-                            <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
-                            <button type="button"
-                               class="btn btn-sm btn-outline-primary fare-action-btn" title="Edit Fare"
-                               data-bs-toggle="modal"
-                               data-bs-target="#editFareModal"
-                               data-id="<?= $route['id'] ?>"
-                               data-origin="<?= esc($route['origin']) ?>"
-                               data-destination="<?= esc($route['destination']) ?>"
-                               data-fare="<?= $route['fare'] ?>"
-                               data-vehicle-type="<?= esc($route['vehicle_type']) ?>"
-                               data-terminal-id="<?= $route['terminal_id'] ?>">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <form action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline"
-                                  onsubmit="return confirm('Delete this fare (<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>)?');">
-                                <?= csrf_field() ?>
-                                <button type="submit" class="btn btn-sm btn-outline-danger fare-action-btn" title="Delete Fare">
-                                    <i class="fas fa-trash-alt"></i>
+                    <div class="list-group-item fare-item" style="flex-direction: column; align-items: stretch; padding: 16px 20px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong class="d-block" style="font-size: 15px;"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
+                                <small class="text-muted">Regular Fare</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
+                                <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                <button type="button"
+                                   class="btn btn-sm btn-outline-primary fare-action-btn" title="Edit Fare"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#editFareModal"
+                                   data-id="<?= $route['id'] ?>"
+                                   data-origin="<?= esc($route['origin']) ?>"
+                                   data-destination="<?= esc($route['destination']) ?>"
+                                   data-fare="<?= $route['fare'] ?>"
+                                   data-vehicle-type="<?= esc($route['vehicle_type']) ?>"
+                                   data-terminal-id="<?= $route['terminal_id'] ?>">
+                                    <i class="fas fa-edit"></i>
                                 </button>
-                            </form>
-                            <?php endif; ?>
+                                <form action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete this fare (<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>)?');">
+                                    <?= csrf_field() ?>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger fare-action-btn" title="Delete Fare">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                            </div>
                         </div>
+                        <?php if (!empty($route['discounted_fares'])): ?>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                            <?php foreach ($route['discounted_fares'] as $type => $df): ?>
+                            <div class="d-flex justify-content-between align-items-center py-1">
+                                <span style="font-size: 13px; color: #475569; font-weight: 500;">
+                                    <i class="fas fa-tag me-1" style="font-size: 10px; color: #94a3b8;"></i>
+                                    <?= esc($df['label']) ?> <span class="text-muted" style="font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                </span>
+                                <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <?php endforeach; ?>
                 <?php else: ?>

@@ -67,6 +67,21 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
+                    <label for="route_id" class="form-label">Assigned Route <span class="text-danger">*</span></label>
+                    <select class="form-select" id="route_id" name="route_id" required>
+                        <option value="">-- Select Route --</option>
+                        <?php if (!empty($routes)): ?>
+                            <?php foreach ($routes as $r): ?>
+                                <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
+                                    <?= (old('route_id') ?? $vehicle['route_id']) == $r['id'] ? 'selected' : '' ?>>
+                                    <?= strtoupper(esc($r['origin'])) ?> &rarr; <?= strtoupper(esc($r['destination'])) ?> (<?= ucfirst(esc($r['vehicle_type'])) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
+                    <small class="form-text text-muted">Route must match vehicle type</small>
+                </div>
+                <div class="col-md-6 mb-3">
                     <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                     <select class="form-select" id="status" name="status" required>
                         <option value="active" <?= (old('status') ?? $vehicle['status']) == 'active' ? 'selected' : '' ?>>Active</option>
@@ -98,5 +113,45 @@
         </p>
     </div>
 </div>
+
+<script>
+// Filter route dropdown based on selected vehicle type
+document.addEventListener('DOMContentLoaded', function() {
+    var typeSelect = document.getElementById('type');
+    var routeSelect = document.getElementById('route_id');
+    var currentRouteId = '<?= old('route_id') ?? $vehicle['route_id'] ?>';
+
+    function filterRoutes() {
+        var selectedType = typeSelect.value;
+        var options = routeSelect.querySelectorAll('option[data-type]');
+        var hasSelected = false;
+
+        options.forEach(function(opt) {
+            if (opt.getAttribute('data-type') === selectedType) {
+                opt.style.display = '';
+                opt.disabled = false;
+                if (opt.value === currentRouteId) {
+                    opt.selected = true;
+                    hasSelected = true;
+                }
+            } else {
+                opt.style.display = 'none';
+                opt.disabled = true;
+                if (opt.selected) opt.selected = false;
+            }
+        });
+
+        if (!hasSelected) {
+            routeSelect.value = '';
+        }
+    }
+
+    filterRoutes();
+    typeSelect.addEventListener('change', function() {
+        currentRouteId = '';
+        filterRoutes();
+    });
+});
+</script>
 
 <?= view('templates/footer') ?>

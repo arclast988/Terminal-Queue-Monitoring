@@ -26,8 +26,6 @@ class Auth extends BaseController
 
         if ($user) {
             $pwdVerify = password_verify($password, $user['password_hash']);
-            
-
 
             if ($pwdVerify) {
                 $ses_data = [

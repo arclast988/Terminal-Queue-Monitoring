@@ -41,7 +41,7 @@ class Home extends BaseController
             'total_departures_today' => $queueModel->where('status', 'departed')
                 ->where('DATE(departure_time)', date('Y-m-d'))
                 ->countAllResults(),
-            'routes' => $routeModel->withFare()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll(),
             'announcements' => $announcements
         ];
 
@@ -93,7 +93,7 @@ class Home extends BaseController
             'recent_departures' => $recent_departures,
             'total_departures_today' => $total_departures_today,
             'sync_token' => $syncToken,
-            'routes' => $routeModel->withFare()->orderBy('destination', 'ASC')->findAll()
+            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll()
         ]);
     }
 }

@@ -20,15 +20,35 @@ class DepartureRuleModel extends Model
     protected $updatedField = 'updated_at';
 
     /**
-     * Get the wait minutes for a given time (H:i:s format).
-     * Returns the matching rule's wait_minutes, or 30 as default.
+     * Get the matching departure rule for a given time (H:i:s format).
+     * Returns the full rule array, or a default fallback if no rule matches.
      */
-    public function getWaitMinutesForTime(string $time): int
+    public function getRuleForTime(string $time): array
     {
         $rule = $this->where('time_from <=', $time)
             ->where('time_to >', $time)
             ->first();
 
-        return $rule ? (int) $rule['wait_minutes'] : 30;
+        if ($rule) {
+            return $rule;
+        }
+
+        // Fallback: no matching rule
+        return [
+            'wait_minutes' => 30,
+            'label' => 'Default (no rule matched)',
+            'time_from' => null,
+            'time_to' => null,
+        ];
+    }
+
+    /**
+     * Get the wait minutes for a given time (H:i:s format).
+     * Returns the matching rule's wait_minutes, or 30 as default.
+     */
+    public function getWaitMinutesForTime(string $time): int
+    {
+        $rule = $this->getRuleForTime($time);
+        return (int) $rule['wait_minutes'];
     }
 }

@@ -18,6 +18,10 @@
                     </div>
                 <?php endif ?>
 
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
+                <?php endif ?>
+
                 <form action="<?= base_url('admin/users/update/'.$user['id']) ?>" method="post">
                     <?= csrf_field() ?>
                     
@@ -39,9 +43,35 @@
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
                         <select class="form-select" id="role" name="role" required>
-                            <option value="staff" <?= $user['role'] == 'staff' ? 'selected' : '' ?>>Dispatcher</option>
-                            <option value="admin" <?= $user['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
+                            <option value="staff" <?= old('role', $user['role']) == 'staff' ? 'selected' : '' ?>>Dispatcher</option>
+                            <option value="admin" <?= old('role', $user['role']) == 'admin' ? 'selected' : '' ?>>Admin</option>
                         </select>
+                    </div>
+
+                    <!-- Route Assignment (only for Dispatcher) -->
+                    <div class="mb-3" id="routeAssignmentSection">
+                        <label class="form-label fw-semibold">Assigned Routes <span class="text-danger">*</span></label>
+                        <p class="form-text text-muted mt-0 mb-2">Select the routes this dispatcher can manage.</p>
+                        <div class="border rounded p-3" style="max-height: 250px; overflow-y: auto;">
+                            <?php
+                                $oldRoutes = old('route_ids') ?? $assignedRouteIds ?? [];
+                            ?>
+                            <?php if (!empty($routes)): ?>
+                                <?php foreach ($routes as $r): ?>
+                                    <div class="form-check mb-1">
+                                        <input class="form-check-input" type="checkbox" name="route_ids[]"
+                                               value="<?= $r['id'] ?>" id="route_<?= $r['id'] ?>"
+                                               <?= in_array($r['id'], $oldRoutes) ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="route_<?= $r['id'] ?>">
+                                            <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?>
+                                            <small class="text-muted">(<?= ucfirst(esc($r['vehicle_type'])) ?>)</small>
+                                        </label>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <p class="text-muted mb-0">No routes available.</p>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -53,5 +83,19 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var roleSelect = document.getElementById('role');
+    var routeSection = document.getElementById('routeAssignmentSection');
+
+    function toggleRouteSection() {
+        routeSection.style.display = roleSelect.value === 'staff' ? 'block' : 'none';
+    }
+
+    toggleRouteSection();
+    roleSelect.addEventListener('change', toggleRouteSection);
+});
+</script>
 
 <?= $this->include('templates/footer') ?>

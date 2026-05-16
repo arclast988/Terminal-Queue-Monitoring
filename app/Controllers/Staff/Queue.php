@@ -6,38 +6,107 @@ use App\Controllers\BaseController;
 use App\Models\QueueModel;
 use App\Models\VehicleModel;
 use App\Models\RouteModel;
-use App\Models\TripStatusHistoryModel;
+use App\Models\DepartureRuleModel;
+use App\Models\UserRouteModel;
 
 class Queue extends BaseController
 {
     protected $queueModel;
     protected $vehicleModel;
     protected $routeModel;
-    protected $historyModel;
 
     public function __construct()
     {
         $this->queueModel = new QueueModel();
         $this->vehicleModel = new VehicleModel();
         $this->routeModel = new RouteModel();
-        $this->historyModel = new TripStatusHistoryModel();
+    }
+
+    /**
+     * Get the assigned route IDs for the current user.
+     * Returns null for admin (unrestricted), or array of route_ids for staff.
+     */
+    private function getAssignedRouteIds(): ?array
+    {
+        if (session()->get('role') === 'admin') {
+            return null; // Admin sees everything
+        }
+
+        $userRouteModel = new UserRouteModel();
+        return $userRouteModel->getRouteIdsForUser((int) session()->get('id'));
+    }
+
+    /**
+     * Check if the current user has access to a specific route.
+     */
+    private function hasRouteAccess(int $routeId): bool
+    {
+        $assignedIds = $this->getAssignedRouteIds();
+        if ($assignedIds === null) {
+            return true; // Admin
+        }
+        return in_array($routeId, $assignedIds);
+    }
+
+    /**
+     * Check if the current user has access to a specific queue entry.
+     */
+    private function hasQueueAccess(int $queueId): bool
+    {
+        $item = $this->queueModel->find($queueId);
+        if (!$item) {
+            return false;
+        }
+        return $this->hasRouteAccess((int) $item['route_id']);
     }
 
     public function index()
     {
-        // Get current queue with details
-        $queue = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, vehicles.capacity')
+        $assignedRouteIds = $this->getAssignedRouteIds();
+
+        // Build queue query
+        $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, vehicles.capacity')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
-            ->whereIn('queue.status', ['waiting', 'boarding'])
-            ->orderBy('queue.position', 'ASC')
-            ->findAll();
+            ->whereIn('queue.status', ['waiting', 'boarding']);
+
+        // Filter by assigned routes for staff
+        if ($assignedRouteIds !== null) {
+            if (!empty($assignedRouteIds)) {
+                $builder->whereIn('queue.route_id', $assignedRouteIds);
+            } else {
+                $builder->where('queue.route_id', 0);
+            }
+        }
+
+        $queue = $builder->orderBy('queue.position', 'ASC')->findAll();
+
+        // Filter vehicles: only show vehicles assigned to dispatcher's routes
+        $freshVehicleModel = new VehicleModel();
+        if ($assignedRouteIds !== null) {
+            if (!empty($assignedRouteIds)) {
+                $vehicles = $freshVehicleModel
+                    ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination')
+                    ->join('routes', 'routes.id = vehicles.route_id', 'left')
+                    ->where('vehicles.status', 'active')
+                    ->whereIn('vehicles.route_id', $assignedRouteIds)
+                    ->findAll();
+            } else {
+                $vehicles = [];
+            }
+        } else {
+            $vehicles = $freshVehicleModel
+                ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination')
+                ->join('routes', 'routes.id = vehicles.route_id', 'left')
+                ->where('vehicles.status', 'active')
+                ->findAll();
+        }
 
         $data = [
             'title' => 'Queue Management',
             'queue' => $queue,
-            'vehicles' => $this->vehicleModel->where('status', 'active')->findAll(),
-            'routes' => $this->routeModel->findAll()
+            'vehicles' => $vehicles,
+            'noRoutesAssigned' => ($assignedRouteIds !== null && empty($assignedRouteIds)),
         ];
 
         return view('staff/queue/index', $data);
@@ -47,8 +116,6 @@ class Queue extends BaseController
     {
         $rules = [
             'vehicle_id' => 'required|integer',
-            'route_id' => 'required|integer',
-            'wait_minutes' => 'required|integer'
         ];
 
         if (!$this->validate($rules)) {
@@ -56,7 +123,28 @@ class Queue extends BaseController
         }
 
         $vehicleId = $this->request->getPost('vehicle_id');
-        $routeId = $this->request->getPost('route_id');
+
+        // Get vehicle and its assigned route
+        $vehicle = $this->vehicleModel->find($vehicleId);
+        if (!$vehicle) {
+            return redirect()->back()->with('error', 'Vehicle not found.');
+        }
+
+        $routeId = $vehicle['route_id'];
+        if (empty($routeId)) {
+            return redirect()->back()->with('error', 'This vehicle has no assigned route. Please contact the administrator.');
+        }
+
+        $route = $this->routeModel->find($routeId);
+        if (!$route) {
+            return redirect()->back()->with('error', 'The route assigned to this vehicle no longer exists.');
+        }
+
+        // Server-side route authorization check
+        if (!$this->hasRouteAccess((int) $routeId)) {
+            $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to add vehicle to unassigned route ID ' . $routeId . '.');
+            return redirect()->back()->with('error', "You don't have access to this route.");
+        }
 
         // Check if vehicle is already in queue
         $existingQueue = $this->queueModel->where('vehicle_id', $vehicleId)
@@ -64,9 +152,7 @@ class Queue extends BaseController
             ->first();
 
         if ($existingQueue) {
-            $vehicle = $this->vehicleModel->find($vehicleId);
-            $platNumber = $vehicle['plate_number'] ?? 'Vehicle';
-            return redirect()->back()->with('warning', $platNumber . ' is already in the queue!');
+            return redirect()->back()->with('warning', $vehicle['plate_number'] . ' is already in the queue!');
         }
         
         // Check for recent departure (within 1 minute)
@@ -87,7 +173,18 @@ class Queue extends BaseController
         $lastPosition = $this->queueModel->selectMax('position')->first();
         $nextPosition = ($lastPosition['position'] ?? 0) + 1;
 
-        $waitMinutes = (int) $this->request->getPost('wait_minutes');
+        // Auto-apply departure rule based on current time
+        $departureRuleModel = new DepartureRuleModel();
+        $currentTime = date('H:i:s'); // Server local time (Asia/Manila)
+        $matchedRule = $departureRuleModel->getRuleForTime($currentTime);
+        $waitMinutes = (int) $matchedRule['wait_minutes'];
+        $ruleLabel = $matchedRule['label'] ?? 'Default';
+
+        // Log warning if no rule matched (using fallback)
+        if (empty($matchedRule['time_from'])) {
+            $this->logActivity('No departure rule matched', 'No departure rule covers ' . date('g:i A') . '. Using default of 30 minutes.');
+        }
+
         $arrivalTime = date('Y-m-d H:i:s');
         $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
 
@@ -100,17 +197,7 @@ class Queue extends BaseController
             'estimated_departure' => $estimatedDeparture
         ]);
 
-        // Log history
-        $this->historyModel->insert([
-            'queue_id' => $queueId,
-            'status' => 'arrived/waiting',
-            'timestamp' => date('Y-m-d H:i:s'),
-            'updated_by_user_id' => session()->get('id')
-        ]);
-
-        $vehicle = $this->vehicleModel->find($vehicleId);
-        $route = $this->routeModel->find($routeId);
-        $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '.');
+        $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
 
         // Fetch complete queue item for broadcast
         $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, routes.origin, routes.destination')
@@ -124,11 +211,18 @@ class Queue extends BaseController
             'queue_item' => $queueItem
         ]);
 
-        return redirect()->to('/staff/queue')->with('success', 'Vehicle added to queue.');
+        $estTime = date('h:i A', strtotime($estimatedDeparture));
+        return redirect()->to('/staff/queue')->with('success', $vehicle['plate_number'] . ' added to queue. Est. departure: ' . $estTime . ' (' . $ruleLabel . ', ' . $waitMinutes . ' min wait).');
     }
 
     public function updateStatus($id, $status)
     {
+        // Server-side route authorization check
+        if (!$this->hasQueueAccess((int) $id)) {
+            $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to update status of queue #' . $id . ' on an unassigned route.');
+            return redirect()->back()->with('error', "You don't have access to this route.");
+        }
+
         // Sanitize status in case query string is included
         if (strpos($status, '?') !== false) {
             $parts = explode('?', $status);
@@ -166,13 +260,6 @@ class Queue extends BaseController
 
         $db->transComplete();
 
-        // Log history
-        $this->historyModel->insert([
-            'queue_id' => $id,
-            'status' => $status,
-            'timestamp' => date('Y-m-d H:i:s'),
-            'updated_by_user_id' => session()->get('id')
-        ]);
 
         $item = $this->queueModel->select('vehicles.plate_number, routes.origin, routes.destination')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
@@ -207,6 +294,12 @@ class Queue extends BaseController
     }
     public function updatePassengers($id, $action)
     {
+        // Server-side route authorization check
+        if (!$this->hasQueueAccess((int) $id)) {
+            $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to update passengers of queue #' . $id . ' on an unassigned route.');
+            return redirect()->back()->with('error', "You don't have access to this route.");
+        }
+
         // Sanitize action in case query string is included
         if (strpos($action, '?') !== false) {
             $parts = explode('?', $action);
@@ -262,7 +355,7 @@ class Queue extends BaseController
         }
 
         $ref = $this->request->getVar('ref');
-        $redirectUrl = $ref === 'dashboard' ? 'admin/dashboard' : 'staff/queue';
+        $redirectUrl = $ref === 'dashboard' ? 'staff/dashboard' : 'staff/queue';
         return redirect()->to(base_url($redirectUrl));
     }
 
@@ -272,6 +365,11 @@ class Queue extends BaseController
      */
     public function setPassengers($id)
     {
+        // Server-side route authorization check
+        if (!$this->hasQueueAccess((int) $id)) {
+            return $this->response->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
+        }
+
         $queueItem = $this->queueModel->find($id);
         if (!$queueItem) {
             return $this->response->setJSON(['success' => false, 'message' => 'Item not found']);
@@ -302,4 +400,3 @@ class Queue extends BaseController
         ]);
     }
 }
-

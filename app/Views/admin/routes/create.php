@@ -27,28 +27,27 @@
             <?= csrf_field() ?>
 
             <div class="mb-3">
-                <label for="origin" class="form-label fw-semibold">Origin</label>
-                <select class="form-select" id="origin" name="origin" required>
-                    <option value="">— Select Origin —</option>
-                    <?php foreach ($all_locations as $loc): ?>
-                        <option value="<?= esc($loc) ?>" <?= old('origin') === $loc ? 'selected' : '' ?>>
-                            <?= esc($loc) ?>
+                <label for="terminal_id" class="form-label fw-semibold">Terminal (Origin)</label>
+                <select class="form-select" id="terminal_id" name="terminal_id" required>
+                    <option value="">Select Terminal</option>
+                    <?php foreach ($terminals as $terminal): ?>
+                        <option value="<?= $terminal['id'] ?>"
+                                data-name="<?= esc($terminal['name']) ?>"
+                                <?= old('terminal_id') == $terminal['id'] ? 'selected' : '' ?>>
+                            <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
-                <div class="form-text text-muted">Only locations already in the database are shown.</div>
+                <div class="form-text text-muted">
+                    <i class="bi bi-info-circle me-1"></i>This terminal serves as the origin point for this route.
+                </div>
             </div>
 
             <div class="mb-3">
                 <label for="destination" class="form-label fw-semibold">Destination</label>
-                <select class="form-select" id="destination" name="destination" required>
-                    <option value="">— Select Destination —</option>
-                    <?php foreach ($all_locations as $loc): ?>
-                        <option value="<?= esc($loc) ?>" <?= old('destination') === $loc ? 'selected' : '' ?>>
-                            <?= esc($loc) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <input type="text" class="form-control" id="destination" name="destination"
+                       value="<?= old('destination') ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
+                <div class="form-text text-muted">Type the destination city/town name.</div>
             </div>
 
             <div class="mb-3">
@@ -77,19 +76,6 @@
                            <?= old('vehicle_type') == 'minibus' ? 'checked' : '' ?>>
                     <label class="form-check-label" for="type_minibus">🚍 Mini Bus</label>
                 </div>
-            </div>
-
-            <div class="mb-3">
-                <label for="terminal_id" class="form-label fw-semibold">Terminal</label>
-                <select class="form-select" id="terminal_id" name="terminal_id" required>
-                    <option value="">Select Terminal</option>
-                    <?php foreach ($terminals as $terminal): ?>
-                        <option value="<?= $terminal['id'] ?>"
-                                <?= old('terminal_id') == $terminal['id'] ? 'selected' : '' ?>>
-                            <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
             </div>
 
             <button type="submit" class="btn btn-primary">

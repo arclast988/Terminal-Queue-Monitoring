@@ -31,13 +31,15 @@
         <form action="<?= base_url('admin/vehicles/store') ?>" method="post">
             <?= csrf_field() ?>
             <div class="row g-3 align-items-end">
-                <div class="col-12 col-sm-6 col-xl-3">
+                <div class="col-12 col-sm-6 col-xl-2">
                     <label for="driver_name" class="form-label">Driver Name</label>
-                    <input type="text" class="form-control" id="driver_name" name="driver_name" placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?>" required>
+                    <input type="text" class="form-control" id="driver_name" name="driver_name"
+                        placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?>" required>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-3">
+                <div class="col-12 col-sm-6 col-xl-2">
                     <label for="plate_number" class="form-label">Plate Number</label>
-                    <input type="text" class="form-control" id="plate_number" name="plate_number" placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
+                    <input type="text" class="form-control" id="plate_number" name="plate_number"
+                        placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-2">
                     <label for="type" class="form-label">Vehicle Type</label>
@@ -48,10 +50,25 @@
                     </select>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-2">
-                    <label for="capacity" class="form-label">Capacity</label>
-                    <input type="number" class="form-control" id="capacity" name="capacity" placeholder="e.g. 16" value="<?= old('capacity') ?>" min="1" required>
+                    <label for="route_id" class="form-label">Assigned Route</label>
+                    <select class="form-select" id="route_id" name="route_id" required>
+                        <option value="">-- Select Route --</option>
+                        <?php if (!empty($routes)): ?>
+                            <?php foreach ($routes as $r): ?>
+                                <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
+                                    <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
+                                    <?= strtoupper(esc($r['destination'])) ?> (<?= ucfirst(esc($r['vehicle_type'])) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </select>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-2">
+                <div class="col-12 col-sm-6 col-xl-1">
+                    <label for="capacity" class="form-label">Capacity</label>
+                    <input type="number" class="form-control" id="capacity" name="capacity" placeholder="16"
+                        value="<?= old('capacity') ?>" min="1" required>
+                </div>
+                <div class="col-12 col-sm-6 col-xl-1">
                     <button type="submit" class="btn btn-primary w-100 vehicle-add-btn">
                         <i class="bi bi-plus-lg"></i> Add
                     </button>
@@ -62,26 +79,35 @@
 </div>
 
 <?php
-    // Count vehicles by type and status
-    $totalVehicles = is_array($vehicles) ? count($vehicles) : 0;
-    $countJeepney = 0; $countVan = 0; $countMinibus = 0;
-    $countActive = 0; $countMaintenance = 0;
-    if (!empty($vehicles) && is_array($vehicles)) {
-        foreach ($vehicles as $v) {
-            if ($v['type'] === 'jeepney') $countJeepney++;
-            elseif ($v['type'] === 'van') $countVan++;
-            elseif ($v['type'] === 'minibus') $countMinibus++;
-            if ($v['status'] === 'active') $countActive++;
-            else $countMaintenance++;
-        }
+// Count vehicles by type and status
+$totalVehicles = is_array($vehicles) ? count($vehicles) : 0;
+$countJeepney = 0;
+$countVan = 0;
+$countMinibus = 0;
+$countActive = 0;
+$countMaintenance = 0;
+if (!empty($vehicles) && is_array($vehicles)) {
+    foreach ($vehicles as $v) {
+        if ($v['type'] === 'jeepney')
+            $countJeepney++;
+        elseif ($v['type'] === 'van')
+            $countVan++;
+        elseif ($v['type'] === 'minibus')
+            $countMinibus++;
+        if ($v['status'] === 'active')
+            $countActive++;
+        else
+            $countMaintenance++;
     }
+}
 ?>
 
 <!-- Vehicle Filter & Summary Bar -->
 <div class="mb-4">
     <!-- Filter Buttons Row -->
     <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
+        <span
+            style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
             <i class="bi bi-funnel me-1"></i>Filter:
         </span>
         <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterVehicles('all')">
@@ -106,7 +132,8 @@
             <i class="bi bi-check-circle-fill"></i> Active
             <span class="vf-count"><?= $countActive ?></span>
         </button>
-        <button type="button" class="vf-btn vf-maintenance-status" id="filter-btn-maintenance" onclick="filterVehicles('maintenance')">
+        <button type="button" class="vf-btn vf-maintenance-status" id="filter-btn-maintenance"
+            onclick="filterVehicles('maintenance')">
             <i class="bi bi-wrench-adjustable"></i> Maintenance
             <span class="vf-count"><?= $countMaintenance ?></span>
         </button>
@@ -116,8 +143,10 @@
 <!-- Vehicles Table -->
 <div class="card shadow">
     <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
-        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Vehicle List</span>
-        <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all <strong><?= $totalVehicles ?></strong> vehicles</span>
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Vehicle
+            List</span>
+        <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all
+            <strong><?= $totalVehicles ?></strong> vehicles</span>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -128,6 +157,7 @@
                         <th>Plate Number</th>
                         <th>Driver Name</th>
                         <th>Vehicle Type</th>
+                        <th>Assigned Route</th>
                         <th>Capacity</th>
                         <th>Status</th>
                         <th>Registered</th>
@@ -145,11 +175,21 @@
                                 <td class="fw-bold"><?= esc($vehicle['driver_name']) ?></td>
                                 <td>
                                     <?php
-                                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                        $imgFile = $imgMap[$vehicle['type']] ?? 'van.png';
+                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
+                                    $imgFile = $imgMap[$vehicle['type']] ?? 'van.png';
                                     ?>
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($vehicle['type']) ?>" style="height:32px; width:auto;" title="<?= ucfirst($vehicle['type']) ?>">
-                                    <small class="d-block text-muted" style="font-size:10px;"><?= ucfirst($vehicle['type']) ?></small>
+                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($vehicle['type']) ?>"
+                                        style="height:32px; width:auto;" title="<?= ucfirst($vehicle['type']) ?>">
+                                    <small class="d-block text-muted"
+                                        style="font-size:10px;"><?= ucfirst($vehicle['type']) ?></small>
+                                </td>
+                                <td>
+                                    <?php if (!empty($vehicle['route_destination'])): ?>
+                                        <span class="badge bg-primary"><?= strtoupper(esc($vehicle['route_origin'])) ?> →
+                                            <?= strtoupper(esc($vehicle['route_destination'])) ?></span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning text-dark">Not Assigned</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td><?= $vehicle['capacity'] ?></td>
                                 <td>
@@ -164,10 +204,13 @@
                                 </td>
                                 <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="<?= base_url('admin/vehicles/edit/'.$vehicle['id']) ?>" class="btn btn-outline-primary" title="Edit vehicle">
+                                        <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
+                                            class="btn btn-outline-primary" title="Edit vehicle">
                                             <i class="bi bi-pencil"></i> <span class="vehicle-action-label">Edit</span>
                                         </a>
-                                        <form action="<?= base_url('admin/vehicles/delete/'.$vehicle['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
+                                        <form action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn btn-outline-danger" title="Delete vehicle">
                                                 <i class="bi bi-trash"></i> <span class="vehicle-action-label">Delete</span>
@@ -179,7 +222,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="no-vehicles-row">
-                            <td colspan="8" class="text-center py-4 text-muted">No vehicles registered yet.</td>
+                            <td colspan="9" class="text-center py-4 text-muted">No vehicles registered yet.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -257,8 +300,9 @@
         border-color: #C62828 !important;
         color: #fff !important;
     }
+
     .vf-btn.active .vf-count {
-        background: rgba(255,255,255,0.25) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
         color: #fff !important;
     }
 
@@ -268,21 +312,25 @@
         border-color: #d97706 !important;
         color: #fff !important;
     }
+
     .vf-btn.vf-van.active {
         background: #059669 !important;
         border-color: #059669 !important;
         color: #fff !important;
     }
+
     .vf-btn.vf-minibus.active {
         background: #0891b2 !important;
         border-color: #0891b2 !important;
         color: #fff !important;
     }
+
     .vf-btn.vf-active-status.active {
         background: #16a34a !important;
         border-color: #16a34a !important;
         color: #fff !important;
     }
+
     .vf-btn.vf-maintenance-status.active {
         background: #dc2626 !important;
         border-color: #dc2626 !important;
@@ -294,7 +342,7 @@
     .vf-btn.vf-minibus.active .vf-count,
     .vf-btn.vf-active-status.active .vf-count,
     .vf-btn.vf-maintenance-status.active .vf-count {
-        background: rgba(255,255,255,0.25) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
         color: #fff !important;
     }
 
@@ -447,7 +495,7 @@
             if (!emptyRow) {
                 emptyRow = document.createElement('tr');
                 emptyRow.classList.add('no-filter-results');
-                emptyRow.innerHTML = '<td colspan="8" class="text-center py-4 text-muted"><i class="bi bi-inbox me-2"></i>No vehicles match the selected filter.</td>';
+                emptyRow.innerHTML = '<td colspan="9" class="text-center py-4 text-muted"><i class="bi bi-inbox me-2"></i>No vehicles match the selected filter.</td>';
                 document.querySelector('#vehicles-table tbody').appendChild(emptyRow);
             }
             emptyRow.style.display = '';
@@ -455,6 +503,32 @@
             emptyRow.style.display = 'none';
         }
     }
+</script>
+
+<script>
+    // Filter route dropdown based on selected vehicle type
+    document.addEventListener('DOMContentLoaded', function () {
+        var typeSelect = document.getElementById('type');
+        var routeSelect = document.getElementById('route_id');
+
+        function filterRoutes() {
+            var selectedType = typeSelect.value;
+            routeSelect.value = '';
+            var options = routeSelect.querySelectorAll('option[data-type]');
+            options.forEach(function (opt) {
+                if (opt.getAttribute('data-type') === selectedType) {
+                    opt.style.display = '';
+                    opt.disabled = false;
+                } else {
+                    opt.style.display = 'none';
+                    opt.disabled = true;
+                }
+            });
+        }
+
+        filterRoutes();
+        typeSelect.addEventListener('change', filterRoutes);
+    });
 </script>
 
 <?= view('templates/footer') ?>

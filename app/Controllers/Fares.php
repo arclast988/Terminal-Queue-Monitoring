@@ -9,21 +9,26 @@ use App\Models\FareDiscountModel;
 
 class Fares extends BaseController
 {
-    private function routesByVehicleType(string $vehicleType): array
+    private function routesByVehicleType(string $vehicleType, array $discounts): array
     {
         $routeModel = new RouteModel();
+        $rows = $routeModel->where('vehicle_type', $vehicleType)
+                           ->orderBy('destination', 'ASC')
+                           ->findAll();
 
-        return $routeModel->withFare()
-            ->where('routes.vehicle_type', $vehicleType)
-            ->findAll();
+        return enrich_routes_with_discounts($rows, $discounts);
     }
 
     public function index()
     {
-        // Fetch routes grouped by vehicle type
-        $van_routes     = $this->routesByVehicleType('van');
-        $jeepney_routes = $this->routesByVehicleType('jeepney');
-        $minibus_routes = $this->routesByVehicleType('minibus');
+        helper('fare');
+
+        $discountModel = new FareDiscountModel();
+        $discounts     = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
+
+        $van_routes     = $this->routesByVehicleType('van', $discounts);
+        $jeepney_routes = $this->routesByVehicleType('jeepney', $discounts);
+        $minibus_routes = $this->routesByVehicleType('minibus', $discounts);
 
         $announcements = [];
         try {
@@ -31,19 +36,13 @@ class Fares extends BaseController
             $announcements     = $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
         } catch (\Throwable $e) {}
 
-        // --- Data for admin/staff management ---
         $terminals = [];
         $all_locations = [];
-
-        // Always load discounts — shown to public too (view-only)
-        $discountModel = new FareDiscountModel();
-        $discounts     = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
 
         if (session()->get('isLoggedIn') && in_array(session()->get('role'), ['admin', 'staff'])) {
             $terminalModel  = new TerminalModel();
             $terminals      = $terminalModel->findAll();
 
-            // Collect distinct locations from DB for dropdown-constrained add form
             $db            = \Config\Database::connect();
             $originsRaw    = $db->query('SELECT DISTINCT origin FROM routes ORDER BY origin ASC')->getResultArray();
             $destsRaw      = $db->query('SELECT DISTINCT destination FROM routes ORDER BY destination ASC')->getResultArray();
@@ -65,34 +64,32 @@ class Fares extends BaseController
             'all_locations' => $all_locations,
         ];
 
-        // Use shared view for logged-in users, public view for guests
         if (session()->get('isLoggedIn')) {
             return view('shared/fares', $data);
         }
         return view('public/fares', $data);
     }
 
-    /**
-     * API endpoint: returns fare data as JSON for AJAX polling.
-     */
     public function apiData()
     {
-        $discountModel = new FareDiscountModel();
+        helper('fare');
 
-        $van_routes     = $this->routesByVehicleType('van');
-        $jeepney_routes = $this->routesByVehicleType('jeepney');
-        $minibus_routes = $this->routesByVehicleType('minibus');
-        $discounts      = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
+        $discountModel = new FareDiscountModel();
+        $discounts     = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
+
+        $van_routes     = $this->routesByVehicleType('van', $discounts);
+        $jeepney_routes = $this->routesByVehicleType('jeepney', $discounts);
+        $minibus_routes = $this->routesByVehicleType('minibus', $discounts);
 
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->setHeader('Pragma', 'no-cache')
             ->setHeader('Expires', '0')
             ->setJSON([
-            'van_routes'     => $van_routes,
-            'jeepney_routes' => $jeepney_routes,
-            'minibus_routes' => $minibus_routes,
-            'discounts'      => $discounts,
-        ]);
+                'van_routes'     => $van_routes,
+                'jeepney_routes' => $jeepney_routes,
+                'minibus_routes' => $minibus_routes,
+                'discounts'      => $discounts,
+            ]);
     }
 }

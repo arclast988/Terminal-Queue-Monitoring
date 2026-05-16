@@ -68,14 +68,31 @@ class DepartureRules extends BaseController
         if (strlen($timeTo) === 5)
             $timeTo .= ':00';
 
+        // Validate time_from < time_to
+        if ($timeFrom >= $timeTo) {
+            return redirect()->back()->withInput()->with('error', 'Time From must be earlier than Time To.');
+        }
+
+        // Check for overlapping rules
+        $overlap = $this->ruleModel
+            ->where('time_from <', $timeTo)
+            ->where('time_to >', $timeFrom)
+            ->first();
+        if ($overlap) {
+            return redirect()->back()->withInput()->with('error', 'This time range overlaps with an existing rule: ' . date('g:i A', strtotime($overlap['time_from'])) . ' – ' . date('g:i A', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').');
+        }
+
+        $label = $this->request->getPost('label') ?: null;
+        $waitMinutes = $this->request->getPost('wait_minutes');
+
         $this->ruleModel->save([
             'time_from' => $timeFrom,
             'time_to' => $timeTo,
-            'wait_minutes' => $this->request->getPost('wait_minutes'),
-            'label' => $this->request->getPost('label') ?: null
+            'wait_minutes' => $waitMinutes,
+            'label' => $label
         ]);
 
-        $this->logActivity('Create departure rule', 'Added departure rule: ' . $this->request->getPost('time_from') . ' - ' . $this->request->getPost('time_to') . ' (' . $this->request->getPost('wait_minutes') . ' min).');
+        $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . date('g:i A', strtotime($timeFrom)) . ' – ' . date('g:i A', strtotime($timeTo)) . ', ' . $waitMinutes . ' min).');
 
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule added successfully.');
     }
@@ -126,14 +143,33 @@ class DepartureRules extends BaseController
         if (strlen($timeTo) === 5)
             $timeTo .= ':00';
 
+        // Validate time_from < time_to
+        if ($timeFrom >= $timeTo) {
+            return redirect()->back()->withInput()->with('error', 'Time From must be earlier than Time To.');
+        }
+
+        // Check for overlapping rules (exclude current rule)
+        $overlap = $this->ruleModel
+            ->where('time_from <', $timeTo)
+            ->where('time_to >', $timeFrom)
+            ->where('id !=', $id)
+            ->first();
+        if ($overlap) {
+            return redirect()->back()->withInput()->with('error', 'This time range overlaps with an existing rule: ' . date('g:i A', strtotime($overlap['time_from'])) . ' – ' . date('g:i A', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').');
+        }
+
+        $oldRule = $this->ruleModel->find($id);
+        $label = $this->request->getPost('label') ?: null;
+        $waitMinutes = $this->request->getPost('wait_minutes');
+
         $this->ruleModel->update($id, [
             'time_from' => $timeFrom,
             'time_to' => $timeTo,
-            'wait_minutes' => $this->request->getPost('wait_minutes'),
-            'label' => $this->request->getPost('label') ?: null
+            'wait_minutes' => $waitMinutes,
+            'label' => $label
         ]);
 
-        $this->logActivity('Update departure rule', 'Updated departure rule #' . $id . '.');
+        $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . date('g:i A', strtotime($oldRule['time_from'])) . '–' . date('g:i A', strtotime($oldRule['time_to'])) . '). After: ' . $waitMinutes . ' min (' . date('g:i A', strtotime($timeFrom)) . '–' . date('g:i A', strtotime($timeTo)) . ').');
 
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule updated successfully.');
     }

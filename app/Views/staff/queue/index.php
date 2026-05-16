@@ -1,9 +1,4 @@
 <?= view('templates/header', ['title' => $title]) ?>
-    <style>
-        
-        
-        
-    </style>
 
 <style>
     /* DISABLE ALL ANIMATIONS AND TRANSITIONS GLOBALLY */
@@ -174,11 +169,20 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Queue Operations </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
+        <?php if (empty($noRoutesAssigned)): ?>
         <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
             <i class="bi bi-plus-lg me-1"></i> Add Vehicle to Queue
         </button>
+        <?php endif; ?>
     </div>
 </div>
+
+<?php if (!empty($noRoutesAssigned)): ?>
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>No Routes Assigned.</strong> You have no routes assigned to your account. Please contact the administrator to assign routes before you can manage the queue.
+    </div>
+<?php endif; ?>
 
 <?php if (session()->getFlashdata('success')): ?>
     <div class="alert alert-success alert-dismissible" role="alert">
@@ -349,7 +353,6 @@
 <?php endforeach; ?>
 <?php endif; ?>
 
-<!-- Add to Queue Modal -->
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
     <div class="modal-dialog">
         <form action="<?= base_url('staff/queue/add') ?>" method="post">
@@ -362,30 +365,25 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Select Vehicle</label>
-                        <select name="vehicle_id" class="form-select" required>
-                            <option value="">-- Choose Vehicle --</option>
+                        <select name="vehicle_id" id="vehicleSelect" class="form-select" required>
+                            <option value="" data-route="">-- Choose Vehicle --</option>
                             <?php foreach ($vehicles as $v): ?>
-                                <option value="<?= $v['id'] ?>"><?= esc($v['plate_number']) ?> (<?= ucfirst(esc($v['type'])) ?>)
+                                <option value="<?= $v['id'] ?>"
+                                    data-route="<?= !empty($v['route_origin']) ? strtoupper(esc($v['route_origin'])) . ' → ' . strtoupper(esc($v['route_destination'])) : '' ?>"
+                                    data-type="<?= esc($v['type']) ?>">
+                                    <?= esc($v['plate_number']) ?> (<?= ucfirst(esc($v['type'])) ?>)<?= !empty($v['route_destination']) ? ' — ' . strtoupper(esc($v['route_destination'])) : '' ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Select Route</label>
-                        <select name="route_id" class="form-select" required>
-                            <option value="">-- Choose Route --</option>
-                            <?php foreach ($routes as $r): ?>
-                                <option value="<?= $r['id'] ?>"><?= esc($r['destination']) ?> (<?= esc($r['origin']) ?>)</option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="mb-3" id="routeInfoBox" style="display:none;">
+                        <label class="form-label">Assigned Route</label>
+                        <div class="form-control bg-light" id="routeInfoText" style="pointer-events:none;"></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Departure In (Wait Time)</label>
-                        <select name="wait_minutes" class="form-select" required>
-                            <option value="30">30 minutes</option>
-                            <option value="40">40 minutes</option>
-                            <option value="60">60 minutes</option>
-                        </select>
+                    <div class="mb-0">
+                        <div class="form-text text-muted">
+                            <i class="bi bi-clock me-1"></i>Estimated departure will be set automatically based on departure time rules.
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -452,7 +450,6 @@
 
         var updateUrl = '<?= base_url('staff/queue/update') ?>/' + id + '/' + status;
 
-        // Read CSRF token from meta tag
         var csrfToken = '';
         var csrfMeta = document.querySelector('meta[name="csrf-token"]');
         if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
@@ -478,12 +475,29 @@
         modalSelector: '[id^="confirmDepartModal"]'
     });
 
-    // Handle Add to Queue Form Validation
+    // Handle Add to Queue Form — show route info on vehicle selection
     document.addEventListener('DOMContentLoaded', function() {
         var addForm = document.querySelector('#addToQueueModal form');
         var warningModal = new bootstrap.Modal(document.getElementById('departureWarningModal'));
         var warningMsg = document.getElementById('departureWarningMessage');
         var submitBtn = document.getElementById('submitToQueueBtn');
+
+        var vehicleSelect = document.getElementById('vehicleSelect');
+        var routeInfoBox = document.getElementById('routeInfoBox');
+        var routeInfoText = document.getElementById('routeInfoText');
+
+        if (vehicleSelect) {
+            vehicleSelect.addEventListener('change', function() {
+                var selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+                var routeLabel = selectedOption.getAttribute('data-route') || '';
+                if (routeLabel) {
+                    routeInfoText.textContent = routeLabel;
+                    routeInfoBox.style.display = 'block';
+                } else {
+                    routeInfoBox.style.display = 'none';
+                }
+            });
+        }
 
         if (addForm) {
             addForm.addEventListener('submit', function(e) {
@@ -507,20 +521,9 @@
                         }
                     })
                     .catch(() => {
-                        addForm.submit(); // Proceed if check fails for any reason
+                        addForm.submit();
                     });
             });
         }
     });
 </script>
-
-
-
-
-
-
-
-
-
-
-

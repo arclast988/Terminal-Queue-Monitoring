@@ -645,19 +645,34 @@
                 <div class="fare-list">
                     <?php if (!empty($van_routes)): ?>
                         <?php foreach ($van_routes as $route): ?>
-                            <div class="fare-item">
-                                <div class="dest-info">
-                                    <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                                    <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                            <div class="fare-item" style="flex-direction: column; align-items: stretch;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="dest-info">
+                                        <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
+                                        <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
+                                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                            <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                    <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
-                                        <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    <?php endif; ?>
+                                <?php if (!empty($route['discounted_fares'])): ?>
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                                    <?php foreach ($route['discounted_fares'] as $type => $df): ?>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                                        <span style="font-size: 13px; color: #475569; font-weight: 500;">
+                                            <i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>
+                                            <?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                        </span>
+                                        <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
+                                    </div>
+                                    <?php endforeach; ?>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -675,19 +690,34 @@
                 <div class="fare-list">
                     <?php if (!empty($jeepney_routes)): ?>
                         <?php foreach ($jeepney_routes as $route): ?>
-                            <div class="fare-item">
-                                <div class="dest-info">
-                                    <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                    <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                            <div class="fare-item" style="flex-direction: column; align-items: stretch;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="dest-info">
+                                        <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
+                                        <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
+                                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                            <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                    <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
-                                        <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    <?php endif; ?>
+                                <?php if (!empty($route['discounted_fares'])): ?>
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                                    <?php foreach ($route['discounted_fares'] as $type => $df): ?>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                                        <span style="font-size: 13px; color: #475569; font-weight: 500;">
+                                            <i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>
+                                            <?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                        </span>
+                                        <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
+                                    </div>
+                                    <?php endforeach; ?>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -705,19 +735,34 @@
                 <div class="fare-list">
                     <?php if (!empty($minibus_routes)): ?>
                         <?php foreach ($minibus_routes as $route): ?>
-                            <div class="fare-item">
-                                <div class="dest-info">
-                                    <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                                    <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                            <div class="fare-item" style="flex-direction: column; align-items: stretch;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div class="dest-info">
+                                        <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
+                                        <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
+                                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                            <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                    <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
-                                        <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    <?php endif; ?>
+                                <?php if (!empty($route['discounted_fares'])): ?>
+                                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                                    <?php foreach ($route['discounted_fares'] as $type => $df): ?>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                                        <span style="font-size: 13px; color: #475569; font-weight: 500;">
+                                            <i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>
+                                            <?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                        </span>
+                                        <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
+                                    </div>
+                                    <?php endforeach; ?>
                                 </div>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -812,13 +857,32 @@
 
         if (routes.length > 0) {
             routes.forEach(function(route) {
-                html += '<div class="fare-item">'
+                html += '<div class="fare-item" style="flex-direction: column; align-items: stretch;">'
+                    + '<div style="display: flex; justify-content: space-between; align-items: center;">'
                     + '<div class="dest-info">'
                     + '<div class="f-dest">' + route.origin.toUpperCase() + ' - ' + route.destination.toUpperCase() + '</div>'
                     + '<div class="f-origin">From: ' + route.origin + '</div>'
                     + '</div>'
                     + '<div class="price-tag">' + formatFare(route.fare) + '</div>'
                     + '</div>';
+
+                // Render discounted fares
+                if (route.discounted_fares && Object.keys(route.discounted_fares).length > 0) {
+                    html += '<div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">';
+                    Object.keys(route.discounted_fares).forEach(function(key) {
+                        var df = route.discounted_fares[key];
+                        html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">'
+                            + '<span style="font-size: 13px; color: #475569; font-weight: 500;">'
+                            + '<i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>'
+                            + df.label + ' <span style="color: #94a3b8; font-size: 12px;">(' + Number(df.discount_percent).toFixed(0) + '% off)</span>'
+                            + '</span>'
+                            + '<span style="font-size: 14px; font-weight: 700; color: #16a34a;">' + formatFare(df.amount) + '</span>'
+                            + '</div>';
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
             });
         } else {
             html += '<p class="text-muted text-center py-5 px-5">No fares listed.</p>';
