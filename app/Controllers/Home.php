@@ -9,6 +9,8 @@ class Home extends BaseController
 {
     public function index()
     {
+        helper('fare');
+
         $queueModel = new QueueModel();
         $routeModel = new \App\Models\RouteModel();
 
@@ -20,9 +22,10 @@ class Home extends BaseController
             // Table may not exist yet; show guest page without announcements
         }
 
-        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
+        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('queue.position', 'ASC')
             ->findAll();
@@ -31,9 +34,10 @@ class Home extends BaseController
         $data = [
             'title' => 'Live Terminal Monitor',
             'active_queue' => $active_queue,
-            'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, routes.origin, routes.destination')
+            'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, terminals.name as origin, routes.destination')
                 ->join('vehicles', 'vehicles.id = queue.vehicle_id')
                 ->join('routes', 'routes.id = queue.route_id')
+                ->join('terminals', 'terminals.id = routes.terminal_id')
                 ->where('queue.status', 'departed')
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
@@ -41,7 +45,7 @@ class Home extends BaseController
             'total_departures_today' => $queueModel->where('status', 'departed')
                 ->where('DATE(departure_time)', date('Y-m-d'))
                 ->countAllResults(),
-            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll(),
+            'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll()),
             'announcements' => $announcements
         ];
 
@@ -50,11 +54,14 @@ class Home extends BaseController
 
     public function status()
     {
+        helper('fare');
+
         $queueModel = new QueueModel();
 
-        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
+        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('queue.position', 'ASC')
             ->findAll();
@@ -64,9 +71,10 @@ class Home extends BaseController
             $item['percent'] = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
         }
 
-        $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, routes.origin, routes.destination')
+        $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, terminals.name as origin, routes.destination')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.status', 'departed')
             ->orderBy('queue.departure_time', 'DESC')
             ->limit(10)
@@ -93,7 +101,7 @@ class Home extends BaseController
             'recent_departures' => $recent_departures,
             'total_departures_today' => $total_departures_today,
             'sync_token' => $syncToken,
-            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll()
+            'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll())
         ]);
     }
 }

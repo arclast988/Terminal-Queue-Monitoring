@@ -32,6 +32,21 @@
                 <small class="text-muted">Shown in the advisory bar on the guest dashboard. Keep it short for best display.</small>
             </div>
 
+            <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
+            <div class="mb-3">
+                <label for="terminal_id" class="form-label">Terminal</label>
+                <select class="form-select" id="terminal_id" name="terminal_id" required>
+                    <?php if (!$onlyTerminal): ?>
+                        <option value="">— Select Terminal —</option>
+                    <?php endif; ?>
+                    <?php foreach ($terminals as $t): ?>
+                        <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id') == $t['id']) ? 'selected' : '' ?>>
+                            <?= esc($t['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <div class="mb-3">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="is_active" id="is_active" value="1" <?= old('is_active', '1') ? 'checked' : '' ?>>

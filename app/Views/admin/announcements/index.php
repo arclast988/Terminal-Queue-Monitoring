@@ -24,6 +24,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
+                        <th>Terminal</th>
                         <th>Message</th>
                         <th>Status</th>
                         <th>Created</th>
@@ -35,6 +36,7 @@
                         <?php foreach ($announcements as $a): ?>
                             <tr>
                                 <td><?= $a['id'] ?></td>
+                                <td><span class="badge bg-dark"><?= esc($a['terminal_name'] ?? '—') ?></span></td>
                                 <td><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?>
                                 </td>
                                 <td>
@@ -61,7 +63,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No announcements yet. Add one to show on the
+                            <td colspan="6" class="text-center text-muted py-4">No announcements yet. Add one to show on the
                                 guest dashboard.</td>
                         </tr>
                     <?php endif; ?>

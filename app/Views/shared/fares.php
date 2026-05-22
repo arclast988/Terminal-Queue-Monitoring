@@ -44,7 +44,7 @@
             <img src="<?= base_url('images/minibus.png') ?>" alt="Minibus" style="width:42px;height:auto;">
             <div><div class="stat-value"><?= count($minibus_routes ?? []) ?></div><small>Minibus Routes</small></div>
         </div>
-        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+        <?php if (session()->get('role') === 'admin'): ?>
         <div class="ms-auto">
             <button class="btn btn-light fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addFareModal">
                 <i class="fas fa-plus-circle me-2 text-success"></i>Add Fare
@@ -91,7 +91,6 @@ $fareTypes = [
                 <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= $ft['label'] ?>" style="width:32px;height:auto;">
                 <?= $ft['label'] ?>
             </h5>
-            <?= $ft['badge'] ?>
         </div>
         <div class="card-body p-0">
             <div class="list-group list-group-flush fare-list">
@@ -106,7 +105,7 @@ $fareTypes = [
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge bg-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
-                                <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                <?php if (session()->get('role') === 'admin'): ?>
                                 <button type="button"
                                    class="btn btn-sm btn-outline-primary fare-action-btn" title="Edit Fare"
                                    data-bs-toggle="modal"
@@ -165,7 +164,7 @@ $discountMeta = [
     'student'        => ['icon' => 'fa-graduation-cap', 'badge' => '<span class="badge bg-warning text-dark">Student</span>'],
 ];
 $hasDiscounts = !empty($discounts);
-$isManager = in_array(session()->get('role'), ['admin', 'staff']);
+$isManager = session()->get('role') === 'admin';
 ?>
 
 <?php if ($hasDiscounts || $isManager): ?>
@@ -195,6 +194,9 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
                     <?= $meta['badge'] ?>
                 </div>
                 <div class="card-body py-4">
+                    <?php if (!empty($disc['terminal_name'])): ?>
+                        <div class="text-muted mb-2" style="font-size: 13px;"><?= esc($disc['terminal_name']) ?></div>
+                    <?php endif; ?>
                     <div class="fw-bold" style="font-size: 56px; line-height: 1; color: #1e293b;">
                         <?= number_format($disc['discount_percent'], 0) ?><span style="font-size: 28px;">%</span>
                     </div>
@@ -242,7 +244,7 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
 <!-- ══════════════════════════════════════════════ -->
 <!--  MODALS                                       -->
 <!-- ══════════════════════════════════════════════ -->
-<?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+<?php if (session()->get('role') === 'admin'): ?>
 
 <!-- ADD FARE MODAL -->
 <div class="modal fade" id="addFareModal" tabindex="-1" aria-labelledby="addFareModalLabel" aria-hidden="true">
@@ -256,10 +258,17 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
         <form id="addFareForm" action="<?= base_url('admin/routes/store') ?>" method="post">
           <?= csrf_field() ?>
 
+          <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Origin</label>
-            <input type="text" class="form-control bg-light" value="PALOMPON" readonly>
-            <input type="hidden" name="origin" id="add_origin" value="PALOMPON">
+            <label class="form-label fw-semibold">Terminal</label>
+            <select name="terminal_id" id="add_fare_terminal_id" class="form-select" required>
+              <?php if (!$onlyTerminal): ?>
+                <option value="">— Select Terminal —</option>
+              <?php endif; ?>
+              <?php foreach ($terminals as $t): ?>
+                <option value="<?= $t['id'] ?>" <?= $onlyTerminal ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
 
           <div class="mb-3">
@@ -305,18 +314,6 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
              <i class="fas fa-exclamation-circle me-1"></i> This route already exists.
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Terminal</label>
-            <select name="terminal_id" class="form-select" required>
-              <option value="">— Select Terminal —</option>
-              <?php foreach ($terminals as $t): ?>
-                <?php if (stripos($t['location'], 'Palompon') !== false): ?>
-                  <option value="<?= $t['id'] ?>" selected><?= esc($t['name']) ?></option>
-                <?php endif; ?>
-              <?php endforeach; ?>
-            </select>
-          </div>
-
           <div class="d-grid mt-2">
             <button type="submit" class="btn btn-primary fw-bold py-2">
               <i class="fas fa-save me-2"></i>Save Fare
@@ -340,9 +337,17 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
         <form id="editFareForm" method="post">
           <?= csrf_field() ?>
 
+          <?php $onlyTerminalEdit = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Origin</label>
-            <input type="text" name="origin" id="edit_fare_origin" class="form-control" required>
+            <label class="form-label fw-semibold">Terminal</label>
+            <select name="terminal_id" id="edit_fare_terminal" class="form-select" required>
+              <?php if (!$onlyTerminalEdit): ?>
+                <option value="">— Select Terminal —</option>
+              <?php endif; ?>
+              <?php foreach ($terminals as $t): ?>
+                <option value="<?= $t['id'] ?>" <?= $onlyTerminalEdit ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
 
           <div class="mb-3">
@@ -374,16 +379,6 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
                 <label class="form-check-label" for="edit_minibus"><i class="fas fa-bus-alt me-1 text-muted"></i> Minibus</label>
               </div>
             </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Terminal</label>
-            <select name="terminal_id" id="edit_fare_terminal" class="form-select" required>
-              <option value="">— Select Terminal —</option>
-              <?php foreach ($terminals as $t): ?>
-                <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
           </div>
 
           <div class="d-grid mt-2">
@@ -448,6 +443,18 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
       <div class="modal-body">
         <form action="<?= base_url('admin/routes/discounts/store') ?>" method="post" id="addDiscountForm">
           <?= csrf_field() ?>
+          <?php $onlyTerminalDisc = (is_array($terminals) && count($terminals) === 1); ?>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Terminal</label>
+            <select name="terminal_id" id="add_terminal_id" class="form-select" required>
+              <?php if (!$onlyTerminalDisc): ?>
+                <option value="">— Select Terminal —</option>
+              <?php endif; ?>
+              <?php foreach ($terminals as $t): ?>
+                <option value="<?= $t['id'] ?>" <?= $onlyTerminalDisc ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Discount Label</label>
             <input type="text" name="label" id="add_disc_label" class="form-control" placeholder="e.g. PWD Discount, Military Discount" required maxlength="100">
@@ -482,18 +489,12 @@ $isManager = in_array(session()->get('role'), ['admin', 'staff']);
 <script>
 // Prevent same origin = destination in add fare modal
 document.getElementById('addFareForm')?.addEventListener('submit', function(e) {
-    const orig = document.getElementById('add_origin').value;
+    const terminalId = document.getElementById('add_fare_terminal_id').value;
     const dest = document.getElementById('add_destination').value;
     const vehicleType = document.querySelector('#addFareForm input[name="vehicle_type"]:checked')?.value;
-    
-    if (orig && dest && orig === dest) {
-        e.preventDefault();
-        alert('Origin and destination cannot be the same.');
-        return;
-    }
 
     // Double-check existence before final submit
-    if (checkRouteExists(orig, dest, vehicleType)) {
+    if (checkRouteExists(terminalId, dest, vehicleType)) {
         e.preventDefault();
         document.getElementById('routeValidationMsg').classList.remove('d-none');
     }
@@ -501,31 +502,31 @@ document.getElementById('addFareForm')?.addEventListener('submit', function(e) {
 
 // Real-time validation for existing routes
 const existingRoutes = {
-    van: <?= json_encode(array_map(fn($r) => ['origin' => strtoupper($r['origin']), 'destination' => strtoupper($r['destination'])], $van_routes ?? [])) ?>,
-    jeepney: <?= json_encode(array_map(fn($r) => ['origin' => strtoupper($r['origin']), 'destination' => strtoupper($r['destination'])], $jeepney_routes ?? [])) ?>,
-    minibus: <?= json_encode(array_map(fn($r) => ['origin' => strtoupper($r['origin']), 'destination' => strtoupper($r['destination'])], $minibus_routes ?? [])) ?>
+    van: <?= json_encode(array_map(fn($r) => ['terminal_id' => (string) $r['terminal_id'], 'destination' => strtoupper($r['destination'])], $van_routes ?? [])) ?>,
+    jeepney: <?= json_encode(array_map(fn($r) => ['terminal_id' => (string) $r['terminal_id'], 'destination' => strtoupper($r['destination'])], $jeepney_routes ?? [])) ?>,
+    minibus: <?= json_encode(array_map(fn($r) => ['terminal_id' => (string) $r['terminal_id'], 'destination' => strtoupper($r['destination'])], $minibus_routes ?? [])) ?>
 };
 
-function checkRouteExists(orig, dest, type) {
-    if (!orig || !dest || !type) return false;
+function checkRouteExists(terminalId, dest, type) {
+    if (!terminalId || !dest || !type) return false;
     const routes = existingRoutes[type] || [];
-    return routes.some(r => r.origin === orig.toUpperCase() && r.destination === dest.toUpperCase());
+    return routes.some(r => r.terminal_id === String(terminalId) && r.destination === dest.toUpperCase());
 }
 
 const addForm = document.getElementById('addFareForm');
 if (addForm) {
-    const inputs = addForm.querySelectorAll('select[name="destination"], input[name="vehicle_type"]');
+    const inputs = addForm.querySelectorAll('select[name="terminal_id"], select[name="destination"], input[name="vehicle_type"]');
     inputs.forEach(input => {
         input.addEventListener('change', () => {
-            const orig = document.getElementById('add_origin').value;
+            const terminalId = document.getElementById('add_fare_terminal_id').value;
             const dest = document.getElementById('add_destination').value;
             const type = document.querySelector('#addFareForm input[name="vehicle_type"]:checked')?.value;
             const msgEl = document.getElementById('routeValidationMsg');
             const submitBtn = addForm.querySelector('button[type="submit"]');
 
-            if (checkRouteExists(orig, dest, type)) {
+            if (checkRouteExists(terminalId, dest, type)) {
                 msgEl.classList.remove('d-none');
-                msgEl.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> A <strong>${type.toUpperCase()}</strong> route already exists for this destination.`;
+                msgEl.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> A <strong>${type.toUpperCase()}</strong> route already exists for this terminal and destination.`;
                 submitBtn.disabled = true;
             } else {
                 msgEl.classList.add('d-none');
@@ -541,14 +542,12 @@ if (editFareModal) {
     editFareModal.addEventListener('show.bs.modal', function(event) {
         var btn = event.relatedTarget;
         var id          = btn.getAttribute('data-id');
-        var origin      = btn.getAttribute('data-origin');
         var destination = btn.getAttribute('data-destination');
         var fare        = btn.getAttribute('data-fare');
         var vehicleType = btn.getAttribute('data-vehicle-type');
         var terminalId  = btn.getAttribute('data-terminal-id');
         var form        = document.getElementById('editFareForm');
         form.action     = '<?= base_url('admin/routes/update') ?>/' + id;
-        document.getElementById('edit_fare_origin').value      = origin;
         document.getElementById('edit_fare_destination').value  = destination;
         document.getElementById('edit_fare_amount').value       = fare;
         document.getElementById('edit_fare_terminal').value     = terminalId;

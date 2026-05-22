@@ -1,41 +1,48 @@
 <?php
 
-if (!function_exists('apply_fare_discounts')) {
-    /**
-     * Build a map of discount-applied fares.
-     *
-     * @param float $fare      Regular fare from routes.fare
-     * @param array $discounts Active rows from fare_discounts (each: type, label, discount_percent)
-     * @return array<string, array{label:string, amount:float, discount_percent:float}>
-     *         Keyed by discount type (e.g. 'pwd', 'student', 'senior_citizen').
-     */
-    function apply_fare_discounts(float $fare, array $discounts): array
-    {
-        $out = [];
-        foreach ($discounts as $d) {
-            $pct = (float) ($d['discount_percent'] ?? 0);
-            $out[$d['type']] = [
-                'label'            => $d['label'] ?? $d['type'],
-                'discount_percent' => $pct,
-                'amount'           => round($fare * (1 - $pct / 100), 2),
-            ];
-        }
-        return $out;
-    }
-}
+use App\Models\FareModel;
 
 if (!function_exists('enrich_routes_with_discounts')) {
     /**
-     * Attach a `discounted_fares` array to every route row.
+     * Attach standard 'fare' and a 'discounted_fares' array to every route row.
      *
-     * @param array $routes    Rows from RouteModel (each must have a 'fare' key)
-     * @param array $discounts Active fare_discounts rows
+     * @param array $routes    Rows from RouteModel
+     * @param array $discounts Active fare_discounts rows (unused now, kept for signature compatibility)
      * @return array
      */
-    function enrich_routes_with_discounts(array $routes, array $discounts): array
+    function enrich_routes_with_discounts(array $routes, array $discounts = []): array
     {
+        $fareModel = new FareModel();
+        
         foreach ($routes as &$r) {
-            $r['discounted_fares'] = apply_fare_discounts((float) ($r['fare'] ?? 0), $discounts);
+            $r['fare'] = isset($r['fare']) ? (float) $r['fare'] : 0.00;
+            $r['discounted_fares'] = [];
+
+            try {
+                $fares = $fareModel
+                    ->select('fares.amount, fare_discounts.type, fare_discounts.label, fare_discounts.discount_percent, fare_discounts.is_active')
+                    ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
+                    ->where('fares.route_id', $r['id'])
+                    ->groupStart()
+                        ->where('fare_discounts.type', 'regular')
+                        ->orWhere('fare_discounts.is_active', 1)
+                    ->groupEnd()
+                    ->findAll();
+            } catch (\Throwable $e) {
+                $fares = [];
+            }
+                               
+            foreach ($fares as $f) {
+                if ($f['type'] === 'regular') {
+                    $r['fare'] = (float)$f['amount'];
+                } else {
+                    $r['discounted_fares'][$f['type']] = [
+                        'label'            => $f['label'],
+                        'discount_percent' => (float)$f['discount_percent'],
+                        'amount'           => (float)$f['amount'],
+                    ];
+                }
+            }
         }
         unset($r);
         return $routes;

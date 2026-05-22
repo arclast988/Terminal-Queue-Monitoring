@@ -31,6 +31,7 @@
             <table class="table table-striped table-hover">
                 <thead class="table-light">
                     <tr>
+                        <th>Terminal</th>
                         <th>Time From</th>
                         <th>Time To</th>
                         <th>Wait (Minutes)</th>
@@ -42,6 +43,7 @@
                     <?php if (!empty($rules) && is_array($rules)): ?>
                         <?php foreach ($rules as $rule): ?>
                             <tr>
+                                <td><?= esc($rule['terminal_name'] ?? '-') ?></td>
                                 <td><span class="badge bg-primary"><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
                                 <td><span class="badge bg-info"><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
                                 <td><strong><?= $rule['wait_minutes'] ?> min</strong></td>
@@ -65,7 +67,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center">No departure rules configured. Default of 30 minutes will be used.</td>
+                            <td colspan="6" class="text-center">No departure rules configured. Default of 30 minutes will be used.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

@@ -31,8 +31,9 @@ class UserRouteModel extends Model
      */
     public function getRoutesForUser(int $userId): array
     {
-        return $this->select('routes.*')
+        return $this->select('routes.*, terminals.name as origin')
             ->join('routes', 'routes.id = user_routes.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('user_routes.user_id', $userId)
             ->orderBy('routes.destination', 'ASC')
             ->findAll();

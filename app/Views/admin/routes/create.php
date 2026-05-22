@@ -26,20 +26,23 @@
         <form action="<?= base_url('admin/routes/store') ?>" method="post">
             <?= csrf_field() ?>
 
+            <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
             <div class="mb-3">
-                <label for="terminal_id" class="form-label fw-semibold">Terminal (Origin)</label>
+                <label for="terminal_id" class="form-label fw-semibold">Terminal</label>
                 <select class="form-select" id="terminal_id" name="terminal_id" required>
-                    <option value="">Select Terminal</option>
+                    <?php if (!$onlyTerminal): ?>
+                        <option value="">Select Terminal</option>
+                    <?php endif; ?>
                     <?php foreach ($terminals as $terminal): ?>
                         <option value="<?= $terminal['id'] ?>"
                                 data-name="<?= esc($terminal['name']) ?>"
-                                <?= old('terminal_id') == $terminal['id'] ? 'selected' : '' ?>>
+                                <?= ($onlyTerminal || old('terminal_id') == $terminal['id']) ? 'selected' : '' ?>>
                             <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
                 <div class="form-text text-muted">
-                    <i class="bi bi-info-circle me-1"></i>This terminal serves as the origin point for this route.
+                    <i class="bi bi-info-circle me-1"></i>This terminal is used as the route source.
                 </div>
             </div>
 

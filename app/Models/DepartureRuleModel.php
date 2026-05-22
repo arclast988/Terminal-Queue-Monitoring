@@ -12,7 +12,7 @@ class DepartureRuleModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $protectFields = true;
-    protected $allowedFields = ['time_from', 'time_to', 'wait_minutes', 'label'];
+    protected $allowedFields = ['terminal_id', 'time_from', 'time_to', 'wait_minutes', 'label'];
 
     protected $useTimestamps = true;
     protected $dateFormat = 'datetime';
@@ -20,12 +20,13 @@ class DepartureRuleModel extends Model
     protected $updatedField = 'updated_at';
 
     /**
-     * Get the matching departure rule for a given time (H:i:s format).
+     * Get the matching departure rule for a given time and terminal.
      * Returns the full rule array, or a default fallback if no rule matches.
      */
-    public function getRuleForTime(string $time): array
+    public function getRuleForTime(string $time, int $terminalId): array
     {
-        $rule = $this->where('time_from <=', $time)
+        $rule = $this->where('terminal_id', $terminalId)
+            ->where('time_from <=', $time)
             ->where('time_to >', $time)
             ->first();
 
@@ -43,12 +44,11 @@ class DepartureRuleModel extends Model
     }
 
     /**
-     * Get the wait minutes for a given time (H:i:s format).
-     * Returns the matching rule's wait_minutes, or 30 as default.
+     * Get the wait minutes for a given time and terminal.
      */
-    public function getWaitMinutesForTime(string $time): int
+    public function getWaitMinutesForTime(string $time, int $terminalId): int
     {
-        $rule = $this->getRuleForTime($time);
+        $rule = $this->getRuleForTime($time, $terminalId);
         return (int) $rule['wait_minutes'];
     }
 }

@@ -4,20 +4,28 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\AnnouncementModel;
+use App\Models\TerminalModel;
 
 class Announcements extends BaseController
 {
     protected $announcementModel;
+    protected $terminalModel;
 
     public function __construct()
     {
         $this->announcementModel = new AnnouncementModel();
+        $this->terminalModel     = new TerminalModel();
     }
 
     public function index()
     {
         try {
-            $announcements = $this->announcementModel->orderBy('sort_order', 'ASC')->orderBy('id', 'DESC')->findAll();
+            $announcements = $this->announcementModel
+                ->select('announcements.*, terminals.name as terminal_name')
+                ->join('terminals', 'terminals.id = announcements.terminal_id', 'left')
+                ->orderBy('sort_order', 'ASC')
+                ->orderBy('announcements.id', 'DESC')
+                ->findAll();
         } catch (\Throwable $e) {
             return view('admin/announcements/setup_required', [
                 'title' => 'Announcements - Setup Required'
@@ -25,7 +33,7 @@ class Announcements extends BaseController
         }
 
         $data = [
-            'title' => 'Announcements',
+            'title'         => 'Announcements',
             'announcements' => $announcements
         ];
 
@@ -34,15 +42,19 @@ class Announcements extends BaseController
 
     public function create()
     {
-        $data = ['title' => 'Add Announcement'];
+        $data = [
+            'title'     => 'Add Announcement',
+            'terminals' => $this->terminalModel->findAll(),
+        ];
         return view('admin/announcements/create', $data);
     }
 
     public function store()
     {
         $rules = [
-            'message' => 'required|min_length[3]|max_length[2000]',
-            'is_active' => 'permit_empty|in_list[0,1]'
+            'message'     => 'required|min_length[3]|max_length[2000]',
+            'is_active'   => 'permit_empty|in_list[0,1]',
+            'terminal_id' => 'required|integer|is_not_unique[terminals.id]',
         ];
 
         if (!$this->validate($rules)) {
@@ -50,13 +62,14 @@ class Announcements extends BaseController
         }
 
         try {
-            $maxOrder = $this->announcementModel->selectMax('sort_order')->first();
+            $maxOrder  = $this->announcementModel->selectMax('sort_order')->first();
             $sortOrder = isset($maxOrder['sort_order']) ? (int)$maxOrder['sort_order'] + 1 : 0;
 
             $this->announcementModel->insert([
-                'message' => $this->request->getPost('message'),
-                'is_active' => $this->request->getPost('is_active') ? 1 : 0,
-                'sort_order' => $sortOrder
+                'terminal_id' => $this->request->getPost('terminal_id'),
+                'message'     => $this->request->getPost('message'),
+                'is_active'   => $this->request->getPost('is_active') ? 1 : 0,
+                'sort_order'  => $sortOrder
             ]);
         } catch (\Throwable $e) {
             return redirect()->to('/admin/announcements')->with('error', 'Announcements table not found. Run the SQL shown on the Announcements page first.');
@@ -81,8 +94,9 @@ class Announcements extends BaseController
         }
 
         $data = [
-            'title' => 'Edit Announcement',
-            'announcement' => $announcement
+            'title'        => 'Edit Announcement',
+            'announcement' => $announcement,
+            'terminals'    => $this->terminalModel->findAll(),
         ];
 
         return view('admin/announcements/edit', $data);
@@ -91,8 +105,9 @@ class Announcements extends BaseController
     public function update($id)
     {
         $rules = [
-            'message' => 'required|min_length[3]|max_length[2000]',
-            'is_active' => 'permit_empty|in_list[0,1]'
+            'message'     => 'required|min_length[3]|max_length[2000]',
+            'is_active'   => 'permit_empty|in_list[0,1]',
+            'terminal_id' => 'required|integer|is_not_unique[terminals.id]',
         ];
 
         if (!$this->validate($rules)) {
@@ -101,8 +116,9 @@ class Announcements extends BaseController
 
         try {
             $this->announcementModel->update($id, [
-                'message' => $this->request->getPost('message'),
-                'is_active' => $this->request->getPost('is_active') ? 1 : 0
+                'terminal_id' => $this->request->getPost('terminal_id'),
+                'message'     => $this->request->getPost('message'),
+                'is_active'   => $this->request->getPost('is_active') ? 1 : 0
             ]);
         } catch (\Throwable $e) {
             return redirect()->to('/admin/announcements')->with('error', 'Announcements table not found. Run the SQL shown on the Announcements page first.');

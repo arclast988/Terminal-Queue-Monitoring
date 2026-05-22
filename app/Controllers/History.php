@@ -13,9 +13,10 @@ class History extends BaseController
         // Get filter parameters
         $search = $this->request->getGet('q');
 
-        $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.owner_name, routes.destination, routes.origin')
+        $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.owner_name, routes.destination, terminals.name as origin')
                               ->join('vehicles', 'vehicles.id = queue.vehicle_id')
                               ->join('routes', 'routes.id = queue.route_id')
+                              ->join('terminals', 'terminals.id = routes.terminal_id')
                               ->where('queue.status', 'departed');
 
         if ($search) {
@@ -23,7 +24,7 @@ class History extends BaseController
                     ->like('vehicles.plate_number', $search)
                     ->orLike('vehicles.owner_name', $search)
                     ->orLike('routes.destination', $search)
-                    ->orLike('routes.origin', $search)
+                    ->orLike('terminals.name', $search)
                     ->groupEnd();
         }
 

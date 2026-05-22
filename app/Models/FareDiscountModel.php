@@ -12,7 +12,7 @@ class FareDiscountModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['type', 'label', 'discount_percent', 'is_active'];
+    protected $allowedFields    = ['terminal_id', 'type', 'label', 'discount_percent', 'is_active'];
 
     // Dates
     protected $useTimestamps = true;

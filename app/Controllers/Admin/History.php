@@ -102,9 +102,10 @@ class History extends BaseController
     private function _getFilteredBuilder($search, $fromDate, $toDate, $destination, $vehicleType)
     {
         $queueModel = new QueueModel();
-        $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, routes.origin, queue.departure_time, queue.current_passengers')
+        $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin, queue.departure_time, queue.current_passengers')
                               ->join('vehicles', 'vehicles.id = queue.vehicle_id')
                               ->join('routes', 'routes.id = queue.route_id')
+                              ->join('terminals', 'terminals.id = routes.terminal_id')
                               ->where('queue.status', 'departed')
                               ->where('queue.departure_time IS NOT NULL');
 
@@ -119,7 +120,7 @@ class History extends BaseController
                     ->orLike('vehicles.owner_name', $search)
                     ->orLike('vehicles.driver_name', $search)
                     ->orLike('routes.destination', $search)
-                    ->orLike('routes.origin', $search)
+                    ->orLike('terminals.name', $search)
                     ->groupEnd();
         }
 

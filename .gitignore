@@ -27,3 +27,26 @@ desktop.ini
 # --- SQLite databases ---
 *.sqlite
 *.db
+
+# --- Claude Code personal session data ---
+.claude/
+
+# --- Numbered SQL backups from phpMyAdmin / Windows (keep only jeepneynvans.sql) ---
+jeepneynvans (*).sql
+
+# --- PHPUnit / test artifacts ---
+.phpunit.result.cache
+
+# --- Composer self-installer (if dropped into the repo root) ---
+composer.phar
+
+# --- Editor / temp swap files ---
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+# --- Build / packaging artifacts ---
+*.zip
+*.tar.gz

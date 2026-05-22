@@ -4,15 +4,14 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class AnnouncementModel extends Model
+class FareModel extends Model
 {
-    protected $table            = 'announcements';
+    protected $table            = 'fares';
     protected $primaryKey       = 'id';
-    protected $useAutoIncrement  = true;
+    protected $useAutoIncrement = true;
     protected $returnType       = 'array';
-    protected $useSoftDeletes    = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['terminal_id', 'message', 'is_active', 'sort_order'];
+    protected $allowedFields    = ['route_id', 'fare_discount_id', 'amount'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

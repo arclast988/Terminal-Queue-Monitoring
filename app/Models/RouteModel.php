@@ -12,7 +12,7 @@ class RouteModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['origin', 'destination', 'fare', 'terminal_id', 'vehicle_type'];
+    protected $allowedFields    = ['destination', 'terminal_id', 'vehicle_type'];
 
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';

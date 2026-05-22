@@ -25,6 +25,21 @@
 
         <form action="<?= base_url($prefix . '/departure-rules/update/' . $rule['id']) ?>" method="post">
             <?= csrf_field() ?>
+
+            <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
+            <div class="mb-3">
+                <label for="terminal_id" class="form-label">Terminal</label>
+                <select class="form-select" id="terminal_id" name="terminal_id" required>
+                    <?php if (!$onlyTerminal): ?>
+                        <option value="">— Select Terminal —</option>
+                    <?php endif; ?>
+                    <?php foreach ($terminals as $t): ?>
+                        <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id', $rule['terminal_id'] ?? '') == $t['id']) ? 'selected' : '' ?>>
+                            <?= esc($t['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
             
             <div class="row">
                 <div class="col-md-6 mb-3">

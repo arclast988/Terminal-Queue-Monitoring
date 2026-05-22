@@ -640,7 +640,6 @@
             <div class="fare-card">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/van.png') ?>" alt="Van" style="width: 45px; height: auto; object-fit: contain;"> Van Routes</h3>
-                    <span class="type-badge van-badge">Express</span>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($van_routes)): ?>
@@ -653,7 +652,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                        <?php if (session()->get('role') === 'admin'): ?>
                                             <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -685,7 +684,6 @@
             <div class="fare-card">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/jeep.png') ?>" alt="Jeepney" style="width: 45px; height: auto; object-fit: contain;"> Jeepney Routes</h3>
-                    <span class="type-badge jeepney-badge">Regular</span>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($jeepney_routes)): ?>
@@ -698,7 +696,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                        <?php if (session()->get('role') === 'admin'): ?>
                                             <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -730,7 +728,6 @@
             <div class="fare-card">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/minibus.png') ?>" alt="Minibus" style="width: 45px; height: auto; object-fit: contain;"> Mini Bus Routes</h3>
-                    <span class="type-badge minibus-badge">Standard</span>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($minibus_routes)): ?>
@@ -743,7 +740,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
+                                        <?php if (session()->get('role') === 'admin'): ?>
                                             <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -851,7 +848,6 @@
         var html = '<div class="fare-card">'
             + '<div class="card-header">'
             + '<h3><img src="' + imgSrc + '" alt="' + label + '" style="width: 45px; height: auto; object-fit: contain;"> ' + label + '</h3>'
-            + '<span class="type-badge ' + badgeClass + '">' + type + '</span>'
             + '</div>'
             + '<div class="fare-list">';
 
@@ -941,9 +937,9 @@
             var grid = document.getElementById('faresGrid');
             if (grid) {
                 grid.innerHTML =
-                    buildFareCard('Express', 'Van Routes', 'van-badge', baseImgUrl + 'van.png', data.van_routes)
-                    + buildFareCard('Regular', 'Jeepney Routes', 'jeepney-badge', baseImgUrl + 'jeep.png', data.jeepney_routes)
-                    + buildFareCard('Standard', 'Mini Bus Routes', 'minibus-badge', baseImgUrl + 'minibus.png', data.minibus_routes);
+                    buildFareCard('', 'Van Routes', 'van-badge', baseImgUrl + 'van.png', data.van_routes)
+                    + buildFareCard('', 'Jeepney Routes', 'jeepney-badge', baseImgUrl + 'jeep.png', data.jeepney_routes)
+                    + buildFareCard('', 'Mini Bus Routes', 'minibus-badge', baseImgUrl + 'minibus.png', data.minibus_routes);
             }
 
             // Rebuild discount section

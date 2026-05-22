@@ -4,14 +4,17 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\DepartureRuleModel;
+use App\Models\TerminalModel;
 
 class DepartureRules extends BaseController
 {
     protected $ruleModel;
+    protected $terminalModel;
 
     public function __construct()
     {
-        $this->ruleModel = new DepartureRuleModel();
+        $this->ruleModel     = new DepartureRuleModel();
+        $this->terminalModel = new TerminalModel();
     }
 
     /**
@@ -25,9 +28,16 @@ class DepartureRules extends BaseController
 
     public function index()
     {
+        $rules = $this->ruleModel
+            ->select('departure_rules.*, terminals.name as terminal_name')
+            ->join('terminals', 'terminals.id = departure_rules.terminal_id', 'left')
+            ->orderBy('departure_rules.terminal_id', 'ASC')
+            ->orderBy('departure_rules.time_from', 'ASC')
+            ->findAll();
+
         $data = [
-            'title' => 'Departure Rules',
-            'rules' => $this->ruleModel->orderBy('time_from', 'ASC')->findAll(),
+            'title'  => 'Departure Rules',
+            'rules'  => $rules,
             'prefix' => $this->getPrefix()
         ];
 
@@ -37,8 +47,9 @@ class DepartureRules extends BaseController
     public function create()
     {
         $data = [
-            'title' => 'Add Departure Rule',
-            'prefix' => $this->getPrefix()
+            'title'     => 'Add Departure Rule',
+            'prefix'    => $this->getPrefix(),
+            'terminals' => $this->terminalModel->findAll(),
         ];
         return view('admin/departure-rules/create', $data);
     }
@@ -51,30 +62,32 @@ class DepartureRules extends BaseController
         }
 
         $rules = [
-            'time_from' => 'required',
-            'time_to' => 'required',
-            'wait_minutes' => 'required|integer|greater_than[0]'
+            'time_from'    => 'required',
+            'time_to'      => 'required',
+            'wait_minutes' => 'required|integer|greater_than[0]',
+            'terminal_id'  => 'required|integer|is_not_unique[terminals.id]',
         ];
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $timeFrom = $this->request->getPost('time_from');
-        $timeTo = $this->request->getPost('time_to');
+        $terminalId = (int)$this->request->getPost('terminal_id');
+        $timeFrom   = $this->request->getPost('time_from');
+        $timeTo     = $this->request->getPost('time_to');
+
         // Ensure HH:MM:SS format (HTML time input sends HH:MM)
-        if (strlen($timeFrom) === 5)
-            $timeFrom .= ':00';
-        if (strlen($timeTo) === 5)
-            $timeTo .= ':00';
+        if (strlen($timeFrom) === 5) $timeFrom .= ':00';
+        if (strlen($timeTo) === 5)   $timeTo   .= ':00';
 
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
             return redirect()->back()->withInput()->with('error', 'Time From must be earlier than Time To.');
         }
 
-        // Check for overlapping rules
+        // Check for overlapping rules within the same terminal
         $overlap = $this->ruleModel
+            ->where('terminal_id', $terminalId)
             ->where('time_from <', $timeTo)
             ->where('time_to >', $timeFrom)
             ->first();
@@ -82,14 +95,15 @@ class DepartureRules extends BaseController
             return redirect()->back()->withInput()->with('error', 'This time range overlaps with an existing rule: ' . date('g:i A', strtotime($overlap['time_from'])) . ' – ' . date('g:i A', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').');
         }
 
-        $label = $this->request->getPost('label') ?: null;
+        $label       = $this->request->getPost('label') ?: null;
         $waitMinutes = $this->request->getPost('wait_minutes');
 
         $this->ruleModel->save([
-            'time_from' => $timeFrom,
-            'time_to' => $timeTo,
+            'terminal_id'  => $terminalId,
+            'time_from'    => $timeFrom,
+            'time_to'      => $timeTo,
             'wait_minutes' => $waitMinutes,
-            'label' => $label
+            'label'        => $label
         ]);
 
         $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . date('g:i A', strtotime($timeFrom)) . ' – ' . date('g:i A', strtotime($timeTo)) . ', ' . $waitMinutes . ' min).');
@@ -111,9 +125,10 @@ class DepartureRules extends BaseController
         }
 
         $data = [
-            'title' => 'Edit Departure Rule',
-            'rule' => $rule,
-            'prefix' => $this->getPrefix()
+            'title'     => 'Edit Departure Rule',
+            'rule'      => $rule,
+            'prefix'    => $this->getPrefix(),
+            'terminals' => $this->terminalModel->findAll(),
         ];
 
         return view('admin/departure-rules/edit', $data);
@@ -127,29 +142,31 @@ class DepartureRules extends BaseController
         }
 
         $rules = [
-            'time_from' => 'required',
-            'time_to' => 'required',
-            'wait_minutes' => 'required|integer|greater_than[0]'
+            'time_from'    => 'required',
+            'time_to'      => 'required',
+            'wait_minutes' => 'required|integer|greater_than[0]',
+            'terminal_id'  => 'required|integer|is_not_unique[terminals.id]',
         ];
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $timeFrom = $this->request->getPost('time_from');
-        $timeTo = $this->request->getPost('time_to');
-        if (strlen($timeFrom) === 5)
-            $timeFrom .= ':00';
-        if (strlen($timeTo) === 5)
-            $timeTo .= ':00';
+        $terminalId = (int)$this->request->getPost('terminal_id');
+        $timeFrom   = $this->request->getPost('time_from');
+        $timeTo     = $this->request->getPost('time_to');
+
+        if (strlen($timeFrom) === 5) $timeFrom .= ':00';
+        if (strlen($timeTo) === 5)   $timeTo   .= ':00';
 
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
             return redirect()->back()->withInput()->with('error', 'Time From must be earlier than Time To.');
         }
 
-        // Check for overlapping rules (exclude current rule)
+        // Check for overlapping rules within the same terminal (exclude current rule)
         $overlap = $this->ruleModel
+            ->where('terminal_id', $terminalId)
             ->where('time_from <', $timeTo)
             ->where('time_to >', $timeFrom)
             ->where('id !=', $id)
@@ -158,15 +175,16 @@ class DepartureRules extends BaseController
             return redirect()->back()->withInput()->with('error', 'This time range overlaps with an existing rule: ' . date('g:i A', strtotime($overlap['time_from'])) . ' – ' . date('g:i A', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').');
         }
 
-        $oldRule = $this->ruleModel->find($id);
-        $label = $this->request->getPost('label') ?: null;
+        $oldRule     = $this->ruleModel->find($id);
+        $label       = $this->request->getPost('label') ?: null;
         $waitMinutes = $this->request->getPost('wait_minutes');
 
         $this->ruleModel->update($id, [
-            'time_from' => $timeFrom,
-            'time_to' => $timeTo,
+            'terminal_id'  => $terminalId,
+            'time_from'    => $timeFrom,
+            'time_to'      => $timeTo,
             'wait_minutes' => $waitMinutes,
-            'label' => $label
+            'label'        => $label
         ]);
 
         $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . date('g:i A', strtotime($oldRule['time_from'])) . '–' . date('g:i A', strtotime($oldRule['time_to'])) . '). After: ' . $waitMinutes . ' min (' . date('g:i A', strtotime($timeFrom)) . '–' . date('g:i A', strtotime($timeTo)) . ').');
@@ -191,4 +209,3 @@ class DepartureRules extends BaseController
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Failed to delete rule.');
     }
 }
-

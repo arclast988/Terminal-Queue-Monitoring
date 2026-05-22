@@ -21,15 +21,16 @@ class Vehicles extends BaseController
     {
         // Join routes to get assigned route info
         $vehicles = $this->vehicleModel
-            ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination, routes.vehicle_type as route_vehicle_type')
+            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.vehicle_type as route_vehicle_type')
             ->join('routes', 'routes.id = vehicles.route_id', 'left')
+            ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
             ->orderBy('vehicles.created_at', 'DESC')
             ->findAll();
 
         $data = [
             'title' => 'Vehicle Register',
             'vehicles' => $vehicles,
-            'routes' => $this->routeModel->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $this->routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll(),
         ];
 
         return view('admin/vehicles/index', $data);
@@ -50,7 +51,10 @@ class Vehicles extends BaseController
         }
 
         $routeId = $this->request->getPost('route_id');
-        $route = $this->routeModel->find($routeId);
+        $route = $this->routeModel
+            ->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->find($routeId);
 
         // Validate vehicle type matches route type
         $vehicleType = $this->request->getPost('type');
@@ -83,7 +87,7 @@ class Vehicles extends BaseController
         $data = [
             'title' => 'Edit Vehicle',
             'vehicle' => $vehicle,
-            'routes' => $this->routeModel->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $this->routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll(),
         ];
 
         return view('admin/vehicles/edit', $data);
@@ -110,7 +114,10 @@ class Vehicles extends BaseController
         }
 
         $routeId = $this->request->getPost('route_id');
-        $route = $this->routeModel->find($routeId);
+        $route = $this->routeModel
+            ->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->find($routeId);
         $vehicleType = $this->request->getPost('type');
 
         if ($route && $route['vehicle_type'] !== $vehicleType) {
@@ -129,7 +136,7 @@ class Vehicles extends BaseController
         // Log route change details if route was reassigned
         $oldRouteId = $vehicle['route_id'];
         if ((string) $oldRouteId !== (string) $routeId) {
-            $oldRoute = $oldRouteId ? $this->routeModel->find($oldRouteId) : null;
+            $oldRoute = $oldRouteId ? $this->routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($oldRouteId) : null;
             $oldLabel = $oldRoute ? (strtoupper($oldRoute['origin']) . ' → ' . strtoupper($oldRoute['destination'])) : 'None';
             $newLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'None';
             $this->logActivity('Reassign vehicle route', 'Reassigned ' . $this->request->getPost('plate_number') . ' from ' . $oldLabel . ' to ' . $newLabel);

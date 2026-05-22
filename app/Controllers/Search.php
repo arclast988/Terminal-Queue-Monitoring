@@ -19,14 +19,16 @@ class Search extends BaseController
 
         // Search in active queue
         // Include vehicles.owner_name so views expecting `owner_name` won't error
-        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, routes.origin')
+        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
                                     ->join('vehicles', 'vehicles.id = queue.vehicle_id')
                                     ->join('routes', 'routes.id = queue.route_id')
+                                    ->join('terminals', 'terminals.id = routes.terminal_id')
                                     ->whereIn('queue.status', ['waiting', 'boarding'])
                                     ->groupStart()
                                         ->like('vehicles.plate_number', $search)
                                         ->orLike('vehicles.driver_name', $search)
                                         ->orLike('routes.destination', $search)
+                                        ->orLike('terminals.name', $search)
                                     ->groupEnd()
                                     ->orderBy('queue.position', 'ASC')
                                     ->findAll();
@@ -34,14 +36,16 @@ class Search extends BaseController
         // Search in recent departures
         // Include vehicles.owner_name for departed results as well
         $queueModel2 = new QueueModel();
-        $departedResults = $queueModel2->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, routes.origin')
+        $departedResults = $queueModel2->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
                                        ->join('vehicles', 'vehicles.id = queue.vehicle_id')
                                        ->join('routes', 'routes.id = queue.route_id')
+                                       ->join('terminals', 'terminals.id = routes.terminal_id')
                                        ->where('queue.status', 'departed')
                                        ->groupStart()
                                            ->like('vehicles.plate_number', $search)
                                            ->orLike('vehicles.driver_name', $search)
                                            ->orLike('routes.destination', $search)
+                                           ->orLike('terminals.name', $search)
                                        ->groupEnd()
                                        ->orderBy('departure_time', 'DESC')
                                        ->limit(20)

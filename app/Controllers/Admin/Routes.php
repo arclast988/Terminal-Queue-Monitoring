@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\RouteModel;
 use App\Models\TerminalModel;
 use App\Models\FareDiscountModel;
+use App\Models\FareModel;
 
 class Routes extends BaseController
 {
@@ -22,9 +23,12 @@ class Routes extends BaseController
 
     public function index()
     {
-        $routes = $this->routeModel->select('routes.*, terminals.name as terminal_name')
+        helper('fare');
+
+        $routes = $this->routeModel->select('routes.*, terminals.name as origin, terminals.name as terminal_name')
                                    ->join('terminals', 'terminals.id = routes.terminal_id')
                                    ->findAll();
+        $routes = enrich_routes_with_discounts($routes);
 
         $data = [
             'title'  => 'Manage Routes',
@@ -35,26 +39,121 @@ class Routes extends BaseController
     }
 
     /**
-     * Get distinct origins and destinations from the routes table for dropdown population.
+     * Get distinct destinations from the routes table for dropdown population.
      */
     private function getDistinctLocations(): array
     {
         $db = \Config\Database::connect();
 
-        $originsResult = $db->query('SELECT DISTINCT origin FROM routes ORDER BY origin ASC')->getResultArray();
         $destsResult   = $db->query('SELECT DISTINCT destination FROM routes ORDER BY destination ASC')->getResultArray();
 
-        // Merge into a single sorted unique list for locations
-        $origins      = array_column($originsResult, 'origin');
         $destinations = array_column($destsResult, 'destination');
-        $allLocations = array_unique(array_merge($origins, $destinations));
+        $allLocations = array_unique($destinations);
         sort($allLocations);
 
         return [
-            'origins'       => $origins,
+            'origins'       => [],
             'destinations'  => $destinations,
             'all_locations' => $allLocations,
         ];
+    }
+
+    private function ensureRegularDiscount(int $terminalId): array
+    {
+        $regular = $this->discountModel
+            ->where('terminal_id', $terminalId)
+            ->where('type', 'regular')
+            ->first();
+
+        if ($regular) {
+            return $regular;
+        }
+
+        $id = $this->discountModel->insert([
+            'terminal_id'      => $terminalId,
+            'type'             => 'regular',
+            'label'            => 'Regular Fare',
+            'discount_percent' => 0.00,
+            'is_active'        => 1,
+        ]);
+
+        return $this->discountModel->find($id);
+    }
+
+    private function getDiscountsForFareCalculation(int $terminalId): array
+    {
+        $this->ensureRegularDiscount($terminalId);
+
+        return $this->discountModel
+            ->where('terminal_id', $terminalId)
+            ->groupStart()
+                ->where('type', 'regular')
+                ->orWhere('is_active', 1)
+            ->groupEnd()
+            ->findAll();
+    }
+
+    private function replaceRouteFares(int $routeId, int $terminalId, float $baseFare): void
+    {
+        $fareModel = new FareModel();
+        $fareModel->where('route_id', $routeId)->delete();
+
+        foreach ($this->getDiscountsForFareCalculation($terminalId) as $discount) {
+            $amount = ($discount['type'] === 'regular')
+                ? $baseFare
+                : round($baseFare * (1 - ((float) $discount['discount_percent'] / 100)), 2);
+
+            $fareModel->insert([
+                'route_id'         => $routeId,
+                'fare_discount_id' => $discount['id'],
+                'amount'           => $amount,
+            ]);
+        }
+    }
+
+    private function getRegularFare(int $routeId): float
+    {
+        $fareModel = new FareModel();
+        $row = $fareModel
+            ->select('fares.amount')
+            ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
+            ->where('fares.route_id', $routeId)
+            ->where('fare_discounts.type', 'regular')
+            ->first();
+
+        return $row ? (float) $row['amount'] : 0.00;
+    }
+
+    private function recalculateFaresForDiscount(array $discount): void
+    {
+        if ($discount['type'] === 'regular') {
+            return;
+        }
+
+        $fareModel = new FareModel();
+        $routes = $this->routeModel
+            ->where('terminal_id', (int) $discount['terminal_id'])
+            ->findAll();
+
+        foreach ($routes as $route) {
+            $baseFare = $this->getRegularFare((int) $route['id']);
+            $amount = round($baseFare * (1 - ((float) $discount['discount_percent'] / 100)), 2);
+            $existing = $fareModel
+                ->where('route_id', $route['id'])
+                ->where('fare_discount_id', $discount['id'])
+                ->first();
+
+            if ($existing) {
+                $fareModel->update($existing['id'], ['amount' => $amount]);
+                continue;
+            }
+
+            $fareModel->insert([
+                'route_id'         => $route['id'],
+                'fare_discount_id' => $discount['id'],
+                'amount'           => $amount,
+            ]);
+        }
     }
 
     public function create()
@@ -91,8 +190,8 @@ class Routes extends BaseController
         $vehicleType = $this->request->getPost('vehicle_type');
         $fare        = $this->request->getPost('fare');
 
-        // Check for existing route with same (Origin, Destination, VehicleType)
-        $existing = $this->routeModel->where('origin', $origin)
+        // Check for existing route with same terminal, destination, and vehicle type.
+        $existing = $this->routeModel->where('terminal_id', $terminalId)
                                      ->where('destination', $destination)
                                      ->where('vehicle_type', $vehicleType)
                                      ->first();
@@ -101,17 +200,17 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', "This route ($origin → $destination) already exists for " . ucfirst($vehicleType) . ". Please edit the existing one instead of adding a new one.");
         }
 
-        $inserted = $this->routeModel->insert([
-            'origin'       => $origin,
+        $insertedId = $this->routeModel->insert([
             'destination'  => $destination,
-            'fare'         => $fare,
             'terminal_id'  => $terminalId,
             'vehicle_type' => $vehicleType,
         ]);
 
-        if (!$inserted) {
+        if (!$insertedId) {
             return redirect()->back()->withInput()->with('error', 'Failed to add route.');
         }
+
+        $this->replaceRouteFares((int) $insertedId, (int) $terminalId, (float) $fare);
 
         $this->logActivity('Create route', "$origin → $destination ($vehicleType, ₱$fare).");
 
@@ -120,11 +219,18 @@ class Routes extends BaseController
 
     public function edit($id)
     {
-        $route = $this->routeModel->find($id);
+        helper('fare');
+
+        $route = $this->routeModel
+            ->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->find($id);
 
         if (!$route) {
             return redirect()->to('/admin/routes')->with('error', 'Route not found.');
         }
+
+        $route = enrich_routes_with_discounts([$route])[0];
 
         $locations = $this->getDistinctLocations();
 
@@ -142,7 +248,10 @@ class Routes extends BaseController
 
     public function update($id)
     {
-        $existingRoute = $this->routeModel->find($id);
+        $existingRoute = $this->routeModel
+            ->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->find($id);
 
         if (!$existingRoute) {
             return redirect()->to('/admin/routes')->with('error', 'Route not found.');
@@ -165,8 +274,12 @@ class Routes extends BaseController
         $destination = strtoupper(trim($this->request->getPost('destination')));
         $vehicleType = $this->request->getPost('vehicle_type');
         $newFare     = $this->request->getPost('fare');
+        $oldFare      = $this->getRegularFare((int) $id);
+        if ($oldFare <= 0 && isset($existingRoute['fare'])) {
+            $oldFare = (float) $existingRoute['fare'];
+        }
 
-        $collision = $this->routeModel->where('origin', $origin)
+        $collision = $this->routeModel->where('terminal_id', $terminalId)
                                       ->where('destination', $destination)
                                       ->where('vehicle_type', $vehicleType)
                                       ->where('id !=', $id)
@@ -176,9 +289,7 @@ class Routes extends BaseController
         }
 
         $updated = $this->routeModel->update($id, [
-            'origin'       => $origin,
             'destination'  => $destination,
-            'fare'         => $newFare,
             'terminal_id'  => $this->request->getPost('terminal_id'),
             'vehicle_type' => $vehicleType,
         ]);
@@ -187,8 +298,8 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', 'Failed to update route.');
         }
 
-        $oldFare      = (float) ($existingRoute['fare'] ?? 0);
-        $newFareFloat = (float) $newFare;
+        $this->replaceRouteFares((int) $id, (int) $terminalId, (float) $newFare);
+        $newFareFloat = (float)$newFare;
 
         if (abs($oldFare - $newFareFloat) > 0.00001) {
             $this->logActivity(
@@ -209,7 +320,10 @@ class Routes extends BaseController
 
     public function delete($id)
     {
-        $route = $this->routeModel->find($id);
+        $route = $this->routeModel
+            ->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->find($id);
         if ($this->routeModel->delete($id)) {
             if ($route) {
                 $this->logActivity('Delete route', $route['origin'] . ' → ' . $route['destination'] . '.');
@@ -243,11 +357,14 @@ class Routes extends BaseController
             return redirect()->to('/fares')->with('errors', $this->validator->getErrors());
         }
 
-        $this->discountModel->update($id, [
+        $updatedData = [
             'discount_percent' => $this->request->getPost('discount_percent'),
             'label'            => $this->request->getPost('label'),
             'is_active'        => $this->request->getPost('is_active') ? 1 : 0,
-        ]);
+        ];
+
+        $this->discountModel->update($id, $updatedData);
+        $this->recalculateFaresForDiscount(array_merge($discount, $updatedData));
 
         $this->logActivity('Update discount', $discount['type'] . ' discount updated to ' . $this->request->getPost('discount_percent') . '%.');
 
@@ -260,6 +377,7 @@ class Routes extends BaseController
     public function storeDiscount()
     {
         $rules = [
+            'terminal_id'      => 'required|integer|is_not_unique[terminals.id]',
             'type'             => 'required|min_length[2]|max_length[50]|alpha_dash',
             'label'            => 'required|min_length[2]|max_length[100]',
             'discount_percent' => 'required|decimal|greater_than_equal_to[0]|less_than_equal_to[100]',
@@ -270,19 +388,26 @@ class Routes extends BaseController
         }
 
         $type = strtolower(trim($this->request->getPost('type')));
+        $terminalId = (int) $this->request->getPost('terminal_id');
 
-        // Prevent duplicate types
-        $existing = $this->discountModel->where('type', $type)->first();
+        // Prevent duplicate types within the same terminal.
+        $existing = $this->discountModel->where('terminal_id', $terminalId)->where('type', $type)->first();
         if ($existing) {
-            return redirect()->to('/fares')->with('error', 'A discount with type "' . $type . '" already exists. Please edit the existing one instead.');
+            return redirect()->to('/fares')->with('error', 'A discount with type "' . $type . '" already exists for this terminal. Please edit the existing one instead.');
         }
 
-        $this->discountModel->save([
+        $discountId = $this->discountModel->insert([
+            'terminal_id'      => $terminalId,
             'type'             => $type,
             'label'            => $this->request->getPost('label'),
             'discount_percent' => $this->request->getPost('discount_percent'),
             'is_active'        => 1,
         ]);
+
+        $discount = $this->discountModel->find($discountId);
+        if ($discount) {
+            $this->recalculateFaresForDiscount($discount);
+        }
 
         $this->logActivity('Add discount', $this->request->getPost('label') . ' discount added at ' . $this->request->getPost('discount_percent') . '%.');
 
@@ -298,6 +423,10 @@ class Routes extends BaseController
 
         if (!$discount) {
             return redirect()->to('/fares')->with('error', 'Discount record not found.');
+        }
+
+        if ($discount['type'] === 'regular') {
+            return redirect()->to('/fares')->with('error', 'Regular fare cannot be deleted.');
         }
 
         $this->discountModel->delete($id);

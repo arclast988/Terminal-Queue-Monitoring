@@ -38,10 +38,11 @@ class Schedules extends BaseController
                 vehicles.capacity,
                 vehicles.driver_name,
                 routes.destination,
-                routes.origin
+                terminals.name as origin
             ')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->groupStart()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orGroupStart()
@@ -142,10 +143,11 @@ class Schedules extends BaseController
                 vehicles.type as vehicle_type,
                 vehicles.capacity,
                 routes.destination,
-                routes.origin
+                terminals.name as origin
             ')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->groupStart()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orGroupStart()

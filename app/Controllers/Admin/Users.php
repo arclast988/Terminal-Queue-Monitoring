@@ -34,7 +34,7 @@ class Users extends BaseController
     {
         $routeModel = new RouteModel();
         $data = [
-            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll(),
         ];
         return view('admin/users/create', $data);
     }
@@ -79,7 +79,7 @@ class Users extends BaseController
             $routeModel = new RouteModel();
             $routeLabels = [];
             foreach ($selectedRoutes as $rid) {
-                $r = $routeModel->find($rid);
+                $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
                 if ($r) {
                     $routeLabels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
@@ -106,7 +106,7 @@ class Users extends BaseController
 
         $data = [
             'user' => $user,
-            'routes' => $routeModel->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll(),
             'assignedRouteIds' => $userRouteModel->getRouteIdsForUser($id),
         ];
 
@@ -173,7 +173,7 @@ class Users extends BaseController
             if (!empty($addedRoutes)) {
                 $labels = [];
                 foreach ($addedRoutes as $rid) {
-                    $r = $routeModel->find($rid);
+                    $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
                     if ($r) $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
                 $details .= ' Added: ' . implode(', ', $labels) . '.';
@@ -181,7 +181,7 @@ class Users extends BaseController
             if (!empty($removedRoutes)) {
                 $labels = [];
                 foreach ($removedRoutes as $rid) {
-                    $r = $routeModel->find($rid);
+                    $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
                     if ($r) $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
                 $details .= ' Removed: ' . implode(', ', $labels) . '.';

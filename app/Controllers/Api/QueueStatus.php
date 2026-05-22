@@ -16,9 +16,10 @@ class QueueStatus extends Controller
     {
         $queueModel = new QueueModel();
 
-        $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, routes.origin, routes.destination')
+        $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, terminals.name as origin, routes.destination')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('queue.position', 'ASC')
             ->findAll();

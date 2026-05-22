@@ -65,9 +65,10 @@ class Queue extends BaseController
         $assignedRouteIds = $this->getAssignedRouteIds();
 
         // Build queue query
-        $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, routes.origin, routes.destination, vehicles.capacity')
+        $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, vehicles.capacity')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->whereIn('queue.status', ['waiting', 'boarding']);
 
         // Filter by assigned routes for staff
@@ -86,8 +87,9 @@ class Queue extends BaseController
         if ($assignedRouteIds !== null) {
             if (!empty($assignedRouteIds)) {
                 $vehicles = $freshVehicleModel
-                    ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination')
+                    ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
                     ->join('routes', 'routes.id = vehicles.route_id', 'left')
+                    ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
                     ->where('vehicles.status', 'active')
                     ->where('vehicles.route_id IS NOT NULL')
                     ->whereIn('vehicles.route_id', $assignedRouteIds)
@@ -97,8 +99,9 @@ class Queue extends BaseController
             }
         } else {
             $vehicles = $freshVehicleModel
-                ->select('vehicles.*, routes.origin as route_origin, routes.destination as route_destination')
+                ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
                 ->join('routes', 'routes.id = vehicles.route_id', 'left')
+                ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
                 ->where('vehicles.status', 'active')
                 ->where('vehicles.route_id IS NOT NULL')
                 ->findAll();
@@ -175,10 +178,11 @@ class Queue extends BaseController
         $lastPosition = $this->queueModel->selectMax('position')->first();
         $nextPosition = ($lastPosition['position'] ?? 0) + 1;
 
-        // Auto-apply departure rule based on current time
+        // Auto-apply departure rule based on current time and terminal
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s'); // Server local time (Asia/Manila)
-        $matchedRule = $departureRuleModel->getRuleForTime($currentTime);
+        $terminalId  = (int) ($route['terminal_id'] ?? 1);
+        $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId);
         $waitMinutes = (int) $matchedRule['wait_minutes'];
         $ruleLabel = $matchedRule['label'] ?? 'Default';
 
@@ -202,9 +206,10 @@ class Queue extends BaseController
         $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
 
         // Fetch complete queue item for broadcast
-        $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, routes.origin, routes.destination')
+        $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.id', $queueId)
             ->first();
 
@@ -263,9 +268,10 @@ class Queue extends BaseController
         $db->transComplete();
 
 
-        $item = $this->queueModel->select('vehicles.plate_number, routes.origin, routes.destination')
+        $item = $this->queueModel->select('vehicles.plate_number, terminals.name as origin, routes.destination')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.id', $id)
             ->first();
         $label = $item ? $item['plate_number'] . ' (' . $item['destination'] . ')' : 'queue #' . $id;
@@ -273,9 +279,10 @@ class Queue extends BaseController
         $this->logActivity($actionLabel, $actionLabel . ' for ' . $label . '.');
 
         // Fetch updated queue item for broadcast
-        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, routes.origin, routes.destination')
+        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
             ->join('vehicles', 'vehicles.id = queue.vehicle_id')
             ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.id', $id)
             ->first();
 

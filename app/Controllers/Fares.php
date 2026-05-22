@@ -12,9 +12,12 @@ class Fares extends BaseController
     private function routesByVehicleType(string $vehicleType, array $discounts): array
     {
         $routeModel = new RouteModel();
-        $rows = $routeModel->where('vehicle_type', $vehicleType)
-                           ->orderBy('destination', 'ASC')
-                           ->findAll();
+        $rows = $routeModel
+            ->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->where('vehicle_type', $vehicleType)
+            ->orderBy('destination', 'ASC')
+            ->findAll();
 
         return enrich_routes_with_discounts($rows, $discounts);
     }
@@ -24,7 +27,14 @@ class Fares extends BaseController
         helper('fare');
 
         $discountModel = new FareDiscountModel();
-        $discounts     = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
+        $discounts = $discountModel
+            ->select('fare_discounts.*, terminals.name as terminal_name')
+            ->join('terminals', 'terminals.id = fare_discounts.terminal_id', 'left')
+            ->where('fare_discounts.is_active', 1)
+            ->where('fare_discounts.type !=', 'regular')
+            ->orderBy('fare_discounts.terminal_id', 'ASC')
+            ->orderBy('fare_discounts.type', 'ASC')
+            ->findAll();
 
         $van_routes     = $this->routesByVehicleType('van', $discounts);
         $jeepney_routes = $this->routesByVehicleType('jeepney', $discounts);
@@ -39,16 +49,14 @@ class Fares extends BaseController
         $terminals = [];
         $all_locations = [];
 
-        if (session()->get('isLoggedIn') && in_array(session()->get('role'), ['admin', 'staff'])) {
+        if (session()->get('isLoggedIn') && session()->get('role') === 'admin') {
             $terminalModel  = new TerminalModel();
             $terminals      = $terminalModel->findAll();
 
             $db            = \Config\Database::connect();
-            $originsRaw    = $db->query('SELECT DISTINCT origin FROM routes ORDER BY origin ASC')->getResultArray();
             $destsRaw      = $db->query('SELECT DISTINCT destination FROM routes ORDER BY destination ASC')->getResultArray();
-            $origins       = array_column($originsRaw, 'origin');
             $destinations  = array_column($destsRaw, 'destination');
-            $all_locations = array_unique(array_merge($origins, $destinations));
+            $all_locations = array_unique($destinations);
             sort($all_locations);
         }
 
@@ -75,7 +83,14 @@ class Fares extends BaseController
         helper('fare');
 
         $discountModel = new FareDiscountModel();
-        $discounts     = $discountModel->where('is_active', 1)->orderBy('type', 'ASC')->findAll();
+        $discounts = $discountModel
+            ->select('fare_discounts.*, terminals.name as terminal_name')
+            ->join('terminals', 'terminals.id = fare_discounts.terminal_id', 'left')
+            ->where('fare_discounts.is_active', 1)
+            ->where('fare_discounts.type !=', 'regular')
+            ->orderBy('fare_discounts.terminal_id', 'ASC')
+            ->orderBy('fare_discounts.type', 'ASC')
+            ->findAll();
 
         $van_routes     = $this->routesByVehicleType('van', $discounts);
         $jeepney_routes = $this->routesByVehicleType('jeepney', $discounts);

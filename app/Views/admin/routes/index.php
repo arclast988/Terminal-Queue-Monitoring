@@ -26,11 +26,10 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
-                        <th>Origin</th>
+                        <th>Terminal</th>
                         <th>Destination</th>
                         <th>Type</th>
                         <th>Fare (PHP)</th>
-                        <th>Terminal</th>
                         <?php if (session()->get('role') === 'admin'): ?>
                         <th>Actions</th>
                         <?php endif; ?>
@@ -41,7 +40,7 @@
                         <?php foreach ($routes as $route): ?>
                             <tr>
                                 <td><?= $route['id'] ?></td>
-                                <td><?= esc($route['origin']) ?></td>
+                                <td><?= esc($route['terminal_name']) ?></td>
                                 <td><?= esc($route['destination']) ?></td>
                                 <td>
                                     <?php
@@ -59,7 +58,6 @@
                                     </span>
                                 </td>
                                 <td><?= number_format($route['fare'], 2) ?></td>
-                                <td><?= esc($route['terminal_name']) ?></td>
                                 <?php if (session()->get('role') === 'admin'): ?>
                                 <td>
                                     <a href="<?= base_url('admin/routes/edit/'.$route['id']) ?>" class="btn btn-sm btn-warning">
@@ -77,7 +75,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?= session()->get('role') === 'admin' ? '7' : '6' ?>" class="text-center">No routes found.</td>
+                            <td colspan="<?= session()->get('role') === 'admin' ? '6' : '5' ?>" class="text-center">No routes found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
