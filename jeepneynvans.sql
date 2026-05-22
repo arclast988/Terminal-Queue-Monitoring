@@ -521,7 +521,7 @@ CREATE TABLE `users` (
   `id` int(11) UNSIGNED NOT NULL,
   `username` varchar(50) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` enum('admin','staff','operator') NOT NULL DEFAULT 'operator',
+  `role` enum('admin','staff') NOT NULL DEFAULT 'staff',
   `full_name` varchar(100) NOT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
