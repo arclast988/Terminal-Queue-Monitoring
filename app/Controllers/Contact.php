@@ -25,7 +25,8 @@ class Contact extends BaseController
             return redirect()->back()->with('contact_error', 'Please provide a valid email address.');
         }
 
-        $toEmail = 'marquezgio38@gmail.com';
+        $config = config('Email');
+        $toEmail = $config->recipients ?: 'marquezgio38@gmail.com';
         $subjectLine = ($type === 'report')
             ? '[PTM Report Issue] ' . ($subject ?: 'Issue reported via website')
             : '[PTM Contact Us] ' . ($subject ?: 'Message from website');
@@ -34,12 +35,12 @@ class Contact extends BaseController
 
         // Use CodeIgniter Email library
         $emailSvc = \Config\Services::email();
-        $config = config('Email');
 
         // Note: Gmail SMTP requires the 'From' address to be the authenticated email
-        $fromEmail = $config->SMTPUser ?: 'marquezgio38@gmail.com';
-        
-        $emailSvc->setFrom($fromEmail, 'PTM System Feedback');
+        $fromEmail = $config->fromEmail ?: ($config->SMTPUser ?: 'marquezgio38@gmail.com');
+        $fromName  = $config->fromName ?: 'PTM System Feedback';
+
+        $emailSvc->setFrom($fromEmail, $fromName);
         $emailSvc->setReplyTo($email, $name); // Important: Guest's email goes here
         $emailSvc->setTo($toEmail);
         $emailSvc->setSubject($subjectLine);
