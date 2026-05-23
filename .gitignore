@@ -50,3 +50,6 @@ composer.phar
 # --- Build / packaging artifacts ---
 *.zip
 *.tar.gz
+
+# --- Local environment / secrets (never commit) ---
+.env
