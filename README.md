@@ -1,3 +1,69 @@
+# Jeepney NVans — Palompon Transit Management System
+
+A CodeIgniter 4 web app for managing van/jeepney terminal queues, routes, vehicle dispatch, and admin audit logs.
+
+## Quick Setup (Windows + XAMPP)
+
+### Prerequisites
+- XAMPP with **PHP 8.2+** (the project is tested on PHP 8.2.12) and **MySQL / MariaDB**.
+- **Git**.
+
+### Steps
+1. **Clone into your XAMPP `htdocs` folder** (usually `C:\xampp\htdocs` or `C:\xampp2\htdocs`):
+   ```
+   cd C:\xampp\htdocs
+   git clone <repo-url> jeepneynvans
+   ```
+   The folder name must be `jeepneynvans` so URLs match `.env`'s `app.baseURL`.
+
+2. **Start Apache and MySQL** in the XAMPP Control Panel.
+
+3. **Create the database**:
+   - Open phpMyAdmin: <http://localhost/phpmyadmin>.
+   - Click *New* and create a database named exactly **`jeepneynvans`** (collation `utf8mb4_general_ci`).
+
+4. **Import the SQL dump**:
+   - Select the new `jeepneynvans` database.
+   - Click *Import* → *Choose File* → pick **`jeepneynvans.sql`** from the project root.
+     - Don't use `app/Database/announcements_table.sql` — that's a helper for one table only.
+     - The `jeepneynvans (5).sql` file is a local backup and is not in GitHub.
+   - Click *Go*. This creates all tables — including `audit_logs` — and loads sample users, routes, vehicles, and queue history.
+
+5. **Open the app**: <http://localhost/jeepneynvans/public/>
+
+6. **Sign in** using the seeded admin account from the dump. Usernames live in the `users` table; ask the project owner for the password if it isn't already shared.
+
+### Alternative: empty database via migrations
+If you want a blank database (no sample data) instead of importing the SQL dump:
+1. Create the empty `jeepneynvans` database in phpMyAdmin.
+2. From the project root, run:
+   ```
+   C:\xampp\php\php.exe spark migrate
+   ```
+   Adjust the path to wherever XAMPP put PHP (e.g., `C:\xampp2\php\php.exe`).
+3. Create a first admin user manually via phpMyAdmin or by editing a seeder.
+
+### Database config
+The repo ships an `.env` with XAMPP defaults:
+```
+database.default.hostname = localhost
+database.default.database = jeepneynvans
+database.default.username = root
+database.default.password =
+database.default.port     = 3306
+```
+If your MySQL has a root password, edit `.env` accordingly.
+
+### Real-time WebSocket features (optional)
+The queue auto-refresh uses a WebSocket server. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for how to run it (double-click `run_ws.bat` or use `php spark ws:serve`). The app still works without WebSocket — pages just fall back to polling.
+
+### Troubleshooting
+- **"Unable to connect to the database"** → MySQL isn't started in XAMPP Control Panel.
+- **Blank page / 404** → the project folder must be named `jeepneynvans` and live under `htdocs`, and you must visit `/jeepneynvans/public/` (not `/jeepneynvans/`).
+- **Login fails** → confirm the import created the `users` table with at least one admin row (phpMyAdmin → `users` → *Browse*).
+
+---
+
 # CodeIgniter 4 Framework
 
 ## What is CodeIgniter?
