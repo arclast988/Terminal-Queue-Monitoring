@@ -17,9 +17,9 @@ class Logs extends BaseController
     public function index()
     {
         // Join with users table to get user name
-        $logs = $this->logModel->select('logs.*, users.username, users.full_name')
-            ->join('users', 'users.id = logs.user_id', 'left')
-            ->orderBy('logs.timestamp', 'DESC')
+        $logs = $this->logModel->select('audit_logs.*, users.username, users.full_name')
+            ->join('users', 'users.id = audit_logs.user_id', 'left')
+            ->orderBy('audit_logs.timestamp', 'DESC')
             ->findAll();
 
         $data = [

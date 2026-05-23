@@ -106,7 +106,7 @@ class InitialSchema extends Migration
         $this->forge->addForeignKey('updated_by_user_id', 'users', 'id', 'SET NULL', 'CASCADE');
         $this->forge->createTable('trip_status_history');
 
-        // 8. Logs Table
+        // 8. Audit Logs Table
         $this->forge->addField([
             'id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
             'user_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
@@ -116,12 +116,12 @@ class InitialSchema extends Migration
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('user_id', 'users', 'id', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('logs');
+        $this->forge->createTable('audit_logs');
     }
 
     public function down()
     {
-        $this->forge->dropTable('logs');
+        $this->forge->dropTable('audit_logs');
         $this->forge->dropTable('trip_status_history');
         $this->forge->dropTable('queue');
         $this->forge->dropTable('vehicle_assignments');

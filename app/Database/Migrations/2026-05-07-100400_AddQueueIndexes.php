@@ -10,7 +10,7 @@ use CodeIgniter\Database\Migration;
  * The application repeatedly executes queries like:
  *   - SELECT ... WHERE status IN ('waiting','boarding') ORDER BY position
  *   - SELECT ... WHERE status = 'departed' ORDER BY departure_time DESC
- *   - SELECT ... FROM logs ORDER BY timestamp DESC
+ *   - SELECT ... FROM audit_logs ORDER BY timestamp DESC
  *
  * Without these indexes the queries do full table scans, which
  * becomes noticeable as the queue and log tables grow.
@@ -25,7 +25,7 @@ class AddQueueIndexes extends Migration
         $this->ensureIndex('queue', 'idx_queue_status', '(`status`)');
         $this->ensureIndex('queue', 'idx_queue_status_position', '(`status`, `position`)');
         $this->ensureIndex('queue', 'idx_queue_departure_time', '(`departure_time`)');
-        $this->ensureIndex('logs',  'idx_logs_timestamp', '(`timestamp`)');
+        $this->ensureIndex('audit_logs',  'idx_audit_logs_timestamp', '(`timestamp`)');
     }
 
     public function down()
@@ -33,7 +33,7 @@ class AddQueueIndexes extends Migration
         $this->dropIndex('queue', 'idx_queue_status');
         $this->dropIndex('queue', 'idx_queue_status_position');
         $this->dropIndex('queue', 'idx_queue_departure_time');
-        $this->dropIndex('logs',  'idx_logs_timestamp');
+        $this->dropIndex('audit_logs',  'idx_audit_logs_timestamp');
     }
 
     private function ensureIndex(string $table, string $indexName, string $columnsSql): void
