@@ -22,7 +22,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-geo-alt me-1"></i> Terminal List</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover">
                 <thead class="table-light">
                     <tr>
@@ -38,12 +38,12 @@
                     <?php if (!empty($terminals) && is_array($terminals)): ?>
                         <?php foreach ($terminals as $terminal): ?>
                             <tr>
-                                <td><?= $terminal['id'] ?></td>
-                                <td><?= esc($terminal['name']) ?></td>
-                                <td><?= esc($terminal['location']) ?></td>
-                                <td><?= $terminal['capacity'] ?></td>
-                                <td><?= $terminal['created_at'] ?></td>
-                                <td>
+                                <td data-label="ID"><?= $terminal['id'] ?></td>
+                                <td data-label="Name"><?= esc($terminal['name']) ?></td>
+                                <td data-label="Location"><?= esc($terminal['location']) ?></td>
+                                <td data-label="Capacity"><?= $terminal['capacity'] ?></td>
+                                <td data-label="Created At"><?= $terminal['created_at'] ?></td>
+                                <td data-label="Actions">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="<?= base_url('admin/terminals/edit/'.$terminal['id']) ?>" class="btn btn-outline-primary" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>

@@ -30,7 +30,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-clock-history me-1"></i> Rule List</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover">
                 <thead class="table-light">
                     <tr>
@@ -46,12 +46,12 @@
                     <?php if (!empty($rules) && is_array($rules)): ?>
                         <?php foreach ($rules as $rule): ?>
                             <tr>
-                                <td><?= esc($rule['terminal_name'] ?? '-') ?></td>
-                                <td><span class="badge bg-primary"><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
-                                <td><span class="badge bg-info"><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
-                                <td><strong><?= $rule['wait_minutes'] ?> min</strong></td>
-                                <td><?= esc($rule['label'] ?? '-') ?></td>
-                                <td>
+                                <td data-label="Terminal"><?= esc($rule['terminal_name'] ?? '-') ?></td>
+                                <td data-label="Time From"><span class="badge bg-primary"><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
+                                <td data-label="Time To"><span class="badge bg-info"><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
+                                <td data-label="Wait (Minutes)"><strong><?= $rule['wait_minutes'] ?> min</strong></td>
+                                <td data-label="Label"><?= esc($rule['label'] ?? '-') ?></td>
+                                <td data-label="Actions">
                                     <?php if (session()->get('role') !== 'staff'): ?>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn btn-outline-primary" title="Edit">

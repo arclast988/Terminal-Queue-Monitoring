@@ -28,7 +28,7 @@
         <h5 class="mb-0"><i class="bi bi-list-ul"></i> All Past Departures</h5>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr>
@@ -42,14 +42,14 @@
                     <?php if (!empty($departures)): ?>
                         <?php foreach ($departures as $item): ?>
                             <tr>
-                                <td class="fw-bold px-4"><?= esc($item['plate_number']) ?></td>
-                                <td><?= esc($item['owner_name']) ?></td>
-                                <td>
+                                <td class="fw-bold px-4" data-label="Plate Number"><?= esc($item['plate_number']) ?></td>
+                                <td data-label="Owner"><?= esc($item['owner_name']) ?></td>
+                                <td data-label="Route (Origin - Dest)">
                                     <small class="text-muted"><?= esc($item['origin']) ?></small>
                                     <i class="bi bi-arrow-right text-primary mx-1"></i>
                                     <strong><?= esc($item['destination']) ?></strong>
                                 </td>
-                                <td>
+                                <td data-label="Departure Time">
                                     <span class="badge bg-secondary fs-6">
                                         <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
                                     </span>

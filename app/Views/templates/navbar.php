@@ -165,8 +165,10 @@
         color: #2563eb;
     }
 
-    .dropdown:hover .dropdown-content {
-        display: block;
+    @media (hover: hover) and (pointer: fine) {
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
     }
 
     .dropbtn {
@@ -293,13 +295,27 @@
         }
 
         .nav-menu .dropdown-content {
-            position: static;
-            display: block;
+            position: static !important;
+            display: none !important;
             box-shadow: none;
             background: rgba(0,0,0,0.08);
             border-radius: 8px;
             padding: 5px 0;
             margin-top: 5px;
+            min-width: auto;
+            width: 100%;
+        }
+
+        .nav-menu .dropdown.mobile-open .dropdown-content {
+            display: block !important;
+        }
+
+        .nav-menu .dropbtn .fa-caret-down {
+            transition: transform 0.25s ease !important;
+        }
+
+        .nav-menu .dropdown.mobile-open .dropbtn .fa-caret-down {
+            transform: rotate(180deg) !important;
         }
 
         .nav-menu .admin-profile {
@@ -644,7 +660,7 @@
         <?php endif; ?>
     </div>
 
-    <div class="mobile-toggle" id="mobileMenuToggle" onclick="toggleAdminMobileMenu()">
+    <div class="mobile-toggle" id="mobileMenuToggle" onclick="toggleAdminMobileMenu()" onkeydown="if(event.key === 'Enter' || event.key === ' ') { toggleAdminMobileMenu(); event.preventDefault(); }" role="button" tabindex="0" aria-label="Toggle navigation menu">
         <i class="fas fa-bars" id="mobileMenuIcon"></i>
     </div>
 </header>
@@ -672,6 +688,23 @@
         }
     }
 
+    // Toggle mobile dropdown on click
+    document.addEventListener('DOMContentLoaded', function() {
+        var dropbtn = document.querySelector('.nav-menu .dropdown .dropbtn');
+        if (dropbtn) {
+            dropbtn.addEventListener('click', function(e) {
+                if (window.innerWidth <= 1280) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var dropdown = this.closest('.dropdown');
+                    if (dropdown) {
+                        dropdown.classList.toggle('mobile-open');
+                    }
+                }
+            });
+        }
+    });
+
     // Close menu if window is resized back to desktop
     window.addEventListener('resize', function() {
         if (window.innerWidth > 1280) {
@@ -682,6 +715,9 @@
             overlay.classList.remove('active');
             icon.classList.replace('fa-times', 'fa-bars');
             document.body.style.overflow = '';
+            
+            var dropdown = document.querySelector('.nav-menu .dropdown');
+            if (dropdown) dropdown.classList.remove('mobile-open');
         }
     });
 </script>

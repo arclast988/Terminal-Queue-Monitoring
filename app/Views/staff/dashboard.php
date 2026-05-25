@@ -37,7 +37,7 @@
 
 <h4 class="mt-4 mb-3">Recent Departures</h4>
 <div class="card shadow-sm">
-    <div class="table-responsive">
+    <div class="table-responsive table-responsive-card">
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
@@ -51,21 +51,21 @@
                 <?php if (!empty($recent_departures)): ?>
                     <?php foreach ($recent_departures as $dept): ?>
                         <tr>
-                            <td>
+                            <td data-label="Type">
                                 <?php 
                                     $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                     $imgFile = $imgMap[$dept['vehicle_type']] ?? 'van.png';
                                 ?>
                                 <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($dept['vehicle_type']) ?>" style="height:36px; width:auto;" title="<?= ucfirst($dept['vehicle_type']) ?>">
                             </td>
-                            <td class="fw-bold"><?= esc($dept['plate_number']) ?></td>
-                            <td><?= date('h:i A', strtotime($dept['departure_time'])) ?></td>
-                            <td><span class="badge bg-success">Departed</span></td>
+                            <td class="fw-bold" data-label="Plate Number"><?= esc($dept['plate_number']) ?></td>
+                            <td data-label="Departure Time"><?= date('h:i A', strtotime($dept['departure_time'])) ?></td>
+                            <td data-label="Status"><span class="badge bg-success">Departed</span></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-3">No recent departures today.</td>
+                        <td colspan="4" class="text-center text-muted py-3">No recent departures today.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

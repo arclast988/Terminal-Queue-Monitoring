@@ -18,7 +18,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-journal-text me-1"></i> Log Entries</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover table-sm">
                 <thead class="table-light">
                     <tr>
@@ -34,9 +34,9 @@
                     <?php if (!empty($logs) && is_array($logs)): ?>
                         <?php foreach ($logs as $log): ?>
                             <tr>
-                                <td><?= $log['id'] ?></td>
-                                <td><?= $log['timestamp'] ?></td>
-                                <td>
+                                <td data-label="ID"><?= $log['id'] ?></td>
+                                <td data-label="Timestamp"><?= $log['timestamp'] ?></td>
+                                <td data-label="User">
                                     <?php if ($log['username']): ?>
                                         <span class="fw-bold"><?= esc($log['username']) ?></span>
                                         <small class="text-muted d-block"><?= esc($log['full_name']) ?></small>
@@ -44,9 +44,9 @@
                                         <span class="text-muted">System/Guest</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= esc($log['action']) ?></td>
-                                <td><?= esc($log['details']) ?></td>
-                                <td>
+                                <td data-label="Action"><?= esc($log['action']) ?></td>
+                                <td data-label="Details"><?= esc($log['details']) ?></td>
+                                <td data-label="Manage">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <form action="<?= base_url('admin/logs/delete/' . $log['id']) ?>" method="post" class="d-inline"
                                             onsubmit="return confirm('Delete this log entry?')">

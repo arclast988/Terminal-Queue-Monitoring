@@ -151,7 +151,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
         <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all <strong><?= $totalVehicles ?></strong> vehicles</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover" id="vehicles-table">
                 <thead class="table-light">
                     <tr>
@@ -170,12 +170,12 @@ if (!empty($vehicles) && is_array($vehicles)) {
                     <?php if (!empty($vehicles) && is_array($vehicles)): ?>
                         <?php foreach ($vehicles as $i => $vehicle): ?>
                             <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>">
-                                <td class="row-number"><?= $i + 1 ?></td>
-                                <td>
+                                <td class="row-number" data-label="#"><?= $i + 1 ?></td>
+                                <td data-label="Plate Number">
                                     <span class="fw-bold"><?= esc($vehicle['plate_number']) ?></span>
                                 </td>
-                                <td class="fw-bold"><?= esc($vehicle['driver_name']) ?></td>
-                                <td>
+                                <td class="fw-bold" data-label="Driver Name"><?= esc($vehicle['driver_name']) ?></td>
+                                <td data-label="Vehicle Type">
                                     <?php
                                     $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                     $imgFile = $imgMap[$vehicle['type']] ?? 'van.png';
@@ -185,28 +185,31 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     <small class="d-block text-muted"
                                         style="font-size:10px;"><?= ucfirst($vehicle['type']) ?></small>
                                 </td>
-                                <td style="max-width: 250px;">
-                                    <?php if (!empty($vehicle['route_destination'])): ?>
-                                        <div style="overflow-x: auto; padding-bottom: 4px; white-space: nowrap;">
-                                            <span class="badge bg-primary" style="font-size:10px; font-weight:500;"><?= strtoupper(esc($vehicle['route_origin'])) ?> →
-                                                <?= strtoupper(esc($vehicle['route_destination'])) ?></span>
+                                <td style="max-width: 250px;" data-label="Assigned Route">
+                                    <?php if (!empty($vehicle['route_destination'])):
+                                        $routeLabel = strtoupper(esc($vehicle['route_origin'])) . ' → ' . strtoupper(esc($vehicle['route_destination']));
+                                    ?>
+                                        <div class="badge-scroll-wrap" title="<?= $routeLabel ?>">
+                                            <span class="badge bg-primary" style="font-size:10px; font-weight:500;">
+                                                <?= $routeLabel ?>
+                                            </span>
                                         </div>
                                     <?php else: ?>
                                         <span class="badge bg-warning text-dark">Not Assigned</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= $vehicle['capacity'] ?></td>
-                                <td>
+                                <td data-label="Capacity"><?= $vehicle['capacity'] ?></td>
+                                <td data-label="Status">
                                     <?php if ($vehicle['status'] == 'active'): ?>
                                         <span class="badge bg-success">Active</span>
                                     <?php else: ?>
                                         <span class="badge bg-danger">Maintenance</span>
                                     <?php endif; ?>
                                 </td>
-                                <td>
+                                <td data-label="Registered">
                                     <small class="text-muted"><?= date('M d, Y', strtotime($vehicle['created_at'])) ?></small>
                                 </td>
-                                <td>
+                                <td data-label="Action">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
                                             class="btn btn-outline-primary" title="Edit vehicle">

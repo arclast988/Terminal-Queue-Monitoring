@@ -22,7 +22,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-megaphone me-1"></i> Announcement List</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover">
                 <thead class="table-light">
                     <tr>
@@ -38,19 +38,18 @@
                     <?php if (!empty($announcements) && is_array($announcements)): ?>
                         <?php foreach ($announcements as $a): ?>
                             <tr>
-                                <td><?= $a['id'] ?></td>
-                                <td><span class="badge bg-dark"><?= esc($a['terminal_name'] ?? '—') ?></span></td>
-                                <td><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?>
-                                </td>
-                                <td>
+                                <td data-label="ID"><?= $a['id'] ?></td>
+                                <td data-label="Terminal"><span class="badge bg-dark"><?= esc($a['terminal_name'] ?? '—') ?></span></td>
+                                <td data-label="Message"><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?></td>
+                                <td data-label="Status">
                                     <?php if ($a['is_active']): ?>
                                         <span class="badge bg-success">Active</span>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">Inactive</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?= $a['created_at'] ? date('M d, Y H:i', strtotime($a['created_at'])) : '-' ?></td>
-                                <td>
+                                <td data-label="Created"><?= $a['created_at'] ? date('M d, Y H:i', strtotime($a['created_at'])) : '-' ?></td>
+                                <td data-label="Actions">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>"
                                             class="btn btn-outline-primary" title="Edit">

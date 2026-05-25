@@ -22,7 +22,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-people me-1"></i> User List</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover" id="users-table">
                 <thead class="table-light">
                     <tr>
@@ -36,8 +36,8 @@
                 <tbody>
                     <?php foreach ($users as $i => $user): ?>
                         <tr>
-                            <td class="row-number"><?= $i + 1 ?></td>
-                            <td>
+                            <td class="row-number" data-label="#"><?= $i + 1 ?></td>
+                            <td data-label="User">
                                 <div>
                                     <span class="fw-bold" style="font-size:14px;"><?= esc($user['full_name']) ?></span>
                                     <div>
@@ -45,11 +45,11 @@
                                     </div>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Role">
                                 <span
                                     class="badge bg-<?= $user['role'] == 'admin' ? 'danger' : 'info' ?>"><?= $user['role'] == 'staff' ? 'Dispatcher' : ucfirst($user['role']) ?></span>
                             </td>
-                            <td style="max-width: 350px;">
+                            <td style="max-width: 350px;" data-label="Assigned Routes">
                                 <?php if ($user['role'] === 'admin'): ?>
                                     <span class="badge bg-success">All Routes</span>
                                 <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
@@ -66,7 +66,7 @@
                                     <span class="badge bg-warning text-dark">No Routes</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td data-label="Action">
                                 <div class="btn-group btn-group-sm" role="group">
                                     <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
                                         class="btn btn-outline-primary" title="Edit">

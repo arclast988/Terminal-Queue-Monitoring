@@ -24,7 +24,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-signpost-split me-1"></i> Route List</span>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-striped table-hover">
                 <thead class="table-light">
                     <tr>
@@ -42,10 +42,10 @@
                     <?php if (!empty($routes) && is_array($routes)): ?>
                         <?php foreach ($routes as $route): ?>
                             <tr>
-                                <td><?= $route['id'] ?></td>
-                                <td><?= esc($route['terminal_name']) ?></td>
-                                <td><?= esc($route['destination']) ?></td>
-                                <td>
+                                <td data-label="ID"><?= $route['id'] ?></td>
+                                <td data-label="Terminal"><?= esc($route['terminal_name']) ?></td>
+                                <td data-label="Destination"><?= esc($route['destination']) ?></td>
+                                <td data-label="Type">
                                     <?php
                                         $badgeClass = 'bg-secondary';
                                         if ($route['vehicle_type'] == 'van') {
@@ -60,9 +60,9 @@
                                         <?= strtoupper($route['vehicle_type']) ?>
                                     </span>
                                 </td>
-                                <td><?= number_format($route['fare'], 2) ?></td>
+                                <td data-label="Fare (PHP)"><?= number_format($route['fare'], 2) ?></td>
                                 <?php if (session()->get('role') === 'admin'): ?>
-                                <td>
+                                <td data-label="Actions">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="<?= base_url('admin/routes/edit/'.$route['id']) ?>" class="btn btn-outline-primary" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>

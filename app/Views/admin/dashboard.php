@@ -104,7 +104,7 @@
 
 <h2 class="mt-4">Recent Activity </h2>
 <div class="card shadow-sm">
-    <div class="table-responsive">
+    <div class="table-responsive table-responsive-card">
         <table class="table table-striped table-hover mb-0">
             <thead class="table-light">
                 <tr>
@@ -117,9 +117,9 @@
                 <?php if (!empty($recent_logs)): ?>
                     <?php foreach ($recent_logs as $log): ?>
                         <tr>
-                            <td><?= date('Y-m-d H:i', strtotime($log['timestamp'])) ?></td>
-                            <td><?= esc($log['username'] ?? 'System') ?></td>
-                            <td><?= esc($log['action']) ?></td>
+                            <td data-label="Time"><?= date('Y-m-d H:i', strtotime($log['timestamp'])) ?></td>
+                            <td data-label="User"><?= esc($log['username'] ?? 'System') ?></td>
+                            <td data-label="Action"><?= esc($log['action']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>

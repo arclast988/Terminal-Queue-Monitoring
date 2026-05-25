@@ -129,7 +129,7 @@
         <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Departure Records</span>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
@@ -144,7 +144,7 @@
                     <?php if (!empty($departures)): ?>
                         <?php foreach ($departures as $item): ?>
                             <tr>
-                                <td class="px-4">
+                                <td class="px-4" data-label="Vehicle">
                                     <?php
                                         $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                         $vType = strtolower($item['vehicle_type'] ?? '');
@@ -153,14 +153,14 @@
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($vType) ?>" style="height:32px; width:auto;" title="<?= ucfirst($vType) ?>">
                                     <small class="d-block text-muted" style="font-size:10px;"><?= ucfirst($vType) ?></small>
                                 </td>
-                                <td class="fw-bold"><?= esc($item['plate_number']) ?></td>
-                                <td><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
-                                <td>
+                                <td class="fw-bold" data-label="Plate Number"><?= esc($item['plate_number']) ?></td>
+                                <td data-label="Driver / Owner"><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
+                                <td data-label="Route (Origin → Dest)">
                                     <small class="text-muted"><?= esc($item['origin']) ?></small>
                                     <i class="bi bi-arrow-right text-primary mx-1"></i>
                                     <strong><?= esc($item['destination']) ?></strong>
                                 </td>
-                                <td>
+                                <td data-label="Departure Time">
                                     <span class="badge bg-secondary fs-6">
                                         <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
                                     </span>

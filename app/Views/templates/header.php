@@ -24,6 +24,8 @@
     <?php if (session()->get('isLoggedIn')): ?>
         <link rel="stylesheet" href="<?= base_url('assets/css/admin-modern.css') ?>">
     <?php endif; ?>
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+
 
     <style>
         /* DISABLE ALL ANIMATIONS AND TRANSITIONS GLOBALLY */

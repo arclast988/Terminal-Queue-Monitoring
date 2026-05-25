@@ -144,7 +144,7 @@
         <span class="badge bg-primary"><?= count($schedules) ?> vehicles</span>
     </div>
     <div class="card-body p-0">
-        <div class="table-responsive">
+        <div class="table-responsive table-responsive-card">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
@@ -160,13 +160,13 @@
                     <?php if (!empty($schedules)): ?>
                         <?php foreach ($schedules as $s): ?>
                             <tr>
-                                <td>
+                                <td data-label="Queue #">
                                     <span class="badge bg-primary fs-6">
                                         #<?= esc($s['position']) ?>
                                     </span>
                                 </td>
-                                <td><code class="fw-bold"><?= esc($s['plate_number']) ?></code></td>
-                                <td>
+                                <td data-label="Plate Number"><code class="fw-bold"><?= esc($s['plate_number']) ?></code></td>
+                                <td data-label="Type">
                                     <?php
                                         $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                         $imgFile = $imgMap[$s['vehicle_type']] ?? 'van.png';
@@ -176,12 +176,12 @@
                                         <small class="text-muted fw-bold"><?= ucfirst($s['vehicle_type']) ?></small>
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Route">
                                     <strong><?= esc($s['origin']) ?></strong>
                                     <i class="fas fa-arrow-right mx-1 text-muted small"></i>
                                     <strong><?= esc($s['destination']) ?></strong>
                                 </td>
-                                <td>
+                                <td data-label="Est. Departure">
                                     <?php if ($s['status'] === 'departed' && $s['departure_time']): ?>
                                         <span class="badge bg-secondary fs-6">
                                             <?= date('g:i A', strtotime($s['departure_time'])) ?>
@@ -197,7 +197,7 @@
                                             passengers</small>
                                     <?php endif; ?>
                                 </td>
-                                <td>
+                                <td data-label="Status">
                                     <?php
                                     $statusClass = match ($s['status']) {
                                         'boarding' => 'bg-success',
