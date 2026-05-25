@@ -748,6 +748,19 @@ body.staff-theme .table .btn-group > form {
         width: 100% !important;
         max-width: none !important;
     }
+    
+    .action-label,
+    .user-action-label {
+        display: none !important;
+    }
+    
+    .table .btn-group {
+        flex-direction: row !important;
+    }
+    
+    .table .btn-group .btn {
+        padding: 0.25rem 0.5rem !important;
+    }
 }
 
 @media (max-width: 576px) {

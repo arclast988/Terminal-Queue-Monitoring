@@ -18,6 +18,9 @@
 <?php endif; ?>
 
 <div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-megaphone me-1"></i> Announcement List</span>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-striped table-hover">
@@ -48,16 +51,18 @@
                                 </td>
                                 <td><?= $a['created_at'] ? date('M d, Y H:i', strtotime($a['created_at'])) : '-' ?></td>
                                 <td>
-                                    <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>"
-                                        class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>"
+                                            class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
+                                        </a>
+                                        <form action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -124,9 +124,9 @@
 </div>
 
 <!-- Departures Table -->
-<div class="card shadow-sm border-0 mb-4">
-    <div class="card-header bg-secondary text-white py-3">
-        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Departure Records</h5>
+<div class="card shadow mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Departure Records</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">

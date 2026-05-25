@@ -41,7 +41,7 @@
                     <input type="text" class="form-control" id="plate_number" name="plate_number"
                         placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-1">
+                <div class="col-12 col-sm-6 col-xl-2">
                     <label for="type" class="form-label">Type</label>
                     <select class="form-select" id="type" name="type" required>
                         <option value="jeepney" <?= old('type') == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
@@ -185,10 +185,12 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     <small class="d-block text-muted"
                                         style="font-size:10px;"><?= ucfirst($vehicle['type']) ?></small>
                                 </td>
-                                <td>
+                                <td style="max-width: 250px;">
                                     <?php if (!empty($vehicle['route_destination'])): ?>
-                                        <span class="badge bg-primary"><?= strtoupper(esc($vehicle['route_origin'])) ?> →
-                                            <?= strtoupper(esc($vehicle['route_destination'])) ?></span>
+                                        <div style="overflow-x: auto; padding-bottom: 4px; white-space: nowrap;">
+                                            <span class="badge bg-primary" style="font-size:10px; font-weight:500;"><?= strtoupper(esc($vehicle['route_origin'])) ?> →
+                                                <?= strtoupper(esc($vehicle['route_destination'])) ?></span>
+                                        </div>
                                     <?php else: ?>
                                         <span class="badge bg-warning text-dark">Not Assigned</span>
                                     <?php endif; ?>

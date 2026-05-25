@@ -14,6 +14,9 @@
 </div>
 
 <div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-journal-text me-1"></i> Log Entries</span>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-striped table-hover table-sm">
@@ -44,13 +47,15 @@
                                 <td><?= esc($log['action']) ?></td>
                                 <td><?= esc($log['details']) ?></td>
                                 <td>
-                                    <form action="<?= base_url('admin/logs/delete/' . $log['id']) ?>" method="post" class="d-inline"
-                                        onsubmit="return confirm('Delete this log entry?')">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <form action="<?= base_url('admin/logs/delete/' . $log['id']) ?>" method="post" class="d-inline"
+                                            onsubmit="return confirm('Delete this log entry?')">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

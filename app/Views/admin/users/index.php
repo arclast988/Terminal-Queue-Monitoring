@@ -18,75 +18,134 @@
 <?php endif; ?>
 
 <div class="card shadow">
-    <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-            <thead>
-                <tr
-                    style="background:#f8fafc; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; color:#64748b;">
-                    <th style="width:40px; text-align:center; padding:10px 8px;">#</th>
-                    <th style="padding:10px 8px;">User</th>
-                    <th style="padding:10px 8px;">Role</th>
-                    <th style="padding:10px 8px;">Assigned Routes</th>
-                    <th style="width:90px; text-align:center; padding:10px 8px;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($users as $i => $user): ?>
+    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-people me-1"></i> User List</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="users-table">
+                <thead class="table-light">
                     <tr>
-                        <td class="text-center text-muted" style="padding:10px 8px; font-size:13px;"><?= $i + 1 ?></td>
-                        <td style="padding:10px 8px;">
-                            <div>
-                                <span class="fw-bold" style="font-size:14px;"><?= esc($user['full_name']) ?></span>
+                        <th>#</th>
+                        <th>User</th>
+                        <th>Role</th>
+                        <th>Assigned Routes</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($users as $i => $user): ?>
+                        <tr>
+                            <td class="row-number"><?= $i + 1 ?></td>
+                            <td>
                                 <div>
-                                    <small class="text-muted" style="font-size:11px;">@<?= esc($user['username']) ?></small>
+                                    <span class="fw-bold" style="font-size:14px;"><?= esc($user['full_name']) ?></span>
+                                    <div>
+                                        <small class="text-muted" style="font-size:11px;">@<?= esc($user['username']) ?></small>
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td style="padding:10px 8px;">
-                            <span
-                                class="badge bg-<?= $user['role'] == 'admin' ? 'danger' : 'info' ?>"><?= $user['role'] == 'staff' ? 'Dispatcher' : ucfirst($user['role']) ?></span>
-                        </td>
-                        <td style="padding:10px 8px; max-width:280px;">
-                            <?php if ($user['role'] === 'admin'): ?>
-                                <span class="badge bg-success">All Routes</span>
-                            <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
-                                <div style="display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px;">
-                                    <?php
-                                    $routeParts = explode(', ', $user['assigned_routes_label']);
-                                    foreach ($routeParts as $rp):
-                                        ?>
-                                        <span class="badge bg-primary"
-                                            style="font-size:10px; font-weight:500; white-space: nowrap;"><?= esc($rp) ?></span>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php else: ?>
-                                <span class="badge bg-warning text-dark">No Routes</span>
-                            <?php endif; ?>
-                        </td>
-                        <td class="text-center" style="padding:10px 8px;">
-                            <div class="d-flex gap-1 justify-content-center">
-                                <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
-                                    class="btn btn-sm btn-outline-primary" title="Edit" style="padding:3px 7px;">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <?php if ((int) $user['id'] !== (int) session()->get('id')): ?>
-                                    <form action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post"
-                                        class="d-inline"
-                                        onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"
-                                            style="padding:3px 7px;">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                            </td>
+                            <td>
+                                <span
+                                    class="badge bg-<?= $user['role'] == 'admin' ? 'danger' : 'info' ?>"><?= $user['role'] == 'staff' ? 'Dispatcher' : ucfirst($user['role']) ?></span>
+                            </td>
+                            <td style="max-width: 350px;">
+                                <?php if ($user['role'] === 'admin'): ?>
+                                    <span class="badge bg-success">All Routes</span>
+                                <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
+                                    <div style="display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px;">
+                                        <?php
+                                        $routeParts = explode(', ', $user['assigned_routes_label']);
+                                        foreach ($routeParts as $rp):
+                                            ?>
+                                            <span class="badge bg-primary"
+                                                style="font-size:10px; font-weight:500; white-space: nowrap;"><?= esc($rp) ?></span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="badge bg-warning text-dark">No Routes</span>
                                 <?php endif; ?>
-                            </div>
-                        </td>
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
+                                        class="btn btn-outline-primary" title="Edit">
+                                        <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
+                                    </a>
+                                    <?php if ((int) $user['id'] !== (int) session()->get('id')): ?>
+                                        <form action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
                     </tr>
                 <?php endforeach; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<style>
+    #users-table {
+        width: 100%;
+    }
+
+    #users-table th,
+    #users-table td {
+        vertical-align: middle;
+    }
+
+    #users-table .btn-group .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    @media (max-width: 991.98px) {
+        #users-table {
+            min-width: 680px;
+            font-size: 13px;
+        }
+
+        #users-table thead th,
+        #users-table tbody td {
+            padding: 0.65rem 0.5rem !important;
+        }
+
+        #users-table th:first-child,
+        #users-table td.row-number {
+            width: 38px;
+            text-align: center;
+        }
+
+        #users-table .btn-group {
+            flex-direction: row !important;
+            gap: 0.35rem;
+        }
+
+        #users-table .btn-group .btn {
+            width: 34px !important;
+            height: 34px;
+            padding: 0 !important;
+            border-radius: 6px !important;
+        }
+
+        #users-table .btn-group form {
+            display: inline-flex !important;
+        }
+
+        .user-action-label {
+            display: none;
+        }
+    }
+</style>
 
 <?= $this->include('templates/footer') ?>

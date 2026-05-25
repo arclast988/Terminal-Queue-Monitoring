@@ -20,6 +20,9 @@
 <?php endif; ?>
 
 <div class="card shadow">
+    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
+        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-signpost-split me-1"></i> Route List</span>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
             <table class="table table-striped table-hover">
@@ -60,15 +63,17 @@
                                 <td><?= number_format($route['fare'], 2) ?></td>
                                 <?php if (session()->get('role') === 'admin'): ?>
                                 <td>
-                                    <a href="<?= base_url('admin/routes/edit/'.$route['id']) ?>" class="btn btn-sm btn-warning">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="<?= base_url('admin/routes/delete/'.$route['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this route?');">
-                                        <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="<?= base_url('admin/routes/edit/'.$route['id']) ?>" class="btn btn-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
+                                        </a>
+                                        <form action="<?= base_url('admin/routes/delete/'.$route['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                                 <?php endif; ?>
                             </tr>
