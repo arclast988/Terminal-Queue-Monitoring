@@ -551,16 +551,79 @@
             font-size: 14px;
         }
 
+        /* --- Mobile Overlay --- */
+        .nav-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1002;
+            display: none;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .nav-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         @media (max-width: 992px) {
             .header-info { display: none !important; }
         }
 
         @media (max-width: 768px) {
-            header { padding: 10px 5%; flex-direction: column; gap: 15px; }
-            .nav-menu { flex-direction: column; width: 100%; }
-            .logo-text h1 { font-size: 16px; }
+            header { padding: 10px 5%; min-height: 65px; border-bottom: 1px solid #eee; }
+            .nav-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 260px;
+                height: 100vh;
+                background: white;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 70px 25px 30px;
+                box-shadow: -5px 0 25px rgba(0, 0, 0, 0.08);
+                transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 1003;
+                gap: 12px;
+            }
+
+            .nav-menu.open {
+                right: 0;
+            }
+
+            .nav-menu a {
+                width: 100%;
+                padding: 12px 18px;
+                border-radius: 12px;
+                background: #f8fafc;
+                font-size: 15px;
+                font-weight: 600;
+            }
+
+            .nav-menu a.active {
+                background: #e3f2fd;
+                color: var(--primary);
+            }
+
+            .nav-menu a.login-btn { background: #1e3a8a; color: white !important; text-align: center; justify-content: center; margin-top: 10px; margin-left: 0 !important; }
+            .nav-menu a.login-btn:hover, .nav-menu a.login-btn:active { background: #172554 !important; transform: scale(0.98); }
+
+            .mobile-toggle {
+                display: block;
+                z-index: 1004;
+                position: relative;
+            }
+
+            .logo-text h1 { font-size: 15px; letter-spacing: -0.2px; }
+            .logo-text p { font-size: 8px; }
+            .logo { width: 40px; height: 40px; border-radius: 8px; }
             .hero { padding: 40px 5%; }
-            .hero h2 { font-size: 32px; }
+            .hero h2 { font-size: 28px; }
             .results-table { font-size: 13px; }
             .results-table th, .results-table td { padding: 12px; }
             .results-section-header { flex-direction: column; align-items: flex-start; }
@@ -577,6 +640,14 @@
 </head>
 <body>
 
+    <!-- Mobile Overlay -->
+    <div class="nav-overlay" id="navOverlay" onclick="toggleMenu()"></div>
+
+    <!-- Mobile Close Button - outside menu panel so position:fixed works at any zoom -->
+    <button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleMenu()" aria-label="Close menu">
+        <i class="fas fa-times"></i>
+    </button>
+
     <!-- Advisory Bar -->
     <div class="advisory-bar">
         <div class="advisory-icon"><i class="fas fa-bullhorn"></i></div>
@@ -592,7 +663,7 @@
     </div>
 
     <!-- Header & Navigation -->
-    <header>
+    <header class="guest-header">
         <div style="display: flex; align-items: center; gap: 40px;">
             <a href="<?= base_url('guest') ?>" class="logo-section">
                 <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Logo" class="logo">
@@ -820,8 +891,23 @@
     // Mobile menu toggle
     function toggleMenu() {
         const m = document.getElementById('navMenu'), o = document.getElementById('navOverlay');
-        if (m) m.classList.toggle('open');
+        const toggleIcon = document.querySelector('.mobile-toggle i');
+        const closeBtn = document.getElementById('mobileMenuClose');
+
+        if (!m) return;
+
+        m.classList.toggle('open');
         if (o) o.classList.toggle('active');
+
+        if (m.classList.contains('open')) {
+            if (toggleIcon) toggleIcon.classList.replace('fa-bars', 'fa-times');
+            if (closeBtn) closeBtn.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        } else {
+            if (toggleIcon) toggleIcon.classList.replace('fa-times', 'fa-bars');
+            if (closeBtn) closeBtn.classList.remove('active');
+            document.body.style.overflow = '';
+        }
     }
     </script>
 </body>

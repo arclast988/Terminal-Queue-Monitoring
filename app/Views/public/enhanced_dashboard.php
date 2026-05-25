@@ -953,7 +953,8 @@
             }
 
             .capacity-info .progress {
-                width: 120px !important;
+                width: 100% !important;
+                max-width: 140px;
             }
 
             .q-meta {
@@ -1097,6 +1098,11 @@
     <!-- Mobile Overlay -->
     <div class="nav-overlay" id="navOverlay" onclick="toggleMenu()"></div>
 
+    <!-- Mobile Close Button - outside menu panel so position:fixed works at any zoom -->
+    <button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleMenu()" aria-label="Close menu">
+        <i class="fas fa-times"></i>
+    </button>
+
     <!-- Advisory Bar (announcements from admin) -->
     <div class="advisory-bar">
         <div class="advisory-icon"><i class="fas fa-bullhorn"></i></div>
@@ -1112,7 +1118,7 @@
     </div>
 
     <!-- Header & Navigation -->
-    <header>
+    <header class="guest-header">
         <div style="display: flex; align-items: center; gap: 40px;">
             <a href="<?= base_url('guest') ?>" class="logo-section">
                 <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Logo" class="logo">
@@ -1255,7 +1261,7 @@
                                 $imgFile = $imgMap[$vType] ?? 'van.png';
                                 ?>
                                 <div
-                                    style="position: relative; width: 75px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+                                    style="position: relative; width: clamp(50px, 11vw, 75px); flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>"
                                         style="width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
                                     <?php if ($vType !== 'jeepney'): ?>
@@ -1286,7 +1292,7 @@
                                                 <?php endif; ?>
                                             </div>
                                             <div class="progress"
-                                                style="height: 6px; width: 150px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden;">
+                                                style="height: 6px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden;">
                                                 <?php $percent = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100); ?>
                                                 <div class="progress-bar"
                                                     style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#e53e3e' : 'var(--primary)' ?>; transition: width 0.3s ease;">
@@ -1508,7 +1514,7 @@
                                 var posBadge = (vType !== 'jeepney')
                                     ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size:13px;font-weight:800;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:1;">#' + item.position + '</span>' : '';
                                 queueHtml += '<div class="queue-card">'
-                                    + '<div style="position:relative;width:75px;flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
+                                    + '<div style="position:relative;width:clamp(50px,11vw,75px);flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
                                     + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
                                     + posBadge
                                     + '</div>'
@@ -1525,7 +1531,7 @@
                                     + '<span style="font-size:13px;font-weight:600;color:var(--text-main);">' + item.current_passengers + ' / ' + item.capacity + ' Onboard</span>'
                                     + fullBadge
                                     + '</div>'
-                                    + '<div class="progress" style="height:6px;width:150px;background:#eee;border-radius:10px;margin-top:5px;overflow:hidden;">'
+                                    + '<div class="progress" style="height:6px;background:#eee;border-radius:10px;margin-top:5px;overflow:hidden;">'
                                     + '<div class="progress-bar" style="width:' + percent + '%;height:100%;background:' + progressColor + ';transition:width 0.3s ease;"></div>'
                                     + '</div>'
                                     + '</div>'
@@ -1609,17 +1615,23 @@
             var menu = document.getElementById('navMenu');
             var overlay = document.getElementById('navOverlay');
             var toggleIcon = document.querySelector('.mobile-toggle i');
+            var toggleBtn = document.querySelector('.mobile-toggle');
+            var closeBtn = document.getElementById('mobileMenuClose');
 
-            if (!menu || !overlay || !toggleIcon) return;
+            if (!menu) return;
 
             menu.classList.toggle('open');
-            overlay.classList.toggle('active');
+            if (overlay) overlay.classList.toggle('active');
 
             if (menu.classList.contains('open')) {
-                toggleIcon.classList.replace('fa-bars', 'fa-times');
+                if (toggleIcon) toggleIcon.classList.replace('fa-bars', 'fa-times');
+                if (toggleBtn) toggleBtn.style.visibility = 'hidden';
+                if (closeBtn) closeBtn.classList.add('active');
                 document.body.style.overflow = 'hidden';
             } else {
-                toggleIcon.classList.replace('fa-times', 'fa-bars');
+                if (toggleIcon) toggleIcon.classList.replace('fa-times', 'fa-bars');
+                if (toggleBtn) toggleBtn.style.visibility = 'visible';
+                if (closeBtn) closeBtn.classList.remove('active');
                 document.body.style.overflow = '';
             }
         }

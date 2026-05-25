@@ -728,6 +728,11 @@
     <!-- Mobile Overlay -->
     <div class="nav-overlay" id="navOverlay" onclick="toggleMenu()"></div>
 
+    <!-- Mobile Close Button - outside menu panel so position:fixed works at any zoom -->
+    <button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleMenu()" aria-label="Close menu">
+        <i class="fas fa-times"></i>
+    </button>
+
     <!-- Advisory Bar -->
     <div class="advisory-bar">
         <div class="advisory-icon"><i class="fas fa-bullhorn"></i></div>
@@ -743,7 +748,7 @@
     </div>
 
     <!-- Header & Navigation -->
-    <header>
+    <header class="guest-header">
         <div style="display: flex; align-items: center; gap: 40px;">
             <a href="<?= base_url('guest') ?>" class="logo-section">
                 <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Logo" class="logo">
@@ -1033,9 +1038,28 @@
         }
 
         function toggleMenu() {
-            var m = document.getElementById('navMenu'), o = document.getElementById('navOverlay');
-            if (m) m.classList.toggle('open');
+            var m = document.getElementById('navMenu');
+            var o = document.getElementById('navOverlay');
+            var toggleIcon = document.querySelector('.mobile-toggle i');
+            var toggleBtn = document.querySelector('.mobile-toggle');
+            var closeBtn = document.getElementById('mobileMenuClose');
+
+            if (!m) return;
+
+            m.classList.toggle('open');
             if (o) o.classList.toggle('active');
+
+            if (m.classList.contains('open')) {
+                if (toggleIcon) toggleIcon.classList.replace('fa-bars', 'fa-times');
+                if (toggleBtn) toggleBtn.style.visibility = 'hidden';
+                if (closeBtn) closeBtn.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } else {
+                if (toggleIcon) toggleIcon.classList.replace('fa-times', 'fa-bars');
+                if (toggleBtn) toggleBtn.style.visibility = 'visible';
+                if (closeBtn) closeBtn.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         }
 
         setInterval(function() {
