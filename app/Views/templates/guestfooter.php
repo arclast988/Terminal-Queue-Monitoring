@@ -29,7 +29,7 @@
                 <ul>
                     <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Palompon Terminal Center</li>
                     <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-phone" style="margin-right: 10px;"></i> (053) 555-0123</li>
-                    <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-envelope" style="margin-right: 10px;"></i> marquezgio38@gmail.com</li>
+                    <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-envelope" style="margin-right: 10px;"></i> <?= config('Email')->recipients ?></li>
                 </ul>
             </div>
         </div>
@@ -166,7 +166,7 @@
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Who do I contact for complaints or feedback? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the "Contact Us" or "Report Issue" widgets here on this page. Your message goes directly to our support team at marquezgio38@gmail.com.</div>
+            <div class="faq-answer">Use the "Contact Us" or "Report Issue" widgets here on this page. Your message goes directly to our support team at <?= config('Email')->recipients ?>.</div>
         </div>
     </div>
 </div>

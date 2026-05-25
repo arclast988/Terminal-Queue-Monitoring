@@ -26,7 +26,7 @@ class Contact extends BaseController
         }
 
         $config = config('Email');
-        $toEmail = $config->recipients ?: 'marquezgio38@gmail.com';
+        $toEmail = $config->recipients;
         $subjectLine = ($type === 'report')
             ? '[PTM Report Issue] ' . ($subject ?: 'Issue reported via website')
             : '[PTM Contact Us] ' . ($subject ?: 'Message from website');
@@ -37,7 +37,7 @@ class Contact extends BaseController
         $emailSvc = \Config\Services::email();
 
         // Note: Gmail SMTP requires the 'From' address to be the authenticated email
-        $fromEmail = $config->fromEmail ?: ($config->SMTPUser ?: 'marquezgio38@gmail.com');
+        $fromEmail = $config->fromEmail ?: $config->SMTPUser;
         $fromName  = $config->fromName ?: 'PTM System Feedback';
 
         $emailSvc->setFrom($fromEmail, $fromName);
@@ -52,7 +52,7 @@ class Contact extends BaseController
         } else {
             // Fallback – still store session so user knows what happened
             return redirect()->back()
-                ->with('contact_error', 'Message could not be sent. Please try contacting us directly at marquezgio38@gmail.com');
+                ->with('contact_error', 'Message could not be sent. Please try contacting us directly at ' . $config->recipients);
         }
     }
 }
