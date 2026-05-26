@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'Departure History') ?> – Palompon Transit</title>
-    <meta name="description" content="View all completed vehicle departures and search by plate number, destination, or operator.">
+    <meta name="description" content="View all completed vehicle departures and search by plate number, destination, or driver.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
@@ -238,56 +238,78 @@
         }
         tbody td:first-child { padding-left: 28px; }
 
-        /* Plate number pill */
-        .plate-pill {
-            font-family: 'Courier New', monospace;
-            font-weight: 800;
+        /* ===== SCHEDULE-STYLE TABLE (shared visual language with /schedules) ===== */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .schedule-table thead {
+            background: #f8fafc;
+        }
+        .schedule-table th {
+            padding: 15px 25px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .schedule-table td {
+            padding: 20px 25px;
+            border-bottom: 1px solid #f1f5f9;
             font-size: 14px;
-            color: #0d47a1;
-            background: #e3f2fd;
-            padding: 5px 14px;
-            border-radius: 8px;
-            display: inline-block;
-            letter-spacing: 1px;
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+        .schedule-table tr:hover { background: #fafbfc; }
+
+        .plate-number {
+            font-weight: 700;
+            color: var(--text-main);
+            font-family: monospace;
+            font-size: 15px;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 6px;
         }
 
-        /* Operator */
-        .operator-name {
+        .driver-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             font-weight: 600;
             color: var(--text-main);
             font-size: 14px;
         }
-
-        /* Route cell */
-        .route-from {
-            font-size: 11px;
+        .driver-cell i {
             color: var(--text-muted);
-            margin-bottom: 3px;
+            font-size: 12px;
         }
-        .route-dest {
+
+        .route-info {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-weight: 700;
-            color: #2c3e50;
-            font-size: 14px;
+            gap: 10px;
         }
-        .route-dest i { color: #1565c0; font-size: 13px; }
 
-        /* Departure badge */
-        .dep-badge {
+        .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: #f1f5f9;
-            color: #475569;
-            font-size: 13px;
-            font-weight: 600;
             padding: 6px 14px;
-            border-radius: 10px;
+            border-radius: 50px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             white-space: nowrap;
         }
-        .dep-badge i { color: #FF9800; }
+        .status-departed {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .status-departed i { color: #FF9800; }
 
         /* Empty state */
         .empty-state {
@@ -369,15 +391,16 @@
                 flex-wrap: wrap;
                 gap: 8px;
             }
-            .mob-operator {
+            .mob-driver {
                 font-size: 13px;
                 color: var(--text-muted);
                 display: flex;
                 align-items: center;
                 gap: 5px;
                 margin-bottom: 4px;
+                font-weight: 600;
             }
-            .mob-operator i { font-size: 12px; }
+            .mob-driver i { font-size: 12px; }
 
             .table-card-header { flex-direction: column; gap: 10px; align-items: flex-start; }
         }
@@ -389,7 +412,10 @@
 </head>
 <body>
 
-<?= view('templates/header', ['title' => $title ?? 'Departure History']) ?>
+<?= view('templates/guest_header', [
+    'announcements' => $announcements ?? [],
+    'breadcrumb_current' => 'Departure History',
+]) ?>
 
 <!-- ===== HERO ===== -->
 <section class="hist-hero">
@@ -402,7 +428,7 @@
                 <input
                     type="text"
                     name="q"
-                    placeholder="Search by Plate Number, Destination, or Operator..."
+                    placeholder="Search by Plate Number, Destination, or Driver..."
                     value="<?= esc($search ?? '') ?>"
                     autocomplete="off"
                 >
@@ -451,12 +477,13 @@
 
         <!-- ===== DESKTOP TABLE ===== -->
         <div class="table-wrap desktop-table">
-            <table>
+            <table class="schedule-table">
                 <thead>
                     <tr>
                         <th>Plate Number</th>
-                        <th>Operator</th>
-                        <th>Route (Origin → Dest.)</th>
+                        <th>Driver</th>
+                        <th>Type</th>
+                        <th>Route</th>
                         <th>Departure Time</th>
                     </tr>
                 </thead>
@@ -464,24 +491,35 @@
                     <?php if (!empty($departures)): ?>
                         <?php foreach ($departures as $item): ?>
                             <tr>
-                                <td>
-                                    <span class="plate-pill"><?= esc($item['plate_number']) ?></span>
+                                <td data-label="Plate">
+                                    <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
-                                <td>
-                                    <div class="operator-name">
-                                        <i class="fas fa-user-tie" style="color:var(--text-muted);margin-right:6px;font-size:12px;"></i>
-                                        <?= esc($item['owner_name']) ?>
+                                <td data-label="Driver">
+                                    <div class="driver-cell">
+                                        <i class="fas fa-user-tie"></i>
+                                        <?= esc($item['driver_name'] ?? '—') ?>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="route-from">From <?= esc($item['origin']) ?></div>
-                                    <div class="route-dest">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <?= esc($item['destination']) ?>
+                                <td data-label="Type">
+                                    <?php
+                                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
+                                        $vType = strtolower($item['vehicle_type'] ?? '');
+                                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                                    ?>
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                    </span>
+                                    <div class="mt-1"><?= vehicle_type_badge($vType) ?></div>
+                                </td>
+                                <td data-label="Route">
+                                    <div class="route-info">
+                                        <span style="color: var(--text-muted); font-size: 13px;"><?= esc($item['origin']) ?></span>
+                                        <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 12px;"></i>
+                                        <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
                                     </div>
                                 </td>
-                                <td>
-                                    <span class="dep-badge">
+                                <td data-label="Departure Time">
+                                    <span class="status-badge status-departed">
                                         <i class="fas fa-clock"></i>
                                         <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
                                     </span>
@@ -490,7 +528,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5">
                                 <div class="empty-state">
                                     <div class="empty-icon">
                                         <i class="fas fa-history"></i>
@@ -509,24 +547,33 @@
         <div class="mobile-cards">
             <?php if (!empty($departures)): ?>
                 <?php foreach ($departures as $item): ?>
+                    <?php
+                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
+                        $vType = strtolower($item['vehicle_type'] ?? '');
+                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                    ?>
                     <div class="mob-row">
                         <div class="mob-top">
                             <div>
-                                <div class="mob-operator">
+                                <div class="mob-driver">
                                     <i class="fas fa-user-tie"></i>
-                                    <?= esc($item['owner_name']) ?>
+                                    <?= esc($item['driver_name'] ?? '—') ?>
                                 </div>
-                                <span class="plate-pill"><?= esc($item['plate_number']) ?></span>
+                                <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                             </div>
-                            <span class="dep-badge" style="font-size:12px;">
+                            <span class="status-badge status-departed" style="font-size:11px;">
                                 <i class="fas fa-clock"></i>
                                 <?= date('h:i A', strtotime($item['departure_time'])) ?>
                             </span>
                         </div>
                         <div class="mob-bottom">
-                            <div class="route-dest">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span style="font-size:13px;"><?= esc($item['origin']) ?> → <?= esc($item['destination']) ?></span>
+                            <div class="route-info">
+                                <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
+                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:22px;width:auto;">
+                                </span>
+                                <span style="color: var(--text-muted); font-size: 12px;"><?= esc($item['origin']) ?></span>
+                                <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 11px;"></i>
+                                <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;"><?= esc($item['destination']) ?></span>
                             </div>
                             <span style="font-size:11px;color:var(--text-muted);">
                                 <?= date('M d, Y', strtotime($item['departure_time'])) ?>

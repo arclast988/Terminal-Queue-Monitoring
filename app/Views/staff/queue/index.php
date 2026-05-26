@@ -223,11 +223,14 @@
                     <span class="q-pos badge bg-secondary-subtle text-secondary rounded-pill">#<?= $item['position'] ?></span>
                     <?php
                         $imgMap  = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                        $imgFile = $imgMap[$item['vehicle_type']] ?? 'van.png';
+                        $vType = strtolower($item['vehicle_type'] ?? '');
+                        $imgFile = $imgMap[$vType] ?? 'van.png';
                     ?>
-                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($item['vehicle_type']) ?>" style="height:32px;width:auto;">
+                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
+                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">
+                    </span>
                     <span class="fw-semibold flex-grow-1"><?= esc($item['plate_number']) ?>
-                        <small class="text-muted fw-normal"><?= ucfirst($item['vehicle_type']) ?></small>
+                        <?= vehicle_type_badge($vType) ?>
                     </span>
                     <?php if ($isWaiting): ?>
                         <span class="badge bg-warning text-dark rounded-pill">Waiting</span>

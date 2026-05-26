@@ -54,9 +54,12 @@
                             <td data-label="Type">
                                 <?php 
                                     $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                    $imgFile = $imgMap[$dept['vehicle_type']] ?? 'van.png';
+                                    $vType = strtolower($dept['vehicle_type'] ?? '');
+                                    $imgFile = $imgMap[$vType] ?? 'van.png';
                                 ?>
-                                <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($dept['vehicle_type']) ?>" style="height:36px; width:auto;" title="<?= ucfirst($dept['vehicle_type']) ?>">
+                                <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                </span>
                             </td>
                             <td class="fw-bold" data-label="Plate Number"><?= esc($dept['plate_number']) ?></td>
                             <td data-label="Departure Time"><?= date('h:i A', strtotime($dept['departure_time'])) ?></td>

@@ -46,19 +46,7 @@
                                 <td data-label="Terminal"><?= esc($route['terminal_name']) ?></td>
                                 <td data-label="Destination"><?= esc($route['destination']) ?></td>
                                 <td data-label="Type">
-                                    <?php
-                                        $badgeClass = 'bg-secondary';
-                                        if ($route['vehicle_type'] == 'van') {
-                                            $badgeClass = 'bg-info';
-                                        } elseif ($route['vehicle_type'] == 'jeepney') {
-                                            $badgeClass = 'bg-warning text-dark';
-                                        } elseif ($route['vehicle_type'] == 'minibus') {
-                                            $badgeClass = 'bg-purple text-white';
-                                        }
-                                    ?>
-                                    <span class="badge <?= $badgeClass ?>">
-                                        <?= strtoupper($route['vehicle_type']) ?>
-                                    </span>
+                                    <?= vehicle_type_badge($route['vehicle_type']) ?>
                                 </td>
                                 <td data-label="Fare (PHP)"><?= number_format($route['fare'], 2) ?></td>
                                 <?php if (session()->get('role') === 'admin'): ?>

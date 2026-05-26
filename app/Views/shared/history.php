@@ -33,8 +33,8 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="px-4">Plate Number</th>
-                        <th>Owner</th>
-                        <th>Route (Origin - Dest)</th>
+                        <th>Driver</th>
+                        <th>Route</th>
                         <th>Departure Time</th>
                     </tr>
                 </thead>
@@ -43,8 +43,8 @@
                         <?php foreach ($departures as $item): ?>
                             <tr>
                                 <td class="fw-bold px-4" data-label="Plate Number"><?= esc($item['plate_number']) ?></td>
-                                <td data-label="Owner"><?= esc($item['owner_name']) ?></td>
-                                <td data-label="Route (Origin - Dest)">
+                                <td data-label="Driver"><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
+                                <td data-label="Route">
                                     <small class="text-muted"><?= esc($item['origin']) ?></small>
                                     <i class="bi bi-arrow-right text-primary mx-1"></i>
                                     <strong><?= esc($item['destination']) ?></strong>

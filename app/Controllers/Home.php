@@ -39,12 +39,14 @@ class Home extends BaseController
                 ->join('routes', 'routes.id = queue.route_id')
                 ->join('terminals', 'terminals.id = routes.terminal_id')
                 ->where('queue.status', 'departed')
+                ->where('DATE(queue.departure_time)', date('Y-m-d'))
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
                 ->findAll(),
             'total_departures_today' => $queueModel->where('status', 'departed')
                 ->where('DATE(departure_time)', date('Y-m-d'))
                 ->countAllResults(),
+            'route_average_departures' => $this->getRouteAverageDepartures(),
             'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll()),
             'announcements' => $announcements
         ];
@@ -76,6 +78,7 @@ class Home extends BaseController
             ->join('routes', 'routes.id = queue.route_id')
             ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.status', 'departed')
+            ->where('DATE(queue.departure_time)', date('Y-m-d'))
             ->orderBy('queue.departure_time', 'DESC')
             ->limit(10)
             ->findAll();
@@ -83,7 +86,6 @@ class Home extends BaseController
         foreach ($recent_departures as &$dept) {
             $dept['departure_time_formatted'] = date('h:i A', strtotime($dept['departure_time']));
         }
-
         $total_departures_today = $queueModel->where('status', 'departed')
             ->where('DATE(departure_time)', date('Y-m-d'))
             ->countAllResults();
@@ -100,8 +102,100 @@ class Home extends BaseController
             'active_queue' => $active_queue,
             'recent_departures' => $recent_departures,
             'total_departures_today' => $total_departures_today,
+            'route_average_departures' => $this->getRouteAverageDepartures(),
             'sync_token' => $syncToken,
             'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll())
         ]);
+    }
+
+    private function getRouteAverageDepartures(): array
+    {
+        $queueModel = new QueueModel();
+
+        $departures = $queueModel
+            ->select('terminals.name as origin, routes.destination, queue.departure_time')
+            ->join('routes', 'routes.id = queue.route_id')
+            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->where('queue.status', 'departed')
+            ->where('queue.departure_time IS NOT NULL', null, false)
+            ->where('DATE(queue.departure_time)', date('Y-m-d'))
+            ->orderBy('terminals.name', 'ASC')
+            ->orderBy('routes.destination', 'ASC')
+            ->orderBy('queue.departure_time', 'ASC')
+            ->findAll();
+
+        $grouped = [];
+        foreach ($departures as $departure) {
+            $origin = (string) ($departure['origin'] ?? '');
+            $destination = (string) ($departure['destination'] ?? '');
+            $key = strtoupper($origin) . '|' . strtoupper($destination);
+
+            if (!isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'origin' => strtoupper($origin),
+                    'destination' => strtoupper($destination),
+                    'departure_times' => [],
+                ];
+            }
+
+            $grouped[$key]['departure_times'][] = strtotime($departure['departure_time']);
+        }
+
+        $rows = [];
+        foreach ($grouped as $group) {
+            $times = array_values(array_filter($group['departure_times']));
+            $departureCount = count($times);
+            $hasInterval = $departureCount > 1;
+            $intervalMinutes = null;
+            $intervalLabel = '';
+
+            if ($hasInterval) {
+                $gaps = [];
+                for ($i = 1; $i < $departureCount; $i++) {
+                    $gapSeconds = $times[$i] - $times[$i - 1];
+                    if ($gapSeconds > 0) {
+                        $gaps[] = $gapSeconds;
+                    }
+                }
+
+                if (!empty($gaps)) {
+                    $intervalMinutes = (int) round((array_sum($gaps) / count($gaps)) / 60);
+                    $intervalLabel = 'Every ' . $this->formatIntervalMinutes($intervalMinutes);
+                } else {
+                    $hasInterval = false;
+                }
+            }
+
+            if (!$hasInterval && $departureCount > 0) {
+                $intervalLabel = 'First departure at ' . date('h:i A', $times[0]);
+            }
+
+            $rows[] = [
+                'origin' => $group['origin'],
+                'destination' => $group['destination'],
+                'departure_count' => $departureCount,
+                'has_interval' => $hasInterval,
+                'interval_minutes' => $intervalMinutes,
+                'interval_label' => $intervalLabel,
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function formatIntervalMinutes(int $minutes): string
+    {
+        if ($minutes < 60) {
+            return $minutes . ' min';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $remainingMinutes = $minutes % 60;
+
+        if ($remainingMinutes === 0) {
+            return $hours . 'h';
+        }
+
+        return $hours . 'h ' . $remainingMinutes . 'm';
     }
 }

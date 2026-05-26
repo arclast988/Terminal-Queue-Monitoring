@@ -106,16 +106,9 @@
                 <label class="form-label fw-bold">Destination</label>
                 <select name="destination" class="form-select">
                     <option value="">All Destinations</option>
-                    <optgroup label="Van Destinations">
-                        <?php foreach ($van_destinations as $dest): ?>
-                            <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?></option>
-                        <?php endforeach; ?>
-                    </optgroup>
-                    <optgroup label="Jeepney Destinations">
-                        <?php foreach ($jeepney_destinations as $dest): ?>
-                            <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?></option>
-                        <?php endforeach; ?>
-                    </optgroup>
+                    <?php foreach ($all_destinations as $dest): ?>
+                        <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-3 d-flex align-items-end">
@@ -126,7 +119,11 @@
         </form>
         <?php if ($vehicle_type || $destination): ?>
             <div class="mt-3 pt-3 border-top d-flex gap-2 align-items-center">
-                <span class="badge bg-primary"><?= $vehicle_type ? ucfirst($vehicle_type) : 'All Types' ?></span>
+                <?php if ($vehicle_type): ?>
+                    <?= vehicle_type_badge($vehicle_type) ?>
+                <?php else: ?>
+                    <span class="badge bg-primary">All Types</span>
+                <?php endif; ?>
                 <?php if ($destination): ?><span
                         class="badge bg-info text-dark"><?= esc($destination) ?></span><?php endif; ?>
                 <a href="<?= base_url('schedules') ?>" class="btn btn-sm btn-outline-secondary">
@@ -169,11 +166,14 @@
                                 <td data-label="Type">
                                     <?php
                                         $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                        $imgFile = $imgMap[$s['vehicle_type']] ?? 'van.png';
+                                        $vType = strtolower($s['vehicle_type'] ?? '');
+                                        $imgFile = $imgMap[$vType] ?? 'van.png';
                                     ?>
                                     <div class="d-flex align-items-center gap-2">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($s['vehicle_type']) ?>" style="height:45px; width:auto;" title="<?= ucfirst($s['vehicle_type']) ?>">
-                                        <small class="text-muted fw-bold"><?= ucfirst($s['vehicle_type']) ?></small>
+                                        <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:45px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        </span>
+                                        <?= vehicle_type_badge($vType) ?>
                                     </div>
                                 </td>
                                 <td data-label="Route">

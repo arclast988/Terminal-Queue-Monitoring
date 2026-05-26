@@ -386,6 +386,139 @@
             box-shadow: var(--shadow-lg);
         }
 
+        .stat-card-link {
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .stat-card-button {
+            width: 100%;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font: inherit;
+            text-align: left;
+        }
+
+        .stat-card-button:focus {
+            outline: 3px solid rgba(21, 101, 192, 0.25);
+            outline-offset: 3px;
+        }
+
+        .route-average-modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(15, 23, 42, 0.55);
+            z-index: 2000;
+        }
+
+        .route-average-modal.is-open {
+            display: flex;
+        }
+
+        .route-average-dialog {
+            width: min(560px, 100%);
+            max-height: min(720px, 90vh);
+            overflow: hidden;
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .route-average-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .route-average-title {
+            margin: 0 0 4px;
+            color: var(--primary-dark);
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .route-average-subtitle {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .route-average-close {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 12px;
+            background: #f1f5f9;
+            color: var(--text-main);
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .route-average-body {
+            padding: 16px 24px 24px;
+            overflow-y: auto;
+        }
+
+        .route-average-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .route-average-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: #ffffff;
+        }
+
+        .route-average-route {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .route-average-count {
+            margin-top: 2px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        .route-average-time {
+            color: var(--success-dark);
+            font-size: 18px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .route-average-empty {
+            padding: 22px;
+            border-radius: 14px;
+            background: #f8fafc;
+            color: var(--text-muted);
+            text-align: center;
+            font-weight: 600;
+        }
+
         .stat-icon-wrapper {
             width: 60px;
             height: 60px;
@@ -915,6 +1048,28 @@
                 text-align: left;
             }
 
+            .route-average-modal {
+                padding: 14px;
+                align-items: flex-end;
+            }
+
+            .route-average-dialog {
+                max-height: 86vh;
+                border-radius: 18px;
+            }
+
+            .route-average-header,
+            .route-average-body {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .route-average-item {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
+            }
+
             /* --- Targeted Horizontal Queue Card --- */
             .queue-card {
                 flex-direction: row;
@@ -1197,7 +1352,7 @@
 
         <div class="search-container">
             <form action="<?= base_url('search') ?>" method="get" class="search-bar">
-                <input type="text" name="q" placeholder="Search by Plate Number, Destination, or Owner..." required>
+                <input type="text" name="q" placeholder="Search by Plate Number, Destination, or Driver..." required>
                 <button type="submit">TRACK STATUS</button>
             </form>
         </div>
@@ -1213,13 +1368,13 @@
                     <span class="label">Actively Queued</span>
                 </div>
             </div>
-            <div class="stat-card">
+            <a href="<?= base_url('schedules') ?>" class="stat-card stat-card-link" aria-label="View schedules">
                 <div class="stat-icon-wrapper si-gold"><i class="fas fa-route"></i></div>
                 <div class="stat-info">
                     <span class="value">8</span>
                     <span class="label">Operating Routes</span>
                 </div>
-            </div>
+            </a>
             <div class="stat-card">
                 <div class="stat-icon-wrapper si-green"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-info">
@@ -1227,11 +1382,43 @@
                     <span class="label">Recent Departures</span>
                 </div>
             </div>
-            <div class="stat-card">
+            <button type="button" class="stat-card stat-card-button" id="routeAverageCard" aria-haspopup="dialog" aria-controls="routeAverageModal">
                 <div class="stat-icon-wrapper si-purple"><i class="fas fa-clock"></i></div>
                 <div class="stat-info">
-                    <span class="value">15 min</span>
-                    <span class="label">Avg. Waiting Time</span>
+                    <span class="value">View</span>
+                    <span class="label">Avg. Departure Interval</span>
+                </div>
+            </button>
+        </div>
+
+        <div class="route-average-modal" id="routeAverageModal" aria-hidden="true">
+            <div class="route-average-dialog" role="dialog" aria-modal="true" aria-labelledby="routeAverageTitle">
+                <div class="route-average-header">
+                    <div>
+                        <h3 class="route-average-title" id="routeAverageTitle">Average Departure Interval by Route</h3>
+                        <p class="route-average-subtitle">Based on today's completed departures from Palompon Terminal.</p>
+                    </div>
+                    <button type="button" class="route-average-close" id="routeAverageClose" aria-label="Close average departure time modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="route-average-body">
+                    <div class="route-average-list" id="routeAverageList">
+                        <?php $routeAverageDepartures = $route_average_departures ?? []; ?>
+                        <?php if (!empty($routeAverageDepartures)): ?>
+                            <?php foreach ($routeAverageDepartures as $avg): ?>
+                                <div class="route-average-item">
+                                    <div>
+                                        <div class="route-average-route"><?= esc($avg['origin']) ?> &rarr; <?= esc($avg['destination']) ?></div>
+                                        <div class="route-average-count"><?= (int) $avg['departure_count'] ?> departure<?= (int) $avg['departure_count'] === 1 ? '' : 's' ?> today</div>
+                                    </div>
+                                    <div class="route-average-time"><?= esc($avg['interval_label']) ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="route-average-empty">No completed departures yet today.</div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1260,17 +1447,19 @@
                                 $vType = strtolower($item['vehicle_type'] ?? '');
                                 $imgFile = $imgMap[$vType] ?? 'van.png';
                                 ?>
-                                <div
+                                <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?>"
                                     style="position: relative; width: clamp(50px, 11vw, 75px); flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>"
                                         style="width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
-                                    <?php if ($vType !== 'jeepney'): ?>
-                                        <span
-                                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2"
-                                            style="font-size: 13px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 1;">
-                                            #<?= $item['position'] ?>
-                                        </span>
-                                    <?php endif; ?>
+                                    <?php
+                                        $posColors = ['van' => '#c62828', 'jeepney' => '#1565c0', 'minibus' => '#2e7d32'];
+                                        $posColor = $posColors[$vType] ?? '#1e293b';
+                                    ?>
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill border border-white border-2 queue-pos-badge"
+                                        style="background:<?= $posColor ?>; color:#fff; font-size:13px; font-weight:800; padding:4px 9px; min-width:28px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); z-index:2;">
+                                        #<?= $item['position'] ?>
+                                    </span>
                                 </div>
                                 <div class="queue-details">
                                     <div class="q-info">
@@ -1353,7 +1542,7 @@
                     <div class="fare-list" id="deptList">
                         <?php if (!empty($recent_departures)): ?>
                             <?php foreach ($recent_departures as $dept): ?>
-                                <a href="<?= base_url('schedules?destination=' . urlencode($dept['destination'])) ?>"
+                                <a href="<?= base_url('history?q=' . urlencode($dept['destination'])) ?>"
                                     class="fare-item" style="text-decoration: none;">
                                     <div>
                                         <div class="f-dest"><?= esc($dept['origin']) ?> - <?= esc($dept['destination']) ?></div>
@@ -1383,7 +1572,7 @@
                                     <div>
                                         <div class="f-dest"><?= esc($route['origin']) ?> - <?= esc($route['destination']) ?>
                                         </div>
-                                        <div class="f-type"><?= esc($route['vehicle_type']) ?></div>
+                                        <div class="f-type"><?= vehicle_type_badge($route['vehicle_type']) ?></div>
                                     </div>
                                     <div class="f-price">₱<?= number_format($route['fare'], 0) ?></div>
                                 </div>
@@ -1405,6 +1594,7 @@
     <script>
         var _fetchPending = false;
         var baseUrl = '<?= base_url() ?>';
+        var routeAverageDepartures = <?= json_encode($route_average_departures ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
         // Language Toggle
         function toggleLanguage(event) {
@@ -1471,9 +1661,65 @@
         var _lastQueueFingerprint = '';
         var _lastDeptFingerprint = '';
         var _lastRoutesFingerprint = '';
+        var _lastRouteAverageFingerprint = makeFingerprint(routeAverageDepartures);
 
         function makeFingerprint(arr) {
             return JSON.stringify(arr);
+        }
+
+        function renderRouteAverageDepartures(rows) {
+            var list = document.getElementById('routeAverageList');
+            if (!list) return;
+
+            list.innerHTML = '';
+            if (!rows || rows.length === 0) {
+                var empty = document.createElement('div');
+                empty.className = 'route-average-empty';
+                empty.textContent = 'No completed departures yet today.';
+                list.appendChild(empty);
+                return;
+            }
+
+            rows.forEach(function (row) {
+                var item = document.createElement('div');
+                item.className = 'route-average-item';
+
+                var routeWrap = document.createElement('div');
+                var route = document.createElement('div');
+                route.className = 'route-average-route';
+                route.textContent = (row.origin || 'Unknown Origin') + ' \u2192 ' + (row.destination || 'Unknown Destination');
+
+                var count = document.createElement('div');
+                var departureCount = Number(row.departure_count || 0);
+                count.className = 'route-average-count';
+                count.textContent = departureCount + ' departure' + (departureCount === 1 ? '' : 's') + ' today';
+
+                var time = document.createElement('div');
+                time.className = 'route-average-time';
+                time.textContent = row.interval_label || '--';
+
+                routeWrap.appendChild(route);
+                routeWrap.appendChild(count);
+                item.appendChild(routeWrap);
+                item.appendChild(time);
+                list.appendChild(item);
+            });
+        }
+
+        function openRouteAverageModal() {
+            var modal = document.getElementById('routeAverageModal');
+            if (!modal) return;
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRouteAverageModal() {
+            var modal = document.getElementById('routeAverageModal');
+            if (!modal) return;
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
         }
 
         // Fetch status for real-time sync
@@ -1493,6 +1739,15 @@
                     if (countQueued) countQueued.innerText = data.active_queue.length;
                     if (countDepartures) countDepartures.innerText = data.total_departures_today;
 
+                    if (data.route_average_departures) {
+                        var routeAverageFP = makeFingerprint(data.route_average_departures);
+                        if (routeAverageFP !== _lastRouteAverageFingerprint) {
+                            _lastRouteAverageFingerprint = routeAverageFP;
+                            routeAverageDepartures = data.route_average_departures;
+                            renderRouteAverageDepartures(routeAverageDepartures);
+                        }
+                    }
+
                     // Only rewrite Queue DOM if data actually changed
                     var queueFP = makeFingerprint(data.active_queue);
                     if (queueFP !== _lastQueueFingerprint) {
@@ -1511,10 +1766,11 @@
                                 var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
                                 var vType = (item.vehicle_type || '').toLowerCase();
                                 var imgFile = imgMap[vType] || 'van.png';
-                                var posBadge = (vType !== 'jeepney')
-                                    ? '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white border-2" style="font-size:13px;font-weight:800;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:1;">#' + item.position + '</span>' : '';
+                                var posColors = { van: '#c62828', jeepney: '#1565c0', minibus: '#2e7d32' };
+                                var posColor = posColors[vType] || '#1e293b';
+                                var posBadge = '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill border border-white border-2 queue-pos-badge" style="background:' + posColor + ';color:#fff;font-size:13px;font-weight:800;padding:4px 9px;min-width:28px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.25);z-index:2;">#' + item.position + '</span>';
                                 queueHtml += '<div class="queue-card">'
-                                    + '<div style="position:relative;width:clamp(50px,11vw,75px);flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
+                                    + '<div class="vehicle-type-icon vehicle-type-' + vType + '" style="position:relative;width:clamp(50px,11vw,75px);flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
                                     + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
                                     + posBadge
                                     + '</div>'
@@ -1562,7 +1818,7 @@
                         if (data.recent_departures.length > 0) {
                             var deptHtml = '';
                             data.recent_departures.forEach(function (dept) {
-                                var url = '<?= base_url("schedules?destination=") ?>' + encodeURIComponent(dept.destination);
+                                var url = '<?= base_url("history?q=") ?>' + encodeURIComponent(dept.destination);
                                 deptHtml += '<a href="' + url + '" class="fare-item" style="text-decoration:none;">'
                                     + '<div>'
                                     + '<div class="f-dest">' + dept.origin + ' - ' + dept.destination + '</div>'
@@ -1590,7 +1846,7 @@
                                         faresHtml += '<div class="fare-item">'
                                             + '<div>'
                                             + '<div class="f-dest">' + route.origin + ' - ' + route.destination + '</div>'
-                                            + '<div class="f-type">' + route.vehicle_type + '</div>'
+                                            + '<div class="f-type"><span class="vehicle-type-chip vehicle-type-' + route.vehicle_type + '">' + route.vehicle_type + '</span></div>'
                                             + '</div>'
                                             + '<div class="f-price">₱' + Number(route.fare).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div>'
                                             + '</div>';
@@ -1648,6 +1904,32 @@
                 });
             });
         }
+
+        var routeAverageCard = document.getElementById('routeAverageCard');
+        var routeAverageModal = document.getElementById('routeAverageModal');
+        var routeAverageClose = document.getElementById('routeAverageClose');
+
+        if (routeAverageCard) {
+            routeAverageCard.addEventListener('click', openRouteAverageModal);
+        }
+
+        if (routeAverageClose) {
+            routeAverageClose.addEventListener('click', closeRouteAverageModal);
+        }
+
+        if (routeAverageModal) {
+            routeAverageModal.addEventListener('click', function (event) {
+                if (event.target === routeAverageModal) {
+                    closeRouteAverageModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeRouteAverageModal();
+            }
+        });
 
         // Initialize real-time sync (polling + WebSocket)
         // Polls every 5s as fallback, WebSocket provides instant updates

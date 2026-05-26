@@ -188,6 +188,44 @@
         .btn-print:hover {
             background: #B71C1C;
         }
+
+        .vehicle-type-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.15;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+
+        .vehicle-type-jeepney {
+            background: #e3f2fd;
+            border-color: #1565c0;
+            color: #1565c0;
+        }
+
+        .vehicle-type-van {
+            background: #ffebee;
+            border-color: #c62828;
+            color: #c62828;
+        }
+
+        .vehicle-type-minibus {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+            color: #2e7d32;
+        }
+
+        @media print {
+            .vehicle-type-chip {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
     </style>
 </head>
 <body>
@@ -245,7 +283,7 @@
         <?php if ($vehicle_type): ?>
         <div class="filter-item">
             <span class="filter-label">Vehicle Type</span>
-            <strong><?= ucfirst(esc($vehicle_type)) ?></strong>
+            <strong><?= vehicle_type_badge($vehicle_type) ?></strong>
         </div>
         <?php endif; ?>
     </div>
@@ -272,7 +310,7 @@
                             </span>
                         </td>
                         <td style="font-family: monospace; font-size: 14px; font-weight: 600;"><?= esc($row['plate_number']) ?></td>
-                        <td><?= ucfirst($row['vehicle_type']) ?></td>
+                        <td><?= vehicle_type_badge($row['vehicle_type']) ?></td>
                         <td>
                             <?= esc($row['driver_name'] ?? $row['owner_name'] ?? '—') ?>
                             <br><small style="color: #94a3b8; font-size: 10px;"><?= $row['driver_name'] ? 'Driver' : 'Owner' ?></small>

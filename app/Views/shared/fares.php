@@ -23,6 +23,19 @@
 .form-label { color: #475569; font-size: 0.875rem; }
 .form-control, .form-select { border-color: #e2e8f0; padding: 0.6rem 0.75rem; font-size: 0.95rem; }
 .form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.fare-section-title { transition: color 0.15s ease; }
+body .card .fare-section-title.vehicle-type-jeepney,
+body.admin-theme .card .fare-section-title.vehicle-type-jeepney,
+body.staff-theme .card .fare-section-title.vehicle-type-jeepney { color: #1565c0 !important; }
+body .card .fare-section-title.vehicle-type-van,
+body.admin-theme .card .fare-section-title.vehicle-type-van,
+body.staff-theme .card .fare-section-title.vehicle-type-van     { color: #c62828 !important; }
+body .card .fare-section-title.vehicle-type-minibus,
+body.admin-theme .card .fare-section-title.vehicle-type-minibus,
+body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32 !important; }
+.fare-section-card.vehicle-type-jeepney .card-header { border-top: 3px solid #1565c0; }
+.fare-section-card.vehicle-type-van     .card-header { border-top: 3px solid #c62828; }
+.fare-section-card.vehicle-type-minibus .card-header { border-top: 3px solid #2e7d32; }
 </style>
 
 <?php $heroClass = (session()->get('role') === 'staff') ? 'hero-staff' : 'hero-admin'; ?>
@@ -77,17 +90,17 @@
 
 <?php
 $fareTypes = [
-    ['key' => 'van_routes',     'label' => 'Van Routes',     'img' => 'van.png',     'badge' => '<span class="badge bg-info">Express</span>',                           'badgeClass' => 'bg-info'],
-    ['key' => 'jeepney_routes', 'label' => 'Jeepney Routes', 'img' => 'jeep.png',    'badge' => '<span class="badge bg-warning text-dark">Regular</span>',              'badgeClass' => 'bg-warning text-dark'],
-    ['key' => 'minibus_routes', 'label' => 'Minibus Routes', 'img' => 'minibus.png', 'badge' => '<span class="badge" style="background:#6d28d9;">Minibus</span>',       'badgeClass' => ''],
+    ['key' => 'van_routes',     'type' => 'van',     'label' => 'Van Routes',     'img' => 'van.png',     'badge' => vehicle_type_badge('van'),     'badgeClass' => 'vehicle-type-chip vehicle-type-van'],
+    ['key' => 'jeepney_routes', 'type' => 'jeepney', 'label' => 'Jeepney Routes', 'img' => 'jeep.png',    'badge' => vehicle_type_badge('jeepney'), 'badgeClass' => 'vehicle-type-chip vehicle-type-jeepney'],
+    ['key' => 'minibus_routes', 'type' => 'minibus', 'label' => 'Minibus Routes', 'img' => 'minibus.png', 'badge' => vehicle_type_badge('minibus'), 'badgeClass' => 'vehicle-type-chip vehicle-type-minibus'],
 ];
 ?>
 
 <?php foreach ($fareTypes as $ft): ?>
 <div class="col-lg-4 mb-4">
-    <div class="card shadow-sm h-100">
+    <div class="card shadow-sm h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?>">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2 fare-section-title <?= vehicle_type_class($ft['type']) ?>">
                 <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= $ft['label'] ?>" style="width:32px;height:auto;">
                 <?= $ft['label'] ?>
             </h5>

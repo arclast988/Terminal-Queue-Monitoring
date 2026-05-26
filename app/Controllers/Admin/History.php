@@ -117,7 +117,6 @@ class History extends BaseController
         if ($search) {
             $builder->groupStart()
                     ->like('vehicles.plate_number', $search)
-                    ->orLike('vehicles.owner_name', $search)
                     ->orLike('vehicles.driver_name', $search)
                     ->orLike('routes.destination', $search)
                     ->orLike('terminals.name', $search)

@@ -81,6 +81,6 @@ class UserRouteModel extends Model
         foreach ($routes as $r) {
             $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
         }
-        return implode(', ', $labels);
+        return implode(', ', array_unique($labels));
     }
 }

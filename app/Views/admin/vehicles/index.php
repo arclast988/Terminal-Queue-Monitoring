@@ -180,10 +180,11 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                     $imgFile = $imgMap[$vehicle['type']] ?? 'van.png';
                                     ?>
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($vehicle['type']) ?>"
-                                        style="height:32px; width:auto;" title="<?= ucfirst($vehicle['type']) ?>">
-                                    <small class="d-block text-muted"
-                                        style="font-size:10px;"><?= ucfirst($vehicle['type']) ?></small>
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
+                                            style="height:32px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
+                                    </span>
+                                    <div class="mt-1"><?= vehicle_type_badge($vehicle['type']) ?></div>
                                 </td>
                                 <td style="max-width: 250px;" data-label="Assigned Route">
                                     <?php if (!empty($vehicle['route_destination'])):
@@ -315,20 +316,20 @@ if (!empty($vehicles) && is_array($vehicles)) {
 
     /* Active states per type */
     .vf-btn.vf-jeepney.active {
-        background: #d97706 !important;
-        border-color: #d97706 !important;
+        background: var(--vehicle-jeepney, #1565c0) !important;
+        border-color: var(--vehicle-jeepney, #1565c0) !important;
         color: #fff !important;
     }
 
     .vf-btn.vf-van.active {
-        background: #059669 !important;
-        border-color: #059669 !important;
+        background: var(--vehicle-van, #c62828) !important;
+        border-color: var(--vehicle-van, #c62828) !important;
         color: #fff !important;
     }
 
     .vf-btn.vf-minibus.active {
-        background: #0891b2 !important;
-        border-color: #0891b2 !important;
+        background: var(--vehicle-minibus, #2e7d32) !important;
+        border-color: var(--vehicle-minibus, #2e7d32) !important;
         color: #fff !important;
     }
 

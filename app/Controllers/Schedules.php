@@ -76,23 +76,10 @@ class Schedules extends BaseController
         unset($s);
 
         // Destination options from admin-managed routes (so admin can add/edit/delete and they appear here)
-        $vanDestinations = $routeModel->select('destination')
-            ->where('vehicle_type', 'van')
+        $allDestinations = $routeModel->select('destination')
             ->orderBy('destination', 'ASC')
             ->findColumn('destination') ?: [];
-        $vanDestinations = array_values(array_unique($vanDestinations));
-
-        $jeepneyDestinations = $routeModel->select('destination')
-            ->where('vehicle_type', 'jeepney')
-            ->orderBy('destination', 'ASC')
-            ->findColumn('destination') ?: [];
-        $jeepneyDestinations = array_values(array_unique($jeepneyDestinations));
-
-        $minibusDestinations = $routeModel->select('destination')
-            ->where('vehicle_type', 'minibus')
-            ->orderBy('destination', 'ASC')
-            ->findColumn('destination') ?: [];
-        $minibusDestinations = array_values(array_unique($minibusDestinations));
+        $allDestinations = array_values(array_unique($allDestinations));
 
         $announcements = [];
         try {
@@ -106,9 +93,7 @@ class Schedules extends BaseController
             'schedules' => $schedules,
             'vehicle_type' => $vehicleType,
             'destination' => $destination,
-            'van_destinations' => $vanDestinations,
-            'jeepney_destinations' => $jeepneyDestinations,
-            'minibus_destinations' => $minibusDestinations,
+            'all_destinations' => $allDestinations,
             'announcements' => $announcements
         ];
 
@@ -142,6 +127,7 @@ class Schedules extends BaseController
                 vehicles.plate_number,
                 vehicles.type as vehicle_type,
                 vehicles.capacity,
+                vehicles.driver_name,
                 routes.destination,
                 terminals.name as origin
             ')

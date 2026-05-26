@@ -367,6 +367,16 @@
             margin: 0;
         }
 
+        .fare-card.vehicle-type-jeepney .card-header { border-top: 3px solid #1565c0; }
+        .fare-card.vehicle-type-van     .card-header { border-top: 3px solid #c62828; }
+        .fare-card.vehicle-type-minibus .card-header { border-top: 3px solid #2e7d32; }
+        .fare-card.vehicle-type-jeepney .card-header h3 { color: #1565c0; }
+        .fare-card.vehicle-type-van     .card-header h3 { color: #c62828; }
+        .fare-card.vehicle-type-minibus .card-header h3 { color: #2e7d32; }
+        .fare-card.vehicle-type-jeepney:hover { border-color: #1565c0; }
+        .fare-card.vehicle-type-van:hover     { border-color: #c62828; }
+        .fare-card.vehicle-type-minibus:hover { border-color: #2e7d32; }
+
         .type-badge {
             padding: 5px 12px;
             border-radius: 50px;
@@ -376,18 +386,18 @@
         }
 
         .van-badge {
-            background: #e3f2fd;
-            color: #1565c0;
+            background: var(--vehicle-van-soft, #ffebee);
+            color: var(--vehicle-van, #c62828);
         }
 
         .jeepney-badge {
-            background: #fff8e1;
-            color: #e65100;
+            background: var(--vehicle-jeepney-soft, #e3f2fd);
+            color: var(--vehicle-jeepney, #1565c0);
         }
 
         .minibus-badge {
-            background: #f3e5f5;
-            color: #6a1b9a;
+            background: var(--vehicle-minibus-soft, #e8f5e9);
+            color: var(--vehicle-minibus, #2e7d32);
         }
 
         .fare-list {
@@ -643,7 +653,7 @@
 
         <div class="fares-grid" id="faresGrid">
             <!-- Van Routes -->
-            <div class="fare-card">
+            <div class="fare-card vehicle-type-van">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/van.png') ?>" alt="Van" style="width: 45px; height: auto; object-fit: contain;"> Van Routes</h3>
                 </div>
@@ -687,7 +697,7 @@
             </div>
 
             <!-- Jeepney Routes -->
-            <div class="fare-card">
+            <div class="fare-card vehicle-type-jeepney">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/jeep.png') ?>" alt="Jeepney" style="width: 45px; height: auto; object-fit: contain;"> Jeepney Routes</h3>
                 </div>
@@ -731,7 +741,7 @@
             </div>
 
             <!-- Mini Bus Routes -->
-            <div class="fare-card">
+            <div class="fare-card vehicle-type-minibus">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/minibus.png') ?>" alt="Minibus" style="width: 45px; height: auto; object-fit: contain;"> Mini Bus Routes</h3>
                 </div>
@@ -869,7 +879,8 @@
     }
 
     function buildFareCard(type, label, badgeClass, imgSrc, routes) {
-        var html = '<div class="fare-card">'
+        var typeClass = type ? ' vehicle-type-' + type : '';
+        var html = '<div class="fare-card' + typeClass + '">'
             + '<div class="card-header">'
             + '<h3><img src="' + imgSrc + '" alt="' + label + '" style="width: 45px; height: auto; object-fit: contain;"> ' + label + '</h3>'
             + '</div>'
@@ -961,9 +972,9 @@
             var grid = document.getElementById('faresGrid');
             if (grid) {
                 grid.innerHTML =
-                    buildFareCard('', 'Van Routes', 'van-badge', baseImgUrl + 'van.png', data.van_routes)
-                    + buildFareCard('', 'Jeepney Routes', 'jeepney-badge', baseImgUrl + 'jeep.png', data.jeepney_routes)
-                    + buildFareCard('', 'Mini Bus Routes', 'minibus-badge', baseImgUrl + 'minibus.png', data.minibus_routes);
+                    buildFareCard('van', 'Van Routes', 'van-badge', baseImgUrl + 'van.png', data.van_routes)
+                    + buildFareCard('jeepney', 'Jeepney Routes', 'jeepney-badge', baseImgUrl + 'jeep.png', data.jeepney_routes)
+                    + buildFareCard('minibus', 'Mini Bus Routes', 'minibus-badge', baseImgUrl + 'minibus.png', data.minibus_routes);
             }
 
             // Rebuild discount section

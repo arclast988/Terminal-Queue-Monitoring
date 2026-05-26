@@ -496,6 +496,19 @@
             border-radius: 6px;
         }
 
+        .driver-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+        .driver-cell i {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
         .type-badge {
             padding: 5px 12px;
             border-radius: 50px;
@@ -834,31 +847,20 @@
                     <label>Destination</label>
                     <select name="destination" id="destinationSelect">
                         <option value="">All Destinations</option>
-                        <optgroup label="Van Destinations" id="vanDestinations">
-                            <?php foreach ($van_destinations as $dest): ?>
-                                <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </optgroup>
-                        <optgroup label="Jeepney Destinations" id="jeepneyDestinations">
-                            <?php foreach ($jeepney_destinations as $dest): ?>
-                                <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </optgroup>
-                        <optgroup label="Minibus Destinations" id="minibusDestinations">
-                            <?php foreach ($minibus_destinations as $dest): ?>
-                                <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </optgroup>
+                        <?php foreach ($all_destinations as $dest): ?>
+                            <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
             </form>
             <?php if ($vehicle_type || $destination): ?>
                 <div class="active-filters">
-                    <span class="filter-badge"><?= $vehicle_type ? ucfirst($vehicle_type) : 'All Types' ?></span>
+                    <?php if ($vehicle_type): ?>
+                        <?= vehicle_type_badge($vehicle_type) ?>
+                    <?php else: ?>
+                        <span class="filter-badge">All Types</span>
+                    <?php endif; ?>
                     <?php if ($destination): ?><span class="filter-badge">Destination:
                             <?= esc($destination) ?></span><?php endif; ?>
                     <a href="<?= base_url('schedules') ?>" class="clear-btn"><i class="fas fa-times"></i> Clear Filters</a>
@@ -878,6 +880,7 @@
                         <tr>
                             <th>Queue #</th>
                             <th>Plate Number</th>
+                            <th>Driver</th>
                             <th>Type</th>
                             <th>Route</th>
                             <th>Est. Departure</th>
@@ -892,13 +895,22 @@
                                 </td>
                                 <td data-label="Plate"><span class="plate-number"><?= esc($schedule['plate_number']) ?></span>
                                 </td>
+                                <td data-label="Driver">
+                                    <div class="driver-cell">
+                                        <i class="fas fa-user-tie"></i>
+                                        <?= esc($schedule['driver_name'] ?? '—') ?>
+                                    </div>
+                                </td>
                                 <td data-label="Type">
                                     <?php
                                         $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                        $imgFile = $imgMap[$schedule['vehicle_type']] ?? 'van.png';
+                                        $vType = strtolower($schedule['vehicle_type'] ?? '');
+                                        $imgFile = $imgMap[$vType] ?? 'van.png';
                                     ?>
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($schedule['vehicle_type']) ?>" style="height:36px; width:auto;" title="<?= ucfirst($schedule['vehicle_type']) ?>">
-                                    <small class="d-block text-muted" style="font-size:10px;"><?= ucfirst($schedule['vehicle_type']) ?></small>
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                    </span>
+                                    <div class="mt-1"><?= vehicle_type_badge($vType) ?></div>
                                 </td>
                                 <td data-label="Route">
                                     <div class="route-info">
@@ -1005,7 +1017,7 @@
             if (!tbody) {
                 card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">' + schedules.length + ' Found</span></div>'
                     + '<table class="schedule-table"><thead><tr>'
-                    + '<th>Queue #</th><th>Plate Number</th><th>Type</th><th>Route</th><th>Est. Departure</th><th>Status</th>'
+                    + '<th>Queue #</th><th>Plate Number</th><th>Driver</th><th>Type</th><th>Route</th><th>Est. Departure</th><th>Status</th>'
                     + '</tr></thead><tbody id="scheduleTableBody"></tbody></table>';
                 tbody = document.getElementById('scheduleTableBody');
             }
@@ -1025,10 +1037,15 @@
                 } else {
                     dep = '<span class="time-display">' + (s.estimated_departure_formatted || '--:-- --') + '</span><div style="font-size:11px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
                 }
+                function escHtml(v) {
+                    if (v === null || v === undefined) return '';
+                    return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+                }
                 html += '<tr>' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
-                    '<td data-label="Plate"><span class="plate-number">' + s.plate_number + '</span></td>' +
-                    '<td data-label="Type"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"><small class="d-block" style="font-size:10px;color:#666">' + typeLabel + '</small></td>' +
+                    '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
+                    '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
+                    '<td data-label="Type"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><div class="mt-1"><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + typeLabel + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +
@@ -1080,4 +1097,3 @@
     </script>
 </body>
 </html>
-

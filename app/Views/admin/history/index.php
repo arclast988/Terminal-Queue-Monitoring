@@ -1,5 +1,52 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
+<style>
+    .table .plate-number {
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        background: #f1f5f9;
+        color: #1e293b;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+    .table .driver-cell {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    .table .driver-cell i {
+        color: #66788a;
+        font-size: 12px;
+    }
+    .table .route-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .table .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    .table .status-departed {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+    .table .status-departed i { color: #FF9800; }
+</style>
+
 <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-history text-primary me-2"></i> Departure History</h1>
     <div class="btn-toolbar mb-2 mb-md-0 d-flex gap-2">
@@ -24,6 +71,7 @@
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between small">
                 <span class="text-white">All Time</span>
+                <a class="text-white stretched-link text-decoration-none" href="<?= base_url('admin/history') ?>">View Details <i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -40,6 +88,7 @@
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between small">
                 <span class="text-white"><?= date('M d, Y') ?></span>
+                <a class="text-white stretched-link text-decoration-none" href="<?= base_url('admin/history') . '?from_date=' . date('Y-m-d') . '&to_date=' . date('Y-m-d') ?>">View Details <i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -56,6 +105,7 @@
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between small">
                 <span class="text-white"><?= date('F Y') ?></span>
+                <a class="text-white stretched-link text-decoration-none" href="<?= base_url('admin/history') . '?from_date=' . date('Y-m-01') . '&to_date=' . date('Y-m-t') ?>">View Details <i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -72,6 +122,7 @@
             </div>
             <div class="card-footer d-flex align-items-center justify-content-between small">
                 <span class="text-white"><?= date('Y') ?></span>
+                <a class="text-white stretched-link text-decoration-none" href="<?= base_url('admin/history') . '?from_date=' . date('Y-01-01') . '&to_date=' . date('Y-12-31') ?>">View Details <i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -135,8 +186,8 @@
                     <tr>
                         <th class="px-4">Vehicle</th>
                         <th>Plate Number</th>
-                        <th>Driver / Owner</th>
-                        <th>Route (Origin → Dest)</th>
+                        <th>Driver</th>
+                        <th>Route</th>
                         <th>Departure Time</th>
                     </tr>
                 </thead>
@@ -150,18 +201,30 @@
                                         $vType = strtolower($item['vehicle_type'] ?? '');
                                         $imgFile = $imgMap[$vType] ?? 'van.png';
                                     ?>
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= ucfirst($vType) ?>" style="height:32px; width:auto;" title="<?= ucfirst($vType) ?>">
-                                    <small class="d-block text-muted" style="font-size:10px;"><?= ucfirst($vType) ?></small>
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                    </span>
+                                    <div class="mt-1"><?= vehicle_type_badge($vType) ?></div>
                                 </td>
-                                <td class="fw-bold" data-label="Plate Number"><?= esc($item['plate_number']) ?></td>
-                                <td data-label="Driver / Owner"><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
-                                <td data-label="Route (Origin → Dest)">
-                                    <small class="text-muted"><?= esc($item['origin']) ?></small>
-                                    <i class="bi bi-arrow-right text-primary mx-1"></i>
-                                    <strong><?= esc($item['destination']) ?></strong>
+                                <td data-label="Plate Number">
+                                    <span class="plate-number"><?= esc($item['plate_number']) ?></span>
+                                </td>
+                                <td data-label="Driver">
+                                    <div class="driver-cell">
+                                        <i class="fas fa-user-tie"></i>
+                                        <?= esc($item['driver_name'] ?? '—') ?>
+                                    </div>
+                                </td>
+                                <td data-label="Route">
+                                    <div class="route-info">
+                                        <span style="color: #66788a; font-size: 13px;"><?= esc($item['origin']) ?></span>
+                                        <i class="bi bi-arrow-right" style="color: #1565c0; font-size: 12px;"></i>
+                                        <span style="font-weight: 700; color: #0d47a1;"><?= esc($item['destination']) ?></span>
+                                    </div>
                                 </td>
                                 <td data-label="Departure Time">
-                                    <span class="badge bg-secondary fs-6">
+                                    <span class="status-badge status-departed">
+                                        <i class="fas fa-clock"></i>
                                         <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
                                     </span>
                                 </td>
@@ -212,6 +275,5 @@
         }
     });
 </script>
-
 
 

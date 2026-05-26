@@ -232,7 +232,7 @@
         /* --- Hero Section --- */
         .hero {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 60px 5%;
+            padding: 70px 5% 100px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -269,40 +269,41 @@
             border-radius: 50px;
             display: flex;
             box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(255,255,255,0.3);
-            gap: 8px;
+            gap: 0;
         }
-
         .search-bar input {
             flex: 1;
             border: none;
-            padding: 15px 25px;
-            font-size: 16px;
+            padding: 14px 24px;
+            font-size: 15px;
             outline: none;
             background: transparent;
-            font-family: inherit;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+            min-width: 0;
         }
-
+        .search-bar input::placeholder { color: var(--text-muted); }
         .search-bar button {
-            background: var(--primary);
+            background: #1e3a8a;
             color: white;
             border: none;
-            padding: 0 35px;
+            padding: 0 32px;
             border-radius: 50px;
             font-weight: 700;
+            font-size: 14px;
             cursor: pointer;
-            transition: var(--transition);
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+            white-space: nowrap;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.5px;
         }
-
-        .search-bar button:hover {
-            background: var(--primary-dark);
-        }
+        .search-bar button:hover { background: #1565c0; transform: scale(1.03); }
 
         /* --- Main Content --- */
         .container {
             width: 90%;
             max-width: 1200px;
-            margin: -40px auto 40px;
+            margin: -50px auto 60px;
             position: relative;
             z-index: 20;
         }
@@ -341,20 +342,35 @@
             display: inline-block;
         }
 
+        .back-row {
+            margin-bottom: 24px;
+        }
+
         .back-link {
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            background: white;
             color: var(--primary);
+            border: 2px solid rgba(21,101,192,0.2);
+            padding: 10px 22px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 14px;
             text-decoration: none;
-            font-weight: 600;
-            margin-bottom: 20px;
             transition: var(--transition);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .back-link:hover {
-            gap: 12px;
-            color: var(--primary-dark);
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateX(-3px);
+        }
+
+        @media (max-width: 420px) {
+            .back-link span { display: none; }
         }
 
         /* --- Results Sections --- */
@@ -622,7 +638,8 @@
             .logo-text h1 { font-size: 15px; letter-spacing: -0.2px; }
             .logo-text p { font-size: 8px; }
             .logo { width: 40px; height: 40px; border-radius: 8px; }
-            .hero { padding: 40px 5%; }
+            .hero { padding: 50px 5% 80px; }
+            .container { margin-top: -40px; }
             .hero h2 { font-size: 28px; }
             .results-table { font-size: 13px; }
             .results-table th, .results-table td { padding: 12px; }
@@ -726,15 +743,29 @@
 
         <div class="search-container">
             <form method="get" action="<?= base_url('search') ?>" class="search-bar">
-                <input type="text" name="q" placeholder="Search by Plate Number, Owner Name, or Destination..." value="<?= esc($search) ?>" autofocus>
-                <button type="submit">Search</button>
+                <input
+                    type="text"
+                    name="q"
+                    placeholder="Search by Plate Number, Driver Name, or Destination..."
+                    value="<?= esc($search) ?>"
+                    autocomplete="off"
+                    autofocus
+                >
+                <button type="submit">
+                    <i class="fas fa-search" style="margin-right:7px;"></i>SEARCH
+                </button>
             </form>
         </div>
     </section>
 
     <!-- Main Content -->
     <div class="container">
-        <a href="<?= base_url('guest') ?>" class="back-link"><i class="fas fa-arrow-left"></i> Back to Live Monitor</a>
+        <div class="back-row">
+            <a href="<?= base_url('guest') ?>" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Live Monitor</span>
+            </a>
+        </div>
 
         <!-- Results Info -->
         <div class="results-info">
@@ -756,7 +787,7 @@
                         <tr>
                             <th>Position/Type</th>
                             <th>Plate Number</th>
-                            <th>Owner</th>
+                            <th>Driver</th>
                             <th>Route</th>
                             <th>Status</th>
                         </tr>
@@ -765,16 +796,16 @@
                         <?php foreach ($active_results as $item): ?>
                         <tr class="<?= $item['status'] == 'boarding' ? 'boarding' : '' ?>">
                             <td>
-                                <div class="vehicle-icon">
-                                    <?php
-                                        $imgMap = [
-                                            'van' => 'van.png',
-                                            'jeepney' => 'jeep.png',
-                                            'minibus' => 'minibus.png'
-                                        ];
-                                        $vType = strtolower($item['vehicle_type'] ?? '');
-                                        $imgFile = $imgMap[$vType] ?? 'van.png';
-                                    ?>
+                                <?php
+                                    $imgMap = [
+                                        'van' => 'van.png',
+                                        'jeepney' => 'jeep.png',
+                                        'minibus' => 'minibus.png'
+                                    ];
+                                    $vType = strtolower($item['vehicle_type'] ?? '');
+                                    $imgFile = $imgMap[$vType] ?? 'van.png';
+                                ?>
+                                <div class="vehicle-icon vehicle-type-icon <?= vehicle_type_class($vType) ?>">
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>">
                                 </div>
                                 <?php if ($vType !== 'jeepney' && !empty($item['position'])): ?>
@@ -782,7 +813,7 @@
                                 <?php endif; ?>
                             </td>
                             <td><span class="plate-number"><?= esc($item['plate_number']) ?></span></td>
-                            <td><?= esc($item['owner_name'] ?? $item['driver_name'] ?? '—') ?></td>
+                            <td><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
                             <td>
                                 <div class="route-info">
                                     <small><?= esc($item['origin']) ?></small>
@@ -818,7 +849,7 @@
                         <tr>
                             <th>Type</th>
                             <th>Plate Number</th>
-                            <th>Owner</th>
+                            <th>Driver</th>
                             <th>Route</th>
                             <th>Departure Time</th>
                         </tr>
@@ -827,21 +858,21 @@
                         <?php foreach ($departed_results as $item): ?>
                         <tr>
                             <td>
-                                <div class="vehicle-icon">
-                                    <?php
-                                        $imgMap = [
-                                            'van' => 'van.png',
-                                            'jeepney' => 'jeep.png',
-                                            'minibus' => 'minibus.png'
-                                        ];
-                                        $vType = strtolower($item['vehicle_type'] ?? '');
-                                        $imgFile = $imgMap[$vType] ?? 'van.png';
-                                    ?>
+                                <?php
+                                    $imgMap = [
+                                        'van' => 'van.png',
+                                        'jeepney' => 'jeep.png',
+                                        'minibus' => 'minibus.png'
+                                    ];
+                                    $vType = strtolower($item['vehicle_type'] ?? '');
+                                    $imgFile = $imgMap[$vType] ?? 'van.png';
+                                ?>
+                                <div class="vehicle-icon vehicle-type-icon <?= vehicle_type_class($vType) ?>">
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>">
                                 </div>
                             </td>
                             <td><span class="plate-number"><?= esc($item['plate_number']) ?></span></td>
-                            <td><?= esc($item['owner_name'] ?? $item['driver_name'] ?? '—') ?></td>
+                            <td><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
                             <td>
                                 <div class="route-info">
                                     <small><?= esc($item['origin']) ?></small>
@@ -873,7 +904,7 @@
                 <p>Try searching with:</p>
                 <ul class="tips-list">
                     <li><i class="fas fa-check-circle"></i> Plate number (e.g., ABC-1234)</li>
-                    <li><i class="fas fa-check-circle"></i> Owner name</li>
+                    <li><i class="fas fa-check-circle"></i> Driver name</li>
                     <li><i class="fas fa-check-circle"></i> Destination city</li>
                 </ul>
             </div>

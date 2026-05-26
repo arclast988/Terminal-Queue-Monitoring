@@ -42,7 +42,8 @@ class Dashboard extends BaseController
         // Build filtered recent departures
         $departBuilder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type')
                                     ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                                    ->where('queue.status', 'departed');
+                                    ->where('queue.status', 'departed')
+                                    ->where('DATE(queue.departure_time)', date('Y-m-d'));
         if ($assignedRouteIds !== null && !empty($assignedRouteIds)) {
             $departBuilder->whereIn('queue.route_id', $assignedRouteIds);
         } elseif ($assignedRouteIds !== null && empty($assignedRouteIds)) {

@@ -55,7 +55,16 @@ class Users extends BaseController
         }
 
         $role = $this->request->getPost('role');
-        $selectedRoutes = $this->request->getPost('route_ids') ?? [];
+        $postedRoutes = $this->request->getPost('route_ids') ?? [];
+        $selectedRoutes = [];
+        foreach ($postedRoutes as $val) {
+            if (is_string($val) && strpos($val, ',') !== false) {
+                $selectedRoutes = array_merge($selectedRoutes, explode(',', $val));
+            } else {
+                $selectedRoutes[] = $val;
+            }
+        }
+        $selectedRoutes = array_unique(array_map('intval', $selectedRoutes));
 
         // Staff must have at least one route assigned
         if ($role === 'staff' && empty($selectedRoutes)) {
@@ -84,7 +93,7 @@ class Users extends BaseController
                     $routeLabels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
             }
-            $this->logActivity('Create user with routes', 'Created dispatcher "' . $data['username'] . '" with routes: ' . implode(', ', $routeLabels));
+            $this->logActivity('Create user with routes', 'Created dispatcher "' . $data['username'] . '" with routes: ' . implode(', ', array_unique($routeLabels)));
         } else {
             $this->logActivity('Create user', 'Created user "' . $data['username'] . '" with role: ' . $role);
         }
@@ -133,7 +142,16 @@ class Users extends BaseController
         }
 
         $role = $this->request->getPost('role');
-        $selectedRoutes = $this->request->getPost('route_ids') ?? [];
+        $postedRoutes = $this->request->getPost('route_ids') ?? [];
+        $selectedRoutes = [];
+        foreach ($postedRoutes as $val) {
+            if (is_string($val) && strpos($val, ',') !== false) {
+                $selectedRoutes = array_merge($selectedRoutes, explode(',', $val));
+            } else {
+                $selectedRoutes[] = $val;
+            }
+        }
+        $selectedRoutes = array_unique(array_map('intval', $selectedRoutes));
 
         // Staff must have at least one route assigned
         if ($role === 'staff' && empty($selectedRoutes)) {
@@ -176,7 +194,7 @@ class Users extends BaseController
                     $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
                     if ($r) $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
-                $details .= ' Added: ' . implode(', ', $labels) . '.';
+                $details .= ' Added: ' . implode(', ', array_unique($labels)) . '.';
             }
             if (!empty($removedRoutes)) {
                 $labels = [];
@@ -184,7 +202,7 @@ class Users extends BaseController
                     $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
                     if ($r) $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
-                $details .= ' Removed: ' . implode(', ', $labels) . '.';
+                $details .= ' Removed: ' . implode(', ', array_unique($labels)) . '.';
             }
             $this->logActivity('Update dispatcher routes', $details);
         }
