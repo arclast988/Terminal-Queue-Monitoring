@@ -10,8 +10,10 @@
    ================================================================= */
 
 /* Disable ALL Bootstrap animations */
-.fade {
-    opacity: 1 !important;
+.fade,
+.modal,
+.modal-dialog,
+.modal-content {
     animation: none !important;
     -webkit-animation: none !important;
     transition: none !important;
@@ -22,15 +24,9 @@
     opacity: 1 !important;
 }
 
-/* DISABLE ALL ANIMATIONS AND TRANSITIONS */
-* {
-    animation: none !important;
-    -webkit-animation: none !important;
-    -moz-animation: none !important;
-    transition: none !important;
-    -webkit-transition: none !important;
-    -moz-transition: none !important;
-    will-change: auto !important;
+/* Targeted transitions for interactive elements */
+.btn, a, .card, .vf-btn {
+    transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* =================================================================
@@ -570,14 +566,14 @@ body.admin-theme .page-hero .subtitle {
 .modal-backdrop {
     display: block !important;
     pointer-events: none !important;
-    opacity: 0 !important;
-    background-color: transparent !important;
+    opacity: 0.5 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
     z-index: 1040 !important;
 }
 
 .modal-backdrop.show {
-    opacity: 0 !important;
-    background-color: transparent !important;
+    opacity: 0.5 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
 }
 
 .modal-dialog {

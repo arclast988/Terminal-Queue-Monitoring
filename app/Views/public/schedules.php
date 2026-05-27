@@ -217,18 +217,6 @@
         .nav-menu a.login-btn.btn-success { background: #059669; }
         .nav-menu a.login-btn.btn-success:hover { background: #047857 !important; }
 
-        .lang-switcher {
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        .lang-switcher:hover {
-            background: rgba(21, 101, 192, 0.05);
-            color: var(--primary) !important;
-        }
-
         /* --- Mobile Toggle --- */
         .mobile-toggle {
             display: none;
@@ -596,25 +584,6 @@
 
 
 
-        /* --- Mobile Overlay --- */
-        .nav-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.4);
-            z-index: 1002;
-            display: none;
-            opacity: 0;
-            transition: var(--transition);
-        }
-
-        .nav-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
         /* --- Responsive Queries --- */
         @media (max-width: 992px) {
             .header-info { display: none !important; }
@@ -738,90 +707,10 @@
 
 <body>
 
-    <!-- Mobile Overlay -->
-    <div class="nav-overlay" id="navOverlay" onclick="toggleMenu()"></div>
-
-    <!-- Mobile Close Button - outside menu panel so position:fixed works at any zoom -->
-    <button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleMenu()" aria-label="Close menu">
-        <i class="fas fa-times"></i>
-    </button>
-
-    <!-- Advisory Bar -->
-    <div class="advisory-bar">
-        <div class="advisory-icon"><i class="fas fa-bullhorn"></i></div>
-        <div class="advisory-text">
-            <div class="marquee">
-                <?php if (!empty($announcements) && is_array($announcements)): ?>
-                    <?= esc(implode(' | ', array_column($announcements, 'message'))) ?>
-                <?php else: ?>
-                    Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.
-                <?php endif; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- Header & Navigation -->
-    <header class="guest-header">
-        <div style="display: flex; align-items: center; gap: 40px;">
-            <a href="<?= base_url('guest') ?>" class="logo-section">
-                <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Logo" class="logo">
-                <div class="logo-text">
-                    <h1>Palompon Transit </h1>
-                    <p>Terminal Monitor</p>
-                </div>
-            </a>
-
-            <div class="header-info" style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-muted); border-left: 1px solid #eee; padding-left: 20px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-map-marker-alt" style="color: #FF9800; font-size: 16px;"></i>
-                    <span style="font-weight: 500;">Central Terminal, Palompon, Leyte</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-clock" style="color: var(--primary); font-size: 16px;"></i>
-                    <span id="headerClock" style="font-weight: 500;"><?= date('h:i:s A') ?></span>
-                </div>
-            </div>
-        </div>
-
-        <div class="nav-menu" id="navMenu">
-            <a href="<?= base_url('guest') ?>" class="<?= current_url() == base_url('guest') ? 'active' : '' ?>"><i class="fas fa-home"></i> Home</a>
-            <a href="<?= base_url('schedules') ?>" class="<?= (strpos(uri_string(), 'schedules') !== false) || (current_url() == base_url('schedules')) ? 'active' : '' ?>"><i class="fas fa-calendar-alt"></i> Schedules</a>
-            <a href="<?= base_url('fares') ?>" class="<?= (strpos(uri_string(), 'fares') !== false) ? 'active' : '' ?>"><i class="fas fa-tags"></i> Fares</a>
-            
-            <div class="lang-switcher" style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted);">
-                <i class="fas fa-globe"></i>
-                <span>EN</span>
-                <i class="fas fa-chevron-down" style="font-size: 11px;"></i>
-            </div>
-
-            <?php if (session()->get('isLoggedIn')): ?>
-                <?php 
-                    $dashboardUrl = '/';
-                    if (session()->get('role') == 'admin') $dashboardUrl = '/admin/dashboard';
-                    elseif (session()->get('role') == 'staff') $dashboardUrl = '/staff/dashboard';
-                ?>
-                <a href="<?= base_url($dashboardUrl) ?>" class="login-btn btn-success" style="margin-left: 10px;">
-                    <i class="fas fa-th-large"></i> Dashboard
-                </a>
-                <a href="<?= base_url('logout') ?>" style="color: #e53e3e; padding: 8px 15px; border-radius: 6px; transition: var(--transition); display: flex; align-items: center;">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-            <?php else: ?>
-                <a href="<?= base_url('login') ?>" class="login-btn" style="margin-left: 10px;">
-                    <i class="fas fa-sign-in-alt"></i> LogIn
-                </a>
-            <?php endif; ?>
-        </div>
-
-        <div class="mobile-toggle" onclick="toggleMenu()">
-            <i class="fas fa-bars"></i>
-        </div>
-    </header>
-
-    <!-- Breadcrumbs -->
-    <div class="breadcrumb-section">
-        <a href="<?= base_url('guest') ?>">Home</a> <i class="fas fa-chevron-right"></i> <span>Schedules</span>
-    </div>
+    <?= view('templates/guest_header', [
+        'announcements'      => $announcements ?? [],
+        'breadcrumb_current' => 'Schedules',
+    ]) ?>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -1053,36 +942,6 @@
             });
             tbody.innerHTML = html;
         }
-
-        function toggleMenu() {
-            var m = document.getElementById('navMenu');
-            var o = document.getElementById('navOverlay');
-            var toggleIcon = document.querySelector('.mobile-toggle i');
-            var toggleBtn = document.querySelector('.mobile-toggle');
-            var closeBtn = document.getElementById('mobileMenuClose');
-
-            if (!m) return;
-
-            m.classList.toggle('open');
-            if (o) o.classList.toggle('active');
-
-            if (m.classList.contains('open')) {
-                if (toggleIcon) toggleIcon.classList.replace('fa-bars', 'fa-times');
-                if (toggleBtn) toggleBtn.style.visibility = 'hidden';
-                if (closeBtn) closeBtn.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            } else {
-                if (toggleIcon) toggleIcon.classList.replace('fa-times', 'fa-bars');
-                if (toggleBtn) toggleBtn.style.visibility = 'visible';
-                if (closeBtn) closeBtn.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-
-        setInterval(function() {
-            var el = document.getElementById('headerClock');
-            if (el) el.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-        }, 1000);
 
         // Initialize real-time sync (WS-only, custom refresh via fetchSchedulesStatus)
         document.addEventListener('DOMContentLoaded', function() {

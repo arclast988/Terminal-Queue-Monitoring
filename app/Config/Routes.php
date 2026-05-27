@@ -86,6 +86,8 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('history', 'Admin\History::index');
     $routes->get('history/export', 'Admin\History::export');
     $routes->get('history/print', 'Admin\History::print');
+    $routes->post('history/delete/(:num)', 'Admin\History::delete/$1');
+    $routes->post('history/delete-all', 'Admin\History::deleteAll');
 
     // Logs
     $routes->get('logs', 'Admin\Logs::index');

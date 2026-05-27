@@ -49,12 +49,28 @@
 
 <div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2"><i class="fas fa-history text-primary me-2"></i> Departure History</h1>
-    <div class="btn-toolbar mb-2 mb-md-0 d-flex gap-2">
+    <div class="btn-toolbar mb-2 mb-md-0 d-flex gap-2 align-items-center">
         <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#reportFilterModal">
             <i class="fas fa-file-invoice me-1"></i> Generate Report
         </button>
+        <?php if ($stats['total'] > 0): ?>
+            <form action="<?= base_url('admin/history/delete-all') ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL departure records? This action cannot be undone.')">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn btn-danger shadow-sm">
+                    <i class="bi bi-trash-fill me-1"></i> Delete All
+                </button>
+            </form>
+        <?php endif; ?>
     </div>
 </div>
+
+<?php if (session()->getFlashdata('success')): ?>
+    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
+<?php endif; ?>
 
 <!-- Stat Cards -->
 <div class="row mb-4">
@@ -189,6 +205,7 @@
                         <th>Driver</th>
                         <th>Route</th>
                         <th>Departure Time</th>
+                        <th class="text-end px-4">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -228,11 +245,19 @@
                                         <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
                                     </span>
                                 </td>
+                                <td class="text-end px-4" data-label="Action">
+                                    <form action="<?= base_url('admin/history/delete/' . $item['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete departure record for vehicle <?= esc($item['plate_number']) ?>?')">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 No departure records found.
                             </td>

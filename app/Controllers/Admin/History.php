@@ -141,4 +141,43 @@ class History extends BaseController
 
         return $builder;
     }
+
+    public function delete($id)
+    {
+        $queueModel = new QueueModel();
+        $departure = $queueModel->find($id);
+
+        if (!$departure || $departure['status'] !== 'departed') {
+            return redirect()->to('/admin/history')->with('error', 'Departure record not found.');
+        }
+
+        // Fetch vehicle details for activity log
+        $vehicleModel = new \App\Models\VehicleModel();
+        $vehicle = $vehicleModel->find($departure['vehicle_id']);
+        $plateNumber = $vehicle ? $vehicle['plate_number'] : 'Unknown Vehicle';
+
+        $queueModel->delete($id);
+
+        $this->logActivity('Delete Departure Record', "Deleted departure record for vehicle $plateNumber.");
+
+        return redirect()->to('/admin/history')->with('success', 'Departure record deleted successfully.');
+    }
+
+    public function deleteAll()
+    {
+        $queueModel = new QueueModel();
+        
+        // Find all departed queue records
+        $departedCount = $queueModel->where('status', 'departed')->countAllResults();
+
+        if ($departedCount === 0) {
+            return redirect()->to('/admin/history')->with('error', 'No departure records to delete.');
+        }
+
+        $queueModel->where('status', 'departed')->delete();
+
+        $this->logActivity('Delete All Departure Records', "Deleted all departed queue records ($departedCount records).");
+
+        return redirect()->to('/admin/history')->with('success', 'All departure records deleted successfully.');
+    }
 }

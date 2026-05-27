@@ -1,15 +1,18 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
 <style>
-    /* DISABLE ALL ANIMATIONS AND TRANSITIONS GLOBALLY */
-    * {
+    /* Targeted: keep button/card hover transitions, only kill modal and debug animations */
+    .fade,
+    .modal,
+    .modal-dialog,
+    .modal-content {
         animation: none !important;
         transition: none !important;
     }
 
-    /* Disable Bootstrap fade animation */
-    .fade {
-        animation: none !important;
+    /* Targeted transitions for interactive elements */
+    .btn, a, .card, .q-card {
+        transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     /* Disable Debug Toolbar Hot Reload Animation */
@@ -44,13 +47,13 @@
         min-height: 100vh !important;
         background: transparent !important;
         backdrop-filter: none !important;
-        pointer-events: none !important; /* Allow clicking through the transparent backdrop if needed, but dialog will override */
+        pointer-events: none !important;
     }
 
     /* Modal dialog centering */
     [id^="confirmDepartModal"] .modal-dialog {
         position: relative !important;
-        margin: auto !important; /* Let flex centering work with auto margin */
+        margin: auto !important;
         transform: none !important;
         max-height: 90vh !important;
         pointer-events: auto !important;
@@ -80,7 +83,7 @@
         cursor: pointer !important;
     }
 
-    /* Add Vehicle to Queue modal: ensure labels and title are readable (dark on white) */
+    /* Add Vehicle to Queue modal */
     #addToQueueModal.fade.show {
         display: flex !important;
         align-items: center !important;
@@ -96,14 +99,14 @@
         width: 100% !important;
         height: 100% !important;
         min-height: 100vh !important;
-        background: transparent !important; /* Make backdrop transparent */
+        background: transparent !important;
         backdrop-filter: none !important;
         pointer-events: none !important;
     }
 
     #addToQueueModal .modal-dialog {
         position: relative !important;
-        margin: auto !important; /* Center using auto margin + flex */
+        margin: auto !important;
         transform: none !important;
         display: flex !important;
         align-items: center !important;
@@ -163,7 +166,30 @@
         pointer-events: auto !important;
     }
 
+    /* Mobile responsive: queue passenger counters and action buttons */
+    @media (max-width: 768px) {
+        .q-card .btn-danger.rounded-circle,
+        .q-card .btn-success.rounded-circle {
+            width: 44px !important;
+            height: 44px !important;
+            font-size: 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
 
+        .q-card .row .col-6 {
+            text-align: center;
+        }
+
+        .q-card .d-flex.gap-2 {
+            flex-wrap: wrap;
+        }
+
+        .q-card .btn {
+            min-height: 44px !important;
+        }
+    }
 </style>
 
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">

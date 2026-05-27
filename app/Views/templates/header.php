@@ -28,11 +28,9 @@
 
 
     <style>
-        /* DISABLE ALL ANIMATIONS AND TRANSITIONS GLOBALLY */
-        * {
-            animation: none !important;
-            transition: none !important;
-            will-change: auto !important;
+        /* Targeted lightweight transitions for interactive elements */
+        .btn, a, .card, .vf-btn {
+            transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
         /* Disable Bootstrap fade animation but allow transitionend to fire */

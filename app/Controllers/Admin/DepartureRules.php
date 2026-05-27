@@ -61,6 +61,15 @@ class DepartureRules extends BaseController
             return redirect()->to('/staff/departure-rules')->with('error', 'You do not have permission to create departure rules.');
         }
 
+        // Convert wait_hours and wait_mins to wait_minutes (integer)
+        $hours = (int)$this->request->getPost('wait_hours');
+        $mins = (int)$this->request->getPost('wait_mins');
+        $waitMinutes = ($hours * 60) + $mins;
+
+        $dataToValidate = array_merge($this->request->getPost(), [
+            'wait_minutes' => $waitMinutes
+        ]);
+
         $rules = [
             'time_from'    => 'required',
             'time_to'      => 'required',
@@ -68,7 +77,7 @@ class DepartureRules extends BaseController
             'terminal_id'  => 'required|integer|is_not_unique[terminals.id]',
         ];
 
-        if (!$this->validate($rules)) {
+        if (!$this->validateData($dataToValidate, $rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
@@ -96,7 +105,6 @@ class DepartureRules extends BaseController
         }
 
         $label       = $this->request->getPost('label') ?: null;
-        $waitMinutes = $this->request->getPost('wait_minutes');
 
         $this->ruleModel->save([
             'terminal_id'  => $terminalId,
@@ -141,6 +149,15 @@ class DepartureRules extends BaseController
             return redirect()->to('/staff/departure-rules')->with('error', 'You do not have permission to edit departure rules.');
         }
 
+        // Convert wait_hours and wait_mins to wait_minutes (integer)
+        $hours = (int)$this->request->getPost('wait_hours');
+        $mins = (int)$this->request->getPost('wait_mins');
+        $waitMinutes = ($hours * 60) + $mins;
+
+        $dataToValidate = array_merge($this->request->getPost(), [
+            'wait_minutes' => $waitMinutes
+        ]);
+
         $rules = [
             'time_from'    => 'required',
             'time_to'      => 'required',
@@ -148,7 +165,7 @@ class DepartureRules extends BaseController
             'terminal_id'  => 'required|integer|is_not_unique[terminals.id]',
         ];
 
-        if (!$this->validate($rules)) {
+        if (!$this->validateData($dataToValidate, $rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
@@ -177,7 +194,6 @@ class DepartureRules extends BaseController
 
         $oldRule     = $this->ruleModel->find($id);
         $label       = $this->request->getPost('label') ?: null;
-        $waitMinutes = $this->request->getPost('wait_minutes');
 
         $this->ruleModel->update($id, [
             'terminal_id'  => $terminalId,

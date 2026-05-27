@@ -37,7 +37,7 @@
                         <th>Terminal</th>
                         <th>Time From</th>
                         <th>Time To</th>
-                        <th>Wait (Minutes)</th>
+                        <th>Wait Time</th>
                         <th>Label</th>
                         <th>Actions</th>
                     </tr>
@@ -49,7 +49,14 @@
                                 <td data-label="Terminal"><?= esc($rule['terminal_name'] ?? '-') ?></td>
                                 <td data-label="Time From"><span class="badge bg-primary"><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
                                 <td data-label="Time To"><span class="badge bg-info"><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
-                                <td data-label="Wait (Minutes)"><strong><?= $rule['wait_minutes'] ?> min</strong></td>
+                                <td data-label="Wait Time">
+                                    <?php
+                                        $mins = (int)$rule['wait_minutes'];
+                                        $h = floor($mins / 60);
+                                        $m = $mins % 60;
+                                    ?>
+                                    <strong><?= sprintf('%02d:%02d', $h, $m) ?></strong>
+                                </td>
                                 <td data-label="Label"><?= esc($rule['label'] ?? '-') ?></td>
                                 <td data-label="Actions">
                                     <?php if (session()->get('role') !== 'staff'): ?>

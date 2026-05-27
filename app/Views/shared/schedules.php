@@ -100,6 +100,7 @@
                     <option value="">All Types</option>
                     <option value="van" <?= $vehicle_type == 'van' ? 'selected' : '' ?>>Van</option>
                     <option value="jeepney" <?= $vehicle_type == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
+                    <option value="minibus" <?= $vehicle_type == 'minibus' ? 'selected' : '' ?>>Minibus</option>
                 </select>
             </div>
             <div class="col-md-5">

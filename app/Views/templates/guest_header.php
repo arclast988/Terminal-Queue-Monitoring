@@ -7,6 +7,8 @@
  *   $breadcrumb_current   string optional — label for the current page (e.g. "Departure History").
  *                                If omitted, breadcrumb shows: Home > Dashboard
  *                                If provided,                   Home > Dashboard > <current>
+ *   $skip_breadcrumb      bool   optional — when true, the breadcrumb section is not rendered (the
+ *                                page is expected to render its own). Defaults to false.
  *
  * Self-contained: brings its own <style> and <script>. The page using it must already
  * have <head> with Font Awesome + Outfit font + the CSS variables (--primary, --primary-dark,
@@ -160,17 +162,6 @@
     .guest-header .nav-menu a.login-btn.btn-success:hover {
         background: #047857 !important;
     }
-    .guest-header .lang-switcher {
-        padding: 8px 12px;
-        border-radius: 6px;
-        transition: var(--transition);
-        cursor: pointer;
-    }
-    .guest-header .lang-switcher:hover {
-        background: rgba(21, 101, 192, 0.05);
-        color: var(--primary) !important;
-    }
-
     /* --- Mobile Toggle --- */
     .guest-header .mobile-toggle {
         display: none;
@@ -318,13 +309,6 @@
             class="<?= (strpos(uri_string(), 'fares') !== false) ? 'active' : '' ?>"><i class="fas fa-tags"></i>
             Fares</a>
 
-        <div class="lang-switcher"
-            style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text-muted);">
-            <i class="fas fa-globe"></i>
-            <span>EN</span>
-            <i class="fas fa-chevron-down" style="font-size: 11px;"></i>
-        </div>
-
         <?php if (session()->get('isLoggedIn')): ?>
             <?php
             $dashboardUrl = '/';
@@ -350,8 +334,14 @@
     <div class="mobile-toggle" onclick="toggleMenu()">
         <i class="fas fa-bars"></i>
     </div>
+
+    <!-- Mobile overlay backdrop -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
+    <!-- Mobile close button -->
+    <button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleMenu()" aria-label="Close menu">&times;</button>
 </header>
 
+<?php if (empty($skip_breadcrumb)): ?>
 <!-- Breadcrumbs -->
 <div class="breadcrumb-section">
     <a href="<?= base_url('guest') ?>">Home</a>
@@ -364,6 +354,25 @@
         <span>Dashboard</span>
     <?php endif; ?>
 </div>
+<?php endif; ?>
+
+<style>
+    /* Mobile overlay backdrop */
+    .mobile-nav-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1002;
+        cursor: pointer;
+    }
+    .mobile-nav-overlay.active {
+        display: block;
+    }
+</style>
 
 <script>
     (function () {
@@ -379,10 +388,23 @@
             }, 1000);
         }
     })();
-    if (typeof toggleMenu !== 'function') {
-        function toggleMenu() {
-            var m = document.getElementById('navMenu');
-            if (m) m.classList.toggle('open');
+
+    function toggleMenu() {
+        var m = document.getElementById('navMenu');
+        var overlay = document.getElementById('mobileNavOverlay');
+        var closeBtn = document.getElementById('mobileMenuClose');
+        if (!m) return;
+        m.classList.toggle('open');
+        var isOpen = m.classList.contains('open');
+        if (overlay) {
+            if (isOpen) overlay.classList.add('active');
+            else overlay.classList.remove('active');
         }
+        if (closeBtn) {
+            if (isOpen) closeBtn.classList.add('active');
+            else closeBtn.classList.remove('active');
+        }
+        document.body.style.overflow = isOpen ? 'hidden' : '';
     }
 </script>
+
