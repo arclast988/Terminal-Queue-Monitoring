@@ -75,37 +75,50 @@ REM ==========================================
 echo.
 echo [INFO] Checking if database "jeepneynvans" exists...
 
-REM Check if the database exists by querying it
-"%MYSQL_PATH%" -u root --skip-password -e "USE jeepneynvans;" 2>nul
-if %errorlevel% neq 0 (
-    echo [WARN] Database "jeepneynvans" does NOT exist.
-
-    set "SQL_FILE=%~dp0jeepneynvans.sql"
-    if not exist "!SQL_FILE!" (
-        echo [ERROR] SQL file not found at !SQL_FILE!
-        echo Please place "jeepneynvans.sql" in the project root folder.
+REM Ensure SQL file is available before anything else.
+set "SQL_FILE=%~dp0jeepneynvans.sql"
+set "CLEAN_SQL_FILE=%~dp0jeepneynvans_clean.sql"
+if not exist "!SQL_FILE!" (
+    echo [WARN] "jeepneynvans.sql" not found.
+    if exist "!CLEAN_SQL_FILE!" (
+        echo [INFO] Creating "jeepneynvans.sql" from clean template "jeepneynvans_clean.sql"...
+        copy /Y "!CLEAN_SQL_FILE!" "!SQL_FILE!" >nul
+        if errorlevel 1 (
+            echo [ERROR] Failed to copy clean SQL template to !SQL_FILE!
+            pause
+            exit /b 1
+        )
+        echo [OK] Created "jeepneynvans.sql" with empty schema + default seed data.
+    ) else (
+        echo [ERROR] Neither "jeepneynvans.sql" nor "jeepneynvans_clean.sql" found in project root.
+        echo Please place one of them in: %~dp0
         pause
         exit /b 1
     )
+)
 
-    echo [INFO] Creating database and importing from jeepneynvans.sql...
+REM Probe a core table - fails if DB is missing OR DB exists but is empty/incomplete.
+"%MYSQL_PATH%" -u root --skip-password -e "SELECT 1 FROM jeepneynvans.users LIMIT 1;" >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [WARN] Database "jeepneynvans" is missing or has no tables. Importing schema...
+
     "%MYSQL_PATH%" -u root --skip-password -e "CREATE DATABASE IF NOT EXISTS jeepneynvans CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo [ERROR] Failed to create database. Is MySQL/MariaDB running?
         pause
         exit /b 1
     )
 
     "%MYSQL_PATH%" -u root --skip-password jeepneynvans < "!SQL_FILE!"
-    if %errorlevel% neq 0 (
+    if !errorlevel! neq 0 (
         echo [ERROR] Failed to import SQL file.
         pause
         exit /b 1
     )
 
-    echo [OK] Database "jeepneynvans" created and imported successfully!
+    echo [OK] Database "jeepneynvans" created/imported successfully!
 ) else (
-    echo [OK] Database "jeepneynvans" already exists. Skipping import.
+    echo [OK] Database "jeepneynvans" already populated. Skipping import.
 )
 
 :skip_db
