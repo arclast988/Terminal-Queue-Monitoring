@@ -36,16 +36,18 @@ class Auth extends BaseController
                     'isLoggedIn' => TRUE
                 ];
                 $session->set($ses_data);
+                // Regenerate the session ID on privilege change to prevent session fixation.
+                $session->regenerate();
 
                 $this->logActivity('Login', ucfirst($user['role']) . ' logged in (' . $user['username'] . ')');
 
                 return $this->redirectBasedOnRole();
             } else {
-                $session->setFlashdata('error', 'Invalid Password.');
+                $session->setFlashdata('error', 'Invalid username or password.');
                 return redirect()->to('/login');
             }
         } else {
-            $session->setFlashdata('error', 'Username not Found.');
+            $session->setFlashdata('error', 'Invalid username or password.');
             return redirect()->to('/login');
         }
     }

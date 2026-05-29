@@ -101,8 +101,8 @@ $fareTypes = [
     <div class="card shadow-sm h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?>">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
             <h5 class="mb-0 fw-bold d-flex align-items-center gap-2 fare-section-title <?= vehicle_type_class($ft['type']) ?>">
-                <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= $ft['label'] ?>" style="width:32px;height:auto;">
-                <?= $ft['label'] ?>
+                <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= esc($ft['label']) ?>" style="width:32px;height:auto;">
+                <?= esc($ft['label']) ?>
             </h5>
         </div>
         <div class="card-body p-0">

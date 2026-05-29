@@ -37,40 +37,34 @@ The Palompon Transit Management System now has **real-time WebSocket support** f
 
 ---
 
-## Quick Start
+## Quick Start (WSL + Nginx — no XAMPP)
 
-### Option 1: Run Both Services at Once (EASIEST)
+### Option 1: Double-click `start_system.bat` (EASIEST)
 
-Simply double-click **`run_ws.bat`** in the project root:
+Double-click **`start_system.bat`** in the project root. It runs the whole stack inside WSL (Ubuntu):
 
-```
-c:\xampp2\htdocs\jeepneynvans\run_ws.bat
-```
+- Detects your installed PHP version and starts MariaDB, PHP-FPM, and Nginx
+- Creates the database/user and imports the SQL dump if the tables are missing
+- Starts the WebSocket server (`php spark ws:serve`) as a background process
+- Waits for Nginx to respond, then opens the site
 
-This will automatically:
-- Start WebSocket Server on port 8081
-- Start Web Server on port 8000
-- Keep both running together
-
-Then open: **http://localhost:8000**
+Then open: **http://localhost/**
 
 ---
 
-### Option 2: Manual Terminal Commands
+### Option 2: Manual WSL Commands
 
-**Terminal 1 - WebSocket Server:**
-```powershell
-cd c:\xampp2\htdocs\jeepneynvans
-php spark ws:serve
+Open a WSL (Ubuntu) shell and run:
+
+```bash
+cd /mnt/c/path/to/jeepneynvans     # wherever you cloned it
+sudo service mariadb start
+sudo service php8.2-fpm start      # use whatever version is installed
+sudo service nginx start
+php spark ws:serve                 # WebSocket server — leave this running
 ```
 
-**Terminal 2 - Web Server:**
-```powershell
-cd c:\xampp2\htdocs\jeepneynvans
-php spark serve
-```
-
-Then open: **http://localhost:8000**
+Then open: **http://localhost/**
 
 ---
 
@@ -121,14 +115,15 @@ Open browser DevTools (F12) on Staff Queue page:
 ## Troubleshooting
 
 ### Error: "WebSocket Connection Failed"
-- Make sure `php spark ws:serve` is running in a separate terminal
+- Make sure the WebSocket server is running (`php spark ws:serve`, or just run `start_system.bat`)
 - Check that port 8081 is not blocked by firewall
-- Try using `run_ws.bat` instead (easier)
+- In WSL: `ss -ltn | grep :8081` should show the server listening
 
 ### No Auto-Reload When Queue Changes
 - Check browser console for errors (F12)
 - Make sure JavaScript is enabled
 - Verify WebSocket connection in console
+- **Broadcasts are gated on `writable/ws_server.pid`** — `broadcastUpdate()` only sends to the server when that file exists. The WS server creates it on startup and removes it on shutdown. If it's missing, the server isn't running; start it via `start_system.bat`.
 
 ### Port Already in Use
 - If port 8081 or 8082 in use:
@@ -144,11 +139,13 @@ Open browser DevTools (F12) on Staff Queue page:
 
 | File | Purpose |
 |------|---------|
-| `app/Commands/WsServe.php` | WebSocket server implementation |
+| `app/Commands/WsServe.php` | WebSocket server (writes `writable/ws_server.pid` on startup) |
 | `app/Controllers/BaseController.php` | `broadcastUpdate()` method |
 | `app/Controllers/Staff/Queue.php` | Queue operations with broadcasts |
+| `public/js/ws-client.js` | Shared client-side WebSocket module |
 | `app/Views/staff/queue/index.php` | WebSocket client handler |
-| `run_ws.bat` | Easy startup script |
+| `start_system.bat` | One-click WSL launcher (Nginx + PHP-FPM + MariaDB + WS) |
+| `ubuntu_migration/` | Production Ubuntu provisioning (`deploy.sh`, `nginx.conf`, systemd unit) |
 
 ---
 
@@ -169,7 +166,7 @@ For now, this works great for development and small deployments!
 ## Support
 
 If something isn't working:
-1. Check that both services are running
-2. Verify ports 8000, 8081, 8082 are not blocked
+1. Check that the services are running (Nginx on port 80, WS on 8081)
+2. Verify ports 80, 8081, 8082 are not blocked
 3. Check browser console (F12) for errors
-4. Check CodeIgniter logs in `writable/logs/`
+4. Check CodeIgniter logs in `writable/logs/` and the WS log at `writable/logs/ws.log`

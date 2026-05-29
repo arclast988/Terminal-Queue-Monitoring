@@ -1,60 +1,73 @@
-$projectRoot = "c:\xampp2\htdocs\jeepneynvans"
+$projectRoot = $PSScriptRoot
+# Convert this folder's Windows path to a WSL path in pure PowerShell.
+# (wsl.exe mangles backslashes when called directly from PowerShell, so don't use wslpath here.)
+$projectWsl = "/mnt/" + $projectRoot.Substring(0,1).ToLower() + ($projectRoot.Substring(2) -replace '\\','/')
 
 Write-Host "======================================" -ForegroundColor Cyan
-Write-Host "WebSocket System Diagnostics" -ForegroundColor Cyan
+Write-Host "WebSocket System Diagnostics (WSL + Nginx)" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Check if PHP is running
-Write-Host "1. Checking PHP processes..." -ForegroundColor Yellow
-$phpProcesses = Get-Process php -ErrorAction SilentlyContinue
-if ($phpProcesses) {
-    Write-Host "   [OK] PHP is running" -ForegroundColor Green
+# 1. PHP-FPM running inside WSL
+Write-Host "1. Checking PHP-FPM inside WSL..." -ForegroundColor Yellow
+$fpm = wsl bash -lc "pgrep -f php-fpm | head -n1 2>/dev/null"
+if ($fpm) {
+    Write-Host "   [OK] PHP-FPM is running in WSL" -ForegroundColor Green
 } else {
-    Write-Host "   [FAIL] PHP not running - start run_ws.bat first!" -ForegroundColor Red
+    Write-Host "   [FAIL] PHP-FPM not running - run start_system.bat first!" -ForegroundColor Red
 }
 Write-Host ""
 
-# Check port 8081 (WebSocket)
-Write-Host "2. Checking port 8081 (WebSocket)..." -ForegroundColor Yellow
+# 2. WebSocket server process + PID file
+Write-Host "2. Checking WebSocket server (spark ws:serve)..." -ForegroundColor Yellow
+$ws = wsl bash -lc "pgrep -f 'spark ws:serve' | head -n1 2>/dev/null"
+$wsPidFile = wsl bash -lc "cat '$projectWsl/writable/ws_server.pid' 2>/dev/null"
+if ($ws) {
+    Write-Host "   [OK] WebSocket server is running (ws_server.pid: $wsPidFile)" -ForegroundColor Green
+} else {
+    Write-Host "   [FAIL] WebSocket server NOT running - run start_system.bat" -ForegroundColor Red
+}
+Write-Host ""
+
+# 3. Web server reachability (Nginx on port 80)
+Write-Host "3. Checking Nginx (http://localhost/)..." -ForegroundColor Yellow
+$code = wsl bash -lc "curl -sS -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null"
+if ($code -match '^[2345]\d\d$') {
+    Write-Host "   [OK] Nginx responded with HTTP $code" -ForegroundColor Green
+} else {
+    Write-Host "   [FAIL] No HTTP response on port 80 - Nginx/PHP-FPM not ready (502 = wrong PHP-FPM socket)" -ForegroundColor Red
+}
+Write-Host ""
+
+# 4. Port 8081 (WebSocket client connections)
+Write-Host "4. Checking port 8081 (WebSocket)..." -ForegroundColor Yellow
 $wsPort = netstat -ano | Select-String ":8081"
 if ($wsPort) {
     Write-Host "   [OK] Port 8081 is listening" -ForegroundColor Green
     $wsPort | ForEach-Object { Write-Host "     $_" -ForegroundColor Green }
 } else {
-    Write-Host "   [FAIL] Port 8081 NOT listening - run_ws.bat may not have started WebSocket server" -ForegroundColor Red
+    Write-Host "   [FAIL] Port 8081 NOT listening - WebSocket server not started" -ForegroundColor Red
 }
 Write-Host ""
 
-# Check port 8000 (Web Server)
-Write-Host "3. Checking port 8000 (Web Server)..." -ForegroundColor Yellow
-$webPort = netstat -ano | Select-String ":8000"
-if ($webPort) {
-    Write-Host "   [OK] Port 8000 is listening" -ForegroundColor Green
+# 5. Port 8082 (broadcast trigger - WSL-internal, bound to 127.0.0.1)
+Write-Host "5. Checking port 8082 (broadcast trigger, WSL-internal)..." -ForegroundColor Yellow
+$bcast = wsl bash -lc "ss -ltn 2>/dev/null | grep 127.0.0.1:8082"
+if ($bcast) {
+    Write-Host "   [OK] Port 8082 is listening inside WSL" -ForegroundColor Green
 } else {
-    Write-Host "   [FAIL] Port 8000 NOT listening - Web server not running" -ForegroundColor Red
+    Write-Host "   [INFO] Port 8082 not detected. It binds 127.0.0.1 inside WSL and is only used by broadcastUpdate() - not visible from Windows." -ForegroundColor Yellow
 }
 Write-Host ""
 
-# Check port 8082 (Broadcast)
-Write-Host "4. Checking port 8082 (Broadcast)..." -ForegroundColor Yellow
-$bcastPort = netstat -ano | Select-String ":8082"
-if ($bcastPort) {
-    Write-Host "   [OK] Port 8082 is listening" -ForegroundColor Green
-} else {
-    Write-Host "   [FAIL] Port 8082 NOT listening - Broadcast service not running" -ForegroundColor Red
-}
-Write-Host ""
-
-# Check CodeIgniter logs
-Write-Host "5. Checking CodeIgniter logs..." -ForegroundColor Yellow
+# 6. CodeIgniter logs
+Write-Host "6. Checking CodeIgniter logs..." -ForegroundColor Yellow
 $logFile = "$projectRoot\writable\logs\log-*.log"
 $latestLog = Get-ChildItem $logFile -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 
 if ($latestLog) {
     Write-Host "   [OK] Latest log file: $($latestLog.Name)" -ForegroundColor Green
-    
-    # Check for WebSocket errors
+
     $wsErrors = Select-String "WS Broadcast" $latestLog.FullName -ErrorAction SilentlyContinue | Select-Object -Last 3
     if ($wsErrors) {
         Write-Host "   Recent WebSocket broadcasts:" -ForegroundColor Cyan
@@ -67,10 +80,10 @@ Write-Host ""
 
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "NEXT STEPS:" -ForegroundColor Yellow
-Write-Host "1. Open http://localhost:8000 in browser" -ForegroundColor White
-Write-Host "2. Go to Staff Queue page" -ForegroundColor White
-Write-Host "3. Open browser DevTools (F12) - Console tab" -ForegroundColor White
-Write-Host "4. You should see: '[Staff Queue WebSocket] Initializing...'" -ForegroundColor White
-Write-Host "5. Then: '[WS Connected] Listening for queue updates'" -ForegroundColor White
-Write-Host "6. Try adding a vehicle and watch for '[Queue Update]'" -ForegroundColor White
+Write-Host "1. If anything failed above, run start_system.bat" -ForegroundColor White
+Write-Host "2. Open http://localhost/ in browser" -ForegroundColor White
+Write-Host "3. Go to Staff Queue page" -ForegroundColor White
+Write-Host "4. Open browser DevTools (F12) - Console tab" -ForegroundColor White
+Write-Host "5. You should see: '[WS] Connected to ws://localhost:8081'" -ForegroundColor White
+Write-Host "6. Add/update a vehicle in another tab and watch for a 'queue_update'" -ForegroundColor White
 Write-Host "======================================" -ForegroundColor Cyan

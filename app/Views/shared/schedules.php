@@ -108,7 +108,7 @@
                 <select name="destination" class="form-select">
                     <option value="">All Destinations</option>
                     <?php foreach ($all_destinations as $dest): ?>
-                        <option value="<?= $dest ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= $dest ?></option>
+                        <option value="<?= esc($dest) ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= esc($dest) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>

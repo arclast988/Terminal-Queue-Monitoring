@@ -16,6 +16,7 @@ writable/uploads/*
 
 # --- DEPENDENCIES ---
 node_modules/
+vendor/
 
 # --- OS/System generated files ---
 .DS_Store

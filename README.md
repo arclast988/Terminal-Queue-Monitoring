@@ -2,65 +2,56 @@
 
 A CodeIgniter 4 web app for managing van/jeepney terminal queues, routes, vehicle dispatch, and admin audit logs.
 
-## Quick Setup (Windows + XAMPP)
+## Setup (Windows + WSL Ubuntu, Nginx — no XAMPP)
+
+This project runs on **Nginx + PHP-FPM + MariaDB** inside **WSL (Ubuntu)** — no XAMPP/Apache.
 
 ### Prerequisites
-- XAMPP with **PHP 8.2+** (the project is tested on PHP 8.2.12) and **MySQL / MariaDB**.
+- **WSL 2** with Ubuntu, and inside it: **PHP 8.2+** (CLI + FPM), **Nginx**, and **MariaDB**.
+  - Need to install them? Double-click `install_system.bat` — one-time Windows installer that sets up WSL, Ubuntu, the full LAMP stack, Composer, and the project's PHP dependencies. (For production Ubuntu servers, see `ubuntu_migration/deploy.sh` instead.)
 - **Git**.
 
-### Steps
-1. **Clone into your XAMPP `htdocs` folder** (usually `C:\xampp\htdocs` or `C:\xampp2\htdocs`):
+### Local quick start (Windows)
+1. **Clone into any folder** (e.g. `C:\projects\jeepneynvans`) — keep the folder name `jeepneynvans`. The launcher auto-detects its own location, so it does **not** need to live in XAMPP's `htdocs`; you can move it out and uninstall XAMPP entirely.
+2. **Create your `.env`** — copy the bundled template:
    ```
-   cd C:\xampp\htdocs
-   git clone <repo-url> jeepneynvans
+   copy env .env
    ```
-   The folder name must be `jeepneynvans` so URLs match `.env`'s `app.baseURL`.
+   The launcher's defaults already match (DB user `jeepney_user` / `12345678`); only edit `.env` to change credentials or enable email.
+3. **Double-click `start_system.bat`.** It runs everything inside WSL:
+   - detects your installed PHP version and starts MariaDB, PHP-FPM, and Nginx,
+   - auto-creates the database and `jeepney_user`, importing `jeepneynvans.sql` if the tables are missing,
+   - starts the real-time WebSocket server,
+   - waits for Nginx, then opens the app.
+4. **Open the app:** <http://localhost/>
+5. **Sign in** with a seeded account from the dump (usernames are in the `users` table; ask the project owner for the password).
+6. **Stopping the system** — double-click `stop_system.bat` to shut down MariaDB, PHP-FPM, Nginx, and the WebSocket server. Database data is preserved.
 
-2. **Start Apache and MySQL** in the XAMPP Control Panel.
-
-3. **Create the database**:
-   - Open phpMyAdmin: <http://localhost/phpmyadmin>.
-   - Click *New* and create a database named exactly **`jeepneynvans`** (collation `utf8mb4_general_ci`).
-
-4. **Import the SQL dump**:
-   - Select the new `jeepneynvans` database.
-   - Click *Import* → *Choose File* → pick **`jeepneynvans.sql`** from the project root.
-     - Don't use `app/Database/announcements_table.sql` — that's a helper for one table only.
-     - The `jeepneynvans (5).sql` file is a local backup and is not in GitHub.
-   - Click *Go*. This creates all tables — including `audit_logs` — and loads sample users, routes, vehicles, and queue history.
-
-5. **Open the app**: <http://localhost/jeepneynvans/public/>
-
-6. **Sign in** using the seeded admin account from the dump. Usernames live in the `users` table; ask the project owner for the password if it isn't already shared.
-
-### Alternative: empty database via migrations
-If you want a blank database (no sample data) instead of importing the SQL dump:
-1. Create the empty `jeepneynvans` database in phpMyAdmin.
-2. From the project root, run:
-   ```
-   C:\xampp\php\php.exe spark migrate
-   ```
-   Adjust the path to wherever XAMPP put PHP (e.g., `C:\xampp2\php\php.exe`).
-3. Create a first admin user manually via phpMyAdmin or by editing a seeder.
-
-### Database config
-The repo ships an `.env` with XAMPP defaults:
+### Database
+The app's defaults live in `app/Config/Database.php` and are created automatically by `start_system.bat`:
 ```
-database.default.hostname = localhost
-database.default.database = jeepneynvans
-database.default.username = root
-database.default.password =
-database.default.port     = 3306
+hostname = 127.0.0.1
+database = jeepneynvans
+username = jeepney_user
+password = 12345678
+port     = 3306
 ```
-If your MySQL has a root password, edit `.env` accordingly.
+To use different credentials, set the matching `database.default.*` keys in `.env`.
 
-### Real-time WebSocket features (optional)
-The queue auto-refresh uses a WebSocket server. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for how to run it (double-click `run_ws.bat` or use `php spark ws:serve`). The app still works without WebSocket — pages just fall back to polling.
+#### Empty database via migrations (no sample data)
+From the project root inside WSL: `php spark migrate`, then create a first admin user (via a seeder or manually).
+
+### Real-time WebSocket features
+Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for you. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for details. The app still works without it — pages fall back to polling.
+
+### Production (Ubuntu server)
+Provision a server with `ubuntu_migration/deploy.sh`, then follow its printed checklist and **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** to deploy the app, the Nginx site, and the WebSocket systemd service.
 
 ### Troubleshooting
-- **"Unable to connect to the database"** → MySQL isn't started in XAMPP Control Panel.
-- **Blank page / 404** → the project folder must be named `jeepneynvans` and live under `htdocs`, and you must visit `/jeepneynvans/public/` (not `/jeepneynvans/`).
-- **Login fails** → confirm the import created the `users` table with at least one admin row (phpMyAdmin → `users` → *Browse*).
+- **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `wsl ss -ltn` and `ls /run/php/`.
+- **"Unable to connect to the database"** → MariaDB isn't started (`wsl sudo service mariadb start`), or `.env` credentials don't match.
+- **Real-time not updating** → run `diagnose.ps1` (checks Nginx, the WebSocket server, and `ws_server.pid`).
+- **Login fails** → confirm the import created the `users` table with at least one admin row.
 
 ---
 

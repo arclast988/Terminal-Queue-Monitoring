@@ -39,6 +39,22 @@ class WsServe extends BaseCommand
         CLI::write("WebSocket Server running on port $wsPort", 'cyan');
         CLI::write("Broadcast Trigger running on port $broadcastPort (Localhost only)", 'yellow');
 
+        // BaseController::broadcastUpdate() only broadcasts when this PID file exists.
+        $pidFile = WRITEPATH . 'ws_server.pid';
+        @file_put_contents($pidFile, (string) getmypid());
+        register_shutdown_function(static function () use ($pidFile) {
+            @unlink($pidFile);
+        });
+        if (function_exists('pcntl_async_signals')) {
+            pcntl_async_signals(true);
+            $stop = static function () use ($pidFile) {
+                @unlink($pidFile);
+                exit(0);
+            };
+            pcntl_signal(SIGTERM, $stop);
+            pcntl_signal(SIGINT, $stop);
+        }
+
         $masterClients = [$wsServer, $broadcastServer];
         $wsClients = [];
         $lastPing = time();
