@@ -27,6 +27,15 @@ This project runs on **Nginx + PHP-FPM + MariaDB** inside **WSL (Ubuntu)** — n
 5. **Sign in** with a seeded account from the dump (usernames are in the `users` table; ask the project owner for the password).
 6. **Stopping the system** — double-click `stop_system.bat` to shut down MariaDB, PHP-FPM, Nginx, and the WebSocket server. Database data is preserved.
 
+### Local quick start (from inside a WSL terminal)
+If you're already at a WSL bash prompt (e.g. `jaylo@DESKTOP-XXXX:~$`), use the bash wrappers instead of the `.bat` files:
+```
+cd /mnt/c/path/to/jeepneynvans
+./start_system.sh     # bring everything up (auto-elevates with sudo)
+./stop_system.sh      # shut everything down
+```
+Both scripts auto-detect the project root, sanity-check that they're running in WSL, and reuse the same Linux-side logic (`ubuntu_migration/wsl_local_up.sh` / `wsl_local_down.sh`) as the `.bat` launchers — so behavior and output are identical. First run may need `chmod +x start_system.sh stop_system.sh`.
+
 ### Database
 The app's defaults live in `app/Config/Database.php` and are created automatically by `start_system.bat`:
 ```
