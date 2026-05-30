@@ -51,6 +51,8 @@ elif command -v xdg-open >/dev/null 2>&1; then
     xdg-open "$URL" >/dev/null 2>&1 &
 elif command -v cmd.exe >/dev/null 2>&1; then
     cmd.exe /c start "" "$URL" >/dev/null 2>&1 &
+elif [ -x /mnt/c/Windows/System32/cmd.exe ]; then
+    /mnt/c/Windows/System32/cmd.exe /c start "" "$URL" >/dev/null 2>&1 &
 else
     echo "       (No browser opener available - open ${URL} manually.)"
 fi
