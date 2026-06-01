@@ -40,7 +40,7 @@
             font-family: 'Outfit', sans-serif;
             background: var(--bg-body);
             color: var(--text-main);
-            overflow-x: hidden;
+            overflow-x: clip;
             line-height: 1.6;
         }
 
