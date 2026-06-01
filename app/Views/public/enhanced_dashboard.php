@@ -44,55 +44,6 @@
             line-height: 1.6;
         }
 
-        /* --- Advisory Bar --- */
-        .advisory-bar {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 10px 5%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            font-size: 14px;
-            text-align: center;
-            position: relative;
-            z-index: 1001;
-        }
-
-        .advisory-icon {
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-            font-weight: 800;
-            flex-shrink: 0;
-        }
-
-        .advisory-text {
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        .marquee {
-            display: inline-block;
-            padding-left: 100%;
-            animation: marquee 15s linear infinite;
-        }
-
-        @keyframes marquee {
-            0% {
-                transform: translate(0, 0);
-            }
-
-            100% {
-                transform: translate(-100%, 0);
-            }
-        }
-
         /* --- Header & Navigation --- */
         header {
             background: var(--white);
@@ -882,11 +833,6 @@
         }
 
         @media (max-width: 768px) {
-            .advisory-bar {
-                padding: 8px 5%;
-                font-size: 11px;
-            }
-
             header {
                 padding: 10px 5%;
                 min-height: 65px;

@@ -182,24 +182,6 @@
                 delete _timers[id];
                 sendToServer(id);
             }, DEBOUNCE_MS);
-        },
-
-        /**
-         * Fallback: direct call for legacy updatePassengers (non-debounced).
-         * Kept for backward compatibility with the old increment/decrement endpoints.
-         */
-        legacyUpdate: function(id, action, url) {
-            fetch(url + '/' + id + '/' + action, {
-                method: 'GET',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    updateUI(id, data.new_count, data.capacity);
-                }
-            })
-            .catch(function(err) { console.error('Error:', err); });
         }
     };
 

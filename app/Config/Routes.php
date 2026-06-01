@@ -27,16 +27,14 @@ $routes->get('api/queue-status', 'Api\QueueStatus::index');
 $routes->get('api/check-vehicle-availability/(:num)', 'Api\QueueStatus::checkAvailability/$1');
 $routes->get('api/announcements', 'Api\Announcements::index');
 
-// Route & Fare Management — View + Fare/Discount (Admin + Staff per DFD 2.3)
+// Route & Fare Management — Admin only (route CRUD + fare/discount management)
 $routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('', 'Admin\Routes::index');
-    // Fare & Discount Management (both roles per DFD 2.3)
+    // Fare & Discount Management
     $routes->post('discounts/store', 'Admin\Routes::storeDiscount');
     $routes->post('discounts/update/(:num)', 'Admin\Routes::updateDiscount/$1');
     $routes->post('discounts/delete/(:num)', 'Admin\Routes::deleteDiscount/$1');
-});
-// Route CRUD — Admin only (per DFD 2.1/2.2: only Admin inputs route records)
-$routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {
+    // Route CRUD
     $routes->get('create', 'Admin\Routes::create');
     $routes->post('store', 'Admin\Routes::store');
     $routes->get('edit/(:num)', 'Admin\Routes::edit/$1');
@@ -112,7 +110,6 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->get('queue', 'Staff\Queue::index');
     $routes->post('queue/add', 'Staff\Queue::add');
     $routes->post('queue/update/(:num)/(:segment)', 'Staff\Queue::updateStatus/$1/$2');
-    $routes->post('queue/updatePassengers/(:num)/(:segment)', 'Staff\Queue::updatePassengers/$1/$2');
     $routes->post('queue/setPassengers/(:num)', 'Staff\Queue::setPassengers/$1');
 
     // Departure Rules (staff view-only access)
