@@ -102,16 +102,27 @@ class WsServe extends BaseCommand
                                 
                                 $encodedData = $this->encode($data);
                                 $targetIds = [];
+                                $staleIds  = [];
                                 foreach ($wsClients as $wsId => $wsClient) {
                                     if ($wsClient['handshaken']) {
                                         $result = @fwrite($wsClient['socket'], $encodedData);
                                         if ($result !== false) {
                                             $targetIds[] = $wsId;
                                         } else {
-                                            CLI::write("  - Removing stale Client $wsId", 'red');
-                                            // Handle stale connection in next loop
+                                            $staleIds[] = $wsId;
                                         }
                                     }
+                                }
+                                // Actually drop clients whose write failed. The original
+                                // code only logged this and left them in place, so dead
+                                // (e.g. dropped-mobile) connections accumulated forever.
+                                foreach ($staleIds as $wsId) {
+                                    CLI::write("  - Removing stale Client $wsId", 'red');
+                                    $staleSocket = $wsClients[$wsId]['socket'];
+                                    unset($wsClients[$wsId]);
+                                    $key = array_search($staleSocket, $masterClients);
+                                    if ($key !== false) unset($masterClients[$key]);
+                                    @fclose($staleSocket);
                                 }
                                 if (count($targetIds) > 0) {
                                     CLI::write("  -> Sent to clients: [" . implode(', ', $targetIds) . "]", 'light_green');

@@ -14,29 +14,38 @@ class QueueStatus extends Controller
 {
     public function index()
     {
-        $queueModel = new QueueModel();
+        // Cache the computed queue for a couple of seconds so that many
+        // simultaneous passenger polls collapse to a single DB query instead
+        // of running this 3-table join per request. broadcastUpdate() clears
+        // this key, so staff actions still appear on the next poll instantly.
+        $items = cache('rt_queue_status');
+        if (! is_array($items)) {
+            $queueModel = new QueueModel();
 
-        $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, terminals.name as origin, routes.destination')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
-            ->whereIn('queue.status', ['waiting', 'boarding'])
-            ->orderBy('queue.position', 'ASC')
-            ->findAll();
+            $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, terminals.name as origin, routes.destination')
+                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
+                ->join('routes', 'routes.id = queue.route_id')
+                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->whereIn('queue.status', ['waiting', 'boarding'])
+                ->orderBy('queue.position', 'ASC')
+                ->findAll();
 
-        // Build a simple lookup by queue ID
-        $items = [];
-        foreach ($queue as $item) {
-            $items[] = [
-                'id'                 => (int)$item['id'],
-                'position'           => (int)$item['position'],
-                'status'             => $item['status'],
-                'current_passengers' => (int)$item['current_passengers'],
-                'capacity'           => (int)$item['capacity'],
-                'plate_number'       => $item['plate_number'],
-                'origin'             => $item['origin'],
-                'destination'        => $item['destination'],
-            ];
+            // Build a simple lookup by queue ID
+            $items = [];
+            foreach ($queue as $item) {
+                $items[] = [
+                    'id'                 => (int)$item['id'],
+                    'position'           => (int)$item['position'],
+                    'status'             => $item['status'],
+                    'current_passengers' => (int)$item['current_passengers'],
+                    'capacity'           => (int)$item['capacity'],
+                    'plate_number'       => $item['plate_number'],
+                    'origin'             => $item['origin'],
+                    'destination'        => $item['destination'],
+                ];
+            }
+
+            cache()->save('rt_queue_status', $items, 2);
         }
 
         return $this->response

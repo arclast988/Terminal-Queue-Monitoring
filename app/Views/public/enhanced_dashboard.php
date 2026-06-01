@@ -1467,7 +1467,10 @@
 
     <?= $this->include('templates/guestfooter') ?>
 
-    <script src="<?= base_url('js/ws-client.js') ?>"></script>
+    <!-- Public board is poll-only (ws-client.js intentionally NOT loaded):
+         passengers refresh every 3s via the cached /status endpoint, so they
+         don't consume WebSocket-server connections. Staff/admin pages keep the
+         instant WebSocket path. -->
     <script src="<?= base_url('js/queue-sync.js') ?>"></script>
     <script>
         var _fetchPending = false;
@@ -1762,12 +1765,13 @@
             }
         });
 
-        // Initialize real-time sync (polling + WebSocket)
-        // Polls every 5s as fallback, WebSocket provides instant updates
+        // Initialize real-time sync (poll-only on the public board).
+        // Polls the cached /status endpoint every 3s; no WebSocket connection is
+        // opened here (ws-client.js is intentionally not loaded), keeping the
+        // single-process WS server free for staff/admin.
         QueueSync.init({
             pollInterval: 3000,
-            customRefresh: fetchStatus,
-            customWSHandler: function () { fetchStatus(); }
+            customRefresh: fetchStatus
         });
 
         fetchStatus(); // Initial fetch

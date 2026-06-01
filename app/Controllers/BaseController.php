@@ -74,6 +74,18 @@ abstract class BaseController extends Controller
         // Write sync token — the polling mechanism on all clients checks this
         @file_put_contents(WRITEPATH . 'sync_token.txt', $now);
 
+        // Invalidate the short-lived public feed caches so this change is
+        // reflected on the very next poll instead of waiting out the TTL.
+        // Best-effort: the short TTLs already bound any staleness if this fails.
+        try {
+            $cache = cache();
+            $cache->delete('rt_queue_status');
+            $cache->delete('rt_home_status');
+            $cache->deleteMatching('rt_sched_status_*');
+        } catch (\Throwable $e) {
+            // ignore — caching is an optimisation, not a correctness requirement
+        }
+
         // Only attempt WebSocket broadcast if the server is confirmed running
         // (indicated by the presence of a PID file written by the WS server on startup)
         $pidFile = WRITEPATH . 'ws_server.pid';

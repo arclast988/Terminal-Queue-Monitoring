@@ -58,54 +58,69 @@ class Home extends BaseController
     {
         helper('fare');
 
-        $queueModel = new QueueModel();
+        // Cache the heavy joins/aggregation for a couple of seconds so that
+        // many simultaneous public-dashboard polls share one computation.
+        // The sync token is read live on every request (so clients still
+        // detect changes), and broadcastUpdate() clears this key so a staff
+        // action shows up on the next poll immediately.
+        $payload = cache('rt_home_status');
+        if (! is_array($payload)) {
+            $queueModel = new QueueModel();
 
-        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
-            ->whereIn('queue.status', ['waiting', 'boarding'])
-            ->orderBy('queue.position', 'ASC')
-            ->findAll();
+            $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
+                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
+                ->join('routes', 'routes.id = queue.route_id')
+                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->whereIn('queue.status', ['waiting', 'boarding'])
+                ->orderBy('queue.position', 'ASC')
+                ->findAll();
 
-        foreach ($active_queue as &$item) {
-            $item['estimated_departure_formatted'] = !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A';
-            $item['percent'] = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
+            foreach ($active_queue as &$item) {
+                $item['estimated_departure_formatted'] = !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A';
+                $item['percent'] = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
+            }
+            unset($item);
+
+            $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, terminals.name as origin, routes.destination')
+                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
+                ->join('routes', 'routes.id = queue.route_id')
+                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->where('queue.status', 'departed')
+                ->where('DATE(queue.departure_time)', date('Y-m-d'))
+                ->orderBy('queue.departure_time', 'DESC')
+                ->limit(10)
+                ->findAll();
+
+            foreach ($recent_departures as &$dept) {
+                $dept['departure_time_formatted'] = date('h:i A', strtotime($dept['departure_time']));
+            }
+            unset($dept);
+
+            $total_departures_today = $queueModel->where('status', 'departed')
+                ->where('DATE(departure_time)', date('Y-m-d'))
+                ->countAllResults();
+
+            $routeModel = new \App\Models\RouteModel();
+
+            $payload = [
+                'active_queue' => $active_queue,
+                'recent_departures' => $recent_departures,
+                'total_departures_today' => $total_departures_today,
+                'route_average_departures' => $this->getRouteAverageDepartures(),
+                'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll())
+            ];
+
+            cache()->save('rt_home_status', $payload, 2);
         }
 
-        $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, terminals.name as origin, routes.destination')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
-            ->where('queue.status', 'departed')
-            ->where('DATE(queue.departure_time)', date('Y-m-d'))
-            ->orderBy('queue.departure_time', 'DESC')
-            ->limit(10)
-            ->findAll();
-
-        foreach ($recent_departures as &$dept) {
-            $dept['departure_time_formatted'] = date('h:i A', strtotime($dept['departure_time']));
-        }
-        $total_departures_today = $queueModel->where('status', 'departed')
-            ->where('DATE(departure_time)', date('Y-m-d'))
-            ->countAllResults();
-
-        $syncToken = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
-
-        $routeModel = new \App\Models\RouteModel();
+        // Always read the sync token live so clients keep detecting changes.
+        $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
 
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->setHeader('Pragma', 'no-cache')
             ->setHeader('Expires', '0')
-            ->setJSON([
-            'active_queue' => $active_queue,
-            'recent_departures' => $recent_departures,
-            'total_departures_today' => $total_departures_today,
-            'route_average_departures' => $this->getRouteAverageDepartures(),
-            'sync_token' => $syncToken,
-            'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll())
-        ]);
+            ->setJSON($payload);
     }
 
     private function getRouteAverageDepartures(): array

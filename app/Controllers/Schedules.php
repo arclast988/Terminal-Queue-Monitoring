@@ -111,69 +111,78 @@ class Schedules extends BaseController
      */
     public function status()
     {
-
-        $queueModel = new QueueModel();
-
         $vehicleType = $this->request->getGet('type');
         $destination = $this->request->getGet('destination');
 
-        $builder = $queueModel->select('
-                queue.id as queue_id,
-                queue.status,
-                queue.current_passengers,
-                queue.position,
-                queue.estimated_departure,
-                queue.departure_time,
-                vehicles.plate_number,
-                vehicles.type as vehicle_type,
-                vehicles.capacity,
-                vehicles.driver_name,
-                routes.destination,
-                terminals.name as origin
-            ')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
-            ->groupStart()
-                ->whereIn('queue.status', ['waiting', 'boarding'])
-                ->orGroupStart()
-                    ->where('queue.status', 'departed')
-                    ->where('DATE(queue.arrival_time)', date('Y-m-d'))
-                ->groupEnd()
-            ->groupEnd();
+        // Cache per filter-combination for a couple of seconds so repeated
+        // public polls reuse one DB query. The sync token stays live below,
+        // and broadcastUpdate() clears these keys so changes appear instantly.
+        $cacheKey = 'rt_sched_status_' . md5(($vehicleType ?? '') . '|' . ($destination ?? ''));
+        $payload  = cache($cacheKey);
+        if (! is_array($payload)) {
+            $queueModel = new QueueModel();
 
-        if ($vehicleType && in_array($vehicleType, ['van', 'jeepney', 'minibus'])) {
-            $builder->where('vehicles.type', $vehicleType);
-        }
-        if ($destination) {
-            $builder->where('routes.destination', $destination);
-        }
+            $builder = $queueModel->select('
+                    queue.id as queue_id,
+                    queue.status,
+                    queue.current_passengers,
+                    queue.position,
+                    queue.estimated_departure,
+                    queue.departure_time,
+                    vehicles.plate_number,
+                    vehicles.type as vehicle_type,
+                    vehicles.capacity,
+                    vehicles.driver_name,
+                    routes.destination,
+                    terminals.name as origin
+                ')
+                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
+                ->join('routes', 'routes.id = queue.route_id')
+                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->groupStart()
+                    ->whereIn('queue.status', ['waiting', 'boarding'])
+                    ->orGroupStart()
+                        ->where('queue.status', 'departed')
+                        ->where('DATE(queue.arrival_time)', date('Y-m-d'))
+                    ->groupEnd()
+                ->groupEnd();
 
-        $schedules = $builder->orderBy("CASE WHEN queue.status = 'departed' THEN 1 ELSE 0 END", 'ASC')
-                             ->orderBy('queue.position', 'ASC')
-                             ->findAll();
-
-        foreach ($schedules as &$s) {
-            if (empty($s['estimated_departure'])) {
-                $s['estimated_departure'] = null;
+            if ($vehicleType && in_array($vehicleType, ['van', 'jeepney', 'minibus'])) {
+                $builder->where('vehicles.type', $vehicleType);
             }
-            $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
-            $s['estimated_departure_formatted'] = !empty($s['estimated_departure'])
-                ? date('g:i A', strtotime($s['estimated_departure'])) : null;
-            $s['departure_time_formatted'] = !empty($s['departure_time'])
-                ? date('g:i A', strtotime($s['departure_time'])) : null;
-        }
-        unset($s);
+            if ($destination) {
+                $builder->where('routes.destination', $destination);
+            }
 
-        $syncToken = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+            $schedules = $builder->orderBy("CASE WHEN queue.status = 'departed' THEN 1 ELSE 0 END", 'ASC')
+                                 ->orderBy('queue.position', 'ASC')
+                                 ->findAll();
+
+            foreach ($schedules as &$s) {
+                if (empty($s['estimated_departure'])) {
+                    $s['estimated_departure'] = null;
+                }
+                $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
+                $s['estimated_departure_formatted'] = !empty($s['estimated_departure'])
+                    ? date('g:i A', strtotime($s['estimated_departure'])) : null;
+                $s['departure_time_formatted'] = !empty($s['departure_time'])
+                    ? date('g:i A', strtotime($s['departure_time'])) : null;
+            }
+            unset($s);
+
+            $payload = [
+                'schedules' => $schedules,
+                'count'     => count($schedules),
+            ];
+
+            cache()->save($cacheKey, $payload, 2);
+        }
+
+        $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
 
         return $this->response
             ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->setHeader('Pragma', 'no-cache')
-            ->setJSON([
-                'schedules' => $schedules,
-                'count'     => count($schedules),
-                'sync_token' => $syncToken
-            ]);
+            ->setJSON($payload);
     }
 }

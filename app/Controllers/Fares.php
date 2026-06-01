@@ -82,29 +82,34 @@ class Fares extends BaseController
     {
         helper('fare');
 
-        $discountModel = new FareDiscountModel();
-        $discounts = $discountModel
-            ->select('fare_discounts.*, terminals.name as terminal_name')
-            ->join('terminals', 'terminals.id = fare_discounts.terminal_id', 'left')
-            ->where('fare_discounts.is_active', 1)
-            ->where('fare_discounts.type !=', 'regular')
-            ->orderBy('fare_discounts.terminal_id', 'ASC')
-            ->orderBy('fare_discounts.type', 'ASC')
-            ->findAll();
+        // Fares/discounts change rarely (admin edits only), so cache the
+        // computed payload for a minute to keep this endpoint cheap under load.
+        $payload = cache('rt_fares_api');
+        if (! is_array($payload)) {
+            $discountModel = new FareDiscountModel();
+            $discounts = $discountModel
+                ->select('fare_discounts.*, terminals.name as terminal_name')
+                ->join('terminals', 'terminals.id = fare_discounts.terminal_id', 'left')
+                ->where('fare_discounts.is_active', 1)
+                ->where('fare_discounts.type !=', 'regular')
+                ->orderBy('fare_discounts.terminal_id', 'ASC')
+                ->orderBy('fare_discounts.type', 'ASC')
+                ->findAll();
 
-        $van_routes     = $this->routesByVehicleType('van', $discounts);
-        $jeepney_routes = $this->routesByVehicleType('jeepney', $discounts);
-        $minibus_routes = $this->routesByVehicleType('minibus', $discounts);
+            $payload = [
+                'van_routes'     => $this->routesByVehicleType('van', $discounts),
+                'jeepney_routes' => $this->routesByVehicleType('jeepney', $discounts),
+                'minibus_routes' => $this->routesByVehicleType('minibus', $discounts),
+                'discounts'      => $discounts,
+            ];
+
+            cache()->save('rt_fares_api', $payload, 60);
+        }
 
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->setHeader('Pragma', 'no-cache')
             ->setHeader('Expires', '0')
-            ->setJSON([
-                'van_routes'     => $van_routes,
-                'jeepney_routes' => $jeepney_routes,
-                'minibus_routes' => $minibus_routes,
-                'discounts'      => $discounts,
-            ]);
+            ->setJSON($payload);
     }
 }
