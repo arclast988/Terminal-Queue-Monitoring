@@ -332,13 +332,11 @@
     </div>
 
     <div class="mobile-toggle" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
+        <i class="fas fa-bars" id="mobileMenuIcon"></i>
     </div>
 
     <!-- Mobile overlay backdrop -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
-    <!-- Mobile close button -->
-    <button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleMenu()" aria-label="Close menu">&times;</button>
 </header>
 
 <?php if (empty($skip_breadcrumb)): ?>
@@ -418,7 +416,7 @@
     function toggleMenu() {
         var m = document.getElementById('navMenu');
         var overlay = document.getElementById('mobileNavOverlay');
-        var closeBtn = document.getElementById('mobileMenuClose');
+        var icon = document.getElementById('mobileMenuIcon');
         if (!m) return;
         m.classList.toggle('open');
         var isOpen = m.classList.contains('open');
@@ -426,9 +424,9 @@
             if (isOpen) overlay.classList.add('active');
             else overlay.classList.remove('active');
         }
-        if (closeBtn) {
-            if (isOpen) closeBtn.classList.add('active');
-            else closeBtn.classList.remove('active');
+        // Morph the hamburger to an X while open — it is the single close control.
+        if (icon) {
+            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
         }
         document.body.style.overflow = isOpen ? 'hidden' : '';
     }

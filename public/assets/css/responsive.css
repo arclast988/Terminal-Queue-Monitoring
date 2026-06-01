@@ -770,37 +770,6 @@ body.staff-theme .badge.badge-truncate {
     }
 }
 
-/* =================================================================
-   11. GUEST VIEWS MOBILE MENU CLOSE BUTTON & TOGGLE OVERRIDES
-   ================================================================= */
-.mobile-menu-close {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .mobile-menu-close.active {
-        display: block;
-        position: fixed;
-        top: 12px;
-        right: 12px;
-        background: white;
-        border: 2px solid #e2e8f0;
-        font-size: 24px;
-        color: #475569;
-        cursor: pointer;
-        padding: 6px 10px;
-        z-index: 9999;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        line-height: 1;
-    }
-
-    .mobile-menu-close.active:hover {
-        color: #1e293b;
-        background: #f1f5f9;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    }
-}
 
 /* Hide mobile toggle on guest headers when screen is wider than the mobile drawer breakpoint (768px) */
 @media (min-width: 769px) {

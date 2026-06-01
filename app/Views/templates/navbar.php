@@ -260,36 +260,7 @@
         cursor: pointer;
     }
 
-    /* Close button for mobile menu - outside the menu panel */
-    .mobile-menu-close {
-        display: none;
-    }
-
     @media (max-width: 1280px) {
-        .mobile-menu-close.active {
-            display: block;
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            font-size: 24px;
-            color: #475569;
-            cursor: pointer;
-            padding: 6px 10px;
-            z-index: 9999;
-            border-radius: 10px;
-            transition: color 0.2s, background 0.2s, box-shadow 0.2s;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            line-height: 1;
-        }
-
-        .mobile-menu-close.active:hover {
-            color: #1e293b;
-            background: #f1f5f9;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
         .nav-menu {
             /* Hidden off-screen right by default on mobile */
             position: fixed;
@@ -721,29 +692,21 @@
 <!-- Mobile Overlay -->
 <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleAdminMobileMenu()"></div>
 
-<!-- Mobile Close Button - outside menu panel so position:fixed works at any zoom -->
-<button class="mobile-menu-close" id="mobileMenuClose" onclick="toggleAdminMobileMenu()" aria-label="Close menu">
-    <i class="fas fa-times"></i>
-</button>
-
 <script>
     function toggleAdminMobileMenu() {
         var menu    = document.querySelector('header .nav-menu');
         var overlay = document.getElementById('mobileNavOverlay');
         var icon    = document.getElementById('mobileMenuIcon');
-        var closeBtn = document.getElementById('mobileMenuClose');
         var isOpen  = menu.classList.contains('mobile-open');
 
         if (isOpen) {
             menu.classList.remove('mobile-open');
             overlay.classList.remove('active');
-            if (closeBtn) closeBtn.classList.remove('active');
             icon.classList.replace('fa-times', 'fa-bars');
             document.body.style.overflow = '';
         } else {
             menu.classList.add('mobile-open');
             overlay.classList.add('active');
-            if (closeBtn) closeBtn.classList.add('active');
             icon.classList.replace('fa-bars', 'fa-times');
             document.body.style.overflow = 'hidden';
         }
