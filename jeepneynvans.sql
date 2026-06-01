@@ -38,6 +38,7 @@ DROP TABLE IF EXISTS `departure_rules`;
 CREATE TABLE `departure_rules` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `terminal_id` int(10) unsigned NOT NULL DEFAULT 1,
+  `route_id` int(10) unsigned DEFAULT NULL,
   `time_from` time NOT NULL,
   `time_to` time NOT NULL,
   `wait_minutes` int(11) NOT NULL DEFAULT 30,
@@ -46,7 +47,9 @@ CREATE TABLE `departure_rules` (
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `fk_departure_rules_terminal` (`terminal_id`),
-  CONSTRAINT `fk_departure_rules_terminal` FOREIGN KEY (`terminal_id`) REFERENCES `terminals` (`id`) ON DELETE CASCADE
+  KEY `fk_departure_rules_route` (`route_id`),
+  CONSTRAINT `fk_departure_rules_terminal` FOREIGN KEY (`terminal_id`) REFERENCES `terminals` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_departure_rules_route` FOREIGN KEY (`route_id`) REFERENCES `routes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

@@ -48,6 +48,19 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
                 </select>
             </div>
 
+            <div class="mb-3">
+                <label for="route_id" class="form-label">Destination (Optional)</label>
+                <select class="form-select" id="route_id" name="route_id">
+                    <option value="">— No specific destination —</option>
+                    <?php foreach (($routes ?? []) as $r): ?>
+                        <option value="<?= $r['id'] ?>" <?= old('route_id', $rule['route_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
+                            <?= esc($r['destination']) ?> (<?= esc(ucfirst($r['vehicle_type'])) ?>)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+                <small class="text-muted">Pick a destination for a route-specific interval, or leave blank for a terminal-wide default rule.</small>
+            </div>
+
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="time_from" class="form-label">Time From</label>

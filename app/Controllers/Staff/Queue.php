@@ -182,7 +182,7 @@ class Queue extends BaseController
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s'); // Server local time (Asia/Manila)
         $terminalId  = (int) ($route['terminal_id'] ?? 1);
-        $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId);
+        $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
         $waitMinutes = (int) $matchedRule['wait_minutes'];
         $ruleLabel = $matchedRule['label'] ?? 'Default';
 

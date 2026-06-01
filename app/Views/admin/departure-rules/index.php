@@ -35,6 +35,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>Terminal</th>
+                        <th>Destination</th>
                         <th>Time From</th>
                         <th>Time To</th>
                         <th>Wait Time</th>
@@ -47,6 +48,7 @@
                         <?php foreach ($rules as $rule): ?>
                             <tr>
                                 <td data-label="Terminal"><?= esc($rule['terminal_name'] ?? '-') ?></td>
+                                <td data-label="Destination"><?= esc($rule['route_destination'] ?? '-') ?></td>
                                 <td data-label="Time From"><span class="badge bg-primary"><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
                                 <td data-label="Time To"><span class="badge bg-info"><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
                                 <td data-label="Wait Time">
@@ -79,7 +81,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center">No departure rules configured. Default of 30 minutes will be used.</td>
+                            <td colspan="7" class="text-center">No departure rules configured. Default of 30 minutes will be used.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
