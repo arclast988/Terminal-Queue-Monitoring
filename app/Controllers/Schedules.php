@@ -170,9 +170,16 @@ class Schedules extends BaseController
             }
             unset($s);
 
+            // Destination filter options, so the guest dropdown can refresh live
+            // when an admin adds/removes a route (rides this same 3s poll).
+            $allDestinations = (new RouteModel())
+                ->select('destination')->orderBy('destination', 'ASC')->findColumn('destination') ?: [];
+            $allDestinations = array_values(array_unique($allDestinations));
+
             $payload = [
-                'schedules' => $schedules,
-                'count'     => count($schedules),
+                'schedules'    => $schedules,
+                'count'        => count($schedules),
+                'destinations' => $allDestinations,
             ];
 
             cache()->save($cacheKey, $payload, 2);

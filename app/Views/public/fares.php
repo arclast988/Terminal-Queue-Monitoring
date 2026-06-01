@@ -851,8 +851,8 @@
         .finally(function() { _fareFetchPending = false; });
     }
 
-    // Poll every 10 seconds
-    setInterval(fetchFareData, 10000);
+    // Poll every 3 seconds (matches the rest of the live guest data)
+    setInterval(fetchFareData, 3000);
     </script>
 </body>
 

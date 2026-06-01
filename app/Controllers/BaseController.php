@@ -81,6 +81,7 @@ abstract class BaseController extends Controller
             $cache = cache();
             $cache->delete('rt_queue_status');
             $cache->delete('rt_home_status');
+            $cache->delete('rt_announcements');
             $cache->deleteMatching('rt_sched_status_*');
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement

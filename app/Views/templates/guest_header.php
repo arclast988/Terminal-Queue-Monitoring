@@ -389,6 +389,32 @@
         }
     })();
 
+    // Live-refresh the announcement marquee so admin changes show without a page
+    // reload. Guest pages are poll-only; this rides its own lightweight 3s poll
+    // of the cached /api/announcements endpoint and only rewrites the text when
+    // it actually changes. textContent keeps it XSS-safe.
+    (function () {
+        var bar = document.querySelector('.advisory-bar .marquee');
+        if (!bar) return;
+        var FALLBACK = 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.';
+        var lastText = bar.textContent.trim();
+        function refreshAnnouncements() {
+            fetch('<?= base_url('api/announcements') ?>?_=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (!d || !d.success || !Array.isArray(d.announcements)) return;
+                    var msgs = d.announcements.map(function (a) { return a.message; }).filter(Boolean);
+                    var text = msgs.length ? msgs.join(' | ') : FALLBACK;
+                    if (text !== lastText) {
+                        lastText = text;
+                        bar.textContent = text;
+                    }
+                })
+                .catch(function () { /* keep current text on error */ });
+        }
+        setInterval(refreshAnnouncements, 3000);
+    })();
+
     function toggleMenu() {
         var m = document.getElementById('navMenu');
         var overlay = document.getElementById('mobileNavOverlay');

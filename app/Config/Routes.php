@@ -25,6 +25,7 @@ $routes->post('contact/send', 'Contact::send');
 // Public API for real-time queue sync (no auth required - read-only)
 $routes->get('api/queue-status', 'Api\QueueStatus::index');
 $routes->get('api/check-vehicle-availability/(:num)', 'Api\QueueStatus::checkAvailability/$1');
+$routes->get('api/announcements', 'Api\Announcements::index');
 
 // Route & Fare Management — View + Fare/Discount (Admin + Staff per DFD 2.3)
 $routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {

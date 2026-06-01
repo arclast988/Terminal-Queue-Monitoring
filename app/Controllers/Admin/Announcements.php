@@ -78,6 +78,9 @@ class Announcements extends BaseController
         $msg = $this->request->getPost('message');
         $this->logActivity('Create announcement', substr($msg, 0, 80) . (strlen($msg) > 80 ? '…' : ''));
 
+        // Clear the cached announcements feed + nudge clients so guests see it live.
+        $this->broadcastUpdate('announcement_update', ['action' => 'create']);
+
         return redirect()->to('/admin/announcements')->with('success', 'Announcement added successfully.');
     }
 
@@ -127,6 +130,8 @@ class Announcements extends BaseController
         $msg = $this->request->getPost('message');
         $this->logActivity('Update announcement', 'ID ' . $id . ': ' . substr($msg, 0, 60) . (strlen($msg) > 60 ? '…' : ''));
 
+        $this->broadcastUpdate('announcement_update', ['action' => 'update', 'id' => (int) $id]);
+
         return redirect()->to('/admin/announcements')->with('success', 'Announcement updated successfully.');
     }
 
@@ -138,6 +143,7 @@ class Announcements extends BaseController
                 if ($a) {
                     $this->logActivity('Delete announcement', 'ID ' . $id . ': ' . substr($a['message'], 0, 50) . (strlen($a['message']) > 50 ? '…' : ''));
                 }
+                $this->broadcastUpdate('announcement_update', ['action' => 'delete', 'id' => (int) $id]);
                 return redirect()->to('/admin/announcements')->with('success', 'Announcement deleted successfully.');
             }
         } catch (\Throwable $e) {

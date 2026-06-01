@@ -883,6 +883,7 @@
                 renderSchedules(data.schedules);
                 var badge = document.getElementById('scheduleCount');
                 if (badge) badge.innerText = data.count + ' Found';
+                syncDestinationOptions(data.destinations);
             })
             .catch(function(e) {
                 console.error('Fetch error:', e);
@@ -943,6 +944,31 @@
                 '</tr>';
             });
             tbody.innerHTML = html;
+        }
+
+        // Rebuild the Destination filter options when the route list changes,
+        // without disrupting a user who's mid-selection. Preserves the current value.
+        function syncDestinationOptions(destinations) {
+            var sel = document.getElementById('destinationSelect');
+            if (!sel || !Array.isArray(destinations)) return;
+            if (document.activeElement === sel) return; // don't interrupt the user
+            var desired = [''].concat(destinations);
+            var existing = Array.prototype.map.call(sel.options, function (o) { return o.value; });
+            var same = existing.length === desired.length && existing.every(function (v, i) { return v === desired[i]; });
+            if (same) return;
+            var current = sel.value;
+            sel.innerHTML = '';
+            var all = document.createElement('option');
+            all.value = '';
+            all.textContent = 'All Destinations';
+            sel.appendChild(all);
+            destinations.forEach(function (d) {
+                var o = document.createElement('option');
+                o.value = d;
+                o.textContent = d;
+                sel.appendChild(o);
+            });
+            sel.value = current; // restore selection if still present
         }
 
         // Initialize real-time sync (poll-only: refresh via fetchSchedulesStatus every 3s).

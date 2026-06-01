@@ -82,8 +82,8 @@ class Fares extends BaseController
     {
         helper('fare');
 
-        // Fares/discounts change rarely (admin edits only), so cache the
-        // computed payload for a minute to keep this endpoint cheap under load.
+        // Cache for a few seconds: the guest fares page polls every 3s, so this
+        // keeps data fresh while collapsing load to one DB query per window.
         $payload = cache('rt_fares_api');
         if (! is_array($payload)) {
             $discountModel = new FareDiscountModel();
@@ -103,7 +103,7 @@ class Fares extends BaseController
                 'discounts'      => $discounts,
             ];
 
-            cache()->save('rt_fares_api', $payload, 60);
+            cache()->save('rt_fares_api', $payload, 3);
         }
 
         return $this->response
