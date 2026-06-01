@@ -1379,7 +1379,7 @@
                                             elseif ($item['estimated_departure']):
                                                 echo date('h:i A', strtotime($item['estimated_departure']));
                                             else:
-                                                echo '--:-- --';
+                                                echo 'Waiting';
                                             endif;
                                             ?>
                                         </div>
@@ -1654,7 +1654,7 @@
                                     + '<div class="q-meta" style="text-align:center;">'
                                     + '<small class="text-muted" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Est. Departure</small>'
                                     + '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
-                                    + (item.estimated_departure_formatted || '--:-- --')
+                                    + (item.estimated_departure_formatted || 'Waiting')
                                     + '</div>'
                                     + (item.status === 'boarding' && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
                                     + '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'

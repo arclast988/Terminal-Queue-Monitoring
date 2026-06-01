@@ -174,11 +174,13 @@ class Queue extends BaseController
             return redirect()->back()->with('error', 'This vehicle departed only ' . $secondsAgo . ' seconds ago. Please wait 1 minute before adding it back.');
         }
 
-        // Calculate next position
+        // Calculate next position (temporary — reorderByDeparture() finalises it)
         $lastPosition = $this->queueModel->selectMax('position')->first();
         $nextPosition = ($lastPosition['position'] ?? 0) + 1;
 
-        // Auto-apply departure rule based on current time and terminal
+        // Look up the departure rule for the success message/log only. The
+        // countdown does NOT start here — it starts when boarding begins (see
+        // updateStatus()), so estimated_departure stays null while waiting.
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s'); // Server local time (Asia/Manila)
         $terminalId  = (int) ($route['terminal_id'] ?? 1);
@@ -192,7 +194,9 @@ class Queue extends BaseController
         }
 
         $arrivalTime = date('Y-m-d H:i:s');
-        $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
+
+        $db = \Config\Database::connect();
+        $db->transStart();
 
         $queueId = $this->queueModel->insert([
             'vehicle_id' => $vehicleId,
@@ -200,10 +204,16 @@ class Queue extends BaseController
             'status' => 'waiting',
             'position' => $nextPosition,
             'arrival_time' => $arrivalTime,
-            'estimated_departure' => $estimatedDeparture
+            'estimated_departure' => null,
         ]);
 
-        $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
+        // Order the active queue by departure: this new waiting vehicle lands
+        // after any boarding vehicles, in arrival order among the waiting ones.
+        $this->queueModel->reorderByDeparture();
+
+        $db->transComplete();
+
+        $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min, starts at boarding).');
 
         // Fetch complete queue item for broadcast
         $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
@@ -218,8 +228,7 @@ class Queue extends BaseController
             'queue_item' => $queueItem
         ]);
 
-        $estTime = date('h:i A', strtotime($estimatedDeparture));
-        return redirect()->to('/staff/queue')->with('success', $vehicle['plate_number'] . ' added to queue. Est. departure: ' . $estTime . ' (' . $ruleLabel . ', ' . $waitMinutes . ' min wait).');
+        return redirect()->to('/staff/queue')->with('success', $vehicle['plate_number'] . ' added to queue for ' . ($route['destination'] ?? 'route') . '. Departs ~' . $waitMinutes . ' min after boarding starts (' . $ruleLabel . ').');
     }
 
     public function updateStatus($id, $status)
@@ -246,6 +255,18 @@ class Queue extends BaseController
         if ($status == 'departed') {
             $data['departure_time'] = date('Y-m-d H:i:s');
             $data['position'] = 0; // Remove from active positions
+        } elseif ($status == 'boarding') {
+            // The departure interval starts NOW (when boarding begins), not when
+            // the vehicle was queued. Re-evaluate the rule for the current time.
+            $qItem      = $this->queueModel->find($id);
+            $route      = $qItem ? $this->routeModel->find($qItem['route_id']) : null;
+            $terminalId = (int) ($route['terminal_id'] ?? 1);
+            $routeId    = $qItem ? (int) $qItem['route_id'] : null;
+            $waitMinutes = (new DepartureRuleModel())->getWaitMinutesForTime(date('H:i:s'), $terminalId, $routeId);
+            $data['estimated_departure'] = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
+        } elseif ($status == 'waiting') {
+            // Re-queued: clear the countdown until boarding starts again.
+            $data['estimated_departure'] = null;
         }
 
         // Use transaction to prevent race conditions during position reordering
@@ -254,16 +275,9 @@ class Queue extends BaseController
 
         $this->queueModel->update($id, $data);
 
-        // Reorder positions if departed or canceled
-        if ($status == 'departed' || $status == 'canceled') {
-            $remainingQueue = $this->queueModel->whereIn('status', ['waiting', 'boarding'])
-                                               ->orderBy('position', 'ASC')
-                                               ->findAll();
-            $pos = 1;
-            foreach ($remainingQueue as $item) {
-                $this->queueModel->update($item['id'], ['position' => $pos++]);
-            }
-        }
+        // Keep the active queue ordered by departure time (boarding by ETA,
+        // then waiting by arrival). Also renumbers after a depart/cancel.
+        $this->queueModel->reorderByDeparture();
 
         $db->transComplete();
 

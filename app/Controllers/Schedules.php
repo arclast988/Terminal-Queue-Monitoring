@@ -67,10 +67,9 @@ class Schedules extends BaseController
 
         // Calculate full status
         foreach ($schedules as &$s) {
-            if (empty($s['estimated_departure'])) {
-                // Fallback for legacy records that don't have an explicit estimated departure
-                $s['estimated_departure'] = $s['arrival_time'];
-            }
+            // estimated_departure is intentionally left null while a vehicle is
+            // only "waiting" (the countdown starts at boarding). The view renders
+            // "Waiting" for those rows instead of a real time.
             $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
         }
         unset($s);

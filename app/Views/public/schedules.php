@@ -822,7 +822,7 @@
                                         </span>
                                     <?php else: ?>
                                         <span class="time-display">
-                                            <?= date('g:i A', strtotime($schedule['estimated_departure'])) ?>
+                                            <?= !empty($schedule['estimated_departure']) ? date('g:i A', strtotime($schedule['estimated_departure'])) : 'Waiting' ?>
                                         </span>
                                         <div style="font-size: 11px; color: var(--text-muted);">
                                             <?= $schedule['current_passengers'] ?>/<?= $schedule['capacity'] ?> passengers
@@ -927,7 +927,7 @@
                 } else if (s.is_full) {
                     dep = '<span class="time-display" style="background:#16a34a;color:white">FULL</span>';
                 } else {
-                    dep = '<span class="time-display">' + (s.estimated_departure_formatted || '--:-- --') + '</span><div style="font-size:11px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
+                    dep = '<span class="time-display">' + (s.estimated_departure_formatted || 'Waiting') + '</span><div style="font-size:11px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
                 }
                 function escHtml(v) {
                     if (v === null || v === undefined) return '';

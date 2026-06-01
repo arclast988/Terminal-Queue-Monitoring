@@ -278,7 +278,7 @@
                     <div class="col-6 py-1">
                         <div class="text-muted small">Est. departure</div>
                         <div class="fw-semibold small text-primary">
-                            <?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A' ?>
+                            <?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
                         </div>
                     </div>
                     <div class="col-6 py-1">

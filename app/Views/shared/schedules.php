@@ -192,7 +192,7 @@
                                         <span class="badge bg-success fs-6">FULL — Ready</span>
                                     <?php else: ?>
                                         <span class="badge bg-primary fs-6">
-                                            <?= date('g:i A', strtotime($s['estimated_departure'])) ?>
+                                            <?= !empty($s['estimated_departure']) ? date('g:i A', strtotime($s['estimated_departure'])) : 'Waiting' ?>
                                         </span>
                                         <small class="text-muted d-block"><?= $s['current_passengers'] ?>/<?= $s['capacity'] ?>
                                             passengers</small>
