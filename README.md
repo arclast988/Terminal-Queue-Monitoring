@@ -13,13 +13,14 @@ This project runs on **Nginx + PHP-FPM + MariaDB** inside **WSL (Ubuntu)** — n
 
 ### Local quick start (Windows)
 1. **Clone into any folder** (e.g. `C:\projects\jeepneynvans`) — keep the folder name `jeepneynvans`. The launcher auto-detects its own location, so it does **not** need to live in XAMPP's `htdocs`; you can move it out and uninstall XAMPP entirely.
-2. **Create your `.env`** — copy the bundled template:
+2. **(Optional) Pre-create `.env`.** You can skip this — `start_system.bat` creates `.env` for you on first run. Only do it if you want the file in place beforehand:
    ```
    copy env .env
    ```
-   The launcher's defaults already match (DB user `jeepney_user` / `12345678`); only edit `.env` to change credentials or enable email.
+   On first launch, `start_system.bat` creates `.env` (if missing) and writes the matching DB credentials (`jeepney_user` / `12345678`) automatically. Edit `.env` only to change credentials or enable email.
 3. **Double-click `start_system.bat`.** It runs everything inside WSL:
    - detects your installed PHP version and starts MariaDB, PHP-FPM, and Nginx,
+   - creates `.env` with the matching DB credentials (if it doesn't exist yet),
    - auto-creates the database and `jeepney_user`, importing `jeepneynvans.sql` if the tables are missing,
    - starts the real-time WebSocket server,
    - waits for Nginx, then opens the app.
@@ -37,15 +38,15 @@ cd /mnt/c/path/to/jeepneynvans
 Both scripts auto-detect the project root, sanity-check that they're running in WSL, and reuse the same Linux-side logic (`ubuntu_migration/wsl_local_up.sh` / `wsl_local_down.sh`) as the `.bat` launchers — so behavior and output are identical. First run may need `chmod +x start_system.sh stop_system.sh`.
 
 ### Database
-The app's defaults live in `app/Config/Database.php` and are created automatically by `start_system.bat`:
+`start_system.bat` (via `ubuntu_migration/wsl_local_up.sh`) auto-creates the database and the `jeepney_user` account, then writes matching credentials into your `.env`:
 ```
-hostname = 127.0.0.1
+hostname = localhost
 database = jeepneynvans
 username = jeepney_user
 password = 12345678
 port     = 3306
 ```
-To use different credentials, set the matching `database.default.*` keys in `.env`.
+These `.env` values override the stock defaults in `app/Config/Database.php` (which ships as the framework's `root` / no-password placeholder). To use different credentials, edit the `database.default.*` keys in `.env`.
 
 #### Empty database via migrations (no sample data)
 From the project root inside WSL: `php spark migrate`, then create a first admin user (via a seeder or manually).

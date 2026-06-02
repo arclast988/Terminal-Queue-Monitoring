@@ -76,11 +76,24 @@ apt-get install -y git curl unzip ca-certificates lsb-release gnupg software-pro
 apt-get install -y mariadb-server mariadb-client
 
 # PHP 8.2 — add the ondrej PPA only if 8.2 isn't already available.
+# Linux Mint reports its own codename (e.g. 'wilma'/'virginia'), which the
+# ondrej PPA doesn't carry; /etc/os-release exposes the Ubuntu base codename
+# in UBUNTU_CODENAME, so pin the PPA to that instead of Mint's codename.
+. /etc/os-release 2>/dev/null || true
 if ! apt-cache show "php${PHP_VER}-cli" >/dev/null 2>&1; then
-    say "PHP ${PHP_VER} not in the base repos; adding the ondrej/php PPA…"
-    add-apt-repository -y ppa:ondrej/php 2>/dev/null \
-        || die "Could not add a PHP ${PHP_VER} repository. On Debian add Sury's repo (https://deb.sury.org/), then re-run."
-    apt-get update -y
+    if [ -n "${UBUNTU_CODENAME:-}" ]; then          # Ubuntu OR Ubuntu-based (Mint)
+        say "PHP ${PHP_VER} not in base repos; adding ondrej/php (base: ${UBUNTU_CODENAME})…"
+        add-apt-repository -y ppa:ondrej/php 2>/dev/null || true
+        # If add-apt-repository used Mint's codename, rewrite it to the Ubuntu base.
+        if [ -n "${VERSION_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
+            sed -i "s/\b${VERSION_CODENAME}\b/${UBUNTU_CODENAME}/g" \
+                /etc/apt/sources.list.d/ondrej-*.list \
+                /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null || true
+        fi
+        apt-get update -y
+    else                                            # Debian / LMDE (no UBUNTU_CODENAME)
+        die "Could not add a PHP ${PHP_VER} repo. On Debian/LMDE add Sury's repo (https://deb.sury.org/), then re-run."
+    fi
 fi
 apt-get install -y \
     "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" \
