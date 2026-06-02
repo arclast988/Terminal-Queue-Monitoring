@@ -75,25 +75,31 @@ apt-get install -y git curl unzip ca-certificates lsb-release gnupg software-pro
 
 apt-get install -y mariadb-server mariadb-client
 
-# PHP 8.2 — add the ondrej PPA only if 8.2 isn't already available.
-# Linux Mint reports its own codename (e.g. 'wilma'/'virginia'), which the
-# ondrej PPA doesn't carry; /etc/os-release exposes the Ubuntu base codename
-# in UBUNTU_CODENAME, so pin the PPA to that instead of Mint's codename.
+# PHP 8.2+ — add the PHP repository first to make sure we have access to the latest versions.
 . /etc/os-release 2>/dev/null || true
-if ! apt-cache show "php${PHP_VER}-cli" >/dev/null 2>&1; then
-    if [ -n "${UBUNTU_CODENAME:-}" ]; then          # Ubuntu OR Ubuntu-based (Mint)
-        say "PHP ${PHP_VER} not in base repos; adding ondrej/php (base: ${UBUNTU_CODENAME})…"
-        add-apt-repository -y ppa:ondrej/php 2>/dev/null || true
-        # If add-apt-repository used Mint's codename, rewrite it to the Ubuntu base.
-        if [ -n "${VERSION_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
-            sed -i "s/\b${VERSION_CODENAME}\b/${UBUNTU_CODENAME}/g" \
-                /etc/apt/sources.list.d/ondrej-*.list \
-                /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null || true
-        fi
-        apt-get update -y
-    else                                            # Debian / LMDE (no UBUNTU_CODENAME)
-        die "Could not add a PHP ${PHP_VER} repo. On Debian/LMDE add Sury's repo (https://deb.sury.org/), then re-run."
+if [ -n "${UBUNTU_CODENAME:-}" ]; then          # Ubuntu OR Ubuntu-based (Mint)
+    say "Adding ondrej/php PPA (base: ${UBUNTU_CODENAME}) to access latest PHP versions…"
+    add-apt-repository -y ppa:ondrej/php 2>/dev/null || true
+    # If add-apt-repository used Mint's codename, rewrite it to the Ubuntu base.
+    if [ -n "${VERSION_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
+        sed -i "s/\b${VERSION_CODENAME}\b/${UBUNTU_CODENAME}/g" \
+            /etc/apt/sources.list.d/ondrej-*.list \
+            /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null || true
     fi
+    apt-get update -y
+elif ! apt-cache show "php${PHP_VER}-cli" >/dev/null 2>&1; then
+    # On Debian/LMDE, advise adding Sury's repo if 8.2 is missing
+    die "Could not add a PHP repository. On Debian/LMDE please add Sury's repo (https://deb.sury.org/), then re-run."
+fi
+
+# Automatically detect the latest supported PHP version (8.2 or newer)
+say "Searching for the latest supported PHP version..."
+LATEST_PHP="$(apt-cache pkgnames | grep -E '^php(8\.[2-9]|9\.[0-9]+)-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+if [ -n "$LATEST_PHP" ]; then
+    PHP_VER="$LATEST_PHP"
+    ok "Found PHP ${PHP_VER} as the latest available version."
+else
+    warn "Could not query apt-cache for newer PHP versions; defaulting to PHP ${PHP_VER}."
 fi
 apt-get install -y \
     "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" \

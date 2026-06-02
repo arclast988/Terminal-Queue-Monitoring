@@ -28,17 +28,23 @@ apt-get install -y mariadb-server mariadb-client
 service mariadb start 2>/dev/null || service mysql start 2>/dev/null || true
 echo "[OK] MariaDB installed."
 
-# --- 3. PHP 8.2 via ondrej PPA + CodeIgniter 4 extensions ---
+# --- 3. PHP (latest available 8.2+) via ondrej PPA + CodeIgniter 4 extensions ---
 echo ""
-echo "[3/6] Installing PHP 8.2 and required extensions..."
+echo "[3/6] Adding ondrej/php PPA and checking for PHP version..."
 if ! grep -rq "ondrej/php" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
     add-apt-repository -y ppa:ondrej/php
     apt-get update -y
 fi
+
+# Detect latest available PHP version (defaulting to 8.2 if detection fails)
+PHP_VER="$(apt-cache pkgnames | grep -E '^php(8\.[2-9]|9\.[0-9]+)-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+[ -n "$PHP_VER" ] || PHP_VER="8.2"
+
+echo "Installing PHP ${PHP_VER} and required extensions..."
 apt-get install -y \
-    php8.2-cli php8.2-fpm php8.2-mysql php8.2-intl php8.2-mbstring \
-    php8.2-curl php8.2-xml php8.2-zip php8.2-gd php8.2-opcache php8.2-common
-echo "[OK] $(php8.2 -v | head -n1)"
+    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" "php${PHP_VER}-mbstring" \
+    "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip" "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
+echo "[OK] $(php${PHP_VER} -v | head -n1)"
 
 # --- 4. Composer ---
 echo ""
@@ -46,9 +52,9 @@ echo "[4/6] Installing Composer..."
 if ! command -v composer >/dev/null 2>&1; then
     curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
     HASH="$(curl -sS https://composer.github.io/installer.sig)"
-    php8.2 -r "if (hash_file('sha384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); exit(1); }"
+    "php${PHP_VER}" -r "if (hash_file('sha384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); exit(1); }"
     echo ""
-    php8.2 /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+    "php${PHP_VER}" /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
     rm -f /tmp/composer-setup.php
 fi
 echo "[OK] $(composer --version 2>/dev/null | head -n1)"
@@ -73,7 +79,7 @@ fi
 echo ""
 echo "====================================================================="
 echo "  INSTALLATION COMPLETE."
-echo "  - MariaDB, PHP 8.2-FPM, Nginx, Composer installed."
+echo "  - MariaDB, PHP ${PHP_VER}-FPM, Nginx, Composer installed."
 echo "  - Project dependencies installed in ${PROJECT_ROOT}/vendor."
 echo ""
 echo "  Next: from Windows, double-click start_system.bat."
