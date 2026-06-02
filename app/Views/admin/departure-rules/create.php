@@ -7,7 +7,7 @@ $defaultMins = old('wait_mins') ?? ($oldWaitMinutes % 60);
 $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
 ?>
 
-<div class="row mb-3">
+<div class="row mt-4 mb-3">
     <div class="col-md-6">
         <h2>Add Departure Rule</h2>
     </div>

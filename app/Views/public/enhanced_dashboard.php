@@ -44,19 +44,6 @@
             line-height: 1.6;
         }
 
-        /* --- Header & Navigation --- */
-        header {
-            background: var(--white);
-            padding: 15px 5%;
-            box-shadow: var(--shadow-sm);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1010;
-        }
-
         .logo-section {
             display: flex;
             align-items: center;
@@ -561,9 +548,94 @@
 
         /* --- Main Content Layout --- */
         .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 30px;
+            display: block;
+        }
+
+        /* --- Quick Filter Bar --- */
+        .quick-filter-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #edf2f7;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .filter-chip:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(21, 101, 192, 0.05);
+        }
+
+        .filter-chip.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            box-shadow: 0 3px 8px rgba(21, 101, 192, 0.25);
+        }
+
+        .no-results-message {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            background: white;
+            border-radius: 16px;
+            border: 1px dashed #e2e8f0;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        /* --- Fare Badge inside queue card --- */
+        .fare-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 4px 11px;
+            border-radius: 20px;
+            margin-top: 6px;
+            letter-spacing: 0.2px;
+        }
+
+        .fare-badge i {
+            font-size: 11px;
         }
 
         /* --- Queue Section --- */
@@ -815,20 +887,15 @@
         }
 
         /* --- Responsive Queries --- */
-        @media (max-width: 1100px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-
-            .sidebar-section {
-                position: relative;
-                top: 0;
-            }
-        }
-
         @media (max-width: 992px) {
             .header-info {
                 display: none !important;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .quick-filter-bar {
+                padding: 12px 15px;
             }
         }
 
@@ -1247,8 +1314,21 @@
             </div>
         </div>
 
+        <?php
+        $fareMap = [];
+        foreach (($routes ?? []) as $r) {
+            $fkey = strtolower(trim($r['origin'])) . '|' . strtolower(trim($r['destination'])) . '|' . strtolower(trim($r['vehicle_type']));
+            $fareMap[$fkey] = $r['fare'];
+        }
+        $uniqueDestinations = [];
+        foreach (($active_queue ?? []) as $qi) {
+            $d = $qi['destination'] ?? '';
+            if ($d && !in_array($d, $uniqueDestinations)) $uniqueDestinations[] = $d;
+        }
+        ?>
+
         <div class="main-layout">
-            <!-- Left: Terminal Queue -->
+            <!-- Terminal Queue (full width) -->
             <section class="queue-section">
                 <div class="section-header">
                     <h3 class="section-title"><i class="fas fa-stream"></i> Terminal Queue</h3>
@@ -1258,19 +1338,40 @@
                     </div>
                 </div>
 
+                <!-- Quick Filters -->
+                <div class="quick-filter-bar" id="quickFilterBar">
+                    <div class="filter-group" id="filterDestGroup">
+                        <button class="filter-chip active" data-filter="all" data-type="all">All Routes</button>
+                        <?php foreach ($uniqueDestinations as $dest): ?>
+                        <button class="filter-chip" data-filter="<?= esc(strtolower($dest)) ?>" data-type="destination">
+                            <i class="fas fa-map-marker-alt" style="font-size:11px;"></i> <?= esc($dest) ?>
+                        </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div id="queueNoResults" class="no-results-message" style="display:none;">
+                    <i class="fas fa-search" style="font-size:28px;margin-bottom:10px;opacity:0.4;display:block;"></i>
+                    No vehicles match the selected filter.
+                </div>
+
                 <div class="queue-container" id="queueList">
                     <?php if (!empty($active_queue)): ?>
                         <?php foreach ($active_queue as $item): ?>
-                            <div class="queue-card">
-                                <?php
-                                $imgMap = [
-                                    'van' => 'van.png',
-                                    'jeepney' => 'jeep.png',
-                                    'minibus' => 'minibus.png'
-                                ];
-                                $vType = strtolower($item['vehicle_type'] ?? '');
-                                $imgFile = $imgMap[$vType] ?? 'van.png';
-                                ?>
+                            <?php
+                            $imgMap = [
+                                'van' => 'van.png',
+                                'jeepney' => 'jeep.png',
+                                'minibus' => 'minibus.png'
+                            ];
+                            $vType = strtolower($item['vehicle_type'] ?? '');
+                            $imgFile = $imgMap[$vType] ?? 'van.png';
+                            $fkey = strtolower(trim($item['origin'])) . '|' . strtolower(trim($item['destination'])) . '|' . $vType;
+                            $cardFare = $fareMap[$fkey] ?? null;
+                            ?>
+                            <div class="queue-card"
+                                 data-vehicle-type="<?= esc($vType) ?>"
+                                 data-destination="<?= esc(strtolower($item['destination'])) ?>">
                                 <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?>"
                                     style="position: relative; width: clamp(50px, 11vw, 75px); flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>"
@@ -1293,6 +1394,11 @@
                                             <p><i class="fas fa-map-marker-alt"></i> Route: <strong><?= esc($item['origin']) ?>
                                                     - <?= esc($item['destination']) ?></strong></p>
                                         </div>
+                                        <?php if ($cardFare !== null): ?>
+                                        <div class="fare-badge">
+                                            <i class="fas fa-tag"></i> ₱<?= number_format($cardFare, 0) ?> Fare
+                                        </div>
+                                        <?php endif; ?>
                                         <div class="capacity-info" style="margin-top: 5px;">
                                             <div style="display: flex; align-items: center; gap: 10px;">
                                                 <i class="fas fa-users" style="color: var(--primary);"></i>
@@ -1354,60 +1460,6 @@
                 </div>
             </section>
 
-            <!-- Right: Route Fares -->
-            <aside class="fares-section" id="fares-section">
-                <div class="sidebar-section">
-                    <h3 class="sidebar-title"><i class="fas fa-paper-plane"></i> Recent Departures</h3>
-
-                    <div class="fare-search">
-                        <input type="text" id="deptSearch" placeholder="Filter departures...">
-                    </div>
-
-                    <div class="fare-list" id="deptList">
-                        <?php if (!empty($recent_departures)): ?>
-                            <?php foreach ($recent_departures as $dept): ?>
-                                <a href="<?= base_url('history?q=' . urlencode($dept['destination'])) ?>"
-                                    class="fare-item" style="text-decoration: none;">
-                                    <div>
-                                        <div class="f-dest"><?= esc($dept['origin']) ?> - <?= esc($dept['destination']) ?></div>
-                                        <div class="f-type"><?= esc($dept['plate_number']) ?></div>
-                                    </div>
-                                    <div class="f-price" style="font-size: 14px;">
-                                        <?= date('h:i A', strtotime($dept['departure_time'])) ?>
-                                    </div>
-                                </a>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <p class="text-muted text-center py-3">No recent departures.</p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="text-center mt-3">
-                        <a href="<?= base_url('history') ?>" class="btn btn-sm btn-outline-primary"
-                            style="font-size: 12px; font-weight: 600; text-decoration: none;">View All History</a>
-                    </div>
-                </div>
-
-                <div class="sidebar-section mt-4" id="route-fares">
-                    <h3 class="sidebar-title"><i class="fas fa-tags"></i> Route Fares</h3>
-                    <div class="fare-list" id="routeFaresList">
-                        <?php if (!empty($routes)): ?>
-                            <?php foreach ($routes as $route): ?>
-                                <div class="fare-item">
-                                    <div>
-                                        <div class="f-dest"><?= esc($route['origin']) ?> - <?= esc($route['destination']) ?>
-                                        </div>
-                                        <div class="f-type"><?= vehicle_type_badge($route['vehicle_type']) ?></div>
-                                    </div>
-                                    <div class="f-price">₱<?= number_format($route['fare'], 0) ?></div>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <p class="text-muted text-center py-3">No active routes.</p>
-                        <?php endif; ?>
-                    </div>
-
-                </div>
-            </aside>
         </div>
     </div>
 
@@ -1422,6 +1474,49 @@
         var _fetchPending = false;
         var baseUrl = '<?= base_url() ?>';
         var routeAverageDepartures = <?= json_encode($route_average_departures ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        var fareMap = <?= json_encode($fareMap ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+
+        // --- Active filter state ---
+        var activeFilterType = 'all';
+        var activeFilterValue = 'all';
+
+        function applyQueueFilter() {
+            var cards = document.querySelectorAll('#queueList .queue-card');
+            var visible = 0;
+            cards.forEach(function (card) {
+                var show = false;
+                if (activeFilterType === 'all') {
+                    show = true;
+                } else if (activeFilterType === 'vehicle') {
+                    show = (card.dataset.vehicleType || '') === activeFilterValue;
+                } else if (activeFilterType === 'destination') {
+                    show = (card.dataset.destination || '') === activeFilterValue;
+                }
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            var noRes = document.getElementById('queueNoResults');
+            if (noRes) noRes.style.display = (visible === 0 && cards.length > 0) ? '' : 'none';
+        }
+
+        function initFilterChips() {
+            document.querySelectorAll('#filterDestGroup .filter-chip').forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    document.querySelectorAll('#filterDestGroup .filter-chip').forEach(function (c) { c.classList.remove('active'); });
+                    this.classList.add('active');
+                    activeFilterType = this.dataset.type;
+                    activeFilterValue = this.dataset.filter;
+                    applyQueueFilter();
+                });
+            });
+        }
+
+        function getFareBadgeHtml(origin, destination, vType) {
+            var key = origin.toLowerCase().trim() + '|' + destination.toLowerCase().trim() + '|' + vType.toLowerCase().trim();
+            var fare = fareMap[key];
+            if (fare === undefined || fare === null) return '';
+            return '<div class="fare-badge"><i class="fas fa-tag"></i> &#8369;' + Number(fare).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' Fare</div>';
+        }
 
         // Smooth Scrolling for Anchor Links
         document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -1464,8 +1559,6 @@
 
         // Fingerprint cache to avoid flickering DOM rewrites when data hasn't changed
         var _lastQueueFingerprint = '';
-        var _lastDeptFingerprint = '';
-        var _lastRoutesFingerprint = '';
         var _lastRouteAverageFingerprint = makeFingerprint(routeAverageDepartures);
 
         function makeFingerprint(arr) {
@@ -1574,7 +1667,10 @@
                                 var posColors = { van: '#c62828', jeepney: '#1565c0', minibus: '#2e7d32' };
                                 var posColor = posColors[vType] || '#1e293b';
                                 var posBadge = '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill border border-white border-2 queue-pos-badge" style="background:' + posColor + ';color:#fff;font-size:13px;font-weight:800;padding:4px 9px;min-width:28px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.25);z-index:2;">#' + item.position + '</span>';
-                                queueHtml += '<div class="queue-card">'
+                                var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
+                                // Normalise MySQL datetime to ISO-8601 so new Date() parses on Safari too
+                                var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
+                                queueHtml += '<div class="queue-card" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '">'
                                     + '<div class="vehicle-type-icon vehicle-type-' + vType + '" style="position:relative;width:clamp(50px,11vw,75px);flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
                                     + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
                                     + posBadge
@@ -1586,6 +1682,7 @@
                                     + '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>'
                                     + '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>'
                                     + '</div>'
+                                    + fareBadge
                                     + '<div class="capacity-info" style="margin-top:5px;">'
                                     + '<div style="display:flex;align-items:center;gap:10px;">'
                                     + '<i class="fas fa-users" style="color:var(--primary);"></i>'
@@ -1602,66 +1699,32 @@
                                     + '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
                                     + (item.estimated_departure_formatted || 'Waiting')
                                     + '</div>'
-                                    + (item.status === 'boarding' && item.estimated_departure ? '<div class="countdown-timer" data-departure="' + item.estimated_departure + '"></div>' : '')
+                                    + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
                                     + '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'
                                     + '</div>'
                                     + '</div>'
                                     + '</div>';
                             });
                             queueList.innerHTML = queueHtml;
+                            // Rebuild destination filter chips from live data
+                            var destGroup = document.getElementById('filterDestGroup');
+                            if (destGroup) {
+                                var dests = [];
+                                data.active_queue.forEach(function (it) { if (it.destination && dests.indexOf(it.destination) === -1) dests.push(it.destination); });
+                                var prevActive = activeFilterValue;
+                                var html = '<button class="filter-chip' + (prevActive === 'all' ? ' active' : '') + '" data-filter="all" data-type="all">All Routes</button>';
+                                dests.forEach(function (d) {
+                                    var isActive = prevActive === d.toLowerCase();
+                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination"><i class="fas fa-map-marker-alt" style="font-size:11px;"></i> ' + d + '</button>';
+                                });
+                                destGroup.innerHTML = html;
+                                initFilterChips();
+                            }
                         } else {
                             queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
                         }
+                        applyQueueFilter();
                         observeItems();
-                    }
-
-                    // Only rewrite Departures DOM if data changed
-                    var deptFP = makeFingerprint(data.recent_departures);
-                    if (deptFP !== _lastDeptFingerprint) {
-                        _lastDeptFingerprint = deptFP;
-                        var deptList = document.getElementById('deptList');
-                        if (data.recent_departures.length > 0) {
-                            var deptHtml = '';
-                            data.recent_departures.forEach(function (dept) {
-                                var url = '<?= base_url("history?q=") ?>' + encodeURIComponent(dept.destination);
-                                deptHtml += '<a href="' + url + '" class="fare-item" style="text-decoration:none;">'
-                                    + '<div>'
-                                    + '<div class="f-dest">' + dept.origin + ' - ' + dept.destination + '</div>'
-                                    + '<div class="f-type">' + dept.plate_number + '</div>'
-                                    + '</div>'
-                                    + '<div class="f-price" style="font-size:14px;">' + dept.departure_time_formatted + '</div>'
-                                    + '</a>';
-                            });
-                            deptList.innerHTML = deptHtml;
-                        } else {
-                            deptList.innerHTML = '<p class="text-muted text-center py-3">No recent departures.</p>';
-                        }
-                    }
-
-                    // Update Route Fares sidebar if data changed
-                    if (data.routes) {
-                        var routesFP = makeFingerprint(data.routes);
-                        if (routesFP !== _lastRoutesFingerprint) {
-                            _lastRoutesFingerprint = routesFP;
-                            var faresList = document.getElementById('routeFaresList');
-                            if (faresList) {
-                                if (data.routes.length > 0) {
-                                    var faresHtml = '';
-                                    data.routes.forEach(function (route) {
-                                        faresHtml += '<div class="fare-item">'
-                                            + '<div>'
-                                            + '<div class="f-dest">' + route.origin + ' - ' + route.destination + '</div>'
-                                            + '<div class="f-type"><span class="vehicle-type-chip vehicle-type-' + route.vehicle_type + '">' + route.vehicle_type + '</span></div>'
-                                            + '</div>'
-                                            + '<div class="f-price">₱' + Number(route.fare).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + '</div>'
-                                            + '</div>';
-                                    });
-                                    faresList.innerHTML = faresHtml;
-                                } else {
-                                    faresList.innerHTML = '<p class="text-muted text-center py-3">No active routes.</p>';
-                                }
-                            }
-                        }
                     }
                 })
                 .catch(function (error) {
@@ -1672,18 +1735,8 @@
                 });
         }
 
-        // Local filtering for departure list
-        var deptSearch = document.getElementById('deptSearch');
-        if (deptSearch) {
-            deptSearch.addEventListener('input', function () {
-                var query = this.value.toLowerCase();
-                var depts = document.querySelectorAll('#deptList .fare-item');
-                depts.forEach(function (dept) {
-                    var text = dept.innerText.toLowerCase();
-                    dept.style.display = text.includes(query) ? 'flex' : 'none';
-                });
-            });
-        }
+        // Wire up quick filter chips
+        initFilterChips();
 
         var routeAverageCard = document.getElementById('routeAverageCard');
         var routeAverageModal = document.getElementById('routeAverageModal');

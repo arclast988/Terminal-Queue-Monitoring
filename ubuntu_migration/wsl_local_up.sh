@@ -16,30 +16,6 @@ echo "====================================================================="
 
 cd "$PROJECT_ROOT" || { echo "[ERROR] Project not found at $PROJECT_ROOT"; exit 1; }
 
-# --- 0. Point the app at the DB this launcher creates (mirrors install_linux.sh) ---
-# Without this, the app uses app/Config/Database.php's stock root/'' default and
-# cannot connect ("Unable to connect to the database") on a fresh clone.
-ENV_FILE="${PROJECT_ROOT}/.env"
-if [ ! -f "$ENV_FILE" ]; then
-    [ -f "${PROJECT_ROOT}/env" ] && cp "${PROJECT_ROOT}/env" "$ENV_FILE" || : > "$ENV_FILE"
-fi
-ENV_MARKER="# === wsl_local_up.sh (auto-generated) ==="
-if ! grep -qF "$ENV_MARKER" "$ENV_FILE"; then
-    cat >> "$ENV_FILE" <<EOF
-
-$ENV_MARKER
-CI_ENVIRONMENT = development
-app.baseURL = ''
-database.default.hostname = localhost
-database.default.database = ${DB_NAME}
-database.default.username = ${DB_USER}
-database.default.password = ${DB_PASS}
-database.default.DBDriver = MySQLi
-database.default.port = 3306
-EOF
-    echo "[OK] Wrote database settings to .env (${DB_USER})."
-fi
-
 # --- 1. Detect installed PHP version (highest under /etc/php) ---
 PHPVER="$(ls /etc/php 2>/dev/null | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail -n1)"
 [ -z "$PHPVER" ] && PHPVER="8.2"

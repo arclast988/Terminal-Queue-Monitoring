@@ -1,6 +1,6 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
-<div class="row mb-3">
+<div class="row mt-4 mb-3">
     <div class="col-md-6">
         <h2>Add New Route / Fare</h2>
     </div>

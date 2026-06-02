@@ -28,7 +28,7 @@
         font-size: 14px;
         text-align: center;
         position: relative;
-        z-index: 1001;
+        z-index: 1;
     }
     .advisory-icon {
         width: 24px;
@@ -56,6 +56,15 @@
         100% { transform: translate(-100%, 0); }
     }
 
+    /* --- Fixed wrapper that locks advisory bar + nav together --- */
+    .sticky-top-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1010;
+    }
+
     /* --- Guest Header (logo + nav + clock + language) --- */
     .guest-header {
         background: #ffffff;
@@ -64,9 +73,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        position: sticky;
-        top: 0;
-        z-index: 1010;
+        position: relative;
+        z-index: 1;
     }
     .guest-header .logo-section {
         display: flex;
@@ -261,6 +269,7 @@
     }
 </style>
 
+<div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
 <div class="advisory-bar">
     <div class="advisory-icon"><i class="fas fa-bullhorn"></i></div>
@@ -338,6 +347,7 @@
     <!-- Mobile overlay backdrop -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
 </header>
+</div><!-- /.sticky-top-wrapper -->
 
 <?php if (empty($skip_breadcrumb)): ?>
 <!-- Breadcrumbs -->
@@ -430,5 +440,20 @@
         }
         document.body.style.overflow = isOpen ? 'hidden' : '';
     }
+
+    // Keep body padding-top in sync with the fixed header height so content
+    // never hides under it. Runs once on load and again on every resize.
+    (function () {
+        var bar = document.querySelector('.sticky-top-wrapper');
+        if (!bar) return;
+        function syncPadding() {
+            document.body.style.paddingTop = bar.offsetHeight + 'px';
+        }
+        syncPadding();
+        if (window.ResizeObserver) {
+            new ResizeObserver(syncPadding).observe(bar);
+        }
+        window.addEventListener('resize', syncPadding, { passive: true });
+    })();
 </script>
 
