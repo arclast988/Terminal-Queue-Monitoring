@@ -145,7 +145,7 @@ Open browser DevTools (F12) on Staff Queue page:
 | `public/js/ws-client.js` | Shared client-side WebSocket module |
 | `app/Views/staff/queue/index.php` | WebSocket client handler |
 | `start_system.bat` | One-click WSL launcher (Nginx + PHP-FPM + MariaDB + WS) |
-| `ubuntu_migration/` | Production Ubuntu provisioning (`deploy.sh`, `nginx.conf`, systemd unit) |
+| `ubuntu_migration/` | Nginx configs + WebSocket systemd unit (`nginx.conf`, `nginx_local.conf`, `jeepney-websocket.service`) |
 
 ---
 

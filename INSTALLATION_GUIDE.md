@@ -18,8 +18,8 @@ sudo ./install_linux.sh
 ```
 After install, manage services via:
 ```bash
-sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket
-sudo systemctl status nginx php8.2-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php8.4-fpm mariadb jeepney-websocket
+sudo systemctl status nginx php8.4-fpm mariadb jeepney-websocket
 ```
 
 ---
@@ -113,8 +113,8 @@ mysql -u jeepney_user -p12345678 jeepneynvans < jeepneynvans.sql
 - **Logs**: Check Windows Event Viewer or WSL `/var/log/nginx/`
 
 ### Linux
-- **Start**: `sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket`
-- **Stop**: `sudo systemctl stop nginx php8.2-fpm mariadb jeepney-websocket`
+- **Start**: `sudo systemctl start nginx php8.4-fpm mariadb jeepney-websocket`
+- **Stop**: `sudo systemctl stop nginx php8.4-fpm mariadb jeepney-websocket`
 - **Status**: `systemctl status nginx` (shows 2 sec response time if healthy)
 - **Logs**: `sudo tail -f /var/log/nginx/error.log`
 

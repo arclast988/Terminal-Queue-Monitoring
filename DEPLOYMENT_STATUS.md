@@ -26,7 +26,7 @@ sudo chmod +x install_linux.sh
 sudo ./install_linux.sh
 
 # 3. Start services
-sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket
+sudo systemctl start nginx php8.4-fpm mariadb jeepney-websocket
 
 # 4. Open browser to http://localhost/
 ```
@@ -98,10 +98,10 @@ wsl sudo tail -f /var/log/nginx/error.log
 ### Linux
 ```bash
 # Check service status
-sudo systemctl status nginx php8.2-fpm mariadb jeepney-websocket
+sudo systemctl status nginx php8.4-fpm mariadb jeepney-websocket
 
 # Restart services
-sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php8.4-fpm mariadb jeepney-websocket
 
 # View logs
 sudo tail -f /var/log/nginx/error.log
@@ -140,7 +140,7 @@ email.SMTPPass = your-app-password
 
 Both proxy:
 - Static files from `public/`
-- PHP requests to `php8.2-fpm.sock`
+- PHP requests to the PHP-FPM socket (`php8.x-fpm.sock`)
 - WebSocket `/ws` to `127.0.0.1:8081`
 
 ---
@@ -181,10 +181,10 @@ cat .env | grep database.default
 ### "502 Bad Gateway" in browser
 ```bash
 # PHP-FPM socket issue - check it exists
-ls -la /run/php/php8.2-fpm.sock
+ls -la /run/php/php8.4-fpm.sock
 
 # Restart PHP-FPM
-sudo systemctl restart php8.2-fpm  # Linux
+sudo systemctl restart php8.4-fpm  # Linux
 wsl sudo service php8.2-fpm restart  # Windows WSL
 ```
 
@@ -226,7 +226,7 @@ wsl tail -f writable/logs/ws.log  # Windows WSL
 | Installation | ✓ Automated via .bat | ✓ Automated via .sh | **READY** |
 | Database | ✓ Auto-created | ✓ Auto-created | **READY** |
 | Web Server | ✓ Nginx in WSL | ✓ Nginx native | **READY** |
-| PHP-FPM | ✓ WSL 8.2 | ✓ Native 8.2 | **READY** |
+| PHP-FPM | ✓ WSL 8.2 | ✓ Native 8.4 | **READY** |
 | Configuration | ✓ Dynamic paths | ✓ Fixed paths | **READY** |
 | WebSocket | ✓ Via start_system.bat | ✓ systemd service | **READY** |
 | Email | ✓ SMTP configurable | ✓ SMTP configurable | **READY** |

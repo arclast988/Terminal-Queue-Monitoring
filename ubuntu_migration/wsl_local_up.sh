@@ -45,8 +45,7 @@ if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
     echo "[OK] Database already populated."
 else
     echo "[INFO] Database tables not found. Importing SQL dump..."
-    mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans.sql" 2>/dev/null \
-        || mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans_clean.sql" 2>/dev/null
+    mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans.sql" 2>/dev/null
     if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
         echo "[OK] Database imported successfully."
     else

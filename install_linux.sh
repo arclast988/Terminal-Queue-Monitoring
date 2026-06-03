@@ -204,9 +204,6 @@ if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
 elif [ -f "$PROJECT_ROOT/jeepneynvans.sql" ]; then
     mysql "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans.sql"      || warn "Import reported errors."
     ok "Imported jeepneynvans.sql"
-elif [ -f "$PROJECT_ROOT/jeepneynvans_clean.sql" ]; then
-    mysql "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans_clean.sql" || warn "Import reported errors."
-    ok "Imported jeepneynvans_clean.sql"
 else
     warn "No SQL dump found — the app will start with an empty database."
 fi

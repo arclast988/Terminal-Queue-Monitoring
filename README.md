@@ -52,8 +52,8 @@ On a real Linux machine, one script installs **and** starts everything (as syste
 3. **Open the app:** <http://localhost/>
 4. **Manage it afterwards** (no launcher needed — it runs on boot):
    ```
-   sudo systemctl status  nginx php8.2-fpm mariadb jeepney-websocket
-   sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket   # or stop / start
+   sudo systemctl status  nginx php8.4-fpm mariadb jeepney-websocket
+   sudo systemctl restart nginx php8.4-fpm mariadb jeepney-websocket   # or stop / start
    ```
    The installer prints the exact command with the PHP version it installed (8.2/8.3/8.4).
 
@@ -77,7 +77,7 @@ From the project root inside WSL: `php spark migrate`, then create a first admin
 Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for you. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for details. The app still works without it — pages fall back to polling.
 
 ### Production (Ubuntu server)
-For a single machine the **Linux quick start** above (`install_linux.sh`) is the simplest path — it provisions the whole stack plus the WebSocket systemd service in one shot. For a manual/step-by-step provision on **Ubuntu** you can also use `ubuntu_migration/deploy.sh`; either way see **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for the Nginx site and WebSocket service details.
+For a single machine the **Linux quick start** above (`install_linux.sh`) is the simplest path — it provisions the whole stack plus the WebSocket systemd service in one shot. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for the Nginx site and WebSocket service details.
 
 ### Troubleshooting
 - **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `wsl ss -ltn` and `ls /run/php/`.
