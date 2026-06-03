@@ -125,9 +125,10 @@ if ! grep -qF "$ENV_MARKER" "$ENV_FILE"; then
 
 $ENV_MARKER
 CI_ENVIRONMENT = development
-# Empty baseURL => CodeIgniter auto-detects the request host, so the app works
-# both at http://localhost/ and at http://<this-machine-LAN-IP>/.
-app.baseURL = ''
+# Explicit localhost baseURL: reliable for a single-machine setup (e.g. a
+# classroom Linux Mint demo). For LAN/multi-device access, set this to the
+# machine's LAN IP (or '' to auto-detect the request host) in .env on that box.
+app.baseURL = 'http://localhost/'
 database.default.hostname = localhost
 database.default.database = ${DB_NAME}
 database.default.username = ${DB_USER}
