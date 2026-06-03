@@ -19,8 +19,11 @@ echo
 
 # --- 1. Sanity-check: must be running inside WSL ---
 if ! grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null; then
-    echo "[ERROR] This launcher is for WSL only."
-    echo "        On a real Ubuntu server, use ubuntu_migration/deploy.sh instead."
+    echo "[ERROR] This launcher is for WSL (Windows) only."
+    echo "        On native Linux (e.g. Mint/Ubuntu), set up once with:"
+    echo "            sudo ./install_linux.sh"
+    echo "        After that the app runs as systemd services; start/stop with:"
+    echo "            sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket"
     exit 1
 fi
 

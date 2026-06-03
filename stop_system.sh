@@ -20,8 +20,9 @@ echo
 
 # --- 1. Sanity-check: must be running inside WSL ---
 if ! grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null; then
-    echo "[ERROR] This shutdown script is for WSL only."
-    echo "        On a real Ubuntu server, manage services with systemctl directly."
+    echo "[ERROR] This shutdown script is for WSL (Windows) only."
+    echo "        On native Linux (e.g. Mint/Ubuntu), stop the services with:"
+    echo "            sudo systemctl stop nginx php8.2-fpm mariadb jeepney-websocket"
     exit 1
 fi
 
