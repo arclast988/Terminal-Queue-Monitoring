@@ -92,9 +92,11 @@ elif ! apt-cache show "php${PHP_VER}-cli" >/dev/null 2>&1; then
     die "Could not add a PHP repository. On Debian/LMDE please add Sury's repo (https://deb.sury.org/), then re-run."
 fi
 
-# Automatically detect the latest supported PHP version (8.2 or newer)
+# Detect the newest fully-packaged PHP in the 8.2-8.4 range (matches composer's ^8.2).
+# Cap the upper bound: a brand-new release (e.g. 8.5) may publish php8.x-cli before
+# all its extensions (php8.x-opcache, etc.), which would break the apt install below.
 say "Searching for the latest supported PHP version..."
-LATEST_PHP="$(apt-cache pkgnames | grep -E '^php(8\.[2-9]|9\.[0-9]+)-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+LATEST_PHP="$(apt-cache pkgnames | grep -E '^php8\.[2-4]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
 if [ -n "$LATEST_PHP" ]; then
     PHP_VER="$LATEST_PHP"
     ok "Found PHP ${PHP_VER} as the latest available version."
