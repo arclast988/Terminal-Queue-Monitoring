@@ -2,13 +2,13 @@
 
 A CodeIgniter 4 web app for managing van/jeepney terminal queues, routes, vehicle dispatch, and admin audit logs.
 
-## Setup (Windows + WSL Ubuntu, Nginx — no XAMPP)
+## Setup (Windows/WSL or native Linux — Nginx + PHP-FPM + MariaDB, no XAMPP)
 
 This project runs on **Nginx + PHP-FPM + MariaDB** inside **WSL (Ubuntu)** — no XAMPP/Apache.
 
 ### Prerequisites
 - **WSL 2** with Ubuntu, and inside it: **PHP 8.2+** (CLI + FPM), **Nginx**, and **MariaDB**.
-  - Need to install them? Double-click `install_system.bat` — one-time Windows installer that sets up WSL, Ubuntu, the full LAMP stack, Composer, and the project's PHP dependencies. (For production Ubuntu servers, see `ubuntu_migration/deploy.sh` instead.)
+  - Need to install them? Double-click `install_system.bat` — one-time Windows installer that sets up WSL, Ubuntu, the full LAMP stack, Composer, and the project's PHP dependencies. (On a **native Linux** machine — Mint/Ubuntu/Debian — skip all of this and use `install_linux.sh`; see the **Linux quick start** below.)
 - **Git**.
 
 ### Local quick start (Windows)
@@ -36,6 +36,29 @@ cd /mnt/c/path/to/jeepneynvans
 ```
 Both scripts auto-detect the project root, sanity-check that they're running in WSL, and reuse the same Linux-side logic (`ubuntu_migration/wsl_local_up.sh` / `wsl_local_down.sh`) as the `.bat` launchers — so behavior and output are identical. First run may need `chmod +x start_system.sh stop_system.sh`.
 
+### Linux quick start (Mint / Ubuntu / Debian — native, no WSL)
+On a real Linux machine, one script installs **and** starts everything (as systemd services that auto-start on boot):
+1. **Clone the project:**
+   ```
+   cd ~
+   git clone https://github.com/jaylocano-stack/Capstone-Project.git jeepneynvans
+   cd jeepneynvans
+   ```
+2. **Run the one-shot installer** — installs PHP + Nginx + MariaDB + Composer, creates and seeds the database, sets up the WebSocket service, and starts it all:
+   ```
+   sudo ./install_linux.sh
+   ```
+   (If you get "permission denied", run `chmod +x install_linux.sh` first.)
+3. **Open the app:** <http://localhost/>
+4. **Manage it afterwards** (no launcher needed — it runs on boot):
+   ```
+   sudo systemctl status  nginx php8.2-fpm mariadb jeepney-websocket
+   sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket   # or stop / start
+   ```
+   The installer prints the exact command with the PHP version it installed (8.2/8.3/8.4).
+
+> ⚠️ `start_system.sh` / `stop_system.sh` are **WSL/Windows-only** and will refuse to run on native Linux — on Mint/Ubuntu use `install_linux.sh` + `systemctl` instead.
+
 ### Database
 The app's defaults live in `app/Config/Database.php` and are created automatically by `start_system.bat`:
 ```
@@ -54,7 +77,7 @@ From the project root inside WSL: `php spark migrate`, then create a first admin
 Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for you. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for details. The app still works without it — pages fall back to polling.
 
 ### Production (Ubuntu server)
-Provision a server with `ubuntu_migration/deploy.sh`, then follow its printed checklist and **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** to deploy the app, the Nginx site, and the WebSocket systemd service.
+For a single machine the **Linux quick start** above (`install_linux.sh`) is the simplest path — it provisions the whole stack plus the WebSocket systemd service in one shot. For a manual/step-by-step provision on **Ubuntu** you can also use `ubuntu_migration/deploy.sh`; either way see **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for the Nginx site and WebSocket service details.
 
 ### Troubleshooting
 - **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `wsl ss -ltn` and `ls /run/php/`.
