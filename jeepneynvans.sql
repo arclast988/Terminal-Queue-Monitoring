@@ -216,7 +216,7 @@ CREATE TABLE `migrations` (
   `time` int(11) NOT NULL,
   `batch` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 
 -- ========================================================
@@ -268,4 +268,6 @@ INSERT INTO `migrations` (`id`, `version`, `class`, `group`, `namespace`, `time`
 (16, '2026-05-22-200000', 'App\\Database\\Migrations\\RedesignFaresAndConfigs', 'default', 'App', 1779449014, 2),
 (17, '2026-05-22-201000', 'App\\Database\\Migrations\\HardenFareRedesignTerminalIndexes', 'default', 'App', 1779451028, 3),
 (18, '2026-05-22-202000', 'App\\Database\\Migrations\\NormalizeRouteOriginsFromTerminals', 'default', 'App', 1779452161, 4),
-(19, '2026-05-22-203000', 'App\\Database\\Migrations\\RemoveRouteOriginUseTerminal', 'default', 'App', 1779454489, 5);
+(19, '2026-05-22-203000', 'App\\Database\\Migrations\\RemoveRouteOriginUseTerminal', 'default', 'App', 1779454489, 5),
+(20, '2026-05-23-000000', 'App\\Database\\Migrations\\RenameLogsToAuditLogs', 'default', 'App', 1779540889, 6),
+(21, '2026-05-31-000000', 'App\\Database\\Migrations\\AddRouteIdToDepartureRules', 'default', 'App', 1780231689, 7);

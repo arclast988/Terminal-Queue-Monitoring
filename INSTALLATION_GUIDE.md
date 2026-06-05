@@ -4,7 +4,7 @@
 
 ### Windows 10/11 (Recommended: WSL 2 + Ubuntu)
 1. Double-click **`install_system.bat`** (admin mode required)
-   - Automatically installs WSL 2, Ubuntu, PHP 8.2, Nginx, MariaDB, Composer
+   - Automatically installs WSL 2, Ubuntu, PHP 8.2–8.4 (auto-detected), Nginx, MariaDB, Composer
    - Takes 5-10 minutes on first run
 2. After install, double-click **`start_system.bat`** to launch
 3. Browser opens to `http://localhost/` automatically
@@ -16,10 +16,32 @@ cd ~/Downloads/jeepneynvans
 sudo chmod +x install_linux.sh
 sudo ./install_linux.sh
 ```
-After install, manage services via:
+After install, manage services via (`8.x` = the PHP version the installer detected — check with `ls /run/php/`):
 ```bash
-sudo systemctl restart nginx php8.4-fpm mariadb jeepney-websocket
-sudo systemctl status nginx php8.4-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php8.x-fpm mariadb jeepney-websocket
+sudo systemctl status nginx php8.x-fpm mariadb jeepney-websocket
+```
+
+---
+
+## Verifying the Installation
+
+After install, confirm everything is healthy:
+
+- **Windows**: double-click **`VERIFY_SETUP.bat`** — every check should show ✓
+- **Linux**: run **`bash VERIFY_SETUP.sh`** — every check should show ✓
+
+The script checks PHP, Nginx, MariaDB (12 tables created), the `.env` configuration, Composer
+packages, and the WebSocket service. Then open <http://localhost/> — you should see the live
+terminal monitor. Log in with the seeded admin account (the username is in the `users` table).
+
+Quick manual checks if a service looks down:
+
+```bash
+# Windows (WSL terminal)               # Linux (native)
+wsl sudo service nginx status          sudo systemctl status nginx
+wsl sudo service mariadb status        sudo systemctl status mariadb
+wsl pgrep -f 'spark ws:serve'          systemctl status jeepney-websocket
 ```
 
 ---
@@ -113,8 +135,8 @@ mysql -u jeepney_user -p12345678 jeepneynvans < jeepneynvans.sql
 - **Logs**: Check Windows Event Viewer or WSL `/var/log/nginx/`
 
 ### Linux
-- **Start**: `sudo systemctl start nginx php8.4-fpm mariadb jeepney-websocket`
-- **Stop**: `sudo systemctl stop nginx php8.4-fpm mariadb jeepney-websocket`
+- **Start**: `sudo systemctl start nginx php8.x-fpm mariadb jeepney-websocket`
+- **Stop**: `sudo systemctl stop nginx php8.x-fpm mariadb jeepney-websocket`
 - **Status**: `systemctl status nginx` (shows 2 sec response time if healthy)
 - **Logs**: `sudo tail -f /var/log/nginx/error.log`
 
@@ -149,6 +171,17 @@ wsl pgrep -f 'spark ws:serve'
 # Linux
 systemctl status jeepney-websocket
 ```
+
+---
+
+## Security Notes
+
+- **Web root**: only the `public/` directory is exposed to the web server; `app/`, `system/`, and
+  `.env` live outside the document root and are not reachable over HTTP.
+- **Database user**: `jeepney_user` is bound to localhost — not exposed to the network.
+- **Default admin password**: change the seeded admin credentials after first login.
+- **Firewall (Linux)**: only port 80 (HTTP) needs to be open; the WebSocket ports (8081/8082) are
+  used locally and proxied through Nginx.
 
 ---
 

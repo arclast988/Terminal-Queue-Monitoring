@@ -52,8 +52,8 @@ On a real Linux machine, one script installs **and** starts everything (as syste
 3. **Open the app:** <http://localhost/>
 4. **Manage it afterwards** (no launcher needed — it runs on boot):
    ```
-   sudo systemctl status  nginx php8.4-fpm mariadb jeepney-websocket
-   sudo systemctl restart nginx php8.4-fpm mariadb jeepney-websocket   # or stop / start
+   sudo systemctl status  nginx php8.x-fpm mariadb jeepney-websocket   # replace 8.x with your installed version
+   sudo systemctl restart nginx php8.x-fpm mariadb jeepney-websocket   # or stop / start
    ```
    The installer prints the exact command with the PHP version it installed (8.2/8.3/8.4).
 
