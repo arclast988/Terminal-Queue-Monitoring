@@ -4,39 +4,31 @@
     <h1 class="h2">Dispatcher Dashboard</h1>
 </div>
 
-<div class="row">
-    <div class="col-12 col-md-6 col-xl-4 mb-4">
-        <div class="card bg-primary text-white shadow">
-            <div class="card-body">
-                <h6 class="text-uppercase small">Active in Queue</h6>
-                <h2 class="mb-0"><?= $active_queue_count ?> Vehicles</h2>
-            </div>
-            <div class="card-footer border-0">
-                <a href="<?= base_url('staff/queue') ?>" class="text-white small text-decoration-none">
-                    Manage Queue <i class="bi bi-chevron-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-    
+<div class="tq-stat-grid mb-4">
+    <a href="<?= base_url('staff/queue') ?>" class="tq-stat">
+        <span class="tq-stat__icon is-mint"><i class="bi bi-people-fill"></i></span>
+        <span class="tq-stat__body">
+            <span class="tq-stat__value"><?= $active_queue_count ?></span>
+            <span class="tq-stat__label">Active in Queue &middot; Manage &rarr;</span>
+        </span>
+    </a>
+
     <?php foreach ($terminals as $terminal): ?>
-        <div class="col-12 col-md-6 col-xl-4 mb-4">
-            <div class="card border-info shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-muted small text-uppercase"><?= esc($terminal['name']) ?></h6>
-                    <div class="d-flex justify-content-between align-items-end">
-                        <h3 class="mb-0"><?= esc($terminal['capacity']) ?> <small class="fs-6">pax capacity</small></h3>
-                        <i class="bi bi-building fs-2 text-info opacity-25"></i>
-                    </div>
-                    <p class="mb-0 small text-muted"><?= esc($terminal['location']) ?></p>
-                </div>
-            </div>
+        <div class="tq-stat">
+            <span class="tq-stat__icon is-cyan"><i class="bi bi-building"></i></span>
+            <span class="tq-stat__body">
+                <span class="tq-stat__value"><?= esc($terminal['capacity']) ?></span>
+                <span class="tq-stat__label"><?= esc($terminal['name']) ?> &middot; <?= esc($terminal['location']) ?></span>
+            </span>
         </div>
     <?php endforeach; ?>
 </div>
 
-<h4 class="mt-4 mb-3">Recent Departures</h4>
-<div class="card shadow-sm">
+<div class="tq-board-head">
+    <h2 class="tq-section-title"><i class="fas fa-plane-departure"></i> Recent Departures</h2>
+    <span class="tq-live"><span class="tq-live__dot"></span> Live</span>
+</div>
+<div class="tq-panel">
     <div class="table-responsive table-responsive-card">
         <table class="table table-hover mb-0">
             <thead class="table-light">
@@ -86,15 +78,10 @@
         refreshUrl:   '<?= base_url('staff/dashboard') ?>',
         tableSelector: '.table-hover tbody',
         extraRefresh: function(newDoc) {
-            // Update Active in Queue count
-            var newCount = newDoc.querySelector('.card.bg-primary .card-body h2');
-            var curCount = document.querySelector('.card.bg-primary .card-body h2');
-            if (newCount && curCount) curCount.textContent = newCount.textContent;
-
-            // Update stat cards (terminal capacity, etc.)
-            var newCards = newDoc.querySelectorAll('.card.border-info .card-body');
-            var curCards = document.querySelectorAll('.card.border-info .card-body');
-            newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].innerHTML = card.innerHTML; });
+            // Update stat tiles (active-in-queue + terminal capacities) — same data, new markup
+            var newVals = newDoc.querySelectorAll('.tq-stat__value');
+            var curVals = document.querySelectorAll('.tq-stat__value');
+            newVals.forEach(function(v, i) { if (curVals[i]) curVals[i].textContent = v.textContent; });
         }
     });
 </script>

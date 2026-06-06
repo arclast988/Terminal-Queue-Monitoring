@@ -8,10 +8,23 @@
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <meta name="csrf-header" content="<?= csrf_header() ?>">
 
+    <!-- Pre-paint theme boot: operator screens default to dark, honor saved choice (no flash) -->
+    <script>
+        (function () {
+            try {
+                var t = window.localStorage.getItem('tqTheme') || 'dark';
+                document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -383,6 +396,10 @@
             background-color: #6a1b9a !important;
         }
     </style>
+
+    <!-- Modern terminal theme layer (loads last so its tokens/components win over Bootstrap) -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/terminal-theme.css') ?>">
+    <script defer src="<?= base_url('js/theme-toggle.js') ?>"></script>
 </head>
 
 <body

@@ -3,8 +3,8 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">Admin Dashboard </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
-        <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#reportFilterModal">
-            <i class="fas fa-file-invoice me-1 text-white"></i> Generate Report
+        <button type="button" class="tq-btn tq-btn--primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal">
+            <i class="fas fa-file-invoice"></i> Generate Report
         </button>
     </div>
 </div>
@@ -33,77 +33,42 @@
     </div>
 <?php endif; ?>
 
-<div class="row">
-    <div class="col-12 col-md-6 col-xl-3 mb-4">
-        <div class="card text-white bg-primary shadow">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase mb-1">Vehicles</h6>
-                        <h2 class="mb-0"><?= $stats['vehicles'] ?> </h2>
-                    </div>
-                    <i class="bi bi-truck fs-1 opacity-50"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between small">
-                <a class="text-white stretched-link" href="<?= base_url('admin/vehicles') ?>">View Details</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-3 mb-4">
-        <div class="card text-white bg-success shadow">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase mb-1">Routes</h6>
-                        <h2 class="mb-0"><?= $stats['routes'] ?> </h2>
-                    </div>
-                    <i class="bi bi-map fs-1 opacity-50"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between small">
-                <a class="text-white stretched-link" href="<?= base_url('admin/routes') ?>">View Details</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-3 mb-4">
-        <div class="card text-white bg-info shadow">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase mb-1">Users</h6>
-                        <h2 class="mb-0"><?= $stats['users'] ?> </h2>
-                    </div>
-                    <i class="bi bi-people fs-1 opacity-50"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between small">
-                <a class="text-white stretched-link" href="<?= base_url('admin/users') ?>">View Details</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xl-3 mb-4">
-        <div class="card text-white bg-secondary shadow">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="card-title text-uppercase mb-1">Logs</h6>
-                        <h2 class="mb-0"><?= $stats['logs'] ?> </h2>
-                    </div>
-                    <i class="bi bi-journal-text fs-1 opacity-50"></i>
-                </div>
-            </div>
-            <div class="card-footer d-flex align-items-center justify-content-between small">
-                <a class="text-white stretched-link" href="<?= base_url('admin/logs') ?>">View Details</a>
-            </div>
-        </div>
-    </div>
+<div class="tq-stat-grid mb-4">
+    <a href="<?= base_url('admin/vehicles') ?>" class="tq-stat">
+        <span class="tq-stat__icon is-cyan"><i class="bi bi-truck"></i></span>
+        <span class="tq-stat__body">
+            <span class="tq-stat__value"><?= $stats['vehicles'] ?></span>
+            <span class="tq-stat__label">Vehicles</span>
+        </span>
+    </a>
+    <a href="<?= base_url('admin/routes') ?>" class="tq-stat">
+        <span class="tq-stat__icon is-mint"><i class="bi bi-map"></i></span>
+        <span class="tq-stat__body">
+            <span class="tq-stat__value"><?= $stats['routes'] ?></span>
+            <span class="tq-stat__label">Routes</span>
+        </span>
+    </a>
+    <a href="<?= base_url('admin/users') ?>" class="tq-stat">
+        <span class="tq-stat__icon is-amber"><i class="bi bi-people"></i></span>
+        <span class="tq-stat__body">
+            <span class="tq-stat__value"><?= $stats['users'] ?></span>
+            <span class="tq-stat__label">Users</span>
+        </span>
+    </a>
+    <a href="<?= base_url('admin/logs') ?>" class="tq-stat">
+        <span class="tq-stat__icon is-rose"><i class="bi bi-journal-text"></i></span>
+        <span class="tq-stat__body">
+            <span class="tq-stat__value"><?= $stats['logs'] ?></span>
+            <span class="tq-stat__label">Logs</span>
+        </span>
+    </a>
 </div>
 
-
-
-<h2 class="mt-4">Recent Activity </h2>
-<div class="card shadow-sm">
+<div class="tq-board-head">
+    <h2 class="tq-section-title"><i class="fas fa-wave-square"></i> Recent Activity</h2>
+    <span class="tq-live"><span class="tq-live__dot"></span> Live</span>
+</div>
+<div class="tq-panel">
     <div class="table-responsive table-responsive-card">
         <table class="table table-striped table-hover mb-0">
             <thead class="table-light">
@@ -142,9 +107,9 @@
         refreshUrl:   '<?= base_url('admin/dashboard') ?>',
         tableSelector: '.table-striped tbody',
         extraRefresh: function(newDoc) {
-            // Update all stat cards
-            var newCards = newDoc.querySelectorAll('.card.text-white .card-body h2');
-            var curCards = document.querySelectorAll('.card.text-white .card-body h2');
+            // Update all stat tiles (same data, new markup)
+            var newCards = newDoc.querySelectorAll('.tq-stat__value');
+            var curCards = document.querySelectorAll('.tq-stat__value');
             newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].textContent = card.textContent; });
         }
     });

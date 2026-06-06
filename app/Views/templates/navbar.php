@@ -640,6 +640,9 @@
                 <a href="<?= base_url('fares') ?>"><i class="fas fa-tags"></i> Fares</a>
 
                 <div class="admin-profile">
+                    <button type="button" class="tq-theme-toggle" aria-label="Toggle light or dark mode" title="Toggle theme">
+                        <i class="fas fa-moon tq-ico-moon"></i><i class="fas fa-sun tq-ico-sun"></i>
+                    </button>
                     <div class="profile-info">
                         <span class="profile-name"><?= session()->get('full_name') ?? 'System Administrator' ?></span>
                         <span class="profile-role">Admin</span>
@@ -659,6 +662,9 @@
                 <a href="<?= base_url('fares') ?>"><i class="fas fa-tags"></i> Fares</a>
 
                 <div class="admin-profile">
+                    <button type="button" class="tq-theme-toggle" aria-label="Toggle light or dark mode" title="Toggle theme">
+                        <i class="fas fa-moon tq-ico-moon"></i><i class="fas fa-sun tq-ico-sun"></i>
+                    </button>
                     <div class="profile-info">
                         <span class="profile-name"><?= session()->get('full_name') ?? 'Dispatcher' ?></span>
                         <span class="profile-role">Dispatcher</span>
