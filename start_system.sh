@@ -23,7 +23,7 @@ if ! grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null; then
     echo "        On native Linux (e.g. Mint/Ubuntu), set up once with:"
     echo "            sudo ./install_linux.sh"
     echo "        After that the app runs as systemd services; start/stop with:"
-    echo "            sudo systemctl start nginx php8.x-fpm mariadb jeepney-websocket   # replace 8.x with your installed version (ls /run/php/)"
+    echo "            sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket"
     exit 1
 fi
 

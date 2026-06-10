@@ -10,8 +10,8 @@ use CodeIgniter\Database\Migration;
  * "Destination" column after Terminal in the admin/staff rule list.
  *
  * Idempotent: guarded with fieldExists / information_schema so it is safe
- * against the live DB and DBs seeded from jeepneynvans.sql
- * (which already contains departure_rules + routes).
+ * against the live DB and DBs seeded from jeepneynvans.sql /
+ * jeepneynvans_clean.sql (which already contain departure_rules + routes).
  */
 class AddRouteIdToDepartureRules extends Migration
 {

@@ -24,6 +24,8 @@ The Palompon Transit Management System now has **real-time WebSocket support** f
   - Adding vehicles to queue ✓
   - Changing queue status (waiting → boarding → departed) ✓
   - Updating passenger counts ✓
+- Admin Queue: `app/Controllers/Admin/Queue.php`
+  - Same operations with broadcasts ✓
 - All changes trigger `queue_update` broadcasts automatically
 
 ### 4. **Client-Side Real-Time Handler**
@@ -57,7 +59,7 @@ Open a WSL (Ubuntu) shell and run:
 ```bash
 cd /mnt/c/path/to/jeepneynvans     # wherever you cloned it
 sudo service mariadb start
-sudo service php8.x-fpm start      # use whatever version is installed (ls /run/php/)
+sudo service php8.2-fpm start      # use whatever version is installed
 sudo service nginx start
 php spark ws:serve                 # WebSocket server — leave this running
 ```
@@ -143,7 +145,7 @@ Open browser DevTools (F12) on Staff Queue page:
 | `public/js/ws-client.js` | Shared client-side WebSocket module |
 | `app/Views/staff/queue/index.php` | WebSocket client handler |
 | `start_system.bat` | One-click WSL launcher (Nginx + PHP-FPM + MariaDB + WS) |
-| `ubuntu_migration/` | Nginx configs + WebSocket systemd unit (`nginx.conf`, `nginx_local.conf`, `jeepney-websocket.service`) |
+| `ubuntu_migration/` | Production Ubuntu provisioning (`deploy.sh`, `nginx.conf`, systemd unit) |
 
 ---
 

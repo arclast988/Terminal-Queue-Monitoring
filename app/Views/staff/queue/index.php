@@ -196,8 +196,8 @@
     <h1 class="h2">Queue Operations </h1>
     <div class="btn-toolbar mb-2 mb-md-0">
         <?php if (empty($noRoutesAssigned)): ?>
-        <button class="tq-btn tq-btn--primary" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
-            <i class="bi bi-plus-lg"></i> Add Vehicle to Queue
+        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
+            <i class="bi bi-plus-lg me-1"></i> Add Vehicle to Queue
         </button>
         <?php endif; ?>
     </div>
@@ -234,57 +234,118 @@
     </div>
 <?php endif; ?>
 
-<?php
-    // Presentational bucketing of the SAME $queue by its existing status (no new stages).
-    $waitingQueue  = [];
-    $boardingQueue = [];
-    if (!empty($queue) && is_array($queue)) {
-        foreach ($queue as $q) {
-            if (($q['status'] ?? '') === 'boarding') {
-                $boardingQueue[] = $q;
-            } else {
-                $waitingQueue[] = $q;
-            }
-        }
-    }
-?>
-<div class="tq-board" id="queue-list">
+<div class="queue-list" id="queue-list">
+    <?php if (!empty($queue) && is_array($queue)): ?>
+        <?php foreach ($queue as $item): ?>
+            <?php
+                $isFull = (int)$item['current_passengers'] >= (int)$item['capacity'];
+                $isBoarding = $item['status'] === 'boarding';
+                $isWaiting  = $item['status'] === 'waiting';
+            ?>
+            <div class="q-card mb-3" id="card-<?= $item['id'] ?>">
 
-    <!-- Stage: In Queue (waiting) -->
-    <section class="tq-col tq-col--wait">
-        <div class="tq-col__head">
-            <h2 class="tq-col__title"><span class="tq-dot"></span> In Queue</h2>
-            <span class="tq-col__count"><?= count($waitingQueue) ?></span>
-        </div>
-        <div class="tq-col__body">
-            <?php if (!empty($waitingQueue)): ?>
-                <?php foreach ($waitingQueue as $item): ?>
-                    <?= view('staff/queue/_queue_card', ['item' => $item]) ?>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="tq-empty"><i class="bi bi-inbox"></i> No vehicles waiting in queue.</div>
-            <?php endif; ?>
-        </div>
-    </section>
+                <!-- Header row: position badge + plate + status -->
+                <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
+                    <span class="q-pos badge bg-secondary-subtle text-secondary rounded-pill">#<?= $item['position'] ?></span>
+                    <?php
+                        $imgMap  = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
+                        $vType = strtolower($item['vehicle_type'] ?? '');
+                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                    ?>
+                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
+                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">
+                    </span>
+                    <span class="fw-semibold flex-grow-1"><?= esc($item['plate_number']) ?>
+                        <?= vehicle_type_badge($vType) ?>
+                    </span>
+                    <?php if ($isWaiting): ?>
+                        <span class="badge bg-warning text-dark rounded-pill">Waiting</span>
+                    <?php else: ?>
+                        <span class="badge bg-info text-dark rounded-pill">Boarding</span>
+                    <?php endif; ?>
+                </div>
 
-    <!-- Stage: Boarding -->
-    <section class="tq-col tq-col--go">
-        <div class="tq-col__head">
-            <h2 class="tq-col__title"><span class="tq-dot"></span> Boarding</h2>
-            <span class="tq-col__count"><?= count($boardingQueue) ?></span>
-        </div>
-        <div class="tq-col__body">
-            <?php if (!empty($boardingQueue)): ?>
-                <?php foreach ($boardingQueue as $item): ?>
-                    <?= view('staff/queue/_queue_card', ['item' => $item]) ?>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="tq-empty"><i class="bi bi-hourglass-split"></i> No vehicle is boarding yet.</div>
-            <?php endif; ?>
-        </div>
-    </section>
+                <!-- Info grid -->
+                <div class="row g-0 px-3 pt-2 pb-1">
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Route</div>
+                        <div class="fw-semibold small"><?= esc($item['origin']) ?> &rarr; <?= esc($item['destination']) ?></div>
+                    </div>
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Arrived</div>
+                        <div class="fw-semibold small"><?= date('h:i A', strtotime($item['arrival_time'])) ?></div>
+                    </div>
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Est. departure</div>
+                        <div class="fw-semibold small text-primary">
+                            <?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
+                        </div>
+                    </div>
+                    <div class="col-6 py-1">
+                        <div class="text-muted small">Capacity</div>
+                        <div class="fw-semibold small"><?= $item['capacity'] ?> seats</div>
+                    </div>
+                </div>
 
+                <!-- Passenger counter -->
+                <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex align-items-center gap-2">
+                    <span class="text-muted small flex-shrink-0">Passengers</span>
+                    <div class="d-flex align-items-center gap-2 ms-auto">
+                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
+                            class="btn btn-danger rounded-circle" style="width:36px;height:36px;padding:0;font-size:18px;line-height:1;">
+                            &minus;
+                        </button>
+                        <span id="passenger-count-<?= $item['id'] ?>"
+                            class="fw-bold <?= $isFull ? 'text-danger' : '' ?>" style="min-width:64px;text-align:center;font-size:15px;">
+                            <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
+                            <?php if ($isFull): ?><br><span class="badge bg-danger" style="font-size:9px;">FULL</span><?php endif; ?>
+                        </span>
+                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
+                            class="btn btn-success rounded-circle" style="width:36px;height:36px;padding:0;font-size:18px;line-height:1;">
+                            &#43;
+                        </button>
+                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'max')"
+                            class="btn btn-danger" style="font-size:11px;padding:5px 10px;">MAX</button>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex gap-2 px-3 pb-3">
+                    <?php if ($isWaiting): ?>
+                        <button onclick="updateStatus(<?= $item['id'] ?>, 'boarding', null, this)"
+                            class="btn btn-primary flex-fill" style="white-space:nowrap;">
+                            Start Boarding
+                        </button>
+                    <?php elseif ($isBoarding): ?>
+                        <button type="button" class="btn btn-success flex-fill" style="white-space:nowrap;"
+                            data-bs-toggle="modal" data-bs-target="#confirmDepartModal<?= $item['id'] ?>">
+                            Depart
+                        </button>
+                    <?php endif; ?>
+                    <button onclick="if(confirm('Cancel this trip?')) updateStatus(<?= $item['id'] ?>, 'canceled', null, this)"
+                        class="btn btn-outline-danger flex-fill" style="white-space:nowrap;">
+                        Cancel
+                    </button>
+                </div>
+
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            Queue is currently empty.
+        </div>
+    <?php endif; ?>
 </div>
+
+<style>
+.q-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+</style>
 <!-- Depart Confirmation Modals - Placed at page level for proper positioning -->
 <?php if (!empty($queue) && is_array($queue)): ?>
     <?php foreach ($queue as $item): ?>
@@ -441,32 +502,6 @@
         tableSelector: 'table tbody',
         modalSelector: '[id^="confirmDepartModal"]'
     });
-
-    // Presentational only: mirror the capacity bar to the existing count span.
-    // Watches passenger-count text (changed by debounce, poll, or WebSocket) and
-    // animates the bar/pop — no data flow change.
-    (function () {
-        function syncCapBar(span) {
-            var cap = span.closest('.tq-cap');
-            if (!cap) return;
-            var parts = span.textContent.trim().split('/');
-            var cur = parseInt(parts[0], 10) || 0;
-            var max = parseInt(parts[1], 10) || 1;
-            var pct = Math.min(100, (cur / Math.max(1, max)) * 100);
-            cap.style.setProperty('--pct', pct + '%');
-            cap.setAttribute('data-fill', pct >= 100 ? 'full' : (pct >= 70 ? 'mid' : 'low'));
-        }
-        document.querySelectorAll('.tq-cap__count').forEach(function (span) {
-            syncCapBar(span);
-            var obs = new MutationObserver(function () {
-                syncCapBar(span);
-                span.classList.remove('tq-count-pop');
-                void span.offsetWidth;            // restart animation
-                span.classList.add('tq-count-pop');
-            });
-            obs.observe(span, { childList: true, characterData: true, subtree: true });
-        });
-    })();
 
     // Handle Add to Queue Form — show route info on vehicle selection
     document.addEventListener('DOMContentLoaded', function() {

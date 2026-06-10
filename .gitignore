@@ -1,56 +1,74 @@
-# --- PHP/CodeIgniter Runtime ---
-writable/session/*
-!writable/session/index.html
-!writable/session/.gitkeep
-writable/cache/*
-!writable/cache/index.html
-writable/logs/*.log
-writable/debugbar/*.json
-writable/sync_token.txt
-writable/ws_server.pid
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
-# --- USER UPLOADS ---
-writable/uploads/*
-!writable/uploads/index.html
-!writable/uploads/.gitkeep
-
-# --- DEPENDENCIES ---
+# Dependencies
 node_modules/
-vendor/
+venv/
+.venv/
+.env
+.env.local
+.env.*
 
-# --- OS/System generated files ---
-.DS_Store
-Thumbs.db
-desktop.ini
-.vscode/
-.idea/
+# Build directories
+dist/
+build/
+target/
+.coverage
+coverage/
+htmlcov/
 
-# --- SQLite databases ---
-*.sqlite
-*.db
-
-# --- Claude Code personal session data ---
-.claude/
-
-# --- Numbered SQL backups from phpMyAdmin / Windows (keep only jeepneynvans.sql) ---
-jeepneynvans (*).sql
-
-# --- PHPUnit / test artifacts ---
-.phpunit.result.cache
-
-# --- Composer self-installer (if dropped into the repo root) ---
-composer.phar
-
-# --- Editor / temp swap files ---
+# Logs and temp files
+*.log
+*.tmp
 *.swp
 *.swo
-*~
-*.bak
-*.tmp
 
-# --- Build / packaging artifacts ---
+# Editors and IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Cache directories
+.mypy_cache/
+.pytest_cache/
+.gradle/
+
+# Compressed files
 *.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
 *.tar.gz
-
-# --- Local environment / secrets (never commit) ---
-.env
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```

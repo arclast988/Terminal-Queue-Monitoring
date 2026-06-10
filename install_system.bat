@@ -17,7 +17,7 @@ echo =====================================================================
 echo   Palompon Transit Management System - First-time Installer
 echo =====================================================================
 echo.
-echo This will install:  WSL 2 (if missing), Ubuntu, MariaDB, PHP 8.2-8.4 (auto-detected),
+echo This will install:  WSL 2 (if missing), Ubuntu, MariaDB, PHP 8.2-FPM,
 echo                     Nginx, Composer, and project PHP dependencies.
 echo Disk usage:         approximately 3-4 GB.
 echo Reboot may be required after WSL is installed.

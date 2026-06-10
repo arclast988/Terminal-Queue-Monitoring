@@ -1,74 +1,93 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
-<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Announcements</h1>
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
+<div class="page-header-modern fade-in">
+    <h1 class="page-title-modern">
+        <i class="bi bi-megaphone"></i>
+        Announcements
+    </h1>
+    <?php if (session()->get('role') === 'admin'): ?>
     <div>
-        <a href="<?= base_url('admin/announcements/create') ?>" class="btn btn-primary">
+        <a href="<?= base_url('admin/announcements/create') ?>" class="btn-modern btn-modern-primary">
             <i class="bi bi-plus-circle"></i> Add Announcement
         </a>
     </div>
+    <?php endif; ?>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
+    <div class="alert-modern alert-modern-success fade-in">
+        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('success')) ?></div>
+    </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
+    <div class="alert-modern alert-modern-danger fade-in">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('error')) ?></div>
+    </div>
 <?php endif; ?>
 
-<div class="card shadow">
-    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
-        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-megaphone me-1"></i> Announcement List</span>
+<div class="modern-card shadow-modern fade-in">
+    <div class="modern-card-header">
+        <span class="modern-card-title">
+            <i class="bi bi-list" style="color: var(--primary-red);"></i>
+            Announcement List
+        </span>
     </div>
-    <div class="card-body">
-        <div class="table-responsive table-responsive-card">
-            <table class="table table-striped table-hover">
-                <thead class="table-light">
+    <div class="modern-card-body">
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
                     <tr>
                         <th>ID</th>
                         <th>Terminal</th>
                         <th>Message</th>
                         <th>Status</th>
                         <th>Created</th>
+                        <?php if (session()->get('role') === 'admin'): ?>
                         <th>Actions</th>
+                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($announcements) && is_array($announcements)): ?>
                         <?php foreach ($announcements as $a): ?>
                             <tr>
-                                <td data-label="ID"><?= $a['id'] ?></td>
-                                <td data-label="Terminal"><span class="badge bg-dark"><?= esc($a['terminal_name'] ?? '—') ?></span></td>
+                                <td data-label="ID"><strong>#<?= $a['id'] ?></strong></td>
+                                <td data-label="Terminal"><span class="badge-modern badge-modern-primary"><?= esc($a['terminal_name'] ?? '—') ?></span></td>
                                 <td data-label="Message"><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?></td>
                                 <td data-label="Status">
                                     <?php if ($a['is_active']): ?>
-                                        <span class="badge bg-success">Active</span>
+                                        <span class="badge-modern badge-modern-success"><i class="bi bi-check-circle-fill"></i> Active</span>
                                     <?php else: ?>
-                                        <span class="badge bg-secondary">Inactive</span>
+                                        <span class="badge-modern badge-modern-info"><i class="bi bi-pause-circle-fill"></i> Inactive</span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Created"><?= $a['created_at'] ? date('M d, Y H:i', strtotime($a['created_at'])) : '-' ?></td>
+                                <?php if (session()->get('role') === 'admin'): ?>
                                 <td data-label="Actions">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>"
-                                            class="btn btn-outline-primary" title="Edit">
-                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
+                                    <div class="d-flex gap-2">
+                                        <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
+                                            <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <form action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
+                                            <button type="submit" class="btn-modern btn-modern-sm" style="background: #FEE2E2; color: #dc2626;" title="Delete">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </form>
                                     </div>
                                 </td>
+                                <?php endif; ?>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">No announcements yet. Add one to show on the
-                                guest dashboard.</td>
+                            <td colspan="<?= session()->get('role') === 'admin' ? '6' : '5' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">No announcements yet. Add one to show on the guest dashboard.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

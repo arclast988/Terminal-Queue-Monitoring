@@ -1,22 +1,34 @@
-<?= view('templates/header', ['title' => $title]) ?>
+<?= $this->include('templates/header') ?>
 
-<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-pencil-square text-primary me-2"></i> Edit Vehicle</h1>
-    <a href="<?= base_url('admin/vehicles') ?>" class="btn btn-secondary">
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
+<div class="page-header-modern fade-in">
+    <h1 class="page-title-modern">
+        <i class="bi bi-pencil-square"></i> Edit Vehicle
+    </h1>
+    <a href="<?= base_url('admin/vehicles') ?>" class="btn-modern btn-modern-outline">
         <i class="bi bi-arrow-left"></i> Back to Vehicles
     </a>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= session()->getFlashdata('success') ?></div>
+    <div class="alert-modern alert-modern-success">
+        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+        <div><?= session()->getFlashdata('success') ?></div>
+    </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= session()->getFlashdata('error') ?></div>
+    <div class="alert-modern alert-modern-danger">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+        <div><?= session()->getFlashdata('error') ?></div>
+    </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('errors')): ?>
-    <div class="alert alert-danger">
+    <div class="alert-modern alert-modern-danger">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
         <ul class="mb-0">
             <?php foreach (session()->getFlashdata('errors') as $error): ?>
                 <li><?= esc($error) ?></li>
@@ -25,50 +37,49 @@
     </div>
 <?php endif; ?>
 
-<!-- Edit Vehicle Form -->
-<div class="card shadow">
-    <div class="card-header">
-        <i class="bi bi-pencil-fill"></i> Update Vehicle Details
+<div class="card-modern fade-in">
+    <div class="card-header-modern">
+        <span><i class="bi bi-pencil-fill"></i> Update Vehicle Details</span>
     </div>
-    <div class="card-body">
+    <div class="card-body-modern">
         <form action="<?= base_url('admin/vehicles/update/' . $vehicle['id']) ?>" method="post">
             <?= csrf_field() ?>
             
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="plate_number" class="form-label">Plate Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="plate_number" name="plate_number" placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?? esc($vehicle['plate_number']) ?>" required>
-                    <small class="form-text text-muted">Unique identifier (required)</small>
+                    <label for="plate_number" class="form-label-modern">Plate Number <span class="text-danger">*</span></label>
+                    <input type="text" class="input-modern" id="plate_number" name="plate_number" placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?? esc($vehicle['plate_number']) ?>" required>
+                    <div class="form-text-modern">Unique identifier (required)</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="driver_name" class="form-label">Driver Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="driver_name" name="driver_name" placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?? esc($vehicle['driver_name']) ?>" required>
-                    <small class="form-text text-muted">Driver's full name</small>
+                    <label for="driver_name" class="form-label-modern">Driver Name <span class="text-danger">*</span></label>
+                    <input type="text" class="input-modern" id="driver_name" name="driver_name" placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?? esc($vehicle['driver_name']) ?>" required>
+                    <div class="form-text-modern">Driver's full name</div>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="type" class="form-label">Vehicle Type <span class="text-danger">*</span></label>
-                    <select class="form-select" id="type" name="type" required>
+                    <label for="type" class="form-label-modern">Vehicle Type <span class="text-danger">*</span></label>
+                    <select class="select-modern" id="type" name="type" required>
                         <option value="">-- Select Type --</option>
                         <option value="jeepney" <?= (old('type') ?? $vehicle['type']) == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
                         <option value="van" <?= (old('type') ?? $vehicle['type']) == 'van' ? 'selected' : '' ?>>Van</option>
                         <option value="minibus" <?= (old('type') ?? $vehicle['type']) == 'minibus' ? 'selected' : '' ?>>Minibus</option>
                     </select>
-                    <small class="form-text text-muted">Accessible to Admin and Staff</small>
+                    <div class="form-text-modern">Accessible to Admin and Staff</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="capacity" class="form-label">Passenger Capacity <span class="text-danger">*</span></label>
-                    <input type="number" class="form-control" id="capacity" name="capacity" placeholder="e.g. 16" value="<?= old('capacity') ?? esc($vehicle['capacity']) ?>" min="1" required>
-                    <small class="form-text text-muted">Maximum passengers</small>
+                    <label for="capacity" class="form-label-modern">Passenger Capacity <span class="text-danger">*</span></label>
+                    <input type="number" class="input-modern" id="capacity" name="capacity" placeholder="e.g. 16" value="<?= old('capacity') ?? esc($vehicle['capacity']) ?>" min="1" required>
+                    <div class="form-text-modern">Maximum passengers</div>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="route_id" class="form-label">Assigned Route <span class="text-danger">*</span></label>
-                    <select class="form-select" id="route_id" name="route_id" required>
+                    <label for="route_id" class="form-label-modern">Assigned Route <span class="text-danger">*</span></label>
+                    <select class="select-modern" id="route_id" name="route_id" required>
                         <option value="">-- Select Route --</option>
                         <?php if (!empty($routes)): ?>
                             <?php foreach ($routes as $r): ?>
@@ -79,35 +90,33 @@
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
-                    <small class="form-text text-muted">Route must match vehicle type</small>
+                    <div class="form-text-modern">Route must match vehicle type</div>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                    <select class="form-select" id="status" name="status" required>
+                    <label for="status" class="form-label-modern">Status <span class="text-danger">*</span></label>
+                    <select class="select-modern" id="status" name="status" required>
                         <option value="active" <?= (old('status') ?? $vehicle['status']) == 'active' ? 'selected' : '' ?>>Active</option>
                         <option value="maintenance" <?= (old('status') ?? $vehicle['status']) == 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
                     </select>
-                    <small class="form-text text-muted">Accessible to Admin and Staff</small>
+                    <div class="form-text-modern">Accessible to Admin and Staff</div>
                 </div>
             </div>
 
-            <div class="row mt-4">
-                <div class="col-12 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Update Vehicle
-                    </button>
-                    <a href="<?= base_url('admin/vehicles') ?>" class="btn btn-secondary">
-                        <i class="bi bi-x-lg"></i> Cancel
-                    </a>
-                </div>
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn-modern btn-modern-primary">
+                    <i class="bi bi-check-lg"></i> Update Vehicle
+                </button>
+                <a href="<?= base_url('admin/vehicles') ?>" class="btn-modern btn-modern-outline">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card shadow mt-3">
-    <div class="card-body">
-        <p class="text-muted">
+<div class="card-modern fade-in mt-3">
+    <div class="card-body-modern">
+        <p class="text-muted mb-0">
             <strong>Vehicle ID:</strong> <?= esc($vehicle['id']) ?><br>
             <strong>Registered:</strong> <?= date('M d, Y h:i A', strtotime($vehicle['created_at'])) ?>
         </p>
@@ -154,4 +163,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?= view('templates/footer') ?>
+<?= $this->include('templates/footer') ?>

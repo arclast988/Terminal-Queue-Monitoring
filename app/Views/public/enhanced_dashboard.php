@@ -5,28 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal Status - Palompon Transit</title>
-
-    <!-- Adaptive theme boot: high-contrast LIGHT by day (best at 15 ft in sunlight),
-         oceanic DARK after sunset. Pure presentation, no data change. -->
-    <script>
-        (function () {
-            try {
-                var o = window.localStorage.getItem('tqPublicOverride');
-                var h = new Date().getHours();
-                var t = (o === 'light' || o === 'dark') ? o : ((h >= 6 && h < 18) ? 'light' : 'dark');
-                document.documentElement.setAttribute('data-theme', t);
-            } catch (e) {
-                document.documentElement.setAttribute('data-theme', 'light');
-            }
-        })();
-    </script>
-
-    <!-- Font Awesome for Icons -->
+    <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sora:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
     <style>
         :root {
@@ -309,9 +291,49 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 12px;
+            }
+            
+            .stat-card {
+                padding: 16px;
+                flex-direction: row;
+                text-align: left;
+                border-radius: 16px;
+            }
+            
+            .stat-icon-wrapper {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+            
+            .stat-info .value {
+                font-size: 24px;
+            }
+            
+            .stat-info .label {
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .container {
+                width: 95%;
+                margin: -30px auto 30px;
+            }
         }
 
         .stat-card {
@@ -1080,15 +1102,15 @@
             }
 
             .queue-pos {
-                width: 55px;
-                height: 55px;
+                width: 50px;
+                height: 50px;
                 border-radius: 14px;
                 position: static;
                 flex-shrink: 0;
             }
 
             .queue-pos span:last-child {
-                font-size: 22px;
+                font-size: 20px;
             }
 
             .queue-details {
@@ -1096,6 +1118,50 @@
                 padding-top: 0;
                 gap: 5px;
             }
+            
+            .vehicle-icon-wrapper img {
+                height: 32px !important;
+                width: auto !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .queue-card {
+                padding: 12px;
+                gap: 10px;
+            }
+            
+            .queue-pos {
+                width: 45px;
+                height: 45px;
+                border-radius: 12px;
+            }
+            
+            .queue-pos span:first-child {
+                font-size: 9px;
+            }
+            
+            .queue-pos span:last-child {
+                font-size: 18px;
+            }
+            
+            .queue-details h4 {
+                font-size: 14px;
+            }
+            
+            .queue-details p {
+                font-size: 12px;
+            }
+            
+            .vehicle-icon-wrapper img {
+                height: 28px !important;
+            }
+            
+            .status-badge {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+        }
 
             .q-info h4 {
                 font-size: 16px;
@@ -1246,66 +1312,9 @@
             }
         }
     </style>
-
-    <!-- Modern terminal theme layer (adaptive day/night) -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/terminal-theme.css') ?>">
-    <script defer src="<?= base_url('js/theme-toggle.js') ?>"></script>
-
-    <style>
-        /* ── Public board: make the existing chrome theme-aware so day/night is cohesive.
-              These override the inline styles above (loaded later + higher specificity). ── */
-        body.tq-public { background: var(--bg-0) !important; color: var(--ink); }
-        body.tq-public::before {
-            content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-            background-color: var(--bg-0); background-image: var(--mesh);
-        }
-
-        body.tq-public .hero {
-            background: linear-gradient(135deg, color-mix(in srgb,var(--accent) 22%, var(--bg-1)) 0%, var(--bg-1) 100%) !important;
-            border-bottom: 1px solid var(--hairline);
-        }
-        body.tq-public .hero::before { opacity:.5; }
-        body.tq-public .hero h2 { color: var(--ink) !important; font-family:'Sora',sans-serif; }
-        body.tq-public .hero p { color: var(--ink-dim) !important; opacity:1; }
-        body.tq-public .search-bar { background: var(--surface) !important; border:1px solid var(--hairline); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); }
-        body.tq-public .search-bar input { color: var(--ink) !important; }
-        body.tq-public .search-bar input::placeholder { color: var(--ink-dim); }
-        body.tq-public .search-bar button { background: var(--brand) !important; color: var(--accent-ink) !important; }
-
-        /* stat tiles reuse the existing .stat-card markup + ids, re-themed */
-        body.tq-public .stat-card { background: var(--surface) !important; border:1px solid var(--hairline); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); box-shadow:var(--shadow-sm); }
-        body.tq-public .stat-card:hover { box-shadow:var(--shadow); border-color:var(--hairline-strong); }
-        body.tq-public .stat-info .value { color: var(--ink) !important; font-family:'JetBrains Mono',monospace; }
-        body.tq-public .stat-info .label { color: var(--ink-dim) !important; }
-        body.tq-public .si-blue { background:color-mix(in srgb,var(--accent) 16%,transparent); color:var(--accent); }
-        body.tq-public .si-green { background:color-mix(in srgb,var(--accent-2) 16%,transparent); color:var(--accent-2); }
-        body.tq-public .si-gold { background:color-mix(in srgb,var(--warn) 16%,transparent); color:var(--warn); }
-        body.tq-public .si-purple { background:color-mix(in srgb,var(--brand) 16%,transparent); color:var(--brand); }
-
-        body.tq-public .section-title { color: var(--ink) !important; font-family:'Sora',sans-serif; }
-        body.tq-public .section-title i { color: var(--brand); }
-        body.tq-public .live-indicator { background:color-mix(in srgb,var(--accent-2) 14%,transparent) !important; color:var(--accent-2) !important; border:1px solid color-mix(in srgb,var(--accent-2) 30%,transparent); }
-        body.tq-public .quick-filter-bar { background: var(--surface) !important; border:1px solid var(--hairline); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); }
-        body.tq-public .filter-label { color: var(--ink-dim) !important; }
-        body.tq-public .no-results-message { background: var(--surface) !important; color: var(--ink-dim) !important; border:1px dashed var(--hairline-strong); }
-
-        /* route-average modal */
-        body.tq-public .route-average-dialog { background: var(--surface-solid) !important; border:1px solid var(--hairline-strong); }
-        body.tq-public .route-average-header { border-bottom-color: var(--hairline) !important; }
-        body.tq-public .route-average-title { color: var(--ink) !important; }
-        body.tq-public .route-average-subtitle, body.tq-public .route-average-count { color: var(--ink-dim) !important; }
-        body.tq-public .route-average-item { background: var(--surface) !important; border-color: var(--hairline) !important; }
-        body.tq-public .route-average-route { color: var(--ink) !important; }
-        body.tq-public .route-average-time { color: var(--accent-2) !important; }
-        body.tq-public .route-average-close { background:color-mix(in srgb,var(--ink) 10%,transparent) !important; color:var(--ink) !important; }
-        body.tq-public .route-average-empty { background: var(--surface) !important; color: var(--ink-dim) !important; }
-
-        /* spacing for the new Now Boarding hero inside the container */
-        body.tq-public .tq-now { margin-bottom: 28px; }
-    </style>
 </head>
 
-<body class="tq-public">
+<body>
 
     <?= view('templates/guest_header', [
         'announcements' => $announcements ?? [],
@@ -1325,51 +1334,6 @@
     </section>
 
     <div class="container">
-
-        <?php
-        // "Now Boarding" = the vehicle currently in boarding status (no ticket entity).
-        // Falls back to the next waiting vehicle as "Up Next". Reuses existing fields only.
-        $boardingItem = null; $nextWaiting = null;
-        foreach (($active_queue ?? []) as $qi) {
-            if (($qi['status'] ?? '') === 'boarding' && $boardingItem === null) $boardingItem = $qi;
-            if (($qi['status'] ?? '') === 'waiting'  && $nextWaiting  === null) $nextWaiting  = $qi;
-        }
-        $nowItem = $boardingItem ?: $nextWaiting;
-        $nowIsBoarding = $boardingItem !== null;
-        $nowPct = $nowItem ? min(100, ($nowItem['current_passengers'] / max(1, $nowItem['capacity'])) * 100) : 0;
-        ?>
-        <section class="tq-now<?= $nowIsBoarding ? '' : ' tq-now--idle' ?>" id="tqNowServing"
-                 data-plate="<?= esc($nowItem['plate_number'] ?? '') ?>">
-            <p class="tq-now__label"><span class="tq-live__dot"></span> <?= $nowIsBoarding ? 'NOW BOARDING' : 'UP NEXT' ?></p>
-            <div class="tq-now__unit">
-                <span class="tq-now__num">#<?= $nowItem['position'] ?? '--' ?></span>
-                <div class="tq-now__detail">
-                    <h2 class="tq-now__plate"><?= esc($nowItem['plate_number'] ?? 'Awaiting next unit') ?></h2>
-                    <p class="tq-now__route">
-                        <?php if ($nowItem): ?>
-                            <?= esc($nowItem['origin']) ?> <span class="arrow">&rarr;</span> <strong><?= esc($nowItem['destination']) ?></strong>
-                        <?php else: ?>
-                            No vehicle is currently boarding
-                        <?php endif; ?>
-                    </p>
-                    <?php if ($nowItem): ?>
-                        <div class="tq-now__sub">
-                            <span class="tq-now__eta"><i class="fas fa-clock"></i>
-                                <?= !empty($nowItem['estimated_departure']) ? date('h:i A', strtotime($nowItem['estimated_departure'])) : 'Waiting' ?>
-                            </span>
-                            <?= vehicle_type_badge($nowItem['vehicle_type'] ?? '') ?>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                <?php if ($nowItem): ?>
-                    <div class="tq-now__cap" style="--pct:<?= $nowPct ?>%">
-                        <span><?= $nowItem['current_passengers'] ?>/<?= $nowItem['capacity'] ?></span>
-                        <small>Onboard</small>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </section>
-
         <!-- Stats Summary -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -1382,7 +1346,7 @@
             <a href="<?= base_url('schedules') ?>" class="stat-card stat-card-link" aria-label="View schedules">
                 <div class="stat-icon-wrapper si-gold"><i class="fas fa-route"></i></div>
                 <div class="stat-info">
-                    <span class="value">8</span>
+                    <span class="value"><?= count($routes ?? []) ?></span>
                     <span class="label">Operating Routes</span>
                 </div>
             </a>
@@ -1475,59 +1439,107 @@
                     No vehicles match the selected filter.
                 </div>
 
-                <div class="tq-queue-grid" id="queueList">
+                <div class="queue-container" id="queueList">
                     <?php if (!empty($active_queue)): ?>
                         <?php foreach ($active_queue as $item): ?>
                             <?php
-                            $vType  = strtolower($item['vehicle_type'] ?? '');
-                            $fkey   = strtolower(trim($item['origin'])) . '|' . strtolower(trim($item['destination'])) . '|' . $vType;
+                            $imgMap = [
+                                'van' => 'van.png',
+                                'jeepney' => 'jeep.png',
+                                'minibus' => 'minibus.png'
+                            ];
+                            $vType = strtolower($item['vehicle_type'] ?? '');
+                            $imgFile = $imgMap[$vType] ?? 'van.png';
+                            $fkey = strtolower(trim($item['origin'])) . '|' . strtolower(trim($item['destination'])) . '|' . $vType;
                             $cardFare = $fareMap[$fkey] ?? null;
-                            $pct    = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
-                            $fill   = $pct >= 100 ? 'full' : ($pct >= 70 ? 'mid' : 'low');
-                            $isFull = (int) $item['current_passengers'] >= (int) $item['capacity'];
-                            $st     = $item['status'] ?? 'waiting';
-                            $pillClass = $st === 'boarding' ? 'go' : ($st === 'departed' ? 'done' : 'wait');
-                            $pillText  = $st === 'boarding' ? 'Boarding' : ($st === 'departed' ? 'Departed' : 'Waiting');
-                            if ($st === 'departed' && !empty($item['departure_time'])) {
-                                $etaStr = date('h:i A', strtotime($item['departure_time']));
-                            } elseif (!empty($item['estimated_departure'])) {
-                                $etaStr = date('h:i A', strtotime($item['estimated_departure']));
-                            } else {
-                                $etaStr = 'Waiting';
-                            }
                             ?>
-                            <article class="tq-card status-<?= esc($st) ?>"
-                                     data-vehicle-type="<?= esc($vType) ?>"
-                                     data-destination="<?= esc(strtolower($item['destination'])) ?>">
-                                <header class="tq-card__head">
-                                    <span class="tq-pos <?= vehicle_type_class($vType) ?>">#<?= $item['position'] ?></span>
-                                    <span class="tq-plate"><?= esc($item['plate_number']) ?></span>
-                                    <?= vehicle_type_badge($vType) ?>
-                                    <span class="tq-pill tq-pill--<?= $pillClass ?>"><span class="tq-pill__dot"></span> <?= $pillText ?></span>
-                                </header>
-                                <div class="tq-card__meta">
-                                    <div><i class="fas fa-user"></i> <?= esc($item['driver_name'] ?? 'N/A') ?></div>
-                                    <div><i class="fas fa-route"></i> <?= esc($item['origin']) ?> <span class="arrow">&rarr;</span> <strong><?= esc($item['destination']) ?></strong></div>
-                                    <div class="tq-eta"><i class="fas fa-plane-departure"></i> Est. <strong><?= $etaStr ?></strong></div>
-                                    <div><i class="fas fa-users"></i> <?= $item['current_passengers'] ?>/<?= $item['capacity'] ?> onboard</div>
+                            <div class="queue-card"
+                                 data-vehicle-type="<?= esc($vType) ?>"
+                                 data-destination="<?= esc(strtolower($item['destination'])) ?>">
+                                <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?>"
+                                    style="position: relative; width: clamp(50px, 11vw, 75px); flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>"
+                                        style="width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));">
+                                    <?php
+                                        $posColors = ['van' => '#c62828', 'jeepney' => '#1565c0', 'minibus' => '#2e7d32'];
+                                        $posColor = $posColors[$vType] ?? '#1e293b';
+                                    ?>
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill border border-white border-2 queue-pos-badge"
+                                        style="background:<?= $posColor ?>; color:#fff; font-size:13px; font-weight:800; padding:4px 9px; min-width:28px; text-align:center; box-shadow:0 2px 6px rgba(0,0,0,0.25); z-index:2;">
+                                        #<?= $item['position'] ?>
+                                    </span>
                                 </div>
-                                <?php if ($cardFare !== null): ?>
-                                    <div class="tq-fare"><i class="fas fa-tag"></i> &#8369;<?= number_format($cardFare, 0) ?> Fare</div>
-                                <?php endif; ?>
-                                <div class="tq-cap" data-fill="<?= $fill ?>" style="--pct:<?= $pct ?>%">
-                                    <div class="tq-cap__head"><i class="fas fa-users"></i> Capacity
-                                        <span class="tq-cap__count <?= $isFull ? 'is-full' : '' ?>"><?= $item['current_passengers'] ?> / <?= $item['capacity'] ?></span>
-                                        <?php if ($isFull): ?><span class="tq-pill tq-pill--full">Full</span><?php endif; ?>
+                                <div class="queue-details">
+                                    <div class="q-info">
+                                        <h4><?= esc($item['plate_number']) ?></h4>
+                                        <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                                            <p><i class="fas fa-user"></i> <?= esc($item['driver_name'] ?? 'N/A') ?></p>
+                                            <p><i class="fas fa-map-marker-alt"></i> Route: <strong><?= esc($item['origin']) ?>
+                                                    - <?= esc($item['destination']) ?></strong></p>
+                                        </div>
+                                        <?php if ($cardFare !== null): ?>
+                                        <div class="fare-badge">
+                                            <i class="fas fa-tag"></i> ₱<?= number_format($cardFare, 0) ?> Fare
+                                        </div>
+                                        <?php endif; ?>
+                                        <div class="capacity-info" style="margin-top: 5px;">
+                                            <div style="display: flex; align-items: center; gap: 10px;">
+                                                <i class="fas fa-users" style="color: var(--primary);"></i>
+                                                <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">
+                                                    <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?> Onboard
+                                                </span>
+                                                <?php if ((int) $item['current_passengers'] >= (int) $item['capacity']): ?>
+                                                    <span class="badge bg-danger"
+                                                        style="font-size: 10px; padding: 2px 8px; border-radius: 10px;">FULL</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <div class="progress"
+                                                style="height: 6px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden;">
+                                                <?php $percent = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100); ?>
+                                                <div class="progress-bar"
+                                                    style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#e53e3e' : 'var(--primary)' ?>; transition: width 0.3s ease;">
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="tq-cap__bar"><span></span></div>
+                                    <div class="q-meta" style="text-align: center;">
+                                        <small class="text-muted"
+                                            style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Est.
+                                            Departure</small>
+                                        <div
+                                            style="background: #4a5c7a; color: white; padding: 12px 16px; border-radius: 12px; font-size: 18px; font-weight: 700; margin-bottom: 8px;">
+                                            <?php
+                                            if ($item['status'] == 'departed' && $item['departure_time']):
+                                                echo date('h:i A', strtotime($item['departure_time']));
+                                            elseif ($item['estimated_departure']):
+                                                echo date('h:i A', strtotime($item['estimated_departure']));
+                                            else:
+                                                echo 'Waiting';
+                                            endif;
+                                            ?>
+                                        </div>
+                                        <?php if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])): ?>
+                                            <div class="countdown-timer"
+                                                data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
+                                        <?php endif; ?>
+                                        <div style="font-size: 13px; color: #1565c0; font-weight: 600; margin-top: 4px;">
+                                            <?php if ($item['status'] == 'departed'): ?>
+                                                Departed
+                                            <?php elseif ($item['status'] == 'boarding'): ?>
+                                                <?= $item['current_passengers'] ?>/<?= $item['capacity'] ?> passengers
+                                            <?php else: ?>
+                                                Waiting
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
-                                <?php if ($st === 'boarding' && !empty($item['estimated_departure'])): ?>
-                                    <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
-                                <?php endif; ?>
-                            </article>
+                            </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="tq-empty"><i class="fas fa-inbox"></i> No vehicles currently in queue.</div>
+                        <div class="card p-4 text-center">
+                            <p class="text-muted">No vehicles currently in queue.</p>
+                        </div>
                     <?php endif; ?>
                 </div>
             </section>
@@ -1553,7 +1565,7 @@
         var activeFilterValue = 'all';
 
         function applyQueueFilter() {
-            var cards = document.querySelectorAll('#queueList .tq-card');
+            var cards = document.querySelectorAll('#queueList .queue-card');
             var visible = 0;
             cards.forEach(function (card) {
                 var show = false;
@@ -1587,92 +1599,7 @@
             var key = origin.toLowerCase().trim() + '|' + destination.toLowerCase().trim() + '|' + vType.toLowerCase().trim();
             var fare = fareMap[key];
             if (fare === undefined || fare === null) return '';
-            return '<div class="tq-fare"><i class="fas fa-tag"></i> &#8369;' + Number(fare).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' Fare</div>';
-        }
-
-        // Build the dispatcher/public queue card markup — MUST mirror the PHP template
-        // (article.tq-card) so poll-rewrites are visually identical. Presentational only.
-        function buildQueueCard(item) {
-            var vType = (item.vehicle_type || '').toLowerCase();
-            var cur = Number(item.current_passengers), cap = Number(item.capacity);
-            var pct = Math.min(100, (cur / Math.max(1, cap)) * 100);
-            var fill = pct >= 100 ? 'full' : (pct >= 70 ? 'mid' : 'low');
-            var isFull = cur >= cap;
-            var st = item.status || 'waiting';
-            var pillClass = st === 'boarding' ? 'go' : (st === 'departed' ? 'done' : 'wait');
-            var pillText = st === 'boarding' ? 'Boarding' : (st === 'departed' ? 'Departed' : 'Waiting');
-            var vLabel = vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : '';
-            var etaStr = item.estimated_departure_formatted || 'Waiting';
-            var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
-            var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
-            var countdown = (st === 'boarding' && estDepIso)
-                ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '';
-            return '<article class="tq-card status-' + st + '" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '">'
-                + '<header class="tq-card__head">'
-                + '<span class="tq-pos vehicle-type-' + vType + '">#' + item.position + '</span>'
-                + '<span class="tq-plate">' + (item.plate_number || '') + '</span>'
-                + '<span class="vehicle-type-chip vehicle-type-' + vType + '">' + vLabel + '</span>'
-                + '<span class="tq-pill tq-pill--' + pillClass + '"><span class="tq-pill__dot"></span> ' + pillText + '</span>'
-                + '</header>'
-                + '<div class="tq-card__meta">'
-                + '<div><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</div>'
-                + '<div><i class="fas fa-route"></i> ' + item.origin + ' <span class="arrow">&rarr;</span> <strong>' + item.destination + '</strong></div>'
-                + '<div class="tq-eta"><i class="fas fa-plane-departure"></i> Est. <strong>' + etaStr + '</strong></div>'
-                + '<div><i class="fas fa-users"></i> ' + cur + '/' + cap + ' onboard</div>'
-                + '</div>'
-                + fareBadge
-                + '<div class="tq-cap" data-fill="' + fill + '" style="--pct:' + pct + '%">'
-                + '<div class="tq-cap__head"><i class="fas fa-users"></i> Capacity '
-                + '<span class="tq-cap__count' + (isFull ? ' is-full' : '') + '">' + cur + ' / ' + cap + '</span>'
-                + (isFull ? '<span class="tq-pill tq-pill--full">Full</span>' : '')
-                + '</div><div class="tq-cap__bar"><span></span></div>'
-                + '</div>'
-                + countdown
-                + '</article>';
-        }
-
-        // "Now Boarding" hero — mirrors the PHP hero; blinks when the boarding plate changes.
-        function updateNowServing(queue) {
-            var el = document.getElementById('tqNowServing');
-            if (!el) return;
-            var boarding = null, nextW = null;
-            queue.forEach(function (q) {
-                if (q.status === 'boarding' && !boarding) boarding = q;
-                if (q.status === 'waiting' && !nextW) nextW = q;
-            });
-            var item = boarding || nextW;
-            var isBoarding = !!boarding;
-            var prevPlate = el.getAttribute('data-plate') || '';
-            var newPlate = item ? (item.plate_number || '') : '';
-            var label = '<span class="tq-live__dot"></span> ' + (isBoarding ? 'NOW BOARDING' : 'UP NEXT');
-
-            var inner = '<p class="tq-now__label">' + label + '</p><div class="tq-now__unit">';
-            if (item) {
-                var vType = (item.vehicle_type || '').toLowerCase();
-                var vLabel = vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : '';
-                var pct = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
-                inner += '<span class="tq-now__num">#' + item.position + '</span>'
-                    + '<div class="tq-now__detail">'
-                    + '<h2 class="tq-now__plate">' + (item.plate_number || '') + '</h2>'
-                    + '<p class="tq-now__route">' + item.origin + ' <span class="arrow">&rarr;</span> <strong>' + item.destination + '</strong></p>'
-                    + '<div class="tq-now__sub"><span class="tq-now__eta"><i class="fas fa-clock"></i> ' + (item.estimated_departure_formatted || 'Waiting') + '</span>'
-                    + '<span class="vehicle-type-chip vehicle-type-' + vType + '">' + vLabel + '</span></div>'
-                    + '</div>'
-                    + '<div class="tq-now__cap" style="--pct:' + pct + '%"><span>' + item.current_passengers + '/' + item.capacity + '</span><small>Onboard</small></div>';
-            } else {
-                inner += '<span class="tq-now__num">#--</span><div class="tq-now__detail">'
-                    + '<h2 class="tq-now__plate">Awaiting next unit</h2>'
-                    + '<p class="tq-now__route">No vehicle is currently boarding</p></div>';
-            }
-            inner += '</div>';
-            el.innerHTML = inner;
-            el.classList.toggle('tq-now--idle', !isBoarding);
-            el.setAttribute('data-plate', newPlate);
-            if (newPlate && newPlate !== prevPlate) {
-                el.classList.remove('is-changed');
-                void el.offsetWidth;
-                el.classList.add('is-changed');
-            }
+            return '<div class="fare-badge"><i class="fas fa-tag"></i> &#8369;' + Number(fare).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' Fare</div>';
         }
 
         // Smooth Scrolling for Anchor Links
@@ -1703,7 +1630,7 @@
         }, observerOptions);
 
         function observeItems() {
-            document.querySelectorAll('.stat-card').forEach(function (el) {
+            document.querySelectorAll('.queue-card, .stat-card').forEach(function (el) {
                 if (!el.dataset.observed) {
                     el.dataset.observed = "true";
                     el.style.opacity = "0.7";
@@ -1811,7 +1738,56 @@
                         if (data.active_queue.length > 0) {
                             var queueHtml = '';
                             data.active_queue.forEach(function (item) {
-                                queueHtml += buildQueueCard(item);
+                                var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
+                                var progressColor = percent >= 100 ? '#e53e3e' : 'var(--primary)';
+                                var fullBadge = Number(item.current_passengers) >= Number(item.capacity)
+                                    ? '<span class="badge bg-danger" style="font-size:10px;padding:2px 8px;border-radius:10px;">FULL</span>' : '';
+                                var statusText = 'Waiting';
+                                if (item.status === 'departed') statusText = 'Departed';
+                                else if (item.status === 'boarding') statusText = item.current_passengers + '/' + item.capacity + ' passengers';
+                                var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
+                                var vType = (item.vehicle_type || '').toLowerCase();
+                                var imgFile = imgMap[vType] || 'van.png';
+                                var posColors = { van: '#c62828', jeepney: '#1565c0', minibus: '#2e7d32' };
+                                var posColor = posColors[vType] || '#1e293b';
+                                var posBadge = '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill border border-white border-2 queue-pos-badge" style="background:' + posColor + ';color:#fff;font-size:13px;font-weight:800;padding:4px 9px;min-width:28px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.25);z-index:2;">#' + item.position + '</span>';
+                                var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
+                                // Normalise MySQL datetime to ISO-8601 so new Date() parses on Safari too
+                                var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
+                                queueHtml += '<div class="queue-card" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '">'
+                                    + '<div class="vehicle-type-icon vehicle-type-' + vType + '" style="position:relative;width:clamp(50px,11vw,75px);flex-shrink:0;display:flex;justify-content:center;align-items:center;">'
+                                    + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" style="width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.1));">'
+                                    + posBadge
+                                    + '</div>'
+                                    + '<div class="queue-details">'
+                                    + '<div class="q-info">'
+                                    + '<h4>' + item.plate_number + '</h4>'
+                                    + '<div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">'
+                                    + '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>'
+                                    + '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>'
+                                    + '</div>'
+                                    + fareBadge
+                                    + '<div class="capacity-info" style="margin-top:5px;">'
+                                    + '<div style="display:flex;align-items:center;gap:10px;">'
+                                    + '<i class="fas fa-users" style="color:var(--primary);"></i>'
+                                    + '<span style="font-size:13px;font-weight:600;color:var(--text-main);">' + item.current_passengers + ' / ' + item.capacity + ' Onboard</span>'
+                                    + fullBadge
+                                    + '</div>'
+                                    + '<div class="progress" style="height:6px;background:#eee;border-radius:10px;margin-top:5px;overflow:hidden;">'
+                                    + '<div class="progress-bar" style="width:' + percent + '%;height:100%;background:' + progressColor + ';transition:width 0.3s ease;"></div>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '<div class="q-meta" style="text-align:center;">'
+                                    + '<small class="text-muted" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Est. Departure</small>'
+                                    + '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
+                                    + (item.estimated_departure_formatted || 'Waiting')
+                                    + '</div>'
+                                    + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
+                                    + '<div style="font-size:13px;color:#1565c0;font-weight:600;margin-top:4px;">' + statusText + '</div>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '</div>';
                             });
                             queueList.innerHTML = queueHtml;
                             // Rebuild destination filter chips from live data
@@ -1829,12 +1805,10 @@
                                 initFilterChips();
                             }
                         } else {
-                            queueList.innerHTML = '<div class="tq-empty"><i class="fas fa-inbox"></i> No vehicles currently in queue.</div>';
+                            queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
                         }
                         applyQueueFilter();
                         observeItems();
-                        // Keep the "Now Boarding" hero in sync (presentational; blinks on change)
-                        updateNowServing(data.active_queue);
                     }
                 })
                 .catch(function (error) {

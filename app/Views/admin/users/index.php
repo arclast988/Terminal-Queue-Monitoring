@@ -1,23 +1,30 @@
 <?= $this->include('templates/header') ?>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <div>
-        <h1 class="h2 mb-1"><i class="bi bi-people-fill text-primary me-2"></i> Manage Users</h1>
-        <p class="text-muted mb-0" style="font-size: 14px;">Manage administrator and dispatcher system accounts and route permissions.</p>
-    </div>
-    <div class="btn-toolbar mb-2 mb-md-0 align-self-start">
-        <a href="<?= base_url('admin/users/create') ?>" class="btn btn-primary d-inline-flex align-items-center gap-2">
-            <i class="bi bi-plus-circle"></i> Add New User
-        </a>
-    </div>
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
+<div class="page-header-modern fade-in">
+    <h1 class="page-title-modern">
+        <i class="bi bi-people-fill"></i>
+        Manage Users
+    </h1>
+    <a href="<?= base_url('admin/users/create') ?>" class="btn-modern btn-modern-primary">
+        <i class="bi bi-plus-circle"></i> Add New User
+    </a>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
+    <div class="alert-modern alert-modern-success fade-in">
+        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('success')) ?></div>
+    </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
+    <div class="alert-modern alert-modern-danger fade-in">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('error')) ?></div>
+    </div>
 <?php endif; ?>
 
 <?php
@@ -35,47 +42,51 @@ foreach ($users as $u) {
 ?>
 
 <!-- User Search & Filter Bar -->
-<div class="mb-4">
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <div class="input-group input-group-sm me-3" style="max-width: 280px;">
-            <span class="input-group-text bg-white border-end-0" style="border-radius: 20px 0 0 20px;">
-                <i class="bi bi-search text-muted"></i>
+<div class="modern-card shadow-modern fade-in mb-4">
+    <div class="modern-card-body">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="input-group-modern me-3" style="max-width: 280px;">
+                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                <input type="text" class="input-modern border-start-0 ps-0" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)">
+            </div>
+            
+            <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
+                <i class="bi bi-funnel me-1"></i>Filter:
             </span>
-            <input type="text" class="form-control border-start-0 ps-0" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)" style="border-radius: 0 20px 20px 0;">
+            
+            <button type="button" class="badge-modern badge-modern-primary active" id="filter-btn-all" onclick="filterUsers('all')">
+                <i class="bi bi-grid-3x3-gap-fill"></i> All
+                <span class="vf-count"><?= $totalUsers ?></span>
+            </button>
+            
+            <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
+            
+            <button type="button" class="badge-modern badge-modern-danger" id="filter-btn-admin" onclick="filterUsers('admin')">
+                <i class="bi bi-shield-lock"></i> Admins
+                <span class="vf-count"><?= $countAdmin ?></span>
+            </button>
+            
+            <button type="button" class="badge-modern badge-modern-info" id="filter-btn-dispatcher" onclick="filterUsers('dispatcher')">
+                <i class="bi bi-person-fill-gear"></i> Dispatchers
+                <span class="vf-count"><?= $countDispatcher ?></span>
+            </button>
         </div>
         
-        <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
-            <i class="bi bi-funnel me-1"></i>Filter:
-        </span>
-        
-        <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterUsers('all')">
-            <i class="bi bi-grid-3x3-gap-fill"></i> All
-            <span class="vf-count"><?= $totalUsers ?></span>
-        </button>
-        
-        <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
-        
-        <button type="button" class="vf-btn vf-admin" id="filter-btn-admin" onclick="filterUsers('admin')">
-            <i class="bi bi-shield-lock"></i> Admins
-            <span class="vf-count"><?= $countAdmin ?></span>
-        </button>
-        
-        <button type="button" class="vf-btn vf-dispatcher" id="filter-btn-dispatcher" onclick="filterUsers('dispatcher')">
-            <i class="bi bi-person-fill-gear"></i> Dispatchers
-            <span class="vf-count"><?= $countDispatcher ?></span>
-        </button>
+        <div id="filter-label" style="font-size:13px; color:#64748b;">Showing all <strong><?= $totalUsers ?></strong> users</div>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-header d-flex justify-content-between align-items-center" style="padding:12px 16px;">
-        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-people me-1"></i> User List</span>
-        <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all <strong><?= $totalUsers ?></strong> users</span>
+<div class="modern-card shadow-modern fade-in">
+    <div class="modern-card-header">
+        <span class="modern-card-title">
+            <i class="bi bi-people" style="color: var(--primary-red);"></i>
+            User List
+        </span>
     </div>
-    <div class="card-body">
-        <div class="table-responsive table-responsive-card">
-            <table class="table table-striped table-hover" id="users-table">
-                <thead class="table-light">
+    <div class="modern-card-body">
+        <div class="table-responsive">
+            <table class="table-modern" id="users-table">
+                <thead>
                     <tr>
                         <th>#</th>
                         <th>User</th>
@@ -115,31 +126,31 @@ foreach ($users as $u) {
                                 </div>
                             </td>
                             <td data-label="Role">
-                                <span class="badge bg-<?= $user['role'] == 'admin' ? 'danger' : 'info' ?>">
+                                <span class="badge-modern badge-modern-<?= $user['role'] == 'admin' ? 'danger' : 'info' ?>">
                                     <?= $user['role'] == 'staff' ? 'Dispatcher' : ucfirst($user['role']) ?>
                                 </span>
                             </td>
                             <td style="max-width: 350px;" data-label="Assigned Routes">
                                 <?php if ($user['role'] === 'admin'): ?>
-                                    <span class="badge bg-success">All Routes</span>
+                                    <span class="badge-modern badge-modern-success">All Routes</span>
                                 <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
                                     <div class="badge-scroll-wrap" style="display: flex; gap: 4px; padding-bottom: 4px;" title="<?= esc($user['assigned_routes_label']) ?>">
                                         <?php
                                         $routeParts = explode(', ', $user['assigned_routes_label']);
                                         foreach ($routeParts as $rp):
                                             ?>
-                                            <span class="badge bg-primary"
+                                            <span class="badge-modern badge-modern-primary"
                                                 style="font-size:10px; font-weight:500; white-space: nowrap;"><?= esc($rp) ?></span>
                                         <?php endforeach; ?>
                                     </div>
                                 <?php else: ?>
-                                    <span class="badge bg-warning text-dark">No Routes</span>
+                                    <span class="badge-modern badge-modern-warning">No Routes</span>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Action">
-                                <div class="btn-group btn-group-sm" role="group">
+                                <div class="btn-group-modern" role="group">
                                     <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
-                                        class="btn btn-outline-primary" title="Edit">
+                                        class="btn-modern btn-modern-sm btn-modern-outline-primary" title="Edit">
                                         <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
                                     </a>
                                     <?php if ((int) $user['id'] !== (int) session()->get('id')): ?>
@@ -147,7 +158,7 @@ foreach ($users as $u) {
                                             class="d-inline"
                                             onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                            <button type="submit" class="btn-modern btn-modern-sm btn-modern-outline-danger" title="Delete">
                                                 <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
                                             </button>
                                         </form>
@@ -170,13 +181,6 @@ foreach ($users as $u) {
     #users-table th,
     #users-table td {
         vertical-align: middle;
-    }
-
-    #users-table .btn-group .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
     }
 
     /* Avatar Circles styling */
@@ -202,30 +206,6 @@ foreach ($users as $u) {
         border: 2px solid rgba(14, 165, 233, 0.15);
     }
 
-    /* User Filter Buttons styling */
-    .vf-btn {
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        padding: 6px 14px !important;
-        border-radius: 20px !important;
-        font-size: 13px !important;
-        font-weight: 500 !important;
-        font-family: 'Outfit', sans-serif !important;
-        cursor: pointer !important;
-        border: 2px solid #dee2e6 !important;
-        background: #fff !important;
-        color: #475569 !important;
-        white-space: nowrap !important;
-        line-height: 1.4 !important;
-    }
-
-    .vf-btn:hover {
-        border-color: #94a3b8 !important;
-        background: #f8fafc !important;
-        color: #1e293b !important;
-    }
-
     .vf-count {
         display: inline-flex !important;
         align-items: center !important;
@@ -236,36 +216,6 @@ foreach ($users as $u) {
         border-radius: 12px !important;
         font-size: 11px !important;
         font-weight: 700 !important;
-        background: #e2e8f0 !important;
-        color: #475569 !important;
-    }
-
-    /* Active states styling */
-    .vf-btn.active {
-        background: #C62828 !important;
-        border-color: #C62828 !important;
-        color: #fff !important;
-    }
-
-    .vf-btn.active .vf-count {
-        background: rgba(255, 255, 255, 0.25) !important;
-        color: #fff !important;
-    }
-
-    .vf-btn.vf-admin.active {
-        background: #dc2626 !important;
-        border-color: #dc2626 !important;
-        color: #fff !important;
-    }
-
-    .vf-btn.vf-dispatcher.active {
-        background: #0ea5e9 !important;
-        border-color: #0ea5e9 !important;
-        color: #fff !important;
-    }
-
-    .vf-btn.vf-admin.active .vf-count,
-    .vf-btn.vf-dispatcher.active .vf-count {
         background: rgba(255, 255, 255, 0.25) !important;
         color: #fff !important;
     }
@@ -276,7 +226,6 @@ foreach ($users as $u) {
 
     @media (max-width: 991.98px) {
         #users-table {
-            min-width: 680px;
             font-size: 13px;
         }
 
@@ -291,20 +240,19 @@ foreach ($users as $u) {
             text-align: center;
         }
 
-        #users-table .btn-group {
-            flex-direction: row !important;
+        .btn-group-modern {
+            display: flex !important;
             gap: 0.35rem;
         }
 
-        #users-table .btn-group .btn {
+        .btn-group-modern .btn-modern {
             width: 34px !important;
             height: 34px;
             padding: 0 !important;
             border-radius: 6px !important;
-        }
-
-        #users-table .btn-group form {
             display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }
 
         .user-action-label {
@@ -317,11 +265,9 @@ foreach ($users as $u) {
             display: none !important;
         }
 
-        .vf-btn {
+        .badge-modern {
             flex: 1 1 calc(50% - 0.5rem);
             justify-content: center;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
         }
     }
 </style>

@@ -36,14 +36,14 @@ Everything else is **100% identical**.
     │ Installs:        │          │ Installs:                │
     │ • WSL 2 kernel   │          │ • apt packages           │
     │ • Ubuntu distro  │          │ • MariaDB                │
-    │ • Inside Ubuntu: │          │ • PHP 8.x-FPM            │
+    │ • Inside Ubuntu: │          │ • PHP 8.2-FPM            │
     │   - MariaDB      │          │ • Nginx                  │
-    │   - PHP 8.x-FPM  │          │ • Composer               │
+    │   - PHP 8.2-FPM  │          │ • Composer               │
     │   - Nginx        │          │ • WebSocket systemd      │
     │   - Composer     │          │                          │
     │ • PHP deps       │          │ Creates systemd services:│
     │                  │          │ • nginx                  │
-    │ Creates .env     │          │ • php8.x-fpm            │
+    │ Creates .env     │          │ • php8.2-fpm            │
     │                  │          │ • mariadb                │
     │ Auto-starts via: │          │ • jeepney-websocket     │
     │ • start_system   │          │                          │
@@ -57,14 +57,14 @@ Everything else is **100% identical**.
     │ Starts:          │          │                          │
     │ • MariaDB        │          │ sudo systemctl start:    │
     │ • PHP-FPM        │          │ • nginx                  │
-    │ • Nginx          │          │ • php8.x-fpm            │
+    │ • Nginx          │          │ • php8.2-fpm            │
     │ • WebSocket      │          │ • mariadb                │
     │                  │          │ • jeepney-websocket     │
     │ stop_system.bat  │          │                          │
     │ Stops all        │          │ sudo systemctl stop:     │
     │                  │          │ • jeepney-websocket     │
     │ Services run in  │          │ • nginx                  │
-    │ WSL Ubuntu       │          │ • php8.x-fpm            │
+    │ WSL Ubuntu       │          │ • php8.2-fpm            │
     │                  │          │ • mariadb                │
     │ Browser: auto    │          │                          │
     │ opens localhost  │          │ Browser: manual          │
@@ -87,10 +87,6 @@ Everything else is **100% identical**.
     │ http://localhost/            http://localhost/         │
     └──────────────────┘          └──────────────────────────┘
 ```
-
-> **PHP version:** both installers auto-detect the newest packaged PHP in the 8.2–8.4 range, so
-> the service unit is named `php8.x-fpm` where `8.x` is whatever was installed. Substitute the real
-> version (find it with `ls /run/php/`) in any `systemctl` / `service` command below.
 
 ---
 
@@ -150,7 +146,7 @@ C:\Users\User\Downloads\jeepneynvans> install_system.bat
 $ sudo ./install_linux.sh
 → Detects Linux (apt-get available)
 → apt-get install php nginx mariadb composer
-→ systemctl enable nginx mariadb php8.x-fpm
+→ systemctl enable nginx mariadb php8.2-fpm
 → Creates .env
 → Application ready
 ```

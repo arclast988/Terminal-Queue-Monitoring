@@ -1,91 +1,125 @@
-<?= view('templates/header', ['title' => $title]) ?>
+<?= $this->include('templates/header') ?>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <h2>Edit Route / Fare</h2>
-    </div>
-    <div class="col-md-6 text-end">
-        <a href="<?= base_url('admin/routes') ?>" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to List
-        </a>
-    </div>
-</div>
-
-<div class="card shadow">
-    <div class="card-body">
-        <?php if (session()->getFlashdata('errors')): ?>
-            <div class="alert alert-danger">
-                <ul>
-                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                        <li><?= esc($error) ?></li>
-                    <?php endforeach; ?>
-                </ul>
+<div class="page-header-modern">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title-modern">
+                    <i class="bi bi-pencil-square"></i> Edit Route / Fare
+                </h1>
+                <p class="text-muted mb-0">Update route information and fare details</p>
             </div>
-        <?php endif; ?>
-
-        <form action="<?= base_url('admin/routes/update/' . $route['id']) ?>" method="post">
-            <?= csrf_field() ?>
-
-            <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
-            <div class="mb-3">
-                <label for="terminal_id" class="form-label fw-semibold">Terminal</label>
-                <select class="form-select" id="terminal_id" name="terminal_id" required>
-                    <?php if (!$onlyTerminal): ?>
-                        <option value="">Select Terminal</option>
-                    <?php endif; ?>
-                    <?php foreach ($terminals as $terminal): ?>
-                        <option value="<?= $terminal['id'] ?>"
-                                data-name="<?= esc($terminal['name']) ?>"
-                                <?= ($onlyTerminal || old('terminal_id', $route['terminal_id']) == $terminal['id']) ? 'selected' : '' ?>>
-                            <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="form-text text-muted">
-                    <i class="bi bi-info-circle me-1"></i>This terminal is used as the route source.
-                </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
             </div>
-
-            <div class="mb-3">
-                <label for="destination" class="form-label fw-semibold">Destination</label>
-                <input type="text" class="form-control" id="destination" name="destination"
-                       value="<?= old('destination', $route['destination']) ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
-                <div class="form-text text-muted">Type the destination city/town name.</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="fare" class="form-label fw-semibold">Fare (PHP)</label>
-                <div class="input-group">
-                    <span class="input-group-text">₱</span>
-                    <input type="number" step="0.01" class="form-control" id="fare" name="fare"
-                           value="<?= old('fare', $route['fare']) ?>" min="1" required>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold d-block">Vehicle Type</label>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="vehicle_type" id="type_van" value="van"
-                           <?= old('vehicle_type', $route['vehicle_type']) == 'van' ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="type_van">🚐 Van</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="vehicle_type" id="type_jeepney" value="jeepney"
-                           <?= old('vehicle_type', $route['vehicle_type']) == 'jeepney' ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="type_jeepney">🚌 Jeepney</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="vehicle_type" id="type_minibus" value="minibus"
-                           <?= old('vehicle_type', $route['vehicle_type']) == 'minibus' ? 'checked' : '' ?>>
-                    <label class="form-check-label" for="type_minibus">🚍 Mini Bus</label>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-warning">
-                <i class="bi bi-pencil-square"></i> Update Route
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 
-<?= view('templates/footer') ?>
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <?php if (session()->getFlashdata('errors')): ?>
+                <div class="alert-modern alert-modern-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Validation Errors:</strong>
+                    <ul class="mb-0 mt-2">
+                        <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                            <li><?= esc($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <i class="bi bi-map me-2"></i> Route Information
+                </div>
+                <div class="card-body-modern">
+                    <form action="<?= base_url('admin/routes/update/' . $route['id']) ?>" method="post">
+                        <?= csrf_field() ?>
+
+                        <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
+                        <div class="mb-4">
+                            <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
+                            <select class="select-modern" id="terminal_id" name="terminal_id" required>
+                                <?php if (!$onlyTerminal): ?>
+                                    <option value="">Select Terminal</option>
+                                <?php endif; ?>
+                                <?php foreach ($terminals as $terminal): ?>
+                                    <option value="<?= $terminal['id'] ?>"
+                                            data-name="<?= esc($terminal['name']) ?>"
+                                            <?= ($onlyTerminal || old('terminal_id', $route['terminal_id']) == $terminal['id']) ? 'selected' : '' ?>>
+                                        <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text-modern">
+                                <i class="bi bi-info-circle me-1"></i>This terminal is used as the route source.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="destination" class="form-label-modern">Destination <span class="text-danger">*</span></label>
+                            <input type="text" class="input-modern" id="destination" name="destination"
+                                   value="<?= old('destination', $route['destination']) ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
+                            <div class="form-text-modern">Type the destination city/town name.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="fare" class="form-label-modern">Fare (PHP) <span class="text-danger">*</span></label>
+                            <div class="input-group-modern">
+                                <span class="input-group-text-modern">₱</span>
+                                <input type="number" step="0.01" class="input-modern" id="fare" name="fare"
+                                       value="<?= old('fare', $route['fare']) ?>" min="1" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-modern d-block">Vehicle Type <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3 flex-wrap">
+                                <label class="radio-card-modern">
+                                    <input type="radio" name="vehicle_type" value="van"
+                                           <?= old('vehicle_type', $route['vehicle_type']) == 'van' ? 'checked' : '' ?> class="radio-card-input">
+                                    <span class="radio-card-content">
+                                        <span class="radio-card-icon">🚐</span>
+                                        <span class="radio-card-label">Van</span>
+                                    </span>
+                                </label>
+                                <label class="radio-card-modern">
+                                    <input type="radio" name="vehicle_type" value="jeepney"
+                                           <?= old('vehicle_type', $route['vehicle_type']) == 'jeepney' ? 'checked' : '' ?> class="radio-card-input">
+                                    <span class="radio-card-content">
+                                        <span class="radio-card-icon">🚌</span>
+                                        <span class="radio-card-label">Jeepney</span>
+                                    </span>
+                                </label>
+                                <label class="radio-card-modern">
+                                    <input type="radio" name="vehicle_type" value="minibus"
+                                           <?= old('vehicle_type', $route['vehicle_type']) == 'minibus' ? 'checked' : '' ?> class="radio-card-input">
+                                    <span class="radio-card-content">
+                                        <span class="radio-card-icon">🚍</span>
+                                        <span class="radio-card-label">Mini Bus</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-5">
+                            <button type="submit" class="btn btn-modern btn-modern-primary">
+                                <i class="bi bi-pencil-square"></i> Update Route
+                            </button>
+                            <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= $this->include('templates/footer') ?>

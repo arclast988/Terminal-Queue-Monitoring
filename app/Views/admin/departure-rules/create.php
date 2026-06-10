@@ -7,112 +7,135 @@ $defaultMins = old('wait_mins') ?? ($oldWaitMinutes % 60);
 $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
 ?>
 
-<div class="row mt-4 mb-3">
-    <div class="col-md-6">
-        <h2>Add Departure Rule</h2>
-    </div>
-    <div class="col-md-6 text-end">
-        <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to List
-        </a>
+<div class="page-header-modern">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title-modern">
+                    <i class="bi bi-clock-history"></i> Add Departure Rule
+                </h1>
+                <p class="text-muted mb-0">Create a new departure schedule rule</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-body">
-        <?php if (session()->getFlashdata('errors')): ?>
-            <div class="alert alert-danger">
-                <ul>
-                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                        <li><?= esc($error) ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-
-        <form action="<?= base_url($prefix . '/departure-rules/store') ?>" method="post">
-            <?= csrf_field() ?>
-
-            <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
-            <div class="mb-3">
-                <label for="terminal_id" class="form-label">Terminal</label>
-                <select class="form-select" id="terminal_id" name="terminal_id" required>
-                    <?php if (!$onlyTerminal): ?>
-                        <option value="">— Select Terminal —</option>
-                    <?php endif; ?>
-                    <?php foreach ($terminals as $t): ?>
-                        <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id') == $t['id']) ? 'selected' : '' ?>>
-                            <?= esc($t['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="mb-3">
-                <label for="route_id" class="form-label">Destination (Optional)</label>
-                <select class="form-select" id="route_id" name="route_id">
-                    <option value="">— No specific destination —</option>
-                    <?php foreach (($routes ?? []) as $r): ?>
-                        <option value="<?= $r['id'] ?>" <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
-                            <?= esc($r['destination']) ?> (<?= esc(ucfirst($r['vehicle_type'])) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <small class="text-muted">Pick a destination for a route-specific interval, or leave blank for a terminal-wide default rule.</small>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="time_from" class="form-label">Time From</label>
-                    <div class="time-input-wrap">
-                        <input type="time" class="form-control" id="time_from" name="time_from"
-                            value="<?= old('time_from') ?>" required>
-                        <i class="bi bi-clock time-icon"></i>
-                    </div>
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <?php if (session()->getFlashdata('errors')): ?>
+                <div class="alert-modern alert-modern-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Validation Errors:</strong>
+                    <ul class="mb-0 mt-2">
+                        <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                            <li><?= esc($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="time_to" class="form-label">Time To</label>
-                    <div class="time-input-wrap">
-                        <input type="time" class="form-control" id="time_to" name="time_to"
-                            value="<?= old('time_to') ?>" required>
-                        <i class="bi bi-clock time-icon"></i>
-                    </div>
-                </div>
-            </div>
+            <?php endif; ?>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Wait Time</label>
-                    <div class="dp-wrap form-control" id="dp_wrap_create" tabindex="0">
-                        <span class="dp-seg" id="dp_h_c" data-seg="h">--</span><span class="dp-colon">:</span><span
-                            class="dp-seg" id="dp_m_c" data-seg="m">--</span>
-                        <i class="bi bi-clock dp-clock-icon"></i>
-                        <input type="hidden" name="wait_hours" id="wait_hours_c" value="<?= $defaultHours ?>">
-                        <input type="hidden" name="wait_mins" id="wait_mins_c" value="<?= $defaultMins ?>">
-                        <div class="dp-panel" id="dp_panel_c">
-                            <div class="dp-col">
-                                <div class="dp-col-label">Hours</div>
-                                <div class="dp-col-items" id="dp_hours_c"></div>
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <i class="bi bi-gear me-2"></i> Rule Configuration
+                </div>
+                <div class="card-body-modern">
+                    <form action="<?= base_url($prefix . '/departure-rules/store') ?>" method="post">
+                        <?= csrf_field() ?>
+
+                        <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
+                        <div class="mb-4">
+                            <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
+                            <select class="select-modern" id="terminal_id" name="terminal_id" required>
+                                <?php if (!$onlyTerminal): ?>
+                                    <option value="">— Select Terminal —</option>
+                                <?php endif; ?>
+                                <?php foreach ($terminals as $t): ?>
+                                    <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id') == $t['id']) ? 'selected' : '' ?>>
+                                        <?= esc($t['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="route_id" class="form-label-modern">Destination (Optional)</label>
+                            <select class="select-modern" id="route_id" name="route_id">
+                                <option value="">— No specific destination —</option>
+                                <?php foreach (($routes ?? []) as $r): ?>
+                                    <option value="<?= $r['id'] ?>" <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
+                                        <?= esc($r['destination']) ?> (<?= esc(ucfirst($r['vehicle_type'])) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text-modern">Pick a destination for a route-specific interval, or leave blank for a terminal-wide default rule.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="time_from" class="form-label-modern">Time From <span class="text-danger">*</span></label>
+                                <div class="input-group-modern">
+                                    <input type="time" class="input-modern" id="time_from" name="time_from"
+                                        value="<?= old('time_from') ?>" required>
+                                    <span class="input-group-text-modern"><i class="bi bi-clock"></i></span>
+                                </div>
                             </div>
-                            <div class="dp-col">
-                                <div class="dp-col-label">Minutes</div>
-                                <div class="dp-col-items" id="dp_mins_c"></div>
+                            <div class="col-md-6 mb-4">
+                                <label for="time_to" class="form-label-modern">Time To <span class="text-danger">*</span></label>
+                                <div class="input-group-modern">
+                                    <input type="time" class="input-modern" id="time_to" name="time_to"
+                                        value="<?= old('time_to') ?>" required>
+                                    <span class="input-group-text-modern"><i class="bi bi-clock"></i></span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <small class="text-muted">Hours and minutes the vehicle waits before departing.</small>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="label" class="form-label">Label (Optional)</label>
-                    <input type="text" class="form-control" id="label" name="label" value="<?= old('label') ?>"
-                        placeholder="e.g. Morning Rush">
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label-modern">Wait Time <span class="text-danger">*</span></label>
+                                <div class="dp-wrap-modern input-modern" id="dp_wrap_create" tabindex="0">
+                                    <span class="dp-seg-modern" id="dp_h_c" data-seg="h">--</span><span class="dp-colon-modern">:</span><span
+                                        class="dp-seg-modern" id="dp_m_c" data-seg="m">--</span>
+                                    <i class="bi bi-clock dp-clock-icon-modern"></i>
+                                    <input type="hidden" name="wait_hours" id="wait_hours_c" value="<?= $defaultHours ?>">
+                                    <input type="hidden" name="wait_mins" id="wait_mins_c" value="<?= $defaultMins ?>">
+                                    <div class="dp-panel-modern" id="dp_panel_c">
+                                        <div class="dp-col-modern">
+                                            <div class="dp-col-label-modern">Hours</div>
+                                            <div class="dp-col-items-modern" id="dp_hours_c"></div>
+                                        </div>
+                                        <div class="dp-col-modern">
+                                            <div class="dp-col-label-modern">Minutes</div>
+                                            <div class="dp-col-items-modern" id="dp_mins_c"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-text-modern">Hours and minutes the vehicle waits before departing.</div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="label" class="form-label-modern">Label (Optional)</label>
+                                <input type="text" class="input-modern" id="label" name="label" value="<?= old('label') ?>"
+                                    placeholder="e.g. Morning Rush">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-5">
+                            <button type="submit" class="btn btn-modern btn-modern-primary">
+                                <i class="bi bi-save"></i> Save Rule
+                            </button>
+                            <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-save"></i> Save Rule
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -124,7 +147,7 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
     }
 
     /* Duration Picker - mimics native time input */
-    .dp-wrap {
+    .dp-wrap-modern {
         display: flex;
         align-items: center;
         cursor: default;
@@ -135,13 +158,13 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         min-height: 38px;
     }
 
-    .dp-wrap:focus {
+    .dp-wrap-modern:focus {
         outline: none;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, .25);
         border-color: #86b7fe;
     }
 
-    .dp-seg {
+    .dp-seg-modern {
         display: inline-block;
         min-width: 22px;
         text-align: center;
@@ -151,22 +174,22 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         color: #212529;
     }
 
-    .dp-seg.active {
+    .dp-seg-modern.active {
         background: #0d6efd;
         color: #fff;
         border-radius: 3px;
     }
 
-    .dp-seg[data-empty="true"] {
+    .dp-seg-modern[data-empty="true"] {
         color: #6c757d;
     }
 
-    .dp-colon {
+    .dp-colon-modern {
         padding: 0 1px;
         color: #212529;
     }
 
-    .dp-clock-icon {
+    .dp-clock-icon-modern {
         margin-left: auto;
         color: #6c757d;
         font-size: 1rem;
@@ -174,7 +197,7 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         cursor: pointer;
     }
 
-    .dp-panel {
+    .dp-panel-modern {
         display: none;
         position: absolute;
         top: 100%;
@@ -191,11 +214,11 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         overflow: hidden;
     }
 
-    .dp-panel.open {
+    .dp-panel-modern.open {
         display: flex !important;
     }
 
-    .dp-col {
+    .dp-col-modern {
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -203,7 +226,7 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         align-items: center;
     }
 
-    .dp-col-label {
+    .dp-col-modern-label {
         font-weight: 600;
         font-size: 0.7rem;
         color: #64748b;
@@ -216,7 +239,7 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         text-align: center;
     }
 
-    .dp-col-items {
+    .dp-col-modern-items {
         display: flex;
         flex-direction: column;
         gap: 2px;
@@ -227,20 +250,20 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         scrollbar-color: #cbd5e1 transparent;
     }
 
-    .dp-col-items::-webkit-scrollbar {
+    .dp-col-modern-items::-webkit-scrollbar {
         width: 4px;
     }
 
-    .dp-col-items::-webkit-scrollbar-track {
+    .dp-col-modern-items::-webkit-scrollbar-track {
         background: transparent;
     }
 
-    .dp-col-items::-webkit-scrollbar-thumb {
+    .dp-col-modern-items::-webkit-scrollbar-thumb {
         background: #cbd5e1;
         border-radius: 2px;
     }
 
-    .dp-item {
+    .dp-item-modern {
         padding: 0.25rem 0;
         margin: 0 0.125rem;
         border-radius: 0.25rem;
@@ -254,33 +277,33 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         display: block;
     }
 
-    .dp-item:hover {
+    .dp-item-modern:hover {
         background: #e9ecef;
     }
 
-    .dp-item.selected {
+    .dp-item-modern.selected {
         background: #0d6efd;
         color: #fff;
         font-weight: 600;
     }
 
     /* Time Input Wrapper for consistency */
-    .time-input-wrap {
+    .time-input-wrap-modern {
         position: relative;
         display: flex;
         align-items: center;
     }
 
-    .time-input-wrap input[type="time"] {
+    .time-input-wrap-modern input[type="time"] {
         padding-right: 2.5rem;
     }
 
-    .time-input-wrap input[type="time"]::-webkit-calendar-picker-indicator {
+    .time-input-wrap-modern input[type="time"]::-webkit-calendar-picker-indicator {
         display: none;
         -webkit-appearance: none;
     }
 
-    .time-input-wrap .time-icon {
+    .time-input-wrap-modern .time-icon {
         position: absolute;
         right: 0.75rem;
         color: #6c757d;
@@ -318,10 +341,10 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
                 inpM.value = (mVal === null) ? '' : mVal;
 
                 // Sync panel selections
-                hoursContainer.querySelectorAll('.dp-item').forEach((item, idx) => {
+                hoursContainer.querySelectorAll('.dp-item-modern').forEach((item, idx) => {
                     item.classList.toggle('selected', idx === hVal);
                 });
-                minsContainer.querySelectorAll('.dp-item').forEach((item, idx) => {
+                minsContainer.querySelectorAll('.dp-item-modern').forEach((item, idx) => {
                     item.classList.toggle('selected', idx === mVal);
                 });
             }
@@ -372,8 +395,8 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
                 panel.classList.add('open');
                 render();
                 // Scroll to selected items
-                const hItems = hoursContainer.querySelectorAll('.dp-item');
-                const mItems = minsContainer.querySelectorAll('.dp-item');
+                const hItems = hoursContainer.querySelectorAll('.dp-item-modern');
+                const mItems = minsContainer.querySelectorAll('.dp-item-modern');
                 if (hVal !== null && hItems[hVal]) hItems[hVal].scrollIntoView({ block: 'nearest' });
                 if (mVal !== null && mItems[mVal]) mItems[mVal].scrollIntoView({ block: 'nearest' });
             }
@@ -383,7 +406,7 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
             }
 
             // Toggle panel click handler on clock icon
-            const icon = wrap.querySelector('.dp-clock-icon');
+            const icon = wrap.querySelector('.dp-clock-icon-modern');
             if (icon) {
                 icon.addEventListener('click', function (e) {
                     e.stopPropagation();
@@ -467,7 +490,7 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
         setupDurationPicker('dp_wrap_create', 'wait_hours_c', 'wait_mins_c', 'dp_panel_c', 'dp_hours_c', 'dp_mins_c', initH, initM);
 
         // Setup native time pickers triggers with custom clock icon
-        document.querySelectorAll('.time-input-wrap').forEach(wrap => {
+        document.querySelectorAll('.time-input-wrap-modern').forEach(wrap => {
             const input = wrap.querySelector('input[type="time"]');
             const icon = wrap.querySelector('.time-icon');
             if (input && icon) {

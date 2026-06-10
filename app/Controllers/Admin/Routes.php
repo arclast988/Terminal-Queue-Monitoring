@@ -38,6 +38,26 @@ class Routes extends BaseController
         return view('admin/routes/index', $data);
     }
 
+    /**
+     * Get distinct destinations from the routes table for dropdown population.
+     */
+    private function getDistinctLocations(): array
+    {
+        $db = \Config\Database::connect();
+
+        $destsResult   = $db->query('SELECT DISTINCT destination FROM routes ORDER BY destination ASC')->getResultArray();
+
+        $destinations = array_column($destsResult, 'destination');
+        $allLocations = array_unique($destinations);
+        sort($allLocations);
+
+        return [
+            'origins'       => [],
+            'destinations'  => $destinations,
+            'all_locations' => $allLocations,
+        ];
+    }
+
     private function ensureRegularDiscount(int $terminalId): array
     {
         $regular = $this->discountModel
@@ -138,9 +158,14 @@ class Routes extends BaseController
 
     public function create()
     {
+        $locations = $this->getDistinctLocations();
+
         $data = [
-            'title'     => 'Add New Route',
-            'terminals' => $this->terminalModel->findAll(),
+            'title'         => 'Add New Route',
+            'terminals'     => $this->terminalModel->findAll(),
+            'origins'       => $locations['origins'],
+            'destinations'  => $locations['destinations'],
+            'all_locations' => $locations['all_locations'],
         ];
         return view('admin/routes/create', $data);
     }
@@ -207,10 +232,15 @@ class Routes extends BaseController
 
         $route = enrich_routes_with_discounts([$route])[0];
 
+        $locations = $this->getDistinctLocations();
+
         $data = [
-            'title'     => 'Edit Route',
-            'route'     => $route,
-            'terminals' => $this->terminalModel->findAll(),
+            'title'         => 'Edit Route',
+            'route'         => $route,
+            'terminals'     => $this->terminalModel->findAll(),
+            'origins'       => $locations['origins'],
+            'destinations'  => $locations['destinations'],
+            'all_locations' => $locations['all_locations'],
         ];
 
         return view('admin/routes/edit', $data);
@@ -245,6 +275,9 @@ class Routes extends BaseController
         $vehicleType = $this->request->getPost('vehicle_type');
         $newFare     = $this->request->getPost('fare');
         $oldFare      = $this->getRegularFare((int) $id);
+        if ($oldFare <= 0 && isset($existingRoute['fare'])) {
+            $oldFare = (float) $existingRoute['fare'];
+        }
 
         $collision = $this->routeModel->where('terminal_id', $terminalId)
                                       ->where('destination', $destination)

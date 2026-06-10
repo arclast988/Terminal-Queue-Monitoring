@@ -45,21 +45,14 @@ if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
     echo "[OK] Database already populated."
 else
     echo "[INFO] Database tables not found. Importing SQL dump..."
-    mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans.sql" 2>/dev/null
+    mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans.sql" 2>/dev/null \
+        || mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans_clean.sql" 2>/dev/null
     if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
         echo "[OK] Database imported successfully."
     else
         echo "[ERROR] Database import failed - verify jeepneynvans.sql exists in the project root."
     fi
 fi
-
-# --- 4b. Ensure writable/ is web-writable (Nginx + PHP-FPM run as www-data) ---
-# Without this the cache/session/log dirs stay owned by the cloning user and the
-# app 500s with "Cache unable to write to .../writable/cache/". Runs as root here.
-mkdir -p "${PROJECT_ROOT}/writable/cache" "${PROJECT_ROOT}/writable/logs" \
-         "${PROJECT_ROOT}/writable/session" "${PROJECT_ROOT}/writable/debugbar"
-chmod -R 0777 "${PROJECT_ROOT}/writable" 2>/dev/null || true
-echo "[OK] writable/ permissions set (www-data can write cache/session/logs)."
 
 # --- 5. WebSocket server (background, no duplicate) ---
 if pgrep -f 'spark ws:serve' >/dev/null 2>&1; then

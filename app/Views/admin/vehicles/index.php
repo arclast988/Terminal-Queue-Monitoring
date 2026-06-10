@@ -1,57 +1,75 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
-<div class="d-flex justify-content-between align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="bi bi-journal-text text-primary me-2"></i> Vehicle Register</h1>
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
+<div class="page-header-modern fade-in">
+    <h1 class="page-title-modern">
+        <i class="bi bi-truck"></i>
+        Vehicle Register
+    </h1>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success"><?= esc(session()->getFlashdata('success')) ?></div>
+    <div class="alert-modern alert-modern-success fade-in">
+        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('success')) ?></div>
+    </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger"><?= esc(session()->getFlashdata('error')) ?></div>
+    <div class="alert-modern alert-modern-danger fade-in">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('error')) ?></div>
+    </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('errors')): ?>
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                <li><?= esc($error) ?></li>
-            <?php endforeach; ?>
-        </ul>
+    <div class="alert-modern alert-modern-danger fade-in">
+        <i class="bi bi-exclamation-circle-fill alert-modern-icon"></i>
+        <div>
+            <ul class="mb-0" style="padding-left: 20px;">
+                <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                    <li><?= esc($error) ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     </div>
 <?php endif; ?>
 
 <!-- Add Vehicle Form -->
-<div class="card shadow mb-4 vehicle-register-form">
-    <div class="card-header">
-        <i class="bi bi-plus-circle"></i> Register New Vehicle
+<div class="modern-card shadow-modern fade-in">
+    <div class="modern-card-header">
+        <span class="modern-card-title">
+            <i class="bi bi-plus-circle" style="color: var(--primary-red);"></i>
+            Register New Vehicle
+        </span>
     </div>
-    <div class="card-body">
+    <div class="modern-card-body">
         <form action="<?= base_url('admin/vehicles/store') ?>" method="post">
             <?= csrf_field() ?>
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-sm-6 col-xl-2">
-                    <label for="driver_name" class="form-label">Driver Name</label>
-                    <input type="text" class="form-control" id="driver_name" name="driver_name"
+                    <label for="driver_name" class="form-label-modern">Driver Name</label>
+                    <input type="text" class="form-control-modern" id="driver_name" name="driver_name"
                         placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?>" required>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-2">
-                    <label for="plate_number" class="form-label">Plate Number</label>
-                    <input type="text" class="form-control" id="plate_number" name="plate_number"
+                    <label for="plate_number" class="form-label-modern">Plate Number</label>
+                    <input type="text" class="form-control-modern" id="plate_number" name="plate_number"
                         placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-2">
-                    <label for="type" class="form-label">Type</label>
-                    <select class="form-select" id="type" name="type" required>
+                    <label for="type" class="form-label-modern">Type</label>
+                    <select class="form-select-modern" id="type" name="type" required>
                         <option value="jeepney" <?= old('type') == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
                         <option value="van" <?= old('type') == 'van' ? 'selected' : '' ?>>Van</option>
                         <option value="minibus" <?= old('type') == 'minibus' ? 'selected' : '' ?>>Minibus</option>
                     </select>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <label for="route_id" class="form-label">Assigned Route</label>
-                    <select class="form-select" id="route_id" name="route_id" required>
+                    <label for="route_id" class="form-label-modern">Assigned Route</label>
+                    <select class="form-select-modern" id="route_id" name="route_id" required>
                         <option value="">-- Select Route --</option>
                         <?php if (!empty($routes)): ?>
                             <?php foreach ($routes as $r): ?>
@@ -64,12 +82,12 @@
                     </select>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-1">
-                    <label for="capacity" class="form-label">Capacity</label>
-                    <input type="number" class="form-control" id="capacity" name="capacity" placeholder="16"
+                    <label for="capacity" class="form-label-modern">Capacity</label>
+                    <input type="number" class="form-control-modern" id="capacity" name="capacity" placeholder="16"
                         value="<?= old('capacity') ?>" min="1" required>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-1">
-                    <button type="submit" class="btn btn-primary w-100 vehicle-add-btn">
+                    <button type="submit" class="btn-modern btn-modern-primary w-100">
                         <i class="bi bi-plus-lg"></i> Add
                     </button>
                 </div>
@@ -145,15 +163,18 @@ if (!empty($vehicles) && is_array($vehicles)) {
 </div>
 
 <!-- Vehicles Table -->
-<div class="card shadow">
-    <div class="card-header d-flex justify-content-between align-items-center" style="padding:10px 16px;">
-        <span style="font-weight:600; font-size:14px; color:#1e293b;"><i class="bi bi-list-ul me-1"></i> Vehicle List</span>
-        <span id="filter-label" style="font-size:12px; color:#64748b;">Showing all <strong><?= $totalVehicles ?></strong> vehicles</span>
+<div class="modern-card shadow-modern fade-in">
+    <div class="modern-card-header">
+        <span class="modern-card-title">
+            <i class="bi bi-list-ul" style="color: var(--primary-red);"></i>
+            Vehicle List
+        </span>
+        <span id="filter-label" style="font-size:12px; color:var(--slate-500);">Showing all <strong><?= $totalVehicles ?></strong> vehicles</span>
     </div>
-    <div class="card-body">
-        <div class="table-responsive table-responsive-card">
-            <table class="table table-striped table-hover" id="vehicles-table">
-                <thead class="table-light">
+    <div class="modern-card-body">
+        <div class="table-responsive">
+            <table class="table-modern" id="vehicles-table">
+                <thead>
                     <tr>
                         <th>#</th>
                         <th>Plate Number</th>
@@ -170,11 +191,9 @@ if (!empty($vehicles) && is_array($vehicles)) {
                     <?php if (!empty($vehicles) && is_array($vehicles)): ?>
                         <?php foreach ($vehicles as $i => $vehicle): ?>
                             <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>">
-                                <td class="row-number" data-label="#"><?= $i + 1 ?></td>
-                                <td data-label="Plate Number">
-                                    <span class="fw-bold"><?= esc($vehicle['plate_number']) ?></span>
-                                </td>
-                                <td class="fw-bold" data-label="Driver Name"><?= esc($vehicle['driver_name']) ?></td>
+                                <td data-label="#" class="row-number"><strong><?= $i + 1 ?></strong></td>
+                                <td data-label="Plate Number"><strong><?= esc($vehicle['plate_number']) ?></strong></td>
+                                <td data-label="Driver Name"><?= esc($vehicle['driver_name']) ?></td>
                                 <td data-label="Vehicle Type">
                                     <?php
                                     $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
@@ -184,44 +203,42 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                         <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
                                             style="height:32px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
                                     </span>
-                                    <div class="mt-1"><?= vehicle_type_badge($vehicle['type']) ?></div>
+                                    <div style="margin-top:4px;"><?= vehicle_type_badge($vehicle['type']) ?></div>
                                 </td>
-                                <td style="max-width: 250px;" data-label="Assigned Route">
+                                <td data-label="Assigned Route">
                                     <?php if (!empty($vehicle['route_destination'])):
                                         $routeLabel = strtoupper(esc($vehicle['route_origin'])) . ' → ' . strtoupper(esc($vehicle['route_destination']));
                                     ?>
-                                        <div class="badge-scroll-wrap" title="<?= $routeLabel ?>">
-                                            <span class="badge bg-primary" style="font-size:10px; font-weight:500;">
-                                                <?= $routeLabel ?>
-                                            </span>
-                                        </div>
+                                        <span class="badge-modern badge-modern-primary" style="font-size:11px;">
+                                            <?= $routeLabel ?>
+                                        </span>
                                     <?php else: ?>
-                                        <span class="badge bg-warning text-dark">Not Assigned</span>
+                                        <span class="badge-modern badge-modern-warning">Not Assigned</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Capacity"><?= $vehicle['capacity'] ?></td>
+                                <td data-label="Capacity"><strong><?= $vehicle['capacity'] ?></strong></td>
                                 <td data-label="Status">
                                     <?php if ($vehicle['status'] == 'active'): ?>
-                                        <span class="badge bg-success">Active</span>
+                                        <span class="badge-modern badge-modern-success">Active</span>
                                     <?php else: ?>
-                                        <span class="badge bg-danger">Maintenance</span>
+                                        <span class="badge-modern badge-modern-danger">Maintenance</span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Registered">
-                                    <small class="text-muted"><?= date('M d, Y', strtotime($vehicle['created_at'])) ?></small>
+                                    <small style="color:var(--slate-500);"><?= date('M d, Y', strtotime($vehicle['created_at'])) ?></small>
                                 </td>
                                 <td data-label="Action">
-                                    <div class="btn-group btn-group-sm" role="group">
+                                    <div style="display:flex; gap:8px;">
                                         <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
-                                            class="btn btn-outline-primary" title="Edit vehicle">
-                                            <i class="bi bi-pencil"></i> <span class="vehicle-action-label">Edit</span>
+                                            class="btn-modern btn-modern-outline btn-modern-sm" title="Edit vehicle">
+                                            <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <form action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post"
-                                            class="d-inline"
+                                            style="display:inline;"
                                             onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn btn-outline-danger" title="Delete vehicle">
-                                                <i class="bi bi-trash"></i> <span class="vehicle-action-label">Delete</span>
+                                            <button type="submit" class="btn-modern btn-modern-sm" style="background:#FEE2E2; color:#dc2626;" title="Delete vehicle">
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </form>
                                     </div>
@@ -230,7 +247,10 @@ if (!empty($vehicles) && is_array($vehicles)) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="no-vehicles-row">
-                            <td colspan="9" class="text-center py-4 text-muted">No vehicles registered yet.</td>
+                            <td colspan="9" style="text-align:center; padding:40px; color:var(--slate-500);">
+                                <i class="bi bi-inbox" style="font-size:32px; opacity:0.3; margin-bottom:8px;"></i>
+                                <div>No vehicles registered yet.</div>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
