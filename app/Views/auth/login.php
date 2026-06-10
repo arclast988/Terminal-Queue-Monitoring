@@ -6,6 +6,9 @@
     <title>Login - Palompon Transit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
     <style>
         * {
@@ -15,12 +18,12 @@
         }
 
         body {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .login-wrapper {
@@ -179,8 +182,8 @@
 
         .form-group input:focus {
             outline: none;
-            border-color: #0052cc;
-            box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.1);
+            border-color: #1565c0;
+            box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.12);
         }
 
         .remember-forgot {
@@ -212,7 +215,7 @@
         .login-btn {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #0052cc 0%, #003d99 100%);
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
             color: white;
             border: none;
             border-radius: 8px;
@@ -220,7 +223,7 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 82, 204, 0.3);
+            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;

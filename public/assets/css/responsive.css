@@ -777,3 +777,322 @@ body.staff-theme .badge.badge-truncate {
         display: none !important;
     }
 }
+
+/* =================================================================
+   MODERNIZATION POLISH LAYER
+   Consistent theme, accessibility, and mobile-first organization.
+   Loaded last so these rules win the cascade. Uses tokens from
+   modern-frontend.css with safe fallbacks.
+   ================================================================= */
+
+/* ---- 1. Accessible, theme-consistent focus states ---- */
+.btn:focus-visible,
+a:focus-visible,
+button:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.dropbtn:focus-visible,
+.nav-menu a:focus-visible {
+    outline: 2px solid var(--primary, #C62828);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm, 6px);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary, #C62828);
+    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12);
+}
+
+body.staff-theme .form-control:focus,
+body.staff-theme .form-select:focus {
+    border-color: var(--primary, #1565c0);
+    box-shadow: 0 0 0 0.2rem rgba(21, 101, 192, 0.12);
+}
+
+/* ---- 2. Consistent component shape and depth ---- */
+.btn {
+    border-radius: var(--radius-sm, 6px);
+}
+
+.card {
+    border-radius: var(--radius-md, 10px);
+}
+
+.modal-content {
+    border-radius: var(--radius-md, 10px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    box-shadow: var(--shadow-lg, 0 8px 32px rgba(0, 0, 0, 0.1));
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--radius-sm, 6px);
+}
+
+.dropdown-menu {
+    border-radius: var(--radius-md, 10px);
+    border: 1px solid var(--slate-200, #e2e8f0);
+    box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.08));
+    overflow: hidden;
+}
+
+.dropdown-menu .dropdown-item {
+    padding: 0.55rem 1rem;
+}
+
+/* Visible validation feedback */
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--danger, #ef4444);
+}
+
+.invalid-feedback {
+    display: block;
+    font-size: 0.8rem;
+}
+
+/* ---- 3. Mobile-first organization (≤ 768px) ---- */
+@media (max-width: 768px) {
+
+    /* Touch targets: minimum 44px for comfortable tapping */
+    .btn:not(.btn-sm):not(.btn-close),
+    .form-control,
+    .form-select,
+    .page-link,
+    .dropdown-menu .dropdown-item,
+    .nav-menu a,
+    .dropbtn,
+    .logout-btn-custom {
+        min-height: 44px;
+    }
+
+    .btn-sm {
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+    }
+
+    /* Icon-only action buttons in tables stay aligned and tappable */
+    .table .btn,
+    .table-responsive-card .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        white-space: nowrap;
+    }
+
+    /* Button groups wrap instead of overflowing */
+    .btn-group,
+    .btn-toolbar {
+        flex-wrap: wrap;
+        gap: 0.375rem;
+    }
+
+    /* Page-header rows (title + action button) stack neatly */
+    .d-flex.justify-content-between.align-items-center:not(.no-stack) {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    /* Modals fit small viewports */
+    .modal-dialog {
+        margin: 0.75rem;
+        max-width: calc(100% - 1.5rem);
+    }
+
+    .modal-body {
+        max-height: calc(100dvh - 12rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-footer {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        flex: 1 1 auto;
+        min-width: 110px;
+    }
+
+    /* Forms: comfortable spacing, no iOS zoom on focus */
+    .form-control,
+    .form-select {
+        font-size: 16px;
+    }
+
+    /* Pagination wraps and stays centered */
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: 0.375rem;
+    }
+
+    /* Cards and stat grids breathe on small screens */
+    .card .card-body {
+        padding: 1rem;
+    }
+
+    /* Badges remain legible */
+    .badge {
+        font-size: 0.72rem;
+        padding: 0.35em 0.6em;
+    }
+}
+
+/* ---- 4. Extra-small screens (≤ 480px): full-width primary actions ---- */
+@media (max-width: 480px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    /* Standalone action buttons in page headers go full width */
+    .main-content > .d-flex.justify-content-between .btn:not(.btn-sm),
+    .card-header .btn:not(.btn-sm) {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ---- 5. Motion preferences: respect reduced-motion users ---- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .marquee {
+        animation: none !important;
+        padding-left: 0 !important;
+    }
+}
+
+/* ---- 6. Consistent empty/loading states ---- */
+.empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--slate-500, #64748b);
+}
+
+.empty-state i {
+    font-size: 2.25rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    color: var(--slate-300, #cbd5e1);
+}
+
+.spinner-border {
+    --bs-spinner-border-width: 0.2em;
+}
+
+/* =================================================================
+   MODERNIZATION POLISH LAYER - PART 2
+   Refinements for the custom *-modern component family used across
+   admin and staff pages, plus theme-aware focus colors.
+   ================================================================= */
+
+/* Theme-aware focus colors for modern inputs (staff theme is blue) */
+body.staff-theme .input-modern:focus,
+body.staff-theme .form-control-modern:focus,
+body.staff-theme .form-select-modern:focus {
+    border-color: var(--primary-blue, #1565c0);
+    box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.1);
+}
+
+/* Modern buttons: consistent icon + label alignment everywhere */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+@media (max-width: 768px) {
+    /* Touch targets for modern buttons and filter badges */
+    .btn-modern {
+        min-height: 44px;
+    }
+
+    .btn-modern.btn-modern-sm {
+        min-height: 36px;
+    }
+
+    button.badge-modern {
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    /* Search/filter bars: full-width inputs */
+    .input-group-modern {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .input-modern,
+    .form-control-modern,
+    .form-select-modern {
+        font-size: 16px; /* prevent iOS auto-zoom on focus */
+        min-height: 44px;
+    }
+
+    /* Modern card-table rows: cells without data-labels align left */
+    .table-modern tbody td:not([data-label]) {
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .table-modern tbody td[data-label] {
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Action button groups inside modern tables wrap neatly */
+    .btn-group-modern {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        justify-content: flex-end;
+    }
+
+    /* Modern card padding breathes on mobile */
+    .modern-card-body {
+        padding: 1rem;
+    }
+
+    .modern-card-header {
+        padding: 0.875rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Alerts stay readable on narrow screens */
+    .alert-modern {
+        padding: 12px 14px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Page-header action buttons go full width on phones */
+    .page-header-modern > div,
+    .page-header-modern > a.btn-modern {
+        width: 100%;
+    }
+
+    .page-header-modern .btn-modern {
+        width: 100%;
+        justify-content: center;
+    }
+}
