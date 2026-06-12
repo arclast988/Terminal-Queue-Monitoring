@@ -20,6 +20,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
+    <!-- Design system: shared tokens/components, role themes, then the legacy-class bridge -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/themes.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/legacy-bridge.css') ?>">
+
     <!-- Modern Admin Styling (for logged-in users) - Remove this line to rollback -->
     <?php if (session()->get('isLoggedIn')): ?>
         <link rel="stylesheet" href="<?= base_url('assets/css/admin-modern.css') ?>">
@@ -70,7 +75,7 @@
             --danger: #ef4444;
             --bg-main: #f8fafc;
             --text-main: #1e293b;
-            --text-muted: #64748b;
+            --text-muted: #475569;
         }
 
         /* Admin theme: modern clean light layout with deep red accent */
@@ -79,7 +84,7 @@
             --primary-dark: #B71C1C;
             --bg-main: #f1f5f9;
             --text-main: #1e293b;
-            --text-muted: #64748b;
+            --text-muted: #475569;
             background-color: #f1f5f9 !important;
             color: #1e293b !important;
         }
@@ -93,13 +98,13 @@
         }
 
         body.admin-theme .text-muted {
-            color: #64748b !important; /* dark slate gray for all text-muted to ensure readability */
+            color: #475569 !important;
         }
         
         body.admin-theme .card .text-muted,
         body.admin-theme .table .text-muted,
         body.admin-theme .list-group-item .text-muted {
-            color: #64748b !important; 
+            color: #475569 !important; 
         }
 
         body.admin-theme .h2,
@@ -156,7 +161,7 @@
 
         body.admin-theme .btn-outline-secondary {
             border-color: #cbd5e1;
-            color: #64748b;
+            color: #475569;
         }
 
         body.admin-theme .btn-outline-secondary:hover {
@@ -184,7 +189,7 @@
             --primary-dark: #0d47a1;
             --bg-main: #f1f5f9;
             --text-main: #1e293b;
-            --text-muted: #64748b;
+            --text-muted: #475569;
             background-color: #f1f5f9 !important;
             color: #1e293b !important;
         }
@@ -198,13 +203,13 @@
         }
 
         body.staff-theme .text-muted {
-            color: #64748b !important;
+            color: #475569 !important;
         }
         
         body.staff-theme .card .text-muted,
         body.staff-theme .table .text-muted,
         body.staff-theme .list-group-item .text-muted {
-            color: #64748b !important; 
+            color: #475569 !important; 
         }
 
         body.staff-theme .h2,
@@ -381,6 +386,258 @@
         /* Custom badge colors */
         .bg-purple {
             background-color: #6a1b9a !important;
+        }
+
+        /* =================================================================
+           DARK MODE — respects system preference, overrides !important rules
+           ================================================================= */
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background-color: #0f172a !important;
+            }
+            body {
+                background-color: #0f172a !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme,
+            body.admin-theme .main-content {
+                background-color: #0f172a !important;
+                color: #f1f5f9 !important;
+            }
+            body.staff-theme,
+            body.staff-theme .main-content {
+                background-color: #0f172a !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .card:not(.text-white),
+            body.staff-theme .card:not(.text-white) {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .card.text-white,
+            body.staff-theme .card.text-white {
+                border-color: #334155 !important;
+            }
+            body.admin-theme .text-muted,
+            body.staff-theme .text-muted {
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success),
+            body.staff-theme .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success) {
+                background-color: #1e293b !important;
+                border-bottom-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .table,
+            body.admin-theme .table td,
+            body.admin-theme .table th,
+            body.staff-theme .table,
+            body.staff-theme .table td,
+            body.staff-theme .table th {
+                color: #e2e8f0 !important;
+            }
+            body.admin-theme .modern-card,
+            body.staff-theme .modern-card {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            body.admin-theme .modern-card-header,
+            body.staff-theme .modern-card-header {
+                background: #1e293b !important;
+                border-bottom-color: #334155 !important;
+            }
+            body.admin-theme .stat-card-modern,
+            body.staff-theme .stat-card-modern {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            body.admin-theme .modal-content,
+            body.staff-theme .modal-content {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .modal-header,
+            body.staff-theme .modal-header,
+            body.admin-theme .modal-body,
+            body.staff-theme .modal-body,
+            body.admin-theme .modal-footer,
+            body.staff-theme .modal-footer {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .modal-title,
+            body.staff-theme .modal-title,
+            body.admin-theme .modal-body p,
+            body.staff-theme .modal-body p,
+            body.admin-theme .modal-body small,
+            body.staff-theme .modal-body small,
+            body.admin-theme .modal-header h5,
+            body.staff-theme .modal-header h5 {
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .table thead th,
+            body.staff-theme .table thead th {
+                background: #334155 !important;
+                border-bottom-color: #475569 !important;
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .table tbody tr,
+            body.staff-theme .table tbody tr {
+                background: #1e293b;
+            }
+            body.admin-theme .table tbody td,
+            body.staff-theme .table tbody td {
+                border-bottom-color: #334155 !important;
+            }
+            body.admin-theme .table-striped tbody tr:nth-of-type(odd),
+            body.staff-theme .table-striped tbody tr:nth-of-type(odd) {
+                background-color: #1e293b !important;
+            }
+            body.admin-theme .table tbody tr:hover,
+            body.staff-theme .table tbody tr:hover {
+                background-color: #334155 !important;
+            }
+            body.admin-theme .table-striped tbody tr:nth-of-type(odd):hover,
+            body.staff-theme .table-striped tbody tr:nth-of-type(odd):hover {
+                background-color: #334155 !important;
+            }
+            body.admin-theme .form-control,
+            body.admin-theme .form-select,
+            body.staff-theme .form-control,
+            body.staff-theme .form-select {
+                background-color: #1e293b !important;
+                border-color: #475569 !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .form-label,
+            body.staff-theme .form-label {
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .page-title-modern,
+            body.staff-theme .page-title-modern,
+            body.admin-theme .stat-card-value,
+            body.staff-theme .stat-card-value,
+            body.admin-theme .modern-card-title,
+            body.staff-theme .modern-card-title {
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .stat-card-label,
+            body.staff-theme .stat-card-label {
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .input-modern,
+            body.admin-theme .form-control-modern,
+            body.admin-theme .form-select-modern,
+            body.staff-theme .input-modern,
+            body.staff-theme .form-control-modern,
+            body.staff-theme .form-select-modern {
+                background: #1e293b !important;
+                border-color: #475569 !important;
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .form-label-modern,
+            body.staff-theme .form-label-modern {
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .breadcrumb,
+            body.staff-theme .breadcrumb {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            body.admin-theme .alert,
+            body.staff-theme .alert {
+                border-color: #334155 !important;
+            }
+            body.admin-theme .list-group-item,
+            body.staff-theme .list-group-item {
+                background: #1e293b !important;
+                border-bottom-color: #334155 !important;
+            }
+            body.admin-theme .page-header-modern,
+            body.staff-theme .page-header-modern,
+            body.admin-theme .border-bottom,
+            body.staff-theme .border-bottom {
+                border-bottom-color: #334155 !important;
+            }
+            body.admin-theme .pagination .page-link,
+            body.staff-theme .pagination .page-link {
+                background: #1e293b !important;
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .pagination .page-item.active .page-link,
+            body.staff-theme .pagination .page-item.active .page-link {
+                background: var(--primary) !important;
+                color: #fff !important;
+            }
+            body.admin-theme .dropdown-content,
+            body.staff-theme .dropdown-content {
+                background: #1e293b !important;
+                border-color: #334155 !important;
+            }
+            body.admin-theme .dropdown-content a,
+            body.staff-theme .dropdown-content a {
+                color: #e2e8f0 !important;
+            }
+            body.admin-theme .dropdown-content a:hover,
+            body.staff-theme .dropdown-content a:hover {
+                background: #334155 !important;
+            }
+            body.admin-theme .input-group-text,
+            body.staff-theme .input-group-text {
+                background: #334155 !important;
+                border-color: #475569 !important;
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .table-modern thead th,
+            body.staff-theme .table-modern thead th {
+                background: linear-gradient(to bottom, #334155, #1e293b) !important;
+                border-bottom-color: #475569 !important;
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .table-modern tbody tr,
+            body.staff-theme .table-modern tbody tr {
+                background: #1e293b !important;
+            }
+            body.admin-theme .table-modern tbody td,
+            body.staff-theme .table-modern tbody td {
+                border-bottom-color: #334155 !important;
+                color: #e2e8f0 !important;
+            }
+            body.admin-theme .table-modern tbody tr:hover,
+            body.staff-theme .table-modern tbody tr:hover {
+                background: #334155 !important;
+            }
+            body.admin-theme .btn-modern-outline,
+            body.staff-theme .btn-modern-outline {
+                background: transparent !important;
+                border-color: #475569 !important;
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .btn-modern-outline:hover,
+            body.staff-theme .btn-modern-outline:hover {
+                border-color: #64748b !important;
+                background: #1e293b !important;
+                color: #e2e8f0 !important;
+            }
+            body.admin-theme .btn-outline-secondary,
+            body.staff-theme .btn-outline-secondary {
+                border-color: #475569 !important;
+                background: transparent !important;
+                color: #94a3b8 !important;
+            }
+            body.admin-theme .btn-outline-secondary:hover,
+            body.staff-theme .btn-outline-secondary:hover {
+                background: #1e293b !important;
+                border-color: #64748b !important;
+                color: #e2e8f0 !important;
+            }
+            body.admin-theme .stat-card-link,
+            body.staff-theme .stat-card-link {
+                color: var(--primary) !important;
+            }
         }
     </style>
 </head>

@@ -336,7 +336,7 @@ body.admin-theme .page-hero .subtitle {
     padding: 1rem 1.25rem !important;
     font-size: 12px;
     font-weight: 700;
-    color: #64748b;
+    color: #475569;
     text-transform: none;
     letter-spacing: 0;
 }
@@ -379,7 +379,7 @@ body.admin-theme .page-hero .subtitle {
 .form-label {
     font-weight: 600;
     font-size: 13px;
-    color: #475569;
+    color: #334155;
     margin-bottom: 0.5rem;
 }
 
@@ -427,7 +427,7 @@ body.admin-theme .page-hero .subtitle {
 .btn-outline-secondary {
     border: 1px solid #e2e8f0 !important;
     background: white !important;
-    color: #64748b !important;
+    color: #475569 !important;
 }
 
 /* Ensure depart button works */
@@ -864,7 +864,7 @@ body.staff-theme .table .btn-group > form {
     border-radius: var(--admin-radius-sm) !important;
     margin: 0 3px !important;
     border: none !important;
-    color: #64748b;
+    color: #475569;
     cursor: pointer !important;
 }
 

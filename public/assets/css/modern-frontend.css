@@ -214,10 +214,10 @@ body {
 
 .stat-card-label {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: var(--slate-500);
+    color: var(--slate-600);
 }
 
 .stat-card-link {
@@ -338,7 +338,7 @@ body {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    color: var(--slate-500);
+    color: var(--slate-600);
     background: linear-gradient(to bottom, var(--slate-50), var(--slate-100));
     border-bottom: 2px solid var(--slate-200);
 }
@@ -439,7 +439,7 @@ body {
 
 .input-modern::placeholder,
 .form-control-modern::placeholder {
-    color: var(--slate-400);
+    color: var(--slate-500);
 }
 
 .form-select-modern {
@@ -626,8 +626,8 @@ body {
 }
 
 /* =================================================================
-   RESPONSIVE DESIGN
-   ================================================================= */
+    RESPONSIVE DESIGN
+    ================================================================= */
 
 @media (max-width: 768px) {
     .page-header-modern {
@@ -674,8 +674,8 @@ body {
     
     .table-modern tbody td::before {
         content: attr(data-label);
-        font-weight: 600;
-        color: var(--slate-500);
+        font-weight: 700;
+        color: var(--slate-600);
         text-transform: uppercase;
         font-size: 11px;
         letter-spacing: 0.5px;
@@ -736,4 +736,59 @@ body.staff-theme .stat-card-link {
 
 body.staff-theme .stat-card-link:hover {
     color: var(--primary-blue-dark);
+}
+
+/* =================================================================
+   QUICK FIX: Ensure header CTAs and modern buttons always show text
+   - Addresses cases where overlay (::after), cascade, or theme tokens
+     cause button text/icons to become invisible on admin pages.
+   - This is a minimal, targeted patch. Keep selectors specific and
+     use !important only where necessary so it wins the cascade.
+   ================================================================= */
+
+/* Make sure the logout/profile CTA in the header is readable */
+body.admin-theme .logout-btn-custom,
+body.staff-theme .logout-btn-custom,
+.logout-btn-custom {
+    color: var(--nav-cta-text, #B71C1C) !important;
+    -webkit-text-fill-color: var(--nav-cta-text, #B71C1C) !important;
+}
+
+.logout-btn-custom i,
+.logout-btn-custom .fa,
+.logout-btn-custom .bi {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Ensure modern buttons and their icons inherit a visible color */
+.btn-modern,
+.btn-modern *,
+.btn-modern i,
+.btn-modern .bi,
+.btn-modern .fa {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Primary modern buttons must have white text on colored backgrounds */
+.btn-modern.btn-modern-primary,
+.btn-modern.btn-modern-primary i,
+.btn-modern.btn-modern-primary .bi {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+/* Outline / neutral modern buttons should be dark on light */
+.btn-modern.btn-modern-outline,
+.btn-modern.btn-modern-outline i,
+.btn-modern.btn-modern-outline .bi {
+    color: var(--slate-800, #1e293b) !important;
+    -webkit-text-fill-color: var(--slate-800, #1e293b) !important;
+}
+
+/* Prevent the decorative ::after overlay from sitting above text */
+.btn-modern::after {
+    z-index: -1 !important;
+    pointer-events: none !important;
 }

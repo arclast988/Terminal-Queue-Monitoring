@@ -11,10 +11,10 @@
     <style>
         /* ===== DESIGN TOKENS ===== */
         :root {
-            --primary:       #1565c0;
-            --primary-dark:  #0d47a1;
-            --accent:        #FFC107;
-            --accent-dark:   #FF9800;
+            --primary:       #1E40AF;
+            --primary-dark:  #1E3A8A;
+            --accent:        #F59E0B;
+            --accent-dark:   #D97706;
             --success:       #43a047;
             --text-main:     #2c3e50;
             --text-muted:    #66788a;

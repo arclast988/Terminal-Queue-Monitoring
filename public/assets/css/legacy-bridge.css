@@ -1,0 +1,442 @@
+/* ==========================================================================
+   Legacy Bridge — maps the old "-modern" classes onto the design system
+   --------------------------------------------------------------------------
+   Class mapping implemented here (no markup changes needed):
+     .page-header-modern  -> .page-header        .stat-card-modern -> .card--stat
+     .table-modern        -> .table--card        .btn-modern-*     -> .btn--*
+     .badge-modern-*      -> .badge--*           .alert-modern-*   -> .alert--*
+     .input-modern        -> .input              .modern-card      -> .card
+
+   All colors come from tokens (design-system.css + themes.css), so every
+   page is automatically consistent: admin = red, dispatcher = blue,
+   guest = crimson. Selectors are prefixed with `html body` so they beat
+   modern-frontend.css / admin-modern.css regardless of load order.
+   Load this file LAST.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. GLOBAL CANVAS — one background source of truth
+   -------------------------------------------------------------------------- */
+html body,
+html body .main-content {
+  background-color: var(--bg-main) !important;
+  font-family: var(--font-body) !important;
+  color: var(--text-main);
+}
+
+/* --------------------------------------------------------------------------
+   1. PAGE HEADER
+   -------------------------------------------------------------------------- */
+html body .page-header-modern {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--space-4);
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-6);
+}
+
+html body .page-title-modern {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+html body .page-title-modern i,
+html body.admin-theme .page-title-modern i,
+html body.staff-theme .page-title-modern i {
+  color: var(--primary);
+}
+
+/* --------------------------------------------------------------------------
+   2. STAT CARDS  (.stat-card-modern -> .card--stat)
+   -------------------------------------------------------------------------- */
+html body .stat-card-modern {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+html body .stat-card-modern:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+html body .stat-card-modern::before,
+html body.admin-theme .stat-card-modern::before,
+html body.staff-theme .stat-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  opacity: 1;
+}
+
+/* Accent variants -> status tokens (consistent across themes) */
+html body .stat-card-modern.red-accent::before     { background: linear-gradient(90deg, var(--primary), var(--primary-dark)); }
+html body .stat-card-modern.blue-accent::before    { background: var(--info); }
+html body .stat-card-modern.success-accent::before { background: var(--success); }
+html body .stat-card-modern.gold-accent::before    { background: var(--warning); }
+
+html body .stat-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: var(--space-4);
+  background: var(--primary-soft);
+  color: var(--primary);
+  transition: transform var(--transition);
+}
+
+html body .stat-card-modern:hover .stat-card-icon { transform: scale(1.06); }
+
+html body .stat-card-modern.blue-accent .stat-card-icon    { background: var(--info-soft);    color: var(--info); }
+html body .stat-card-modern.success-accent .stat-card-icon { background: var(--success-soft); color: var(--success); }
+html body .stat-card-modern.gold-accent .stat-card-icon    { background: var(--warning-soft); color: var(--warning); }
+
+html body .stat-card-value {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.1;
+  margin-bottom: var(--space-1);
+}
+
+html body .stat-card-label {
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+}
+
+html body .stat-card-link,
+html body.admin-theme .stat-card-link,
+html body.staff-theme .stat-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .825rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+  margin-top: var(--space-4);
+  transition: gap var(--transition), color var(--transition);
+}
+
+html body .stat-card-link:hover,
+html body.admin-theme .stat-card-link:hover,
+html body.staff-theme .stat-card-link:hover {
+  color: var(--primary-dark);
+  gap: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   3. CARDS  (.modern-card -> .card)
+   -------------------------------------------------------------------------- */
+html body .modern-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+html body .modern-card-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+html body .modern-card-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+html body .modern-card-body { padding: var(--space-5); }
+
+html body .modern-card-footer {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+html body .shadow-modern    { box-shadow: var(--shadow-sm); }
+html body .shadow-modern-lg { box-shadow: var(--shadow-md); }
+html body .rounded-modern   { border-radius: var(--radius-lg); }
+
+/* --------------------------------------------------------------------------
+   4. BUTTONS  (.btn-modern-* -> .btn--*)
+   -------------------------------------------------------------------------- */
+html body .btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: .6rem 1.2rem;
+  font-family: var(--font-body);
+  font-size: .875rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transition), border-color var(--transition),
+              color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+html body .btn-modern::after { display: none; }
+html body .btn-modern:active { transform: translateY(1px); }
+
+html body .btn-modern-primary,
+html body.admin-theme .btn-modern-primary,
+html body.staff-theme .btn-modern-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-xs);
+}
+
+html body .btn-modern-primary:hover,
+html body.admin-theme .btn-modern-primary:hover,
+html body.staff-theme .btn-modern-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+html body .btn-modern-blue {
+  background: var(--info);
+  border-color: var(--info);
+  color: #fff;
+  box-shadow: var(--shadow-xs);
+}
+
+html body .btn-modern-blue:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+html body .btn-modern-outline {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-main);
+}
+
+html body .btn-modern-outline:hover {
+  background: var(--surface-sunken);
+  border-color: var(--text-faint);
+  color: var(--text-main);
+}
+
+html body .btn-modern-sm   { padding: .35rem .8rem; font-size: .8rem; }
+html body .btn-modern-icon { width: 38px; height: 38px; padding: 0; border-radius: var(--radius-sm); }
+
+/* --------------------------------------------------------------------------
+   5. TABLES  (.table-modern -> .table--card)
+   -------------------------------------------------------------------------- */
+html body .table-modern {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--surface);
+}
+
+html body .table-modern thead th {
+  padding: var(--space-3) var(--space-4);
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+html body .table-modern tbody tr {
+  background: var(--surface);
+  transition: background-color var(--transition);
+}
+
+html body .table-modern tbody tr:hover {
+  background: var(--surface-sunken);
+  box-shadow: none;
+}
+
+html body .table-modern tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  font-size: .875rem;
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+html body .table-modern tbody tr:last-child td { border-bottom: none; }
+
+/* --------------------------------------------------------------------------
+   6. BADGES  (.badge-modern-* -> .badge--*)
+   -------------------------------------------------------------------------- */
+html body .badge-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: .35em;
+  padding: .3em .8em;
+  font-size: .72rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+html body .badge-modern-success { background: var(--success-soft); color: var(--success); }
+html body .badge-modern-warning { background: var(--warning-soft); color: var(--warning); }
+html body .badge-modern-danger  { background: var(--danger-soft);  color: var(--danger); }
+html body .badge-modern-info    { background: var(--info-soft);    color: var(--info); }
+html body .badge-modern-primary { background: var(--primary-soft); color: var(--primary-dark); }
+
+/* --------------------------------------------------------------------------
+   7. ALERTS  (.alert-modern-* -> .alert--*)
+   -------------------------------------------------------------------------- */
+html body .alert-modern {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  box-shadow: none;
+  font-size: .925rem;
+}
+
+html body .alert-modern-success { background: var(--success-soft); border-left-color: var(--success); color: #0a6e4d; }
+html body .alert-modern-warning { background: var(--warning-soft); border-left-color: var(--warning); color: #92500a; }
+html body .alert-modern-danger  { background: var(--danger-soft);  border-left-color: var(--danger);  color: #991b1b; }
+html body .alert-modern-info    { background: var(--info-soft);    border-left-color: var(--info);    color: #1d4ed8; }
+
+html body .alert-modern-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: .1em; }
+
+html body .alert-modern a { color: inherit; font-weight: 700; }
+
+/* --------------------------------------------------------------------------
+   8. FORMS  (.input-modern -> .input)
+   -------------------------------------------------------------------------- */
+html body .input-modern,
+html body .form-control-modern,
+html body .form-select-modern {
+  width: 100%;
+  padding: .55rem .8rem;
+  font-size: .925rem;
+  font-family: var(--font-body);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  color: var(--text-main);
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+html body .input-modern:focus,
+html body .form-control-modern:focus,
+html body .form-select-modern:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+html body .input-modern::placeholder,
+html body .form-control-modern::placeholder { color: var(--text-faint); }
+
+html body .form-label-modern {
+  font-weight: 600;
+  font-size: .8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: var(--space-2);
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   9. HEADINGS — display font everywhere for consistency
+   -------------------------------------------------------------------------- */
+html body h1, html body h2, html body .h1, html body .h2,
+html body.admin-theme h1, html body.admin-theme h2,
+html body.staff-theme h1, html body.staff-theme h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   10. MOBILE — keep stacked tables + tidy headers on small screens
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  html body .page-header-modern {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+  }
+
+  html body .page-header-modern .btn-modern { width: 100%; }
+
+  html body .stat-card-modern { padding: var(--space-4); }
+  html body .stat-card-icon { width: 44px; height: 44px; font-size: 1.1rem; margin-bottom: var(--space-3); }
+
+  html body .table-modern thead { display: none; }
+
+  html body .table-modern tbody tr {
+    display: block;
+    margin-bottom: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  html body .table-modern tbody td {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-1) 0;
+    border-bottom: 1px solid var(--surface-sunken);
+    text-align: right;
+  }
+
+  html body .table-modern tbody td:last-child { border-bottom: none; }
+
+  html body .table-modern tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: .7rem;
+    letter-spacing: .05em;
+    text-align: left;
+  }
+}

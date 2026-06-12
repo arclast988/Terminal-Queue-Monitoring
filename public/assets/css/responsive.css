@@ -103,7 +103,7 @@ html, body {
     .table-responsive-card table.table tbody tr td::before {
         content: attr(data-label);
         font-weight: 700 !important;
-        color: #64748b !important;
+        color: #475569 !important;
         text-align: left !important;
         font-size: 12px !important;
         text-transform: uppercase;
@@ -981,14 +981,14 @@ body.staff-theme .form-select:focus {
 .empty-state {
     text-align: center;
     padding: 2.5rem 1rem;
-    color: var(--slate-500, #64748b);
+    color: var(--text-muted, #475569);
 }
 
 .empty-state i {
     font-size: 2.25rem;
     margin-bottom: 0.75rem;
     display: block;
-    color: var(--slate-300, #cbd5e1);
+    color: var(--text-faint, #64748b);
 }
 
 .spinner-border {
@@ -1083,6 +1083,50 @@ body.staff-theme .form-select-modern:focus {
         gap: 10px;
     }
 }
+
+/* QUICK OVERRIDES: Fix invisible header CTA and modern button text
+   These rules are intentionally specific and loaded last (responsive.css)
+   so they resolve cascade conflicts where theme tokens or overlays hide
+   button text in the admin header. */
+
+/* Ensure header logout/profile CTA text is visible */
+.logout-btn-custom,
+body.admin-theme .logout-btn-custom,
+body.staff-theme .logout-btn-custom {
+    color: var(--nav-cta-text, #fff) !important;
+    -webkit-text-fill-color: var(--nav-cta-text, #fff) !important;
+}
+
+.logout-btn-custom i,
+.logout-btn-custom .fa,
+.logout-btn-custom .bi {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Ensure modern buttons show their text and icons */
+.btn-modern,
+.btn-modern i,
+.btn-modern .bi,
+.btn-modern .fa {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Make sure primary modern buttons use white text */
+.btn-modern.btn-modern-primary,
+.btn-modern.btn-modern-primary i,
+.btn-modern.btn-modern-primary .bi {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+/* Prevent decorative overlays from covering content */
+.btn-modern::after {
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
 
 @media (max-width: 480px) {
     /* Page-header action buttons go full width on phones */

@@ -54,19 +54,19 @@ foreach ($users as $u) {
                 <i class="bi bi-funnel me-1"></i>Filter:
             </span>
             
-            <button type="button" class="badge-modern badge-modern-primary active" id="filter-btn-all" onclick="filterUsers('all')">
+            <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterUsers('all')">
                 <i class="bi bi-grid-3x3-gap-fill"></i> All
                 <span class="vf-count"><?= $totalUsers ?></span>
             </button>
             
             <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
             
-            <button type="button" class="badge-modern badge-modern-danger" id="filter-btn-admin" onclick="filterUsers('admin')">
+            <button type="button" class="vf-btn vf-van" id="filter-btn-admin" onclick="filterUsers('admin')">
                 <i class="bi bi-shield-lock"></i> Admins
                 <span class="vf-count"><?= $countAdmin ?></span>
             </button>
             
-            <button type="button" class="badge-modern badge-modern-info" id="filter-btn-dispatcher" onclick="filterUsers('dispatcher')">
+            <button type="button" class="vf-btn vf-jeepney" id="filter-btn-dispatcher" onclick="filterUsers('dispatcher')">
                 <i class="bi bi-person-fill-gear"></i> Dispatchers
                 <span class="vf-count"><?= $countDispatcher ?></span>
             </button>
@@ -216,6 +216,10 @@ foreach ($users as $u) {
         border-radius: 12px !important;
         font-size: 11px !important;
         font-weight: 700 !important;
+        background: #e2e8f0 !important;
+        color: #475569 !important;
+    }
+    .vf-btn.active .vf-count {
         background: rgba(255, 255, 255, 0.25) !important;
         color: #fff !important;
     }
@@ -265,10 +269,49 @@ foreach ($users as $u) {
             display: none !important;
         }
 
-        .badge-modern {
+        .vf-btn {
             flex: 1 1 calc(50% - 0.5rem);
             justify-content: center;
         }
+    }
+
+    /* Filter capsule buttons — matches Vehicles Register page */
+    .vf-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 6px 14px !important;
+        border-radius: 20px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        font-family: 'Outfit', sans-serif !important;
+        cursor: pointer !important;
+        border: 2px solid #dee2e6 !important;
+        background: #fff !important;
+        color: #475569 !important;
+        white-space: nowrap !important;
+        line-height: 1.4 !important;
+        transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+    .vf-btn:hover {
+        border-color: #94a3b8 !important;
+        background: #f8fafc !important;
+        color: #1e293b !important;
+    }
+    .vf-btn.active {
+        background: var(--primary, #C62828) !important;
+        border-color: var(--primary, #C62828) !important;
+        color: #fff !important;
+    }
+    .vf-btn.vf-van.active {
+        background: #c62828 !important;
+        border-color: #c62828 !important;
+        color: #fff !important;
+    }
+    .vf-btn.vf-jeepney.active {
+        background: #1565c0 !important;
+        border-color: #1565c0 !important;
+        color: #fff !important;
     }
 </style>
 
