@@ -8,7 +8,7 @@
         <i class="bi bi-megaphone"></i>
         Announcements
     </h1>
-    <?php if (session()->get('role') === 'admin'): ?>
+    <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
     <div>
         <a href="<?= base_url('admin/announcements/create') ?>" class="btn-modern btn-modern-primary">
             <i class="bi bi-plus-circle"></i> Add Announcement
@@ -48,7 +48,7 @@
                         <th>Message</th>
                         <th>Status</th>
                         <th>Created</th>
-                        <?php if (session()->get('role') === 'admin'): ?>
+                        <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
                         <th>Actions</th>
                         <?php endif; ?>
                     </tr>
@@ -68,7 +68,7 @@
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Created"><?= $a['created_at'] ? date('M d, Y H:i', strtotime($a['created_at'])) : '-' ?></td>
-                                <?php if (session()->get('role') === 'admin'): ?>
+                                <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">
                                         <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
@@ -76,7 +76,7 @@
                                         </a>
                                         <form action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm" style="background: #FEE2E2; color: #dc2626;" title="Delete">
+                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </form>
@@ -87,7 +87,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?= session()->get('role') === 'admin' ? '6' : '5' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">No announcements yet. Add one to show on the guest dashboard.</td>
+                            <td colspan="<?= in_array(session()->get('role'), ['admin', 'staff']) ? '6' : '5' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">No announcements yet. Add one to show on the guest dashboard.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

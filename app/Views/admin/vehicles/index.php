@@ -121,44 +121,55 @@ if (!empty($vehicles) && is_array($vehicles)) {
 ?>
 
 <!-- Vehicle Filter & Summary Bar -->
-<div class="mb-4">
-    <!-- Filter Buttons Row -->
-    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <div class="input-group input-group-sm me-3" style="max-width: 250px;">
-            <span class="input-group-text bg-white border-end-0" style="border-radius: 20px 0 0 20px;"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" class="form-control border-start-0 ps-0" id="vehicle-search" placeholder="Search plate or driver..." onkeyup="filterVehicles(currentFilter)" style="border-radius: 0 20px 20px 0;">
+<div class="modern-card shadow-modern fade-in mb-4">
+    <div class="modern-card-body">
+        <!-- Filter Buttons Row -->
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <div class="vehicle-search-group me-3">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate or driver..." onkeyup="filterVehicles(currentFilter)">
+            </div>
+            
+            <span class="filter-label-text">
+                <i class="bi bi-funnel me-1"></i>Filter:
+            </span>
+            
+            <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterVehicles('all')">
+                <i class="bi bi-grid-3x3-gap-fill"></i> All
+                <span class="vf-count"><?= $totalVehicles ?></span>
+            </button>
+            
+            <span class="vf-divider"></span>
+            
+            <button type="button" class="vf-btn vf-jeepney" id="filter-btn-jeepney" onclick="filterVehicles('jeepney')">
+                <img src="<?= base_url('images/jeep.png') ?>" alt="" style="height:18px; width:auto;"> Jeepney
+                <span class="vf-count"><?= $countJeepney ?></span>
+            </button>
+            
+            <button type="button" class="vf-btn vf-van" id="filter-btn-van" onclick="filterVehicles('van')">
+                <img src="<?= base_url('images/van.png') ?>" alt="" style="height:18px; width:auto;"> Van
+                <span class="vf-count"><?= $countVan ?></span>
+            </button>
+            
+            <button type="button" class="vf-btn vf-minibus" id="filter-btn-minibus" onclick="filterVehicles('minibus')">
+                <img src="<?= base_url('images/minibus.png') ?>" alt="" style="height:18px; width:auto;"> Minibus
+                <span class="vf-count"><?= $countMinibus ?></span>
+            </button>
+            
+            <span class="vf-divider"></span>
+            
+            <button type="button" class="vf-btn vf-active-status" id="filter-btn-active" onclick="filterVehicles('active')">
+                <i class="bi bi-check-circle-fill"></i> Active
+                <span class="vf-count"><?= $countActive ?></span>
+            </button>
+            
+            <button type="button" class="vf-btn vf-maintenance-status" id="filter-btn-maintenance"
+                onclick="filterVehicles('maintenance')">
+                <i class="bi bi-wrench-adjustable"></i> Maintenance
+                <span class="vf-count"><?= $countMaintenance ?></span>
+            </button>
         </div>
-        <span
-            style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
-            <i class="bi bi-funnel me-1"></i>Filter:
-        </span>
-        <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterVehicles('all')">
-            <i class="bi bi-grid-3x3-gap-fill"></i> All
-            <span class="vf-count"><?= $totalVehicles ?></span>
-        </button>
-        <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
-        <button type="button" class="vf-btn vf-jeepney" id="filter-btn-jeepney" onclick="filterVehicles('jeepney')">
-            <img src="<?= base_url('images/jeep.png') ?>" alt="" style="height:18px; width:auto;"> Jeepney
-            <span class="vf-count"><?= $countJeepney ?></span>
-        </button>
-        <button type="button" class="vf-btn vf-van" id="filter-btn-van" onclick="filterVehicles('van')">
-            <img src="<?= base_url('images/van.png') ?>" alt="" style="height:18px; width:auto;"> Van
-            <span class="vf-count"><?= $countVan ?></span>
-        </button>
-        <button type="button" class="vf-btn vf-minibus" id="filter-btn-minibus" onclick="filterVehicles('minibus')">
-            <img src="<?= base_url('images/minibus.png') ?>" alt="" style="height:18px; width:auto;"> Minibus
-            <span class="vf-count"><?= $countMinibus ?></span>
-        </button>
-        <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
-        <button type="button" class="vf-btn vf-active-status" id="filter-btn-active" onclick="filterVehicles('active')">
-            <i class="bi bi-check-circle-fill"></i> Active
-            <span class="vf-count"><?= $countActive ?></span>
-        </button>
-        <button type="button" class="vf-btn vf-maintenance-status" id="filter-btn-maintenance"
-            onclick="filterVehicles('maintenance')">
-            <i class="bi bi-wrench-adjustable"></i> Maintenance
-            <span class="vf-count"><?= $countMaintenance ?></span>
-        </button>
+        <div id="filter-label" style="font-size:13px; color:var(--slate-500);">Showing all <strong><?= $totalVehicles ?></strong> vehicles</div>
     </div>
 </div>
 
@@ -169,7 +180,6 @@ if (!empty($vehicles) && is_array($vehicles)) {
             <i class="bi bi-list-ul" style="color: var(--primary-red);"></i>
             Vehicle List
         </span>
-        <span id="filter-label" style="font-size:12px; color:var(--slate-500);">Showing all <strong><?= $totalVehicles ?></strong> vehicles</span>
     </div>
     <div class="modern-card-body">
         <div class="table-responsive">
@@ -237,7 +247,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                             style="display:inline;"
                                             onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm" style="background:#FEE2E2; color:#dc2626;" title="Delete vehicle">
+                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete vehicle">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </form>
@@ -284,6 +294,112 @@ if (!empty($vehicles) && is_array($vehicles)) {
         gap: 4px;
     }
 
+    /* Premium Hover & Transitions for Table Rows */
+    #vehicles-table tbody tr {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    #vehicles-table tbody tr:hover {
+        background-color: var(--primary-soft, #f1f5f9) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        z-index: 2;
+    }
+    /* Left border accent on hover */
+    #vehicles-table tbody tr td:first-child {
+        position: relative;
+        transition: border-left-color 0.2s ease;
+    }
+    #vehicles-table tbody tr:hover td:first-child {
+        border-left: 3px solid var(--primary, #c62828) !important;
+    }
+    /* Scale inner badges and icons smoothly on hover */
+    #vehicles-table tbody tr:hover .badge-modern {
+        transform: scale(1.05);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #vehicles-table tbody tr:hover .vehicle-type-icon img {
+        transform: scale(1.1) rotate(2deg);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #vehicles-table tbody tr:hover .btn-modern {
+        transform: scale(1.02);
+    }
+    .vehicle-type-icon img, .badge-modern, .btn-modern {
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Search Input Capsule and Alignments ── */
+    .vehicle-search-group {
+        display: flex !important;
+        align-items: center !important;
+        max-width: 250px;
+        width: 100%;
+        position: relative;
+    }
+
+    .vehicle-search-group .input-group-text {
+        height: 34px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 6px 0 6px 14px !important;
+        border: 2px solid #dee2e6 !important;
+        border-right: none !important;
+        background: #fff !important;
+        color: #64748b !important;
+        border-radius: 20px 0 0 20px !important;
+        transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease !important;
+    }
+
+    .vehicle-search-input {
+        height: 34px !important;
+        width: 100%;
+        padding: 6px 14px 6px 8px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        font-family: 'Outfit', sans-serif !important;
+        border: 2px solid #dee2e6 !important;
+        border-left: none !important;
+        background: #fff !important;
+        color: #1e293b !important;
+        border-radius: 0 20px 20px 0 !important;
+        transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease !important;
+    }
+
+    /* Focus effects across the search capsule */
+    .vehicle-search-group:focus-within .input-group-text {
+        border-color: var(--primary, #c62828) !important;
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.08) !important;
+    }
+    
+    .vehicle-search-group:focus-within .vehicle-search-input {
+        border-color: var(--primary, #c62828) !important;
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.08) !important;
+        outline: none !important;
+    }
+
+    .filter-label-text {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        margin-right: 4px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        height: 34px !important;
+    }
+
+    .vf-divider {
+        display: inline-block !important;
+        width: 1px !important;
+        height: 24px !important;
+        background: #dee2e6 !important;
+        margin: 0 4px !important;
+        align-self: center !important;
+    }
+
     /* ── Vehicle Filter Buttons ── */
     .vf-btn {
         display: inline-flex !important;
@@ -300,12 +416,35 @@ if (!empty($vehicles) && is_array($vehicles)) {
         color: #475569 !important;
         white-space: nowrap !important;
         line-height: 1.4 !important;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease !important;
     }
 
     .vf-btn:hover {
-        border-color: #94a3b8 !important;
+        border-color: #cbd5e1 !important;
         background: #f8fafc !important;
         color: #1e293b !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .vf-btn.active:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25) !important;
+    }
+    .vf-btn.vf-jeepney.active:hover {
+        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25) !important;
+    }
+    .vf-btn.vf-van.active:hover {
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25) !important;
+    }
+    .vf-btn.vf-minibus.active:hover {
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25) !important;
+    }
+    .vf-btn.vf-active-status.active:hover {
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;
+    }
+    .vf-btn.vf-maintenance-status.active:hover {
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
     }
 
     .vf-count {

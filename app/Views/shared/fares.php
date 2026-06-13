@@ -1,28 +1,50 @@
 <?= $this->include('templates/header') ?>
 
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
 <style>
-.page-hero { padding: 40px 30px; margin: -20px -24px 30px -24px; border-radius: 0 0 24px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
-.page-hero.hero-admin { background: linear-gradient(135deg, rgba(30,58,95,0.95), rgba(198,40,40,0.85)) !important; }
-.page-hero.hero-staff { background: linear-gradient(135deg, rgba(15,32,65,0.95), rgba(21,101,192,0.85)) !important; }
-.page-hero h1 { color: white !important; font-size: 32px; font-weight: 800; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
-.page-hero .subtitle { color: rgba(255,255,255,0.8); font-size: 15px; margin-bottom: 20px; }
-.page-hero .stats-row { display: flex; gap: 25px; flex-wrap: wrap; align-items: center; }
-.page-hero .stat-item { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.9); font-size: 14px; }
-.page-hero .stat-value { font-weight: 700; font-size: 18px; color: white; }
-.fare-action-btn { width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 13px; }
-.discount-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; font-weight: 700; font-size: 14px; }
-.discount-card { border-radius: 16px; overflow: hidden; border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-.discount-card .card-header { padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.06); }
-.discount-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #f1f5f9; }
-.discount-row:last-child { border-bottom: none; }
-.discount-type-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.modal-content { border-radius: 12px !important; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; }
-.modal-header { border-bottom: 1px solid #f1f5f9 !important; padding: 1.25rem 1.5rem !important; }
-.modal-title { color: #1e3a5f !important; font-size: 1.1rem !important; }
-.modal-body { padding: 1.5rem !important; }
-.form-label { color: #475569; font-size: 0.875rem; }
-.form-control, .form-select { border-color: #e2e8f0; padding: 0.6rem 0.75rem; font-size: 0.95rem; }
-.form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+/* Fare Card/Item Hover & Transition Animation */
+.fare-section-card {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fare-section-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important;
+}
+.fare-item {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+.fare-item:hover {
+    background-color: var(--primary-soft, #f8fafc) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    z-index: 2;
+}
+.discount-rate-card {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.discount-rate-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important;
+}
+.discount-rate-card .modern-card-header {
+    transition: background-color 0.2s ease;
+}
+.discount-rate-card:hover .modern-card-header {
+    background-color: var(--primary-soft, #f8fafc) !important;
+}
+.fare-action-btn { 
+    width: 34px; 
+    height: 34px; 
+    padding: 0; 
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 8px; 
+    font-size: 14px; 
+}
 .fare-section-title { transition: color 0.15s ease; }
 body .card .fare-section-title.vehicle-type-jeepney,
 body.admin-theme .card .fare-section-title.vehicle-type-jeepney,
@@ -33,58 +55,75 @@ body.staff-theme .card .fare-section-title.vehicle-type-van     { color: #c62828
 body .card .fare-section-title.vehicle-type-minibus,
 body.admin-theme .card .fare-section-title.vehicle-type-minibus,
 body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32 !important; }
-.fare-section-card.vehicle-type-jeepney .card-header { border-top: 3px solid #1565c0; }
-.fare-section-card.vehicle-type-van     .card-header { border-top: 3px solid #c62828; }
-.fare-section-card.vehicle-type-minibus .card-header { border-top: 3px solid #2e7d32; }
+.fare-section-card.vehicle-type-jeepney .modern-card-header { border-top: 3px solid #1565c0; }
+.fare-section-card.vehicle-type-van     .modern-card-header { border-top: 3px solid #c62828; }
+.fare-section-card.vehicle-type-minibus .modern-card-header { border-top: 3px solid #2e7d32; }
 </style>
 
-<?php $heroClass = (session()->get('role') === 'staff') ? 'hero-staff' : 'hero-admin'; ?>
-
-<!-- Hero -->
-<div class="page-hero <?= $heroClass ?>">
-    <h1><i class="fas fa-tags"></i> Route Fares</h1>
-    <p class="subtitle">Official fare rates for all van, jeepney, and minibus destinations</p>
-    <div class="stats-row">
-        <div class="stat-item">
-            <img src="<?= base_url('images/van.png') ?>" alt="Van" style="width:42px;height:auto;">
-            <div><div class="stat-value"><?= count($van_routes ?? []) ?></div><small>Van Routes</small></div>
-        </div>
-        <div class="stat-item">
-            <img src="<?= base_url('images/jeep.png') ?>" alt="Jeepney" style="width:42px;height:auto;">
-            <div><div class="stat-value"><?= count($jeepney_routes ?? []) ?></div><small>Jeepney Routes</small></div>
-        </div>
-        <div class="stat-item">
-            <img src="<?= base_url('images/minibus.png') ?>" alt="Minibus" style="width:42px;height:auto;">
-            <div><div class="stat-value"><?= count($minibus_routes ?? []) ?></div><small>Minibus Routes</small></div>
-        </div>
-        <?php if (session()->get('role') === 'admin'): ?>
-        <div class="ms-auto">
-            <button class="btn btn-light fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addFareModal">
-                <i class="fas fa-plus-circle me-2 text-success"></i>Add Fare
-            </button>
-        </div>
-        <?php endif; ?>
+<div class="page-header-modern fade-in">
+    <h1 class="page-title-modern">
+        <i class="bi bi-tags"></i>
+        Route Fares
+    </h1>
+    <?php if (session()->get('role') === 'admin'): ?>
+    <div>
+        <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addFareModal">
+            <i class="bi bi-plus-circle"></i> Add Fare
+        </button>
     </div>
+    <?php endif; ?>
 </div>
 
 <!-- Flash messages -->
 <?php if (session()->getFlashdata('success')): ?>
-<div class="alert alert-success alert-dismissible mx-3 mt-2 fade show" role="alert">
-    <i class="fas fa-check-circle me-2"></i><?= esc(session()->getFlashdata('success')) ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<div class="alert-modern alert-modern-success fade-in mx-3 mt-2">
+    <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+    <div><?= esc(session()->getFlashdata('success')) ?></div>
 </div>
 <?php endif; ?>
 <?php if (session()->getFlashdata('error')): ?>
-<div class="alert alert-danger alert-dismissible mx-3 mt-2 fade show" role="alert">
-    <i class="fas fa-exclamation-circle me-2"></i><?= esc(session()->getFlashdata('error')) ?>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<div class="alert-modern alert-modern-danger fade-in mx-3 mt-2">
+    <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+    <div><?= esc(session()->getFlashdata('error')) ?></div>
 </div>
 <?php endif; ?>
 <?php if (session()->getFlashdata('errors') && is_array(session()->getFlashdata('errors'))): ?>
-<div class="alert alert-danger mx-3 mt-2">
+<div class="alert-modern alert-modern-danger fade-in mx-3 mt-2">
+    <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
     <ul class="mb-0"><?php foreach (session()->getFlashdata('errors') as $e): ?><li><?= esc($e) ?></li><?php endforeach; ?></ul>
 </div>
 <?php endif; ?>
+
+<!-- Modern Stat Cards block -->
+<div class="row px-3 mt-2">
+    <div class="col-12 col-md-4 mb-4">
+        <div class="stat-card-modern red-accent fade-in">
+            <div class="stat-card-icon" style="background: #FBE9E9; color: #c62828;">
+                <i class="bi bi-truck"></i>
+            </div>
+            <div class="stat-card-value"><?= count($van_routes ?? []) ?></div>
+            <div class="stat-card-label">Van Routes</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 mb-4">
+        <div class="stat-card-modern blue-accent fade-in">
+            <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
+                <i class="bi bi-bus-front"></i>
+            </div>
+            <div class="stat-card-value"><?= count($jeepney_routes ?? []) ?></div>
+            <div class="stat-card-label">Jeepney Routes</div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 mb-4">
+        <div class="stat-card-modern success-accent fade-in">
+            <div class="stat-card-icon" style="background: #D1FAE5; color: #2e7d32;">
+                <i class="bi bi-ev-front"></i>
+            </div>
+            <div class="stat-card-value"><?= count($minibus_routes ?? []) ?></div>
+            <div class="stat-card-label">Minibus Routes</div>
+        </div>
+    </div>
+</div>
 
 <div class="row px-3 mt-2">
 
@@ -98,14 +137,14 @@ $fareTypes = [
 
 <?php foreach ($fareTypes as $ft): ?>
 <div class="col-lg-4 mb-4">
-    <div class="card shadow-sm h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?>">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2 fare-section-title <?= vehicle_type_class($ft['type']) ?>">
-                <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= esc($ft['label']) ?>" style="width:32px;height:auto;">
+    <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in">
+        <div class="modern-card-header bg-white d-flex justify-content-between align-items-center">
+            <span class="modern-card-title fare-section-title <?= vehicle_type_class($ft['type']) ?>">
+                <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= esc($ft['label']) ?>" style="width:32px;height:auto; margin-right: 8px;">
                 <?= esc($ft['label']) ?>
-            </h5>
+            </span>
         </div>
-        <div class="card-body p-0">
+        <div class="modern-card-body p-0">
             <div class="list-group list-group-flush fare-list">
                 <?php $routes = ${$ft['key']}; ?>
                 <?php if (!empty($routes)): ?>
@@ -113,14 +152,14 @@ $fareTypes = [
                     <div class="list-group-item fare-item" style="flex-direction: column; align-items: stretch; padding: 16px 20px;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <strong class="d-block" style="font-size: 15px;"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
+                                <strong class="d-block" style="font-size: 15px; color: var(--slate-800);"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
                                 <small class="text-muted">Regular Fare</small>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="badge bg-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
+                                <span class="badge-modern badge-modern-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
                                 <?php if (session()->get('role') === 'admin'): ?>
                                 <button type="button"
-                                   class="btn btn-sm btn-outline-primary fare-action-btn" title="Edit Fare"
+                                   class="btn-modern btn-modern-sm btn-modern-outline btn-action-edit fare-action-btn" title="Edit Fare"
                                    data-bs-toggle="modal"
                                    data-bs-target="#editFareModal"
                                    data-id="<?= $route['id'] ?>"
@@ -129,13 +168,13 @@ $fareTypes = [
                                    data-fare="<?= $route['fare'] ?>"
                                    data-vehicle-type="<?= esc($route['vehicle_type']) ?>"
                                    data-terminal-id="<?= $route['terminal_id'] ?>">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="bi bi-pencil"></i>
                                 </button>
                                 <form action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline"
                                       onsubmit="return confirm('Delete this fare (<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>)?');">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-sm btn-outline-danger fare-action-btn" title="Delete Fare">
-                                        <i class="fas fa-trash-alt"></i>
+                                    <button type="submit" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Fare">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
                                 <?php endif; ?>
@@ -146,7 +185,7 @@ $fareTypes = [
                             <?php foreach ($route['discounted_fares'] as $type => $df): ?>
                             <div class="d-flex justify-content-between align-items-center py-1">
                                 <span style="font-size: 13px; color: #475569; font-weight: 500;">
-                                    <i class="fas fa-tag me-1" style="font-size: 10px; color: #94a3b8;"></i>
+                                    <i class="bi bi-tag me-1" style="font-size: 11px; color: #94a3b8;"></i>
                                     <?= esc($df['label']) ?> <span class="text-muted" style="font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
                                 </span>
                                 <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
@@ -158,7 +197,7 @@ $fareTypes = [
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="list-group-item text-center text-muted py-4">
-                        <i class="fas fa-route mb-2 d-block" style="font-size:24px;"></i>
+                        <i class="bi bi-geo fs-3 mb-2 d-block" style="color:#94a3b8;"></i>
                         No fares listed yet.
                     </div>
                 <?php endif; ?>
@@ -167,14 +206,15 @@ $fareTypes = [
     </div>
 </div>
 <?php endforeach; ?>
+</div>
 <!-- ══════════════════════════════════════════════════ -->
 <!--  Discount Rates Section                           -->
 <!-- ══════════════════════════════════════════════════ -->
 <?php
 $discountMeta = [
-    'pwd'            => ['icon' => 'fa-wheelchair',     'badge' => '<span class="badge bg-info">PWD</span>'],
-    'senior_citizen' => ['icon' => 'fa-user-shield',    'badge' => '<span class="badge" style="background:#6d28d9;">Senior Citizen</span>'],
-    'student'        => ['icon' => 'fa-graduation-cap', 'badge' => '<span class="badge bg-warning text-dark">Student</span>'],
+    'pwd'            => ['icon' => 'bi bi-person-fill-exclamation', 'badge' => '<span class="badge-modern badge-modern-info">PWD</span>'],
+    'senior_citizen' => ['icon' => 'bi bi-shield-shaded',           'badge' => '<span class="badge-modern" style="background: rgba(109,40,217,0.1); color: #6d28d9;">Senior Citizen</span>'],
+    'student'        => ['icon' => 'bi bi-mortarboard-fill',        'badge' => '<span class="badge-modern badge-modern-warning">Student</span>'],
 ];
 $hasDiscounts = !empty($discounts);
 $isManager = session()->get('role') === 'admin';
@@ -183,10 +223,10 @@ $isManager = session()->get('role') === 'admin';
 <?php if ($hasDiscounts || $isManager): ?>
 <div class="px-3 mb-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <h5 class="fw-bold mb-0"><i class="fas fa-percent me-2"></i>Passenger Discount Rates</h5>
+        <h5 class="fw-bold mb-0"><i class="bi bi-percent me-2" style="color: var(--primary-red);"></i>Passenger Discount Rates</h5>
         <?php if ($isManager): ?>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDiscountModal">
-            <i class="fas fa-plus me-1"></i> Add Discount
+        <button class="btn-modern btn-modern-primary btn-modern-sm" data-bs-toggle="modal" data-bs-target="#addDiscountModal">
+            <i class="bi bi-plus-circle"></i> Add Discount
         </button>
         <?php endif; ?>
     </div>
@@ -195,42 +235,42 @@ $isManager = session()->get('role') === 'admin';
         <?php if ($hasDiscounts): ?>
         <?php foreach ($discounts as $disc):
             if (!$disc['is_active']) continue;
-            $meta = $discountMeta[$disc['type']] ?? ['icon' => 'fa-tag', 'badge' => '<span class="badge bg-secondary">' . esc(ucwords(str_replace('_', ' ', $disc['type']))) . '</span>'];
+            $meta = $discountMeta[$disc['type']] ?? ['icon' => 'bi-tag', 'badge' => '<span class="badge-modern badge-modern-info">' . esc(ucwords(str_replace('_', ' ', $disc['type']))) . '</span>'];
         ?>
         <div class="col-lg-4 mb-4">
-            <div class="card shadow-sm h-100 text-center">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
-                        <i class="fas <?= $meta['icon'] ?>"></i>
+            <div class="modern-card shadow-modern h-100 text-center discount-rate-card fade-in">
+                <div class="modern-card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="modern-card-title">
+                        <i class="<?= $meta['icon'] ?>" style="color: var(--primary-red); margin-right: 8px;"></i>
                         <?= esc($disc['label']) ?>
-                    </h5>
+                    </span>
                     <?= $meta['badge'] ?>
                 </div>
-                <div class="card-body py-4">
+                <div class="modern-card-body py-4">
                     <?php if (!empty($disc['terminal_name'])): ?>
                         <div class="text-muted mb-2" style="font-size: 13px;"><?= esc($disc['terminal_name']) ?></div>
                     <?php endif; ?>
-                    <div class="fw-bold" style="font-size: 56px; line-height: 1; color: #1e293b;">
+                    <div class="fw-bold" style="font-size: 56px; line-height: 1; color: var(--slate-800);">
                         <?= number_format($disc['discount_percent'], 0) ?><span style="font-size: 28px;">%</span>
                     </div>
                     <div class="text-muted mt-2" style="font-size: 13px;">off the regular fare</div>
                 </div>
                 <?php if ($isManager): ?>
-                <div class="card-footer bg-white d-flex justify-content-center gap-2">
-                    <button class="btn btn-sm btn-outline-secondary"
+                <div class="modern-card-footer bg-white d-flex justify-content-center gap-2">
+                    <button class="btn-modern btn-modern-sm btn-modern-outline btn-action-edit"
                         data-bs-toggle="modal"
                         data-bs-target="#editDiscountModal"
                         data-id="<?= $disc['id'] ?>"
                         data-label="<?= esc($disc['label']) ?>"
                         data-percent="<?= $disc['discount_percent'] ?>"
                         data-active="<?= $disc['is_active'] ?>">
-                        <i class="fas fa-edit me-1"></i> Edit
+                        <i class="bi bi-pencil"></i> Edit
                     </button>
                     <form action="<?= base_url('admin/routes/discounts/delete/' . $disc['id']) ?>" method="post" class="d-inline"
                           onsubmit="return confirm('Delete this discount (<?= esc($disc['label']) ?>)?');">
                         <?= csrf_field() ?>
-                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-trash-alt me-1"></i> Delete
+                        <button type="submit" class="btn-modern btn-modern-sm btn-action-delete">
+                            <i class="bi bi-trash"></i> Delete
                         </button>
                     </form>
                 </div>
@@ -240,9 +280,9 @@ $isManager = session()->get('role') === 'admin';
         <?php endforeach; ?>
         <?php else: ?>
         <div class="col-12">
-            <div class="card shadow-sm text-center py-5">
-                <div class="card-body">
-                    <i class="fas fa-percent text-muted mb-3" style="font-size: 48px;"></i>
+            <div class="modern-card shadow-modern text-center py-5">
+                <div class="modern-card-body">
+                    <i class="bi bi-percent text-muted mb-3" style="font-size: 48px;"></i>
                     <h5 class="text-muted">No Discounts Added Yet</h5>
                     <p class="text-muted mb-0">Click the "Add Discount" button above to create your first passenger discount rate.</p>
                 </div>

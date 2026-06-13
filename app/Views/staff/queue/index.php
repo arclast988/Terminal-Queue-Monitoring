@@ -1,5 +1,8 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
 <style>
     /* Targeted: keep button/card hover transitions, only kill modal and debug animations */
     .fade,
@@ -166,10 +169,120 @@
         pointer-events: auto !important;
     }
 
+    /* Modern Queue Card Hover Effects & Transitions */
+    .q-card {
+        background: white;
+        border-radius: var(--radius-lg, 12px) !important;
+        border: 1px solid var(--slate-200, #e2e8f0) !important;
+        box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06)) !important;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    .q-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg, 0 10px 24px rgba(0, 0, 0, 0.1)) !important;
+        border-color: var(--primary, #1565c0) !important;
+    }
+    /* Header hover accent matching theme */
+    .q-card-header {
+        background-color: var(--slate-50, #f8fafc);
+        transition: background-color 0.2s ease;
+    }
+    .q-card:hover .q-card-header {
+        background-color: var(--primary-soft, #e7f0fb) !important;
+    }
+    /* Rotate / scale type image slightly on card hover */
+    .q-card:hover .vehicle-type-icon img {
+        transform: scale(1.1) rotate(2deg);
+        transition: transform 0.2s ease;
+    }
+    .vehicle-type-icon img {
+        transition: transform 0.2s ease;
+    }
+    /* Badge size transitions */
+    .q-card .badge-modern {
+        transition: transform 0.2s ease;
+    }
+    .q-card:hover .badge-modern {
+        transform: scale(1.05);
+    }
+
+    /* Passenger Counter Controls */
+    .btn-counter {
+        width: 36px;
+        height: 36px;
+        border-radius: 50% !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 18px;
+        padding: 0;
+        border: none;
+        transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+    }
+    .btn-counter-minus {
+        background-color: var(--danger-light, #FEE2E2);
+        color: var(--danger-dark, #dc2626);
+    }
+    .btn-counter-minus:hover {
+        background-color: var(--danger-dark, #dc2626);
+        color: white;
+        transform: scale(1.1);
+    }
+    .btn-counter-plus {
+        background-color: var(--success-light, #D1FAE5);
+        color: var(--success-dark, #059669);
+    }
+    .btn-counter-plus:hover {
+        background-color: var(--success-dark, #059669);
+        color: white;
+        transform: scale(1.1);
+    }
+    .btn-counter-max {
+        border-radius: var(--radius-sm, 6px) !important;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 6px 12px;
+        background-color: var(--slate-100, #f1f5f9);
+        color: var(--slate-700, #475569);
+        border: 1px solid var(--slate-200, #e2e8f0);
+        transition: all 0.2s;
+    }
+    .btn-counter-max:hover {
+        background-color: var(--slate-800, #1e293b);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    /* Custom success button for Boarding Actions */
+    .btn-modern-success {
+        background: linear-gradient(135deg, var(--success, #10b981) 0%, var(--success-dark, #059669) 100%);
+        color: white !important;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+    .btn-modern-success:hover {
+        background: linear-gradient(135deg, #34d399 0%, var(--success, #10b981) 100%);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+        transform: translateY(-2px);
+    }
+
+    .btn-modern-danger {
+        background: var(--danger-light, #FEE2E2);
+        color: var(--danger-dark, #dc2626) !important;
+        border: 2px solid transparent;
+    }
+    .btn-modern-danger:hover {
+        background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%);
+        color: white !important;
+        transform: translateY(-2px);
+    }
+
     /* Mobile responsive: queue passenger counters and action buttons */
     @media (max-width: 768px) {
-        .q-card .btn-danger.rounded-circle,
-        .q-card .btn-success.rounded-circle {
+        .q-card .btn-counter-minus,
+        .q-card .btn-counter-plus {
             width: 44px !important;
             height: 44px !important;
             font-size: 20px !important;
@@ -192,45 +305,47 @@
     }
 </style>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Queue Operations </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
+<div class="page-header-modern fade-in">
+    <h1 class="page-title-modern">
+        <i class="bi bi-clock-history"></i>
+        Queue Operations
+    </h1>
+    <div class="d-flex gap-2">
         <?php if (empty($noRoutesAssigned)): ?>
-        <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
-            <i class="bi bi-plus-lg me-1"></i> Add Vehicle to Queue
+        <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
+            <i class="bi bi-plus-lg"></i> Add Vehicle to Queue
         </button>
         <?php endif; ?>
     </div>
 </div>
 
 <?php if (!empty($noRoutesAssigned)): ?>
-    <div class="alert alert-warning" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <strong>No Routes Assigned.</strong> You have no routes assigned to your account. Please contact the administrator to assign routes before you can manage the queue.
+    <div class="alert-modern alert-modern-warning fade-in">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+        <div>
+            <strong>No Routes Assigned.</strong> You have no routes assigned to your account. Please contact the administrator to assign routes before you can manage the queue.
+        </div>
     </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success alert-dismissible" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <?= esc(session()->getFlashdata('success')) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert-modern alert-modern-success fade-in">
+        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('success')) ?></div>
     </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('warning')): ?>
-    <div class="alert alert-warning alert-dismissible" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        <strong>Already Queued!</strong> <?= esc(session()->getFlashdata('warning')) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert-modern alert-modern-warning fade-in">
+        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+        <div><strong>Already Queued!</strong> <?= esc(session()->getFlashdata('warning')) ?></div>
     </div>
 <?php endif; ?>
 
 <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible" role="alert">
-        <i class="bi bi-x-circle-fill me-2"></i>
-        <?= esc(session()->getFlashdata('error')) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div class="alert-modern alert-modern-danger fade-in">
+        <i class="bi bi-x-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('error')) ?></div>
     </div>
 <?php endif; ?>
 
@@ -242,11 +357,11 @@
                 $isBoarding = $item['status'] === 'boarding';
                 $isWaiting  = $item['status'] === 'waiting';
             ?>
-            <div class="q-card mb-3" id="card-<?= $item['id'] ?>">
+            <div class="q-card mb-3 fade-in" id="card-<?= $item['id'] ?>">
 
                 <!-- Header row: position badge + plate + status -->
                 <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
-                    <span class="q-pos badge bg-secondary-subtle text-secondary rounded-pill">#<?= $item['position'] ?></span>
+                    <span class="badge-modern badge-modern-primary">#<?= $item['position'] ?></span>
                     <?php
                         $imgMap  = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                         $vType = strtolower($item['vehicle_type'] ?? '');
@@ -259,9 +374,13 @@
                         <?= vehicle_type_badge($vType) ?>
                     </span>
                     <?php if ($isWaiting): ?>
-                        <span class="badge bg-warning text-dark rounded-pill">Waiting</span>
+                        <span class="badge-modern badge-modern-warning">
+                            <i class="bi bi-hourglass-split me-1"></i>Waiting
+                        </span>
                     <?php else: ?>
-                        <span class="badge bg-info text-dark rounded-pill">Boarding</span>
+                        <span class="badge-modern badge-modern-success">
+                            <i class="bi bi-play-circle-fill me-1"></i>Boarding
+                        </span>
                     <?php endif; ?>
                 </div>
 
@@ -292,20 +411,20 @@
                     <span class="text-muted small flex-shrink-0">Passengers</span>
                     <div class="d-flex align-items-center gap-2 ms-auto">
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
-                            class="btn btn-danger rounded-circle" style="width:36px;height:36px;padding:0;font-size:18px;line-height:1;">
+                            class="btn-counter btn-counter-minus">
                             &minus;
                         </button>
                         <span id="passenger-count-<?= $item['id'] ?>"
                             class="fw-bold <?= $isFull ? 'text-danger' : '' ?>" style="min-width:64px;text-align:center;font-size:15px;">
                             <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
-                            <?php if ($isFull): ?><br><span class="badge bg-danger" style="font-size:9px;">FULL</span><?php endif; ?>
+                            <?php if ($isFull): ?><br><span class="badge-modern badge-modern-danger" style="font-size:9px;">FULL</span><?php endif; ?>
                         </span>
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
-                            class="btn btn-success rounded-circle" style="width:36px;height:36px;padding:0;font-size:18px;line-height:1;">
+                            class="btn-counter btn-counter-plus">
                             &#43;
                         </button>
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'max')"
-                            class="btn btn-danger" style="font-size:11px;padding:5px 10px;">MAX</button>
+                            class="btn-counter-max">MAX</button>
                     </div>
                 </div>
 
@@ -313,17 +432,17 @@
                 <div class="d-flex gap-2 px-3 pb-3">
                     <?php if ($isWaiting): ?>
                         <button onclick="updateStatus(<?= $item['id'] ?>, 'boarding', null, this)"
-                            class="btn btn-primary flex-fill" style="white-space:nowrap;">
+                            class="btn-modern btn-modern-primary flex-fill" style="white-space:nowrap;">
                             Start Boarding
                         </button>
                     <?php elseif ($isBoarding): ?>
-                        <button type="button" class="btn btn-success flex-fill" style="white-space:nowrap;"
+                        <button type="button" class="btn-modern btn-modern-success flex-fill" style="white-space:nowrap;"
                             data-bs-toggle="modal" data-bs-target="#confirmDepartModal<?= $item['id'] ?>">
                             Depart
                         </button>
                     <?php endif; ?>
                     <button onclick="if(confirm('Cancel this trip?')) updateStatus(<?= $item['id'] ?>, 'canceled', null, this)"
-                        class="btn btn-outline-danger flex-fill" style="white-space:nowrap;">
+                        class="btn-modern btn-modern-outline btn-modern-danger flex-fill" style="white-space:nowrap;">
                         Cancel
                     </button>
                 </div>
@@ -338,14 +457,6 @@
     <?php endif; ?>
 </div>
 
-<style>
-.q-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-}
-</style>
 <!-- Depart Confirmation Modals - Placed at page level for proper positioning -->
 <?php if (!empty($queue) && is_array($queue)): ?>
     <?php foreach ($queue as $item): ?>
@@ -365,12 +476,12 @@
                                 This action cannot be undone.
                             </p>
                             <div class="d-flex gap-2 justify-content-center mt-3">
-                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" data-bs-dismiss="modal">
                                     Cancel
                                 </button>
                                 <button onclick="updateStatus(<?= $item['id'] ?>, 'departed', 'confirmDepartModal<?= $item['id'] ?>')" 
                                    id="confirmDepartBtn<?= $item['id'] ?>" 
-                                   class="btn btn-sm btn-danger">
+                                   class="btn-modern btn-modern-sm btn-modern-danger">
                                     Depart
                                 </button>
                             </div>
@@ -378,8 +489,8 @@
                     </div>
                 </div>
             </div>
-<?php endif; ?>
-<?php endforeach; ?>
+        <?php endif; ?>
+    <?php endforeach; ?>
 <?php endif; ?>
 
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
@@ -388,13 +499,13 @@
             <?= csrf_field() ?>
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Add Vehicle to Queue</h5>
+                    <h5 class="modal-title fw-bold">Add Vehicle to Queue</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Select Vehicle</label>
-                        <select name="vehicle_id" id="vehicleSelect" class="form-select" required>
+                        <label class="form-label-modern">Select Vehicle</label>
+                        <select name="vehicle_id" id="vehicleSelect" class="form-select-modern" required>
                             <option value="" data-route="">-- Choose Vehicle --</option>
                             <?php foreach ($vehicles as $v): ?>
                                 <option value="<?= $v['id'] ?>"
@@ -406,8 +517,8 @@
                         </select>
                     </div>
                     <div class="mb-3" id="routeInfoBox" style="display:none;">
-                        <label class="form-label">Assigned Route</label>
-                        <div class="form-control bg-light" id="routeInfoText" style="pointer-events:none;"></div>
+                        <label class="form-label-modern">Assigned Route</label>
+                        <div class="form-control bg-light" id="routeInfoText" style="pointer-events:none; border-radius: var(--radius-md);"></div>
                     </div>
                     <div class="mb-0">
                         <div class="form-text text-muted">
@@ -416,7 +527,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-danger" id="submitToQueueBtn">Add to Queue</button>
+                    <button type="submit" class="btn-modern btn-modern-primary" id="submitToQueueBtn">Add to Queue</button>
                 </div>
             </div>
         </form>

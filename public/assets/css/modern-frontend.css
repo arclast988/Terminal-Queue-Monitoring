@@ -14,8 +14,8 @@
     --primary-blue-light: #1976D2;
     
     /* Accent Colors */
-    --accent-gold: #FFC107;
-    --accent-gold-dark: #FFA000;
+    --accent-gold: #FFA726;
+    --accent-gold-dark: #F57C00;
     
     /* Semantic Colors */
     --success: #10b981;
@@ -408,6 +408,33 @@ body {
     color: var(--info-dark);
 }
 
+/* Action utilities for consistent Edit/Delete styling across admin views.
+   These are the canonical classes to use in templates instead of inline styles.
+   Icons inside buttons will inherit the color. */
+.btn-action-edit {
+    background: transparent !important;
+    border: 2px solid var(--primary-blue, #1565c0) !important;
+    color: var(--primary-blue, #1565c0) !important;
+    -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
+}
+.btn-action-edit:hover {
+    background: linear-gradient(135deg, var(--primary-blue-light, #1976D2) 0%, var(--primary-blue, #1565c0) 100%) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+.btn-action-delete {
+    background: var(--danger-light, #FEE2E2) !important;
+    color: var(--danger-dark, #dc2626) !important;
+    -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+    border: 2px solid transparent !important;
+}
+.btn-action-delete:hover {
+    background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
 .badge-modern-primary {
     background: var(--info-light);
     color: var(--info-dark);
@@ -763,10 +790,12 @@ body.staff-theme .logout-btn-custom,
 
 /* Ensure modern buttons and their icons inherit a visible color */
 .btn-modern,
-.btn-modern *,
 .btn-modern i,
 .btn-modern .bi,
 .btn-modern .fa {
+    /* Only target direct interactive elements to avoid overriding
+       nested component styles (SVGs, badges). Using a narrower selector
+       reduces unexpected cascade wins while keeping button text visible. */
     color: inherit !important;
     -webkit-text-fill-color: inherit !important;
 }

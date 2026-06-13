@@ -66,27 +66,15 @@
             background-color: #f8fafc !important;
         }
 
-        :root {
-            --primary: #C62828;
-            --primary-dark: #B71C1C;
-            --secondary: #64748b;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg-main: #f8fafc;
-            --text-main: #1e293b;
-            --text-muted: #475569;
-        }
+        /* Theme tokens are defined in public/assets/css/design-system.css and
+           public/assets/css/themes.css. Removing duplicate variable declarations
+           here reduces cascade conflicts and keeps the source of truth in the
+           stylesheet files. Keep only safe fallbacks for background and text. */
 
-        /* Admin theme: modern clean light layout with deep red accent */
+        /* Admin theme: keep color application but prefer tokens with fallbacks */
         body.admin-theme {
-            --primary: #C62828;
-            --primary-dark: #B71C1C;
-            --bg-main: #f1f5f9;
-            --text-main: #1e293b;
-            --text-muted: #475569;
-            background-color: #f1f5f9 !important;
-            color: #1e293b !important;
+            background-color: var(--bg-main, #f1f5f9) !important;
+            color: var(--text-main, #1e293b) !important;
         }
 
         body.admin-theme .main-content {
@@ -183,15 +171,10 @@
             color: #1e293b;
         }
 
-        /* Staff theme: modern clean light layout with blue accent */
+        /* Staff theme: keep color application but prefer tokens with fallbacks */
         body.staff-theme {
-            --primary: #1565c0;
-            --primary-dark: #0d47a1;
-            --bg-main: #f1f5f9;
-            --text-main: #1e293b;
-            --text-muted: #475569;
-            background-color: #f1f5f9 !important;
-            color: #1e293b !important;
+            background-color: var(--bg-main, #f1f5f9) !important;
+            color: var(--text-main, #1e293b) !important;
         }
 
         body.staff-theme .main-content {
@@ -572,19 +555,10 @@
                 background: var(--primary) !important;
                 color: #fff !important;
             }
-            body.admin-theme .dropdown-content,
-            body.staff-theme .dropdown-content {
-                background: #1e293b !important;
-                border-color: #334155 !important;
-            }
-            body.admin-theme .dropdown-content a,
-            body.staff-theme .dropdown-content a {
-                color: #e2e8f0 !important;
-            }
-            body.admin-theme .dropdown-content a:hover,
-            body.staff-theme .dropdown-content a:hover {
-                background: #334155 !important;
-            }
+            /* NOTE: dropdown visuals are intentionally handled in the CSS files
+               (public/assets/css/navigation.css and responsive.css). Keeping
+               inline overrides here made the cascade unpredictable and caused
+               nav dropdown text to become unreadable. */
             body.admin-theme .input-group-text,
             body.staff-theme .input-group-text {
                 background: #334155 !important;

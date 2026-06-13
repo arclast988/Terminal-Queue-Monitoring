@@ -70,7 +70,7 @@
                                         </a>
                                         <form action="<?= base_url('admin/terminals/delete/'.$terminal['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this terminal?');">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm" style="background: #FEE2E2; color: #dc2626;" title="Delete">
+                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </form>

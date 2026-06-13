@@ -1140,3 +1140,198 @@ body.staff-theme .logout-btn-custom {
         justify-content: center;
     }
 }
+
+/* ==================================================================
+   ADDITIONAL: Ensure management/admin nav dropdowns are readable
+   These rules are intentionally specific (include body.<theme> .nav-menu)
+   so they override inline theme blocks in header.php while remaining
+   minimal. Desktop rules scoped to hover-capable pointers to avoid
+   interfering with mobile drawer styling; mobile keeps text color only.
+   ================================================================== */
+@media (hover: hover) and (pointer: fine) {
+  body.admin-theme .nav-menu .dropdown-content,
+  body.staff-theme .nav-menu .dropdown-content {
+    background: var(--surface, #fff) !important;
+    border: 1px solid var(--border, #e4e7ec) !important;
+    box-shadow: var(--shadow-lg, 0 8px 16px rgba(0,0,0,.12)) !important;
+    z-index: 2002 !important;
+  }
+
+  body.admin-theme .nav-menu .dropdown-content a,
+  body.staff-theme .nav-menu .dropdown-content a {
+    color: var(--text-main, #1c2430) !important;
+  }
+
+  body.admin-theme .nav-menu .dropdown-content a i,
+  body.staff-theme .nav-menu .dropdown-content a i {
+    color: var(--text-faint, #94a3b8) !important;
+  }
+}
+
+/* Mobile slide-out drawer: ensure link text is readable without changing
+   the mobile drawer's translucent background. */
+@media (max-width: 1280px) {
+  .nav-menu .dropdown-content a {
+    color: var(--text-main, #1c2430) !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body.admin-theme .nav-menu .dropdown-content,
+  body.staff-theme .nav-menu .dropdown-content {
+    background: var(--nav-drawer-bg, #1e293b) !important;
+    border-color: var(--border-strong, #334155) !important;
+  }
+  body.admin-theme .nav-menu .dropdown-content a,
+  body.staff-theme .nav-menu .dropdown-content a {
+    color: var(--text-ghost, #e2e8f0) !important;
+  }
+}
+
+/* ==================================================================
+   ACTION BUTTON COLORS — system-wide
+   Edit actions should appear blue; Delete actions should appear red.
+   Targets common patterns (title attributes, common icons and classes)
+   and uses !important to override inline styles where present.
+   ================================================================== */
+
+/* Edit (blue) */
+/* Match titles containing "edit" (case-insensitive) so variants like
+   "Edit vehicle" or "Edit user" are covered. Also match inputs by value. */
+a.btn-modern[title*="edit" i],
+button.btn-modern[title*="edit" i],
+input[type="submit"][title*="edit" i],
+input[type="submit"][value*="edit" i],
+a[title*="edit" i].btn-modern-outline,
+button[title*="edit" i],
+a[title*="edit" i] {
+  background: transparent !important;
+  border-color: var(--primary-blue, #1565c0) !important;
+  color: var(--primary-blue, #1565c0) !important;
+  -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
+}
+
+.btn-modern[title*="edit" i] i,
+.btn-modern[title*="edit" i] i,
+.btn-modern[title*="edit" i] i,
+.btn-modern .bi.bi-pencil,
+.btn-modern .bi-pencil-fill,
+.bi.bi-pencil,
+.bi.bi-pencil-fill {
+  color: var(--primary-blue, #1565c0) !important;
+  -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
+}
+
+a.btn-modern[title*="edit" i]:hover,
+button.btn-modern[title*="edit" i]:hover,
+a[title*="edit" i]:hover {
+  background: linear-gradient(135deg, var(--primary-blue-light, #1976D2) 0%, var(--primary-blue, #1565c0) 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-color: var(--primary-blue, #1565c0) !important;
+}
+
+/* Delete (red) */
+/* Match titles/values containing "delete" (case-insensitive) to cover
+   variations like "Delete vehicle" or buttons labelled "Delete All". */
+button.btn-modern[title*="delete" i],
+input[type="submit"][title*="delete" i],
+input[type="submit"][value*="delete" i],
+a[title*="delete" i],
+button[title*="delete" i],
+input[title*="delete" i] {
+  background: var(--danger-light, #FEE2E2) !important;
+  color: var(--danger-dark, #dc2626) !important;
+  -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+  border-color: transparent !important;
+}
+
+.btn-modern[title*="delete" i] i,
+.input[type="submit"][title*="delete" i] i,
+.a[title*="delete" i] i,
+.btn-modern .bi.bi-trash,
+.btn-modern .bi-trash-fill,
+.bi.bi-trash,
+.bi.bi-trash-fill {
+  color: var(--danger-dark, #dc2626) !important;
+  -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+}
+
+button.btn-modern[title*="delete" i]:hover,
+input[type="submit"][title*="delete" i]:hover,
+button[title*="delete" i]:hover,
+a[title*="delete" i]:hover {
+  background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Additional class-based helpers (used in some views) */
+.btn-modern.btn-modern-outline-primary {
+  border-color: var(--primary-blue, #1565c0) !important;
+  color: var(--primary-blue, #1565c0) !important;
+}
+.btn-modern.btn-modern-outline-primary:hover {
+  background: linear-gradient(135deg, var(--primary-blue-light, #1976D2) 0%, var(--primary-blue, #1565c0) 100%) !important;
+  color: #fff !important;
+}
+.btn-modern.btn-modern-outline-danger {
+  background: var(--danger-light, #FEE2E2) !important;
+  color: var(--danger-dark, #dc2626) !important;
+}
+.btn-modern.btn-modern-outline-danger i {
+  color: var(--danger-dark, #dc2626) !important;
+  background: transparent !important;
+}
+.btn-modern.btn-modern-outline-danger:hover {
+  background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+  color: #fff !important;
+}
+
+/* Force Edit Button Icons to turn White on Hover */
+a.btn-modern[title*="edit" i]:hover i,
+button.btn-modern[title*="edit" i]:hover i,
+a[title*="edit" i]:hover i,
+button[title*="edit" i]:hover i,
+.btn-modern.btn-modern-outline-primary:hover i,
+.btn-modern.btn-modern-outline-primary:hover .bi,
+.btn-modern.btn-modern-outline-primary:hover .fa,
+a.btn-modern[title*="edit" i]:hover .bi,
+button.btn-modern[title*="edit" i]:hover .bi,
+a[title*="edit" i]:hover .bi,
+button[title*="edit" i]:hover .bi,
+.btn-modern[title*="edit" i]:hover .bi,
+.btn-modern[title*="edit" i]:hover .fa,
+.btn-action-edit:hover i,
+.btn-action-edit:hover .bi,
+.btn-action-edit:hover .fa,
+.btn-modern-outline-primary:hover i,
+.btn-modern-outline-primary:hover .bi,
+.btn-modern-outline-primary:hover .fa {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Force Delete/Trash/Clear Button Icons to turn White on Hover */
+button.btn-modern[title*="delete" i]:hover i,
+input[type="submit"][title*="delete" i]:hover i,
+button[title*="delete" i]:hover i,
+a[title*="delete" i]:hover i,
+.btn-modern.btn-modern-outline-danger:hover i,
+.btn-modern.btn-modern-outline-danger:hover .bi,
+.btn-modern.btn-modern-outline-danger:hover .fa,
+button.btn-modern[title*="delete" i]:hover .bi,
+input[type="submit"][title*="delete" i]:hover .bi,
+button[title*="delete" i]:hover .bi,
+a[title*="delete" i]:hover .bi,
+.btn-modern[title*="delete" i]:hover .bi,
+.btn-modern[title*="delete" i]:hover .fa,
+.btn-action-delete:hover i,
+.btn-action-delete:hover .bi,
+.btn-action-delete:hover .fa,
+.btn-modern-outline-danger:hover i,
+.btn-modern-outline-danger:hover .bi,
+.btn-modern-outline-danger:hover .fa {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}

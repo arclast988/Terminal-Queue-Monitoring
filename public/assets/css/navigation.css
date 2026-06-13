@@ -380,3 +380,47 @@ header#site-header {
 .nav-menu .dropbtn:hover {
   color: var(--nav-accent, #C62828) !important;
 }
+
+/* ==================================================================
+   FIX: Management dropdown contrast and visibility
+   Ensures the dropdown content in the header shows readable text/icons
+   across themes (admin/staff/guest) and wins the cascade when other
+   theme rules make nav links invisible. Kept minimal and specific.
+   ================================================================== */
+.nav-menu .dropdown-content {
+  background: var(--surface, #fff) !important;
+  border: 1px solid var(--border, #e4e7ec) !important;
+  box-shadow: var(--shadow-lg, 0 8px 16px rgba(0,0,0,.12)) !important;
+  z-index: 2002; /* above header content */
+}
+
+.nav-menu .dropdown-content a {
+  color: var(--text-main, #1c2430) !important;
+  padding: 10px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.nav-menu .dropdown-content a i {
+  color: var(--text-faint, #94a3b8) !important;
+  width: 18px;
+  flex: 0 0 auto;
+}
+
+/* Dark mode: prefer dark surface with light text */
+@media (prefers-color-scheme: dark) {
+  body.admin-theme .nav-menu .dropdown-content,
+  body.staff-theme .nav-menu .dropdown-content {
+    background: var(--nav-drawer-bg, #1e293b) !important;
+    border-color: var(--border-strong, #475569) !important;
+  }
+  body.admin-theme .nav-menu .dropdown-content a,
+  body.staff-theme .nav-menu .dropdown-content a {
+    color: var(--text-muted, #94a3b8) !important;
+  }
+  body.admin-theme .nav-menu .dropdown-content a i,
+  body.staff-theme .nav-menu .dropdown-content a i {
+    color: var(--nav-text-soft, rgba(255,255,255,.85)) !important;
+  }
+}

@@ -13,8 +13,8 @@
         :root {
             --primary:       #1E40AF;
             --primary-dark:  #1E3A8A;
-            --accent:        #F59E0B;
-            --accent-dark:   #D97706;
+            --accent:        #FFB74D;
+            --accent-dark:   #FFA726;
             --success:       #43a047;
             --text-main:     #2c3e50;
             --text-muted:    #66788a;

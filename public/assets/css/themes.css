@@ -14,7 +14,7 @@ body.guest-theme {
   --primary-dark: #1E3A8A;
   --primary-soft: #EFF6FF;
   --on-primary: #ffffff;
-  --accent: #F59E0B;
+  --accent: #FFA726;
 
   /* Navigation: white bar, blue accents */
   --nav-bg: #ffffff;
@@ -47,7 +47,7 @@ body.admin-theme {
   --primary-dark: #7F1212;
   --primary-soft: #FBE9E9;
   --on-primary: #ffffff;
-  --accent: #F59E0B;
+  --accent: #FFA726;
 
   /* Navigation: deep red bar, white text */
   --nav-bg: #B71C1C;

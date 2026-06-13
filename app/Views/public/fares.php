@@ -21,8 +21,8 @@
         :root {
             --primary: #1E40AF;
             --primary-dark: #1E3A8A;
-            --accent: #F59E0B;
-            --accent-dark: #D97706;
+            --accent: #FFA726;
+            --accent-dark: #F57C00;
             --success: #43a047;
             --success-dark: #2e7d32;
             --warning: #ef6c00;
