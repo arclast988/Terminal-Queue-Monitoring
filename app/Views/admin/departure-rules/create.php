@@ -1,5 +1,8 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
 <?php
 $oldWaitMinutes = old('wait_minutes') ?? 30;
 $defaultHours = old('wait_hours') ?? (int) floor($oldWaitMinutes / 60);

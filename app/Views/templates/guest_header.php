@@ -317,6 +317,9 @@
         <a href="<?= base_url('fares') ?>"
             class="<?= (strpos(uri_string(), 'fares') !== false) ? 'active' : '' ?>"><i class="fas fa-tags"></i>
             Fares</a>
+        <a href="<?= base_url('history') ?>"
+            class="<?= (strpos(uri_string(), 'history') !== false) ? 'active' : '' ?>"><i class="fas fa-history"></i>
+            Departures</a>
 
         <?php if (session()->get('isLoggedIn')): ?>
             <?php

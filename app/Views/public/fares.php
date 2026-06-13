@@ -279,13 +279,18 @@
             box-shadow: var(--shadow-md);
             transition: var(--transition);
             border: 1px solid #edf2f7;
+            animation: fadeInUp 0.5s ease-out both;
         }
 
         .fare-card:hover {
-            transform: translateY(-6px);
+            transform: translateY(-8px);
             box-shadow: var(--shadow-lg);
             border-color: var(--primary);
         }
+
+        .fare-card.vehicle-type-van { animation-delay: 0.1s; }
+        .fare-card.vehicle-type-jeepney { animation-delay: 0.2s; }
+        .fare-card.vehicle-type-minibus { animation-delay: 0.3s; }
 
         .card-header {
             padding: 20px 25px;
@@ -294,6 +299,7 @@
             align-items: center;
             background: white;
             border-bottom: 1px solid #f1f5f9;
+            transition: background var(--transition);
         }
 
         .card-header h3 {
@@ -304,6 +310,11 @@
             align-items: center;
             gap: 12px;
             margin: 0;
+            transition: transform var(--transition);
+        }
+
+        .fare-card:hover .card-header h3 {
+            transform: scale(1.02);
         }
 
         .fare-card.vehicle-type-jeepney .card-header { border-top: 3px solid #1565c0; }
@@ -322,6 +333,11 @@
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
+            transition: var(--transition);
+        }
+
+        .fare-card:hover .type-badge {
+            transform: scale(1.05);
         }
 
         .van-badge {
@@ -358,7 +374,8 @@
         }
 
         .fare-item:hover {
-            background: #f8fafc;
+            background: rgba(30, 64, 175, 0.03);
+            padding-left: 30px;
         }
 
         .f-dest {
@@ -380,6 +397,28 @@
             background: #e8f5e9;
             padding: 5px 12px;
             border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .fare-item:hover .price-tag {
+            transform: scale(1.08);
+            box-shadow: var(--shadow-sm);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #discountSection {
+            animation: fadeInUp 0.6s ease-out both;
+            animation-delay: 0.4s;
         }
 
 

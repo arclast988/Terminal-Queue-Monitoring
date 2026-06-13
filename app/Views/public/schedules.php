@@ -284,7 +284,7 @@
 
         .form-group select:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
             background: white;
         }
 
@@ -305,7 +305,7 @@
         }
 
         .filter-btn:hover {
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.02);
             box-shadow: var(--shadow-md);
         }
 
@@ -346,6 +346,8 @@
         .clear-btn:hover {
             background: #f1f5f9;
             color: var(--text-main);
+            border-color: var(--text-muted);
+            transform: translateY(-1px);
         }
 
         /* --- Schedule Card/Table --- */
@@ -411,8 +413,33 @@
             color: var(--text-main);
         }
 
-        .schedule-table tr:hover {
-            background: #fafbfc;
+        .schedule-table tbody tr {
+            transition: var(--transition);
+        }
+
+        .schedule-table tbody tr:hover {
+            background: rgba(30, 64, 175, 0.03);
+            transform: translateX(4px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .filter-box {
+            animation: fadeInUp 0.5s ease-out both;
+        }
+
+        .schedule-card {
+            animation: fadeInUp 0.5s ease-out both;
+            animation-delay: 0.15s;
         }
 
         .time-display {
@@ -632,6 +659,13 @@
                 border-radius: 15px;
                 margin-bottom: 15px;
                 background: white;
+                transition: var(--transition);
+            }
+
+            .schedule-table tr:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-md);
+                border-color: var(--primary);
             }
 
             .schedule-table td {

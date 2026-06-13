@@ -1,5 +1,8 @@
 <?= $this->include('templates/header') ?>
 
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
 <div class="page-header-modern">
     <div class="container-fluid">
         <div class="row align-items-center">

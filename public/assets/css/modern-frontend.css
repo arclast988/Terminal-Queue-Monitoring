@@ -96,7 +96,8 @@ body {
    MODERN CARD STYLES
    ================================================================= */
 
-.modern-card {
+.modern-card,
+.card-modern {
     background: white;
     border-radius: var(--radius-lg);
     border: 1px solid var(--slate-200);
@@ -105,12 +106,14 @@ body {
     overflow: hidden;
 }
 
-.modern-card:hover {
+.modern-card:hover,
+.card-modern:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
 
-.modern-card-header {
+.modern-card-header,
+.card-header-modern {
     padding: 20px 24px;
     border-bottom: 1px solid var(--slate-200);
     display: flex;
@@ -120,7 +123,8 @@ body {
     background: linear-gradient(to bottom, var(--slate-50), white);
 }
 
-.modern-card-title {
+.modern-card-title,
+.card-title-modern {
     font-size: 16px;
     font-weight: 700;
     color: var(--slate-800);
@@ -129,11 +133,13 @@ body {
     gap: 10px;
 }
 
-.modern-card-body {
+.modern-card-body,
+.card-body-modern {
     padding: 24px;
 }
 
-.modern-card-footer {
+.modern-card-footer,
+.card-footer-modern {
     padding: 16px 24px;
     border-top: 1px solid var(--slate-200);
     background: var(--slate-50);
@@ -434,13 +440,7 @@ body {
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
 }
-
-.badge-modern-primary {
-    background: var(--info-light);
-    color: var(--info-dark);
-}
-
-/* =================================================================
+/* =================================================================
    MODERN INPUTS
    ================================================================= */
 
@@ -469,29 +469,6 @@ body {
     color: var(--slate-500);
 }
 
-.form-select-modern {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 14px;
-    font-family: inherit;
-    border: 2px solid var(--slate-200);
-    border-radius: var(--radius-md);
-    background: white;
-    color: var(--slate-800);
-    transition: all var(--transition-fast);
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-}
-
-.form-select-modern:focus {
-    outline: none;
-    border-color: var(--primary-red);
-    box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
-}
-
 .form-label-modern {
     font-weight: 600;
     font-size: 13px;
@@ -513,10 +490,6 @@ body {
 .input-group-modern .btn-modern {
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
-
-/* =================================================================
-   PAGE HEADER
-   ================================================================= */
 
 .page-header-modern {
     display: flex;
@@ -820,4 +793,104 @@ body.staff-theme .logout-btn-custom,
 .btn-modern::after {
     z-index: -1 !important;
     pointer-events: none !important;
+}
+
+/* Radio Card Modern Component */
+.radio-card-modern {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+.radio-card-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border: 2px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    background: white;
+    transition: all var(--transition-base);
+    text-align: center;
+    min-width: 100px;
+}
+
+.radio-card-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.radio-card-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slate-600);
+    display: block;
+}
+
+.radio-card-modern:hover .radio-card-content {
+    border-color: var(--slate-400);
+    background: var(--slate-50);
+}
+
+.radio-card-input:checked + .radio-card-content {
+    border-color: var(--primary-red);
+    background: #fdecea;
+}
+
+.radio-card-input:checked + .radio-card-content .radio-card-label {
+    color: var(--primary-red-dark);
+}
+
+body.staff-theme .radio-card-input:checked + .radio-card-content {
+    border-color: var(--primary-blue);
+    background: #e8effd;
+}
+
+body.staff-theme .radio-card-input:checked + .radio-card-content .radio-card-label {
+    color: var(--primary-blue-dark);
+}
+
+/* Modern Form Checks (Checkboxes & Radios) */
+.form-check-modern {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.form-check-input-modern {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    border: 2px solid var(--slate-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.form-check-input-modern:checked {
+    background-color: var(--primary-red);
+    border-color: var(--primary-red);
+}
+
+body.staff-theme .form-check-input-modern:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.form-check-label-modern {
+    font-size: 14px;
+    color: var(--slate-700);
+    cursor: pointer;
+    user-select: none;
 }

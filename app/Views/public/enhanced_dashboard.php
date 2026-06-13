@@ -253,6 +253,12 @@
             display: flex;
             box-shadow: var(--shadow-lg);
             border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: var(--transition);
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
         }
 
         .search-bar input {
@@ -278,6 +284,7 @@
 
         .search-bar button:hover {
             background: var(--primary-dark);
+            transform: scale(1.03);
         }
 
         /* --- Stats Grid --- */
@@ -345,17 +352,33 @@
             align-items: center;
             gap: 20px;
             transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.03);
         }
 
         .stat-card:hover {
             transform: translateY(-8px);
             box-shadow: var(--shadow-lg);
+            border-color: rgba(30, 64, 175, 0.1);
         }
 
         .stat-card-link {
             text-decoration: none;
             color: inherit;
             cursor: pointer;
+        }
+
+        .stat-card-link:focus,
+        .stat-card-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.25), var(--shadow-md);
+        }
+
+        .stat-card .stat-icon-wrapper {
+            transition: transform var(--transition);
+        }
+
+        .stat-card:hover .stat-icon-wrapper {
+            transform: scale(1.15) rotate(5deg);
         }
 
         .stat-card-button {
@@ -367,11 +390,6 @@
             text-align: left;
         }
 
-        .stat-card-button:focus {
-            outline: 3px solid rgba(21, 101, 192, 0.25);
-            outline-offset: 3px;
-        }
-
         .route-average-modal {
             position: fixed;
             inset: 0;
@@ -379,12 +397,14 @@
             align-items: center;
             justify-content: center;
             padding: 24px;
-            background: rgba(15, 23, 42, 0.55);
+            background: rgba(15, 23, 42, 0);
             z-index: 2000;
+            transition: background 0.3s ease-out;
         }
 
         .route-average-modal.is-open {
             display: flex;
+            background: rgba(15, 23, 42, 0.55);
         }
 
         .route-average-dialog {
@@ -396,6 +416,14 @@
             box-shadow: var(--shadow-lg);
             display: flex;
             flex-direction: column;
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .route-average-modal.is-open .route-average-dialog {
+            transform: scale(1) translateY(0);
+            opacity: 1;
         }
 
         .route-average-header {
@@ -699,7 +727,16 @@
 
         .queue-card:hover {
             border-color: var(--primary);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-4px);
+        }
+
+        .queue-card .vehicle-type-icon img {
+            transition: transform var(--transition);
+        }
+
+        .queue-card:hover .vehicle-type-icon img {
+            transform: scale(1.08) translateY(-2px);
         }
 
         .queue-pos {
@@ -1350,13 +1387,13 @@
                     <span class="label">Operating Routes</span>
                 </div>
             </a>
-            <div class="stat-card">
+            <a href="<?= base_url('history') ?>" class="stat-card stat-card-link" aria-label="View departure history">
                 <div class="stat-icon-wrapper si-green"><i class="fas fa-check-circle"></i></div>
                 <div class="stat-info">
                     <span class="value" id="count-departures"><?= $total_departures_today ?></span>
                     <span class="label">Recent Departures</span>
                 </div>
-            </div>
+            </a>
             <button type="button" class="stat-card stat-card-button" id="routeAverageCard" aria-haspopup="dialog" aria-controls="routeAverageModal">
                 <div class="stat-icon-wrapper si-purple"><i class="fas fa-clock"></i></div>
                 <div class="stat-info">
@@ -1633,9 +1670,9 @@
             document.querySelectorAll('.queue-card, .stat-card').forEach(function (el) {
                 if (!el.dataset.observed) {
                     el.dataset.observed = "true";
-                    el.style.opacity = "0.7";
-                    el.style.transform = "translateY(20px)";
-                    el.style.transition = "all 0.6s ease-out";
+                    el.style.opacity = "0";
+                    el.style.transform = "translateY(25px)";
+                    el.style.transition = "opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
                     observer.observe(el);
                 }
             });

@@ -212,6 +212,12 @@
             display: flex;
             box-shadow: var(--shadow-lg);
             gap: 0;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
         }
         .search-bar input {
             flex: 1;
@@ -304,11 +310,25 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
+        .back-link i {
+            transition: transform var(--transition);
+        }
+
         .back-link:hover {
             background: var(--primary);
             color: white;
             border-color: var(--primary);
-            transform: translateX(-3px);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .back-link:hover i {
+            transform: translateX(-4px);
+        }
+
+        .back-link:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.25), var(--shadow-sm);
         }
 
         @media (max-width: 420px) {
@@ -392,7 +412,28 @@
         }
 
         .results-table tbody tr:hover {
-            background: #f8fafc;
+            background: rgba(30, 64, 175, 0.03);
+            transform: translateX(4px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-header {
+            animation: fadeInUp 0.5s ease-out both;
+        }
+
+        .results-section {
+            animation: fadeInUp 0.5s ease-out both;
+            animation-delay: 0.15s;
         }
 
         .results-table tbody tr.boarding {

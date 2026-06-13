@@ -82,6 +82,12 @@
             display: flex;
             box-shadow: var(--shadow-lg);
             gap: 0;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
         }
         .search-bar input {
             flex: 1;
@@ -163,11 +169,22 @@
             transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
+        .btn-back i {
+            transition: transform var(--transition);
+        }
         .btn-back:hover {
             background: #1565c0;
             color: white;
             border-color: #1565c0;
-            transform: translateX(-3px);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-back:hover i {
+            transform: translateX(-4px);
+        }
+        .btn-back:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.25), var(--shadow-sm);
         }
 
         /* ===== TABLE CARD ===== */
@@ -262,7 +279,28 @@
             color: var(--text-main);
             vertical-align: middle;
         }
-        .schedule-table tr:hover { background: #fafbfc; }
+        .schedule-table tbody tr {
+            transition: var(--transition);
+        }
+        .schedule-table tbody tr:hover {
+            background: rgba(30, 64, 175, 0.03);
+            transform: translateX(4px);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .table-card {
+            animation: fadeInUp 0.5s ease-out both;
+        }
 
         .plate-number {
             font-weight: 700;
@@ -373,10 +411,15 @@
             .mob-row {
                 padding: 16px 20px;
                 border-bottom: 1px solid #f1f5f9;
-                transition: background 0.15s;
+                transition: var(--transition);
             }
             .mob-row:last-child { border-bottom: none; }
-            .mob-row:hover { background: #fafbff; }
+            .mob-row:hover {
+                background: #ffffff;
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-sm);
+                border-color: var(--primary);
+            }
 
             .mob-top {
                 display: flex;
