@@ -203,6 +203,7 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 380px;
         }
 
         .hero::before {
@@ -237,7 +238,7 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -40px auto 40px;
+            margin: -140px auto 40px !important;
             position: relative;
             z-index: 20;
         }

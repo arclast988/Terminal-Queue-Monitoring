@@ -13,8 +13,8 @@
         :root {
             --primary:       #1E40AF;
             --primary-dark:  #1E3A8A;
-            --accent:        #FFB74D;
-            --accent-dark:   #FFA726;
+            --accent:        #FFA726;
+            --accent-dark:   #F57C00;
             --success:       #43a047;
             --text-main:     #2c3e50;
             --text-muted:    #66788a;
@@ -38,42 +38,50 @@
         }
 
         /* ===== HERO ===== */
-        .hist-hero {
+        .hero {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 70px 5% 100px;
+            padding: 80px 5%;
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 380px;
         }
-        .hist-hero::before {
+        .hero::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background-image:
-                radial-gradient(circle at 15% 50%, rgba(255,255,255,0.22) 0%, transparent 40%),
-                radial-gradient(circle at 85% 20%, rgba(255,255,255,0.18) 0%, transparent 40%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
         }
-        .hist-hero > * { position: relative; z-index: 1; }
+        .hero > * { position: relative; z-index: 1; }
 
-        .hist-hero h1 {
-            font-size: clamp(28px, 5vw, 50px);
+        .hero h2 {
+            font-size: 48px;
             font-weight: 800;
-            color: #0d47a1;
-            margin-bottom: 12px;
-            letter-spacing: -1px;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            position: relative;
         }
-        .hist-hero h1 i { margin-right: 12px; }
 
-        .hist-hero p {
-            font-size: clamp(14px, 2vw, 18px);
-            color: #0d47a1;
+        .hero p {
+            font-size: 18px;
+            color: var(--primary-dark);
             opacity: 0.8;
-            max-width: 640px;
-            margin: 0 auto 36px;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            position: relative;
         }
 
         /* ===== SEARCH BAR ===== */
-        .search-container { max-width: 820px; margin: 0 auto; }
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
 
         .search-bar {
             background: white;
@@ -81,41 +89,40 @@
             border-radius: 50px;
             display: flex;
             box-shadow: var(--shadow-lg);
-            gap: 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: var(--transition);
-            border: 1px solid rgba(0, 0, 0, 0.05);
         }
+
         .search-bar:focus-within {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
         }
+
         .search-bar input {
             flex: 1;
             border: none;
-            padding: 14px 24px;
-            font-size: 15px;
+            padding: 15px 25px;
+            font-size: 16px;
             outline: none;
             background: transparent;
-            font-family: 'Outfit', sans-serif;
-            color: var(--text-main);
-            min-width: 0;
+            font-family: inherit;
         }
-        .search-bar input::placeholder { color: var(--text-muted); }
+
         .search-bar button {
-            background: #1e3a8a;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 0 32px;
+            padding: 0 35px;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-            white-space: nowrap;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: 0.5px;
+            transition: var(--transition);
         }
-        .search-bar button:hover { background: #1565c0; transform: scale(1.03); }
+
+        .search-bar button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.03);
+        }
 
         /* Active filter badge */
         .filter-badge {
@@ -145,7 +152,7 @@
         .hist-content {
             width: 90%;
             max-width: 1300px;
-            margin: -50px auto 60px;
+            margin: -30px auto 60px;
             position: relative;
             z-index: 10;
         }
@@ -222,7 +229,7 @@
         }
 
         /* Table itself */
-        .table-wrap { overflow-x: auto; }
+        .table-wrap { overflow-x: hidden; }
 
         table {
             width: 100%;
@@ -284,7 +291,6 @@
         }
         .schedule-table tbody tr:hover {
             background: rgba(30, 64, 175, 0.03);
-            transform: translateX(4px);
         }
 
         @keyframes fadeInUp {
@@ -331,6 +337,16 @@
             gap: 10px;
         }
 
+        .time-display {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary);
+            background: #e3f2fd;
+            padding: 5px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -372,78 +388,96 @@
             display: flex;
             justify-content: center;
         }
-        /* Override CI4 Bootstrap pager links */
+        /* CI4 default pager outputs: nav > ul.pagination > li > a */
+        .pager-wrap nav { display: flex; justify-content: center; }
         .pager-wrap .pagination { margin: 0; gap: 6px; display: flex; flex-wrap: wrap; list-style: none; padding: 0; }
-        .pager-wrap .pagination .page-item .page-link {
-            border-radius: 10px !important;
+        .pager-wrap .pagination li a {
+            display: inline-block;
+            border-radius: 10px;
             font-weight: 600;
             font-family: 'Outfit', sans-serif;
             color: var(--primary);
             border: 1px solid #e2e8f0;
             padding: 8px 14px;
+            text-decoration: none;
+            transition: var(--transition);
         }
-        .pager-wrap .pagination .page-item.active .page-link {
+        .pager-wrap .pagination li.active a {
             background: var(--primary-dark);
             border-color: var(--primary-dark);
             color: white;
         }
-        .pager-wrap .pagination .page-item .page-link:hover {
+        .pager-wrap .pagination li a:hover {
             background: #e3f2fd;
             border-color: var(--primary);
         }
 
-        /* ===== MOBILE CARD VIEW (≤ 640px) ===== */
+        /* ===== MOBILE CARD VIEW (≤ 768px) ===== */
         .mobile-cards { display: none; }
 
-        @media (max-width: 640px) {
-            .hist-hero { padding: 50px 5% 80px; }
+        /* Hide pager when only 1 page (single active link, no prev/next) */
+        .pager-wrap--single-page { display: none; }
+
+        @media (max-width: 768px) {
+            .hero { padding: 50px 5% 80px; }
 
             .search-bar { flex-direction: column; border-radius: 18px; padding: 10px; gap: 8px; }
             .search-bar input { padding: 12px 16px; text-align: center; }
             .search-bar button { padding: 12px; border-radius: 12px; width: 100%; }
 
-            .hist-content { width: 94%; margin-top: -40px; }
+            .hist-content { width: 94%; margin-top: -30px !important; }
 
-            /* Hide desktop table, show mobile cards */
-            .desktop-table { display: none; }
-            .mobile-cards  { display: flex; flex-direction: column; gap: 0; }
+            .table-wrap { overflow-x: auto; }
 
-            .mob-row {
-                padding: 16px 20px;
-                border-bottom: 1px solid #f1f5f9;
+            .schedule-table,
+            .schedule-table tbody,
+            .schedule-table tr,
+            .schedule-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .schedule-table thead {
+                display: none;
+            }
+
+            .schedule-table tr {
+                padding: 15px;
+                border: 1px solid #edf2f7;
+                border-radius: 15px;
+                margin-bottom: 15px;
+                background: white;
                 transition: var(--transition);
             }
-            .mob-row:last-child { border-bottom: none; }
-            .mob-row:hover {
-                background: #ffffff;
-                transform: translateY(-2px);
-                box-shadow: var(--shadow-sm);
+
+            .schedule-table tr:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-md);
                 border-color: var(--primary);
             }
 
-            .mob-top {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                margin-bottom: 10px;
-            }
-            .mob-bottom {
+            .schedule-table td {
+                padding: 10px 0;
+                border: none;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                flex-wrap: wrap;
-                gap: 8px;
+                text-align: right;
+                border-bottom: 1px solid #f1f5f9;
             }
-            .mob-driver {
-                font-size: 13px;
+
+            .schedule-table td:last-child {
+                border-bottom: none;
+            }
+
+            .schedule-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
                 color: var(--text-muted);
-                display: flex;
-                align-items: center;
-                gap: 5px;
-                margin-bottom: 4px;
-                font-weight: 600;
+                font-size: 11px;
+                text-transform: uppercase;
+                text-align: left;
             }
-            .mob-driver i { font-size: 12px; }
 
             .table-card-header { flex-direction: column; gap: 10px; align-items: flex-start; }
         }
@@ -461,24 +495,20 @@
 ]) ?>
 
 <!-- ===== HERO ===== -->
-<section class="hist-hero">
-    <h1><i class="fas fa-history"></i> Departure History</h1>
+<section class="hero">
+    <h2>Departure History</h2>
     <p>Search or browse all completed vehicle departures from our terminal.</p>
 
     <div class="search-container">
-        <form method="get" action="<?= base_url('history') ?>">
-            <div class="search-bar">
-                <input
-                    type="text"
-                    name="q"
-                    placeholder="Search by Plate Number, Destination, or Driver..."
-                    value="<?= esc($search ?? '') ?>"
-                    autocomplete="off"
-                >
-                <button type="submit">
-                    <i class="fas fa-search" style="margin-right:7px;"></i>SEARCH
-                </button>
-            </div>
+        <form method="get" action="<?= base_url('history') ?>" class="search-bar">
+            <input
+                type="text"
+                name="q"
+                placeholder="Search by Plate Number, Destination, or Driver..."
+                value="<?= esc($search ?? '') ?>"
+                autocomplete="off"
+            >
+            <button type="submit">SEARCH</button>
         </form>
 
         <?php if (!empty($search)): ?>
@@ -496,13 +526,6 @@
 <!-- ===== MAIN CONTENT ===== -->
 <div class="hist-content">
 
-    <!-- Back button -->
-    <div class="back-row">
-        <a href="<?= base_url('guest') ?>" class="btn-back">
-            <i class="fas fa-arrow-left"></i>
-            <span>Back to Live Monitor</span>
-        </a>
-    </div>
 
     <!-- Table Card -->
     <div class="table-card">
@@ -518,8 +541,8 @@
             <?php endif; ?>
         </div>
 
-        <!-- ===== DESKTOP TABLE ===== -->
-        <div class="table-wrap desktop-table">
+        <!-- Table content -->
+        <div class="table-wrap">
             <table class="schedule-table">
                 <thead>
                     <tr>
@@ -534,7 +557,7 @@
                     <?php if (!empty($departures)): ?>
                         <?php foreach ($departures as $item): ?>
                             <tr>
-                                <td data-label="Plate">
+                                <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
                                 <td data-label="Driver">
@@ -549,10 +572,12 @@
                                         $vType = strtolower($item['vehicle_type'] ?? '');
                                         $imgFile = $imgMap[$vType] ?? 'van.png';
                                     ?>
-                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
-                                    </span>
-                                    <div class="mt-1"><?= vehicle_type_badge($vType) ?></div>
+                                    <div class="vehicle-type-cell">
+                                        <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        </span>
+                                        <?= vehicle_type_badge($vType) ?>
+                                    </div>
                                 </td>
                                 <td data-label="Route">
                                     <div class="route-info">
@@ -562,10 +587,12 @@
                                     </div>
                                 </td>
                                 <td data-label="Departure Time">
-                                    <span class="status-badge status-departed">
-                                        <i class="fas fa-clock"></i>
-                                        <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
+                                    <span class="time-display">
+                                        <?= date('g:i A', strtotime($item['departure_time'])) ?>
                                     </span>
+                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                        <?= date('M d, Y', strtotime($item['departure_time'])) ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -586,55 +613,10 @@
             </table>
         </div>
 
-        <!-- ===== MOBILE CARD LIST ===== -->
-        <div class="mobile-cards">
-            <?php if (!empty($departures)): ?>
-                <?php foreach ($departures as $item): ?>
-                    <?php
-                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                        $vType = strtolower($item['vehicle_type'] ?? '');
-                        $imgFile = $imgMap[$vType] ?? 'van.png';
-                    ?>
-                    <div class="mob-row">
-                        <div class="mob-top">
-                            <div>
-                                <div class="mob-driver">
-                                    <i class="fas fa-user-tie"></i>
-                                    <?= esc($item['driver_name'] ?? '—') ?>
-                                </div>
-                                <span class="plate-number"><?= esc($item['plate_number']) ?></span>
-                            </div>
-                            <span class="status-badge status-departed" style="font-size:11px;">
-                                <i class="fas fa-clock"></i>
-                                <?= date('h:i A', strtotime($item['departure_time'])) ?>
-                            </span>
-                        </div>
-                        <div class="mob-bottom">
-                            <div class="route-info">
-                                <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:22px;width:auto;">
-                                </span>
-                                <span style="color: var(--text-muted); font-size: 12px;"><?= esc($item['origin']) ?></span>
-                                <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 11px;"></i>
-                                <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;"><?= esc($item['destination']) ?></span>
-                            </div>
-                            <span style="font-size:11px;color:var(--text-muted);">
-                                <?= date('M d, Y', strtotime($item['departure_time'])) ?>
-                            </span>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="empty-state">
-                    <div class="empty-icon"><i class="fas fa-history"></i></div>
-                    <h3>No Departures Found</h3>
-                    <p><?= !empty($search) ? 'Try a different search term.' : 'No departure history has been recorded yet.' ?></p>
-                </div>
-            <?php endif; ?>
-        </div>
 
-        <!-- Pagination -->
-        <?php if ($pager): ?>
+
+        <!-- Pagination (hidden when only 1 page) -->
+        <?php if ($pager && $pager->getPageCount() > 1): ?>
             <div class="pager-wrap">
                 <?= $pager->links() ?>
             </div>
@@ -644,6 +626,7 @@
 </div>
 
 <?= view('templates/footer') ?>
+<style>#confirmActionModal { display: none !important; }</style>
 
 </body>
 </html>

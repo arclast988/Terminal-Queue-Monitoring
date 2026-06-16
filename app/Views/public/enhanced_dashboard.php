@@ -208,6 +208,7 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 380px;
         }
 
         .hero::before {
@@ -328,6 +329,23 @@
             
             .stat-info .label {
                 font-size: 11px;
+            }
+
+            .search-bar {
+                flex-direction: column;
+                border-radius: 18px;
+                padding: 10px;
+                gap: 8px;
+            }
+            .search-bar input {
+                padding: 12px 16px;
+                text-align: center;
+                width: 100%;
+            }
+            .search-bar button {
+                padding: 12px;
+                border-radius: 12px;
+                width: 100%;
             }
         }
 
@@ -1383,7 +1401,7 @@
             <a href="<?= base_url('schedules') ?>" class="stat-card stat-card-link" aria-label="View schedules">
                 <div class="stat-icon-wrapper si-gold"><i class="fas fa-route"></i></div>
                 <div class="stat-info">
-                    <span class="value"><?= count($routes ?? []) ?></span>
+                    <span class="value" id="count-routes"><?= count(array_unique(array_column($routes ?? [], 'destination'))) ?></span>
                     <span class="label">Operating Routes</span>
                 </div>
             </a>
@@ -1755,8 +1773,16 @@
                     // Update stats (lightweight text-only, no flicker)
                     var countQueued = document.getElementById('count-queued');
                     var countDepartures = document.getElementById('count-departures');
+                    var countRoutes = document.getElementById('count-routes');
                     if (countQueued) countQueued.innerText = data.active_queue.length;
                     if (countDepartures) countDepartures.innerText = data.total_departures_today;
+                    if (countRoutes && data.routes) {
+                        var uniqueDests = [];
+                        data.routes.forEach(function(r) {
+                            if (r.destination && uniqueDests.indexOf(r.destination) === -1) uniqueDests.push(r.destination);
+                        });
+                        countRoutes.innerText = uniqueDests.length;
+                    }
 
                     if (data.route_average_departures) {
                         var routeAverageFP = makeFingerprint(data.route_average_departures);

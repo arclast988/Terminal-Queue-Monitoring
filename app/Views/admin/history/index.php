@@ -170,29 +170,18 @@
             <table class="table-modern">
                 <thead>
                     <tr>
-                        <th>Vehicle</th>
                         <th>Plate Number</th>
                         <th>Driver</th>
+                        <th>Vehicle</th>
                         <th>Route</th>
                         <th>Departure Time</th>
-                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($departures)): ?>
                         <?php foreach ($departures as $item): ?>
                             <tr>
-                                <td data-label="Vehicle">
-                                    <?php
-                                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                        $vType = strtolower($item['vehicle_type'] ?? '');
-                                        $imgFile = $imgMap[$vType] ?? 'van.png';
-                                    ?>
-                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
-                                    </span>
-                                    <div class="mt-1"><?= vehicle_type_badge($vType) ?></div>
-                                </td>
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
@@ -200,6 +189,19 @@
                                     <div class="driver-cell">
                                         <i class="bi bi-person-badge"></i>
                                         <?= esc($item['driver_name'] ?? '—') ?>
+                                    </div>
+                                </td>
+                                <td data-label="Vehicle">
+                                    <?php
+                                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
+                                        $vType = strtolower($item['vehicle_type'] ?? '');
+                                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                                    ?>
+                                    <div class="vehicle-type-cell">
+                                        <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        </span>
+                                        <?= vehicle_type_badge($vType) ?>
                                     </div>
                                 </td>
                                 <td data-label="Route">
@@ -211,10 +213,15 @@
                                 <td data-label="Departure Time">
                                     <span class="badge-modern badge-modern-primary"><?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?></span>
                                 </td>
-                                <td data-label="Status">
-                                    <span class="status-badge status-departed">
-                                        <i class="bi bi-check-circle-fill"></i> Departed
-                                    </span>
+                                <td data-label="Actions">
+                                    <div class="d-flex gap-2">
+                                        <form action="<?= base_url('admin/history/delete/' . $item['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this departure record?');">
+                                            <?= csrf_field() ?>
+                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

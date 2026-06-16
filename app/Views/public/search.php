@@ -174,10 +174,11 @@
         /* --- Hero Section --- */
         .hero {
             background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 70px 5% 100px;
+            padding: 80px 5%;
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 380px;
         }
 
         .hero h2 {
@@ -247,11 +248,34 @@
         }
         .search-bar button:hover { background: #1565c0; transform: scale(1.03); }
 
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 18px;
+            background: rgba(255,255,255,0.85);
+            color: var(--primary-dark);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 18px;
+            border-radius: 50px;
+            backdrop-filter: blur(6px);
+        }
+        .filter-badge a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-size: 18px;
+            line-height: 1;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+        .filter-badge a:hover { opacity: 1; }
+
         /* --- Main Content --- */
         .container {
             width: 90%;
             max-width: 1200px;
-            margin: -50px auto 60px;
+            margin: -80px auto 60px !important;
             position: relative;
             z-index: 20;
         }
@@ -480,6 +504,29 @@
             font-weight: 700;
         }
 
+        .time-display {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--primary);
+            background: #e3f2fd;
+            padding: 5px 12px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .driver-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+        .driver-cell i {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
         .status-badge {
             display: inline-block;
             padding: 6px 12px;
@@ -603,10 +650,70 @@
             .logo-text p { font-size: 8px; }
             .logo { width: 40px; height: 40px; border-radius: 8px; }
             .hero { padding: 50px 5% 80px; }
-            .container { margin-top: -40px; }
+            .container { margin-top: -30px !important; }
             .hero h2 { font-size: 28px; }
-            .results-table { font-size: 13px; }
-            .results-table th, .results-table td { padding: 12px; }
+            .search-bar {
+                flex-direction: column;
+                border-radius: 18px;
+                padding: 10px;
+                gap: 8px;
+            }
+            .search-bar input {
+                padding: 12px 16px;
+                text-align: center;
+                width: 100%;
+            }
+            .search-bar button {
+                padding: 12px;
+                border-radius: 12px;
+                width: 100%;
+            }
+            .results-table, 
+            .results-table thead, 
+            .results-table tbody, 
+            .results-table th, 
+            .results-table td, 
+            .results-table tr { 
+                display: block; 
+                width: 100%;
+            }
+            .results-table thead { 
+                display: none; 
+            }
+            .results-table tr {
+                border: 1px solid #edf2f7;
+                border-radius: 15px;
+                margin-bottom: 15px;
+                padding: 15px;
+                background: white;
+                box-shadow: var(--shadow-sm);
+                transition: var(--transition);
+            }
+            .results-table tr:hover {
+                transform: translateY(-3px);
+                box-shadow: var(--shadow-md);
+                border-color: var(--primary);
+            }
+            .results-table td {
+                padding: 10px 0;
+                border: none;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                border-bottom: 1px solid #f1f5f9;
+            }
+            .results-table td:last-child {
+                border-bottom: none;
+            }
+            .results-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: var(--text-muted);
+                font-size: 11px;
+                text-transform: uppercase;
+                text-align: left;
+            }
             .results-section-header { flex-direction: column; align-items: flex-start; }
             .vehicle-icon { width: 40px; height: 40px; margin-right: 6px; }
         }
@@ -645,11 +752,18 @@
                     <i class="fas fa-search" style="margin-right:7px;"></i>SEARCH
                 </button>
             </form>
+            <?php if (!empty($search)): ?>
+                <div class="filter-badge">
+                    <span><i class="fas fa-info-circle"></i> <?= $total_results ?> result<?= $total_results != 1 ? 's' : '' ?> found for "<strong><?= esc($search) ?></strong>"</span>
+                    <a href="<?= base_url('search') ?>">&times;</a>
+                </div>
+            <?php endif; ?>
         </div>
     </section>
 
     <!-- Main Content -->
     <div class="container">
+
         <div class="back-row">
             <a href="<?= base_url('guest') ?>" class="back-link">
                 <i class="fas fa-arrow-left"></i>
@@ -657,12 +771,6 @@
             </a>
         </div>
 
-        <!-- Results Info -->
-        <div class="results-info">
-            <span class="badge-info">
-                <i class="fas fa-info-circle"></i> <?= $total_results ?> result<?= $total_results != 1 ? 's' : '' ?> found for "<strong><?= esc($search) ?></strong>"
-            </span>
-        </div>
 
         <!-- Active Queue Results -->
         <?php if (!empty($active_results)): ?>
@@ -675,9 +783,10 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Position/Type</th>
+                            <th>Queue #</th>
                             <th>Plate Number</th>
                             <th>Driver</th>
+                            <th>Type</th>
                             <th>Route</th>
                             <th>Status</th>
                         </tr>
@@ -685,33 +794,39 @@
                     <tbody>
                         <?php foreach ($active_results as $item): ?>
                         <tr class="<?= $item['status'] == 'boarding' ? 'boarding' : '' ?>">
-                            <td>
+                            <td data-label="Queue #">
+                                <span class="time-display">#<?= esc($item['position'] ?? '—') ?></span>
+                            </td>
+                            <td data-label="Plate Number">
+                                <span class="plate-number"><?= esc($item['plate_number']) ?></span>
+                            </td>
+                            <td data-label="Driver">
+                                <div class="driver-cell">
+                                    <i class="fas fa-user-tie"></i>
+                                    <?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?>
+                                </div>
+                            </td>
+                            <td data-label="Type">
                                 <?php
-                                    $imgMap = [
-                                        'van' => 'van.png',
-                                        'jeepney' => 'jeep.png',
-                                        'minibus' => 'minibus.png'
-                                    ];
+                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                     $vType = strtolower($item['vehicle_type'] ?? '');
                                     $imgFile = $imgMap[$vType] ?? 'van.png';
                                 ?>
-                                <div class="vehicle-icon vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>">
+                                <div class="vehicle-type-cell">
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                    </span>
+                                    <?= vehicle_type_badge($vType) ?>
                                 </div>
-                                <?php if ($vType !== 'jeepney' && !empty($item['position'])): ?>
-                                    <span style="font-weight: 700; color: var(--primary);">#<?= $item['position'] ?></span>
-                                <?php endif; ?>
                             </td>
-                            <td><span class="plate-number"><?= esc($item['plate_number']) ?></span></td>
-                            <td><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
-                            <td>
+                            <td data-label="Route">
                                 <div class="route-info">
-                                    <small><?= esc($item['origin']) ?></small>
-                                    <i class="fas fa-arrow-right" style="font-size: 10px; color: var(--primary);"></i>
-                                    <strong><?= esc($item['destination']) ?></strong>
+                                    <span style="color: var(--text-muted); font-size: 13px;"><?= esc($item['origin']) ?></span>
+                                    <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 12px;"></i>
+                                    <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
                                 </div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <?php if ($item['status'] == 'boarding'): ?>
                                     <span class="status-badge status-boarding blink">BOARDING</span>
                                 <?php else: ?>
@@ -737,9 +852,9 @@
                 <table class="results-table">
                     <thead>
                         <tr>
-                            <th>Type</th>
                             <th>Plate Number</th>
                             <th>Driver</th>
+                            <th>Type</th>
                             <th>Route</th>
                             <th>Departure Time</th>
                         </tr>
@@ -747,33 +862,42 @@
                     <tbody>
                         <?php foreach ($departed_results as $item): ?>
                         <tr>
-                            <td>
+                            <td data-label="Plate Number">
+                                <span class="plate-number"><?= esc($item['plate_number']) ?></span>
+                            </td>
+                            <td data-label="Driver">
+                                <div class="driver-cell">
+                                    <i class="fas fa-user-tie"></i>
+                                    <?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?>
+                                </div>
+                            </td>
+                            <td data-label="Type">
                                 <?php
-                                    $imgMap = [
-                                        'van' => 'van.png',
-                                        'jeepney' => 'jeep.png',
-                                        'minibus' => 'minibus.png'
-                                    ];
+                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
                                     $vType = strtolower($item['vehicle_type'] ?? '');
                                     $imgFile = $imgMap[$vType] ?? 'van.png';
                                 ?>
-                                <div class="vehicle-icon vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>">
+                                <div class="vehicle-type-cell">
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                    </span>
+                                    <?= vehicle_type_badge($vType) ?>
                                 </div>
                             </td>
-                            <td><span class="plate-number"><?= esc($item['plate_number']) ?></span></td>
-                            <td><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
-                            <td>
+                            <td data-label="Route">
                                 <div class="route-info">
-                                    <small><?= esc($item['origin']) ?></small>
-                                    <i class="fas fa-arrow-right" style="font-size: 10px; color: var(--primary);"></i>
-                                    <strong><?= esc($item['destination']) ?></strong>
+                                    <span style="color: var(--text-muted); font-size: 13px;"><?= esc($item['origin']) ?></span>
+                                    <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 12px;"></i>
+                                    <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
                                 </div>
                             </td>
-                            <td>
-                                <span class="status-badge status-departed">
-                                    <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
+                            <td data-label="Departure Time">
+                                <span class="time-display">
+                                    <?= date('g:i A', strtotime($item['departure_time'])) ?>
                                 </span>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                    <?= date('M d, Y', strtotime($item['departure_time'])) ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>

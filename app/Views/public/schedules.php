@@ -203,6 +203,7 @@
             text-align: center;
             position: relative;
             overflow: hidden;
+            min-height: 380px;
         }
 
         .hero::before {
@@ -237,7 +238,7 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -40px auto 40px;
+            margin: -140px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -781,10 +782,12 @@
                                         $vType = strtolower($schedule['vehicle_type'] ?? '');
                                         $imgFile = $imgMap[$vType] ?? 'van.png';
                                     ?>
-                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
-                                    </span>
-                                    <div class="mt-1"><?= vehicle_type_badge($vType) ?></div>
+                                    <div class="vehicle-type-cell">
+                                        <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        </span>
+                                        <?= vehicle_type_badge($vType) ?>
+                                    </div>
                                 </td>
                                 <td data-label="Route">
                                     <div class="route-info">
@@ -922,7 +925,7 @@
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
                     '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
-                    '<td data-label="Type"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><div class="mt-1"><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + typeLabel + '</span></div></td>' +
+                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + typeLabel + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +

@@ -146,6 +146,11 @@
     .guest-header .nav-menu a.active::after {
         width: 100%;
     }
+    .guest-header .nav-menu a:focus,
+    .guest-header .nav-menu a:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+    }
     .guest-header .nav-menu a.login-btn {
         background: #1e3a8a;
         color: white !important;
