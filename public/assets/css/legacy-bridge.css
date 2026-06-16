@@ -526,10 +526,12 @@ html body .form-check-input-modern:checked {
   background-color: var(--primary);
   border-color: var(--primary);
 }
-
 html body .form-check-label-modern {
   font-size: .875rem;
   color: var(--text-main);
   cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }

@@ -1247,8 +1247,8 @@ input[title*="delete" i] {
 }
 
 .btn-modern[title*="delete" i] i,
-.input[type="submit"][title*="delete" i] i,
-.a[title*="delete" i] i,
+input[type="submit"][title*="delete" i] i,
+a[title*="delete" i] i,
 .btn-modern .bi.bi-trash,
 .btn-modern .bi-trash-fill,
 .bi.bi-trash,
