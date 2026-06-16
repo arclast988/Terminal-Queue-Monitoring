@@ -11,6 +11,10 @@ $routes->get('/', 'Home::index');
 $routes->get('login', 'Auth::index');
 $routes->post('login', 'Auth::login');
 $routes->get('logout', 'Auth::logout');
+$routes->get('forgot-password', 'Auth::forgotPassword');
+$routes->post('forgot-password', 'Auth::sendResetLink');
+$routes->get('reset-password/(:any)', 'Auth::resetPassword/$1');
+$routes->post('reset-password/(:any)', 'Auth::updatePassword/$1');
 // seed-users route removed for security — use CLI: php spark db:seed UserSeeder
 $routes->get('guest', 'Home::index');
 $routes->get('status', 'Home::status');
