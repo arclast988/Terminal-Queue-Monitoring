@@ -4,7 +4,14 @@ REM Run this after install_system.bat and start_system.bat to verify everything 
 
 setlocal enableextensions
 set "WSL_UTF8=1"
-set "WSL=wsl -u root"
+set "UBUNTU_DISTRO="
+for /f "usebackq delims=" %%i in (`powershell -Command "wsl -l -q | ForEach-Object { $_ -replace [char]0, '' } | Where-Object { $_ -match 'Ubuntu' } | Select-Object -First 1"`) do set "UBUNTU_DISTRO=%%i"
+
+if not defined UBUNTU_DISTRO (
+    set "UBUNTU_DISTRO=Ubuntu"
+)
+
+set "WSL=wsl -d %UBUNTU_DISTRO% -u root"
 
 echo.
 echo ======================================================================
@@ -14,7 +21,7 @@ echo.
 
 REM Test WSL connectivity
 %WSL% bash -c "echo '[OK] WSL is accessible'" || (
-    echo [ERROR] Cannot communicate with WSL. Is WSL installed?
+    echo [ERROR] Cannot communicate with WSL. Is %UBUNTU_DISTRO% installed?
     pause
     exit /b 1
 )

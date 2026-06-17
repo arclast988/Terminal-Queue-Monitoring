@@ -18,6 +18,11 @@ echo "====================================================================="
 echo ""
 echo "[1/6] Updating apt index and installing core utilities..."
 export DEBIAN_FRONTEND=noninteractive
+
+# Clean up any broken ondrej/php PPA repository sources from previous failed runs
+rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.sources 2>/dev/null
+rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.list 2>/dev/null
+
 apt-get update -y
 apt-get install -y git curl unzip software-properties-common ca-certificates lsb-release gnupg sed
 
@@ -28,17 +33,46 @@ apt-get install -y mariadb-server mariadb-client
 service mariadb start 2>/dev/null || service mysql start 2>/dev/null || true
 echo "[OK] MariaDB installed."
 
-# --- 3. PHP 8.2 via ondrej PPA + CodeIgniter 4 extensions ---
+# --- 3. PHP via PPA or default repositories + CodeIgniter 4 extensions ---
 echo ""
-echo "[3/6] Installing PHP 8.2 and required extensions..."
-if ! grep -rq "ondrej/php" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
-    add-apt-repository -y ppa:ondrej/php
-    apt-get update -y
+echo "[3/6] Installing PHP and required extensions..."
+
+CODENAME=$(lsb_release -cs)
+USE_PPA=false
+case "$CODENAME" in
+    focal|jammy|noble)
+        USE_PPA=true
+        ;;
+    *)
+        echo "[INFO] Ubuntu codename '$CODENAME' is not a standard LTS release. Skipping PPA..."
+        ;;
+esac
+
+if [ "$USE_PPA" = true ]; then
+    if ! grep -rq "ondrej/php" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null; then
+        add-apt-repository -y ppa:ondrej/php
+        apt-get update -y
+    fi
 fi
-apt-get install -y \
-    php8.2-cli php8.2-fpm php8.2-mysql php8.2-intl php8.2-mbstring \
-    php8.2-curl php8.2-xml php8.2-zip php8.2-gd php8.2-opcache php8.2-common
-echo "[OK] $(php8.2 -v | head -n1)"
+
+if [ "$USE_PPA" = true ]; then
+    PHP_SUFFIX="8.2"
+else
+    PHP_SUFFIX=""
+fi
+
+if [ -n "$PHP_SUFFIX" ]; then
+    apt-get install -y \
+        php${PHP_SUFFIX}-cli php${PHP_SUFFIX}-fpm php${PHP_SUFFIX}-mysql php${PHP_SUFFIX}-intl php${PHP_SUFFIX}-mbstring \
+        php${PHP_SUFFIX}-curl php${PHP_SUFFIX}-xml php${PHP_SUFFIX}-zip php${PHP_SUFFIX}-gd php${PHP_SUFFIX}-opcache php${PHP_SUFFIX}-common
+    PHP_BIN="php${PHP_SUFFIX}"
+else
+    apt-get install -y \
+        php-cli php-fpm php-mysql php-intl php-mbstring \
+        php-curl php-xml php-zip php-gd php-common
+    PHP_BIN="php"
+fi
+echo "[OK] $($PHP_BIN -v | head -n1)"
 
 # --- 4. Composer ---
 echo ""
@@ -46,9 +80,9 @@ echo "[4/6] Installing Composer..."
 if ! command -v composer >/dev/null 2>&1; then
     curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
     HASH="$(curl -sS https://composer.github.io/installer.sig)"
-    php8.2 -r "if (hash_file('sha384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); exit(1); }"
+    $PHP_BIN -r "if (hash_file('sha384', '/tmp/composer-setup.php') === '$HASH') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); exit(1); }"
     echo ""
-    php8.2 /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+    $PHP_BIN /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
     rm -f /tmp/composer-setup.php
 fi
 echo "[OK] $(composer --version 2>/dev/null | head -n1)"

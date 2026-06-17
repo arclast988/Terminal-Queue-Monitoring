@@ -3,6 +3,9 @@ $projectRoot = $PSScriptRoot
 # (wsl.exe mangles backslashes when called directly from PowerShell, so don't use wslpath here.)
 $projectWsl = "/mnt/" + $projectRoot.Substring(0,1).ToLower() + ($projectRoot.Substring(2) -replace '\\','/')
 
+$ubuntuDistro = (wsl -l -q | ForEach-Object { $_ -replace [char]0, '' } | Where-Object { $_ -match 'Ubuntu' } | Select-Object -First 1)
+if (-not $ubuntuDistro) { $ubuntuDistro = "Ubuntu" }
+
 Write-Host "======================================" -ForegroundColor Cyan
 Write-Host "WebSocket System Diagnostics (WSL + Nginx)" -ForegroundColor Cyan
 Write-Host "======================================" -ForegroundColor Cyan
@@ -10,8 +13,8 @@ Write-Host ""
 
 # 1. PHP-FPM running inside WSL
 Write-Host "1. Checking PHP-FPM inside WSL..." -ForegroundColor Yellow
-$fpm = wsl bash -lc "pgrep -f php-fpm | head -n1 2>/dev/null"
-if ($fpm) {
+$fpm = wsl -d $ubuntuDistro bash -lc "pgrep -f php-fpm | head -n1 2>/dev/null"
+if ($fpm -and $fpm.ToString().Trim() -ne "") {
     Write-Host "   [OK] PHP-FPM is running in WSL" -ForegroundColor Green
 } else {
     Write-Host "   [FAIL] PHP-FPM not running - run start_system.bat first!" -ForegroundColor Red
@@ -20,9 +23,10 @@ Write-Host ""
 
 # 2. WebSocket server process + PID file
 Write-Host "2. Checking WebSocket server (spark ws:serve)..." -ForegroundColor Yellow
-$ws = wsl bash -lc "pgrep -f 'spark ws:serve' | head -n1 2>/dev/null"
-$wsPidFile = wsl bash -lc "cat '$projectWsl/writable/ws_server.pid' 2>/dev/null"
-if ($ws) {
+$ws = wsl -d $ubuntuDistro bash -lc "pgrep -f 'spark ws:serve' | head -n1 2>/dev/null"
+$wsPidFile = wsl -d $ubuntuDistro bash -lc "cat '$projectWsl/writable/ws_server.pid' 2>/dev/null"
+if ($wsPidFile) { $wsPidFile = $wsPidFile.ToString().Trim() }
+if ($ws -and $ws.ToString().Trim() -ne "") {
     Write-Host "   [OK] WebSocket server is running (ws_server.pid: $wsPidFile)" -ForegroundColor Green
 } else {
     Write-Host "   [FAIL] WebSocket server NOT running - run start_system.bat" -ForegroundColor Red
@@ -31,7 +35,7 @@ Write-Host ""
 
 # 3. Web server reachability (Nginx on port 80)
 Write-Host "3. Checking Nginx (http://localhost/)..." -ForegroundColor Yellow
-$code = wsl bash -lc "curl -sS -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null"
+$code = wsl -d $ubuntuDistro bash -lc "curl -sS -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null"
 if ($code -match '^[2345]\d\d$') {
     Write-Host "   [OK] Nginx responded with HTTP $code" -ForegroundColor Green
 } else {
@@ -52,7 +56,7 @@ Write-Host ""
 
 # 5. Port 8082 (broadcast trigger - WSL-internal, bound to 127.0.0.1)
 Write-Host "5. Checking port 8082 (broadcast trigger, WSL-internal)..." -ForegroundColor Yellow
-$bcast = wsl bash -lc "ss -ltn 2>/dev/null | grep 127.0.0.1:8082"
+$bcast = wsl -d $ubuntuDistro bash -lc "ss -ltn 2>/dev/null | grep 127.0.0.1:8082"
 if ($bcast) {
     Write-Host "   [OK] Port 8082 is listening inside WSL" -ForegroundColor Green
 } else {

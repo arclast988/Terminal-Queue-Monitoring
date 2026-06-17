@@ -64,25 +64,32 @@ REM ====================================================================
 REM  STAGE B: Ubuntu distribution
 REM ====================================================================
 echo [STAGE B] Checking Ubuntu distribution...
-wsl -l -q 2>nul | findstr /b /i "Ubuntu" >nul 2>nul
+set "UBUNTU_DISTRO="
+for /f "usebackq delims=" %%i in (`powershell -Command "wsl -l -q | ForEach-Object { $_ -replace [char]0, '' } | Where-Object { $_ -match 'Ubuntu' } | Select-Object -First 1"`) do set "UBUNTU_DISTRO=%%i"
+
+if not defined UBUNTU_DISTRO (
+    set "UBUNTU_DISTRO=Ubuntu"
+)
+
+wsl -d %UBUNTU_DISTRO% -u root true >nul 2>nul
 if errorlevel 1 (
-    echo [INFO] Ubuntu not detected. Installing (this may take several minutes)...
-    wsl --install -d Ubuntu --no-launch
+    echo [INFO] Ubuntu distro "%UBUNTU_DISTRO%" not detected. Installing (this may take several minutes)...
+    wsl --install -d %UBUNTU_DISTRO% --no-launch
     if errorlevel 1 (
-        echo [ERROR] Failed to install Ubuntu. Check your internet connection.
+        echo [ERROR] Failed to install %UBUNTU_DISTRO%. Check your internet connection.
         pause
         exit /b 1
     )
     REM Initialize the distro as root to skip the interactive username prompt
-    wsl -d Ubuntu -u root -- echo ready >nul 2>nul
+    wsl -d %UBUNTU_DISTRO% -u root -- echo ready >nul 2>nul
 )
-echo [OK] Ubuntu is installed.
+echo [OK] %UBUNTU_DISTRO% is installed.
 echo.
 
 REM ====================================================================
 REM  STAGE C: Linux-side stack + composer install
 REM ====================================================================
-set "WSL=wsl -d Ubuntu -u root"
+set "WSL=wsl -d %UBUNTU_DISTRO% -u root"
 
 REM This .bat's own folder (strip trailing backslash so wslpath gets a clean path)
 set "HERE=%~dp0"

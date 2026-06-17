@@ -8,8 +8,15 @@ set "WSL_UTF8=1"
 REM All Linux-side logic lives in ubuntu_migration/wsl_local_up.sh so we avoid
 REM fragile batch<->bash quoting. This launcher auto-detects its own location,
 REM so the project can live in ANY folder (no XAMPP required).
+set "UBUNTU_DISTRO="
+for /f "usebackq delims=" %%i in (`powershell -Command "wsl -l -q | ForEach-Object { $_ -replace [char]0, '' } | Where-Object { $_ -match 'Ubuntu' } | Select-Object -First 1"`) do set "UBUNTU_DISTRO=%%i"
+
+if not defined UBUNTU_DISTRO (
+    set "UBUNTU_DISTRO=Ubuntu"
+)
+
 set "WSL_USER=root"
-set "WSL=wsl -u %WSL_USER%"
+set "WSL=wsl -d %UBUNTU_DISTRO% -u %WSL_USER%"
 
 echo =====================================================================
 echo   Palompon Transit Management System - WSL Launcher
@@ -19,7 +26,7 @@ echo.
 REM Verify WSL is available
 %WSL% true >nul 2>nul
 if errorlevel 1 (
-    echo [ERROR] Failed to communicate with WSL. Is WSL installed and running?
+    echo [ERROR] Failed to communicate with WSL. Is %UBUNTU_DISTRO% installed and running?
     pause
     exit /b 1
 )
