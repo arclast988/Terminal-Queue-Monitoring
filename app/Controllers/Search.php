@@ -20,9 +20,7 @@ class Search extends BaseController
         // Search in active queue
         // Include vehicles.owner_name so views expecting `owner_name` won't error
         $activeResults = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
-                                    ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                                    ->join('routes', 'routes.id = queue.route_id')
-                                    ->join('terminals', 'terminals.id = routes.terminal_id')
+                                    ->withFullJoins()
                                     ->whereIn('queue.status', ['waiting', 'boarding'])
                                     ->groupStart()
                                         ->like('vehicles.plate_number', $search)
@@ -35,11 +33,8 @@ class Search extends BaseController
 
         // Search in recent departures
         // Include vehicles.owner_name for departed results as well
-        $queueModel2 = new QueueModel();
-        $departedResults = $queueModel2->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
-                                       ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                                       ->join('routes', 'routes.id = queue.route_id')
-                                       ->join('terminals', 'terminals.id = routes.terminal_id')
+        $departedResults = (new QueueModel())->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+                                       ->withFullJoins()
                                        ->where('queue.status', 'departed')
                                        ->groupStart()
                                            ->like('vehicles.plate_number', $search)
@@ -53,8 +48,7 @@ class Search extends BaseController
 
         $announcements = [];
         try {
-            $announcementModel = new AnnouncementModel();
-            $announcements = $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+            $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {}
 
         $data = [

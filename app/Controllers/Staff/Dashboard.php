@@ -17,8 +17,7 @@ class Dashboard extends BaseController
 
         $announcements = [];
         try {
-            $announcementModel = new AnnouncementModel();
-            $announcements = $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+            $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {
             // Table may not exist
         }
@@ -41,7 +40,7 @@ class Dashboard extends BaseController
 
         // Build filtered recent departures
         $departBuilder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type')
-                                    ->join('vehicles', 'vehicles.id = queue.vehicle_id')
+                                    ->withFullJoins()
                                     ->where('queue.status', 'departed')
                                     ->where('DATE(queue.departure_time)', date('Y-m-d'));
         if ($assignedRouteIds !== null && !empty($assignedRouteIds)) {

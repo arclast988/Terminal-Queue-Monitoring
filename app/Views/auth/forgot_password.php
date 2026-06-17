@@ -89,6 +89,11 @@
             color: #991b1b;
             border: 1px solid #fecaca;
         }
+        .alert-success {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
         .back-link {
             text-align: center;
             margin-top: 16px;
@@ -110,6 +115,12 @@
         <?php if (session()->getFlashdata('error')): ?>
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i> <?= session()->getFlashdata('error') ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i> <?= session()->getFlashdata('success') ?>
             </div>
         <?php endif; ?>
 

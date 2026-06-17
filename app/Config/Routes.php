@@ -12,7 +12,10 @@ $routes->get('login', 'Auth::index');
 $routes->post('login', 'Auth::login');
 $routes->get('logout', 'Auth::logout');
 $routes->get('forgot-password', 'Auth::forgotPassword');
-$routes->post('forgot-password', 'Auth::sendResetLink');
+$routes->post('forgot-password', 'Auth::sendResetCode');
+$routes->get('verify-reset-code/(:any)', 'Auth::verifyResetCode/$1');
+$routes->post('verify-reset-code/(:any)', 'Auth::submitResetCode/$1');
+$routes->post('resend-reset-code/(:any)', 'Auth::resendResetCode/$1');
 $routes->get('reset-password/(:any)', 'Auth::resetPassword/$1');
 $routes->post('reset-password/(:any)', 'Auth::updatePassword/$1');
 // seed-users route removed for security — use CLI: php spark db:seed UserSeeder

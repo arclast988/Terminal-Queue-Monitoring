@@ -85,6 +85,18 @@ For a single machine the **Linux quick start** above (`install_linux.sh`) is the
 - **Real-time not updating** → run `diagnose.ps1` (checks Nginx, the WebSocket server, and `ws_server.pid`).
 - **Login fails** → confirm the import created the `users` table with at least one admin row.
 
+### Security, Performance & Code Optimization Updates (June 2026)
+
+We recently performed a system-wide audit and optimization:
+- **Hardened OTP Authentication**: Replaced `mt_rand()` with secure `random_int()`, added a 60-second rate limiter for OTP requests, and implemented a 5-attempt threshold limit that invalidates compromised OTP verification sessions.
+- **Enhanced Database Query Performance**:
+  - Eliminated N+1 queries on the Admin Dashboard using aggregate joins.
+  - Consolidated multiple sequential history counting queries into a single conditional SQL aggregation query.
+  - Optimized discount fare calculation loading loops via batch-fetching mapping arrays.
+  - Replaced high-overhead queries in audit logs with proper CodeIgniter pagination.
+- **Cache Control & Real-Time Sync**: Implemented caching for local fares APIs (`rt_fares_api`) with automatic invalidate triggers and added a `sync_token` field to verify payload currency.
+- **Code Redundancy Cleanup**: Introduced model-level scopes (`withOrigin()` and `withFullJoins()`) to consolidate database joins and standardized active announcement retrieval inside `BaseController.php`.
+
 ---
 
 # CodeIgniter 4 Framework

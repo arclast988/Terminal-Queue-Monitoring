@@ -34,13 +34,7 @@ class Contact extends BaseController
         $body = "Name: {$name}\nEmail: {$email}\n\nMessage:\n{$message}";
 
         // Use CodeIgniter Email library
-        $emailSvc = \Config\Services::email();
-
-        // Note: Gmail SMTP requires the 'From' address to be the authenticated email
-        $fromEmail = $config->fromEmail ?: $config->SMTPUser;
-        $fromName  = $config->fromName ?: 'PTM System Feedback';
-
-        $emailSvc->setFrom($fromEmail, $fromName);
+        $emailSvc = $this->getConfiguredEmailService();
         $emailSvc->setReplyTo($email, $name); // Important: Guest's email goes here
         $emailSvc->setTo($toEmail);
         $emailSvc->setSubject($subjectLine);

@@ -14,23 +14,35 @@ if (!function_exists('enrich_routes_with_discounts')) {
     {
         $fareModel = new FareModel();
         
+        $routeIds = array_column($routes, 'id');
+        if (empty($routeIds)) {
+            return $routes;
+        }
+
+        $faresGrouped = [];
+        try {
+            $faresList = $fareModel
+                ->select('fares.route_id, fares.amount, fare_discounts.type, fare_discounts.label, fare_discounts.discount_percent, fare_discounts.is_active')
+                ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
+                ->whereIn('fares.route_id', $routeIds)
+                ->groupStart()
+                    ->where('fare_discounts.type', 'regular')
+                    ->orWhere('fare_discounts.is_active', 1)
+                ->groupEnd()
+                ->findAll();
+
+            foreach ($faresList as $f) {
+                $faresGrouped[$f['route_id']][] = $f;
+            }
+        } catch (\Throwable $e) {
+            $faresGrouped = [];
+        }
+
         foreach ($routes as &$r) {
             $r['fare'] = isset($r['fare']) ? (float) $r['fare'] : 0.00;
             $r['discounted_fares'] = [];
 
-            try {
-                $fares = $fareModel
-                    ->select('fares.amount, fare_discounts.type, fare_discounts.label, fare_discounts.discount_percent, fare_discounts.is_active')
-                    ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
-                    ->where('fares.route_id', $r['id'])
-                    ->groupStart()
-                        ->where('fare_discounts.type', 'regular')
-                        ->orWhere('fare_discounts.is_active', 1)
-                    ->groupEnd()
-                    ->findAll();
-            } catch (\Throwable $e) {
-                $fares = [];
-            }
+            $fares = $faresGrouped[$r['id']] ?? [];
                                
             foreach ($fares as $f) {
                 if ($f['type'] === 'regular') {

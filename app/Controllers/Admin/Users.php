@@ -34,7 +34,7 @@ class Users extends BaseController
     {
         $routeModel = new RouteModel();
         $data = [
-            'routes' => $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
         ];
         return view('admin/users/create', $data);
     }
@@ -44,7 +44,15 @@ class Users extends BaseController
         $model = new UserModel();
         
         $rules = [
-            'username' => 'required|min_length[3]|is_unique[users.username]',
+            'username' => [
+                'rules'  => 'required|min_length[3]|valid_email|is_unique[users.username]',
+                'errors' => [
+                    'required'    => 'The Username is required.',
+                    'min_length'  => 'The Username must be at least 3 characters long.',
+                    'valid_email' => 'The Username must be a valid email address.',
+                    'is_unique'   => 'This username/email is already registered.'
+                ]
+            ],
             'password' => 'required|min_length[6]',
             'full_name' => 'required|min_length[3]',
             'role' => 'required|in_list[admin,staff]'
@@ -55,16 +63,7 @@ class Users extends BaseController
         }
 
         $role = $this->request->getPost('role');
-        $postedRoutes = $this->request->getPost('route_ids') ?? [];
-        $selectedRoutes = [];
-        foreach ($postedRoutes as $val) {
-            if (is_string($val) && strpos($val, ',') !== false) {
-                $selectedRoutes = array_merge($selectedRoutes, explode(',', $val));
-            } else {
-                $selectedRoutes[] = $val;
-            }
-        }
-        $selectedRoutes = array_unique(array_map('intval', $selectedRoutes));
+        $selectedRoutes = $this->parseRouteIds();
 
         // Staff must have at least one route assigned
         if ($role === 'staff' && empty($selectedRoutes)) {
@@ -73,6 +72,7 @@ class Users extends BaseController
 
         $data = [
             'username' => $this->request->getPost('username'),
+            'email' => $this->request->getPost('username'),
             'password_hash' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
             'full_name' => $this->request->getPost('full_name'),
             'role' => $role,
@@ -88,7 +88,7 @@ class Users extends BaseController
             $routeModel = new RouteModel();
             $routeLabels = [];
             foreach ($selectedRoutes as $rid) {
-                $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
+                $r = $routeModel->withOrigin()->find($rid);
                 if ($r) {
                     $routeLabels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
@@ -115,7 +115,7 @@ class Users extends BaseController
 
         $data = [
             'user' => $user,
-            'routes' => $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
             'assignedRouteIds' => $userRouteModel->getRouteIdsForUser($id),
         ];
 
@@ -128,7 +128,15 @@ class Users extends BaseController
         $userRouteModel = new UserRouteModel();
         
         $rules = [
-            'username' => "required|min_length[3]|is_unique[users.username,id,{$id}]",
+            'username' => [
+                'rules'  => "required|min_length[3]|valid_email|is_unique[users.username,id,{$id}]",
+                'errors' => [
+                    'required'    => 'The Username is required.',
+                    'min_length'  => 'The Username must be at least 3 characters long.',
+                    'valid_email' => 'The Username must be a valid email address.',
+                    'is_unique'   => 'This username/email is already registered.'
+                ]
+            ],
             'full_name' => 'required|min_length[3]',
             'role' => 'required|in_list[admin,staff]'
         ];
@@ -142,16 +150,7 @@ class Users extends BaseController
         }
 
         $role = $this->request->getPost('role');
-        $postedRoutes = $this->request->getPost('route_ids') ?? [];
-        $selectedRoutes = [];
-        foreach ($postedRoutes as $val) {
-            if (is_string($val) && strpos($val, ',') !== false) {
-                $selectedRoutes = array_merge($selectedRoutes, explode(',', $val));
-            } else {
-                $selectedRoutes[] = $val;
-            }
-        }
-        $selectedRoutes = array_unique(array_map('intval', $selectedRoutes));
+        $selectedRoutes = $this->parseRouteIds();
 
         // Staff must have at least one route assigned
         if ($role === 'staff' && empty($selectedRoutes)) {
@@ -164,6 +163,7 @@ class Users extends BaseController
 
         $data = [
             'username' => $this->request->getPost('username'),
+            'email' => $this->request->getPost('username'),
             'full_name' => $this->request->getPost('full_name'),
             'role' => $role,
         ];
@@ -191,7 +191,7 @@ class Users extends BaseController
             if (!empty($addedRoutes)) {
                 $labels = [];
                 foreach ($addedRoutes as $rid) {
-                    $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
+                    $r = $routeModel->withOrigin()->find($rid);
                     if ($r) $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
                 $details .= ' Added: ' . implode(', ', array_unique($labels)) . '.';
@@ -199,7 +199,7 @@ class Users extends BaseController
             if (!empty($removedRoutes)) {
                 $labels = [];
                 foreach ($removedRoutes as $rid) {
-                    $r = $routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->find($rid);
+                    $r = $routeModel->withOrigin()->find($rid);
                     if ($r) $labels[] = strtoupper($r['origin']) . ' → ' . strtoupper($r['destination']);
                 }
                 $details .= ' Removed: ' . implode(', ', array_unique($labels)) . '.';
@@ -221,5 +221,19 @@ class Users extends BaseController
         $model->delete($id);
         // user_routes cleaned up automatically by ON DELETE CASCADE
         return redirect()->to('/admin/users')->with('success', 'User deleted successfully.');
+    }
+
+    private function parseRouteIds(): array
+    {
+        $postedRoutes = $this->request->getPost('route_ids') ?? [];
+        $selectedRoutes = [];
+        foreach ($postedRoutes as $val) {
+            if (is_string($val) && strpos($val, ',') !== false) {
+                $selectedRoutes = array_merge($selectedRoutes, explode(',', $val));
+            } else {
+                $selectedRoutes[] = $val;
+            }
+        }
+        return array_unique(array_map('intval', $selectedRoutes));
     }
 }

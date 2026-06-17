@@ -16,16 +16,13 @@ class Home extends BaseController
 
         $announcements = [];
         try {
-            $announcementModel = new AnnouncementModel();
-            $announcements = $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+            $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {
             // Table may not exist yet; show guest page without announcements
         }
 
         $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('queue.position', 'ASC')
             ->findAll();
@@ -35,9 +32,7 @@ class Home extends BaseController
             'title' => 'Live Terminal Monitor',
             'active_queue' => $active_queue,
             'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, terminals.name as origin, routes.destination')
-                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                ->join('routes', 'routes.id = queue.route_id')
-                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->withFullJoins()
                 ->where('queue.status', 'departed')
                 ->where('DATE(queue.departure_time)', date('Y-m-d'))
                 ->orderBy('queue.departure_time', 'DESC')
@@ -47,7 +42,7 @@ class Home extends BaseController
                 ->where('DATE(departure_time)', date('Y-m-d'))
                 ->countAllResults(),
             'route_average_departures' => $this->getRouteAverageDepartures(),
-            'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll()),
+            'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
             'announcements' => $announcements
         ];
 
@@ -68,9 +63,7 @@ class Home extends BaseController
             $queueModel = new QueueModel();
 
             $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
-                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                ->join('routes', 'routes.id = queue.route_id')
-                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('queue.position', 'ASC')
                 ->findAll();
@@ -82,9 +75,7 @@ class Home extends BaseController
             unset($item);
 
             $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, terminals.name as origin, routes.destination')
-                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                ->join('routes', 'routes.id = queue.route_id')
-                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->withFullJoins()
                 ->where('queue.status', 'departed')
                 ->where('DATE(queue.departure_time)', date('Y-m-d'))
                 ->orderBy('queue.departure_time', 'DESC')
@@ -107,7 +98,7 @@ class Home extends BaseController
                 'recent_departures' => $recent_departures,
                 'total_departures_today' => $total_departures_today,
                 'route_average_departures' => $this->getRouteAverageDepartures(),
-                'routes' => enrich_routes_with_discounts($routeModel->select('routes.*, terminals.name as origin')->join('terminals', 'terminals.id = routes.terminal_id')->orderBy('destination', 'ASC')->findAll())
+                'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll())
             ];
 
             cache()->save('rt_home_status', $payload, 2);

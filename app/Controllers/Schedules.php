@@ -40,9 +40,7 @@ class Schedules extends BaseController
                 routes.destination,
                 terminals.name as origin
             ')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withFullJoins()
             ->groupStart()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orGroupStart()
@@ -82,8 +80,7 @@ class Schedules extends BaseController
 
         $announcements = [];
         try {
-            $announcementModel = new AnnouncementModel();
-            $announcements = $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+            $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {}
 
         $data = [
@@ -135,9 +132,7 @@ class Schedules extends BaseController
                     routes.destination,
                     terminals.name as origin
                 ')
-                ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                ->join('routes', 'routes.id = queue.route_id')
-                ->join('terminals', 'terminals.id = routes.terminal_id')
+                ->withFullJoins()
                 ->groupStart()
                     ->whereIn('queue.status', ['waiting', 'boarding'])
                     ->orGroupStart()

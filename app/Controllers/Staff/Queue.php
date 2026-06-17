@@ -66,9 +66,7 @@ class Queue extends BaseController
 
         // Build queue query
         $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, vehicles.capacity')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding']);
 
         // Filter by assigned routes for staff
@@ -217,9 +215,7 @@ class Queue extends BaseController
 
         // Fetch complete queue item for broadcast
         $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withFullJoins()
             ->where('queue.id', $queueId)
             ->first();
 
@@ -283,9 +279,7 @@ class Queue extends BaseController
 
 
         $item = $this->queueModel->select('vehicles.plate_number, terminals.name as origin, routes.destination')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withFullJoins()
             ->where('queue.id', $id)
             ->first();
         $label = $item ? $item['plate_number'] . ' (' . $item['destination'] . ')' : 'queue #' . $id;
@@ -294,9 +288,7 @@ class Queue extends BaseController
 
         // Fetch updated queue item for broadcast
         $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
-            ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withFullJoins()
             ->where('queue.id', $id)
             ->first();
 

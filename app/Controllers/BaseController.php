@@ -82,6 +82,7 @@ abstract class BaseController extends Controller
             $cache->delete('rt_queue_status');
             $cache->delete('rt_home_status');
             $cache->delete('rt_announcements');
+            $cache->delete('rt_fares_api');
             $cache->deleteMatching('rt_sched_status_*');
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement
@@ -116,5 +117,29 @@ abstract class BaseController extends Controller
         } catch (\Throwable $e) {
             // Silent fail — polling fallback is always active
         }
+    }
+
+    /**
+     * Get all active announcements ordered by sort_order.
+     */
+    protected function getActiveAnnouncements(): array
+    {
+        $announcementModel = new \App\Models\AnnouncementModel();
+        return $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+    }
+
+    /**
+     * Get a pre-configured Email service instance.
+     */
+    protected function getConfiguredEmailService(): \CodeIgniter\Email\Email
+    {
+        $config = config('Email');
+        $emailSvc = \Config\Services::email();
+
+        $fromEmail = $config->fromEmail ?: $config->SMTPUser;
+        $fromName  = $config->fromName ?: 'PTM System Feedback';
+
+        $emailSvc->setFrom($fromEmail, $fromName);
+        return $emailSvc;
     }
 }

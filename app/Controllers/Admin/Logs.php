@@ -20,11 +20,12 @@ class Logs extends BaseController
         $logs = $this->logModel->select('audit_logs.*, users.username, users.full_name')
             ->join('users', 'users.id = audit_logs.user_id', 'left')
             ->orderBy('audit_logs.timestamp', 'DESC')
-            ->findAll();
+            ->paginate(50);
 
         $data = [
             'title' => 'System Logs',
-            'logs' => $logs
+            'logs'  => $logs,
+            'pager' => $this->logModel->pager
         ];
 
         return view('admin/logs/index', $data);

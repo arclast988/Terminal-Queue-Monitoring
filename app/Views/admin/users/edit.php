@@ -43,12 +43,12 @@
 
                     <div class="row">
                         <div class="col-12 col-lg-6 mb-3">
-                            <label for="username" class="form-label-modern">Username <span class="text-muted small">(unique)</span></label>
+                            <label for="username" class="form-label-modern">Username <span class="text-muted small">(Google / Email account)</span></label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-person-fill"></i></span>
-                                <input type="text" class="input-modern" id="username" name="username" value="<?= old('username', $user['username']) ?>" required placeholder="e.g. jdoe">
+                                <input type="email" class="input-modern" id="username" name="username" value="<?= old('username', $user['username']) ?>" required placeholder="e.g. jdoe@email.com">
                             </div>
-                            <div class="form-text-modern">Used for signing in to the system.</div>
+                            <div class="form-text-modern">Used for signing in and password reset. Must be a valid Google or email account.</div>
                         </div>
 
                         <div class="col-12 col-lg-6 mb-3">

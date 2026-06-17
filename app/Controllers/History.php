@@ -17,17 +17,12 @@ class History extends BaseController
         // Announcements for the guest header marquee
         $announcements = [];
         try {
-            $announcementModel = new AnnouncementModel();
-            $announcements = $announcementModel->where('is_active', 1)
-                ->orderBy('sort_order', 'ASC')
-                ->findAll();
+            $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {
         }
 
         $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
-                              ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                              ->join('routes', 'routes.id = queue.route_id')
-                              ->join('terminals', 'terminals.id = routes.terminal_id')
+                              ->withFullJoins()
                               ->where('queue.status', 'departed');
 
         if ($search) {

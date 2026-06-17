@@ -18,4 +18,14 @@ class RouteModel extends Model
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = '';
+
+    /**
+     * Scope: join terminals to get origin name.
+     * Usage: $routeModel->withOrigin()->findAll()
+     */
+    public function withOrigin(): self
+    {
+        return $this->select('routes.*, terminals.name as origin')
+                    ->join('terminals', 'terminals.id = routes.terminal_id');
+    }
 }

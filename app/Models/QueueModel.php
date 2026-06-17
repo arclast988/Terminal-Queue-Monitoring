@@ -55,7 +55,18 @@ class QueueModel extends Model
             if ((int) $row['position'] !== $pos) {
                 $this->update($row['id'], ['position' => $pos]);
             }
-            $pos++;
+        $pos++;
         }
+    }
+
+    /**
+     * Scope: join vehicles, routes, and terminals for full queue data.
+     * Usage: $queueModel->withFullJoins()->findAll()
+     */
+    public function withFullJoins(): self
+    {
+        return $this->join('vehicles', 'vehicles.id = queue.vehicle_id')
+                    ->join('routes', 'routes.id = queue.route_id')
+                    ->join('terminals', 'terminals.id = routes.terminal_id');
     }
 }

@@ -16,5 +16,4 @@ class VehicleModel extends Model
 
     // Dates — vehicles table only has created_at, no updated_at
     protected $useTimestamps = false;
-    protected $createdField  = 'created_at';
 }

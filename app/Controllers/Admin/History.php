@@ -15,30 +15,24 @@ class History extends BaseController
         $destFilter = $this->request->getGet('destination');
         $typeFilter = $this->request->getGet('vehicle_type');
 
-        // --- Stats (fresh query for each to avoid filter stacking) ---
-        $queueModel1 = new QueueModel();
-        $totalAll = $queueModel1->where('queue.status', 'departed')
-                                 ->where('queue.departure_time IS NOT NULL')
-                                 ->countAllResults();
+        // --- Stats (single query with conditional aggregation) ---
+        $db = \Config\Database::connect();
+        $statsResult = $db->table('queue')
+            ->select("
+                COUNT(*) as total,
+                SUM(CASE WHEN DATE(departure_time) = CURDATE() THEN 1 ELSE 0 END) as today,
+                SUM(CASE WHEN YEAR(departure_time) = YEAR(CURDATE()) AND MONTH(departure_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as month,
+                SUM(CASE WHEN YEAR(departure_time) = YEAR(CURDATE()) THEN 1 ELSE 0 END) as year
+            ")
+            ->where('status', 'departed')
+            ->where('departure_time IS NOT NULL')
+            ->get()
+            ->getRow();
 
-        $queueModel2 = new QueueModel();
-        $totalToday = $queueModel2->where('queue.status', 'departed')
-                                   ->where('queue.departure_time IS NOT NULL')
-                                   ->where('DATE(queue.departure_time)', date('Y-m-d'))
-                                   ->countAllResults();
-
-        $queueModel3 = new QueueModel();
-        $totalMonth = $queueModel3->where('queue.status', 'departed')
-                                   ->where('queue.departure_time IS NOT NULL')
-                                   ->where('YEAR(queue.departure_time)', date('Y'))
-                                   ->where('MONTH(queue.departure_time)', date('m'))
-                                   ->countAllResults();
-
-        $queueModel4 = new QueueModel();
-        $totalYear = $queueModel4->where('queue.status', 'departed')
-                                  ->where('queue.departure_time IS NOT NULL')
-                                  ->where('YEAR(queue.departure_time)', date('Y'))
-                                  ->countAllResults();
+        $totalAll   = (int) ($statsResult->total ?? 0);
+        $totalToday = (int) ($statsResult->today ?? 0);
+        $totalMonth = (int) ($statsResult->month ?? 0);
+        $totalYear  = (int) ($statsResult->year ?? 0);
 
         // --- Options for Filter Modal ---
         $routeModel = new \App\Models\RouteModel();
@@ -103,9 +97,7 @@ class History extends BaseController
     {
         $queueModel = new QueueModel();
         $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin, queue.departure_time, queue.current_passengers')
-                              ->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                              ->join('routes', 'routes.id = queue.route_id')
-                              ->join('terminals', 'terminals.id = routes.terminal_id')
+                              ->withFullJoins()
                               ->where('queue.status', 'departed')
                               ->where('queue.departure_time IS NOT NULL');
 

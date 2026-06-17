@@ -83,6 +83,11 @@
             </table>
         </div>
     </div>
+    <?php if (isset($pager) && $pager): ?>
+        <div class="modern-card-footer bg-white py-3 d-flex justify-content-center">
+            <?= $pager->links() ?>
+        </div>
+    <?php endif; ?>
 </div>
 
 <style>

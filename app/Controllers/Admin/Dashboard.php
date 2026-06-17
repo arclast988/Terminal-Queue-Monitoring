@@ -23,14 +23,12 @@ class Dashboard extends BaseController
         $unassignedVehicles = $vehicleModel->where('route_id IS NULL')->countAllResults();
 
         // Count staff users with no route assignments
-        $staffUsers = $userModel->where('role', 'staff')->findAll();
-        $unassignedStaff = 0;
-        foreach ($staffUsers as $su) {
-            $routeIds = $userRouteModel->getRouteIdsForUser((int) $su['id']);
-            if (empty($routeIds)) {
-                $unassignedStaff++;
-            }
-        }
+        $unassignedStaff = $userModel->select('COUNT(DISTINCT users.id) as count')
+                                     ->join('user_routes', 'user_routes.user_id = users.id', 'left')
+                                     ->where('users.role', 'staff')
+                                     ->where('user_routes.id IS NULL')
+                                     ->first()['count'] ?? 0;
+        $unassignedStaff = (int) $unassignedStaff;
 
         $data = [
             'title' => 'Admin Dashboard',

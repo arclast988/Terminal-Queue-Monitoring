@@ -25,8 +25,8 @@ class Routes extends BaseController
     {
         helper('fare');
 
-        $routes = $this->routeModel->select('routes.*, terminals.name as origin, terminals.name as terminal_name')
-                                   ->join('terminals', 'terminals.id = routes.terminal_id')
+        $routes = $this->routeModel->withOrigin()
+                                   ->select('terminals.name as terminal_name')
                                    ->findAll();
         $routes = enrich_routes_with_discounts($routes);
 
@@ -222,8 +222,7 @@ class Routes extends BaseController
         helper('fare');
 
         $route = $this->routeModel
-            ->select('routes.*, terminals.name as origin')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withOrigin()
             ->find($id);
 
         if (!$route) {
@@ -249,8 +248,7 @@ class Routes extends BaseController
     public function update($id)
     {
         $existingRoute = $this->routeModel
-            ->select('routes.*, terminals.name as origin')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withOrigin()
             ->find($id);
 
         if (!$existingRoute) {
@@ -321,8 +319,7 @@ class Routes extends BaseController
     public function delete($id)
     {
         $route = $this->routeModel
-            ->select('routes.*, terminals.name as origin')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withOrigin()
             ->find($id);
         if ($this->routeModel->delete($id)) {
             if ($route) {

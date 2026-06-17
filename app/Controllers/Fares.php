@@ -13,8 +13,7 @@ class Fares extends BaseController
     {
         $routeModel = new RouteModel();
         $rows = $routeModel
-            ->select('routes.*, terminals.name as origin')
-            ->join('terminals', 'terminals.id = routes.terminal_id')
+            ->withOrigin()
             ->where('vehicle_type', $vehicleType)
             ->orderBy('destination', 'ASC')
             ->findAll();
@@ -42,8 +41,7 @@ class Fares extends BaseController
 
         $announcements = [];
         try {
-            $announcementModel = new AnnouncementModel();
-            $announcements     = $announcementModel->where('is_active', 1)->orderBy('sort_order', 'ASC')->findAll();
+            $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {}
 
         $terminals = [];
@@ -105,6 +103,9 @@ class Fares extends BaseController
 
             cache()->save('rt_fares_api', $payload, 3);
         }
+
+        // Always read the sync token live so clients keep detecting changes.
+        $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
 
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
