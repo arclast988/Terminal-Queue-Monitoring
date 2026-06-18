@@ -72,73 +72,6 @@ CREATE TABLE `audit_logs` (
 
 LOCK TABLES `audit_logs` WRITE;
 /*!40000 ALTER TABLE `audit_logs` DISABLE KEYS */;
-INSERT INTO `audit_logs` VALUES
-(1,1,'Login','Admin logged in (admin123)','2026-06-02 15:25:58'),
-(2,1,'Logout','Admin admin123 logged out','2026-06-02 15:26:53'),
-(3,1,'Login','Admin logged in (admin123)','2026-06-02 15:27:00'),
-(4,1,'Logout','Admin admin123 logged out','2026-06-02 15:27:10'),
-(5,1,'Login','Admin logged in (admin123)','2026-06-02 15:29:39'),
-(6,1,'Create route','PALOMPON → ORMOC (van, ₱150).','2026-06-02 15:29:49'),
-(7,1,'Create route','PALOMPON → TACLOBAN (jeepney, ₱150).','2026-06-02 15:31:17'),
-(8,1,'Create user with routes','Created dispatcher \"giogmarquez\" with routes: PALOMPON → ORMOC','2026-06-02 15:31:42'),
-(9,1,'Assign vehicle to route','Registered vehicle 726 HOF (van) - Driver: GIO MARQUEZ - Route: PALOMPON → ORMOC','2026-06-02 15:32:15'),
-(10,1,'Logout','Admin admin123 logged out','2026-06-02 15:32:28'),
-(11,2,'Login','Staff logged in (giogmarquez)','2026-06-02 15:32:50'),
-(12,2,'Add to queue','Added 726 HOF to queue for ORMOC. Rule: Afternoon Rush (30 min, starts at boarding).','2026-06-02 15:32:53'),
-(13,2,'Start Boarding','Start Boarding for 726 HOF (ORMOC).','2026-06-02 15:32:56'),
-(14,2,'Logout','Staff giogmarquez logged out','2026-06-02 15:33:01'),
-(15,2,'Login','Staff logged in (giogmarquez)','2026-06-02 16:16:29'),
-(16,2,'Logout','Staff giogmarquez logged out','2026-06-02 16:16:36'),
-(17,1,'Login','Admin logged in (admin123)','2026-06-02 16:16:40'),
-(18,1,'Logout','Admin admin123 logged out','2026-06-02 16:24:07'),
-(19,1,'Login','Admin logged in (admin123)','2026-06-02 16:24:25'),
-(20,1,'Logout','Admin admin123 logged out','2026-06-02 16:24:43'),
-(21,1,'Login','Admin logged in (admin123)','2026-06-02 17:06:16'),
-(22,1,'Logout','Admin admin123 logged out','2026-06-02 17:07:35'),
-(23,1,'Login','Admin logged in (admin123)','2026-06-02 17:25:50'),
-(24,1,'Logout','Admin admin123 logged out','2026-06-02 17:25:56'),
-(25,1,'Login','Admin logged in (admin123)','2026-06-02 18:00:55'),
-(26,1,'Logout','Admin admin123 logged out','2026-06-02 18:02:08'),
-(27,2,'Login','Staff logged in (giogmarquez)','2026-06-03 17:50:46'),
-(28,2,'Depart Vehicle','Depart Vehicle for 726 HOF (ORMOC).','2026-06-03 17:50:49'),
-(29,2,'Logout','Staff giogmarquez logged out','2026-06-03 17:50:50'),
-(30,2,'Login','Staff logged in (giogmarquez)','2026-06-03 18:08:04'),
-(31,2,'Add to queue','Added 726 HOF to queue for ORMOC. Rule: Evening (40 min, starts at boarding).','2026-06-03 18:08:08'),
-(32,2,'Logout','Staff giogmarquez logged out','2026-06-03 18:08:11'),
-(33,1,'Login','Admin logged in (admin123)','2026-06-09 08:18:52'),
-(34,1,'Logout','Admin admin123 logged out','2026-06-09 08:19:35'),
-(35,2,'Login','Staff logged in (giogmarquez)','2026-06-09 08:19:40'),
-(36,2,'Logout','Staff giogmarquez logged out','2026-06-09 08:19:52'),
-(37,2,'Login','Staff logged in (giogmarquez)','2026-06-09 08:43:51'),
-(38,2,'Logout','Staff giogmarquez logged out','2026-06-09 08:43:54'),
-(39,1,'Login','Admin logged in (admin123)','2026-06-09 21:14:34'),
-(40,1,'Logout','Admin admin123 logged out','2026-06-09 21:14:39'),
-(41,1,'Login','Admin logged in (admin123)','2026-06-09 21:16:00'),
-(42,1,'Logout','Admin admin123 logged out','2026-06-09 21:16:15'),
-(43,1,'Login','Admin logged in (admin123)','2026-06-09 22:44:21'),
-(44,1,'Logout','Admin admin123 logged out','2026-06-09 22:44:46'),
-(45,1,'Login','Admin logged in (admin123)','2026-06-09 22:44:51'),
-(46,1,'Logout','Admin admin123 logged out','2026-06-09 22:47:06'),
-(47,2,'Login','Staff logged in (giogmarquez)','2026-06-09 22:47:36'),
-(48,2,'Logout','Staff giogmarquez logged out','2026-06-09 22:47:46'),
-(49,1,'Login','Admin logged in (admin123)','2026-06-09 22:47:51'),
-(50,1,'Logout','Admin admin123 logged out','2026-06-09 22:53:42'),
-(51,1,'Login','Admin logged in (admin123)','2026-06-13 19:46:42'),
-(52,1,'Logout','Admin admin123 logged out','2026-06-13 19:47:20'),
-(53,1,'Login','Admin logged in (admin123)','2026-06-13 19:48:20'),
-(54,1,'Logout','Admin admin123 logged out','2026-06-13 19:48:57'),
-(55,2,'Login','Staff logged in (giogmarquez)','2026-06-13 19:49:42'),
-(56,2,'Logout','Staff giogmarquez logged out','2026-06-13 19:50:48'),
-(57,2,'Login','Staff logged in (giogmarquez)','2026-06-13 19:50:57'),
-(58,2,'Start Boarding','Start Boarding for 726 HOF (ORMOC).','2026-06-13 19:51:36'),
-(59,2,'Logout','Staff giogmarquez logged out','2026-06-13 19:51:40'),
-(60,1,'Login','Admin logged in (admin123)','2026-06-16 10:45:57'),
-(61,1,'Logout','Admin admin123 logged out','2026-06-16 11:19:28'),
-(62,1,'Login','Admin logged in (admin123)','2026-06-16 11:19:41'),
-(63,1,'Login','Admin logged in (admin123)','2026-06-16 11:24:54'),
-(64,1,'Logout','Admin admin123 logged out','2026-06-16 11:24:59'),
-(65,2,'Login','Staff logged in (giogmarquez)','2026-06-16 11:45:36'),
-(66,2,'Logout','Staff giogmarquez logged out','2026-06-16 11:45:46');
 /*!40000 ALTER TABLE `audit_logs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -337,10 +270,6 @@ CREATE TABLE `password_reset_tokens` (
 
 LOCK TABLES `password_reset_tokens` WRITE;
 /*!40000 ALTER TABLE `password_reset_tokens` DISABLE KEYS */;
-INSERT INTO `password_reset_tokens` VALUES
-(1,'giogmarquez','3c79b309f481d82c2fb831a072f2ab0a2c8f7f148a8308e67a8cf37b23645028','2026-06-16 12:44:00',0,'2026-06-16 11:44:00'),
-(2,'giogmarquez','e47507b1a777e951e748273e58f50a2de4ea1c30d48a98372ddc40b3954e8578','2026-06-16 12:44:09',0,'2026-06-16 11:44:09'),
-(3,'giogmarquez','cb62012bef1bd049454020647fc569cc4a5969e4d35cab3466820c92639268ef','2026-06-16 12:45:20',1,'2026-06-16 11:45:20');
 /*!40000 ALTER TABLE `password_reset_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 

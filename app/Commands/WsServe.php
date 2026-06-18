@@ -22,8 +22,8 @@ class WsServe extends BaseCommand
     public function run(array $params)
     {
         $address = '0.0.0.0';
-        $wsPort = 8081;
-        $broadcastPort = 8082;
+        $wsPort = (int) env('websocket.clientPort', 8081);
+        $broadcastPort = (int) env('websocket.broadcastPort', 8082);
 
         $wsServer = stream_socket_server("tcp://$address:$wsPort", $errno, $errstr);
         $broadcastServer = stream_socket_server("tcp://127.0.0.1:$broadcastPort", $errno, $errstr);

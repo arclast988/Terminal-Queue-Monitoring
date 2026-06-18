@@ -62,8 +62,8 @@
                             <tr>
                                 <td data-label="Terminal"><?= esc($rule['terminal_name'] ?? '-') ?></td>
                                 <td data-label="Destination"><?= esc($rule['route_destination'] ?? '-') ?></td>
-                                <td data-label="Time From"><span class="badge-modern badge-modern-primary"><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
-                                <td data-label="Time To"><span class="badge-modern badge-modern-info"><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
+                                <td data-label="Time From"><span class="badge-modern badge-modern-primary"><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
+                                <td data-label="Time To"><span class="badge-modern badge-modern-info"><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
                                 <td data-label="Wait Time">
                                     <?php
                                         $mins = (int)$rule['wait_minutes'];

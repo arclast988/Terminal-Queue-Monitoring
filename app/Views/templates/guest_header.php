@@ -308,7 +308,7 @@
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-clock" style="color: var(--primary); font-size: 16px;"></i>
-                <span id="headerClock" style="font-weight: 500;"><?= date('h:i:s A') ?></span>
+                <span id="headerClock" style="font-weight: 500;"><?= date('H:i:s') ?></span>
             </div>
         </div>
     </div>
@@ -399,7 +399,7 @@
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
-                    hour12: true
+                    hour12: false
                 });
             }, 1000);
         }

@@ -779,7 +779,7 @@
                 <h3><i class="fas fa-clock"></i> Currently in Terminal</h3>
                 <span class="badge-count"><?= count($active_results) ?> vehicle<?= count($active_results) != 1 ? 's' : '' ?></span>
             </div>
-            <div style="overflow-x: auto;">
+            <div>
                 <table class="results-table">
                     <thead>
                         <tr>
@@ -848,7 +848,7 @@
                 <h3><i class="fas fa-plane-departure"></i> Recent Departures</h3>
                 <span class="badge-count"><?= count($departed_results) ?> departure<?= count($departed_results) != 1 ? 's' : '' ?></span>
             </div>
-            <div style="overflow-x: auto;">
+            <div>
                 <table class="results-table">
                     <thead>
                         <tr>

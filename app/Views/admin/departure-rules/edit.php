@@ -7,7 +7,7 @@
 $oldWaitMinutes = old('wait_minutes') ?? ($rule['wait_minutes'] ?? 30);
 $defaultHours = old('wait_hours') ?? (int) floor($oldWaitMinutes / 60);
 $defaultMins = old('wait_mins') ?? ($oldWaitMinutes % 60);
-$defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
+$defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, $defaultMins);
 ?>
 
 <div class="page-header-modern">
@@ -82,41 +82,40 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <label for="time_from" class="form-label-modern">Time From <span class="text-danger">*</span></label>
-                                <div class="input-group-modern">
-                                    <input type="time" class="input-modern" id="time_from" name="time_from"
-                                        value="<?= old('time_from') ?? date('H:i', strtotime($rule['time_from'])) ?>" required>
-                                    <span class="input-group-text-modern"><i class="bi bi-clock"></i></span>
+                                <div class="time-shortcut-wrap">
+                                    <input type="text" class="input-modern time-24-input" id="time_from" name="time_from"
+                                        value="<?= old('time_from') ?? date('H:i', strtotime($rule['time_from'])) ?>"
+                                        placeholder="HH:MM" inputmode="numeric" maxlength="5"
+                                        pattern="(?:[01]\d|2[0-3]):[0-5]\d" required>
+                                    <button type="button" class="time-shortcut-btn" data-time-shortcut="time_from" title="Pick time">
+                                        <i class="bi bi-clock"></i>
+                                    </button>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-4">
                                 <label for="time_to" class="form-label-modern">Time To <span class="text-danger">*</span></label>
-                                <div class="input-group-modern">
-                                    <input type="time" class="input-modern" id="time_to" name="time_to"
-                                        value="<?= old('time_to') ?? date('H:i', strtotime($rule['time_to'])) ?>" required>
-                                    <span class="input-group-text-modern"><i class="bi bi-clock"></i></span>
+                                <div class="time-shortcut-wrap">
+                                    <input type="text" class="input-modern time-24-input" id="time_to" name="time_to"
+                                        value="<?= old('time_to') ?? date('H:i', strtotime($rule['time_to'])) ?>"
+                                        placeholder="HH:MM" inputmode="numeric" maxlength="5"
+                                        pattern="(?:[01]\d|2[0-3]):[0-5]\d" required>
+                                    <button type="button" class="time-shortcut-btn" data-time-shortcut="time_to" title="Pick time">
+                                        <i class="bi bi-clock"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
-                                <label class="form-label-modern">Wait Time <span class="text-danger">*</span></label>
-                                <div class="dp-wrap-modern input-modern" id="dp_wrap_edit" tabindex="0">
-                                    <span class="dp-seg-modern" id="dp_h_e" data-seg="h">--</span><span class="dp-colon-modern">:</span><span
-                                        class="dp-seg-modern" id="dp_m_e" data-seg="m">--</span>
-                                    <i class="bi bi-clock dp-clock-icon-modern"></i>
-                                    <input type="hidden" name="wait_hours" id="wait_hours_e" value="<?= $defaultHours ?>">
-                                    <input type="hidden" name="wait_mins" id="wait_mins_e" value="<?= $defaultMins ?>">
-                                    <div class="dp-panel-modern" id="dp_panel_e">
-                                        <div class="dp-col-modern">
-                                            <div class="dp-col-label-modern">Hours</div>
-                                            <div class="dp-col-items-modern" id="dp_hours_e"></div>
-                                        </div>
-                                        <div class="dp-col-modern">
-                                            <div class="dp-col-label-modern">Minutes</div>
-                                            <div class="dp-col-items-modern" id="dp_mins_e"></div>
-                                        </div>
-                                    </div>
+                                <label for="wait_duration" class="form-label-modern">Wait Time <span class="text-danger">*</span></label>
+                                <div class="time-shortcut-wrap">
+                                    <input type="text" class="input-modern time-24-input" id="wait_duration" name="wait_duration"
+                                        value="<?= esc($defaultWaitValue) ?>" placeholder="HH:MM" inputmode="numeric"
+                                        maxlength="5" pattern="(?:[01]?\d|2[0-3]):[0-5]\d" required>
+                                    <button type="button" class="time-shortcut-btn" data-time-shortcut="wait_duration" title="Pick wait time">
+                                        <i class="bi bi-clock"></i>
+                                    </button>
                                 </div>
                                 <div class="form-text-modern">Hours and minutes the vehicle waits before departing.</div>
                             </div>
@@ -147,6 +146,70 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
 <style>
     .card, .card-body {
         overflow: visible !important;
+    }
+
+    .time-shortcut-wrap {
+        display: flex;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .time-shortcut-wrap .input-modern {
+        flex: 1;
+        min-width: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .time-shortcut-btn {
+        width: 42px;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.375rem;
+        background: #fff;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    .time-shortcut-btn:hover,
+    .time-shortcut-btn:focus {
+        border-color: #b91c1c;
+        color: #b91c1c;
+        outline: none;
+    }
+
+    .time-shortcut-panel {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        gap: 0.5rem;
+        align-items: center;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.375rem;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+        padding: 0.65rem;
+    }
+
+    .time-shortcut-panel.open {
+        display: flex;
+    }
+
+    .time-shortcut-panel select {
+        border: 1px solid #cbd5e1;
+        border-radius: 0.375rem;
+        padding: 0.35rem 0.45rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .time-shortcut-panel button {
+        border: 0;
+        border-radius: 0.375rem;
+        background: #b91c1c;
+        color: #fff;
+        font-weight: 600;
+        padding: 0.4rem 0.65rem;
     }
 
     /* Duration Picker - mimics native time input */
@@ -318,6 +381,79 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
 
 <script>
     (function () {
+        function pad(value) {
+            return String(value).padStart(2, '0');
+        }
+
+        function normalizeInput(input) {
+            const digits = input.value.replace(/\D/g, '');
+            if (digits.length === 3 || digits.length === 4) {
+                const padded = digits.padStart(4, '0');
+                const hours = Number(padded.slice(0, 2));
+                const mins = Number(padded.slice(2));
+                if (hours <= 23 && mins <= 59) {
+                    input.value = `${pad(hours)}:${pad(mins)}`;
+                }
+            }
+        }
+
+        function buildOptions(select, max) {
+            select.innerHTML = '';
+            for (let value = 0; value <= max; value++) {
+                const option = document.createElement('option');
+                option.value = pad(value);
+                option.textContent = pad(value);
+                select.appendChild(option);
+            }
+        }
+
+        const panel = document.createElement('div');
+        panel.className = 'time-shortcut-panel';
+        panel.innerHTML = '<select aria-label="Hour"></select><span>:</span><select aria-label="Minute"></select><button type="button">Set</button>';
+        document.body.appendChild(panel);
+
+        const hourSelect = panel.querySelector('select:first-child');
+        const minuteSelect = panel.querySelector('select:nth-of-type(2)');
+        const setButton = panel.querySelector('button');
+        let activeInput = null;
+        buildOptions(hourSelect, 23);
+        buildOptions(minuteSelect, 59);
+
+        document.querySelectorAll('.time-24-input').forEach((input) => {
+            input.addEventListener('blur', () => normalizeInput(input));
+        });
+
+        document.querySelectorAll('[data-time-shortcut]').forEach((button) => {
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                activeInput = document.getElementById(button.dataset.timeShortcut);
+                if (!activeInput) return;
+
+                const match = activeInput.value.match(/^(\d{1,2}):(\d{2})$/);
+                hourSelect.value = match ? pad(Math.min(Number(match[1]), 23)) : '00';
+                minuteSelect.value = match ? pad(Math.min(Number(match[2]), 59)) : '00';
+
+                const rect = button.getBoundingClientRect();
+                panel.style.top = `${rect.bottom + 6}px`;
+                panel.style.left = `${Math.min(rect.left, window.innerWidth - 190)}px`;
+                panel.classList.add('open');
+            });
+        });
+
+        setButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (activeInput) {
+                activeInput.value = `${hourSelect.value}:${minuteSelect.value}`;
+                activeInput.focus();
+            }
+            panel.classList.remove('open');
+        });
+
+        panel.addEventListener('click', (event) => event.stopPropagation());
+        document.addEventListener('click', () => panel.classList.remove('open'));
+    })();
+
+    (function () {
         function setupDurationPicker(wrapId, hidH, hidM, panelId, hoursContainerId, minsContainerId, initH, initM) {
             const wrap = document.getElementById(wrapId);
             if (!wrap) return;
@@ -486,11 +622,6 @@ $defaultWaitValue = sprintf('%02d:%02d', $defaultHours, $defaultMins);
 
             render();
         }
-
-        // Init form picker
-        var initH = <?= (int) $defaultHours ?>;
-        var initM = <?= (int) $defaultMins ?>;
-        setupDurationPicker('dp_wrap_edit', 'wait_hours_c', 'wait_mins_c', 'dp_panel_e', 'dp_hours_e', 'dp_mins_e', initH, initM);
 
         // Setup native time pickers triggers with custom clock icon
         document.querySelectorAll('.time-input-wrap-modern').forEach(wrap => {

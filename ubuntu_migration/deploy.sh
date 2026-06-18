@@ -56,8 +56,8 @@ echo "=== [7/9] Setting Up Firewall (UFW) ==="
 ufw allow OpenSSH
 # Allow web traffic
 ufw allow 'Nginx Full'
-# Allow WebSocket Client Connections (Port 8081)
-ufw allow 8081/tcp
+# Allow WebSocket Client Connections (Port 8081) - Optional, since Nginx proxies /ws internally
+# ufw allow 8081/tcp
 # Enable firewall (non-interactively)
 ufw --force enable
 ufw status

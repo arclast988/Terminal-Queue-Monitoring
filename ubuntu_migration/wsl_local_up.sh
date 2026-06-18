@@ -23,13 +23,22 @@ PHP_BIN="php${PHPVER}"
 command -v "$PHP_BIN" >/dev/null 2>&1 || PHP_BIN="php"
 echo "[OK] Using PHP ${PHPVER} (service php${PHPVER}-fpm, CLI ${PHP_BIN})."
 
-# --- 2. Sync + patch Nginx config to the detected FPM socket ---
+# --- 2. Sync + patch Nginx config to the detected FPM socket & WS Port ---
+WS_PORT="8081"
+if [ -f "${PROJECT_ROOT}/.env" ]; then
+    ENV_WS_PORT=$(grep -E '^[[:space:]]*websocket\.clientPort[[:space:]]*=' "${PROJECT_ROOT}/.env" | cut -d'=' -f2 | tr -d '[:space:]"' | tr -d "'")
+    if [ ! -z "$ENV_WS_PORT" ]; then
+        WS_PORT="$ENV_WS_PORT"
+    fi
+fi
+
 cp "${PROJECT_ROOT}/ubuntu_migration/nginx_local.conf" "/etc/nginx/sites-available/${NGINX_SITE}"
 sed -i "s#php[0-9.]*-fpm.sock#php${PHPVER}-fpm.sock#" "/etc/nginx/sites-available/${NGINX_SITE}"
 sed -i "s#root [^;]*;#root ${PROJECT_ROOT}/public;#" "/etc/nginx/sites-available/${NGINX_SITE}"
+sed -i "s#proxy_pass http://127.0.0.1:8081;#proxy_pass http://127.0.0.1:${WS_PORT};#" "/etc/nginx/sites-available/${NGINX_SITE}"
 ln -sf "/etc/nginx/sites-available/${NGINX_SITE}" "/etc/nginx/sites-enabled/"
 rm -f /etc/nginx/sites-enabled/default
-echo "[OK] Nginx configuration synchronized (php${PHPVER}-fpm.sock)."
+echo "[OK] Nginx configuration synchronized (php${PHPVER}-fpm.sock, WS port ${WS_PORT})."
 
 # --- 3. Start core services ---
 service mysql start 2>/dev/null || service mariadb start 2>/dev/null
@@ -87,6 +96,6 @@ case "$CODE" in
         ;;
 esac
 echo "  - Web URL:          http://localhost/"
-echo "  - WebSocket Server: ws://localhost:8081"
+echo "  - WebSocket Server: ws://localhost:${WS_PORT}"
 echo "  - Database User:    ${DB_USER} / ${DB_PASS}"
 echo "====================================================================="

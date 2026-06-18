@@ -21,7 +21,7 @@
 (function(window) {
     'use strict';
 
-    var WS_PORT = 8081; // backend port the Nginx "/ws" proxy forwards to (see buildUrl)
+
     var MIN_RETRY = 1000;
     var MAX_RETRY = 15000;
     var RETRY_MULTIPLIER = 1.5;
@@ -54,7 +54,7 @@
         //   http://  page  ->  ws://<host>/ws
         // This is required for HTTPS deployments (browsers block insecure ws://
         // from an https:// page) and avoids exposing the raw WS port publicly.
-        // Nginx proxies "/ws" to the PHP WS server on 127.0.0.1:8081.
+        // Nginx proxies "/ws" to the PHP WS server.
         var scheme = (window.location.protocol === 'https:') ? 'wss://' : 'ws://';
         return scheme + window.location.host + '/ws';
     }

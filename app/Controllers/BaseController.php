@@ -105,8 +105,9 @@ abstract class BaseController extends Controller
         ]);
 
         try {
+            $broadcastPort = (int) env('websocket.broadcastPort', 8082);
             $fp = @stream_socket_client(
-                'tcp://127.0.0.1:8082', $errno, $errstr, 0,
+                'tcp://127.0.0.1:' . $broadcastPort, $errno, $errstr, 0,
                 STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT
             );
             if ($fp) {
