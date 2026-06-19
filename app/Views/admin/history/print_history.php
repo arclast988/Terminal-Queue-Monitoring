@@ -247,7 +247,7 @@
         </div>
         <div class="report-meta">
             <h2>Departure History Report</h2>
-            <p>Generated on: <?= date('M d, Y h:i A') ?></p>
+            <p>Generated on: <?= strtoupper(date('M d, Y H:i')) ?></p>
         </div>
     </div>
 
@@ -256,11 +256,11 @@
             <span class="filter-label">Date Range</span>
             <strong>
                 <?php if ($from_date && $to_date): ?>
-                    <?= date('M d, Y', strtotime($from_date)) ?> — <?= date('M d, Y', strtotime($to_date)) ?>
+                    <?= strtoupper(date('M d, Y', strtotime($from_date))) ?> — <?= strtoupper(date('M d, Y', strtotime($to_date))) ?>
                 <?php elseif ($from_date): ?>
-                    Starting <?= date('M d, Y', strtotime($from_date)) ?>
+                    Starting <?= strtoupper(date('M d, Y', strtotime($from_date))) ?>
                 <?php elseif ($to_date): ?>
-                    Until <?= date('M d, Y', strtotime($to_date)) ?>
+                    Until <?= strtoupper(date('M d, Y', strtotime($to_date))) ?>
                 <?php else: ?>
                     All Time Records
                 <?php endif; ?>
@@ -304,9 +304,9 @@
                 <?php foreach ($results as $row): ?>
                     <tr>
                         <td style="white-space: nowrap; line-height: 1.4;">
-                            <strong style="display: block; font-size: 14px;"><?= date('M d, Y', strtotime($row['departure_time'])) ?></strong>
+                            <strong style="display: block; font-size: 14px;"><?= strtoupper(date('M d, Y', strtotime($row['departure_time']))) ?></strong>
                             <span style="color: #64748b; font-size: 12px; font-weight: 500; font-family: monospace;">
-                                <i class="far fa-clock" style="font-size: 10px;"></i> <?= date('h:i A', strtotime($row['departure_time'])) ?>
+                                <i class="far fa-clock" style="font-size: 10px;"></i> <?= date('H:i', strtotime($row['departure_time'])) ?>
                             </span>
                         </td>
                         <td style="font-family: monospace; font-size: 14px; font-weight: 600;"><?= esc($row['plate_number']) ?></td>

@@ -71,7 +71,7 @@
             <div class="stat-card-icon" style="background: #F1F5F9; color: #475569;">
                 <i class="bi bi-calendar-check"></i>
             </div>
-            <div class="stat-card-value"><?= date('D, M j, Y') ?></div>
+            <div class="stat-card-value"><?= strtoupper(date('D, M j, Y')) ?></div>
             <div class="stat-card-label">Schedule Date</div>
         </div>
     </div>
@@ -179,14 +179,14 @@
                                 <td data-label="Est. Departure">
                                     <?php if ($s['status'] === 'departed' && $s['departure_time']): ?>
                                         <span class="badge-modern badge-modern-info">
-                                            <?= date('g:i A', strtotime($s['departure_time'])) ?>
+                                            <?= date('H:i', strtotime($s['departure_time'])) ?>
                                         </span>
                                         <small class="text-muted d-block mt-1">Departed</small>
                                     <?php elseif ($s['is_full']): ?>
                                         <span class="badge-modern badge-modern-success">FULL — Ready</span>
                                     <?php else: ?>
                                         <span class="badge-modern badge-modern-primary">
-                                            <?= !empty($s['estimated_departure']) ? date('g:i A', strtotime($s['estimated_departure'])) : 'Waiting' ?>
+                                            <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'Waiting' ?>
                                         </span>
                                         <small class="text-muted d-block mt-1"><?= $s['current_passengers'] ?>/<?= $s['capacity'] ?> passengers</small>
                                     <?php endif; ?>

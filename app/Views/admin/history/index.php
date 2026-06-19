@@ -211,7 +211,7 @@
                                     </div>
                                 </td>
                                 <td data-label="Departure Time">
-                                    <span class="badge-modern badge-modern-primary"><?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?></span>
+                                    <span class="badge-modern badge-modern-primary"><?= strtoupper(date('M d, Y H:i', strtotime($item['departure_time']))) ?></span>
                                 </td>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">

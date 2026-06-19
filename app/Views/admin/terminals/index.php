@@ -61,7 +61,7 @@
                                 <td data-label="Name"><?= esc($terminal['name']) ?></td>
                                 <td data-label="Location"><?= esc($terminal['location']) ?></td>
                                 <td data-label="Capacity"><span class="badge-modern badge-modern-info"><?= $terminal['capacity'] ?> pax</span></td>
-                                <td data-label="Created At"><?= date('M d, Y', strtotime($terminal['created_at'])) ?></td>
+                                <td data-label="Created At"><?= strtoupper(date('M d, Y', strtotime($terminal['created_at']))) ?></td>
                                 <?php if (session()->get('role') === 'admin'): ?>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">

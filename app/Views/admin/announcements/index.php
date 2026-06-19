@@ -67,7 +67,7 @@
                                         <span class="badge-modern badge-modern-info"><i class="bi bi-pause-circle-fill"></i> Inactive</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Created"><?= $a['created_at'] ? date('M d, Y H:i', strtotime($a['created_at'])) : '-' ?></td>
+                                <td data-label="Created"><?= $a['created_at'] ? strtoupper(date('M d, Y H:i', strtotime($a['created_at']))) : '-' ?></td>
                                 <?php if (in_array(session()->get('role'), ['admin', 'staff'])): ?>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">

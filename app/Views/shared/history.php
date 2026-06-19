@@ -51,7 +51,7 @@
                                 </td>
                                 <td data-label="Departure Time">
                                     <span class="badge bg-secondary fs-6">
-                                        <?= date('M d, Y h:i A', strtotime($item['departure_time'])) ?>
+                                        <?= strtoupper(date('M d, Y H:i', strtotime($item['departure_time']))) ?>
                                     </span>
                                 </td>
                             </tr>

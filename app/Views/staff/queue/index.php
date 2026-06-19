@@ -392,12 +392,12 @@
                     </div>
                     <div class="col-6 py-1">
                         <div class="text-muted small">Arrived</div>
-                        <div class="fw-semibold small"><?= date('h:i A', strtotime($item['arrival_time'])) ?></div>
+                        <div class="fw-semibold small"><?= date('H:i', strtotime($item['arrival_time'])) ?></div>
                     </div>
                     <div class="col-6 py-1">
                         <div class="text-muted small">Est. departure</div>
                         <div class="fw-semibold small text-primary">
-                            <?= !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
+                            <?= !empty($item['estimated_departure']) ? date('H:i', strtotime($item['estimated_departure'])) : 'Waiting' ?>
                         </div>
                     </div>
                     <div class="col-6 py-1">

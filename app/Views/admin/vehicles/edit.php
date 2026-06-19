@@ -118,7 +118,7 @@
     <div class="card-body-modern">
         <p class="text-muted mb-0">
             <strong>Vehicle ID:</strong> <?= esc($vehicle['id']) ?><br>
-            <strong>Registered:</strong> <?= date('M d, Y h:i A', strtotime($vehicle['created_at'])) ?>
+            <strong>Registered:</strong> <?= strtoupper(date('M d, Y H:i', strtotime($vehicle['created_at']))) ?>
         </p>
     </div>
 </div>

@@ -235,7 +235,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Registered">
-                                    <small style="color:var(--slate-500);"><?= date('M d, Y', strtotime($vehicle['created_at'])) ?></small>
+                                    <small style="color:var(--slate-500);"><?= strtoupper(date('M d, Y', strtotime($vehicle['created_at']))) ?></small>
                                 </td>
                                 <td data-label="Action">
                                     <div style="display:flex; gap:8px;">

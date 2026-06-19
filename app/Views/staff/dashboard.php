@@ -150,7 +150,7 @@
                                 </span>
                             </td>
                             <td class="fw-bold" data-label="Plate Number"><?= esc($dept['plate_number']) ?></td>
-                            <td data-label="Departure Time"><?= date('h:i A', strtotime($dept['departure_time'])) ?></td>
+                            <td data-label="Departure Time"><?= date('H:i', strtotime($dept['departure_time'])) ?></td>
                             <td data-label="Status">
                                 <span class="badge-modern badge-modern-success">
                                     <i class="bi bi-check-circle-fill"></i> Departed
