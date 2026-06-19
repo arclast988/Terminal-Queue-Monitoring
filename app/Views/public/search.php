@@ -490,8 +490,9 @@
 
         .route-info {
             display: flex;
-            flex-direction: column;
-            gap: 4px;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .route-info small {
