@@ -36,14 +36,14 @@ Everything else is **100% identical**.
     │ Installs:        │          │ Installs:                │
     │ • WSL 2 kernel   │          │ • apt packages           │
     │ • Ubuntu distro  │          │ • MariaDB                │
-    │ • Inside Ubuntu: │          │ • PHP 8.2-FPM            │
+    │ • Inside Ubuntu: │          │ • PHP (8.2 - 8.4)        │
     │   - MariaDB      │          │ • Nginx                  │
-    │   - PHP 8.2-FPM  │          │ • Composer               │
+    │   - PHP (8.2-8.4)│          │ • Composer               │
     │   - Nginx        │          │ • WebSocket systemd      │
     │   - Composer     │          │                          │
     │ • PHP deps       │          │ Creates systemd services:│
     │                  │          │ • nginx                  │
-    │ Creates .env     │          │ • php8.2-fpm            │
+    │ Creates .env     │          │ • php<VERSION>-fpm      │
     │                  │          │ • mariadb                │
     │ Auto-starts via: │          │ • jeepney-websocket     │
     │ • start_system   │          │                          │
@@ -57,14 +57,14 @@ Everything else is **100% identical**.
     │ Starts:          │          │                          │
     │ • MariaDB        │          │ sudo systemctl start:    │
     │ • PHP-FPM        │          │ • nginx                  │
-    │ • Nginx          │          │ • php8.2-fpm            │
+    │ • Nginx          │          │ • php<VERSION>-fpm      │
     │ • WebSocket      │          │ • mariadb                │
     │                  │          │ • jeepney-websocket     │
     │ stop_system.bat  │          │                          │
     │ Stops all        │          │ sudo systemctl stop:     │
     │                  │          │ • jeepney-websocket     │
     │ Services run in  │          │ • nginx                  │
-    │ WSL Ubuntu       │          │ • php8.2-fpm            │
+    │ WSL Ubuntu       │          │ • php<VERSION>-fpm      │
     │                  │          │ • mariadb                │
     │ Browser: auto    │          │                          │
     │ opens localhost  │          │ Browser: manual          │
@@ -146,7 +146,7 @@ C:\Users\User\Downloads\jeepneynvans> install_system.bat
 $ sudo ./install_linux.sh
 → Detects Linux (apt-get available)
 → apt-get install php nginx mariadb composer
-→ systemctl enable nginx mariadb php8.2-fpm
+→ systemctl enable nginx mariadb php<VERSION>-fpm
 → Creates .env
 → Application ready
 ```
@@ -213,6 +213,40 @@ database.default.DBDriver = MySQLi
 ```
 
 CodeIgniter reads these values the same way on both platforms.
+
+---
+
+## Role-Based Access Control (RBAC) System
+
+The application implements a secure three-tier user access matrix enforced by `AuthFilter` and custom controller checks:
+
+1. **Super Admin**: 
+   - Root privilege tier. Bypasses all AuthFilter checks.
+   - The only role that can manage `admin` accounts (create, edit, delete).
+   - Account edit/demotion blocks are enforced in the web UI. Role transfer or demotion must be done securely via the CodeIgniter command-line interface:
+     ```bash
+     php spark admin:transfer-super-admin [new_user_id]
+     ```
+2. **Admin**:
+   - Manage terminal queues, routes, vehicle registry, departure rules, fare structures, discounts, announcements, audit logs, and dispatchers (`staff`).
+   - Restricted from creating or editing other `admin` or `super_admin` accounts.
+3. **Staff (Dispatcher)**:
+   - Perform real-time queue management (adding vehicles, updates) specifically for their assigned routes.
+   - View departure rules (read-only).
+
+---
+
+## Security & Authentication Architecture
+
+1. **Brute Force Prevention**: 
+   - **Login Rate-Limiting**: Enforces a 5-attempt lockout threshold per user account and client IP address. Lockout triggers a 15-minute authentication cooling period.
+2. **Hardened Password Recovery (OTP)**:
+   - Uses `random_int()` to generate secure 6-digit verification codes.
+   - **OTP Rate Limiting**: Enforced 60-second delay between OTP request generation to prevent email spam/exhaustion.
+   - **OTP Attempt Lockout**: A limit of 5 incorrect code entries invalidates the password reset session token.
+   - **Token Expiry**: Token and OTP code expire automatically after 10 minutes.
+3. **Client-Side XSS Protection**:
+   - Integrated **DOMPurify** in real-time updates (`queue-sync.js`). Any updates received through the WebSocket connection or AJAX refresh are sanitized prior to updating the DOM or appending modal dialogs.
 
 ---
 

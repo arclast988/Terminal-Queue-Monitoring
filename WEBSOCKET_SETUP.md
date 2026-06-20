@@ -30,9 +30,10 @@ The Palompon Transit Management System now has **real-time WebSocket support** f
 
 ### 4. **Client-Side Real-Time Handler**
 - Location: `app/Views/staff/queue/index.php` (line 411+)
-- Connects to WebSocket automatically
+- Connects to WebSocket automatically using `public/js/queue-sync.js`
 - Listens for `queue_update` messages
-- Auto-reloads page when updates arrive
+- **DOMPurify Sanitization**: Integrates DOMPurify to sanitize incoming real-time dynamic HTML payloads prior to injection in the DOM, preventing Cross-Site Scripting (XSS).
+- Auto-reloads/updates page components when updates arrive safely
 - Auto-reconnects with timeout backoff
 
 ---
@@ -59,7 +60,7 @@ Open a WSL (Ubuntu) shell and run:
 ```bash
 cd /mnt/c/path/to/jeepneynvans     # wherever you cloned it
 sudo service mariadb start
-sudo service php8.2-fpm start      # use whatever version is installed
+sudo service php<VERSION>-fpm start      # use whatever version is installed (e.g. 8.2, 8.3, 8.4)
 sudo service nginx start
 php spark ws:serve                 # WebSocket server — leave this running
 ```

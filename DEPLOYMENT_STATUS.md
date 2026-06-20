@@ -25,8 +25,8 @@ cd ~/Downloads/jeepneynvans
 sudo chmod +x install_linux.sh
 sudo ./install_linux.sh
 
-# 3. Start services
-sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket
+# 3. Start services (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
+sudo systemctl start nginx php<VERSION>-fpm mariadb jeepney-websocket
 
 # 4. Open browser to http://localhost/
 ```
@@ -60,8 +60,8 @@ Password: 12345678
 Port:     3306
 ```
 
-### Current Schema (12 Tables)
-1. `users` - Admin/staff accounts
+### Current Schema (13 Tables)
+1. `users` - User/admin accounts
 2. `terminals` - Transit hubs
 3. `routes` - Jeepney/van routes
 4. `vehicles` - Registered vehicles
@@ -72,7 +72,8 @@ Port:     3306
 9. `fare_discounts` - Pricing
 10. `fares` - Route fares
 11. `user_routes` - User-route assignments
-12. `migrations` - Schema version tracking
+12. `password_reset_tokens` - Secure reset tokens & verification codes
+13. `migrations` - Schema version tracking
 
 ---
 
@@ -80,15 +81,15 @@ Port:     3306
 
 ### Windows (WSL Terminal)
 ```bash
-# Check service status
+# Check service status (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
 wsl sudo service nginx status
-wsl sudo service php8.2-fpm status
+wsl sudo service php<VERSION>-fpm status
 wsl sudo service mariadb status
 wsl pgrep -f 'spark ws:serve'
 
 # Restart services
 wsl sudo service nginx restart
-wsl sudo service php8.2-fpm restart
+wsl sudo service php<VERSION>-fpm restart
 wsl sudo service mariadb restart
 
 # View logs
@@ -97,11 +98,11 @@ wsl sudo tail -f /var/log/nginx/error.log
 
 ### Linux
 ```bash
-# Check service status
-sudo systemctl status nginx php8.2-fpm mariadb jeepney-websocket
+# Check service status (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
+sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket
 
 # Restart services
-sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket
 
 # View logs
 sudo tail -f /var/log/nginx/error.log
@@ -140,7 +141,7 @@ email.SMTPPass = your-app-password
 
 Both proxy:
 - Static files from `public/`
-- PHP requests to `php8.2-fpm.sock`
+- PHP requests to `php<VERSION>-fpm.sock` (dynamic based on detected version)
 - WebSocket `/ws` to `127.0.0.1:8081`
 
 ---
@@ -180,12 +181,12 @@ cat .env | grep database.default
 
 ### "502 Bad Gateway" in browser
 ```bash
-# PHP-FPM socket issue - check it exists
-ls -la /run/php/php8.2-fpm.sock
+# PHP-FPM socket issue - check it exists (replace <VERSION> with your version)
+ls -la /run/php/php<VERSION>-fpm.sock
 
 # Restart PHP-FPM
-sudo systemctl restart php8.2-fpm  # Linux
-wsl sudo service php8.2-fpm restart  # Windows WSL
+sudo systemctl restart php<VERSION>-fpm  # Linux
+wsl sudo service php<VERSION>-fpm restart  # Windows WSL
 ```
 
 ### Port 80 already in use
@@ -226,7 +227,7 @@ wsl tail -f writable/logs/ws.log  # Windows WSL
 | Installation | ✓ Automated via .bat | ✓ Automated via .sh | **READY** |
 | Database | ✓ Auto-created | ✓ Auto-created | **READY** |
 | Web Server | ✓ Nginx in WSL | ✓ Nginx native | **READY** |
-| PHP-FPM | ✓ WSL 8.2 | ✓ Native 8.2 | **READY** |
+| PHP-FPM | ✓ WSL (8.2-8.4) | ✓ Native (8.2-8.4) | **READY** |
 | Configuration | ✓ Dynamic paths | ✓ Fixed paths | **READY** |
 | WebSocket | ✓ Via start_system.bat | ✓ systemd service | **READY** |
 | Email | ✓ SMTP configurable | ✓ SMTP configurable | **READY** |

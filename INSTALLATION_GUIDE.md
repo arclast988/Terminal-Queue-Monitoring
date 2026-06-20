@@ -4,7 +4,7 @@
 
 ### Windows 10/11 (Recommended: WSL 2 + Ubuntu)
 1. Double-click **`install_system.bat`** (admin mode required)
-   - Automatically installs WSL 2, Ubuntu, PHP 8.2, Nginx, MariaDB, Composer
+   - Automatically installs WSL 2, Ubuntu, PHP (8.2-8.4 range), Nginx, MariaDB, Composer
    - Takes 5-10 minutes on first run
 2. After install, double-click **`start_system.bat`** to launch
 3. Browser opens to `http://localhost/` automatically
@@ -18,8 +18,9 @@ sudo ./install_linux.sh
 ```
 After install, manage services via:
 ```bash
-sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket
-sudo systemctl status nginx php8.2-fpm mariadb jeepney-websocket
+# (Replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
+sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket
+sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket
 ```
 
 ---
@@ -113,8 +114,8 @@ mysql -u jeepney_user -p12345678 jeepneynvans < jeepneynvans.sql
 - **Logs**: Check Windows Event Viewer or WSL `/var/log/nginx/`
 
 ### Linux
-- **Start**: `sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket`
-- **Stop**: `sudo systemctl stop nginx php8.2-fpm mariadb jeepney-websocket`
+- **Start**: `sudo systemctl start nginx php<VERSION>-fpm mariadb jeepney-websocket` (replace <VERSION> with installed version)
+- **Stop**: `sudo systemctl stop nginx php<VERSION>-fpm mariadb jeepney-websocket`
 - **Status**: `systemctl status nginx` (shows 2 sec response time if healthy)
 - **Logs**: `sudo tail -f /var/log/nginx/error.log`
 

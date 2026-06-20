@@ -88,7 +88,11 @@ For a single machine the **Linux quick start** above (`install_linux.sh`) is the
 ### Security, Performance & Code Optimization Updates (June 2026)
 
 We recently performed a system-wide audit and optimization:
+- **Hierarchical Role Control & Super Admin Role**: Introduced a three-tier role hierarchy (`super_admin`, `admin`, and `staff`). Only a `super_admin` can manage other admin accounts and bypass all role gates. Demotion or transfer of the super admin role is restricted to a secure CLI command: `php spark admin:transfer-super-admin [user_id]`.
 - **Hardened OTP Authentication**: Replaced `mt_rand()` with secure `random_int()`, added a 60-second rate limiter for OTP requests, and implemented a 5-attempt threshold limit that invalidates compromised OTP verification sessions.
+- **Login Rate-Limiting & Lockouts**: Added per-user and per-IP login rate limiting that locks accounts and IP-based authentication for 15 minutes after 5 consecutive failed attempts.
+- **Client-Side XSS Protection**: Integrated DOMPurify to sanitize all dynamic HTML updates pushed via WebSocket queue syncs to prevent cross-site scripting (XSS) attacks.
+- **Dynamic PHP Version Support**: De-hardcoded specific PHP versions. The automated installers and services now dynamically auto-detect and support any installed version from PHP 8.2 up to PHP 8.4.
 - **Enhanced Database Query Performance**:
   - Eliminated N+1 queries on the Admin Dashboard using aggregate joins.
   - Consolidated multiple sequential history counting queries into a single conditional SQL aggregation query.

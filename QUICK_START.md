@@ -54,9 +54,9 @@
 - [ ] To start again: Double-click `start_system.bat`
 
 ### Linux Only
-- [ ] Check services are running: `sudo systemctl status nginx php8.2-fpm mariadb jeepney-websocket`
-- [ ] To stop services: `sudo systemctl stop nginx php8.2-fpm mariadb jeepney-websocket`
-- [ ] To start services: `sudo systemctl start nginx php8.2-fpm mariadb jeepney-websocket`
+- [ ] Check services are running: `sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket` (replace <VERSION> with installed version)
+- [ ] To stop services: `sudo systemctl stop nginx php<VERSION>-fpm mariadb jeepney-websocket`
+- [ ] To start services: `sudo systemctl start nginx php<VERSION>-fpm mariadb jeepney-websocket`
 
 ---
 
@@ -126,8 +126,8 @@ sudo systemctl status nginx
 ```bash
 # Windows: Double-click stop_system.bat, then start_system.bat
 
-# Linux
-sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket
+# Linux (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
+sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket
 ```
 
 ### View error logs
