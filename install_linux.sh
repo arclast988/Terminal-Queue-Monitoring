@@ -92,16 +92,33 @@ elif ! apt-cache show "php${PHP_VER}-cli" >/dev/null 2>&1; then
     die "Could not add a PHP repository. On Debian/LMDE please add Sury's repo (https://deb.sury.org/), then re-run."
 fi
 
-# Detect the newest fully-packaged PHP in the 8.2-8.4 range (matches composer's ^8.2).
-# Cap the upper bound: a brand-new release (e.g. 8.5) may publish php8.x-cli before
-# all its extensions (php8.x-opcache, etc.), which would break the apt install below.
-say "Searching for the latest supported PHP version..."
-LATEST_PHP="$(apt-cache pkgnames | grep -E '^php8\.[2-4]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
-if [ -n "$LATEST_PHP" ]; then
-    PHP_VER="$LATEST_PHP"
-    ok "Found PHP ${PHP_VER} as the latest available version."
+# Detect PHP. Resolution order (mirrors ubuntu_migration/wsl_install.sh):
+#   1. An already-installed PHP in the 8.2-8.9 range (incl. 8.5) — reuse it,
+#      don't reinstall. Confirmed via dpkg so a half-removed package is ignored.
+#   2. Otherwise auto-install the newest fully-packaged PHP in the 8.2-8.4 range
+#      (matches composer's ^8.2). The upper bound is capped: a brand-new release
+#      (e.g. 8.5) may publish php8.x-cli before all its extensions
+#      (php8.x-opcache, etc.) land, which would break the apt install below.
+EXISTING_PHP=""
+for _v in $(ls /etc/php 2>/dev/null | grep -E '^8\.[2-9]$' | sort -V -r); do
+    if dpkg -s "php${_v}-cli" >/dev/null 2>&1; then
+        EXISTING_PHP="$_v"
+        break
+    fi
+done
+
+if [ -n "$EXISTING_PHP" ]; then
+    PHP_VER="$EXISTING_PHP"
+    ok "Using already-installed PHP ${PHP_VER} (no reinstall)."
 else
-    warn "Could not query apt-cache for newer PHP versions; defaulting to PHP ${PHP_VER}."
+    say "Searching for the latest supported PHP version..."
+    LATEST_PHP="$(apt-cache pkgnames | grep -E '^php8\.[2-4]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+    if [ -n "$LATEST_PHP" ]; then
+        PHP_VER="$LATEST_PHP"
+        ok "Found PHP ${PHP_VER} as the latest available version."
+    else
+        warn "Could not query apt-cache for newer PHP versions; defaulting to PHP ${PHP_VER}."
+    fi
 fi
 apt-get install -y \
     "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" \

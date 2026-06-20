@@ -51,3 +51,15 @@ if (! function_exists('vehicle_type_badge')) {
         return '<span class="' . esc($classes, 'attr') . '">' . esc(vehicle_type_label($typeKey)) . '</span>';
     }
 }
+
+if (! function_exists('vehicle_type_image')) {
+    function vehicle_type_image(?string $type): string
+    {
+        $images = [
+            'jeepney' => 'jeep.png',
+            'van'     => 'van.png',
+            'minibus' => 'minibus.png',
+        ];
+        return $images[vehicle_type_key($type)] ?? 'van.png';
+    }
+}

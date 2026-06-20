@@ -31,10 +31,12 @@ class Dashboard extends BaseController
 
         // Build filtered queue count
         $countBuilder = $queueModel->whereIn('status', ['waiting', 'boarding']);
-        if ($assignedRouteIds !== null && !empty($assignedRouteIds)) {
-            $countBuilder->whereIn('route_id', $assignedRouteIds);
-        } elseif ($assignedRouteIds !== null && empty($assignedRouteIds)) {
-            $countBuilder->where('route_id', 0); // No routes = 0 results
+        if ($assignedRouteIds !== null) {
+            if (!empty($assignedRouteIds)) {
+                $countBuilder->whereIn('route_id', $assignedRouteIds);
+            } else {
+                $countBuilder->where('route_id', 0); // No routes = 0 results
+            }
         }
         $activeQueueCount = $countBuilder->countAllResults();
 
@@ -42,11 +44,13 @@ class Dashboard extends BaseController
         $departBuilder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type')
                                     ->withFullJoins()
                                     ->where('queue.status', 'departed')
-                                    ->where('DATE(queue.departure_time)', date('Y-m-d'));
-        if ($assignedRouteIds !== null && !empty($assignedRouteIds)) {
-            $departBuilder->whereIn('queue.route_id', $assignedRouteIds);
-        } elseif ($assignedRouteIds !== null && empty($assignedRouteIds)) {
-            $departBuilder->where('queue.route_id', 0);
+                                    ->like('queue.departure_time', date('Y-m-d'), 'after');
+        if ($assignedRouteIds !== null) {
+            if (!empty($assignedRouteIds)) {
+                $departBuilder->whereIn('queue.route_id', $assignedRouteIds);
+            } else {
+                $departBuilder->where('queue.route_id', 0);
+            }
         }
         $recentDepartures = $departBuilder->orderBy('departure_time', 'DESC')
                                           ->limit(5)

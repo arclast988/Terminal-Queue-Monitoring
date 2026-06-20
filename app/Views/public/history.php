@@ -568,9 +568,8 @@
                                 </td>
                                 <td data-label="Type">
                                     <?php
-                                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                        $vType = strtolower($item['vehicle_type'] ?? '');
-                                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                                        $vType = $item['vehicle_type'] ?? '';
+                                        $imgFile = vehicle_type_image($vType);
                                     ?>
                                     <div class="vehicle-type-cell">
                                         <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">

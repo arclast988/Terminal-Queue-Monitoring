@@ -808,14 +808,10 @@
                                 </div>
                             </td>
                             <td data-label="Type">
-                                <?php
-                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                    $vType = strtolower($item['vehicle_type'] ?? '');
-                                    $imgFile = $imgMap[$vType] ?? 'van.png';
-                                ?>
+                                <?php $vType = $item['vehicle_type'] ?? ''; ?>
                                 <div class="vehicle-type-cell">
                                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        <img src="<?= base_url('images/' . vehicle_type_image($vType)) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
                                     </span>
                                     <?= vehicle_type_badge($vType) ?>
                                 </div>
@@ -873,14 +869,10 @@
                                 </div>
                             </td>
                             <td data-label="Type">
-                                <?php
-                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                    $vType = strtolower($item['vehicle_type'] ?? '');
-                                    $imgFile = $imgMap[$vType] ?? 'van.png';
-                                ?>
+                                <?php $vType = $item['vehicle_type'] ?? ''; ?>
                                 <div class="vehicle-type-cell">
                                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        <img src="<?= base_url('images/' . vehicle_type_image($vType)) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
                                     </span>
                                     <?= vehicle_type_badge($vType) ?>
                                 </div>

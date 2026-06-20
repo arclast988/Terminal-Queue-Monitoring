@@ -96,6 +96,10 @@ We recently performed a system-wide audit and optimization:
   - Replaced high-overhead queries in audit logs with proper CodeIgniter pagination.
 - **Cache Control & Real-Time Sync**: Implemented caching for local fares APIs (`rt_fares_api`) with automatic invalidate triggers and added a `sync_token` field to verify payload currency.
 - **Code Redundancy Cleanup**: Introduced model-level scopes (`withOrigin()` and `withFullJoins()`) to consolidate database joins and standardized active announcement retrieval inside `BaseController.php`.
+- **WSL-Safe File Logging**: Created a custom `WslFileHandler` to suppress chmod permission warnings when writing logs on WSL mounted NTFS drives (DrvFs).
+- **Global Filter Optimization**: Removed redundant filters (`forcehttps`, `pagecache`) to eliminate per-request redirect and caching overhead.
+- **Vehicle Image Centralization**: Eliminated duplicate vehicle type-to-image mapping blocks across views via a central `vehicle_type_image()` helper in `app/Common.php`.
+- **Database Query Portability**: Refactored MySQL-specific date functions (`YEAR()`, `DATE()`, `CURDATE()`) using standard SQL comparison and `LIKE` queries to make the application fully compatible with SQLite3 (used for local unit testing) and MySQL.
 
 ---
 

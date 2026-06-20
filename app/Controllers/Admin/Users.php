@@ -81,7 +81,7 @@ class Users extends BaseController
         $userId = $model->insert($data);
 
         // Sync route assignments for staff
-        if ($role === 'staff' && !empty($selectedRoutes)) {
+        if ($role === 'staff') {
             $userRouteModel = new UserRouteModel();
             $userRouteModel->syncRoutesForUser($userId, $selectedRoutes);
 

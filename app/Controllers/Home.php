@@ -34,12 +34,12 @@ class Home extends BaseController
             'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, terminals.name as origin, routes.destination')
                 ->withFullJoins()
                 ->where('queue.status', 'departed')
-                ->where('DATE(queue.departure_time)', date('Y-m-d'))
+                ->like('queue.departure_time', date('Y-m-d'), 'after')
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
                 ->findAll(),
             'total_departures_today' => $queueModel->where('status', 'departed')
-                ->where('DATE(departure_time)', date('Y-m-d'))
+                ->like('departure_time', date('Y-m-d'), 'after')
                 ->countAllResults(),
             'route_average_departures' => $this->getRouteAverageDepartures(),
             'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
@@ -77,7 +77,7 @@ class Home extends BaseController
             $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, terminals.name as origin, routes.destination')
                 ->withFullJoins()
                 ->where('queue.status', 'departed')
-                ->where('DATE(queue.departure_time)', date('Y-m-d'))
+                ->like('queue.departure_time', date('Y-m-d'), 'after')
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
                 ->findAll();
@@ -88,7 +88,7 @@ class Home extends BaseController
             unset($dept);
 
             $total_departures_today = $queueModel->where('status', 'departed')
-                ->where('DATE(departure_time)', date('Y-m-d'))
+                ->like('departure_time', date('Y-m-d'), 'after')
                 ->countAllResults();
 
             $routeModel = new \App\Models\RouteModel();
@@ -124,7 +124,7 @@ class Home extends BaseController
             ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.status', 'departed')
             ->where('queue.departure_time IS NOT NULL', null, false)
-            ->where('DATE(queue.departure_time)', date('Y-m-d'))
+            ->like('queue.departure_time', date('Y-m-d'), 'after')
             ->orderBy('terminals.name', 'ASC')
             ->orderBy('routes.destination', 'ASC')
             ->orderBy('queue.departure_time', 'ASC')

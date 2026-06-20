@@ -45,7 +45,7 @@ class Schedules extends BaseController
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orGroupStart()
                     ->where('queue.status', 'departed')
-                    ->where('DATE(queue.arrival_time)', date('Y-m-d'))
+                    ->like('queue.arrival_time', date('Y-m-d'), 'after')
                 ->groupEnd()
             ->groupEnd();
 
@@ -137,7 +137,7 @@ class Schedules extends BaseController
                     ->whereIn('queue.status', ['waiting', 'boarding'])
                     ->orGroupStart()
                         ->where('queue.status', 'departed')
-                        ->where('DATE(queue.arrival_time)', date('Y-m-d'))
+                        ->like('queue.arrival_time', date('Y-m-d'), 'after')
                     ->groupEnd()
                 ->groupEnd();
 

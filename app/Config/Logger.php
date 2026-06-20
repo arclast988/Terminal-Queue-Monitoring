@@ -82,7 +82,7 @@ class Logger extends BaseConfig
          * File Handler
          * --------------------------------------------------------------------
          */
-        FileHandler::class => [
+        \App\Log\Handlers\WslFileHandler::class => [
             // The log levels that this handler will handle.
             'handles' => [
                 'critical',

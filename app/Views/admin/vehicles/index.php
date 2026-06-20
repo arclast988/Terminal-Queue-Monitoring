@@ -206,8 +206,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 <td data-label="Driver Name"><?= esc($vehicle['driver_name']) ?></td>
                                 <td data-label="Vehicle Type">
                                     <?php
-                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                    $imgFile = $imgMap[$vehicle['type']] ?? 'van.png';
+                                    $imgFile = vehicle_type_image($vehicle['type']);
                                     ?>
                                     <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
                                         <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"

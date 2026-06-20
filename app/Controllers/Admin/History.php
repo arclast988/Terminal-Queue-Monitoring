@@ -15,14 +15,18 @@ class History extends BaseController
         $destFilter = $this->request->getGet('destination');
         $typeFilter = $this->request->getGet('vehicle_type');
 
+        $todayStr = date('Y-m-d');
+        $monthStr = date('Y-m');
+        $yearStr  = date('Y');
+
         // --- Stats (single query with conditional aggregation) ---
         $db = \Config\Database::connect();
         $statsResult = $db->table('queue')
             ->select("
                 COUNT(*) as total,
-                SUM(CASE WHEN DATE(departure_time) = CURDATE() THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN YEAR(departure_time) = YEAR(CURDATE()) AND MONTH(departure_time) = MONTH(CURDATE()) THEN 1 ELSE 0 END) as month,
-                SUM(CASE WHEN YEAR(departure_time) = YEAR(CURDATE()) THEN 1 ELSE 0 END) as year
+                SUM(CASE WHEN departure_time LIKE '{$todayStr}%' THEN 1 ELSE 0 END) as today,
+                SUM(CASE WHEN departure_time LIKE '{$monthStr}%' THEN 1 ELSE 0 END) as month,
+                SUM(CASE WHEN departure_time LIKE '{$yearStr}%' THEN 1 ELSE 0 END) as year
             ")
             ->where('status', 'departed')
             ->where('departure_time IS NOT NULL')
@@ -103,7 +107,7 @@ class History extends BaseController
 
         // Default to current year ONLY if no filters applied
         if (!$fromDate && !$toDate) {
-            $builder->where('YEAR(queue.departure_time)', date('Y'));
+            $builder->like('queue.departure_time', date('Y'), 'after');
         }
 
         if ($search) {
@@ -116,11 +120,11 @@ class History extends BaseController
         }
 
         if ($fromDate) {
-            $builder->where('DATE(queue.departure_time) >=', $fromDate);
+            $builder->where('queue.departure_time >=', $fromDate . ' 00:00:00');
         }
 
         if ($toDate) {
-            $builder->where('DATE(queue.departure_time) <=', $toDate);
+            $builder->where('queue.departure_time <=', $toDate . ' 23:59:59');
         }
 
         if ($destination) {

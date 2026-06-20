@@ -141,9 +141,8 @@
                         <tr>
                             <td data-label="Type">
                                 <?php 
-                                    $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                    $vType = strtolower($dept['vehicle_type'] ?? '');
-                                    $imgFile = $imgMap[$vType] ?? 'van.png';
+                                    $vType = $dept['vehicle_type'] ?? '';
+                                    $imgFile = vehicle_type_image($vType);
                                 ?>
                                 <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
                                     <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">

@@ -363,9 +363,8 @@
                 <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
                     <span class="badge-modern badge-modern-primary">#<?= $item['position'] ?></span>
                     <?php
-                        $imgMap  = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                        $vType = strtolower($item['vehicle_type'] ?? '');
-                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                        $vType = $item['vehicle_type'] ?? '';
+                        $imgFile = vehicle_type_image($vType);
                     ?>
                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
                         <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">

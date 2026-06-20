@@ -33,6 +33,7 @@ htmlcov/
 *.swp
 *.swo
 writable/ws_server.pid
+writable/sync_token.txt
 
 # Editors and IDEs
 .vscode/

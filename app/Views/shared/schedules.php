@@ -158,9 +158,8 @@
                                 </td>
                                 <td data-label="Type">
                                     <?php
-                                        $imgMap = ['van' => 'van.png', 'jeepney' => 'jeep.png', 'minibus' => 'minibus.png'];
-                                        $vType = strtolower($s['vehicle_type'] ?? '');
-                                        $imgFile = $imgMap[$vType] ?? 'van.png';
+                                        $vType = $s['vehicle_type'] ?? '';
+                                        $imgFile = vehicle_type_image($vType);
                                     ?>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">

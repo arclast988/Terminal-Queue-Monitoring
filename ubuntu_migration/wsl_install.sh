@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Local WSL stack installer for the Palompon Transit Management System.
-# Installs MariaDB, PHP 8.2-FPM, Nginx, Composer, and the project's PHP
+# Installs MariaDB, PHP 8.2+ (auto-detected), Nginx, Composer, and the project's PHP
 # dependencies so start_system.bat can launch the app.
 # Idempotent - safe to re-run. Invoked by install_system.bat as root inside WSL.
 
@@ -33,9 +33,17 @@ apt-get install -y mariadb-server mariadb-client
 service mariadb start 2>/dev/null || service mysql start 2>/dev/null || true
 echo "[OK] MariaDB installed."
 
-# --- 3. PHP via PPA or default repositories + CodeIgniter 4 extensions ---
+# --- 3. PHP version resolution + CodeIgniter 4 extensions ---
+# Resolution order (mirrors install_linux.sh):
+#   1. An already-installed PHP in the 8.2-8.9 range (incl. 8.5) — reuse it,
+#      don't reinstall. We confirm via dpkg so a half-removed package is ignored.
+#   2. Otherwise auto-install the newest fully-packaged PHP in the 8.2-8.4 range
+#      (matches composer's ^8.2). The upper bound is capped: a brand-new release
+#      may publish php8.x-cli before all its extensions land, which would break
+#      the apt-get install below.
+#   3. Fall back to the distro-default (unsuffixed) packages on non-LTS codenames.
 echo ""
-echo "[3/6] Installing PHP and required extensions..."
+echo "[3/6] Resolving PHP version..."
 
 CODENAME=$(lsb_release -cs)
 USE_PPA=false
@@ -55,17 +63,40 @@ if [ "$USE_PPA" = true ]; then
     fi
 fi
 
-if [ "$USE_PPA" = true ]; then
-    PHP_SUFFIX="8.2"
+# (1) Reuse an already-installed PHP in range (e.g. 8.5 pre-installed on the box).
+EXISTING_PHP=""
+for _v in $(ls /etc/php 2>/dev/null | grep -E '^8\.[2-9]$' | sort -V -r); do
+    if dpkg -s "php${_v}-cli" >/dev/null 2>&1; then
+        EXISTING_PHP="$_v"
+        break
+    fi
+done
+
+if [ -n "$EXISTING_PHP" ]; then
+    PHP_VER="$EXISTING_PHP"
+    echo "[OK] Using already-installed PHP ${PHP_VER} (no reinstall)."
+elif [ "$USE_PPA" = true ]; then
+    # (2) Auto-install the newest fully-packaged PHP in 8.2-8.4.
+    echo "Searching for the latest supported PHP version..."
+    PHP_VER="$(apt-cache pkgnames | grep -E '^php8\.[2-4]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+    if [ -n "$PHP_VER" ]; then
+        echo "[OK] Found PHP ${PHP_VER} as the latest available version."
+    else
+        PHP_VER="8.2"
+        echo "[WARN] Could not query apt-cache for newer PHP; defaulting to PHP ${PHP_VER}."
+    fi
 else
-    PHP_SUFFIX=""
+    PHP_VER=""
 fi
 
-if [ -n "$PHP_SUFFIX" ]; then
+# Install packages for the resolved version. apt-get install is idempotent, so
+# passing already-installed packages for an existing PHP just fills in any
+# missing extensions.
+if [ -n "$PHP_VER" ]; then
     apt-get install -y \
-        php${PHP_SUFFIX}-cli php${PHP_SUFFIX}-fpm php${PHP_SUFFIX}-mysql php${PHP_SUFFIX}-intl php${PHP_SUFFIX}-mbstring \
-        php${PHP_SUFFIX}-curl php${PHP_SUFFIX}-xml php${PHP_SUFFIX}-zip php${PHP_SUFFIX}-gd php${PHP_SUFFIX}-opcache php${PHP_SUFFIX}-common
-    PHP_BIN="php${PHP_SUFFIX}"
+        php${PHP_VER}-cli php${PHP_VER}-fpm php${PHP_VER}-mysql php${PHP_VER}-intl php${PHP_VER}-mbstring \
+        php${PHP_VER}-curl php${PHP_VER}-xml php${PHP_VER}-zip php${PHP_VER}-gd php${PHP_VER}-opcache php${PHP_VER}-common
+    PHP_BIN="php${PHP_VER}"
 else
     apt-get install -y \
         php-cli php-fpm php-mysql php-intl php-mbstring \
@@ -107,7 +138,7 @@ fi
 echo ""
 echo "====================================================================="
 echo "  INSTALLATION COMPLETE."
-echo "  - MariaDB, PHP 8.2-FPM, Nginx, Composer installed."
+echo "  - MariaDB, PHP, Nginx, Composer installed."
 echo "  - Project dependencies installed in ${PROJECT_ROOT}/vendor."
 echo ""
 echo "  Next: from Windows, double-click start_system.bat."

@@ -1498,14 +1498,9 @@
                     <?php if (!empty($active_queue)): ?>
                         <?php foreach ($active_queue as $item): ?>
                             <?php
-                            $imgMap = [
-                                'van' => 'van.png',
-                                'jeepney' => 'jeep.png',
-                                'minibus' => 'minibus.png'
-                            ];
-                            $vType = strtolower($item['vehicle_type'] ?? '');
-                            $imgFile = $imgMap[$vType] ?? 'van.png';
-                            $fkey = strtolower(trim($item['origin'])) . '|' . strtolower(trim($item['destination'])) . '|' . $vType;
+                            $vType = $item['vehicle_type'] ?? '';
+                            $imgFile = vehicle_type_image($vType);
+                            $fkey = strtolower(trim($item['origin'])) . '|' . strtolower(trim($item['destination'])) . '|' . strtolower(trim($vType));
                             $cardFare = $fareMap[$fkey] ?? null;
                             ?>
                             <div class="queue-card"
