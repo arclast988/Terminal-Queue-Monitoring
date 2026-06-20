@@ -52,10 +52,10 @@ On a real Linux machine, one script installs **and** starts everything (as syste
 3. **Open the app:** <http://localhost/>
 4. **Manage it afterwards** (no launcher needed — it runs on boot):
    ```
-   sudo systemctl status  nginx php8.2-fpm mariadb jeepney-websocket
-   sudo systemctl restart nginx php8.2-fpm mariadb jeepney-websocket   # or stop / start
+   sudo systemctl status  nginx php<VERSION>-fpm mariadb jeepney-websocket
+   sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket   # or stop / start
    ```
-   The installer prints the exact command with the PHP version it installed (8.2/8.3/8.4).
+   The installer prints the exact command with the PHP version it installed (replace `<VERSION>` with `8.2`, `8.3`, `8.4`, `8.5`, etc. depending on your installed PHP version).
 
 > ⚠️ `start_system.sh` / `stop_system.sh` are **WSL/Windows-only** and will refuse to run on native Linux — on Mint/Ubuntu use `install_linux.sh` + `systemctl` instead.
 
