@@ -67,7 +67,7 @@ final class ResponseCache
     public function generateCacheKey(CLIRequest|IncomingRequest $request): string
     {
         if ($request instanceof CLIRequest) {
-            return md5($request->getPath());
+            return hash('sha256', $request->getPath());
         }
 
         $uri = clone $request->getUri();
@@ -76,7 +76,7 @@ final class ResponseCache
             ? $uri->getQuery(is_array($this->cacheQueryString) ? ['only' => $this->cacheQueryString] : [])
             : '';
 
-        return md5($request->getMethod() . ':' . $uri->setFragment('')->setQuery($query));
+        return hash('sha256', $request->getMethod() . ':' . $uri->setFragment('')->setQuery($query));
     }
 
     /**
