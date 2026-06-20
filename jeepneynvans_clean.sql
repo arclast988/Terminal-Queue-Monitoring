@@ -1,5 +1,5 @@
 -- Clean Schema for Transport Vehicle Queuing Management System
--- Generated: 2026-06-16
+-- Generated: 2026-06-20
 -- No dummy data, includes default configuration and administrator account only.
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -33,7 +33,7 @@ CREATE TABLE `terminals` (
   `capacity` int(11) NOT NULL DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 -- Table structure for table `routes`
@@ -65,7 +65,7 @@ CREATE TABLE `fare_discounts` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `fare_discounts_terminal_type_unique` (`terminal_id`,`type`),
   CONSTRAINT `fk_fare_discounts_terminal` FOREIGN KEY (`terminal_id`) REFERENCES `terminals` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 -- Table structure for table `fares`
@@ -117,9 +117,9 @@ CREATE TABLE `departure_rules` (
   PRIMARY KEY (`id`),
   KEY `fk_departure_rules_terminal` (`terminal_id`),
   KEY `fk_departure_rules_route` (`route_id`),
-  CONSTRAINT `fk_departure_rules_terminal` FOREIGN KEY (`terminal_id`) REFERENCES `terminals` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_departure_rules_route` FOREIGN KEY (`route_id`) REFERENCES `routes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  CONSTRAINT `fk_departure_rules_route` FOREIGN KEY (`route_id`) REFERENCES `routes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT `fk_departure_rules_terminal` FOREIGN KEY (`terminal_id`) REFERENCES `terminals` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 -- Table structure for table `vehicles`
@@ -168,7 +168,7 @@ CREATE TABLE `users` (
   `username` varchar(50) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `email` varchar(100) DEFAULT NULL,
-  `role` enum('admin','staff') NOT NULL DEFAULT 'staff',
+  `role` enum('super_admin','admin','staff') NOT NULL DEFAULT 'staff',
   `full_name` varchar(100) NOT NULL,
   `login_attempts` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `locked_until` datetime DEFAULT NULL,
@@ -177,7 +177,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `idx_email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 -- Table structure for table `password_reset_tokens`
@@ -186,8 +186,12 @@ CREATE TABLE `password_reset_tokens` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(50) NOT NULL,
   `token` varchar(64) NOT NULL,
+  `reset_code` varchar(6) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
   `expires_at` datetime NOT NULL,
   `used` tinyint(1) DEFAULT 0,
+  `verified` tinyint(1) DEFAULT 0,
+  `code_attempts` int(11) NOT NULL DEFAULT 0,
   `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `idx_token` (`token`),
@@ -236,8 +240,7 @@ CREATE TABLE `migrations` (
   `time` int(11) NOT NULL,
   `batch` int(11) unsigned NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ========================================================
 -- Seed Initial Professional & Core Configuration Data Only
@@ -264,9 +267,9 @@ INSERT INTO `departure_rules` (`id`, `terminal_id`, `time_from`, `time_to`, `wai
 (6, 1, '18:00:00', '21:00:00', 40, 'Evening', NOW(), NOW()),
 (7, 1, '21:00:00', '23:59:00', 60, 'Late Evening', NOW(), NOW());
 
--- 4. Create Default Administrator Account (Username: admin123, Password: admin123)
+-- 4. Create Default Administrator Account (Username: admin123, Password: admin123, Role: super_admin)
 INSERT INTO `users` (`id`, `username`, `password_hash`, `email`, `role`, `full_name`, `login_attempts`, `locked_until`, `created_at`, `updated_at`) VALUES
-(1, 'admin123', '$2y$10$CiJRci4T78G/Dndn3NAWjeqcSRnl02X6/Ejmanv9TvmdcSQxpwSOy', NULL, 'admin', 'System Administrator', 0, NULL, NOW(), NOW());
+(1, 'admin123', '$2y$10$CiJRci4T78G/Dndn3NAWjeqcSRnl02X6/Ejmanv9TvmdcSQxpwSOy', NULL, 'super_admin', 'System Administrator', 0, NULL, NOW(), NOW());
 
 -- 5. Seed Core Migration Tracking (Matches DB state code)
 INSERT INTO `migrations` (`id`, `version`, `class`, `group`, `namespace`, `time`, `batch`) VALUES
@@ -291,4 +294,10 @@ INSERT INTO `migrations` (`id`, `version`, `class`, `group`, `namespace`, `time`
 (19, '2026-05-22-203000', 'App\\Database\\Migrations\\RemoveRouteOriginUseTerminal', 'default', 'App', 1779454489, 5),
 (20, '2026-05-23-000000', 'App\\Database\\Migrations\\RenameLogsToAuditLogs', 'default', 'App', 1780479842, 6),
 (21, '2026-05-31-000000', 'App\\Database\\Migrations\\AddRouteIdToDepartureRules', 'default', 'App', 1780479842, 6),
-(22, '2026-06-09-000002', 'App\\Database\\Migrations\\CreatePasswordResetTokensTable', 'default', 'App', 1781015812, 7);
+(22, '2026-06-09-000002', 'App\\Database\\Migrations\\CreatePasswordResetTokensTable', 'default', 'App', 1781015812, 7),
+(23, '2026-06-20-100000', 'App\\Database\\Migrations\\AddSuperAdminRole', 'default', 'App', 1781924858, 8),
+(24, '2026-06-16-000000', 'App\\Database\\Migrations\\AddLoginRateLimitToUsers', 'default', 'App', 1781929194, 7),
+(25, '2026-06-16-100000', 'App\\Database\\Migrations\\CreatePasswordResetTokensTable', 'default', 'App', 1781929194, 7),
+(26, '2026-06-17-000001', 'App\\Database\\Migrations\\AddEmailToUsers', 'default', 'App', 1781929194, 7),
+(27, '2026-06-17-000000', 'App\\Database\\Migrations\\AddResetCodeToPasswordResetTokens', 'default', 'App', 1781929201, 9),
+(28, '2026-06-17-000002', 'App\\Database\\Migrations\\AddCodeAttemptsToPasswordResetTokens', 'default', 'App', 1781929201, 9);
