@@ -167,6 +167,7 @@ class WsServe extends BaseCommand
     private function performHandshake($client, $headers)
     {
         if (preg_match("/Sec-WebSocket-Key: (.*)\r\n/", $headers, $matches)) {
+            // snyk ignore: sha1 is mandated by RFC 6455 §4.2.2 for WebSocket handshake
             $key = base64_encode(pack('H*', sha1($matches[1] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
             $response = "HTTP/1.1 101 Switching Protocols\r\n" .
                         "Upgrade: websocket\r\n" .
