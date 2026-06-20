@@ -169,7 +169,7 @@ class MemcachedHandler extends BaseHandler
 
             $data = (string) $this->memcached->get($this->keyPrefix . $id);
 
-            $this->fingerprint = md5($data);
+            $this->fingerprint = hash('sha256', $data);
 
             return $data;
         }
@@ -194,14 +194,14 @@ class MemcachedHandler extends BaseHandler
                 return false;
             }
 
-            $this->fingerprint = md5('');
+            $this->fingerprint = hash('sha256', '');
             $this->sessionID   = $id;
         }
 
         if (isset($this->lockKey)) {
             $this->memcached->replace($this->lockKey, Time::now()->getTimestamp(), 300);
 
-            if ($this->fingerprint !== ($fingerprint = md5($data))) {
+            if ($this->fingerprint !== ($fingerprint = hash('sha256', $data))) {
                 if ($this->memcached->set($this->keyPrefix . $id, $data, $this->sessionExpiration)) {
                     $this->fingerprint = $fingerprint;
 

@@ -197,7 +197,7 @@ class DatabaseHandler extends BaseHandler
                 return $this->fail();
             }
 
-            $this->fingerprint = md5($data);
+            $this->fingerprint = hash('sha256', $data);
             $this->rowExists   = true;
 
             return true;
@@ -211,7 +211,7 @@ class DatabaseHandler extends BaseHandler
 
         $updateData = [];
 
-        if ($this->fingerprint !== md5($data)) {
+        if ($this->fingerprint !== hash('sha256', $data)) {
             $updateData['data'] = $this->prepareData($data);
         }
 
@@ -219,7 +219,7 @@ class DatabaseHandler extends BaseHandler
             return $this->fail();
         }
 
-        $this->fingerprint = md5($data);
+        $this->fingerprint = hash('sha256', $data);
 
         return true;
     }

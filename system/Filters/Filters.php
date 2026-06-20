@@ -550,7 +550,7 @@ class Filters
      */
     public function addFilter(string $class, ?string $alias = null, string $position = 'before', string $section = 'globals')
     {
-        $alias ??= md5($class);
+        $alias ??= hash('sha256', $class);
 
         if (! isset($this->config->{$section})) {
             $this->config->{$section} = [];

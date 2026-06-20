@@ -72,7 +72,7 @@ abstract class BaseHandler implements CacheInterface
         }
 
         // If the key with prefix exceeds the length then return the hashed version
-        return strlen($prefix . $key) > static::MAX_KEY_LENGTH ? $prefix . md5($key) : $prefix . $key;
+        return strlen($prefix . $key) > static::MAX_KEY_LENGTH ? $prefix . hash('sha256', $key) : $prefix . $key;
     }
 
     public function remember(string $key, int $ttl, Closure $callback): mixed

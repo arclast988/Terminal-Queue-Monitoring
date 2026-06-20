@@ -85,7 +85,7 @@ class Cell
         $params = $this->prepareParams($params);
 
         // Is the output cached?
-        $cacheName ??= str_replace(['\\', '/'], '', $class) . $method . md5(serialize($params));
+        $cacheName ??= str_replace(['\\', '/'], '', $class) . $method . hash('sha256', serialize($params));
 
         $output = $this->cache->get($cacheName);
 

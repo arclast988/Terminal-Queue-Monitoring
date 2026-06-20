@@ -240,7 +240,7 @@ class RedisHandler extends BaseHandler
                 $data = '';
             }
 
-            $this->fingerprint = md5($data);
+            $this->fingerprint = hash('sha256', $data);
 
             return $data;
         }
@@ -274,7 +274,7 @@ class RedisHandler extends BaseHandler
         if (isset($this->lockKey)) {
             $this->redis->expire($this->lockKey, 300);
 
-            if ($this->fingerprint !== ($fingerprint = md5($data)) || $this->keyExists === false) {
+            if ($this->fingerprint !== ($fingerprint = hash('sha256', $data)) || $this->keyExists === false) {
                 if ($this->redis->set($this->keyPrefix . $id, $data, $this->sessionExpiration)) {
                     $this->fingerprint = $fingerprint;
                     $this->keyExists   = true;

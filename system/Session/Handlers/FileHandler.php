@@ -105,7 +105,7 @@ class FileHandler extends BaseHandler
         $this->savePath = $path;
 
         // we'll use the session name as prefix to avoid collisions
-        $this->filePath = $this->savePath . '/' . $name . ($this->matchIP ? md5($this->ipAddress) : '');
+        $this->filePath = $this->savePath . '/' . $name . ($this->matchIP ? hash('sha256', $this->ipAddress) : '');
 
         return true;
     }
@@ -142,7 +142,7 @@ class FileHandler extends BaseHandler
 
             if ($this->fileNew) {
                 chmod($this->filePath . $id, 0600);
-                $this->fingerprint = md5('');
+                $this->fingerprint = hash('sha256', '');
 
                 return '';
             }
@@ -162,7 +162,7 @@ class FileHandler extends BaseHandler
             $data .= $buffer;
         }
 
-        $this->fingerprint = md5($data);
+        $this->fingerprint = hash('sha256', $data);
 
         return $data;
     }
@@ -184,7 +184,7 @@ class FileHandler extends BaseHandler
             return false;
         }
 
-        if ($this->fingerprint === md5($data)) {
+        if ($this->fingerprint === hash('sha256', $data)) {
             return ($this->fileNew) ? true : touch($this->filePath . $id);
         }
 
@@ -205,14 +205,14 @@ class FileHandler extends BaseHandler
             }
 
             if (! is_int($result)) {
-                $this->fingerprint = md5(substr($data, 0, $written));
+                $this->fingerprint = hash('sha256', substr($data, 0, $written));
                 $this->logger->error('Session: Unable to write data.');
 
                 return false;
             }
         }
 
-        $this->fingerprint = md5($data);
+        $this->fingerprint = hash('sha256', $data);
 
         return true;
     }

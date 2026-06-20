@@ -425,7 +425,7 @@ class Parser extends View
         if (preg_match_all($pattern, $template, $matches, PREG_SET_ORDER) >= 1) {
             foreach ($matches as $match) {
                 // Create a hash of the contents to insert in its place.
-                $hash                       = md5($match[1]);
+                $hash = hash('sha256', $match[1]);
                 $this->noparseBlocks[$hash] = $match[1];
                 $template                   = str_replace($match[0], "noparse_{$hash}", $template);
             }
