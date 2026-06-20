@@ -973,11 +973,10 @@ class CodeIgniter
 
             if ($override instanceof Closure) {
                 if (ENVIRONMENT === 'production' && $this->isWeb()) {
-                    $message = 'Page Not Found';
+                    echo $override('Page Not Found');
                 } else {
-                    $message = $e->getMessage();
+                    echo $override(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
                 }
-                echo $override(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
             } elseif (is_array($override)) {
                 $this->benchmark->start('controller');
                 $this->benchmark->start('controller_constructor');
