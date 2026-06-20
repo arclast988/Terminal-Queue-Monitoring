@@ -705,6 +705,9 @@ trait ResponseTrait
      */
     private function doSetRawCookie(string $name, string $value, array $options): void
     {
+        $options['httponly'] ??= true;
+        $options['secure'] ??= true;
+
         setrawcookie($name, $value, $options);
     }
 
@@ -715,6 +718,9 @@ trait ResponseTrait
      */
     private function doSetCookie(string $name, string $value, array $options): void
     {
+        $options['httponly'] ??= true;
+        $options['secure'] ??= true;
+
         setcookie($name, $value, $options);
     }
 

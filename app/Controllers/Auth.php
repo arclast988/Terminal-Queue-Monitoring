@@ -103,7 +103,7 @@ class Auth extends BaseController
 
     private function cacheKey(): string
     {
-        return 'login_ip_' . md5($this->request->getIPAddress());
+        return 'login_ip_' . hash('sha256', $this->request->getIPAddress());
     }
 
     private function isIpLocked(): bool

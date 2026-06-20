@@ -113,7 +113,7 @@ class Schedules extends BaseController
         // Cache per filter-combination for a couple of seconds so repeated
         // public polls reuse one DB query. The sync token stays live below,
         // and broadcastUpdate() clears these keys so changes appear instantly.
-        $cacheKey = 'rt_sched_status_' . md5(($vehicleType ?? '') . '|' . ($destination ?? ''));
+        $cacheKey = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? ''));
         $payload  = cache($cacheKey);
         if (! is_array($payload)) {
             $queueModel = new QueueModel();

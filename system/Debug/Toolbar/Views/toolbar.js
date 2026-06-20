@@ -734,7 +734,7 @@ var ciDebugBar = {
         }
 
         document.cookie =
-            name + "=" + value + expires + "; path=/; samesite=Lax";
+            name + "=" + value + expires + "; path=/; samesite=Lax; Secure";
     },
 
     readCookie: function (name) {
