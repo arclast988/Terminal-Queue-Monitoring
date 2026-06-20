@@ -110,7 +110,7 @@ class DatabaseHandler extends BaseHandler
     public function read($id): false|string
     {
         if ($this->lockSession($id) === false) {
-            $this->fingerprint = md5('');
+            $this->fingerprint = hash('sha256', '');
 
             return '';
         }
@@ -134,14 +134,14 @@ class DatabaseHandler extends BaseHandler
             // ID regeneration, so we need to explicitly set this to
             // FALSE instead of relying on the default ...
             $this->rowExists   = false;
-            $this->fingerprint = md5('');
+            $this->fingerprint = hash('sha256', '');
 
             return '';
         }
 
         $result = is_bool($result) ? '' : $this->decodeData($result->data);
 
-        $this->fingerprint = md5($result);
+        $this->fingerprint = hash('sha256', $result);
         $this->rowExists   = true;
 
         return $result;

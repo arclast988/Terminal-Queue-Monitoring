@@ -33,7 +33,7 @@ final class DirectoryHasher
      */
     public function hash(): string
     {
-        return md5(implode('', $this->hashApp()));
+        return hash('sha256', implode('', $this->hashApp()));
     }
 
     /**
@@ -73,10 +73,10 @@ final class DirectoryHasher
 
         foreach ($iterator as $file) {
             if ($file->isFile()) {
-                $hashes[] = md5_file($file->getRealPath());
+                $hashes[] = hash_file('sha256', $file->getRealPath());
             }
         }
 
-        return md5(implode('', $hashes));
+        return hash('sha256', implode('', $hashes));
     }
 }

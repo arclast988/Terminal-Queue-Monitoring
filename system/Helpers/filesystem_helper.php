@@ -443,7 +443,7 @@ if (! function_exists('same_file')) {
      */
     function same_file(string $file1, string $file2): bool
     {
-        return is_file($file1) && is_file($file2) && md5_file($file1) === md5_file($file2);
+        return is_file($file1) && is_file($file2) && hash_file('sha256', $file1) === hash_file('sha256', $file2);
     }
 }
 

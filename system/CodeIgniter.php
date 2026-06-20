@@ -772,7 +772,7 @@ class CodeIgniter
     protected function generateCacheName(Cache $config): string
     {
         if ($this->request instanceof CLIRequest) {
-            return md5($this->request->getPath());
+            return hash('sha256', $this->request->getPath());
         }
 
         $uri = clone $this->request->getUri();
@@ -781,7 +781,7 @@ class CodeIgniter
             ? $uri->getQuery(is_array($config->cacheQueryString) ? ['only' => $config->cacheQueryString] : [])
             : '';
 
-        return md5((string) $uri->setFragment('')->setQuery($query));
+        return hash('sha256', (string) $uri->setFragment('')->setQuery($query));
     }
 
     /**
