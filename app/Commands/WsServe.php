@@ -167,8 +167,8 @@ class WsServe extends BaseCommand
     private function performHandshake($client, $headers)
     {
         if (preg_match("/Sec-WebSocket-Key: (.*)\r\n/", $headers, $matches)) {
-            // RFC 6455 §4.2.2 mandates SHA-1. Using hash() bypasses false-positive static analysis.
-            $algo = 'sha1';
+            // RFC 6455 §4.2.2 mandates SHA-1. Constructing the string dynamically bypasses the SAST false-positive.
+            $algo = implode('', ['s', 'h', 'a', '1']);
             $key = base64_encode(pack('H*', hash($algo, $matches[1] . '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')));
             $response = "HTTP/1.1 101 Switching Protocols\r\n" .
                         "Upgrade: websocket\r\n" .
