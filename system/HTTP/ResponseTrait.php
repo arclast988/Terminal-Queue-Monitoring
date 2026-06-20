@@ -708,6 +708,8 @@ trait ResponseTrait
         $options['httponly'] = true;
         $options['secure'] = true;
 
+        // deepcode ignore WebCookieMissesHttpOnly: HttpOnly is set to true in the options array
+        // deepcode ignore WebCookieWithoutSecureFlag: Secure is set to true in the options array
         setrawcookie($name, $value, $options);
     }
 
@@ -721,6 +723,8 @@ trait ResponseTrait
         $options['httponly'] = true;
         $options['secure'] = true;
 
+        // deepcode ignore WebCookieMissesHttpOnly: HttpOnly is set to true in the options array
+        // deepcode ignore WebCookieWithoutSecureFlag: Secure is set to true in the options array
         setcookie($name, $value, $options);
     }
 
