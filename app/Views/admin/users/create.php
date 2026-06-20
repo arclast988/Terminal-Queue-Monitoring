@@ -140,12 +140,13 @@
                                         $val = implode(',', $group['ids']);
                                         $isChecked = !empty(array_intersect($group['ids'], $selectedRouteIds));
                                         $routeLabel = $group['origin'] . ' ' . $group['destination'];
+                                        $routeIdSelector = preg_replace('/[^a-zA-Z0-9]/', '_', $key);
                                     ?>
                                     <div class="form-check route-item" data-label="<?= esc(strtolower($routeLabel), 'attr') ?>">
                                         <input class="form-check-input route-checkbox" type="checkbox" name="route_ids[]"
-                                               value="<?= esc($val) ?>" id="route_<?= md5($key) ?>"
+                                               value="<?= esc($val) ?>" id="route_<?= $routeIdSelector ?>"
                                                <?= $isChecked ? 'checked' : '' ?>>
-                                        <label class="form-check-label" for="route_<?= md5($key) ?>">
+                                        <label class="form-check-label" for="route_<?= $routeIdSelector ?>">
                                             <span class="route-name"><?= esc($group['origin']) ?> &rarr; <?= esc($group['destination']) ?></span>
                                         </label>
                                     </div>

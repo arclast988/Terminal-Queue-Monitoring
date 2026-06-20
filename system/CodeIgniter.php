@@ -972,7 +972,11 @@ class CodeIgniter
             $returned = null;
 
             if ($override instanceof Closure) {
-                $message = (ENVIRONMENT !== 'production' || ! $this->isWeb()) ? $e->getMessage() : 'Page Not Found';
+                if (ENVIRONMENT === 'production' && $this->isWeb()) {
+                    $message = 'Page Not Found';
+                } else {
+                    $message = $e->getMessage();
+                }
                 echo $override(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
             } elseif (is_array($override)) {
                 $this->benchmark->start('controller');
