@@ -705,12 +705,14 @@ trait ResponseTrait
      */
     private function doSetRawCookie(string $name, string $value, array $options): void
     {
-        $options['httponly'] = true;
-        $options['secure'] = true;
-
-        // deepcode ignore WebCookieMissesHttpOnly: HttpOnly is set to true in the options array
-        // deepcode ignore WebCookieWithoutSecureFlag: Secure is set to true in the options array
-        setrawcookie($name, $value, $options);
+        setrawcookie($name, $value, [
+            'expires'  => $options['expires'] ?? 0,
+            'path'     => $options['path'] ?? '',
+            'domain'   => $options['domain'] ?? '',
+            'secure'   => true,
+            'httponly' => true,
+            'samesite' => $options['samesite'] ?? 'Lax',
+        ]);
     }
 
     /**
@@ -720,12 +722,14 @@ trait ResponseTrait
      */
     private function doSetCookie(string $name, string $value, array $options): void
     {
-        $options['httponly'] = true;
-        $options['secure'] = true;
-
-        // deepcode ignore WebCookieMissesHttpOnly: HttpOnly is set to true in the options array
-        // deepcode ignore WebCookieWithoutSecureFlag: Secure is set to true in the options array
-        setcookie($name, $value, $options);
+        setcookie($name, $value, [
+            'expires'  => $options['expires'] ?? 0,
+            'path'     => $options['path'] ?? '',
+            'domain'   => $options['domain'] ?? '',
+            'secure'   => true,
+            'httponly' => true,
+            'samesite' => $options['samesite'] ?? 'Lax',
+        ]);
     }
 
     /**
