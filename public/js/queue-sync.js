@@ -96,7 +96,8 @@
                 var newTbody = newDoc.querySelector(_config.tableSelector);
                 var curTbody = document.querySelector(_config.tableSelector);
                 if (newTbody && curTbody) {
-                    curTbody.innerHTML = DOMPurify.sanitize(newTbody.innerHTML);
+                    DOMPurify.sanitize(newTbody, { IN_PLACE: true });
+                    curTbody.innerHTML = newTbody.innerHTML;
                 }
             }
 

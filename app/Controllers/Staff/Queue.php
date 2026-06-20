@@ -28,7 +28,7 @@ class Queue extends BaseController
      */
     private function getAssignedRouteIds(): ?array
     {
-        if (session()->get('role') === 'admin') {
+        if (in_array(session()->get('role'), ['super_admin', 'admin'], true)) {
             return null; // Admin sees everything
         }
 

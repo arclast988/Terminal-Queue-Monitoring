@@ -537,6 +537,7 @@ class Auth extends BaseController
     {
         $role = session()->get('role');
         switch ($role) {
+            case 'super_admin':
             case 'admin':
                 return redirect()->to('/admin/dashboard');
             case 'staff':

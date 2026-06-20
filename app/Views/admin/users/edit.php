@@ -78,10 +78,20 @@
                             <label for="role" class="form-label-modern">Role</label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-shield-lock-fill"></i></span>
-                                <select class="select-modern" id="role" name="role" required>
-                                    <option value="staff" <?= old('role', $user['role']) === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
-                                    <option value="admin" <?= old('role', $user['role']) === 'admin' ? 'selected' : '' ?>>Admin</option>
-                                </select>
+                                <?php if ($user['role'] === 'super_admin'): ?>
+                                    <input type="text" class="input-modern" value="Super Admin" disabled>
+                                    <input type="hidden" name="role" value="super_admin">
+                                <?php elseif ((int)$user['id'] === (int)session()->get('id')): ?>
+                                    <input type="text" class="input-modern" value="<?= $user['role'] === 'admin' ? 'Admin' : 'Dispatcher' ?>" disabled>
+                                    <input type="hidden" name="role" value="<?= esc($user['role']) ?>">
+                                <?php else: ?>
+                                    <select class="select-modern" id="role" name="role" required>
+                                        <option value="staff" <?= old('role', $user['role']) === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
+                                        <?php if (session()->get('role') === 'super_admin'): ?>
+                                            <option value="admin" <?= old('role', $user['role']) === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                        <?php endif; ?>
+                                    </select>
+                                <?php endif; ?>
                             </div>
                             <div class="form-text-modern">Admins can access all routes; dispatchers need assigned routes.</div>
                         </div>

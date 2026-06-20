@@ -543,7 +543,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                        <?php if (session()->get('role') === 'admin'): ?>
+                                        <?php if (in_array(session()->get('role'), ['super_admin', 'admin'], true)): ?>
                                             <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -587,7 +587,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                        <?php if (session()->get('role') === 'admin'): ?>
+                                        <?php if (in_array(session()->get('role'), ['super_admin', 'admin'], true)): ?>
                                             <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -631,7 +631,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
-                                        <?php if (session()->get('role') === 'admin'): ?>
+                                        <?php if (in_array(session()->get('role'), ['super_admin', 'admin'], true)): ?>
                                             <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare">
                                                 <i class="fas fa-edit"></i>
                                             </a>

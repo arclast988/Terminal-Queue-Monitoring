@@ -47,7 +47,7 @@ class Fares extends BaseController
         $terminals = [];
         $all_locations = [];
 
-        if (session()->get('isLoggedIn') && session()->get('role') === 'admin') {
+        if (session()->get('isLoggedIn') && in_array(session()->get('role'), ['super_admin', 'admin'], true)) {
             $terminalModel  = new TerminalModel();
             $terminals      = $terminalModel->findAll();
 

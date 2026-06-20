@@ -3,6 +3,10 @@
 <!-- Modern Frontend Styles -->
 <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
+<?php
+$isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
+?>
+
 <style>
 /* Fare Card/Item Hover & Transition Animation */
 .fare-section-card {
@@ -65,7 +69,7 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
         <i class="bi bi-tags"></i>
         Route Fares
     </h1>
-    <?php if (session()->get('role') === 'admin'): ?>
+    <?php if ($isAdmin): ?>
     <div>
         <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addFareModal">
             <i class="bi bi-plus-circle"></i> Add Fare
@@ -157,7 +161,7 @@ $fareTypes = [
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="badge-modern badge-modern-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
-                                <?php if (session()->get('role') === 'admin'): ?>
+                                <?php if ($isAdmin): ?>
                                 <button type="button"
                                    class="btn-modern btn-modern-sm btn-modern-outline btn-action-edit fare-action-btn" title="Edit Fare"
                                    data-bs-toggle="modal"
@@ -217,7 +221,7 @@ $discountMeta = [
     'student'        => ['icon' => 'bi bi-mortarboard-fill',        'badge' => '<span class="badge-modern badge-modern-warning">Student</span>'],
 ];
 $hasDiscounts = !empty($discounts);
-$isManager = session()->get('role') === 'admin';
+$isManager = $isAdmin;
 ?>
 
 <?php if ($hasDiscounts || $isManager): ?>
@@ -297,7 +301,7 @@ $isManager = session()->get('role') === 'admin';
 <!-- ══════════════════════════════════════════════ -->
 <!--  MODALS                                       -->
 <!-- ══════════════════════════════════════════════ -->
-<?php if (session()->get('role') === 'admin'): ?>
+<?php if ($isAdmin): ?>
 
 <!-- ADD FARE MODAL -->
 <div class="modal fade" id="addFareModal" tabindex="-1" aria-labelledby="addFareModalLabel" aria-hidden="true">

@@ -4,7 +4,8 @@
  * Styles: public/assets/css/navigation.css (loaded by templates/navbar.php).
  */
 $role    = session()->get('isLoggedIn') ? session()->get('role') : null;
-$homeUrl = $role === 'admin' ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard' : '/');
+$isAdmin = in_array($role, ['super_admin', 'admin'], true);
+$homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard' : '/');
 ?>
 <header id="site-header">
     <a href="<?= base_url($homeUrl) ?>" class="logo-section">
@@ -16,7 +17,7 @@ $homeUrl = $role === 'admin' ? 'admin/dashboard' : ($role === 'staff' ? 'staff/d
     </a>
 
     <nav class="nav-menu" aria-label="Primary navigation">
-        <?php if ($role === 'admin'): ?>
+        <?php if ($isAdmin): ?>
             <?= view('partials/nav-admin') ?>
         <?php elseif ($role === 'staff'): ?>
             <?= view('partials/nav-dispatcher') ?>

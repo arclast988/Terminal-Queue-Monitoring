@@ -18,7 +18,7 @@ class Users extends BaseController
 
         // Attach assigned routes label to each user
         foreach ($users as &$user) {
-            if ($user['role'] === 'admin') {
+            if ($user['role'] === 'super_admin' || $user['role'] === 'admin') {
                 $user['assigned_routes_label'] = 'All Routes';
             } else {
                 $label = $userRouteModel->getRouteLabelsForUser($user['id']);
@@ -41,8 +41,12 @@ class Users extends BaseController
 
     public function store()
     {
+        $currentRole = session()->get('role');
         $model = new UserModel();
-        
+
+        // Only super_admin can create admin accounts
+        $allowedRoles = $currentRole === 'super_admin' ? 'super_admin,admin,staff' : 'admin,staff';
+
         $rules = [
             'username' => [
                 'rules'  => 'required|min_length[3]|valid_email|is_unique[users.username]',
@@ -55,7 +59,7 @@ class Users extends BaseController
             ],
             'password' => 'required|min_length[6]',
             'full_name' => 'required|min_length[3]',
-            'role' => 'required|in_list[admin,staff]'
+            'role' => "required|in_list[{$allowedRoles}]"
         ];
 
         if (!$this->validate($rules)) {
@@ -64,6 +68,16 @@ class Users extends BaseController
 
         $role = $this->request->getPost('role');
         $selectedRoutes = $this->parseRouteIds();
+
+        // Regular admin cannot create admin accounts
+        if ($currentRole !== 'super_admin' && $role === 'admin') {
+            return redirect()->back()->withInput()->with('error', 'Only a super admin can create admin accounts.');
+        }
+
+        // No one can create super_admin accounts through the UI
+        if ($role === 'super_admin') {
+            return redirect()->back()->withInput()->with('error', 'Super admin accounts cannot be created through the user interface.');
+        }
 
         // Staff must have at least one route assigned
         if ($role === 'staff' && empty($selectedRoutes)) {
@@ -103,6 +117,7 @@ class Users extends BaseController
 
     public function edit($id)
     {
+        $currentRole = session()->get('role');
         $model = new UserModel();
         $routeModel = new RouteModel();
         $userRouteModel = new UserRouteModel();
@@ -111,6 +126,16 @@ class Users extends BaseController
         
         if (!$user) {
             return redirect()->to('/admin/users')->with('error', 'User not found.');
+        }
+
+        // Regular admin cannot edit other admin accounts
+        if ($currentRole !== 'super_admin' && $user['role'] === 'admin' && (int)$user['id'] !== (int)session()->get('id')) {
+            return redirect()->to('/admin/users')->with('error', 'You cannot edit other admin accounts.');
+        }
+
+        // No one can edit the super_admin account through the UI
+        if ($user['role'] === 'super_admin' && $currentRole !== 'super_admin') {
+            return redirect()->to('/admin/users')->with('error', 'You cannot edit the super admin account.');
         }
 
         $data = [
@@ -124,9 +149,33 @@ class Users extends BaseController
 
     public function update($id)
     {
+        $currentRole = session()->get('role');
         $model = new UserModel();
         $userRouteModel = new UserRouteModel();
-        
+
+        $targetUser = $model->find($id);
+        if (!$targetUser) {
+            return redirect()->to('/admin/users')->with('error', 'User not found.');
+        }
+
+        // Regular admin cannot modify other admin accounts
+        if ($currentRole !== 'super_admin' && $targetUser['role'] === 'admin' && (int)$id !== (int)session()->get('id')) {
+            return redirect()->back()->withInput()->with('error', 'You cannot modify other admin accounts.');
+        }
+
+        // No one can modify the super_admin account through the UI
+        if ($targetUser['role'] === 'super_admin' && $currentRole !== 'super_admin') {
+            return redirect()->to('/admin/users')->with('error', 'You cannot modify the super admin account.');
+        }
+
+        // Super admin cannot demote themselves
+        if ($currentRole === 'super_admin' && (int)$id === (int)session()->get('id') && $this->request->getPost('role') !== 'super_admin') {
+            return redirect()->back()->withInput()->with('error', 'You cannot demote yourself from super admin. Use the CLI transfer command instead.');
+        }
+
+        // Only super_admin is allowed to set a role of admin
+        $allowedRoles = $currentRole === 'super_admin' ? 'super_admin,admin,staff' : 'admin,staff';
+
         $rules = [
             'username' => [
                 'rules'  => "required|min_length[3]|valid_email|is_unique[users.username,id,{$id}]",
@@ -138,7 +187,7 @@ class Users extends BaseController
                 ]
             ],
             'full_name' => 'required|min_length[3]',
-            'role' => 'required|in_list[admin,staff]'
+            'role' => "required|in_list[{$allowedRoles}]"
         ];
 
         if ($this->request->getPost('password')) {
@@ -152,13 +201,18 @@ class Users extends BaseController
         $role = $this->request->getPost('role');
         $selectedRoutes = $this->parseRouteIds();
 
+        // Regular admin cannot change user roles
+        if ($currentRole !== 'super_admin' && $role !== $targetUser['role']) {
+            return redirect()->back()->withInput()->with('error', 'Only a super admin can change user roles.');
+        }
+
         // Staff must have at least one route assigned
         if ($role === 'staff' && empty($selectedRoutes)) {
             return redirect()->back()->withInput()->with('error', 'Dispatchers must have at least one route assigned.');
         }
 
         // Get old data for logging
-        $oldUser = $model->find($id);
+        $oldUser = $targetUser;
         $oldRouteIds = $userRouteModel->getRouteIdsForUser($id);
 
         $data = [
@@ -178,7 +232,7 @@ class Users extends BaseController
         if ($role === 'staff') {
             $userRouteModel->syncRoutesForUser($id, $selectedRoutes);
         } else {
-            // Admin users don't need route assignments — clear them
+            // Admin/super_admin users don't need route assignments — clear them
             $userRouteModel->syncRoutesForUser($id, []);
         }
 
@@ -212,12 +266,29 @@ class Users extends BaseController
 
     public function delete($id)
     {
+        $currentRole = session()->get('role');
+        $model = new UserModel();
+
+        $targetUser = $model->find($id);
+        if (!$targetUser) {
+            return redirect()->to('/admin/users')->with('error', 'User not found.');
+        }
+
         // Prevent admin from deleting their own account
         if ((int)$id === (int)session()->get('id')) {
             return redirect()->to('/admin/users')->with('error', 'You cannot delete your own account.');
         }
 
-        $model = new UserModel();
+        // Regular admin cannot delete other admin accounts
+        if ($currentRole !== 'super_admin' && $targetUser['role'] === 'admin') {
+            return redirect()->to('/admin/users')->with('error', 'You cannot delete other admin accounts.');
+        }
+
+        // No one can delete the super_admin account
+        if ($targetUser['role'] === 'super_admin') {
+            return redirect()->to('/admin/users')->with('error', 'The super admin account cannot be deleted.');
+        }
+
         $model->delete($id);
         // user_routes cleaned up automatically by ON DELETE CASCADE
         return redirect()->to('/admin/users')->with('success', 'User deleted successfully.');

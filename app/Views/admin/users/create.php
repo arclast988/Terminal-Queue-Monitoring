@@ -80,7 +80,9 @@
                                 <span class="input-group-text-modern"><i class="bi bi-shield-lock-fill"></i></span>
                                 <select class="select-modern" id="role" name="role" required>
                                     <option value="staff" <?= old('role', 'staff') === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
-                                    <option value="admin" <?= old('role') === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                    <?php if (session()->get('role') === 'super_admin'): ?>
+                                        <option value="admin" <?= old('role') === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div class="form-text-modern">Admins can access all routes; dispatchers need assigned routes.</div>

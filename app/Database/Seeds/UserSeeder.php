@@ -12,7 +12,7 @@ class UserSeeder extends Seeder
             [
                 'username' => 'admin',
                 'password_hash' => password_hash('admin123', PASSWORD_DEFAULT),
-                'role' => 'admin',
+                'role' => 'super_admin',
                 'full_name' => 'System Administrator',
                 'created_at' => date('Y-m-d H:i:s'),
             ],

@@ -33,7 +33,7 @@ $totalUsers = count($users);
 $countAdmin = 0;
 $countDispatcher = 0;
 foreach ($users as $u) {
-    if ($u['role'] === 'admin') {
+    if ($u['role'] === 'super_admin' || $u['role'] === 'admin') {
         $countAdmin++;
     } else {
         $countDispatcher++;
@@ -114,7 +114,7 @@ foreach ($users as $u) {
                                 }
                                 ?>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-circle me-3 <?= $user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher' ?>">
+                                    <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' || $user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher' ?>">
                                         <?= esc($initials) ?>
                                     </div>
                                     <div>
@@ -126,12 +126,16 @@ foreach ($users as $u) {
                                 </div>
                             </td>
                             <td data-label="Role">
-                                <span class="badge-modern badge-modern-<?= $user['role'] == 'admin' ? 'danger' : 'info' ?>">
-                                    <?= $user['role'] == 'staff' ? 'Dispatcher' : ucfirst($user['role']) ?>
-                                </span>
+                                <?php if ($user['role'] === 'super_admin'): ?>
+                                    <span class="badge-modern" style="background: #7c3aed; color: #fff;">Super Admin</span>
+                                <?php else: ?>
+                                    <span class="badge-modern badge-modern-<?= $user['role'] === 'admin' ? 'danger' : 'info' ?>">
+                                        <?= $user['role'] === 'staff' ? 'Dispatcher' : 'Admin' ?>
+                                    </span>
+                                <?php endif; ?>
                             </td>
                             <td style="max-width: 350px;" data-label="Assigned Routes">
-                                <?php if ($user['role'] === 'admin'): ?>
+                                <?php if ($user['role'] === 'super_admin' || $user['role'] === 'admin'): ?>
                                     <span class="badge-modern badge-modern-success">All Routes</span>
                                 <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
                                     <div class="badge-scroll-wrap" style="display: flex; gap: 4px; padding-bottom: 4px;" title="<?= esc($user['assigned_routes_label']) ?>">
@@ -148,12 +152,29 @@ foreach ($users as $u) {
                                 <?php endif; ?>
                             </td>
                             <td data-label="Action">
+                                <?php
+                                $currentUserId = (int) session()->get('id');
+                                $currentUserRole = session()->get('role');
+                                $targetUserId = (int) $user['id'];
+                                $targetUserRole = $user['role'];
+
+                                $canEdit = ($targetUserId === $currentUserId) || 
+                                           ($currentUserRole === 'super_admin') || 
+                                           ($currentUserRole === 'admin' && $targetUserRole === 'staff');
+
+                                $canDelete = ($targetUserId !== $currentUserId) && 
+                                             ($targetUserRole !== 'super_admin') && 
+                                             (($currentUserRole === 'super_admin') || 
+                                              ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
+                                ?>
                                 <div class="btn-group-modern" role="group">
-                                    <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
-                                        class="btn-modern btn-modern-sm btn-modern-outline-primary" title="Edit">
-                                        <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
-                                    </a>
-                                    <?php if ((int) $user['id'] !== (int) session()->get('id')): ?>
+                                    <?php if ($canEdit): ?>
+                                        <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
+                                            class="btn-modern btn-modern-sm btn-modern-outline-primary" title="Edit">
+                                            <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if ($canDelete): ?>
                                         <form action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post"
                                             class="d-inline"
                                             onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
@@ -344,7 +365,7 @@ foreach ($users as $u) {
             if (filter === 'all') {
                 show = true;
             } else if (filter === 'admin') {
-                show = role === 'admin';
+                show = role === 'super_admin' || role === 'admin';
             } else if (filter === 'dispatcher') {
                 show = role === 'staff';
             }

@@ -17,6 +17,12 @@ class AuthFilter implements FilterInterface
         // Optional: Role-based checking if arguments provided
         if ($arguments) {
             $role = session()->get('role');
+
+            // Super admin bypasses all role gates
+            if ($role === 'super_admin') {
+                return;
+            }
+
             if (!in_array($role, $arguments)) {
                 // Unauthorized access for this role
                 return redirect()->back()->with('error', 'You do not have access to this page.');

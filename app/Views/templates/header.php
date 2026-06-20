@@ -617,6 +617,6 @@
 </head>
 
 <body
-    class="layout-lock <?= (session()->get('role') === 'admin' ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : '')) ?><?= esc($body_class ?? '') ?>">
+    class="layout-lock <?= (in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : '')) ?><?= esc($body_class ?? '') ?>">
     <?php include __DIR__ . '/navbar.php'; ?>
     <div class="main-content container-fluid">

@@ -38,7 +38,7 @@ $isActive = static fn (string $path): string => url_is($path) ? 'active' : '';
 <div class="admin-profile">
     <div class="profile-info">
         <span class="profile-name"><?= esc(session()->get('full_name') ?? session()->get('username')) ?></span>
-        <span class="profile-role">Admin</span>
+        <span class="profile-role"><?= session()->get('role') === 'super_admin' ? 'Super Admin' : 'Admin' ?></span>
     </div>
     <a href="<?= base_url('logout') ?>" class="logout-btn-custom">
         <i class="fas fa-sign-out-alt"></i> Logout
