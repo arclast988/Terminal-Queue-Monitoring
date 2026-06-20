@@ -219,7 +219,7 @@ class Forge extends BaseForge
                 SQL;
 
             foreach ($this->db->query($sql)->getResultArray() as $index) {
-                $this->db->query('ALTER TABLE ' . $fullTable . ' DROP CONSTRAINT ' . $index['name'] . '');
+                $this->db->query('ALTER TABLE ' . $fullTable . ' DROP CONSTRAINT ' . $this->db->escapeIdentifiers($index['name']));
             }
 
             $sql = 'ALTER TABLE ' . $fullTable . ' DROP ';
