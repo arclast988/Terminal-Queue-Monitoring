@@ -975,7 +975,7 @@ class CodeIgniter
                 if (ENVIRONMENT === 'production' && $this->isWeb()) {
                     echo $override('Page Not Found');
                 } else {
-                    echo $override(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
+                    echo $override('Page Not Found');
                 }
             } elseif (is_array($override)) {
                 $this->benchmark->start('controller');
