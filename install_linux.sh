@@ -123,10 +123,20 @@ else
         warn "Could not query apt-cache for newer PHP versions; defaulting to PHP ${PHP_VER}."
     fi
 fi
-apt-get install -y \
-    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" \
-    "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip" \
+WANTED_PKGS=(
+    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl"
+    "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip"
     "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
+)
+PKGS_TO_INSTALL=()
+for pkg in "${WANTED_PKGS[@]}"; do
+    if apt-cache show "$pkg" >/dev/null 2>&1; then
+        PKGS_TO_INSTALL+=("$pkg")
+    else
+        warn "Skipping package '$pkg' (not found in apt repositories, possibly built-in)."
+    fi
+done
+apt-get install -y "${PKGS_TO_INSTALL[@]}"
 
 apt-get install -y nginx
 ok "Packages installed."

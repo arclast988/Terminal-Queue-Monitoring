@@ -93,14 +93,34 @@ fi
 # passing already-installed packages for an existing PHP just fills in any
 # missing extensions.
 if [ -n "$PHP_VER" ]; then
-    apt-get install -y \
-        php${PHP_VER}-cli php${PHP_VER}-fpm php${PHP_VER}-mysql php${PHP_VER}-intl php${PHP_VER}-mbstring \
-        php${PHP_VER}-curl php${PHP_VER}-xml php${PHP_VER}-zip php${PHP_VER}-gd php${PHP_VER}-opcache php${PHP_VER}-common
+    WANTED_PKGS=(
+        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" "php${PHP_VER}-mbstring"
+        "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip" "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
+    )
+    PKGS_TO_INSTALL=()
+    for pkg in "${WANTED_PKGS[@]}"; do
+        if apt-cache show "$pkg" >/dev/null 2>&1; then
+            PKGS_TO_INSTALL+=("$pkg")
+        else
+            echo "[INFO] Skipping package '$pkg' (not found in apt repositories, possibly built-in)."
+        fi
+    done
+    apt-get install -y "${PKGS_TO_INSTALL[@]}"
     PHP_BIN="php${PHP_VER}"
 else
-    apt-get install -y \
-        php-cli php-fpm php-mysql php-intl php-mbstring \
+    WANTED_PKGS=(
+        php-cli php-fpm php-mysql php-intl php-mbstring
         php-curl php-xml php-zip php-gd php-common
+    )
+    PKGS_TO_INSTALL=()
+    for pkg in "${WANTED_PKGS[@]}"; do
+        if apt-cache show "$pkg" >/dev/null 2>&1; then
+            PKGS_TO_INSTALL+=("$pkg")
+        else
+            echo "[INFO] Skipping package '$pkg' (not found in apt repositories)."
+        fi
+    done
+    apt-get install -y "${PKGS_TO_INSTALL[@]}"
     PHP_BIN="php"
 fi
 echo "[OK] $($PHP_BIN -v | head -n1)"

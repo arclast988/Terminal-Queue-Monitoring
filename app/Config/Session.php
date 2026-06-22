@@ -60,6 +60,20 @@ class Session extends BaseConfig
      */
     public string $savePath = WRITEPATH . 'session';
 
+    public function __construct()
+    {
+        parent::__construct();
+
+        // If running in a Linux/WSL environment where the workspace is on a mounted Windows drive (/mnt/),
+        // file permissions (chmod) on session files will fail. Use native Linux /tmp directory instead.
+        if (DIRECTORY_SEPARATOR === '/' && (strpos(WRITEPATH, '/mnt/') === 0 || strpos(WRITEPATH, '/media/') === 0)) {
+            $this->savePath = '/tmp/jeepneynvans_session';
+            if (!is_dir($this->savePath)) {
+                @mkdir($this->savePath, 0777, true);
+            }
+        }
+    }
+
     /**
      * --------------------------------------------------------------------------
      * Session Match IP
