@@ -62,13 +62,35 @@ elif [ "$ACTUAL_ROOT" != "${PROJECT_ROOT}/public" ]; then
     echo "       Expected:     ${PROJECT_ROOT}/public"
 fi
 
-# --- 3. Start core services ---
+# --- 3. Ensure /var/run/php exists (WSL may not have the /var/run → /run symlink) ---
+mkdir -p /var/run/php
+
+# --- 4. Start core services ---
 service mysql start 2>/dev/null || service mariadb start 2>/dev/null
 service "php${PHPVER}-fpm" start 2>/dev/null
+
+# After starting FPM, wait briefly for the socket file to appear and symlink
+# it if it landed under /run/php/ (where PHP-FPM actually writes it).
+FPM_SOCK_REAL="/run/php/php${PHPVER}-fpm.sock"
+FPM_SOCK_VAR="/var/run/php/php${PHPVER}-fpm.sock"
+for _ in $(seq 1 5); do
+    if [ -S "$FPM_SOCK_REAL" ]; then
+        [ ! -e "$FPM_SOCK_VAR" ] && ln -sf "$FPM_SOCK_REAL" "$FPM_SOCK_VAR"
+        break
+    fi
+    sleep 0.5
+done
+
+# Verify the socket Nginx will use actually exists
+if [ ! -S "$FPM_SOCK_VAR" ] && [ ! -S "$FPM_SOCK_REAL" ]; then
+    echo -e "${RED}[ERROR] PHP-FPM socket not found at either ${FPM_SOCK_VAR} or ${FPM_SOCK_REAL}!${NC}"
+    echo "       PHP-FPM may have failed to start. Check: service php${PHPVER}-fpm status"
+fi
+
 service nginx restart 2>/dev/null || service nginx start 2>/dev/null
 echo "[OK] MariaDB, PHP-FPM, and Nginx started."
 
-# --- 4. Database: ensure DB + user, import if empty ---
+# --- 5. Database: ensure DB + user, import if empty ---
 mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" 2>/dev/null
 mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" 2>/dev/null
 mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;" 2>/dev/null
@@ -85,7 +107,7 @@ else
     fi
 fi
 
-# --- 5. WebSocket server (background, no duplicate) ---
+# --- 6. WebSocket server (background, no duplicate) ---
 if pgrep -f 'spark ws:serve' >/dev/null 2>&1; then
     echo "[OK] WebSocket server already running."
 else
@@ -94,7 +116,7 @@ else
     echo "[OK] WebSocket server started (${PHP_BIN} spark ws:serve)."
 fi
 
-# --- 6. Wait for Nginx to actually serve (treat 5xx as not-ready) ---
+# --- 7. Wait for Nginx to actually serve (treat 5xx as not-ready) ---
 CODE="000"
 for _ in $(seq 1 30); do
     CODE="$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null)"

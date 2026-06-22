@@ -142,12 +142,13 @@ apt-get install -y nginx
 ok "Packages installed."
 
 # ── 2. Composer ─────────────────────────────────────────────────────────────
+PHP_BIN="$(command -v "php${PHP_VER}" || command -v php)"
 if ! command -v composer >/dev/null 2>&1; then
     say "Installing Composer…"
     curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
     HASH="$(curl -sS https://composer.github.io/installer.sig)"
-    "php${PHP_VER}" -r "if (hash_file('sha384', '/tmp/composer-setup.php') === '${HASH}') { echo 'verified'.PHP_EOL; } else { fwrite(STDERR, 'Composer installer corrupt'.PHP_EOL); unlink('/tmp/composer-setup.php'); exit(1); }"
-    "php${PHP_VER}" /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+    "$PHP_BIN" -r "if (hash_file('sha384', '/tmp/composer-setup.php') === '${HASH}') { echo 'verified'.PHP_EOL; } else { fwrite(STDERR, 'Composer installer corrupt'.PHP_EOL); unlink('/tmp/composer-setup.php'); exit(1); }"
+    "$PHP_BIN" /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
     rm -f /tmp/composer-setup.php
 fi
 COMPOSER_BIN="$(command -v composer)"
@@ -215,6 +216,10 @@ sed -i -E "s#root[[:space:]]+[^;]+;#root ${PROJECT_ROOT}/public;#"  "/etc/nginx/
 sed -i -E "s/server_name[[:space:]]+[^;]+;/server_name _;/"        "/etc/nginx/sites-available/${NGINX_SITE}"
 ln -sf "/etc/nginx/sites-available/${NGINX_SITE}" "/etc/nginx/sites-enabled/${NGINX_SITE}"
 rm -f /etc/nginx/sites-enabled/default
+
+# Ensure /var/run/php directory exists (some minimal installs omit it)
+mkdir -p /var/run/php
+
 ok "Nginx root → ${PROJECT_ROOT}/public"
 
 # ── 7. writable/ permissions ────────────────────────────────────────────────

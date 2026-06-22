@@ -26,14 +26,48 @@ apt install -y mariadb-server mariadb-client
 systemctl enable mariadb
 systemctl start mariadb
 
-echo "=== [4/9] Adding PHP 8.2 Repository & Installing PHP ==="
+echo "=== [4/9] Adding PHP 8.2+ Repository & Installing PHP ==="
 # Add Ondrej Surý's PHP repository (the official gold standard for Debian/Ubuntu PHP versions)
 add-apt-repository -y ppa:ondrej/php
 apt update
 
-# Install PHP 8.2 CLI, FPM (Web Server Gateway), and CodeIgniter 4 required extensions.
-# php8.2-opcache is included for a large production throughput boost.
-apt install -y php8.2-cli php8.2-fpm php8.2-mysql php8.2-intl php8.2-mbstring php8.2-curl php8.2-xml php8.2-zip php8.2-gd php8.2-opcache php8.2-common
+# Detect PHP version (mirrors wsl_install.sh and install_linux.sh logic):
+#   1. Reuse an already-installed PHP in the 8.2-8.9 range.
+#   2. Otherwise auto-install the newest fully-packaged PHP in 8.2-8.4 range.
+PHP_VER="8.2"
+EXISTING_PHP=""
+for _v in $(ls /etc/php 2>/dev/null | grep -E '^8\.[2-9]$' | sort -V -r); do
+    if dpkg -s "php${_v}-cli" >/dev/null 2>&1; then
+        EXISTING_PHP="$_v"
+        break
+    fi
+done
+if [ -n "$EXISTING_PHP" ]; then
+    PHP_VER="$EXISTING_PHP"
+    echo "[INFO] Using already-installed PHP ${PHP_VER}"
+else
+    LATEST_PHP="$(apt-cache pkgnames | grep -E '^php8\.[2-4]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+    if [ -n "$LATEST_PHP" ]; then
+        PHP_VER="$LATEST_PHP"
+        echo "[INFO] Found PHP ${PHP_VER} as latest available version"
+    fi
+fi
+
+# Install PHP extensions (skip packages not available in the repo).
+WANTED_PKGS=(
+    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl"
+    "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip"
+    "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
+)
+PKGS_TO_INSTALL=()
+for pkg in "${WANTED_PKGS[@]}"; do
+    if apt-cache show "$pkg" >/dev/null 2>&1; then
+        PKGS_TO_INSTALL+=("$pkg")
+    else
+        echo "[INFO] Skipping package '$pkg' (not found in apt repositories, possibly built-in)."
+    fi
+done
+apt install -y "${PKGS_TO_INSTALL[@]}"
 
 # Verify PHP installation
 php -v
