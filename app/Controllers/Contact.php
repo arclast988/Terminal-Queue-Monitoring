@@ -14,7 +14,7 @@ class Contact extends BaseController
         // Rate limiting: max 3 contact submissions per 5 minutes per IP
         $cache = \Config\Services::cache();
         $ip = $this->request->getIPAddress();
-        $cacheKey = 'contact_rate_limit_' . md5($ip);
+        $cacheKey = 'contact_rate_limit_' . hash('sha256', $ip);
         $attempts = (int) $cache->get($cacheKey);
         
         if ($attempts >= 3) {
