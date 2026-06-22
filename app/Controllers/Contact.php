@@ -11,6 +11,16 @@ class Contact extends BaseController
             return redirect()->to(base_url('guest') . '#support-section');
         }
 
+        // Rate limiting: max 3 contact submissions per 5 minutes per IP
+        $cache = \Config\Services::cache();
+        $ip = $this->request->getIPAddress();
+        $cacheKey = 'contact_rate_limit_' . md5($ip);
+        $attempts = (int) $cache->get($cacheKey);
+        
+        if ($attempts >= 3) {
+            return redirect()->back()->withInput()->with('contact_error', 'Too many messages sent. Please wait 5 minutes before trying again.');
+        }
+
         $type    = $this->request->getPost('type');    // 'report' or 'contact'
         $name    = trim($this->request->getPost('name'));
         $email   = trim($this->request->getPost('email'));
@@ -41,6 +51,7 @@ class Contact extends BaseController
         $emailSvc->setMessage(nl2br(esc($body)));
 
         if ($emailSvc->send()) {
+            $cache->save($cacheKey, $attempts + 1, 300); // 5 minutes TTL
             return redirect()->to(base_url('guest') . '#support-section')
                 ->with('contact_success', 'Your message has been sent! We will respond shortly.');
         } else {

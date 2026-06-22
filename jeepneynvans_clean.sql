@@ -267,9 +267,9 @@ INSERT INTO `departure_rules` (`id`, `terminal_id`, `time_from`, `time_to`, `wai
 (6, 1, '18:00:00', '21:00:00', 40, 'Evening', NOW(), NOW()),
 (7, 1, '21:00:00', '23:59:00', 60, 'Late Evening', NOW(), NOW());
 
--- 4. Create Default Administrator Account (Username: admin123, Password: admin123, Role: super_admin)
+-- 4. Create Default Administrator Account (Username: admin@gmail.com, Password: admin123, Role: super_admin)
 INSERT INTO `users` (`id`, `username`, `password_hash`, `email`, `role`, `full_name`, `login_attempts`, `locked_until`, `created_at`, `updated_at`) VALUES
-(1, 'admin123', '$2y$10$CiJRci4T78G/Dndn3NAWjeqcSRnl02X6/Ejmanv9TvmdcSQxpwSOy', NULL, 'super_admin', 'System Administrator', 0, NULL, NOW(), NOW());
+(1, 'admin@gmail.com', '$2y$10$CiJRci4T78G/Dndn3NAWjeqcSRnl02X6/Ejmanv9TvmdcSQxpwSOy', 'admin@gmail.com', 'super_admin', 'System Administrator', 0, NULL, NOW(), NOW());
 
 -- 5. Seed Core Migration Tracking (Matches DB state code)
 INSERT INTO `migrations` (`id`, `version`, `class`, `group`, `namespace`, `time`, `batch`) VALUES

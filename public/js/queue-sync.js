@@ -96,7 +96,12 @@
                 var newTbody = newDoc.querySelector(_config.tableSelector);
                 var curTbody = document.querySelector(_config.tableSelector);
                 if (newTbody && curTbody) {
-                    curTbody.innerHTML = DOMPurify.sanitize(newTbody.innerHTML);
+                    // Wrap the innerHTML in a <table> tag so DOMPurify doesn't strip table elements (tr/td)
+                    var cleanTableHtml = DOMPurify.sanitize('<table>' + newTbody.innerHTML + '</table>');
+                    var tempTable = document.createElement('div');
+                    tempTable.innerHTML = cleanTableHtml;
+                    var cleanTbody = tempTable.querySelector('table');
+                    curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
                 }
             }
 

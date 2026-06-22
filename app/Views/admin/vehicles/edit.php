@@ -67,7 +67,7 @@
                         <option value="van" <?= (old('type') ?? $vehicle['type']) == 'van' ? 'selected' : '' ?>>Van</option>
                         <option value="minibus" <?= (old('type') ?? $vehicle['type']) == 'minibus' ? 'selected' : '' ?>>Minibus</option>
                     </select>
-                    <div class="form-text-modern">Accessible to Admin and Staff</div>
+                    <div class="form-text-modern">Accessible to Admin and Super Admin</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="capacity" class="form-label-modern">Passenger Capacity <span class="text-danger">*</span></label>
@@ -98,7 +98,7 @@
                         <option value="active" <?= (old('status') ?? $vehicle['status']) == 'active' ? 'selected' : '' ?>>Active</option>
                         <option value="maintenance" <?= (old('status') ?? $vehicle['status']) == 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
                     </select>
-                    <div class="form-text-modern">Accessible to Admin and Staff</div>
+                    <div class="form-text-modern">Accessible to Admin and Super Admin</div>
                 </div>
             </div>
 

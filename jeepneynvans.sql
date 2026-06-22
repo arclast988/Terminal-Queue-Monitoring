@@ -248,7 +248,7 @@ CREATE TABLE `users` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin123','$2y$10$CiJRci4T78G/Dndn3NAWjeqcSRnl02X6/Ejmanv9TvmdcSQxpwSOy',NULL,'admin','System Administrator',0,NULL,'2026-06-20 11:06:08','2026-06-20 11:06:08'),(2,'arclast988@gmail.com','$2y$10$AKSFQl7iqKqKBzhWBo4MXeEkmDAK1wCSfXFSxAAjkomfUGz/27V1S','arclast988@gmail.com','super_admin','Arc Last',0,NULL,'2026-06-20 11:06:43','2026-06-20 11:06:59');
+INSERT INTO `users` VALUES (2,'arclast988@gmail.com','$2y$10$AKSFQl7iqKqKBzhWBo4MXeEkmDAK1wCSfXFSxAAjkomfUGz/27V1S','arclast988@gmail.com','super_admin','Arc Last',0,NULL,'2026-06-20 11:06:43','2026-06-20 11:06:59');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 DROP TABLE IF EXISTS `vehicles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

@@ -329,7 +329,7 @@
         <?php if (session()->get('isLoggedIn')): ?>
             <?php
             $dashboardUrl = '/';
-            if (session()->get('role') == 'admin')
+            if (in_array(session()->get('role'), ['super_admin', 'admin'], true))
                 $dashboardUrl = '/admin/dashboard';
             elseif (session()->get('role') == 'staff')
                 $dashboardUrl = '/staff/dashboard';
