@@ -57,7 +57,7 @@ On a real Linux machine, one script installs **and** starts everything (as syste
    ```
    The installer prints the exact command with the PHP version it installed (replace `<VERSION>` with `8.2`, `8.3`, `8.4`, `8.5`, etc. depending on your installed PHP version).
 
-> ⚠️ `start_system.sh` / `stop_system.sh` are **WSL/Windows-only** and will refuse to run on native Linux — on Mint/Ubuntu use `install_linux.sh` + `systemctl` instead.
+> ℹ️ `start_system.sh` / `stop_system.sh` now support both WSL and native Linux. On native Mint/Ubuntu/Debian, they start/stop the installed `nginx`, `php*-fpm`, `mariadb`/`mysql`, and `jeepney-websocket` services via `sudo`.
 
 ### Database
 The app's defaults live in `app/Config/Database.php` and are created automatically by `start_system.bat`:

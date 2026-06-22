@@ -77,11 +77,14 @@ apt-get install -y mariadb-server mariadb-client
 
 # PHP 8.2+ — add the PHP repository first to make sure we have access to the latest versions.
 . /etc/os-release 2>/dev/null || true
-if [ -n "${UBUNTU_CODENAME:-}" ]; then          # Ubuntu OR Ubuntu-based (Mint)
-    say "Adding ondrej/php PPA (base: ${UBUNTU_CODENAME}) to access latest PHP versions…"
-    add-apt-repository -y ppa:ondrej/php 2>/dev/null || true
+if [ -n "${UBUNTU_CODENAME:-}" ] || [ -n "${VERSION_CODENAME:-}" ]; then
+    TARGET_CODENAME="${UBUNTU_CODENAME:-${VERSION_CODENAME}}"
+    say "Adding ondrej/php PPA (base: ${TARGET_CODENAME}) to access latest PHP versions…"
+    if ! add-apt-repository -y ppa:ondrej/php >/dev/null 2>&1; then
+        die "Could not add the ondrej/php PPA. Confirm your Linux distribution is supported and you have network access."
+    fi
     # If add-apt-repository used Mint's codename, rewrite it to the Ubuntu base.
-    if [ -n "${VERSION_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
+    if [ -n "${VERSION_CODENAME:-}" ] && [ -n "${UBUNTU_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
         sed -i "s/\b${VERSION_CODENAME}\b/${UBUNTU_CODENAME}/g" \
             /etc/apt/sources.list.d/ondrej-*.list \
             /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null || true

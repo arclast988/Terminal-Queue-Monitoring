@@ -6,10 +6,12 @@ REM Emit UTF-8 from wsl so FOR /F and findstr can parse output cleanly
 set "WSL_UTF8=1"
 
 REM --- Auto-elevate to admin (required for WSL feature install) ---
+set "ELEVATED=0"
+if "%1"=="--elevated" set "ELEVATED=1"
 net session >nul 2>nul
-if errorlevel 1 (
+if errorlevel 1 if "%ELEVATED%"=="0" (
     echo Requesting administrator privileges...
-    powershell -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -ArgumentList '--elevated' -Verb RunAs"
     exit /b
 )
 

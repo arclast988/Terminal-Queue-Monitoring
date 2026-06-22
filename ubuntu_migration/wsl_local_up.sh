@@ -24,6 +24,11 @@ command -v "$PHP_BIN" >/dev/null 2>&1 || PHP_BIN="php"
 echo "[OK] Using PHP ${PHPVER} (service php${PHPVER}-fpm, CLI ${PHP_BIN})."
 
 # --- 2. Sync + patch Nginx config to the detected FPM socket & WS Port ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
 WS_PORT="8081"
 if [ -f "${PROJECT_ROOT}/.env" ]; then
     ENV_WS_PORT=$(grep -E '^[[:space:]]*websocket\.clientPort[[:space:]]*=' "${PROJECT_ROOT}/.env" | cut -d'=' -f2 | tr -d '[:space:]"' | tr -d "'")
@@ -32,13 +37,30 @@ if [ -f "${PROJECT_ROOT}/.env" ]; then
     fi
 fi
 
-cp "${PROJECT_ROOT}/ubuntu_migration/nginx_local.conf" "/etc/nginx/sites-available/${NGINX_SITE}"
-sed -i "s#php[0-9.]*-fpm.sock#php${PHPVER}-fpm.sock#" "/etc/nginx/sites-available/${NGINX_SITE}"
-sed -i "s#root [^;]*;#root ${PROJECT_ROOT}/public;#" "/etc/nginx/sites-available/${NGINX_SITE}"
-sed -i "s#proxy_pass http://127.0.0.1:8081;#proxy_pass http://127.0.0.1:${WS_PORT};#" "/etc/nginx/sites-available/${NGINX_SITE}"
-ln -sf "/etc/nginx/sites-available/${NGINX_SITE}" "/etc/nginx/sites-enabled/"
-rm -f /etc/nginx/sites-enabled/default
-echo "[OK] Nginx configuration synchronized (php${PHPVER}-fpm.sock, WS port ${WS_PORT})."
+mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
+NGINX_SRC_CONF="${PROJECT_ROOT}/ubuntu_migration/nginx_local.conf"
+if [ -f "$NGINX_SRC_CONF" ]; then
+    cp "$NGINX_SRC_CONF" "/etc/nginx/sites-available/${NGINX_SITE}"
+    sed -i "s#php[0-9.]*-fpm.sock#php${PHPVER}-fpm.sock#" "/etc/nginx/sites-available/${NGINX_SITE}" || true
+    sed -i "s#root [^;]*;#root ${PROJECT_ROOT}/public;#" "/etc/nginx/sites-available/${NGINX_SITE}" || true
+    sed -i "s#proxy_pass http://127.0.0.1:8081;#proxy_pass http://127.0.0.1:${WS_PORT};#" "/etc/nginx/sites-available/${NGINX_SITE}" || true
+    ln -sf "/etc/nginx/sites-available/${NGINX_SITE}" "/etc/nginx/sites-enabled/"
+    rm -f /etc/nginx/sites-enabled/default
+    echo "[OK] Nginx configuration synchronized (php${PHPVER}-fpm.sock, WS port ${WS_PORT})."
+    echo "     Root path: ${PROJECT_ROOT}/public"
+else
+    echo -e "${YELLOW}[WARN] Nginx source config not found at ${NGINX_SRC_CONF}; skipping sync.${NC}"
+    echo "       Ensure ubuntu_migration/nginx_local.conf exists in the project root."
+fi
+
+# Verify the nginx config was actually updated
+ACTUAL_ROOT=$(grep "^[[:space:]]*root " /etc/nginx/sites-available/${NGINX_SITE} 2>/dev/null | sed 's/.*root \(.*\);.*/\1/' | head -1)
+if [ -z "$ACTUAL_ROOT" ]; then
+    echo -e "${RED}[ERROR] Nginx root path is empty! Config may not have been updated.${NC}"
+elif [ "$ACTUAL_ROOT" != "${PROJECT_ROOT}/public" ]; then
+    echo -e "${YELLOW}[WARN] Nginx root is: $ACTUAL_ROOT${NC}"
+    echo "       Expected:     ${PROJECT_ROOT}/public"
+fi
 
 # --- 3. Start core services ---
 service mysql start 2>/dev/null || service mariadb start 2>/dev/null
