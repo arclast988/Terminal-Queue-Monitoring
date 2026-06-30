@@ -181,6 +181,7 @@ CI_ENVIRONMENT = development
 # classroom Linux Mint demo). For LAN/multi-device access, set this to the
 # machine's LAN IP (or '' to auto-detect the request host) in .env on that box.
 app.baseURL = 'http://localhost/'
+app.indexPage = ''
 database.default.hostname = localhost
 database.default.database = ${DB_NAME}
 database.default.username = ${DB_USER}
