@@ -3,6 +3,33 @@
 <!-- Modern Frontend Styles -->
 <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
+<style>
+.card-modern a.btn-modern-outline,
+.page-header-modern a.btn-modern-outline,
+.card-modern a.btn-modern-outline .bi,
+.card-modern a.btn-modern-outline i,
+.page-header-modern a.btn-modern-outline .bi,
+.page-header-modern a.btn-modern-outline i {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+}
+.card-modern a.btn-modern-outline:hover,
+.page-header-modern a.btn-modern-outline:hover,
+.card-modern a.btn-modern-outline:hover .bi,
+.card-modern a.btn-modern-outline:hover i,
+.page-header-modern a.btn-modern-outline:hover .bi,
+.page-header-modern a.btn-modern-outline:hover i {
+    background: #475569 !important;
+    border-color: #64748b !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+</style>
+
 <?php
 $oldWaitMinutes = old('wait_minutes') ?? ($rule['wait_minutes'] ?? 30);
 $defaultHours = old('wait_hours') ?? (int) floor($oldWaitMinutes / 60);

@@ -118,9 +118,9 @@ foreach ($users as $u) {
                                         <?= esc($initials) ?>
                                     </div>
                                     <div>
-                                        <div class="fw-bold text-dark" style="font-size:14px;"><?= esc($user['full_name']) ?></div>
+                                        <div class="fw-bold" style="font-size:14px; color: inherit;"><?= esc($user['full_name']) ?></div>
                                         <div>
-                                            <small class="text-muted" style="font-size:11px;">@<?= esc($user['username']) ?></small>
+                                            <small style="font-size:11px; color: #94a3b8;">@<?= esc($user['username']) ?></small>
                                         </div>
                                     </div>
                                 </div>

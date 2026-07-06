@@ -566,14 +566,12 @@ body.admin-theme .page-hero .subtitle {
 .modal-backdrop {
     display: block !important;
     pointer-events: none !important;
-    opacity: 0.5 !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
+    background-color: #000 !important;
     z-index: 1040 !important;
 }
 
 .modal-backdrop.show {
-    opacity: 0.5 !important;
-    background-color: rgba(0, 0, 0, 0.5) !important;
+    opacity: 0.65 !important;
 }
 
 .modal-dialog {
@@ -1016,4 +1014,135 @@ body.staff-theme .table .btn-outline-dark:hover {
     background-color: #f8fafc !important;
     border-color: #cbd5e1 !important;
     color: #1e293b !important;
+}
+
+/* =================================================================
+   ADMIN / STAFF THEME — Dark modals (always on, no OS-pref gate)
+   Admin and staff pages always use the dark slate palette, so modals
+   must match regardless of the user's OS colour-scheme preference.
+   Placed AFTER the white-modal rules above so these win the cascade.
+   ================================================================= */
+
+/* Backdrop */
+body.admin-theme .modal-backdrop,
+body.staff-theme .modal-backdrop {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+}
+
+body.admin-theme .modal-backdrop.show,
+body.staff-theme .modal-backdrop.show {
+    opacity: 0.82 !important;
+}
+
+body.admin-theme.modal-open .modal.show,
+body.staff-theme.modal-open .modal.show {
+    background: rgba(15, 23, 42, 0.28) !important;
+}
+
+body.admin-theme .modal.show,
+body.staff-theme .modal.show {
+    display: grid !important;
+    place-items: center !important;
+    padding: 1rem !important;
+}
+
+body.admin-theme .modal-dialog,
+body.staff-theme .modal-dialog {
+    margin: 0 !important;
+}
+
+body.admin-theme .modal-dialog-centered,
+body.staff-theme .modal-dialog-centered {
+    min-height: 0 !important;
+}
+
+/* Modal shell */
+body.admin-theme .modal-content,
+body.staff-theme .modal-content {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Header */
+body.admin-theme .modal-header,
+body.staff-theme .modal-header {
+    background-color: #1e293b !important;
+    border-bottom-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+body.admin-theme .modal-title,
+body.staff-theme .modal-title {
+    color: #f1f5f9 !important;
+}
+
+/* Body */
+body.admin-theme .modal-body,
+body.staff-theme .modal-body {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+}
+
+/* Footer */
+body.admin-theme .modal-footer,
+body.staff-theme .modal-footer {
+    background-color: #1e293b !important;
+    border-top-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* All text inside modal body */
+body.admin-theme .modal-body p,
+body.admin-theme .modal-body small,
+body.admin-theme .modal-body span,
+body.admin-theme .modal-body div,
+body.admin-theme .modal-header h5,
+body.staff-theme .modal-body p,
+body.staff-theme .modal-body small,
+body.staff-theme .modal-body span,
+body.staff-theme .modal-body div,
+body.staff-theme .modal-header h5 {
+    color: #f1f5f9 !important;
+}
+
+/* Form labels & help text */
+body.admin-theme .modal .form-label,
+body.admin-theme .modal .form-text,
+body.staff-theme .modal .form-label,
+body.staff-theme .modal .form-text {
+    color: #cbd5e1 !important;
+}
+
+/* Form inputs & selects */
+body.admin-theme .modal .form-control,
+body.admin-theme .modal .form-select,
+body.staff-theme .modal .form-control,
+body.staff-theme .modal .form-select {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+body.admin-theme .modal .form-control:focus,
+body.admin-theme .modal .form-select:focus,
+body.staff-theme .modal .form-control:focus,
+body.staff-theme .modal .form-select:focus {
+    border-color: #475569 !important;
+    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.35) !important;
+}
+
+/* Close button — Bootstrap uses an SVG mask; filter:invert makes it white */
+body.admin-theme .modal .btn-close,
+body.staff-theme .modal .btn-close {
+    filter: invert(1) grayscale(1) !important;
+    opacity: 0.85 !important;
+}
+
+/* Input group prefixes (e.g. ₱ symbol) */
+body.admin-theme .modal .input-group-text,
+body.staff-theme .modal .input-group-text {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
 }

@@ -11,7 +11,7 @@
     <form action="<?= base_url('admin/logs/clear') ?>" method="post" class="d-inline"
         onsubmit="return confirm('Are you sure you want to clear all logs? This action cannot be undone.')">
         <?= csrf_field() ?>
-        <button type="submit" class="btn-modern btn-action-delete">
+        <button type="submit" class="btn-modern btn-modern-primary">
             <i class="bi bi-trash-fill"></i> Clear All Logs
         </button>
     </form>

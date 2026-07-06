@@ -27,6 +27,8 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     z-index: 2;
 }
 .discount-rate-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .discount-rate-card:hover {
@@ -34,10 +36,74 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important;
 }
 .discount-rate-card .modern-card-header {
+    background: #1e293b !important;
+    border-bottom-color: #334155 !important;
     transition: background-color 0.2s ease;
 }
+.discount-rate-card .modern-card-footer {
+    background: #1e293b !important;
+    border-top-color: #334155 !important;
+}
+.discount-rate-card .modern-card-body {
+    color: #f1f5f9 !important;
+}
+.discount-rate-card .modern-card-title {
+    color: #f1f5f9 !important;
+}
+.discount-rate-card .text-muted {
+    color: #94a3b8 !important;
+}
+.discount-rate-card .fw-bold {
+    color: #f1f5f9 !important;
+}
+.discount-rate-card .btn-action-edit {
+    background: transparent !important;
+    border-color: #e2e8f0 !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+}
+.discount-rate-card .btn-action-edit:hover {
+    background: #e2e8f0 !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+}
+.discount-rate-card .btn-action-edit i,
+.discount-rate-card .btn-action-edit .bi,
+.discount-rate-card .btn-modern .bi.bi-pencil {
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+}
+.discount-rate-card .btn-action-edit:hover i,
+.discount-rate-card .btn-action-edit:hover .bi,
+.discount-rate-card .btn-modern:hover .bi.bi-pencil {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+}
+.discount-rate-card .btn-action-delete i,
+.discount-rate-card .btn-action-delete .bi,
+.discount-rate-card .btn-modern .bi.bi-trash {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+.discount-rate-card .btn-action-delete:hover i,
+.discount-rate-card .btn-action-delete:hover .bi,
+.discount-rate-card .btn-modern:hover .bi.bi-trash {
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626 !important;
+}
+.discount-rate-card .btn-action-delete {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+.discount-rate-card .btn-action-delete:hover {
+    background: #fecaca !important;
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626 !important;
+}
 .discount-rate-card:hover .modern-card-header {
-    background-color: var(--primary-soft, #f8fafc) !important;
+    background: #334155 !important;
 }
 .fare-action-btn { 
     width: 34px; 
@@ -62,6 +128,150 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
 .fare-section-card.vehicle-type-jeepney .modern-card-header { border-top: 3px solid #1565c0; }
 .fare-section-card.vehicle-type-van     .modern-card-header { border-top: 3px solid #c62828; }
 .fare-section-card.vehicle-type-minibus .modern-card-header { border-top: 3px solid #2e7d32; }
+.fare-route-text {
+    font-size: 15px;
+    color: #e2e8f0;
+}
+.fare-item .fare-action-btn.btn-action-edit {
+    background: #334155 !important;
+    border-color: #475569 !important;
+}
+.fare-item .fare-action-btn.btn-action-edit,
+.fare-item .fare-action-btn.btn-action-edit .bi,
+.fare-item .fare-action-btn.btn-action-edit i {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+.fare-item .fare-action-btn.btn-action-edit:hover {
+    background: #475569 !important;
+    border-color: #64748b !important;
+}
+.fare-item .fare-action-btn.btn-action-edit:hover,
+.fare-item .fare-action-btn.btn-action-edit:hover .bi,
+.fare-item .fare-action-btn.btn-action-edit:hover i {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+#addFareModal .modal-content,
+#editFareModal .modal-content,
+#editDiscountModal .modal-content,
+#addDiscountModal .modal-content {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+#addFareModal .modal-header,
+#editFareModal .modal-header,
+#editDiscountModal .modal-header,
+#addDiscountModal .modal-header,
+#addFareModal .modal-body,
+#editFareModal .modal-body,
+#editDiscountModal .modal-body,
+#addDiscountModal .modal-body,
+#addFareModal .modal-footer,
+#editFareModal .modal-footer,
+#editDiscountModal .modal-footer,
+#addDiscountModal .modal-footer {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+#addFareModal .modal-title,
+#editFareModal .modal-title,
+#editDiscountModal .modal-title,
+#addDiscountModal .modal-title {
+    color: #f1f5f9 !important;
+}
+#addFareModal .btn-close,
+#editFareModal .btn-close,
+#editDiscountModal .btn-close,
+#addDiscountModal .btn-close {
+    filter: invert(1) grayscale(1) !important;
+    opacity: 0.85 !important;
+}
+#addFareModal .form-label,
+#editFareModal .form-label,
+#editDiscountModal .form-label,
+#addDiscountModal .form-label,
+#addFareModal .form-text,
+#editFareModal .form-text,
+#editDiscountModal .form-text,
+#addDiscountModal .form-text {
+    color: #cbd5e1 !important;
+}
+#addFareModal .form-control,
+#editFareModal .form-control,
+#editDiscountModal .form-control,
+#addDiscountModal .form-control,
+#addFareModal .form-select,
+#editFareModal .form-select,
+#editDiscountModal .form-select,
+#addDiscountModal .form-select {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+#addFareModal .form-control:focus,
+#editFareModal .form-control:focus,
+#editDiscountModal .form-control:focus,
+#addDiscountModal .form-control:focus,
+#addFareModal .form-select:focus,
+#editFareModal .form-select:focus,
+#editDiscountModal .form-select:focus,
+#addDiscountModal .form-select:focus {
+    border-color: #475569 !important;
+    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.3) !important;
+}
+#addFareModal .input-group-text,
+#editFareModal .input-group-text,
+#editDiscountModal .input-group-text,
+#addDiscountModal .input-group-text {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+#addFareModal .form-check-input,
+#editFareModal .form-check-input,
+#editDiscountModal .form-check-input,
+#addDiscountModal .form-check-input {
+    background-color: #0f172a !important;
+    border-color: #475569 !important;
+}
+#addFareModal .form-check-input:checked,
+#editFareModal .form-check-input:checked,
+#editDiscountModal .form-check-input:checked,
+#addDiscountModal .form-check-input:checked {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+#addFareModal .form-check-label,
+#editFareModal .form-check-label,
+#editDiscountModal .form-check-label,
+#addDiscountModal .form-check-label {
+    color: #e2e8f0 !important;
+}
+#addFareModal .text-primary,
+#editFareModal .text-primary,
+#editDiscountModal .text-primary,
+#addDiscountModal .text-primary {
+    color: #60a5fa !important;
+}
+#addFareModal .text-muted,
+#editFareModal .text-muted,
+#editDiscountModal .text-muted,
+#addDiscountModal .text-muted {
+    color: #64748b !important;
+}
+#routeValidationMsg {
+    background: #451a1a !important;
+    border-color: #7f1d1d !important;
+    color: #fca5a5 !important;
+}
+body.admin-theme .modal-backdrop {
+    background-color: #0f172a !important;
+}
+body.admin-theme .modal-backdrop.show {
+    opacity: 0.75 !important;
+}
 </style>
 
 <div class="page-header-modern fade-in">
@@ -142,7 +352,7 @@ $fareTypes = [
 <?php foreach ($fareTypes as $ft): ?>
 <div class="col-lg-4 mb-4">
     <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in">
-        <div class="modern-card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="modern-card-header d-flex justify-content-between align-items-center">
             <span class="modern-card-title fare-section-title <?= vehicle_type_class($ft['type']) ?>">
                 <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= esc($ft['label']) ?>" style="width:32px;height:auto; margin-right: 8px;">
                 <?= esc($ft['label']) ?>
@@ -156,7 +366,7 @@ $fareTypes = [
                     <div class="list-group-item fare-item" style="flex-direction: column; align-items: stretch; padding: 16px 20px;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <strong class="d-block" style="font-size: 15px; color: var(--slate-800);"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
+                                <strong class="d-block fare-route-text"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
                                 <small class="text-muted">Regular Fare</small>
                             </div>
                             <div class="d-flex align-items-center gap-2">
@@ -243,7 +453,7 @@ $isManager = $isAdmin;
         ?>
         <div class="col-lg-4 mb-4">
             <div class="modern-card shadow-modern h-100 text-center discount-rate-card fade-in">
-                <div class="modern-card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="modern-card-header d-flex justify-content-between align-items-center">
                     <span class="modern-card-title">
                         <i class="<?= $meta['icon'] ?>" style="color: var(--primary-red); margin-right: 8px;"></i>
                         <?= esc($disc['label']) ?>
@@ -254,13 +464,13 @@ $isManager = $isAdmin;
                     <?php if (!empty($disc['terminal_name'])): ?>
                         <div class="text-muted mb-2" style="font-size: 13px;"><?= esc($disc['terminal_name']) ?></div>
                     <?php endif; ?>
-                    <div class="fw-bold" style="font-size: 56px; line-height: 1; color: var(--slate-800);">
+                    <div class="fw-bold" style="font-size: 56px; line-height: 1;">
                         <?= number_format($disc['discount_percent'], 0) ?><span style="font-size: 28px;">%</span>
                     </div>
                     <div class="text-muted mt-2" style="font-size: 13px;">off the regular fare</div>
                 </div>
                 <?php if ($isManager): ?>
-                <div class="modern-card-footer bg-white d-flex justify-content-center gap-2">
+                <div class="modern-card-footer d-flex justify-content-center gap-2">
                     <button class="btn-modern btn-modern-sm btn-modern-outline btn-action-edit"
                         data-bs-toggle="modal"
                         data-bs-target="#editDiscountModal"
@@ -307,7 +517,7 @@ $isManager = $isAdmin;
 <div class="modal fade" id="addFareModal" tabindex="-1" aria-labelledby="addFareModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-white">
+      <div class="modal-header">
         <h5 class="modal-title fw-bold" id="addFareModalLabel"><i class="fas fa-plus me-2 text-primary"></i>Add New Fare</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -386,7 +596,7 @@ $isManager = $isAdmin;
 <div class="modal fade" id="editFareModal" tabindex="-1" aria-labelledby="editFareModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-white">
+      <div class="modal-header">
         <h5 class="modal-title fw-bold" id="editFareModalLabel"><i class="fas fa-edit me-2 text-primary"></i>Edit Fare</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -453,7 +663,7 @@ $isManager = $isAdmin;
 <div class="modal fade" id="editDiscountModal" tabindex="-1" aria-labelledby="editDiscountModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">
     <div class="modal-content">
-      <div class="modal-header bg-white">
+      <div class="modal-header">
         <h5 class="modal-title fw-bold" id="editDiscountModalLabel"><i class="fas fa-percent me-2 text-primary"></i>Edit Discount</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
@@ -493,7 +703,7 @@ $isManager = $isAdmin;
 <div class="modal fade" id="addDiscountModal" tabindex="-1" aria-labelledby="addDiscountModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header bg-white">
+      <div class="modal-header">
         <h5 class="modal-title fw-bold" id="addDiscountModalLabel"><i class="fas fa-plus me-2 text-primary"></i>Add New Discount</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>

@@ -60,7 +60,7 @@ class Fares extends BaseController
 
         $data = [
             'title'         => 'Route Fares',
-            'body_class'    => 'public-page',
+            'body_class'    => session()->get('isLoggedIn') ? '' : 'public-page',
             'van_routes'    => $van_routes,
             'jeepney_routes'=> $jeepney_routes,
             'minibus_routes'=> $minibus_routes,

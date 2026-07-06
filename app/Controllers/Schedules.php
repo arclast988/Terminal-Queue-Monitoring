@@ -85,7 +85,7 @@ class Schedules extends BaseController
 
         $data = [
             'title' => 'Vehicle Schedules',
-            'body_class' => 'public-page',
+            'body_class' => session()->get('isLoggedIn') ? '' : 'public-page',
             'schedules' => $schedules,
             'vehicle_type' => $vehicleType,
             'destination' => $destination,

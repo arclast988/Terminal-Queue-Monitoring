@@ -38,7 +38,7 @@ class History extends BaseController
 
         $data = [
             'title' => 'Departure History',
-            'body_class' => 'public-page',
+            'body_class' => session()->get('isLoggedIn') ? '' : 'public-page',
             'departures' => $departures,
             'pager' => $queueModel->pager,
             'search' => $search,

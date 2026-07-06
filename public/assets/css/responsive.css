@@ -1229,6 +1229,14 @@ a[title*="edit" i] {
   -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
 }
 
+body.admin-theme .btn-modern .bi.bi-pencil,
+body.admin-theme .btn-modern .bi-pencil-fill,
+body.admin-theme .bi.bi-pencil,
+body.admin-theme .bi.bi-pencil-fill {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+}
+
 a.btn-modern[title*="edit" i]:hover,
 button.btn-modern[title*="edit" i]:hover,
 a[title*="edit" i]:hover {
@@ -1247,9 +1255,9 @@ input[type="submit"][value*="delete" i],
 a[title*="delete" i],
 button[title*="delete" i],
 input[title*="delete" i] {
-  background: var(--danger-light, #FEE2E2) !important;
-  color: var(--danger-dark, #dc2626) !important;
-  -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+  background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
   border-color: transparent !important;
 }
 
@@ -1260,17 +1268,17 @@ a[title*="delete" i] i,
 .btn-modern .bi-trash-fill,
 .bi.bi-trash,
 .bi.bi-trash-fill {
-  color: var(--danger-dark, #dc2626) !important;
-  -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
 }
 
 button.btn-modern[title*="delete" i]:hover,
 input[type="submit"][title*="delete" i]:hover,
 button[title*="delete" i]:hover,
 a[title*="delete" i]:hover {
-  background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
+  background: var(--danger-light, #FEE2E2) !important;
+  color: var(--danger-dark, #dc2626) !important;
+  -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
 }
 
 /* Additional class-based helpers (used in some views) */
@@ -1283,16 +1291,16 @@ a[title*="delete" i]:hover {
   color: #fff !important;
 }
 .btn-modern.btn-modern-outline-danger {
-  background: var(--danger-light, #FEE2E2) !important;
-  color: var(--danger-dark, #dc2626) !important;
+  background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+  color: #fff !important;
 }
 .btn-modern.btn-modern-outline-danger i {
-  color: var(--danger-dark, #dc2626) !important;
+  color: #fff !important;
   background: transparent !important;
 }
 .btn-modern.btn-modern-outline-danger:hover {
-  background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
-  color: #fff !important;
+  background: var(--danger-light, #FEE2E2) !important;
+  color: var(--danger-dark, #dc2626) !important;
 }
 
 /* Force Edit Button Icons to turn White on Hover */

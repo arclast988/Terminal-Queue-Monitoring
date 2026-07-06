@@ -214,7 +214,7 @@ class Routes extends BaseController
 
         $this->logActivity('Create route', "$origin → $destination ($vehicleType, ₱$fare).");
 
-        return redirect()->back()->with('success', 'New route and fare added successfully.');
+        return redirect()->to('/admin/routes')->with('success', 'New route and fare added successfully.');
     }
 
     public function edit($id)
@@ -313,7 +313,7 @@ class Routes extends BaseController
             $this->logActivity('Update route', $origin . ' to ' . $destination . ' (' . $vehicleType . ').');
         }
 
-        return redirect()->back()->with('success', 'Route updated successfully.');
+        return redirect()->to('/admin/routes')->with('success', 'Route updated successfully.');
     }
 
     public function delete($id)
@@ -325,7 +325,7 @@ class Routes extends BaseController
             if ($route) {
                 $this->logActivity('Delete route', $route['origin'] . ' → ' . $route['destination'] . '.');
             }
-            return redirect()->back()->with('success', 'Route deleted successfully.');
+            return redirect()->to('/admin/routes')->with('success', 'Route deleted successfully.');
         }
         return redirect()->back()->with('error', 'Failed to delete route.');
     }
