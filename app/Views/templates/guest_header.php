@@ -202,7 +202,7 @@
     }
 
     /* --- Responsive --- */
-    @media (max-width: 992px) {
+    @media (max-width: 1200px) {
         .guest-header .header-info {
             display: none !important;
         }
@@ -230,6 +230,9 @@
         .guest-header .logo-text p {
             font-size: 8px;
         }
+    }
+
+    @media (max-width: 1200px) {
         .guest-header .nav-menu {
             position: fixed;
             top: 0;

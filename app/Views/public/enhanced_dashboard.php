@@ -982,7 +982,7 @@
         }
 
         /* --- Responsive Queries --- */
-        @media (max-width: 992px) {
+        @media (max-width: 1200px) {
             .header-info {
                 display: none !important;
             }
@@ -1079,7 +1079,17 @@
                 z-index: 1004;
                 position: relative;
             }
+        }
 
+        @media (min-width: 769px) and (max-width: 1200px) {
+            .mobile-toggle {
+                display: block;
+                z-index: 1004;
+                position: relative;
+            }
+        }
+
+        @media (max-width: 768px) {
             .hero {
                 padding: 60px 5%;
             }
@@ -1169,14 +1179,28 @@
             }
 
             .queue-details {
-                grid-template-columns: 1fr;
-                padding-top: 0;
                 gap: 5px;
             }
             
             .vehicle-icon-wrapper img {
                 height: 32px !important;
                 width: auto !important;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .queue-card .queue-details {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            .queue-card .q-meta {
+                align-items: flex-end !important;
+                padding-right: 20px !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .queue-card .queue-details {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -1557,7 +1581,7 @@
                                         <small class="text-muted"
                                             style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Est.
                                             Departure</small>
-                                        <div
+                                        <div class="departure-time-box"
                                             style="background: #4a5c7a; color: white; padding: 12px 16px; border-radius: 12px; font-size: 18px; font-weight: 700; margin-bottom: 8px;">
                                             <?php
                                             if ($item['status'] == 'departed' && $item['departure_time']):
@@ -1838,7 +1862,7 @@
                                     + '</div>'
                                     + '<div class="q-meta" style="text-align:center;">'
                                     + '<small class="text-muted" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Est. Departure</small>'
-                                    + '<div style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
+                                    + '<div class="departure-time-box" style="background:#4a5c7a;color:white;padding:12px 16px;border-radius:12px;font-size:18px;font-weight:700;margin-bottom:8px;">'
                                     + (item.estimated_departure_formatted || 'Waiting')
                                     + '</div>'
                                     + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
@@ -1857,7 +1881,7 @@
                                 var html = '<button class="filter-chip' + (prevActive === 'all' ? ' active' : '') + '" data-filter="all" data-type="all">All Routes</button>';
                                 dests.forEach(function (d) {
                                     var isActive = prevActive === d.toLowerCase();
-                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination"><i class="fas fa-map-marker-alt" style="font-size:11px;"></i> ' + d + '</button>';
+                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d + '</button>';
                                 });
                                 destGroup.innerHTML = html;
                                 initFilterChips();

@@ -778,8 +778,8 @@ body.staff-theme .badge.badge-truncate {
 }
 
 
-/* Hide mobile toggle on guest headers when screen is wider than the mobile drawer breakpoint (768px) */
-@media (min-width: 769px) {
+/* Hide mobile toggle on guest headers when screen is wider than the mobile drawer breakpoint (1200px) */
+@media (min-width: 1201px) {
     header.guest-header .mobile-toggle {
         display: none !important;
     }

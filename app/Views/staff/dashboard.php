@@ -104,26 +104,26 @@
         <div class="col-12 col-md-6 col-xl-4 mb-4">
             <div class="modern-card shadow-modern fade-in">
                 <div class="modern-card-body">
-                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--slate-500); margin-bottom: 8px;">
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted, #475569); margin-bottom: 8px;">
                         <?= esc($terminal['name']) ?>
                     </div>
                     <div class="d-flex justify-content-between align-items-end">
                         <div>
-                            <div style="font-size: 28px; font-weight: 800; color: var(--slate-800); line-height: 1.1;">
+                            <div style="font-size: 28px; font-weight: 800; color: var(--text-main, #1e293b); line-height: 1.1;">
                                 <?= esc($terminal['capacity']) ?>
-                                <span style="font-size: 12px; font-weight: 600; color: var(--slate-500);">pax capacity</span>
+                                <span style="font-size: 12px; font-weight: 600; color: var(--text-muted, #475569);">pax capacity</span>
                             </div>
                         </div>
                         <i class="bi bi-building fs-2" style="color: #1565c0; opacity: 0.2;"></i>
                     </div>
-                    <p style="margin: 8px 0 0; font-size: 13px; color: var(--slate-500);"><?= esc($terminal['location']) ?></p>
+                    <p style="margin: 8px 0 0; font-size: 13px; color: var(--text-muted, #475569);"><?= esc($terminal['location']) ?></p>
                 </div>
             </div>
         </div>
     <?php endforeach; ?>
 </div>
 
-<h4 class="mt-5 mb-3" style="font-size: 20px; font-weight: 700; color: var(--slate-800);">Recent Departures</h4>
+<h4 class="mt-5 mb-3" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Departures</h4>
 <div class="modern-card shadow-modern fade-in">
     <div class="table-responsive">
         <table class="table-modern">
@@ -159,7 +159,7 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--slate-500);">No recent departures today.</td>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">No recent departures today.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

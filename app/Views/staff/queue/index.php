@@ -171,26 +171,55 @@
 
     /* Modern Queue Card Hover Effects & Transitions */
     .q-card {
-        background: white;
+        background: var(--surface, #ffffff);
         border-radius: var(--radius-lg, 12px) !important;
-        border: 1px solid var(--slate-200, #e2e8f0) !important;
-        box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06)) !important;
+        border: 1px solid var(--border, #e2e8f0) !important;
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(16, 24, 40, 0.08)) !important;
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
         overflow: hidden;
         position: relative;
     }
+    .q-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary, #1565c0);
+        z-index: 1;
+        transition: opacity 0.25s ease;
+    }
     .q-card:hover {
         transform: translateY(-4px);
-        box-shadow: var(--shadow-lg, 0 10px 24px rgba(0, 0, 0, 0.1)) !important;
+        box-shadow: var(--shadow-lg, 0 16px 40px -12px rgba(16, 24, 40, 0.2)) !important;
         border-color: var(--primary, #1565c0) !important;
     }
     /* Header hover accent matching theme */
     .q-card-header {
-        background-color: var(--slate-50, #f8fafc);
+        background-color: var(--surface-sunken, #f1f3f6);
         transition: background-color 0.2s ease;
+        position: relative;
     }
     .q-card:hover .q-card-header {
         background-color: var(--primary-soft, #e7f0fb) !important;
+    }
+    /* Better text contrast inside cards */
+    .q-card .text-muted {
+        color: var(--text-muted, #475569) !important;
+    }
+    .q-card .fw-semibold {
+        color: var(--text-main, #1e293b);
+    }
+    .q-card .q-card-header .fw-semibold {
+        color: var(--text-main, #1e293b);
+        font-weight: 700;
+    }
+    .q-card .bg-light {
+        background-color: var(--surface-sunken, #f1f3f6) !important;
+    }
+    .q-card .text-primary {
+        color: var(--primary, #1565c0) !important;
     }
     /* Rotate / scale type image slightly on card hover */
     .q-card:hover .vehicle-type-icon img {
@@ -276,6 +305,18 @@
     .btn-modern-danger:hover {
         background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%);
         color: white !important;
+        transform: translateY(-2px);
+    }
+    /* Cancel button: red bg with white text */
+    .btn-modern-outline.btn-modern-danger {
+        background: var(--danger, #dc2626) !important;
+        color: #fff !important;
+        border: 2px solid var(--danger, #dc2626) !important;
+    }
+    .btn-modern-outline.btn-modern-danger:hover {
+        background: var(--danger-dark, #b91c1c) !important;
+        border-color: var(--danger-dark, #b91c1c) !important;
+        color: #fff !important;
         transform: translateY(-2px);
     }
 

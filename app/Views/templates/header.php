@@ -424,9 +424,36 @@
             body.admin-theme .modern-card,
             body.staff-theme .modern-card,
             body.admin-theme .card-modern,
-            body.staff-theme .card-modern {
+            body.staff-theme .card-modern,
+            body.admin-theme .q-card,
+            body.staff-theme .q-card {
                 background: #1e293b !important;
                 border-color: #334155 !important;
+            }
+            body.admin-theme .q-card::before,
+            body.staff-theme .q-card::before {
+                background: var(--primary) !important;
+            }
+            body.admin-theme .q-card-header,
+            body.staff-theme .q-card-header {
+                background-color: #1e293b !important;
+                border-bottom-color: #334155 !important;
+            }
+            body.admin-theme .q-card .fw-semibold,
+            body.staff-theme .q-card .fw-semibold {
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .q-card .bg-light,
+            body.staff-theme .q-card .bg-light {
+                background-color: #0f172a !important;
+            }
+            body.admin-theme .q-card .text-primary,
+            body.staff-theme .q-card .text-primary {
+                color: var(--primary) !important;
+            }
+            body.admin-theme .q-card:hover .q-card-header,
+            body.staff-theme .q-card:hover .q-card-header {
+                background-color: var(--primary-soft, #1a2a4a) !important;
             }
             body.admin-theme .modern-card-header,
             body.staff-theme .modern-card-header,
@@ -604,6 +631,18 @@
                 border-color: #64748b !important;
                 background: #1e293b !important;
                 color: #f1f5f9 !important;
+            }
+            body.admin-theme .btn-modern-outline.btn-modern-danger,
+            body.staff-theme .btn-modern-outline.btn-modern-danger {
+                background: var(--danger, #dc2626) !important;
+                border-color: var(--danger, #dc2626) !important;
+                color: #fff !important;
+            }
+            body.admin-theme .btn-modern-outline.btn-modern-danger:hover,
+            body.staff-theme .btn-modern-outline.btn-modern-danger:hover {
+                background: var(--danger-dark, #b91c1c) !important;
+                border-color: var(--danger-dark, #b91c1c) !important;
+                color: #fff !important;
             }
             body.admin-theme .btn-outline-secondary,
             body.staff-theme .btn-outline-secondary {
