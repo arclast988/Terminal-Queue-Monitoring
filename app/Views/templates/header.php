@@ -306,11 +306,12 @@
         }
 
         .footer {
-            background-color: #1e293b;
-            color: #94a3b8;
+            background-color: #f8fafc;
+            color: var(--text-muted, #64748b);
             padding: 10px 0;
             text-align: center;
             margin-top: auto;
+            border-top: 1px solid #e2e8f0;
         }
 
         /* Schedules/Fares: same header as dashboard, but content area full-width (no padding) */
@@ -382,6 +383,12 @@
             body {
                 background-color: #0f172a !important;
                 color: #f1f5f9 !important;
+            }
+            body.admin-theme .footer,
+            body.staff-theme .footer {
+                background-color: #0f172a !important;
+                color: #64748b !important;
+                border-top-color: #1e293b !important;
             }
             body.admin-theme,
             body.admin-theme .main-content {

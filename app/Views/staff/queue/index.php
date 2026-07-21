@@ -67,15 +67,15 @@
     }
 
     [id^="confirmDepartModal"] .modal-content {
-        background-color: white !important;
-        border: 1px solid #e2e8f0 !important;
+        background-color: var(--surface, #ffffff) !important;
+        border: 1px solid var(--border, #e2e8f0) !important;
         border-radius: 8px !important;
         pointer-events: auto !important;
     }
 
     [id^="confirmDepartModal"] .modal-body {
-        background-color: white !important;
-        color: #1e293b !important;
+        background-color: var(--surface, #ffffff) !important;
+        color: var(--text-main, #1e293b) !important;
         pointer-events: auto !important;
     }
 
@@ -118,27 +118,26 @@
     }
 
     #addToQueueModal .modal-title {
-        color: #1e293b;
+        color: var(--text-main, #1e293b);
         font-weight: 700;
-    }
-
-    #addToQueueModal .form-label {
-        color: #1e293b !important;
+     }
+ 
+     #addToQueueModal .form-label {
+        color: var(--text-main, #1e293b) !important;
         font-weight: 600;
-    }
-
-    #addToQueueModal .modal-header {
-        border-bottom-color: #e2e8f0;
-    }
-
-    #addToQueueModal .modal-footer {
-        border-top-color: #e2e8f0;
-    }
-
-    #addToQueueModal .btn-close {
-        filter: none;
+     }
+ 
+     #addToQueueModal .modal-header {
+        border-bottom-color: var(--border, #e2e8f0);
+     }
+ 
+     #addToQueueModal .modal-footer {
+        border-top-color: var(--border, #e2e8f0);
+     }
+ 
+     #addToQueueModal .btn-close {
         opacity: 0.8;
-    }
+     }
 
     /* Departure Warning Modal Centering */
     #departureWarningModal.fade.show {
