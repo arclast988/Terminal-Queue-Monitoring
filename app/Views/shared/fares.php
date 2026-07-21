@@ -8,6 +8,13 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 ?>
 
 <style>
+/* Freeze card hover shifts while modal is open to eliminate screen flash/repaint flicker */
+body.modal-open .fare-section-card,
+body.modal-open .discount-rate-card,
+body.modal-open .fare-item {
+    transform: none !important;
+    transition: none !important;
+}
 /* Fare Card/Item Hover & Transition Animation */
 .fare-section-card {
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -762,41 +769,57 @@ if (addForm) {
     });
 }
 
-// Populate edit fare modal
+// Populate edit fare modal synchronously on click/mousedown to avoid input flash
+function populateFareModal(btn) {
+    if (!btn) return;
+    var id          = btn.getAttribute('data-id');
+    var destination = btn.getAttribute('data-destination');
+    var fare        = btn.getAttribute('data-fare');
+    var vehicleType = btn.getAttribute('data-vehicle-type');
+    var terminalId  = btn.getAttribute('data-terminal-id');
+    var form        = document.getElementById('editFareForm');
+    if (form) form.action = '<?= base_url('admin/routes/update') ?>/' + id;
+    if (document.getElementById('edit_fare_destination')) document.getElementById('edit_fare_destination').value = destination;
+    if (document.getElementById('edit_fare_amount')) document.getElementById('edit_fare_amount').value = fare;
+    if (document.getElementById('edit_fare_terminal')) document.getElementById('edit_fare_terminal').value = terminalId;
+    if (form) {
+        var radios = form.querySelectorAll('input[name="vehicle_type"]');
+        radios.forEach(function(r) { r.checked = (r.value === vehicleType); });
+    }
+}
+
+function populateDiscountModal(btn) {
+    if (!btn) return;
+    var id      = btn.getAttribute('data-id');
+    var label   = btn.getAttribute('data-label');
+    var percent = btn.getAttribute('data-percent');
+    var active  = btn.getAttribute('data-active');
+    var form    = document.getElementById('editDiscountForm');
+    if (form) form.action = '<?= base_url('admin/routes/discounts/update') ?>/' + id;
+    if (document.getElementById('edit_disc_label')) document.getElementById('edit_disc_label').value = label;
+    if (document.getElementById('edit_disc_percent')) document.getElementById('edit_disc_percent').value = percent;
+    if (document.getElementById('edit_disc_active')) document.getElementById('edit_disc_active').checked = (active == '1');
+}
+
+// Pre-fill on click/mousedown
+document.addEventListener('mousedown', function(e) {
+    var editFareBtn = e.target.closest('[data-bs-target="#editFareModal"]');
+    if (editFareBtn) populateFareModal(editFareBtn);
+    var editDiscBtn = e.target.closest('[data-bs-target="#editDiscountModal"]');
+    if (editDiscBtn) populateDiscountModal(editDiscBtn);
+});
+
 var editFareModal = document.getElementById('editFareModal');
 if (editFareModal) {
     editFareModal.addEventListener('show.bs.modal', function(event) {
-        var btn = event.relatedTarget;
-        var id          = btn.getAttribute('data-id');
-        var destination = btn.getAttribute('data-destination');
-        var fare        = btn.getAttribute('data-fare');
-        var vehicleType = btn.getAttribute('data-vehicle-type');
-        var terminalId  = btn.getAttribute('data-terminal-id');
-        var form        = document.getElementById('editFareForm');
-        form.action     = '<?= base_url('admin/routes/update') ?>/' + id;
-        document.getElementById('edit_fare_destination').value  = destination;
-        document.getElementById('edit_fare_amount').value       = fare;
-        document.getElementById('edit_fare_terminal').value     = terminalId;
-        // Set vehicle type radio
-        var radios = form.querySelectorAll('input[name="vehicle_type"]');
-        radios.forEach(function(r) { r.checked = (r.value === vehicleType); });
+        populateFareModal(event.relatedTarget);
     });
 }
 
-// Populate edit discount modal
 var editDiscountModal = document.getElementById('editDiscountModal');
 if (editDiscountModal) {
     editDiscountModal.addEventListener('show.bs.modal', function(event) {
-        var btn = event.relatedTarget;
-        var id      = btn.getAttribute('data-id');
-        var label   = btn.getAttribute('data-label');
-        var percent = btn.getAttribute('data-percent');
-        var active  = btn.getAttribute('data-active');
-        var form    = document.getElementById('editDiscountForm');
-        form.action = '<?= base_url('admin/routes/discounts/update') ?>/' + id;
-        document.getElementById('edit_disc_label').value   = label;
-        document.getElementById('edit_disc_percent').value = percent;
-        document.getElementById('edit_disc_active').checked = (active == '1');
+        populateDiscountModal(event.relatedTarget);
     });
 }
 
