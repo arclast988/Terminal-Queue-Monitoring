@@ -123,7 +123,7 @@
     <?php endforeach; ?>
 </div>
 
-<h4 class="mt-5 mb-3" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Departures</h4>
+<h4 class="mt-5 mb-3 fade-in" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Departures</h4>
 <div class="modern-card shadow-modern fade-in">
     <div class="table-responsive">
         <table class="table-modern">
