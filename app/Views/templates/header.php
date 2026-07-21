@@ -462,6 +462,29 @@
                 background: #1e293b !important;
                 border-bottom-color: #334155 !important;
             }
+            body.admin-theme .modern-card-footer,
+            body.staff-theme .modern-card-footer,
+            body.admin-theme .card-footer-modern,
+            body.staff-theme .card-footer-modern {
+                background: #1e293b !important;
+                border-top-color: #334155 !important;
+            }
+            body.admin-theme .modern-card .bg-white,
+            body.staff-theme .modern-card .bg-white,
+            body.admin-theme .card-modern .bg-white,
+            body.staff-theme .card-modern .bg-white,
+            body.admin-theme .discount-rate-card .bg-white,
+            body.staff-theme .discount-rate-card .bg-white {
+                background-color: transparent !important;
+            }
+            body.admin-theme .discount-rate-card .fw-bold,
+            body.staff-theme .discount-rate-card .fw-bold {
+                color: #f1f5f9 !important;
+            }
+            body.admin-theme .discount-rate-card:hover .modern-card-header,
+            body.staff-theme .discount-rate-card:hover .modern-card-header {
+                background-color: var(--primary-soft, #1a2a4a) !important;
+            }
             body.admin-theme .card-body-modern,
             body.staff-theme .card-body-modern {
                 background: #1e293b !important;

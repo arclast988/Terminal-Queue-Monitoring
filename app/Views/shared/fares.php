@@ -152,125 +152,127 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
 }
-#addFareModal .modal-content,
-#editFareModal .modal-content,
-#editDiscountModal .modal-content,
-#addDiscountModal .modal-content {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-}
-#addFareModal .modal-header,
-#editFareModal .modal-header,
-#editDiscountModal .modal-header,
-#addDiscountModal .modal-header,
-#addFareModal .modal-body,
-#editFareModal .modal-body,
-#editDiscountModal .modal-body,
-#addDiscountModal .modal-body,
-#addFareModal .modal-footer,
-#editFareModal .modal-footer,
-#editDiscountModal .modal-footer,
-#addDiscountModal .modal-footer {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    color: #f1f5f9 !important;
-}
-#addFareModal .modal-title,
-#editFareModal .modal-title,
-#editDiscountModal .modal-title,
-#addDiscountModal .modal-title {
-    color: #f1f5f9 !important;
-}
-#addFareModal .btn-close,
-#editFareModal .btn-close,
-#editDiscountModal .btn-close,
-#addDiscountModal .btn-close {
-    filter: invert(1) grayscale(1) !important;
-    opacity: 0.85 !important;
-}
-#addFareModal .form-label,
-#editFareModal .form-label,
-#editDiscountModal .form-label,
-#addDiscountModal .form-label,
-#addFareModal .form-text,
-#editFareModal .form-text,
-#editDiscountModal .form-text,
-#addDiscountModal .form-text {
-    color: #cbd5e1 !important;
-}
-#addFareModal .form-control,
-#editFareModal .form-control,
-#editDiscountModal .form-control,
-#addDiscountModal .form-control,
-#addFareModal .form-select,
-#editFareModal .form-select,
-#editDiscountModal .form-select,
-#addDiscountModal .form-select {
-    background: #0f172a !important;
-    border-color: #334155 !important;
-    color: #f1f5f9 !important;
-}
-#addFareModal .form-control:focus,
-#editFareModal .form-control:focus,
-#editDiscountModal .form-control:focus,
-#addDiscountModal .form-control:focus,
-#addFareModal .form-select:focus,
-#editFareModal .form-select:focus,
-#editDiscountModal .form-select:focus,
-#addDiscountModal .form-select:focus {
-    border-color: #475569 !important;
-    box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.3) !important;
-}
-#addFareModal .input-group-text,
-#editFareModal .input-group-text,
-#editDiscountModal .input-group-text,
-#addDiscountModal .input-group-text {
-    background: #0f172a !important;
-    border-color: #334155 !important;
-    color: #94a3b8 !important;
-}
-#addFareModal .form-check-input,
-#editFareModal .form-check-input,
-#editDiscountModal .form-check-input,
-#addDiscountModal .form-check-input {
-    background-color: #0f172a !important;
-    border-color: #475569 !important;
-}
-#addFareModal .form-check-input:checked,
-#editFareModal .form-check-input:checked,
-#editDiscountModal .form-check-input:checked,
-#addDiscountModal .form-check-input:checked {
-    background-color: #0d6efd !important;
-    border-color: #0d6efd !important;
-}
-#addFareModal .form-check-label,
-#editFareModal .form-check-label,
-#editDiscountModal .form-check-label,
-#addDiscountModal .form-check-label {
-    color: #e2e8f0 !important;
-}
-#addFareModal .text-primary,
-#editFareModal .text-primary,
-#editDiscountModal .text-primary,
-#addDiscountModal .text-primary {
-    color: #60a5fa !important;
-}
-#addFareModal .text-muted,
-#editFareModal .text-muted,
-#editDiscountModal .text-muted,
-#addDiscountModal .text-muted {
-    color: #64748b !important;
-}
-#routeValidationMsg {
-    background: #451a1a !important;
-    border-color: #7f1d1d !important;
-    color: #fca5a5 !important;
-}
-body.admin-theme .modal-backdrop {
-    background-color: #0f172a !important;
-}
-body.admin-theme .modal-backdrop.show {
-    opacity: 0.75 !important;
+@media (prefers-color-scheme: dark) {
+    #addFareModal .modal-content,
+    #editFareModal .modal-content,
+    #editDiscountModal .modal-content,
+    #addDiscountModal .modal-content {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    #addFareModal .modal-header,
+    #editFareModal .modal-header,
+    #editDiscountModal .modal-header,
+    #addDiscountModal .modal-header,
+    #addFareModal .modal-body,
+    #editFareModal .modal-body,
+    #editDiscountModal .modal-body,
+    #addDiscountModal .modal-body,
+    #addFareModal .modal-footer,
+    #editFareModal .modal-footer,
+    #editDiscountModal .modal-footer,
+    #addDiscountModal .modal-footer {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+    #addFareModal .modal-title,
+    #editFareModal .modal-title,
+    #editDiscountModal .modal-title,
+    #addDiscountModal .modal-title {
+        color: #f1f5f9 !important;
+    }
+    #addFareModal .btn-close,
+    #editFareModal .btn-close,
+    #editDiscountModal .btn-close,
+    #addDiscountModal .btn-close {
+        filter: invert(1) grayscale(1) !important;
+        opacity: 0.85 !important;
+    }
+    #addFareModal .form-label,
+    #editFareModal .form-label,
+    #editDiscountModal .form-label,
+    #addDiscountModal .form-label,
+    #addFareModal .form-text,
+    #editFareModal .form-text,
+    #editDiscountModal .form-text,
+    #addDiscountModal .form-text {
+        color: #cbd5e1 !important;
+    }
+    #addFareModal .form-control,
+    #editFareModal .form-control,
+    #editDiscountModal .form-control,
+    #addDiscountModal .form-control,
+    #addFareModal .form-select,
+    #editFareModal .form-select,
+    #editDiscountModal .form-select,
+    #addDiscountModal .form-select {
+        background: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+    #addFareModal .form-control:focus,
+    #editFareModal .form-control:focus,
+    #editDiscountModal .form-control:focus,
+    #addDiscountModal .form-control:focus,
+    #addFareModal .form-select:focus,
+    #editFareModal .form-select:focus,
+    #editDiscountModal .form-select:focus,
+    #addDiscountModal .form-select:focus {
+        border-color: #475569 !important;
+        box-shadow: 0 0 0 2px rgba(71, 85, 105, 0.3) !important;
+    }
+    #addFareModal .input-group-text,
+    #editFareModal .input-group-text,
+    #editDiscountModal .input-group-text,
+    #addDiscountModal .input-group-text {
+        background: #0f172a !important;
+        border-color: #334155 !important;
+        color: #94a3b8 !important;
+    }
+    #addFareModal .form-check-input,
+    #editFareModal .form-check-input,
+    #editDiscountModal .form-check-input,
+    #addDiscountModal .form-check-input {
+        background-color: #0f172a !important;
+        border-color: #475569 !important;
+    }
+    #addFareModal .form-check-input:checked,
+    #editFareModal .form-check-input:checked,
+    #editDiscountModal .form-check-input:checked,
+    #addDiscountModal .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+    #addFareModal .form-check-label,
+    #editFareModal .form-check-label,
+    #editDiscountModal .form-check-label,
+    #addDiscountModal .form-check-label {
+        color: #e2e8f0 !important;
+    }
+    #addFareModal .text-primary,
+    #editFareModal .text-primary,
+    #editDiscountModal .text-primary,
+    #addDiscountModal .text-primary {
+        color: #60a5fa !important;
+    }
+    #addFareModal .text-muted,
+    #editFareModal .text-muted,
+    #editDiscountModal .text-muted,
+    #addDiscountModal .text-muted {
+        color: #64748b !important;
+    }
+    #routeValidationMsg {
+        background: #451a1a !important;
+        border-color: #7f1d1d !important;
+        color: #fca5a5 !important;
+    }
+    body.admin-theme .modal-backdrop {
+        background-color: #0f172a !important;
+    }
+    body.admin-theme .modal-backdrop.show {
+        opacity: 0.75 !important;
+    }
 }
 </style>
 
