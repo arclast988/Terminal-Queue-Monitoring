@@ -27,8 +27,6 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     z-index: 2;
 }
 .discount-rate-card {
-    background: #1e293b !important;
-    border-color: #334155 !important;
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .discount-rate-card:hover {
@@ -36,74 +34,10 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important;
 }
 .discount-rate-card .modern-card-header {
-    background: #1e293b !important;
-    border-bottom-color: #334155 !important;
     transition: background-color 0.2s ease;
 }
-.discount-rate-card .modern-card-footer {
-    background: #1e293b !important;
-    border-top-color: #334155 !important;
-}
-.discount-rate-card .modern-card-body {
-    color: #f1f5f9 !important;
-}
-.discount-rate-card .modern-card-title {
-    color: #f1f5f9 !important;
-}
-.discount-rate-card .text-muted {
-    color: #94a3b8 !important;
-}
-.discount-rate-card .fw-bold {
-    color: #f1f5f9 !important;
-}
-.discount-rate-card .btn-action-edit {
-    background: transparent !important;
-    border-color: #e2e8f0 !important;
-    color: #f1f5f9 !important;
-    -webkit-text-fill-color: #f1f5f9 !important;
-}
-.discount-rate-card .btn-action-edit:hover {
-    background: #e2e8f0 !important;
-    border-color: #e2e8f0 !important;
-    color: #1e293b !important;
-    -webkit-text-fill-color: #1e293b !important;
-}
-.discount-rate-card .btn-action-edit i,
-.discount-rate-card .btn-action-edit .bi,
-.discount-rate-card .btn-modern .bi.bi-pencil {
-    color: #f1f5f9 !important;
-    -webkit-text-fill-color: #f1f5f9 !important;
-}
-.discount-rate-card .btn-action-edit:hover i,
-.discount-rate-card .btn-action-edit:hover .bi,
-.discount-rate-card .btn-modern:hover .bi.bi-pencil {
-    color: #1e293b !important;
-    -webkit-text-fill-color: #1e293b !important;
-}
-.discount-rate-card .btn-action-delete i,
-.discount-rate-card .btn-action-delete .bi,
-.discount-rate-card .btn-modern .bi.bi-trash {
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-}
-.discount-rate-card .btn-action-delete:hover i,
-.discount-rate-card .btn-action-delete:hover .bi,
-.discount-rate-card .btn-modern:hover .bi.bi-trash {
-    color: #dc2626 !important;
-    -webkit-text-fill-color: #dc2626 !important;
-}
-.discount-rate-card .btn-action-delete {
-    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-}
-.discount-rate-card .btn-action-delete:hover {
-    background: #fecaca !important;
-    color: #dc2626 !important;
-    -webkit-text-fill-color: #dc2626 !important;
-}
 .discount-rate-card:hover .modern-card-header {
-    background: #334155 !important;
+    background-color: var(--primary-soft, #f8fafc) !important;
 }
 .fare-action-btn { 
     width: 34px; 
@@ -130,27 +64,7 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
 .fare-section-card.vehicle-type-minibus .modern-card-header { border-top: 3px solid #2e7d32; }
 .fare-route-text {
     font-size: 15px;
-    color: #e2e8f0;
-}
-.fare-item .fare-action-btn.btn-action-edit {
-    background: #334155 !important;
-    border-color: #475569 !important;
-}
-.fare-item .fare-action-btn.btn-action-edit,
-.fare-item .fare-action-btn.btn-action-edit .bi,
-.fare-item .fare-action-btn.btn-action-edit i {
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-}
-.fare-item .fare-action-btn.btn-action-edit:hover {
-    background: #475569 !important;
-    border-color: #64748b !important;
-}
-.fare-item .fare-action-btn.btn-action-edit:hover,
-.fare-item .fare-action-btn.btn-action-edit:hover .bi,
-.fare-item .fare-action-btn.btn-action-edit:hover i {
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    color: var(--text-main, #1e293b);
 }
 @media (prefers-color-scheme: dark) {
     #addFareModal .modal-content,
@@ -273,6 +187,49 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
     body.admin-theme .modal-backdrop.show {
         opacity: 0.75 !important;
     }
+    /* Discount rate cards — dark mode */
+    .discount-rate-card {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+    }
+    .discount-rate-card .modern-card-header {
+        background: #1e293b !important;
+        border-bottom-color: #334155 !important;
+    }
+    .discount-rate-card .modern-card-footer {
+        background: #1e293b !important;
+        border-top-color: #334155 !important;
+    }
+    .discount-rate-card .modern-card-body { color: #f1f5f9 !important; }
+    .discount-rate-card .modern-card-title { color: #f1f5f9 !important; }
+    .discount-rate-card .text-muted { color: #94a3b8 !important; }
+    .discount-rate-card .fw-bold { color: #f1f5f9 !important; }
+    .discount-rate-card:hover .modern-card-header {
+        background-color: #334155 !important;
+    }
+    .discount-rate-card .btn-action-edit {
+        border-color: #475569 !important;
+        color: #f1f5f9 !important;
+    }
+    .discount-rate-card .btn-action-edit:hover {
+        background: #475569 !important;
+        color: #fff !important;
+    }
+    /* Fare route text — dark mode */
+    .fare-route-text { color: #e2e8f0 !important; }
+    /* Fare edit button — dark mode */
+    .fare-item .fare-action-btn.btn-action-edit {
+        background: #334155 !important;
+        border-color: #475569 !important;
+        color: #fff !important;
+    }
+    .fare-item .fare-action-btn.btn-action-edit:hover {
+        background: #475569 !important;
+        border-color: #64748b !important;
+    }
+    /* Route picker — dark mode */
+    .route-picker.bg-white { background-color: #0f172a !important; }
+    .route-name { color: #e2e8f0 !important; }
 }
 </style>
 
