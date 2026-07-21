@@ -34,7 +34,7 @@ class Dashboard extends BaseController
             'title' => 'Admin Dashboard',
             'stats' => [
                 'vehicles' => $vehicleModel->countAll(),
-                'routes'   => $routeModel->countAll(),
+                'routes'   => $routeModel->select('COUNT(DISTINCT CONCAT(terminal_id, "-", destination)) as cnt')->first()['cnt'] ?? 0,
                 'users'    => $userModel->countAll(),
                 'logs'     => $logModel->countAll()
             ],

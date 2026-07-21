@@ -414,6 +414,27 @@ body {
     color: var(--info-dark);
 }
 
+/* Time display badge */
+.time-display {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary, #1565c0);
+    background-color: var(--primary-soft, #e3f2fd);
+    padding: 5px 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.time-display.departed {
+    background-color: var(--slate-200, #e2e8f0) !important;
+    color: var(--slate-600, #475569) !important;
+}
+
+.time-display.full {
+    background-color: var(--success-light, #d1fae5) !important;
+    color: var(--success-dark, #059669) !important;
+}
+
 /* Action utilities for consistent Edit/Delete styling across admin views.
    These are the canonical classes to use in templates instead of inline styles.
    Icons inside buttons will inherit the color. */
@@ -433,16 +454,46 @@ body {
 
 .btn-action-delete,
 .btn-modern.btn-action-delete {
-    background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    background: var(--danger-light, #FEE2E2) !important;
+    color: var(--danger-dark, #dc2626) !important;
+    -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
     border: 2px solid transparent !important;
 }
 .btn-action-delete:hover,
 .btn-modern.btn-action-delete:hover {
-    background: var(--danger-light, #FEE2E2) !important;
-    color: var(--danger-dark, #dc2626) !important;
-    -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+    background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-action-edit,
+    .btn-modern.btn-action-edit {
+        background: transparent !important;
+        border-color: #60a5fa !important;
+        color: #60a5fa !important;
+        -webkit-text-fill-color: #60a5fa !important;
+    }
+    .btn-action-edit:hover,
+    .btn-modern.btn-action-edit:hover {
+        background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%) !important;
+        border-color: #1e88e5 !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+    }
+    .btn-action-delete,
+    .btn-modern.btn-action-delete {
+        background: rgba(239, 68, 68, 0.15) !important;
+        color: #f87171 !important;
+        -webkit-text-fill-color: #f87171 !important;
+        border-color: transparent !important;
+    }
+    .btn-action-delete:hover,
+    .btn-modern.btn-action-delete:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+    }
 }
 
 /* =================================================================
@@ -901,4 +952,152 @@ body.staff-theme .form-check-input-modern:checked {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+}
+
+/* ==========================================================================
+   DARK MODE SUPPORT FOR MODERN FRONTEND COMPONENTS
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --slate-50: #0f172a;
+        --slate-100: #1e293b;
+        --slate-200: #334155;
+        --slate-300: #475569;
+        --slate-400: #64748b;
+        --slate-500: #94a3b8;
+        --slate-600: #cbd5e1;
+        --slate-700: #e2e8f0;
+        --slate-800: #f1f5f9;
+        --slate-900: #f8fafc;
+        
+        --success-light: rgba(16, 185, 129, 0.15);
+        --success-dark: #34d399;
+        --warning-light: rgba(245, 158, 11, 0.15);
+        --warning-dark: #fbbf24;
+        --danger-light: rgba(239, 68, 68, 0.15);
+        --danger-dark: #f87171;
+        --info-light: rgba(59, 130, 246, 0.15);
+        --info-dark: #60a5fa;
+    }
+
+    /* Cards & Containers */
+    .modern-card,
+    .stat-card,
+    .quick-action-card,
+    .feature-card,
+    .fare-section-card,
+    .discount-rate-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .modern-card-header,
+    .modern-card-footer {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .modern-card-title,
+    .stat-card-value,
+    .quick-action-card h3,
+    .feature-card-title,
+    .fare-route-text {
+        color: #f1f5f9 !important;
+    }
+
+    .modern-card-subtitle,
+    .stat-card-label,
+    .quick-action-card p,
+    .feature-card-description,
+    .form-text-modern,
+    .form-check-label-modern {
+        color: #cbd5e1 !important;
+    }
+
+    /* Icons in Dark Mode */
+    .stat-card-icon,
+    .quick-action-icon,
+    .feature-card-icon,
+    i.text-muted,
+    i.text-secondary,
+    .fare-item i,
+    .vehicle-type-icon {
+        color: #cbd5e1 !important;
+    }
+
+    /* Tables */
+    .table-modern,
+    .table-modern th,
+    .table-modern td {
+        background-color: transparent !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    .table-modern th {
+        background-color: #0f172a !important;
+        color: #cbd5e1 !important;
+    }
+
+    .table-modern tbody tr:hover {
+        background-color: #334155 !important;
+    }
+
+    /* Form Controls & Inputs */
+    .form-control-modern,
+    .form-select-modern,
+    .input-modern {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .form-control-modern::placeholder,
+    .input-modern::placeholder {
+        color: #94a3b8 !important;
+        opacity: 1 !important;
+    }
+
+    .form-label-modern {
+        color: #e2e8f0 !important;
+    }
+
+    /* Tabs & Filters */
+    .tab-btn {
+        color: #cbd5e1 !important;
+    }
+
+    .tab-btn.active {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    /* Badges */
+    .badge-modern:not([class*="badge-modern-"]) {
+        background-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Radio Cards (e.g. Vehicle Type selectors) */
+    .radio-card-content {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .radio-card-label {
+        color: #f1f5f9 !important;
+    }
+
+    .radio-card-sublabel {
+        color: #94a3b8 !important;
+    }
+
+    .radio-card-input:checked + .radio-card-content {
+        background-color: #1e293b !important;
+        border-color: #ef5350 !important;
+    }
 }

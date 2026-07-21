@@ -239,7 +239,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 <td data-label="Action">
                                     <div style="display:flex; gap:8px;">
                                         <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
-                                            class="btn-modern btn-modern-outline btn-modern-sm" title="Edit vehicle">
+                                            class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <form action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post"

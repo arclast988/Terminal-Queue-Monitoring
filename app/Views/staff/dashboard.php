@@ -94,7 +94,7 @@
             </div>
             <div class="stat-card-value"><?= $active_queue_count ?></div>
             <div class="stat-card-label">Active in Queue</div>
-            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link" style="color: #1565c0;">
+            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link">
                 Manage Queue <i class="bi bi-arrow-right"></i>
             </a>
         </div>
@@ -114,7 +114,7 @@
                                 <span style="font-size: 12px; font-weight: 600; color: var(--text-muted, #475569);">pax capacity</span>
                             </div>
                         </div>
-                        <i class="bi bi-building fs-2" style="color: #1565c0; opacity: 0.2;"></i>
+                        <i class="bi bi-building fs-2" style="color: var(--primary, #60a5fa); opacity: 0.7;"></i>
                     </div>
                     <p style="margin: 8px 0 0; font-size: 13px; color: var(--text-muted, #475569);"><?= esc($terminal['location']) ?></p>
                 </div>

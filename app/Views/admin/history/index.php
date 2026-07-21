@@ -31,6 +31,26 @@
         align-items: center;
         gap: 10px;
     }
+
+    @media (prefers-color-scheme: dark) {
+        .table-modern .plate-number {
+            background: #334155 !important;
+            color: #f1f5f9 !important;
+        }
+        .table-modern .driver-cell {
+            color: #e2e8f0 !important;
+        }
+        .table-modern .driver-cell i {
+            color: #94a3b8 !important;
+        }
+        .table-modern .route-info,
+        .table-modern .route-info span {
+            color: #e2e8f0 !important;
+        }
+        .table-modern td {
+            color: #e2e8f0 !important;
+        }
+    }
 </style>
 
 <div class="page-header-modern fade-in">
@@ -210,7 +230,7 @@
                                     </div>
                                 </td>
                                 <td data-label="Departure Time">
-                                    <span class="badge-modern badge-modern-primary"><?= strtoupper(date('M d, Y H:i', strtotime($item['departure_time']))) ?></span>
+                                    <span class="badge-modern badge-modern-info"><?= strtoupper(date('M d, Y H:i', strtotime($item['departure_time']))) ?></span>
                                 </td>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">

@@ -182,18 +182,12 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
     #editFareModal .text-muted,
     #editDiscountModal .text-muted,
     #addDiscountModal .text-muted {
-        color: #64748b !important;
+        color: #cbd5e1 !important;
     }
     #routeValidationMsg {
         background: #451a1a !important;
         border-color: #7f1d1d !important;
         color: #fca5a5 !important;
-    }
-    body.admin-theme .modal-backdrop {
-        background-color: #0f172a !important;
-    }
-    body.admin-theme .modal-backdrop.show {
-        opacity: 0.75 !important;
     }
     /* Discount rate cards — dark mode */
     .discount-rate-card {
@@ -238,6 +232,7 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
     /* Route picker — dark mode */
     .route-picker.bg-white { background-color: #0f172a !important; }
     .route-name { color: #e2e8f0 !important; }
+    .fare-discount-label { color: #cbd5e1 !important; }
 }
 </style>
 
@@ -362,14 +357,14 @@ $fareTypes = [
                             </div>
                         </div>
                         <?php if (!empty($route['discounted_fares'])): ?>
-                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border, #e2e8f0);">
                             <?php foreach ($route['discounted_fares'] as $type => $df): ?>
                             <div class="d-flex justify-content-between align-items-center py-1">
-                                <span style="font-size: 13px; color: #475569; font-weight: 500;">
-                                    <i class="bi bi-tag me-1" style="font-size: 11px; color: #94a3b8;"></i>
+                                <span class="fare-discount-label" style="font-size: 13px; color: var(--text-muted, #475569); font-weight: 500;">
+                                    <i class="bi bi-tag me-1" style="font-size: 11px;"></i>
                                     <?= esc($df['label']) ?> <span class="text-muted" style="font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
                                 </span>
-                                <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
+                                <span style="font-size: 14px; font-weight: 700; color: var(--success, #16a34a);">₱<?= number_format($df['amount'], 2) ?></span>
                             </div>
                             <?php endforeach; ?>
                         </div>
@@ -770,19 +765,20 @@ if (addForm) {
     });
 }
 
-// Populate edit fare modal synchronously on click/mousedown to avoid input flash
+// Populate edit fare modal synchronously on click/mousedown/show.bs.modal to avoid input flash
 function populateFareModal(btn) {
     if (!btn) return;
-    var id          = btn.getAttribute('data-id');
-    var destination = btn.getAttribute('data-destination');
-    var fare        = btn.getAttribute('data-fare');
-    var vehicleType = btn.getAttribute('data-vehicle-type');
-    var terminalId  = btn.getAttribute('data-terminal-id');
+    var target = (btn.closest && btn.closest('[data-id]')) ? btn.closest('[data-id]') : btn;
+    var id          = target.getAttribute('data-id');
+    var destination = target.getAttribute('data-destination');
+    var fare        = target.getAttribute('data-fare');
+    var vehicleType = target.getAttribute('data-vehicle-type');
+    var terminalId  = target.getAttribute('data-terminal-id');
     var form        = document.getElementById('editFareForm');
-    if (form) form.action = '<?= base_url('admin/routes/update') ?>/' + id;
-    if (document.getElementById('edit_fare_destination')) document.getElementById('edit_fare_destination').value = destination;
-    if (document.getElementById('edit_fare_amount')) document.getElementById('edit_fare_amount').value = fare;
-    if (document.getElementById('edit_fare_terminal')) document.getElementById('edit_fare_terminal').value = terminalId;
+    if (form && id) form.action = '<?= base_url('admin/routes/update') ?>/' + id;
+    if (document.getElementById('edit_fare_destination')) document.getElementById('edit_fare_destination').value = destination || '';
+    if (document.getElementById('edit_fare_amount')) document.getElementById('edit_fare_amount').value = fare || '';
+    if (document.getElementById('edit_fare_terminal')) document.getElementById('edit_fare_terminal').value = terminalId || '';
     if (form) {
         var radios = form.querySelectorAll('input[name="vehicle_type"]');
         radios.forEach(function(r) { r.checked = (r.value === vehicleType); });
@@ -791,18 +787,25 @@ function populateFareModal(btn) {
 
 function populateDiscountModal(btn) {
     if (!btn) return;
-    var id      = btn.getAttribute('data-id');
-    var label   = btn.getAttribute('data-label');
-    var percent = btn.getAttribute('data-percent');
-    var active  = btn.getAttribute('data-active');
+    var target = (btn.closest && btn.closest('[data-id]')) ? btn.closest('[data-id]') : btn;
+    var id      = target.getAttribute('data-id');
+    var label   = target.getAttribute('data-label');
+    var percent = target.getAttribute('data-percent');
+    var active  = target.getAttribute('data-active');
     var form    = document.getElementById('editDiscountForm');
-    if (form) form.action = '<?= base_url('admin/routes/discounts/update') ?>/' + id;
-    if (document.getElementById('edit_disc_label')) document.getElementById('edit_disc_label').value = label;
-    if (document.getElementById('edit_disc_percent')) document.getElementById('edit_disc_percent').value = percent;
-    if (document.getElementById('edit_disc_active')) document.getElementById('edit_disc_active').checked = (active == '1');
+    if (form && id) form.action = '<?= base_url('admin/routes/discounts/update') ?>/' + id;
+    if (document.getElementById('edit_disc_label')) document.getElementById('edit_disc_label').value = label || '';
+    if (document.getElementById('edit_disc_percent')) document.getElementById('edit_disc_percent').value = percent || '';
+    if (document.getElementById('edit_disc_active')) document.getElementById('edit_disc_active').checked = (active == '1' || active === 'true');
 }
 
 // Pre-fill on click/mousedown
+document.addEventListener('click', function(e) {
+    var editFareBtn = e.target.closest('[data-bs-target="#editFareModal"]');
+    if (editFareBtn) populateFareModal(editFareBtn);
+    var editDiscBtn = e.target.closest('[data-bs-target="#editDiscountModal"]');
+    if (editDiscBtn) populateDiscountModal(editDiscBtn);
+});
 document.addEventListener('mousedown', function(e) {
     var editFareBtn = e.target.closest('[data-bs-target="#editFareModal"]');
     if (editFareBtn) populateFareModal(editFareBtn);

@@ -127,7 +127,7 @@ foreach ($users as $u) {
                             </td>
                             <td data-label="Role">
                                 <?php if ($user['role'] === 'super_admin'): ?>
-                                    <span class="badge-modern" style="background: #7c3aed; color: #fff;">Super Admin</span>
+                                    <span class="badge-modern badge-modern-super-admin">Super Admin</span>
                                 <?php else: ?>
                                     <span class="badge-modern badge-modern-<?= $user['role'] === 'admin' ? 'danger' : 'info' ?>">
                                         <?= $user['role'] === 'staff' ? 'Dispatcher' : 'Admin' ?>
@@ -170,7 +170,7 @@ foreach ($users as $u) {
                                 <div class="btn-group-modern" role="group">
                                     <?php if ($canEdit): ?>
                                         <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
-                                            class="btn-modern btn-modern-sm btn-modern-outline-primary" title="Edit">
+                                            class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
                                         </a>
                                     <?php endif; ?>
@@ -179,7 +179,7 @@ foreach ($users as $u) {
                                             class="d-inline"
                                             onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm btn-modern-outline-danger" title="Delete">
+                                            <button type="submit" class="btn-modern btn-action-delete btn-modern-sm" title="Delete">
                                                 <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
                                             </button>
                                         </form>

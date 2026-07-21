@@ -1149,53 +1149,6 @@ body.staff-theme .logout-btn-custom {
 }
 
 /* ==================================================================
-   ADDITIONAL: Ensure management/admin nav dropdowns are readable
-   These rules are intentionally specific (include body.<theme> .nav-menu)
-   so they override inline theme blocks in header.php while remaining
-   minimal. Desktop rules scoped to hover-capable pointers to avoid
-   interfering with mobile drawer styling; mobile keeps text color only.
-   ================================================================== */
-@media (hover: hover) and (pointer: fine) {
-  body.admin-theme .nav-menu .dropdown-content,
-  body.staff-theme .nav-menu .dropdown-content {
-    background: var(--surface, #fff) !important;
-    border: 1px solid var(--border, #e4e7ec) !important;
-    box-shadow: var(--shadow-lg, 0 8px 16px rgba(0,0,0,.12)) !important;
-    z-index: 2002 !important;
-  }
-
-  body.admin-theme .nav-menu .dropdown-content a,
-  body.staff-theme .nav-menu .dropdown-content a {
-    color: var(--text-main, #1c2430) !important;
-  }
-
-  body.admin-theme .nav-menu .dropdown-content a i,
-  body.staff-theme .nav-menu .dropdown-content a i {
-    color: var(--text-faint, #94a3b8) !important;
-  }
-}
-
-/* Mobile slide-out drawer: ensure link text is readable without changing
-   the mobile drawer's translucent background. */
-@media (max-width: 1280px) {
-  .nav-menu .dropdown-content a {
-    color: var(--text-main, #1c2430) !important;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  body.admin-theme .nav-menu .dropdown-content,
-  body.staff-theme .nav-menu .dropdown-content {
-    background: var(--nav-drawer-bg, #1e293b) !important;
-    border-color: var(--border-strong, #334155) !important;
-  }
-  body.admin-theme .nav-menu .dropdown-content a,
-  body.staff-theme .nav-menu .dropdown-content a {
-    color: var(--text-ghost, #e2e8f0) !important;
-  }
-}
-
-/* ==================================================================
    ACTION BUTTON COLORS — system-wide
    Edit actions should appear blue; Delete actions should appear red.
    Targets common patterns (title attributes, common icons and classes)
@@ -1229,16 +1182,7 @@ a[title*="edit" i] {
   -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  body.admin-theme .btn-modern .bi.bi-pencil,
-  body.admin-theme .btn-modern .bi-pencil-fill,
-  body.admin-theme .bi.bi-pencil,
-  body.admin-theme .bi.bi-pencil-fill {
-    color: #f1f5f9 !important;
-    -webkit-text-fill-color: #f1f5f9 !important;
-  }
-}
-
+/* Edit hover - general/light mode */
 a.btn-modern[title*="edit" i]:hover,
 button.btn-modern[title*="edit" i]:hover,
 a[title*="edit" i]:hover {
@@ -1246,6 +1190,43 @@ a[title*="edit" i]:hover {
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   border-color: var(--primary-blue, #1565c0) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Edit icons – bright blue for dark backgrounds */
+  body.admin-theme .btn-modern .bi.bi-pencil,
+  body.admin-theme .btn-modern .bi-pencil-fill,
+  body.admin-theme .bi.bi-pencil,
+  body.admin-theme .bi.bi-pencil-fill,
+  body.staff-theme .btn-modern .bi.bi-pencil,
+  body.staff-theme .btn-modern .bi-pencil-fill,
+  body.staff-theme .bi.bi-pencil,
+  body.staff-theme .bi.bi-pencil-fill {
+    color: #60a5fa !important;
+    -webkit-text-fill-color: #60a5fa !important;
+  }
+  /* Edit buttons – transparent bg, blue outline + text (same pattern as light) */
+  a.btn-modern[title*="edit" i],
+  button.btn-modern[title*="edit" i],
+  a[title*="edit" i],
+  button[title*="edit" i],
+  .btn-modern.btn-modern-outline-primary {
+    background: transparent !important;
+    border-color: #60a5fa !important;
+    color: #60a5fa !important;
+    -webkit-text-fill-color: #60a5fa !important;
+  }
+  /* Edit hover – fills blue, white text (same pattern as light) */
+  a.btn-modern[title*="edit" i]:hover,
+  button.btn-modern[title*="edit" i]:hover,
+  a[title*="edit" i]:hover,
+  button[title*="edit" i]:hover,
+  .btn-modern.btn-modern-outline-primary:hover {
+    background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%) !important;
+    border-color: #1e88e5 !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+  }
 }
 
 /* Delete (red) */
@@ -1306,7 +1287,7 @@ a[title*="delete" i]:hover {
 }
 
 @media (prefers-color-scheme: dark) {
-  /* Override delete buttons in dark mode to avoid high-brightness FEE2E2 background */
+  /* Delete buttons – soft dark-red bg, red text (mirrors light mode's pink bg + red text) */
   button.btn-modern[title*="delete" i],
   input[type="submit"][title*="delete" i],
   input[type="submit"][value*="delete" i],
@@ -1314,11 +1295,12 @@ a[title*="delete" i]:hover {
   button[title*="delete" i],
   input[title*="delete" i],
   .btn-modern.btn-modern-outline-danger {
-    background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #f87171 !important;
+    -webkit-text-fill-color: #f87171 !important;
     border-color: transparent !important;
   }
+  /* Delete icons – red for dark mode */
   .btn-modern[title*="delete" i] i,
   input[type="submit"][title*="delete" i] i,
   a[title*="delete" i] i,
@@ -1327,15 +1309,16 @@ a[title*="delete" i]:hover {
   .bi.bi-trash,
   .bi.bi-trash-fill,
   .btn-modern.btn-modern-outline-danger i {
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    color: #f87171 !important;
+    -webkit-text-fill-color: #f87171 !important;
   }
+  /* Delete hover – fills red, white text (same pattern as light) */
   button.btn-modern[title*="delete" i]:hover,
   input[type="submit"][title*="delete" i]:hover,
   button[title*="delete" i]:hover,
   a[title*="delete" i]:hover,
   .btn-modern.btn-modern-outline-danger:hover {
-    background: var(--danger-dark, #991b1b) !important;
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
     color: #fff !important;
     -webkit-text-fill-color: #fff !important;
   }

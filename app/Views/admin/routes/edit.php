@@ -75,7 +75,7 @@
                     <i class="bi bi-map me-2"></i> Route Information
                 </div>
                 <div class="card-body-modern">
-                    <form action="<?= base_url('admin/routes/update/' . $route['id']) ?>" method="post">
+                    <form action="<?= base_url('admin/routes/update_group/' . $route['id']) ?>" method="post">
                         <?= csrf_field() ?>
 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
@@ -106,47 +106,39 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="fare" class="form-label-modern">Fare (PHP) <span class="text-danger">*</span></label>
-                            <div class="input-group-modern">
-                                <span class="input-group-text-modern">₱</span>
-                                <input type="number" step="0.01" class="input-modern" id="fare" name="fare"
-                                       value="<?= old('fare', $route['fare']) ?>" min="1" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label-modern d-block">Vehicle Type <span class="text-danger">*</span></label>
-                            <div class="d-flex gap-3 flex-wrap">
-                                <label class="radio-card-modern">
-                                    <input type="radio" name="vehicle_type" value="van"
-                                           <?= old('vehicle_type', $route['vehicle_type']) == 'van' ? 'checked' : '' ?> class="radio-card-input">
-                                    <span class="radio-card-content">
-                                        <span class="radio-card-icon">🚐</span>
-                                        <span class="radio-card-label">Van</span>
-                                    </span>
-                                </label>
-                                <label class="radio-card-modern">
-                                    <input type="radio" name="vehicle_type" value="jeepney"
-                                           <?= old('vehicle_type', $route['vehicle_type']) == 'jeepney' ? 'checked' : '' ?> class="radio-card-input">
-                                    <span class="radio-card-content">
-                                        <span class="radio-card-icon">🚌</span>
-                                        <span class="radio-card-label">Jeepney</span>
-                                    </span>
-                                </label>
-                                <label class="radio-card-modern">
-                                    <input type="radio" name="vehicle_type" value="minibus"
-                                           <?= old('vehicle_type', $route['vehicle_type']) == 'minibus' ? 'checked' : '' ?> class="radio-card-input">
-                                    <span class="radio-card-content">
-                                        <span class="radio-card-icon">🚍</span>
-                                        <span class="radio-card-label">Mini Bus</span>
-                                    </span>
-                                </label>
+                            <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
+                            <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
+                                    <div class="input-group-modern" style="max-width: 250px;">
+                                        <span class="input-group-text-modern">₱</span>
+                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
+                                               value="<?= old('fares.van', $fares['van']) ?>" placeholder="Fare amount (e.g. 150.00)">
+                                    </div>
+                                </div>
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
+                                    <div class="input-group-modern" style="max-width: 250px;">
+                                        <span class="input-group-text-modern">₱</span>
+                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
+                                               value="<?= old('fares.jeepney', $fares['jeepney']) ?>" placeholder="Fare amount (e.g. 100.00)">
+                                    </div>
+                                </div>
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
+                                    <div class="input-group-modern" style="max-width: 250px;">
+                                        <span class="input-group-text-modern">₱</span>
+                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
+                                               value="<?= old('fares.minibus', $fares['minibus']) ?>" placeholder="Fare amount (e.g. 120.00)">
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="d-flex gap-2 mt-5">
                             <button type="submit" class="btn btn-modern btn-modern-primary">
-                                <i class="bi bi-pencil-square"></i> Update Route
+                                <i class="bi bi-save"></i> Save Route
                             </button>
                             <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
                                 <i class="bi bi-x-circle"></i> Cancel

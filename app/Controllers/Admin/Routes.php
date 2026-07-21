@@ -30,9 +30,23 @@ class Routes extends BaseController
                                    ->findAll();
         $routes = enrich_routes_with_discounts($routes);
 
+        $groupedRoutes = [];
+        foreach ($routes as $route) {
+            $key = $route['terminal_id'] . '_' . $route['destination'];
+            if (!isset($groupedRoutes[$key])) {
+                $groupedRoutes[$key] = [
+                    'terminal_name' => $route['terminal_name'] ?? $route['origin'] ?? '',
+                    'destination' => $route['destination'],
+                    'items' => []
+                ];
+            }
+            $groupedRoutes[$key]['items'][] = $route;
+        }
+
         $data = [
-            'title'  => 'Manage Routes',
-            'routes' => $routes
+            'title'         => 'Manage Routes',
+            'routes'        => $routes,
+            'groupedRoutes' => $groupedRoutes
         ];
 
         return view('admin/routes/index', $data);
@@ -172,6 +186,49 @@ class Routes extends BaseController
 
     public function store()
     {
+        $selectedFares = $this->request->getPost('fares');
+        if (is_array($selectedFares)) {
+            $terminalId  = $this->request->getPost('terminal_id');
+            $terminal    = $this->terminalModel->find($terminalId);
+            $origin      = strtoupper(trim($terminal['name'] ?? ''));
+            $destination = strtoupper(trim($this->request->getPost('destination')));
+
+            if (empty($destination) || strlen($destination) < 2) {
+                return redirect()->back()->withInput()->with('error', 'Please provide a valid destination (at least 2 characters).');
+            }
+
+            $added = 0;
+            foreach ($selectedFares as $vType => $fareVal) {
+                if (in_array($vType, ['jeepney', 'van', 'minibus'], true) && $fareVal !== '' && $fareVal !== null && (float)$fareVal > 0) {
+                    $fareFloat = (float) $fareVal;
+                    $existing = $this->routeModel->where('terminal_id', $terminalId)
+                                                 ->where('destination', $destination)
+                                                 ->where('vehicle_type', $vType)
+                                                 ->first();
+                    if ($existing) {
+                        $this->replaceRouteFares((int)$existing['id'], (int)$terminalId, $fareFloat);
+                    } else {
+                        $insertedId = $this->routeModel->insert([
+                            'destination'  => $destination,
+                            'terminal_id'  => $terminalId,
+                            'vehicle_type' => $vType,
+                        ]);
+                        if ($insertedId) {
+                            $this->replaceRouteFares((int)$insertedId, (int)$terminalId, $fareFloat);
+                        }
+                    }
+                    $added++;
+                }
+            }
+
+            if ($added > 0) {
+                $this->logActivity('Create route', "$origin → $destination ($added vehicle type(s)).");
+                return redirect()->to('/admin/routes')->with('success', "Route ($origin → $destination) saved with $added vehicle type(s).");
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Please enter a valid fare for at least one vehicle type.');
+            }
+        }
+
         $rules = [
             'destination'  => 'required|min_length[2]|max_length[100]',
             'fare'         => 'required|decimal|greater_than[0]',
@@ -190,7 +247,6 @@ class Routes extends BaseController
         $vehicleType = $this->request->getPost('vehicle_type');
         $fare        = $this->request->getPost('fare');
 
-        // Check for existing route with same terminal, destination, and vehicle type.
         $existing = $this->routeModel->where('terminal_id', $terminalId)
                                      ->where('destination', $destination)
                                      ->where('vehicle_type', $vehicleType)
@@ -229,13 +285,30 @@ class Routes extends BaseController
             return redirect()->to('/admin/routes')->with('error', 'Route not found.');
         }
 
-        $route = enrich_routes_with_discounts([$route])[0];
+        // Find all sibling routes in the same group (same terminal and destination)
+        $groupRoutes = $this->routeModel
+            ->where('terminal_id', $route['terminal_id'])
+            ->where('destination', $route['destination'])
+            ->findAll();
+
+        $groupRoutes = enrich_routes_with_discounts($groupRoutes);
+
+        // Put fares into a key-value array by vehicle type
+        $fares = [
+            'van' => null,
+            'jeepney' => null,
+            'minibus' => null
+        ];
+        foreach ($groupRoutes as $r) {
+            $fares[$r['vehicle_type']] = $r['fare'];
+        }
 
         $locations = $this->getDistinctLocations();
 
         $data = [
             'title'         => 'Edit Route',
             'route'         => $route,
+            'fares'         => $fares,
             'terminals'     => $this->terminalModel->findAll(),
             'origins'       => $locations['origins'],
             'destinations'  => $locations['destinations'],
@@ -286,9 +359,24 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', "A route already exists for $origin → $destination ($vehicleType). Update that one instead.");
         }
 
+        // --- GROUP RENAMING PREVENTION OF DESYNC ---
+        $oldTerminalId = $existingRoute['terminal_id'];
+        $oldDestination = $existingRoute['destination'];
+
+        if ($oldTerminalId != $terminalId || $oldDestination !== $destination) {
+            $this->routeModel->where('terminal_id', $oldTerminalId)
+                             ->where('destination', $oldDestination)
+                             ->set([
+                                 'destination' => $destination,
+                                 'terminal_id' => $terminalId
+                             ])
+                             ->update();
+        }
+        // -------------------------------------------
+
         $updated = $this->routeModel->update($id, [
             'destination'  => $destination,
-            'terminal_id'  => $this->request->getPost('terminal_id'),
+            'terminal_id'  => $terminalId,
             'vehicle_type' => $vehicleType,
         ]);
 
@@ -313,7 +401,119 @@ class Routes extends BaseController
             $this->logActivity('Update route', $origin . ' to ' . $destination . ' (' . $vehicleType . ').');
         }
 
-        return redirect()->to('/admin/routes')->with('success', 'Route updated successfully.');
+        return redirect()->back()->with('success', 'Route updated successfully.');
+    }
+
+    public function updateGroup($id)
+    {
+        $existingRoute = $this->routeModel->find($id);
+        if (!$existingRoute) {
+            return redirect()->to('/admin/routes')->with('error', 'Route not found.');
+        }
+
+        $oldTerminalId = $existingRoute['terminal_id'];
+        $oldDestination = $existingRoute['destination'];
+
+        $terminalId  = $this->request->getPost('terminal_id');
+        $terminal    = $this->terminalModel->find($terminalId);
+        $origin      = strtoupper(trim($terminal['name'] ?? ''));
+        $destination = strtoupper(trim($this->request->getPost('destination')));
+
+        if (empty($destination) || strlen($destination) < 2) {
+            return redirect()->back()->withInput()->with('error', 'Please provide a valid destination (at least 2 characters).');
+        }
+
+        // First, update the terminal_id and destination of all existing sibling routes to prevent desync
+        $this->routeModel->where('terminal_id', $oldTerminalId)
+                         ->where('destination', $oldDestination)
+                         ->set([
+                             'terminal_id' => $terminalId,
+                             'destination' => $destination
+                         ])
+                         ->update();
+
+        // Update, insert, or delete vehicle types based on selected fares
+        $selectedFares = $this->request->getPost('fares');
+        $added = 0;
+        if (is_array($selectedFares)) {
+            foreach (['van', 'jeepney', 'minibus'] as $vType) {
+                $fareVal = $selectedFares[$vType] ?? null;
+                $hasFare = ($fareVal !== '' && $fareVal !== null && (float)$fareVal > 0);
+
+                $existing = $this->routeModel->where('terminal_id', $terminalId)
+                                             ->where('destination', $destination)
+                                             ->where('vehicle_type', $vType)
+                                             ->first();
+
+                if ($hasFare) {
+                    $fareFloat = (float) $fareVal;
+                    if ($existing) {
+                        $this->replaceRouteFares((int)$existing['id'], (int)$terminalId, $fareFloat);
+                    } else {
+                        $insertedId = $this->routeModel->insert([
+                            'destination'  => $destination,
+                            'terminal_id'  => $terminalId,
+                            'vehicle_type' => $vType,
+                        ]);
+                        if ($insertedId) {
+                            $this->replaceRouteFares((int)$insertedId, (int)$terminalId, $fareFloat);
+                        }
+                    }
+                    $added++;
+                } else {
+                    if ($existing) {
+                        try {
+                            $this->routeModel->delete($existing['id']);
+                        } catch (\Throwable $e) {
+                            // If delete fails due to dependencies (like queue entries), we just keep it
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->logActivity('Update route group', "$origin → $destination.");
+        return redirect()->to('/admin/routes')->with('success', 'Route group updated successfully.');
+    }
+
+    public function deleteGroup($id)
+    {
+        $route = $this->routeModel->find($id);
+        if (!$route) {
+            return redirect()->to('/admin/routes')->with('error', 'Route not found.');
+        }
+
+        $terminalId = $route['terminal_id'];
+        $destination = $route['destination'];
+
+        $groupRoutes = $this->routeModel
+            ->where('terminal_id', $terminalId)
+            ->where('destination', $destination)
+            ->findAll();
+
+        $deletedCount = 0;
+        $failedCount = 0;
+        foreach ($groupRoutes as $r) {
+            try {
+                if ($this->routeModel->delete($r['id'])) {
+                    $deletedCount++;
+                } else {
+                    $failedCount++;
+                }
+            } catch (\Throwable $e) {
+                $failedCount++;
+            }
+        }
+
+        if ($deletedCount > 0) {
+            $this->logActivity('Delete route group', "Deleted $deletedCount vehicle type(s) for route to $destination.");
+        }
+
+        if ($failedCount > 0) {
+            return redirect()->to('/admin/routes')->with('warning', "Deleted $deletedCount vehicle type(s), but $failedCount could not be deleted (likely in use by active queues or vehicles).");
+        }
+
+        return redirect()->to('/admin/routes')->with('success', 'Route group deleted successfully.');
     }
 
     public function delete($id)
@@ -325,7 +525,7 @@ class Routes extends BaseController
             if ($route) {
                 $this->logActivity('Delete route', $route['origin'] . ' → ' . $route['destination'] . '.');
             }
-            return redirect()->to('/admin/routes')->with('success', 'Route deleted successfully.');
+            return redirect()->back()->with('success', 'Route deleted successfully.');
         }
         return redirect()->back()->with('error', 'Failed to delete route.');
     }
@@ -342,7 +542,7 @@ class Routes extends BaseController
         $discount = $this->discountModel->find($id);
 
         if (!$discount) {
-            return redirect()->to('/fares')->with('error', 'Discount record not found.');
+            return redirect()->back()->with('error', 'Discount record not found.');
         }
 
         $rules = [
@@ -351,7 +551,7 @@ class Routes extends BaseController
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->to('/fares')->with('errors', $this->validator->getErrors());
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $updatedData = [
@@ -365,7 +565,7 @@ class Routes extends BaseController
 
         $this->logActivity('Update discount', $discount['type'] . ' discount updated to ' . $this->request->getPost('discount_percent') . '%.');
 
-        return redirect()->to('/fares')->with('success', 'Discount updated successfully.');
+        return redirect()->back()->with('success', 'Discount updated successfully.');
     }
 
     /**

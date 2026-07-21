@@ -76,7 +76,7 @@
                                 <?php if (session()->get('role') !== 'staff'): ?>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">
-                                        <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
+                                        <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <form action="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this rule?');">

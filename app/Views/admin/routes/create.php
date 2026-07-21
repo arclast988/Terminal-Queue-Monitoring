@@ -82,39 +82,40 @@
                 </div>
             </div>
 
-            <div class="mb-3">
+            <div class="mb-4">
                 <label for="destination" class="form-label-modern">Destination</label>
                 <input type="text" class="input-modern" id="destination" name="destination"
                        value="<?= old('destination') ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
                 <div class="form-text-modern">Type the destination city/town name.</div>
             </div>
 
-            <div class="mb-3">
-                <label for="fare" class="form-label-modern">Fare (PHP)</label>
-                <div class="input-group-modern">
-                    <span class="input-group-text-modern">₱</span>
-                    <input type="number" step="0.01" class="input-modern" id="fare" name="fare"
-                           value="<?= old('fare') ?>" min="1" placeholder="e.g. 150.00" required>
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label-modern d-block">Vehicle Type</label>
-                <div class="d-flex gap-3 flex-wrap">
-                    <div class="form-check-modern">
-                        <input class="form-check-input" type="radio" name="vehicle_type" id="type_van" value="van"
-                               <?= old('vehicle_type', 'van') == 'van' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="type_van">🚐 Van</label>
+            <div class="mb-4">
+                <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
+                <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                        <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
+                        <div class="input-group-modern" style="max-width: 250px;">
+                            <span class="input-group-text-modern">₱</span>
+                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
+                                   value="<?= old('fares.van', old('fare')) ?>" placeholder="Fare amount (e.g. 150.00)">
+                        </div>
                     </div>
-                    <div class="form-check-modern">
-                        <input class="form-check-input" type="radio" name="vehicle_type" id="type_jeepney" value="jeepney"
-                               <?= old('vehicle_type') == 'jeepney' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="type_jeepney">🚌 Jeepney</label>
+                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                        <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
+                        <div class="input-group-modern" style="max-width: 250px;">
+                            <span class="input-group-text-modern">₱</span>
+                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
+                                   value="<?= old('fares.jeepney') ?>" placeholder="Fare amount (e.g. 100.00)">
+                        </div>
                     </div>
-                    <div class="form-check-modern">
-                        <input class="form-check-input" type="radio" name="vehicle_type" id="type_minibus" value="minibus"
-                               <?= old('vehicle_type') == 'minibus' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="type_minibus">🚍 Mini Bus</label>
+                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                        <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
+                        <div class="input-group-modern" style="max-width: 250px;">
+                            <span class="input-group-text-modern">₱</span>
+                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
+                                   value="<?= old('fares.minibus') ?>" placeholder="Fare amount (e.g. 120.00)">
+                        </div>
                     </div>
                 </div>
             </div>

@@ -46,7 +46,9 @@ $routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('store', 'Admin\Routes::store');
     $routes->get('edit/(:num)', 'Admin\Routes::edit/$1');
     $routes->post('update/(:num)', 'Admin\Routes::update/$1');
+    $routes->post('update_group/(:num)', 'Admin\Routes::updateGroup/$1');
     $routes->post('delete/(:num)', 'Admin\Routes::delete/$1');
+    $routes->post('delete_group/(:num)', 'Admin\Routes::deleteGroup/$1');
 });
 
 // Vehicle Register — Admin only (per DFD 2.1: only Admin inputs vehicle records)

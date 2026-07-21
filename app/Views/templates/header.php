@@ -38,22 +38,7 @@
             transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        /* Disable Bootstrap fade animation but allow transitionend to fire */
-        .fade {
-            opacity: 1 !important;
-            transition: opacity 0.001s !important;
-            animation: none !important;
-        }
 
-        .show {
-            opacity: 1 !important;
-        }
-
-        /* Disable all Bootstrap animations */
-        .modal.fade .modal-dialog {
-            animation: none !important;
-            transition: none !important;
-        }
 
         /* Disable tooltip/popover animations */
         .tooltip-inner,
@@ -73,40 +58,58 @@
 
         /* Admin theme: keep color application but prefer tokens with fallbacks */
         body.admin-theme {
-            background-color: var(--bg-main, #f1f5f9) !important;
-            color: var(--text-main, #1e293b) !important;
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
         }
 
         body.admin-theme .main-content {
-            background-color: #f1f5f9 !important;
+            background-color: var(--bg-main) !important;
         }
 
         body.admin-theme .border-bottom {
-            border-color: #e2e8f0 !important;
+            border-color: var(--border) !important;
         }
 
         body.admin-theme .text-muted {
-            color: #475569 !important;
+            color: var(--text-muted) !important;
         }
         
         body.admin-theme .card .text-muted,
         body.admin-theme .table .text-muted,
         body.admin-theme .list-group-item .text-muted {
-            color: #475569 !important; 
+            color: var(--text-muted) !important; 
         }
 
         body.admin-theme .h2,
         body.admin-theme .h1,
-        body.admin-theme h1,
+        body.admin-theme h1:not(.logo-text h1),
         body.admin-theme h2 {
-            color: #1e293b !important;
+            color: var(--text-main) !important;
+        }
+
+        body.admin-theme #site-header .logo-text h1,
+        body.admin-theme .logo-text h1,
+        body.staff-theme #site-header .logo-text h1,
+        body.staff-theme .logo-text h1 {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body.admin-theme #site-header .logo-text h1,
+            body.admin-theme .logo-text h1,
+            body.staff-theme #site-header .logo-text h1,
+            body.staff-theme .logo-text h1 {
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+            }
         }
 
         body.admin-theme .card:not(.text-white) {
-            background-color: white !important;
-            border-color: #e2e8f0 !important;
-            border: 1px solid #e2e8f0 !important;
-            color: #1e293b !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-main) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
         }
 
@@ -124,18 +127,16 @@
         }
 
         body.admin-theme .table {
-            color: #1e293b;
+            color: var(--text-main);
         }
 
         body.admin-theme .table-light {
-            background-color: #f8fafc;
+            background-color: var(--surface-sunken, #f8fafc);
         }
 
         body.admin-theme .table-dark {
             background-color: var(--primary);
         }
-
-
 
         body.admin-theme .bg-primary {
             background-color: var(--primary) !important;
@@ -148,65 +149,65 @@
         }
 
         body.admin-theme .btn-outline-secondary {
-            border-color: #cbd5e1;
-            color: #475569;
+            border-color: var(--border-strong, #cbd5e1);
+            color: var(--text-muted, #475569);
         }
 
         body.admin-theme .btn-outline-secondary:hover {
-            background-color: #f1f5f9;
-            border-color: #94a3b8;
-            color: #1e293b;
+            background-color: var(--surface-sunken, #f1f5f9);
+            border-color: var(--border-strong, #94a3b8);
+            color: var(--text-main, #1e293b);
         }
 
         /* Quick Actions: readable button and natural dropdown on admin dashboard */
         body.admin-theme .table .btn-outline-dark {
-            border-color: #e2e8f0;
-            color: #1e293b;
-            background: #fff;
+            border-color: var(--border);
+            color: var(--text-main);
+            background: var(--surface);
         }
 
         body.admin-theme .table .btn-outline-dark:hover {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-            color: #1e293b;
+            background-color: var(--surface-sunken);
+            border-color: var(--border-strong);
+            color: var(--text-main);
         }
 
         /* Staff theme: keep color application but prefer tokens with fallbacks */
         body.staff-theme {
-            background-color: var(--bg-main, #f1f5f9) !important;
-            color: var(--text-main, #1e293b) !important;
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
         }
 
         body.staff-theme .main-content {
-            background-color: #f1f5f9 !important;
+            background-color: var(--bg-main) !important;
         }
 
         body.staff-theme .border-bottom {
-            border-color: #e2e8f0 !important;
+            border-color: var(--border) !important;
         }
 
         body.staff-theme .text-muted {
-            color: #475569 !important;
+            color: var(--text-muted) !important;
         }
         
         body.staff-theme .card .text-muted,
         body.staff-theme .table .text-muted,
         body.staff-theme .list-group-item .text-muted {
-            color: #475569 !important; 
+            color: var(--text-muted) !important; 
         }
 
         body.staff-theme .h2,
         body.staff-theme .h1,
-        body.staff-theme h1,
+        body.staff-theme h1:not(.logo-text h1),
         body.staff-theme h2 {
-            color: #1e293b !important;
+            color: var(--text-main) !important;
         }
 
         body.staff-theme .card:not(.text-white) {
-            background-color: white !important;
-            border-color: #e2e8f0 !important;
-            border: 1px solid #e2e8f0 !important;
-            color: #1e293b !important;
+            background-color: var(--surface) !important;
+            border-color: var(--border) !important;
+            border: 1px solid var(--border) !important;
+            color: var(--text-main) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
         }
 
@@ -224,11 +225,11 @@
         }
 
         body.staff-theme .table {
-            color: #1e293b;
+            color: var(--text-main);
         }
 
         body.staff-theme .table-light {
-            background-color: #f8fafc;
+            background-color: var(--surface-sunken, #f8fafc);
         }
 
         body.staff-theme .table-dark {
@@ -246,27 +247,27 @@
         }
 
         body.staff-theme .btn-outline-secondary {
-            border-color: #cbd5e1;
-            color: #64748b;
+            border-color: var(--border-strong, #cbd5e1);
+            color: var(--text-muted, #64748b);
         }
 
         body.staff-theme .btn-outline-secondary:hover {
-            background-color: #f1f5f9;
-            border-color: #94a3b8;
-            color: #1e293b;
+            background-color: var(--surface-sunken, #f1f5f9);
+            border-color: var(--border-strong, #94a3b8);
+            color: var(--text-main, #1e293b);
         }
 
         /* Quick Actions: readable button and natural dropdown on staff dashboard */
         body.staff-theme .table .btn-outline-dark {
-            border-color: #e2e8f0;
-            color: #1e293b;
-            background: #fff;
+            border-color: var(--border);
+            color: var(--text-main);
+            background: var(--surface);
         }
 
         body.staff-theme .table .btn-outline-dark:hover {
-            background-color: #f8fafc;
-            border-color: #cbd5e1;
-            color: #1e293b;
+            background-color: var(--surface-sunken);
+            border-color: var(--border-strong);
+            color: var(--text-main);
         }
 
         /* Lock layout: no horizontal shift, scrollbar space always reserved */

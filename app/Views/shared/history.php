@@ -50,7 +50,7 @@
                                     <strong><?= esc($item['destination']) ?></strong>
                                 </td>
                                 <td data-label="Departure Time">
-                                    <span class="badge bg-secondary fs-6">
+                                    <span class="badge-modern badge-modern-info">
                                         <?= strtoupper(date('M d, Y H:i', strtotime($item['departure_time']))) ?>
                                     </span>
                                 </td>

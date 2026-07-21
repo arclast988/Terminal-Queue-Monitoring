@@ -447,7 +447,7 @@
             font-size: 16px;
             font-weight: 800;
             color: var(--primary);
-            background: #e3f2fd;
+            background: var(--primary-soft);
             padding: 5px 12px;
             border-radius: 8px;
             display: inline-block;
@@ -799,12 +799,12 @@
                                 </td>
                                 <td data-label="Est. Departure">
                                     <?php if ($schedule['status'] === 'departed' && $schedule['departure_time']): ?>
-                                        <span class="time-display" style="background: var(--text-muted); color: white;">
+                                        <span class="time-display departed">
                                             <?= date('g:i A', strtotime($schedule['departure_time'])) ?>
                                         </span>
                                         <div style="font-size: 11px; color: var(--text-muted);">Departed</div>
                                     <?php elseif ($schedule['is_full']): ?>
-                                        <span class="time-display" style="background: #16a34a; color: white;">
+                                        <span class="time-display full">
                                             FULL — Ready
                                         </span>
                                     <?php else: ?>
@@ -910,9 +910,9 @@
                 var statusClass = statusClassMap[s.status] || 'status-departed';
                 var dep = '';
                 if (s.status === 'departed' && s.departure_time_formatted) {
-                    dep = '<span class="time-display" style="background:#64748b;color:white">' + s.departure_time_formatted + '</span><div style="font-size:11px;color:var(--text-muted)">Departed</div>';
+                    dep = '<span class="time-display departed">' + s.departure_time_formatted + '</span><div style="font-size:11px;color:var(--text-muted)">Departed</div>';
                 } else if (s.is_full) {
-                    dep = '<span class="time-display" style="background:#16a34a;color:white">FULL</span>';
+                    dep = '<span class="time-display full">FULL</span>';
                 } else {
                     dep = '<span class="time-display">' + (s.estimated_departure_formatted || 'Waiting') + '</span><div style="font-size:11px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
                 }

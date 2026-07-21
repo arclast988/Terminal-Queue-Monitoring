@@ -216,7 +216,7 @@
     .route-item { border-radius: 6px; margin-bottom: 0.25rem; padding: 0.55rem 0.65rem 0.55rem 2rem; }
     .route-item:last-child { margin-bottom: 0; }
     .route-item .form-check-input { margin-left: -1.35rem; }
-    .route-name { font-weight: 600; color: #1e293b; }
+    .route-name { font-weight: 600; color: var(--text-main, #1e293b); }
     .user-form-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
     @media (max-width: 767.98px) {
         .user-form-heading { align-items: flex-start !important; gap: 0.75rem; }

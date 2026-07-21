@@ -341,7 +341,7 @@
             font-size: 16px;
             font-weight: 800;
             color: var(--primary);
-            background: #e3f2fd;
+            background: var(--primary-soft);
             padding: 5px 12px;
             border-radius: 8px;
             display: inline-block;
