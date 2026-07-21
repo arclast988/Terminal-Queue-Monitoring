@@ -8,50 +8,6 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 ?>
 
 <style>
-/* ── Smooth modal entrance animation (replaces Bootstrap's jarring fade) ── */
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95) translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-@keyframes backdropFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-/* Override Bootstrap's default fade transition with smooth custom animation */
-#addFareModal.fade,
-#editFareModal.fade,
-#editDiscountModal.fade,
-#addDiscountModal.fade {
-    transition: none !important;
-}
-#addFareModal.fade.show,
-#editFareModal.fade.show,
-#editDiscountModal.fade.show,
-#addDiscountModal.fade.show {
-    opacity: 1 !important;
-}
-
-/* Smooth scale+fade entrance on modal content */
-#addFareModal.show .modal-content,
-#editFareModal.show .modal-content,
-#editDiscountModal.show .modal-content,
-#addDiscountModal.show .modal-content {
-    animation: modalSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) both !important;
-}
-
-/* Smooth backdrop fade (not instant, not Bootstrap's jarring default) */
-.modal-backdrop.show {
-    animation: backdropFadeIn 0.2s ease-out both !important;
-    transition: none !important;
-}
-
 /* Freeze card hover shifts while modal is open */
 body.modal-open .fare-section-card,
 body.modal-open .discount-rate-card,

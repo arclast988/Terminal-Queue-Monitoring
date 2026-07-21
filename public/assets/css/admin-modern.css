@@ -533,23 +533,36 @@ body.admin-theme .page-hero .subtitle {
    MODALS
    ================================================================= */
 
+/* ── Smooth modal entrance animation ── */
+@keyframes adminModalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+@keyframes adminBackdropFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 0.65; }
+}
+
 .modal {
-    animation: none !important;
     transition: none !important;
 }
 
 .modal.fade {
-    opacity: 0 !important;
-    animation: none !important;
-    transition: none !important;
-    visibility: hidden !important;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out !important;
 }
 
 .modal.fade.show {
     opacity: 1 !important;
     visibility: visible !important;
-    animation: none !important;
-    transition: none !important;
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out !important;
 }
 
 .modal.show {
@@ -559,8 +572,6 @@ body.admin-theme .page-hero .subtitle {
     pointer-events: auto !important;
     opacity: 1 !important;
     visibility: visible !important;
-    animation: none !important;
-    transition: none !important;
 }
 
 .modal-backdrop {
@@ -571,12 +582,11 @@ body.admin-theme .page-hero .subtitle {
 }
 
 .modal-backdrop.show {
-    opacity: 0.65 !important;
+    animation: adminBackdropFadeIn 0.2s ease-out both !important;
 }
 
 .modal-dialog {
-    animation: none !important;
-    transition: none !important;
+    animation: adminModalSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) both !important;
     pointer-events: auto !important;
     position: relative !important;
     margin: auto !important;
@@ -602,8 +612,6 @@ body.modal-open .modal {
     border: 1px solid #e2e8f0 !important;
     border-radius: 8px !important;
     color: #1e293b !important;
-    animation: none !important;
-    transition: none !important;
     pointer-events: auto !important;
     max-width: 500px !important;
     width: auto !important;
