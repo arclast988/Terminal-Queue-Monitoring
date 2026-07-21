@@ -8,12 +8,33 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 ?>
 
 <style>
-/* Freeze card hover shifts while modal is open to eliminate screen flash/repaint flicker */
+/* ── Anti-flash: kill Bootstrap fade animation on fare/discount modals ── */
+#addFareModal,
+#editFareModal,
+#editDiscountModal,
+#addDiscountModal,
+#addFareModal .modal-dialog,
+#editFareModal .modal-dialog,
+#editDiscountModal .modal-dialog,
+#addDiscountModal .modal-dialog,
+#addFareModal .modal-content,
+#editFareModal .modal-content,
+#editDiscountModal .modal-content,
+#addDiscountModal .modal-content {
+    animation: none !important;
+    transition: none !important;
+}
+/* Backdrop appears instantly — no slow fade that causes repaint flash */
+.modal-backdrop {
+    transition: none !important;
+}
+/* Freeze card hover shifts while modal is open */
 body.modal-open .fare-section-card,
 body.modal-open .discount-rate-card,
 body.modal-open .fare-item {
     transform: none !important;
     transition: none !important;
+    box-shadow: none !important;
 }
 /* Fare Card/Item Hover & Transition Animation */
 .fare-section-card {
