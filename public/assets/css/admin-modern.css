@@ -145,7 +145,6 @@ select {
 html, 
 body,
 .main-content,
-.modal,
 .modal-content {
     background-color: white !important;
 }
@@ -542,8 +541,9 @@ body.staff-theme.modal-open .modal {
     justify-content: center !important;
 }
 
-/* Modal wrapper fade transition */
 .modal {
+    opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     transition: opacity 0.2s ease-out, visibility 0.2s ease-out !important;
 }
