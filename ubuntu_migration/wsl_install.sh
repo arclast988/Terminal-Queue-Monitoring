@@ -20,10 +20,10 @@ echo "[1/6] Updating apt index and installing core utilities..."
 export DEBIAN_FRONTEND=noninteractive
 
 # Clean up any broken ondrej/php PPA repository sources from previous failed runs
-rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.sources 2>/dev/null
-rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.list 2>/dev/null
+rm -f /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null
+rm -f /etc/apt/sources.list.d/ondrej-*.list 2>/dev/null
 
-apt-get update -y
+apt-get update -y || echo "[WARN] apt-get update finished with warnings."
 apt-get install -y git curl unzip software-properties-common ca-certificates lsb-release gnupg sed
 
 # --- 2. MariaDB ---

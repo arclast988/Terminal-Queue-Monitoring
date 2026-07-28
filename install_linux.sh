@@ -70,38 +70,51 @@ echo "====================================================================="
 # ── 1. System packages ──────────────────────────────────────────────────────
 say "Installing system packages (this can take a few minutes)…"
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -y
+
+# Clean up any broken ondrej/php PPA repository sources from previous failed runs
+rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.sources 2>/dev/null
+rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.list 2>/dev/null
+
+apt-get update -y || warn "apt update finished with warnings."
 apt-get install -y git curl unzip ca-certificates lsb-release gnupg software-properties-common
 
 apt-get install -y mariadb-server mariadb-client
 
-# PHP 8.2+ — add the PHP repository first to make sure we have access to the latest versions.
+# PHP 8.2+ — add PPA for supported Ubuntu/Mint LTS codenames, or fallback to distro packages
 . /etc/os-release 2>/dev/null || true
-if [ -n "${UBUNTU_CODENAME:-}" ] || [ -n "${VERSION_CODENAME:-}" ]; then
-    TARGET_CODENAME="${UBUNTU_CODENAME:-${VERSION_CODENAME}}"
+TARGET_CODENAME="${UBUNTU_CODENAME:-$(lsb_release -cs 2>/dev/null || echo "")}"
+
+USE_PPA=false
+case "$TARGET_CODENAME" in
+    focal|jammy|noble)
+        USE_PPA=true
+        ;;
+    *)
+        warn "Distribution codename '${TARGET_CODENAME:-unknown}' is not a standard Ubuntu LTS base. Skipping ondrej/php PPA..."
+        ;;
+esac
+
+if [ "$USE_PPA" = true ]; then
     say "Adding ondrej/php PPA (base: ${TARGET_CODENAME}) to access latest PHP versions…"
     if ! add-apt-repository -y ppa:ondrej/php >/dev/null 2>&1; then
-        die "Could not add the ondrej/php PPA. Confirm your Linux distribution is supported and you have network access."
+        warn "Could not add ondrej/php PPA. Falling back to default repositories."
+        rm -f /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null
+        rm -f /etc/apt/sources.list.d/ondrej-*.list 2>/dev/null
+    else
+        # If add-apt-repository used Mint's codename (e.g. victoria/wilma), rewrite it to Ubuntu base (e.g. jammy/noble).
+        if [ -n "${VERSION_CODENAME:-}" ] && [ -n "${UBUNTU_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
+            sed -i "s/\b${VERSION_CODENAME}\b/${UBUNTU_CODENAME}/g" \
+                /etc/apt/sources.list.d/ondrej-*.list \
+                /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null || true
+        fi
     fi
-    # If add-apt-repository used Mint's codename, rewrite it to the Ubuntu base.
-    if [ -n "${VERSION_CODENAME:-}" ] && [ -n "${UBUNTU_CODENAME:-}" ] && [ "${VERSION_CODENAME}" != "${UBUNTU_CODENAME}" ]; then
-        sed -i "s/\b${VERSION_CODENAME}\b/${UBUNTU_CODENAME}/g" \
-            /etc/apt/sources.list.d/ondrej-*.list \
-            /etc/apt/sources.list.d/ondrej-*.sources 2>/dev/null || true
-    fi
-    apt-get update -y
-elif ! apt-cache show "php${PHP_VER}-cli" >/dev/null 2>&1; then
-    # On Debian/LMDE, advise adding Sury's repo if 8.2 is missing
-    die "Could not add a PHP repository. On Debian/LMDE please add Sury's repo (https://deb.sury.org/), then re-run."
 fi
+apt-get update -y || warn "apt update finished with warnings."
 
-# Detect PHP. Resolution order (mirrors ubuntu_migration/wsl_install.sh):
-#   1. An already-installed PHP in the 8.2-8.9 range (incl. 8.5) — reuse it,
-#      don't reinstall. Confirmed via dpkg so a half-removed package is ignored.
-#   2. Otherwise auto-install the newest fully-packaged PHP in the 8.2-8.4 range
-#      (matches composer's ^8.2). The upper bound is capped: a brand-new release
-#      (e.g. 8.5) may publish php8.x-cli before all its extensions
-#      (php8.x-opcache, etc.) land, which would break the apt install below.
+# Detect PHP. Resolution order:
+#   1. An already-installed PHP in the 8.2-8.9 range — reuse it.
+#   2. Auto-install newest available PHP in apt-cache.
+#   3. Fall back to distro default php-* packages.
 EXISTING_PHP=""
 for _v in $(ls /etc/php 2>/dev/null | grep -E '^8\.[2-9]$' | sort -V -r); do
     if dpkg -s "php${_v}-cli" >/dev/null 2>&1; then
@@ -114,31 +127,46 @@ if [ -n "$EXISTING_PHP" ]; then
     PHP_VER="$EXISTING_PHP"
     ok "Using already-installed PHP ${PHP_VER} (no reinstall)."
 else
-    say "Searching for the latest supported PHP version..."
-    LATEST_PHP="$(apt-cache pkgnames | grep -E '^php8\.[2-4]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1)"
+    say "Searching for available PHP version..."
+    LATEST_PHP="$(apt-cache pkgnames 2>/dev/null | grep -E '^php8\.[2-9]-cli$' | sed -E 's/^php([0-9]+\.[0-9]+)-cli$/\1/' | sort -V | tail -n1 || true)"
     if [ -n "$LATEST_PHP" ]; then
         PHP_VER="$LATEST_PHP"
         ok "Found PHP ${PHP_VER} as the latest available version."
     else
-        warn "Could not query apt-cache for newer PHP versions; defaulting to PHP ${PHP_VER}."
+        PHP_VER=""
+        say "Using distribution default PHP packages."
     fi
 fi
-WANTED_PKGS=(
-    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl"
-    "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip"
-    "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
-)
+
+if [ -n "$PHP_VER" ]; then
+    WANTED_PKGS=(
+        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl"
+        "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip"
+        "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
+    )
+else
+    WANTED_PKGS=(
+        "php-cli" "php-fpm" "php-mysql" "php-intl"
+        "php-mbstring" "php-curl" "php-xml" "php-zip"
+        "php-gd" "php-opcache" "php-common"
+    )
+fi
+
 PKGS_TO_INSTALL=()
 for pkg in "${WANTED_PKGS[@]}"; do
     if apt-cache show "$pkg" >/dev/null 2>&1; then
         PKGS_TO_INSTALL+=("$pkg")
     else
-        warn "Skipping package '$pkg' (not found in apt repositories, possibly built-in)."
+        warn "Skipping package '$pkg' (not found in apt repositories)."
     fi
 done
 apt-get install -y "${PKGS_TO_INSTALL[@]}"
 
 apt-get install -y nginx
+
+if [ -z "$PHP_VER" ]; then
+    PHP_VER="$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || echo "8.2")"
+fi
 ok "Packages installed."
 
 # ── 2. Composer ─────────────────────────────────────────────────────────────
@@ -277,8 +305,14 @@ ok "WebSocket service enabled."
 
 # ── 10. Start web services + open the firewall ──────────────────────────────
 say "Starting Nginx + PHP-FPM…"
-systemctl enable "php${PHP_VER}-fpm" >/dev/null 2>&1 || true
-systemctl restart "php${PHP_VER}-fpm"
+FPM_SVC="php${PHP_VER}-fpm"
+if ! systemctl list-unit-files 2>/dev/null | grep -qE "^${FPM_SVC}\.service"; then
+    if systemctl list-unit-files 2>/dev/null | grep -qE "^php-fpm\.service"; then
+        FPM_SVC="php-fpm"
+    fi
+fi
+systemctl enable "$FPM_SVC" >/dev/null 2>&1 || true
+systemctl restart "$FPM_SVC"
 nginx -t
 systemctl enable nginx >/dev/null 2>&1 || true
 systemctl restart nginx
