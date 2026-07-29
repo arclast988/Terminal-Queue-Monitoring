@@ -256,7 +256,12 @@ footer {
 
 /* Responsive Footer */
 @media (max-width: 768px) {
-    .footer-content { grid-template-columns: 1fr; gap: 30px; }
+    .footer-content { grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+    .f-about { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+    .footer-content { grid-template-columns: 1fr 1fr; }
+    .f-links:nth-child(4) { grid-column: 1 / -1; }
 }
 
 /* --- Modals --- */
