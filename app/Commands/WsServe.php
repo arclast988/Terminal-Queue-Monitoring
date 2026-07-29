@@ -64,8 +64,8 @@ class WsServe extends BaseCommand
             $write = null;
             $except = null;
 
-            // Wait up to 5 seconds for activity
-            $numChanged = stream_select($read, $write, $except, 5);
+            // Wait up to 200ms for activity (keeps broadcast latency under ~200ms)
+            $numChanged = stream_select($read, $write, $except, 0, 200000);
 
             // Heartbeat check every 30 seconds
             if (time() - $lastPing >= 30) {

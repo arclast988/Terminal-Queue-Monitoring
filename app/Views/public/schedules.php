@@ -842,9 +842,8 @@
     <!-- Footer -->
     <?= $this->include('templates/guestfooter') ?>
 
-        <!-- Public board is poll-only (ws-client.js intentionally NOT loaded):
-             refreshes every 3s via the cached /schedules/status endpoint, freeing
-             the WebSocket server for staff/admin. -->
+        <!-- WebSocket is the fast path; polling remains the fallback. -->
+        <script src="<?= base_url('js/ws-client.js') ?>"></script>
         <script src="<?= base_url('js/queue-sync.js') ?>"></script>
         <script>
         var currentType = '<?= esc($vehicle_type) ?>';
@@ -958,12 +957,13 @@
             sel.value = current; // restore selection if still present
         }
 
-        // Initialize real-time sync (poll-only: refresh via fetchSchedulesStatus every 3s).
-        // No WebSocket is opened here (ws-client.js is intentionally not loaded).
+        // Initialize real-time sync. WebSocket messages refresh immediately;
+        // polling still runs as the fallback if the socket is unavailable.
         document.addEventListener('DOMContentLoaded', function() {
             QueueSync.init({
                 pollInterval:  3000,
-                customRefresh: fetchSchedulesStatus
+                customRefresh: fetchSchedulesStatus,
+                customWSHandler: fetchSchedulesStatus
             });
             fetchSchedulesStatus(); // Initial load
         });

@@ -5,9 +5,9 @@
  *
  * How it works:
  *   1. On each click, immediately update the UI (optimistic)
- *   2. Start/reset a 400ms debounce timer
- *   3. When the timer fires, send ONE request with the final count
- *   4. The server sets the count directly (not increment/decrement)
+ *   2. Send the first click immediately for fast WebSocket fan-out
+ *   3. Coalesce rapid follow-up clicks while a request is in flight
+ *   4. The server sets the latest count directly (not increment/decrement)
  *
  * Usage:
  *   PassengerDebounce.init({
@@ -27,7 +27,7 @@
 (function(window) {
     'use strict';
 
-    var DEBOUNCE_MS = 400;
+    var DEBOUNCE_MS = 120;
 
     // Pending timers keyed by queue item ID
     var _timers = {};
@@ -89,12 +89,23 @@
         }
     }
 
+    function scheduleSend(id, delay) {
+        if (_timers[id]) clearTimeout(_timers[id]);
+        _timers[id] = setTimeout(function() {
+            delete _timers[id];
+            sendToServer(id);
+        }, delay);
+    }
+
     function sendToServer(id) {
         var count = _pending[id];
         if (count === undefined) return;
 
-        // Don't send if already in-flight with same count
-        if (_inflight[id] === count) return;
+        if (_inflight[id] !== undefined) {
+            scheduleSend(id, DEBOUNCE_MS);
+            return;
+        }
+
         _inflight[id] = count;
 
         var url = _config.setUrl.replace('{id}', id);
@@ -119,8 +130,25 @@
         })
         .then(function(response) { return response.json(); })
         .then(function(data) {
+            var sentCount = _inflight[id];
             delete _inflight[id];
-            delete _pending[id];
+
+            if (data.success) {
+                var serverCount = parseInt(data.new_count, 10);
+                var serverCapacity = parseInt(data.capacity, 10);
+                var hasNewerPending = _pending[id] !== undefined && _pending[id] !== sentCount;
+
+                if (!hasNewerPending) {
+                    delete _pending[id];
+                    if (!isNaN(serverCount) && !isNaN(serverCapacity)) {
+                        updateUI(id, serverCount, serverCapacity);
+                    }
+                } else {
+                    scheduleSend(id, 0);
+                }
+            } else {
+                delete _pending[id];
+            }
 
             if (data.success && _config.onUpdated) {
                 _config.onUpdated(id, data);
@@ -176,12 +204,16 @@
             // Immediately update the UI
             updateUI(id, newCount, capacity);
 
-            // Reset debounce timer
-            if (_timers[id]) clearTimeout(_timers[id]);
-            _timers[id] = setTimeout(function() {
-                delete _timers[id];
-                sendToServer(id);
-            }, DEBOUNCE_MS);
+            // Notify QueueSync (if present) to set a cooldown so the pending
+            // poll doesn't overwrite this optimistic update with stale data.
+            var ev = new CustomEvent('passenger-optimistic-update', { detail: { id: id, count: newCount, capacity: capacity } });
+            document.dispatchEvent(ev);
+
+            // Send the first click immediately so WebSocket clients update
+            // without waiting for the polling interval. Rapid follow-up clicks
+            // are coalesced while a request is in flight, and the latest count
+            // is sent as soon as the current request finishes.
+            scheduleSend(id, _inflight[id] === undefined ? 0 : DEBOUNCE_MS);
         }
     };
 

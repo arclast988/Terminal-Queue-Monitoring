@@ -37,6 +37,11 @@
     var _lastIds = {};
     var _paused = false;
 
+    // Tracks the last time a WS passenger_change was received for each ID
+    // so that stale poll data does not overwrite a fresh WS update.
+    var _wsUpdatedAt = {};
+    var WS_COOLDOWN_MS = 2000;
+
     /* ── Passenger UI helpers ── */
 
     function getCountSpan(id) {
@@ -158,6 +163,15 @@
                     return;
                 }
 
+                // If this item was recently updated via WebSocket, skip the
+                // passenger-count overwrite to avoid a stale poll response
+                // rolling back the value. The cooldown is cleared once the
+                // poll has had time to fetch fresh data.
+                var lastWs = _wsUpdatedAt[item.id];
+                if (lastWs && (Date.now() - lastWs) < WS_COOLDOWN_MS) {
+                    return;
+                }
+
                 updatePassengerUI(item.id, item.current_passengers, item.capacity);
             });
 
@@ -170,6 +184,14 @@
             }
 
             _lastIds = currentIds;
+
+            // Prune stale WS cooldown entries
+            var now = Date.now();
+            for (var id in _wsUpdatedAt) {
+                if ((now - _wsUpdatedAt[id]) >= WS_COOLDOWN_MS * 2) {
+                    delete _wsUpdatedAt[id];
+                }
+            }
 
             if (needsRefresh) {
                 ajaxRefresh();
@@ -234,6 +256,7 @@
             var newCount = parseInt(data.new_count, 10);
             var capacity = parseInt(data.capacity, 10);
             if (id && !isNaN(newCount) && !isNaN(capacity)) {
+                _wsUpdatedAt[id] = Date.now();
                 updatePassengerUI(id, newCount, capacity);
                 // If element not found, do full refresh
                 if (!getCountSpan(id)) {
@@ -270,6 +293,14 @@
 
             // Hook visibility change
             document.addEventListener('visibilitychange', onVisibilityChange);
+
+            // Listen for optimistic passenger updates from the debounce module
+            // so stale poll data doesn't overwrite them.
+            document.addEventListener('passenger-optimistic-update', function(e) {
+                if (e.detail && e.detail.id) {
+                    _wsUpdatedAt[e.detail.id] = Date.now();
+                }
+            });
 
             // ALWAYS start polling — this is the guaranteed fallback
             startPolling();

@@ -77,13 +77,19 @@ abstract class BaseController extends Controller
         // Invalidate the short-lived public feed caches so this change is
         // reflected on the very next poll instead of waiting out the TTL.
         // Best-effort: the short TTLs already bound any staleness if this fails.
+        // Passenger changes only need the queue-status cache cleared; heavier
+        // actions (add/remove/status) invalidate all cached public feeds.
         try {
             $cache = cache();
+            $isPassengerChange = ($data['action'] ?? '') === 'passenger_change';
             $cache->delete('rt_queue_status');
             $cache->delete('rt_home_status');
-            $cache->delete('rt_announcements');
-            $cache->delete('rt_fares_api');
             $cache->deleteMatching('rt_sched_status_*');
+
+            if (! $isPassengerChange) {
+                $cache->delete('rt_announcements');
+                $cache->delete('rt_fares_api');
+            }
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement
         }
@@ -107,8 +113,11 @@ abstract class BaseController extends Controller
         try {
             $broadcastPort = (int) env('websocket.broadcastPort', 8082);
             $fp = @stream_socket_client(
-                'tcp://127.0.0.1:' . $broadcastPort, $errno, $errstr, 0,
-                STREAM_CLIENT_CONNECT | STREAM_CLIENT_ASYNC_CONNECT
+                'tcp://127.0.0.1:' . $broadcastPort,
+                $errno,
+                $errstr,
+                0.2,
+                STREAM_CLIENT_CONNECT
             );
             if ($fp) {
                 stream_set_timeout($fp, 0, 200000);

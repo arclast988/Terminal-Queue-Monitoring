@@ -1623,13 +1623,12 @@
 
     <?= $this->include('templates/guestfooter') ?>
 
-    <!-- Public board is poll-only (ws-client.js intentionally NOT loaded):
-         passengers refresh every 3s via the cached /status endpoint, so they
-         don't consume WebSocket-server connections. Staff/admin pages keep the
-         instant WebSocket path. -->
+    <!-- WebSocket is the fast path; polling remains the fallback. -->
+    <script src="<?= base_url('js/ws-client.js') ?>"></script>
     <script src="<?= base_url('js/queue-sync.js') ?>"></script>
     <script>
         var _fetchPending = false;
+        var _fetchQueued = false;
         var baseUrl = '<?= base_url() ?>';
         var routeAverageDepartures = <?= json_encode($route_average_departures ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
         var fareMap = <?= json_encode($fareMap ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
@@ -1780,7 +1779,10 @@
 
         // Fetch status for real-time sync
         function fetchStatus() {
-            if (_fetchPending) return;
+            if (_fetchPending) {
+                _fetchQueued = true;
+                return;
+            }
             _fetchPending = true;
 
             fetch('<?= base_url('status') ?>?_=' + Date.now())
@@ -1898,6 +1900,10 @@
                 })
                 .finally(function () {
                     _fetchPending = false;
+                    if (_fetchQueued) {
+                        _fetchQueued = false;
+                        fetchStatus();
+                    }
                 });
         }
 
@@ -1930,13 +1936,12 @@
             }
         });
 
-        // Initialize real-time sync (poll-only on the public board).
-        // Polls the cached /status endpoint every 3s; no WebSocket connection is
-        // opened here (ws-client.js is intentionally not loaded), keeping the
-        // single-process WS server free for staff/admin.
+        // Initialize real-time sync. WebSocket messages refresh immediately;
+        // polling still runs as the fallback if the socket is unavailable.
         QueueSync.init({
             pollInterval: 3000,
-            customRefresh: fetchStatus
+            customRefresh: fetchStatus,
+            customWSHandler: fetchStatus
         });
 
         fetchStatus(); // Initial fetch

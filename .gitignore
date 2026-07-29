@@ -68,6 +68,10 @@ Thumbs.db
 *.tar.xz
 *.tar.zst
 
+# opencode
+.opencode/
+skills/
+
 # CodeIgniter 4 Writable Directories
 writable/cache/*
 !writable/cache/index.html
