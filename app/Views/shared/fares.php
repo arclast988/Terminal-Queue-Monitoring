@@ -490,14 +490,18 @@ $isManager = $isAdmin;
           <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
             <label class="form-label fw-semibold">Terminal</label>
-            <select name="terminal_id" id="add_fare_terminal_id" class="form-select" required>
-              <?php if (!$onlyTerminal): ?>
+            <?php if ($onlyTerminal): ?>
+              <?php $singleTerminal = reset($terminals); ?>
+              <input type="text" class="form-control" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
+              <input type="hidden" name="terminal_id" id="add_fare_terminal_id" value="<?= $singleTerminal['id'] ?>">
+            <?php else: ?>
+              <select name="terminal_id" id="add_fare_terminal_id" class="form-select" required>
                 <option value="">— Select Terminal —</option>
-              <?php endif; ?>
-              <?php foreach ($terminals as $t): ?>
-                <option value="<?= $t['id'] ?>" <?= $onlyTerminal ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
+                <?php foreach ($terminals as $t): ?>
+                  <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            <?php endif; ?>
           </div>
 
           <div class="mb-3">
@@ -516,7 +520,7 @@ $isManager = $isAdmin;
             <label class="form-label fw-semibold">Fare Amount (₱)</label>
             <div class="input-group">
               <span class="input-group-text">₱</span>
-              <input type="number" name="fare" class="form-control" step="0.01" min="1" placeholder="e.g. 150.00" required>
+              <input type="number" name="fare" class="form-control" step="0.01" min="1" placeholder="0.00" required>
             </div>
           </div>
 
@@ -569,14 +573,18 @@ $isManager = $isAdmin;
           <?php $onlyTerminalEdit = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
             <label class="form-label fw-semibold">Terminal</label>
-            <select name="terminal_id" id="edit_fare_terminal" class="form-select" required>
-              <?php if (!$onlyTerminalEdit): ?>
+            <?php if ($onlyTerminalEdit): ?>
+              <?php $singleTerminalEdit = reset($terminals); ?>
+              <input type="text" class="form-control" value="<?= esc($singleTerminalEdit['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
+              <input type="hidden" name="terminal_id" id="edit_fare_terminal" value="<?= $singleTerminalEdit['id'] ?>">
+            <?php else: ?>
+              <select name="terminal_id" id="edit_fare_terminal" class="form-select" required>
                 <option value="">— Select Terminal —</option>
-              <?php endif; ?>
-              <?php foreach ($terminals as $t): ?>
-                <option value="<?= $t['id'] ?>" <?= $onlyTerminalEdit ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
+                <?php foreach ($terminals as $t): ?>
+                  <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            <?php endif; ?>
           </div>
 
           <div class="mb-3">
@@ -675,14 +683,18 @@ $isManager = $isAdmin;
           <?php $onlyTerminalDisc = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
             <label class="form-label fw-semibold">Terminal</label>
-            <select name="terminal_id" id="add_terminal_id" class="form-select" required>
-              <?php if (!$onlyTerminalDisc): ?>
+            <?php if ($onlyTerminalDisc): ?>
+              <?php $singleTerminalDisc = reset($terminals); ?>
+              <input type="text" class="form-control" value="<?= esc($singleTerminalDisc['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
+              <input type="hidden" name="terminal_id" id="add_terminal_id" value="<?= $singleTerminalDisc['id'] ?>">
+            <?php else: ?>
+              <select name="terminal_id" id="add_terminal_id" class="form-select" required>
                 <option value="">— Select Terminal —</option>
-              <?php endif; ?>
-              <?php foreach ($terminals as $t): ?>
-                <option value="<?= $t['id'] ?>" <?= $onlyTerminalDisc ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
+                <?php foreach ($terminals as $t): ?>
+                  <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            <?php endif; ?>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Discount Label</label>

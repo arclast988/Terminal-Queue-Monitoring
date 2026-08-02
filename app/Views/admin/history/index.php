@@ -65,7 +65,7 @@
         <?php if ($stats['total'] > 0): ?>
                 <form action="<?= base_url('admin/history/delete-all') ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL departure records? This action cannot be undone?');">
                     <?= csrf_field() ?>
-                    <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete All">
+                    <button type="submit" class="btn-modern btn-action-delete" title="Delete All">
                         <i class="bi bi-trash-fill"></i> Delete All
                     </button>
                 </form>

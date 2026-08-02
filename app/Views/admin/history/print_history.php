@@ -253,7 +253,7 @@
 
     <div class="filter-summary">
         <div class="filter-item">
-            <span class="filter-label">Date Range</span>
+            <span class="filter-label">Date Covered</span>
             <strong>
                 <?php if ($from_date && $to_date): ?>
                     <?= strtoupper(date('M d, Y', strtotime($from_date))) ?> — <?= strtoupper(date('M d, Y', strtotime($to_date))) ?>

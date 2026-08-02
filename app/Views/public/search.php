@@ -62,10 +62,13 @@
         }
 
         .logo {
-            width: 45px;
-            height: 45px;
+            width: 58px;
+            height: 58px;
             object-fit: contain;
             border-radius: 10px;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15));
         }
 
         .logo-text h1 {

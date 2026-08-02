@@ -37,93 +37,121 @@
 }
 </style>
 
-<div class="page-header-modern fade-in">
-    <h1 class="page-title-modern">
-        <i class="bi bi-plus-circle"></i> Add New Route / Fare
-    </h1>
-    <a href="<?= base_url('admin/routes') ?>" class="btn-modern btn-modern-outline">
-        <i class="bi bi-arrow-left"></i> Back to List
-    </a>
+<div class="page-header-modern">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title-modern">
+                    <i class="bi bi-plus-circle"></i> Add New Route / Fare
+                </h1>
+                <p class="text-muted mb-0">Create a new route and set initial fare details</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="card-modern fade-in">
-    <div class="card-body-modern">
-        <?php if (session()->getFlashdata('errors')): ?>
-            <div class="alert-modern alert-modern-danger">
-                <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
-                <ul class="mb-0">
-                    <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                        <li><?= esc($error) ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <?php if (session()->getFlashdata('errors')): ?>
+                <div class="alert-modern alert-modern-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Validation Errors:</strong>
+                    <ul class="mb-0 mt-2">
+                        <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                            <li><?= esc($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
 
-        <form action="<?= base_url('admin/routes/store') ?>" method="post">
-            <?= csrf_field() ?>
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <i class="bi bi-map me-2"></i> Route Information
+                </div>
+                <div class="card-body-modern">
+                    <form action="<?= base_url('admin/routes/store') ?>" method="post">
+                        <?= csrf_field() ?>
 
-            <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
-            <div class="mb-3">
-                <label for="terminal_id" class="form-label-modern">Terminal</label>
-                <select class="select-modern" id="terminal_id" name="terminal_id" required>
-                    <?php if (!$onlyTerminal): ?>
-                        <option value="">Select Terminal</option>
-                    <?php endif; ?>
-                    <?php foreach ($terminals as $terminal): ?>
-                        <option value="<?= $terminal['id'] ?>"
-                                data-name="<?= esc($terminal['name']) ?>"
-                                <?= ($onlyTerminal || old('terminal_id') == $terminal['id']) ? 'selected' : '' ?>>
-                            <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <div class="form-text-modern">
-                    <i class="bi bi-info-circle me-1"></i>This terminal is used as the route source.
+                        <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
+                        <div class="mb-4">
+                            <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
+                            <?php if ($onlyTerminal): ?>
+                                <?php $singleTerminal = reset($terminals); ?>
+                                <input type="text" class="input-modern" value="<?= esc($singleTerminal['name']) ?> (<?= esc($singleTerminal['location']) ?>)" readonly style="background-color: var(--surface-sunken, #f8fafc); cursor: not-allowed;">
+                                <input type="hidden" name="terminal_id" id="terminal_id" value="<?= $singleTerminal['id'] ?>">
+                            <?php else: ?>
+                                <select class="select-modern" id="terminal_id" name="terminal_id" required>
+                                    <option value="">Select Terminal</option>
+                                    <?php foreach ($terminals as $terminal): ?>
+                                        <option value="<?= $terminal['id'] ?>"
+                                                data-name="<?= esc($terminal['name']) ?>"
+                                                <?= (old('terminal_id') == $terminal['id']) ? 'selected' : '' ?>>
+                                            <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+                            <div class="form-text-modern">
+                                <i class="bi bi-info-circle me-1"></i>This terminal is used as the route source.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="destination" class="form-label-modern">Destination <span class="text-danger">*</span></label>
+                            <input type="text" class="input-modern" id="destination" name="destination"
+                                   value="<?= old('destination') ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
+                            <div class="form-text-modern">Type the destination city/town name.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
+                            <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
+                            <div class="d-flex flex-column gap-3">
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
+                                    <div class="input-group-modern" style="max-width: 250px;">
+                                        <span class="input-group-text-modern">₱</span>
+                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
+                                               value="<?= old('fares.van', old('fare')) ?>" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
+                                    <div class="input-group-modern" style="max-width: 250px;">
+                                        <span class="input-group-text-modern">₱</span>
+                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
+                                               value="<?= old('fares.jeepney') ?>" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
+                                    <div class="input-group-modern" style="max-width: 250px;">
+                                        <span class="input-group-text-modern">₱</span>
+                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
+                                               value="<?= old('fares.minibus') ?>" placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-5">
+                            <button type="submit" class="btn btn-modern btn-modern-primary">
+                                <i class="bi bi-save"></i> Save Route
+                            </button>
+                            <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <div class="mb-4">
-                <label for="destination" class="form-label-modern">Destination</label>
-                <input type="text" class="input-modern" id="destination" name="destination"
-                       value="<?= old('destination') ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
-                <div class="form-text-modern">Type the destination city/town name.</div>
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
-                <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
-                <div class="d-flex flex-column gap-3">
-                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                        <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
-                        <div class="input-group-modern" style="max-width: 250px;">
-                            <span class="input-group-text-modern">₱</span>
-                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
-                                   value="<?= old('fares.van', old('fare')) ?>" placeholder="Fare amount (e.g. 150.00)">
-                        </div>
-                    </div>
-                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                        <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
-                        <div class="input-group-modern" style="max-width: 250px;">
-                            <span class="input-group-text-modern">₱</span>
-                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
-                                   value="<?= old('fares.jeepney') ?>" placeholder="Fare amount (e.g. 100.00)">
-                        </div>
-                    </div>
-                    <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                        <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
-                        <div class="input-group-modern" style="max-width: 250px;">
-                            <span class="input-group-text-modern">₱</span>
-                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
-                                   value="<?= old('fares.minibus') ?>" placeholder="Fare amount (e.g. 120.00)">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-modern btn-modern-primary">
-                <i class="bi bi-save"></i> Save Route
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 

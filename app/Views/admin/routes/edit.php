@@ -81,18 +81,22 @@
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
                         <div class="mb-4">
                             <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
-                            <select class="select-modern" id="terminal_id" name="terminal_id" required>
-                                <?php if (!$onlyTerminal): ?>
+                            <?php if ($onlyTerminal): ?>
+                                <?php $singleTerminal = reset($terminals); ?>
+                                <input type="text" class="input-modern" value="<?= esc($singleTerminal['name']) ?> (<?= esc($singleTerminal['location']) ?>)" readonly style="background-color: var(--surface-sunken, #f8fafc); cursor: not-allowed;">
+                                <input type="hidden" name="terminal_id" id="terminal_id" value="<?= $singleTerminal['id'] ?>">
+                            <?php else: ?>
+                                <select class="select-modern" id="terminal_id" name="terminal_id" required>
                                     <option value="">Select Terminal</option>
-                                <?php endif; ?>
-                                <?php foreach ($terminals as $terminal): ?>
-                                    <option value="<?= $terminal['id'] ?>"
-                                            data-name="<?= esc($terminal['name']) ?>"
-                                            <?= ($onlyTerminal || old('terminal_id', $route['terminal_id']) == $terminal['id']) ? 'selected' : '' ?>>
-                                        <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                                    <?php foreach ($terminals as $terminal): ?>
+                                        <option value="<?= $terminal['id'] ?>"
+                                                data-name="<?= esc($terminal['name']) ?>"
+                                                <?= (old('terminal_id', $route['terminal_id']) == $terminal['id']) ? 'selected' : '' ?>>
+                                            <?= esc($terminal['name']) ?> (<?= esc($terminal['location']) ?>)
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
                             <div class="form-text-modern">
                                 <i class="bi bi-info-circle me-1"></i>This terminal is used as the route source.
                             </div>
@@ -114,7 +118,7 @@
                                     <div class="input-group-modern" style="max-width: 250px;">
                                         <span class="input-group-text-modern">₱</span>
                                         <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
-                                               value="<?= old('fares.van', $fares['van']) ?>" placeholder="Fare amount (e.g. 150.00)">
+                                               value="<?= old('fares.van', $fares['van']) ?>" placeholder="0.00">
                                     </div>
                                 </div>
                                 <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
@@ -122,7 +126,7 @@
                                     <div class="input-group-modern" style="max-width: 250px;">
                                         <span class="input-group-text-modern">₱</span>
                                         <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
-                                               value="<?= old('fares.jeepney', $fares['jeepney']) ?>" placeholder="Fare amount (e.g. 100.00)">
+                                               value="<?= old('fares.jeepney', $fares['jeepney']) ?>" placeholder="0.00">
                                     </div>
                                 </div>
                                 <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
@@ -130,7 +134,7 @@
                                     <div class="input-group-modern" style="max-width: 250px;">
                                         <span class="input-group-text-modern">₱</span>
                                         <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
-                                               value="<?= old('fares.minibus', $fares['minibus']) ?>" placeholder="Fare amount (e.g. 120.00)">
+                                               value="<?= old('fares.minibus', $fares['minibus']) ?>" placeholder="0.00">
                                     </div>
                                 </div>
                             </div>

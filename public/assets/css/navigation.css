@@ -9,7 +9,7 @@
 
 header#site-header {
   background: var(--nav-bg, var(--surface, #ffffff));
-  padding: 14px 24px;
+  padding: 8px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -38,10 +38,13 @@ header#site-header {
 }
 
 .logo {
-  width: 45px;
-  height: 45px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
   border-radius: 10px;
+  image-rendering: auto;
+  -ms-interpolation-mode: bicubic;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
   transition: transform .3s cubic-bezier(.175, .885, .32, 1.275);
 }
 

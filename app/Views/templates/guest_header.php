@@ -68,7 +68,7 @@
     /* --- Guest Header (logo + nav + clock + language) --- */
     .guest-header {
         background: #ffffff;
-        padding: 15px 5%;
+        padding: 8px 5%;
         box-shadow: var(--shadow-sm);
         display: flex;
         justify-content: space-between;
@@ -83,10 +83,13 @@
         text-decoration: none;
     }
     .guest-header .logo {
-        width: 45px;
-        height: 45px;
+        width: 64px;
+        height: 64px;
         object-fit: contain;
         border-radius: 10px;
+        image-rendering: auto;
+        -ms-interpolation-mode: bicubic;
+        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .guest-header .logo-section:hover .logo {
