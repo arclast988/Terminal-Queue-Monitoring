@@ -3,434 +3,727 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Palompon Transit</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="theme-color" content="#D62828">
+    <title>Sign in · Palompon Transit</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* =================================================================
+           Palompon Transit — Premium Login
+           Design tokens (8pt system)
+           ================================================================= */
+        :root {
+            --red: #D62828;
+            --red-dark: #B71C1C;
+            --red-soft: rgba(214, 40, 40, .10);
+            --white: #FFFFFF;
+            --bg: #F8F9FA;
+            --text: #1F2937;
+            --text-2: #6B7280;
+            --border: #E5E7EB;
+            --border-strong: #D1D5DB;
+            --success: #16A34A;
+
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-2xl: 24px;
+
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-8: 32px;
+            --space-10: 40px;
+            --space-12: 48px;
+            --space-16: 64px;
+
+            --shadow-card: 0 24px 60px -16px rgba(15, 23, 42, .14), 0 10px 24px -12px rgba(15, 23, 42, .08);
+            --shadow-btn: 0 12px 26px -10px rgba(214, 40, 40, .5);
+            --shadow-chip: 0 8px 20px -6px rgba(15, 23, 42, .18);
+
+            --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        a, button, input { touch-action: manipulation; }
+
+        html { -webkit-text-size-adjust: 100%; }
 
         body {
-            background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%);
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
         }
 
-        .login-wrapper {
-            display: flex;
-            width: 95%;
-            max-width: 1100px;
-            min-height: 600px;
-            background: white;
-            border-radius: 20px;
+        /* ---- Subtle transportation scenery (route lines, nodes, faint skyline) ---- */
+        .scenery {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
             overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        .scenery svg { position: absolute; display: block; }
+        .scenery .routes { top: -60px; right: -80px; width: 640px; height: 640px; }
+        .scenery .skyline { bottom: -2px; left: 0; width: 100%; height: 150px; }
 
-        .mobile-logo-header {
-            display: none;
-        }
-
-        /* Desktop Branding Styles */
-        .login-branding {
+        /* =================================================================
+           Layout
+           ================================================================= */
+        .page {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-6) var(--space-6) var(--space-8);
             flex: 1;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            padding: 50px 40px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+        }
+
+        /* ---- Brand row ---- */
+        .brand {
+            display: inline-flex;
             align-items: center;
-            text-align: center;
-            border-right: 3px solid #0052cc;
+            gap: var(--space-3);
+            margin-bottom: clamp(var(--space-5), 4vh, var(--space-8));
+            animation: fadeDown .6s ease .1s both;
         }
-
-        .branding-content {
-            width: 100%;
-        }
-
-        .vehicle-icon {
-            font-size: 60px;
-            color: #0052cc;
-            margin-bottom: 15px;
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-        }
-
-        .branding-content h1 {
-            color: #0052cc;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .branding-content p {
-            color: #0052cc;
-            font-size: 14px;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .features-list {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .feature-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 82, 204, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .feature-box:hover {
-            transform: translateX(10px);
-            box-shadow: 0 6px 20px rgba(0, 82, 204, 0.3);
-        }
-
-        .feature-icon {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, #0052cc 0%, #003d99 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
+        .brand-mark {
+            width: 46px;
+            height: 46px;
+            border-radius: 13px;
+            padding: 3px;
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            box-shadow: 0 8px 18px -8px rgba(15, 23, 42, .22);
+            display: grid;
+            place-items: center;
+            overflow: hidden;
             flex-shrink: 0;
         }
-
-        .feature-text h3 {
-            color: #0052cc;
-            font-size: 14px;
-            font-weight: 700;
-            margin: 0;
+        .brand-mark img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 9px;
+            object-fit: cover;
         }
+        .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; color: var(--text); line-height: 1.2; }
+        .brand-sub { display: block; font-size: 12.5px; font-weight: 500; color: var(--text-2); margin-top: 2px; letter-spacing: 0; }
 
-        .feature-text p {
-            color: #666;
-            font-size: 12px;
-            margin: 0;
-            opacity: 0.8;
-        }
-
-        /* Right Side - Login Form */
-        .login-form-section {
+        /* ---- Main grid: hero (left) / card (right) ---- */
+        .login-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+            gap: clamp(var(--space-10), 5vw, var(--space-16));
+            align-items: center;
             flex: 1;
-            padding: 40px 60px;
+        }
+
+        /* =================================================================
+           Hero / Branding column
+           ================================================================= */
+        .hero-copy { animation: fadeUp .7s ease .15s both; }
+        .kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--red);
+            margin-bottom: var(--space-4);
+        }
+        .kicker::before {
+            content: "";
+            width: 26px;
+            height: 2px;
+            border-radius: 2px;
+            background: var(--red);
+        }
+        .hero-copy h1 {
+            font-size: clamp(2.1rem, 4.2vw, 3.3rem);
+            font-weight: 800;
+            letter-spacing: -.035em;
+            line-height: 1.08;
+            color: var(--text);
+            max-width: 13ch;
+        }
+        .hero-copy h1 .accent { color: var(--red); }
+        .hero-copy .lede {
+            margin-top: var(--space-5);
+            font-size: 16.5px;
+            line-height: 1.65;
+            color: var(--text-2);
+            max-width: 46ch;
+            font-weight: 400;
+        }
+
+        .features {
+            margin-top: var(--space-8);
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            overflow-y: auto;
+            gap: var(--space-4);
         }
-
-        .login-form-section h2 {
-            color: #1a3a7a;
-            font-size: 36px;
-            font-weight: 700;
-            margin-bottom: 15px;
+        .feature { display: flex; align-items: center; gap: var(--space-4); }
+        .feature-icon {
+            width: 40px; height: 40px;
+            border-radius: 11px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            display: grid; place-items: center;
+            color: var(--red);
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px -4px rgba(15, 23, 42, .08);
         }
+        .feature-icon svg { width: 19px; height: 19px; }
+        .feature-text b { display: block; font-size: 14.5px; font-weight: 600; color: var(--text); }
+        .feature-text span { font-size: 13.5px; color: var(--text-2); line-height: 1.45; }
 
-        .login-form-section > p {
-            color: #666;
-            font-size: 15px;
-            margin-bottom: 35px;
+        /* ---- Hero artwork: framed on a red plate so it blends in ---- */
+        .hero-art {
+            position: relative;
+            margin-top: clamp(var(--space-8), 5vh, var(--space-12));
+            border-radius: var(--radius-2xl);
+            background:
+                radial-gradient(120% 130% at 18% 12%, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, 0) 46%),
+                linear-gradient(158deg, var(--red) 0%, var(--red-dark) 100%);
+            overflow: hidden;
+            box-shadow: 0 30px 70px -24px rgba(183, 28, 28, .5);
+            animation: fadeUp .8s ease .3s both;
         }
-
-        .form-group {
-            margin-bottom: 25px;
+        .hero-art::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(120deg, rgba(255, 255, 255, .05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .05) 50%, rgba(255, 255, 255, .05) 75%, transparent 75%);
+            background-size: 28px 28px;
+            opacity: .5;
         }
-
-        .form-group label {
+        .hero-art::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), inset 0 -70px 80px -60px rgba(0, 0, 0, .35);
+            border-radius: var(--radius-2xl);
+            pointer-events: none;
+        }
+        .hero-art .art-route { position: absolute; top: 24px; left: 24px; width: 210px; height: 120px; z-index: 2; }
+        .hero-art img {
+            position: relative;
+            z-index: 1;
             display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 14px;
+            width: 100%;
+            height: auto;
+            max-height: 430px;
+            object-fit: contain;
+            filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .22));
         }
 
-        .form-group input {
+        /* =================================================================
+           Login card
+           ================================================================= */
+        .login-card {
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            border: 1px solid rgba(229, 231, 235, .8);
+            box-shadow: var(--shadow-card);
+            padding: var(--space-10);
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 15px;
-            transition: all 0.3s ease;
+            max-width: 440px;
+            margin: 0 auto;
+            animation: slideUp .7s cubic-bezier(.22, 1, .36, 1) .25s both;
+        }
+        .login-card .card-head { margin-bottom: var(--space-8); }
+        .login-card h2 { font-size: 25px; font-weight: 700; letter-spacing: -.02em; color: var(--text); }
+        .login-card .card-sub { margin-top: var(--space-2); font-size: 14.5px; color: var(--text-2); line-height: 1.55; }
+
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-left: 4px solid var(--red);
+            color: #B91C1C;
+            font-size: 13.5px;
+            line-height: 1.5;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-6);
+        }
+        .alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+
+        .field { margin-bottom: var(--space-5); }
+        .field label {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: var(--space-2);
+        }
+        .field .control { position: relative; }
+        .field input {
+            width: 100%;
+            height: 52px;
+            padding: 0 var(--space-4);
             font-family: inherit;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+            background: #FCFDFD;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
         }
-
-        .form-group input:focus {
+        .field input::placeholder { color: #9CA3AF; font-weight: 400; }
+        .field input:hover { border-color: var(--border-strong); }
+        .field input:focus {
             outline: none;
-            border-color: #1565c0;
-            box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.12);
+            border-color: var(--red);
+            background: var(--white);
+            box-shadow: 0 0 0 4px var(--red-soft);
         }
+        .field.password input { padding-right: 56px; }
 
-        .remember-forgot {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .remember-forgot a {
-            color: #0052cc;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: #0052cc;
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
-            color: white;
+        .toggle {
+            position: absolute;
+            top: 50%;
+            right: 4px;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 700;
+            background: transparent;
+            color: #9CA3AF;
+            border-radius: var(--radius-md);
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(21, 101, 192, 0.3);
+            transition: color .15s ease, background .15s ease;
+        }
+        .toggle:hover { color: var(--text-2); background: rgba(15, 23, 42, .04); }
+        .toggle svg { width: 20px; height: 20px; }
+        .toggle .icon-off { display: none; }
+        .toggle[aria-pressed="true"] .icon-on { display: none; }
+        .toggle[aria-pressed="true"] .icon-off { display: block; }
+
+        .options {
             display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-4);
+            margin: var(--space-2) 0 var(--space-6);
+        }
+        .check {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 48px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .check input { position: absolute; opacity: 0; width: 20px; height: 20px; }
+        .check .box {
+            width: 20px; height: 20px;
+            border: 1.5px solid var(--border-strong);
+            border-radius: 6px;
+            background: var(--white);
+            display: grid; place-items: center;
+            flex-shrink: 0;
+            transition: background .15s ease, border-color .15s ease;
+        }
+        .check .box svg { width: 12px; height: 12px; color: #fff; opacity: 0; transition: opacity .15s ease; }
+        .check input:checked + .box { background: var(--red); border-color: var(--red); }
+        .check input:checked + .box svg { opacity: 1; }
+        .check input:focus-visible + .box { outline: 2px solid var(--red); outline-offset: 2px; }
+        .check .label { font-size: 14px; font-weight: 500; color: var(--text); }
+        .forgot {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--red);
+            text-decoration: none;
+            min-height: 48px;
+            display: inline-flex;
+            align-items: center;
+            padding: 0 2px;
+            border-radius: var(--space-1);
+            transition: color .15s ease;
+        }
+        .forgot:hover { color: var(--red-dark); }
+
+        .btn {
+            width: 100%;
+            height: 52px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-size: 15.5px;
+            font-weight: 700;
+            letter-spacing: .01em;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
         }
-
-        .login-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 82, 204, 0.4);
+        .btn-primary {
+            color: #fff;
+            background: linear-gradient(150deg, var(--red), var(--red-dark));
+            box-shadow: var(--shadow-btn);
         }
-
-        .guest-link {
-            text-align: center;
-            margin-top: 25px;
-            font-size: 14px;
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -10px rgba(214, 40, 40, .58); }
+        .btn-primary:active { transform: translateY(0); box-shadow: 0 8px 18px -8px rgba(214, 40, 40, .5); }
+        .btn .spinner {
+            width: 18px; height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, .35);
+            border-top-color: #fff;
+            display: none;
+            animation: spin .7s linear infinite;
         }
+        .btn.is-loading { pointer-events: none; opacity: .9; }
+        .btn.is-loading .spinner { display: inline-block; }
+        .btn.is-loading .btn-label { opacity: .92; }
 
-        .guest-link a {
-            color: #0052cc;
-            text-decoration: none;
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            margin: var(--space-6) 0;
+            color: #9CA3AF;
+            font-size: 12px;
             font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--border);
         }
 
-        .alert {
-            margin-bottom: 25px;
-            border-radius: 8px;
-            padding: 14px;
-            font-size: 14px;
-            border-left: 5px solid #d9534f;
-            background: #fff5f5;
-            color: #d9534f;
+        .btn-guest {
+            background: var(--white);
+            color: var(--text-2);
+            border: 1.5px solid var(--border);
+        }
+        .btn-guest:hover { color: var(--red); border-color: var(--red); transform: translateY(-1px); }
+        .btn-guest:active { transform: translateY(0); }
+        .btn-guest svg { width: 18px; height: 18px; }
+
+        .card-foot {
+            margin-top: var(--space-6);
+            text-align: center;
+            font-size: 12.5px;
+            color: #9CA3AF;
+            line-height: 1.5;
         }
 
-        /* Responsive Overrides (Placed at bottom to ensure specificity) */
-        @media (max-width: 991px) {
-            body {
-                padding: 0;
-                align-items: flex-start;
-                background: white; /* Clean background for mobile */
+        .page-foot {
+            margin-top: var(--space-12);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-2);
+            animation: fadeUp .7s ease .5s both;
+        }
+        .page-foot b { color: var(--red); font-weight: 600; }
+
+        /* ---- Focus visibility (keyboard) ---- */
+        a:focus-visible, button:focus-visible, input:focus-visible {
+            outline: 2px solid var(--red);
+            outline-offset: 2px;
+        }
+        .btn:focus-visible, .forgot:focus-visible, .toggle:focus-visible { outline-offset: 3px; }
+
+        /* =================================================================
+           Animations
+           ================================================================= */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(28px) scale(.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
+
+        /* =================================================================
+           Responsive — laptop / tablet / mobile
+           ================================================================= */
+
+        /* ≥1025px: full hero + floating card composition.
+           ≤1024px: form-first — hide hero artwork/copy, keep logo + centered card. */
+        @media (max-width: 1024px) {
+            .hero { display: none; }
+
+            .page { max-width: 520px; }
+
+            .brand {
+                margin-bottom: var(--space-8);
+                animation-name: fadeDown;
             }
-            .login-wrapper {
+
+            .login-layout {
+                display: flex;
                 flex-direction: column;
-                width: 100%;
-                max-width: 100%;
-                border-radius: 0;
-                border: none;
-                box-shadow: none;
-                min-height: 100vh;
+                justify-content: center;
+                gap: 0;
+                min-height: 60vh;
             }
-            .login-branding {
-                display: none !important; /* Force hide branding on mobile */
-            }
-            .mobile-logo-header {
-                display: flex !important;
-                align-items: center;
-                gap: 12px;
-                margin-bottom: 25px;
-                padding: 15px 0;
-                border-bottom: 1px solid #eee;
-            }
-            .mobile-logo-header i {
-                font-size: 28px;
-                color: #0052cc;
-            }
-            .mobile-logo-header h1 {
-                font-size: 22px;
-                font-weight: 700;
-                color: #0052cc;
-                margin: 0;
-            }
-            .login-form-section {
-                padding: 20px 20px;
-                justify-content: flex-start;
-            }
-            .login-form-section h2 {
-                font-size: 26px;
-                margin-bottom: 5px;
-            }
-            .login-form-section > p {
-                font-size: 14px;
-                margin-bottom: 25px;
-            }
-            .form-group {
-                margin-bottom: 15px;
-            }
-            .form-group label {
-                margin-bottom: 5px;
-            }
-            .form-group input {
-                padding: 12px 14px;
-            }
-            .remember-forgot {
-                margin-bottom: 20px;
-            }
+
+            .login-col { width: 100%; }
+
+            .login-card { max-width: 460px; margin: 0 auto; }
+        }
+
+        @media (max-width: 640px) {
+            .page { padding: var(--space-6) var(--space-5) var(--space-8); }
+            .brand { margin-bottom: var(--space-8); }
+            .login-layout { min-height: auto; }
+            .login-card { padding: var(--space-6); border-radius: var(--radius-lg); }
+            .login-card h2 { font-size: 22px; }
+            .page-foot { margin-top: var(--space-8); }
+        }
+
+        @media (max-width: 380px) {
+            .options { flex-direction: column; align-items: flex-start; gap: 0; }
         }
     </style>
-
-
 </head>
 <body>
 
-    <div class="login-wrapper">
-        <!-- Left Side - Branding (Desktop Only) -->
-        <div class="login-branding">
-            <div class="branding-content">
-                <div class="vehicle-icon">
-                    <i class="fas fa-shuttle-van"></i>
-                </div>
-                <h1>Palompon Transit</h1>
-                <p>Real-Time Terminal Monitoring System</p>
-            </div>
-
-            <div class="features-list">
-                <div class="feature-box">
-                    <div class="feature-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="feature-text">
-                        <h3>Real-Time</h3>
-                        <p>Live system updates</p>
-                    </div>
-                </div>
-
-                <div class="feature-box">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <div class="feature-text">
-                        <h3>Analytics</h3>
-                        <p>Smart reports</p>
-                    </div>
-                </div>
-
-                <div class="feature-box">
-                    <div class="feature-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <div class="feature-text">
-                        <h3>Secure</h3>
-                        <p>Protected data</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Side - Login Form -->
-        <div class="login-form-section">
-            <!-- Mobile-Only Compact Header -->
-            <div class="mobile-logo-header">
-                <i class="fas fa-shuttle-van"></i>
-                <h1>Palompon Transit</h1>
-            </div>
-
-            <h2>Welcome Back!</h2>
-            <p>Login to access the terminal monitoring system</p>
-
-            <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> <?= session()->getFlashdata('error') ?>
-                </div>
-            <?php endif; ?>
-
-            <form action="<?= base_url('login') ?>" method="post">
-                <?= csrf_field() ?>
-                
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="Enter your username" 
-                        required 
-                        autofocus
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Enter your password" 
-                        required
-                    >
-                </div>
-
-                <div class="remember-forgot">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="remember" name="remember">
-                        <label for="remember">Remember me</label>
-                    </div>
-                    <a href="<?= base_url('forgot-password') ?>">Forgot password?</a>
-                </div>
-
-                <button type="submit" class="login-btn">
-                    <i class="fas fa-sign-in-alt"></i> Login to Dashboard
-                </button>
-            </form>
-
-            <div class="guest-link">
-                <a href="<?= base_url('guest') ?>">Continue as Guest</a>
-            </div>
-        </div>
+    <!-- Subtle transportation scenery -->
+    <div class="scenery" aria-hidden="true">
+        <svg class="routes" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 470C170 350 300 500 470 350S640 170 610 60"
+                  stroke="#D62828" stroke-opacity="0.10" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
+            <path d="M90 560C240 420 420 560 560 420"
+                  stroke="#D62828" stroke-opacity="0.07" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
+            <circle cx="470" cy="350" r="6" fill="#D62828" fill-opacity="0.14"/>
+            <circle cx="470" cy="350" r="14" stroke="#D62828" stroke-opacity="0.10" stroke-width="1.5"/>
+            <circle cx="610" cy="60" r="5" fill="#D62828" fill-opacity="0.12"/>
+            <circle cx="610" cy="60" r="12" stroke="#D62828" stroke-opacity="0.08" stroke-width="1.5"/>
+            <circle cx="40" cy="470" r="5" fill="#D62828" fill-opacity="0.10"/>
+        </svg>
+        <svg class="skyline" viewBox="0 0 1440 150" preserveAspectRatio="xMidYMax slice" fill="#D62828" xmlns="http://www.w3.org/2000/svg">
+            <path fill-opacity="0.05" d="M0 150V96h40v54h34V60h48v90h40V84h52v66h36V40h46v110h52V74h44v76h40V58h54v92h34V100h48v50h40V70h44v80h40V48h60v102h34V96h44v54h36V64h52v86h40V110h46v40h44V76h52v74h36V56h60v94h44V120h38v30h24V150H0z"/>
+            <path fill-opacity="0.04" d="M0 150V120h28v30h28V84h40v66h44V64h52v86h40V104h48v46h36V52h56v98h40V92h52v58h40V120h44v30h36V72h48v78h40V110h52v40h34V88h52v62h40V120h44v30h36V96h52v54h36V140h40v10H0z"/>
+        </svg>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="page">
+        <!-- Brand -->
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">
+                <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>"
+                     alt="Palompon Transit logo"
+                     width="400" height="400" loading="eager">
+            </span>
+            <span class="brand-name">
+                Palompon Transit
+                <span class="brand-sub">Terminal Monitoring &amp; Vehicle Dispatching</span>
+            </span>
+        </div>
+
+        <main class="login-layout">
+            <!-- Left — hero copy + artwork -->
+            <section class="hero">
+                <div class="hero-copy">
+                    <p class="kicker">Palompon Transit · Terminal Operations</p>
+                    <h1>Move every van, jeepney &amp; bus <span class="accent">on time.</span></h1>
+                    <p class="lede">
+                        Palompon Transit gives dispatchers a live view of vehicle queues,
+                        routes, and departures — so every trip leaves the terminal on schedule.
+                    </p>
+                    <div class="features">
+                        <div class="feature">
+                            <span class="feature-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="9"/>
+                                    <path d="M12 7v5l3 3"/>
+                                </svg>
+                            </span>
+                            <span class="feature-text">
+                                <b>Real-time queue</b>
+                                <span>Live queue and departure status across every route.</span>
+                            </span>
+                        </div>
+                        <div class="feature">
+                            <span class="feature-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z"/>
+                                    <path d="M9.5 12l1.8 1.8 3.4-3.6"/>
+                                </svg>
+                            </span>
+                            <span class="feature-text">
+                                <b>Secure &amp; audited</b>
+                                <span>Role-based access with a full activity audit trail.</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportation artwork, framed as the hero -->
+                <figure class="hero-art">
+                    <svg class="art-route" viewBox="0 0 210 120" fill="none" aria-hidden="true">
+                        <path d="M6 96C56 96 74 34 128 40S188 78 204 24"
+                              stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
+                        <circle cx="204" cy="24" r="4" fill="#FFFFFF" fill-opacity="0.35"/>
+                        <circle cx="6" cy="96" r="4" fill="#FFFFFF" fill-opacity="0.30"/>
+                    </svg>
+                    <img src="<?= base_url('images/system bg image.png') ?>"
+                         alt="Illustration of a jeepney, minibus, and van at the Palompon terminal"
+                         width="1536" height="1024" loading="eager">
+                </figure>
+            </section>
+
+            <!-- Right — floating login card -->
+            <aside class="login-col">
+                <div class="login-card">
+                    <div class="card-head">
+                        <h2>Welcome back</h2>
+                        <p class="card-sub">Sign in to manage terminal operations and dispatch.</p>
+                    </div>
+
+                    <?php if (session()->getFlashdata('error')): ?>
+                        <div class="alert" role="alert">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"/>
+                                <path d="M12 8v4"/>
+                                <path d="M12 16h.01"/>
+                            </svg>
+                            <span><?= session()->getFlashdata('error') ?></span>
+                        </div>
+                    <?php endif; ?>
+
+                    <form action="<?= base_url('login') ?>" method="post" novalidate>
+                        <?= csrf_field() ?>
+
+                        <div class="field">
+                            <label for="username">Username</label>
+                            <div class="control">
+                                <input type="text" id="username" name="username"
+                                       placeholder="Enter your username"
+                                       autocomplete="username"
+                                       required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="field password">
+                            <label for="password">Password</label>
+                            <div class="control">
+                                <input type="password" id="password" name="password"
+                                       placeholder="Enter your password"
+                                       autocomplete="current-password"
+                                       required>
+                                <button type="button" class="toggle" aria-pressed="false"
+                                        aria-label="Show password">
+                                    <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    <svg class="icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M17.94 17.94A10.5 10.5 0 0 1 12 19c-6.5 0-10-7-10-7a18 18 0 0 1 5.06-5.94M9.9 4.24A9.5 9.5 0 0 1 12 5c6.5 0 10 7 10 7a18.2 18.2 0 0 1-2.16 3.19"/>
+                                        <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                                        <path d="M1 1l22 22"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="options">
+                            <label class="check">
+                                <input type="checkbox" id="remember" name="remember">
+                                <span class="box" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 12.5l5 5L20 6.5"/>
+                                    </svg>
+                                </span>
+                                <span class="label">Remember me</span>
+                            </label>
+                            <a class="forgot" href="<?= base_url('forgot-password') ?>">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span class="spinner" aria-hidden="true"></span>
+                            <span class="btn-label">Sign in</span>
+                        </button>
+                    </form>
+
+                    <div class="divider">or</div>
+
+                    <a class="btn btn-guest" href="<?= base_url('guest') ?>">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M5 12h14"/>
+                            <path d="M13 6l6 6-6 6"/>
+                        </svg>
+                        Continue as guest
+                    </a>
+
+                    <p class="card-foot">Protected access · Your session is logged for audit.</p>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="page-foot">
+            <b>Palompon Transit</b> · Terminal Monitoring &amp; Vehicle Dispatching System
+        </footer>
+    </div>
+
+    <script>
+        (function () {
+            // --- Show / hide password ---
+            var toggle = document.querySelector('.toggle');
+            var password = document.getElementById('password');
+            if (toggle && password) {
+                toggle.addEventListener('click', function () {
+                    var show = toggle.getAttribute('aria-pressed') !== 'true';
+                    password.type = show ? 'text' : 'password';
+                    toggle.setAttribute('aria-pressed', String(show));
+                    toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                });
+            }
+
+            // --- Soft loading state on submit (client-side only) ---
+            var form = document.querySelector('form');
+            var submit = form ? form.querySelector('.btn-primary') : null;
+            if (form && submit) {
+                form.addEventListener('submit', function () {
+                    submit.classList.add('is-loading');
+                    var label = submit.querySelector('.btn-label');
+                    if (label) label.textContent = 'Signing in\u2026';
+                });
+            }
+        })();
+    </script>
 </body>
 </html>
