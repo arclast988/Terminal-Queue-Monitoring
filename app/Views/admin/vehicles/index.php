@@ -62,6 +62,7 @@
                 <div class="col-12 col-sm-6 col-xl-2">
                     <label for="type" class="form-label-modern">Type</label>
                     <select class="form-select-modern" id="type" name="type" required>
+                        <option value="">-- Select Type --</option>
                         <option value="jeepney" <?= old('type') == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
                         <option value="van" <?= old('type') == 'van' ? 'selected' : '' ?>>Van</option>
                         <option value="minibus" <?= old('type') == 'minibus' ? 'selected' : '' ?>>Minibus</option>
@@ -202,25 +203,33 @@ if (!empty($vehicles) && is_array($vehicles)) {
                         <?php foreach ($vehicles as $i => $vehicle): ?>
                             <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>">
                                 <td data-label="#" class="row-number"><strong><?= $i + 1 ?></strong></td>
-                                <td data-label="Plate Number"><strong><?= esc($vehicle['plate_number']) ?></strong></td>
-                                <td data-label="Driver Name"><?= esc($vehicle['driver_name']) ?></td>
+                                <td data-label="Plate Number">
+                                    <span class="plate-number"><?= esc($vehicle['plate_number']) ?></span>
+                                </td>
+                                <td data-label="Driver Name">
+                                    <div class="driver-cell">
+                                        <i class="bi bi-person-badge"></i>
+                                        <?= esc($vehicle['driver_name'] ?? '—') ?>
+                                    </div>
+                                </td>
                                 <td data-label="Vehicle Type">
-                                    <?php
-                                    $imgFile = vehicle_type_image($vehicle['type']);
-                                    ?>
-                                    <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
-                                            style="height:32px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
-                                    </span>
-                                    <div style="margin-top:4px;"><?= vehicle_type_badge($vehicle['type']) ?></div>
+                                    <?php $imgFile = vehicle_type_image($vehicle['type']); ?>
+                                    <div class="vehicle-type-cell">
+                                        <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
+                                                style="height:28px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
+                                        </span>
+                                        <?= vehicle_type_badge($vehicle['type']) ?>
+                                    </div>
                                 </td>
                                 <td data-label="Assigned Route">
                                     <?php if (!empty($vehicle['route_destination'])):
                                         $routeLabel = strtoupper(esc($vehicle['route_origin'])) . ' → ' . strtoupper(esc($vehicle['route_destination']));
                                     ?>
-                                        <span class="badge-modern badge-modern-primary" style="font-size:11px;">
-                                            <?= $routeLabel ?>
-                                        </span>
+                                        <div class="route-info">
+                                            <i class="bi bi-geo-alt" style="color: var(--primary-red);"></i>
+                                            <span><?= $routeLabel ?></span>
+                                        </div>
                                     <?php else: ?>
                                         <span class="badge-modern badge-modern-warning">Not Assigned</span>
                                     <?php endif; ?>
@@ -234,16 +243,16 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Registered">
-                                    <small style="color:var(--slate-500);"><?= strtoupper(date('M d, Y', strtotime($vehicle['created_at']))) ?></small>
+                                    <span class="badge-modern badge-modern-info"><?= strtoupper(date('M d, Y', strtotime($vehicle['created_at']))) ?></span>
                                 </td>
                                 <td data-label="Action">
-                                    <div style="display:flex; gap:8px;">
+                                    <div class="d-flex gap-2">
                                         <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
                                             class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <form action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post"
-                                            style="display:inline;"
+                                            class="d-inline"
                                             onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete vehicle">
@@ -521,56 +530,11 @@ if (!empty($vehicles) && is_array($vehicles)) {
             padding: 1rem !important;
         }
 
+        /* Let the master mobile card CSS in responsive.css handle the table layout.
+           Do NOT set min-width here — it blocks the card conversion. */
         #vehicles-table {
-            min-width: 680px;
+            min-width: 0 !important;
             font-size: 13px;
-        }
-
-        #vehicles-table thead th,
-        #vehicles-table tbody td {
-            padding: 0.65rem 0.5rem !important;
-        }
-
-        #vehicles-table th:first-child,
-        #vehicles-table td.row-number {
-            width: 38px;
-            text-align: center;
-        }
-
-        #vehicles-table th:nth-child(4),
-        #vehicles-table td:nth-child(4) {
-            width: 86px;
-            text-align: center;
-        }
-
-        #vehicles-table th:nth-child(5),
-        #vehicles-table td:nth-child(5),
-        #vehicles-table th:nth-child(6),
-        #vehicles-table td:nth-child(6) {
-            width: 84px;
-            text-align: center;
-        }
-
-        #vehicles-table th:nth-child(8),
-        #vehicles-table td:nth-child(8) {
-            width: 88px;
-            text-align: center;
-        }
-
-        #vehicles-table .btn-group {
-            flex-direction: row !important;
-            gap: 0.35rem;
-        }
-
-        #vehicles-table .btn-group .btn {
-            width: 34px !important;
-            height: 34px;
-            padding: 0 !important;
-            border-radius: 6px !important;
-        }
-
-        #vehicles-table .btn-group form {
-            display: inline-flex !important;
         }
 
         .vehicle-action-label {
@@ -687,11 +651,11 @@ if (!empty($vehicles) && is_array($vehicles)) {
         var routeSelect = document.getElementById('route_id');
 
         function filterRoutes() {
+            if (!typeSelect || !routeSelect) return;
             var selectedType = typeSelect.value;
-            routeSelect.value = '';
             var options = routeSelect.querySelectorAll('option[data-type]');
             options.forEach(function (opt) {
-                if (opt.getAttribute('data-type') === selectedType) {
+                if (!selectedType || opt.getAttribute('data-type') === selectedType) {
                     opt.style.display = '';
                     opt.disabled = false;
                 } else {
@@ -699,10 +663,16 @@ if (!empty($vehicles) && is_array($vehicles)) {
                     opt.disabled = true;
                 }
             });
+            routeSelect.dispatchEvent(new Event('change'));
         }
 
         filterRoutes();
-        typeSelect.addEventListener('change', filterRoutes);
+        if (typeSelect) {
+            typeSelect.addEventListener('change', function() {
+                if (routeSelect) routeSelect.value = '';
+                filterRoutes();
+            });
+        }
     });
 </script>
 

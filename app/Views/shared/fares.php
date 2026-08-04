@@ -506,14 +506,9 @@ $isManager = $isAdmin;
 
           <div class="mb-3">
             <label class="form-label fw-semibold">Destination</label>
-            <select name="destination" id="add_destination" class="form-select" required>
-              <option value="">— Select Destination —</option>
-              <?php foreach ($all_locations as $loc): ?>
-                <?php if (strtoupper($loc) !== 'PALOMPON'): ?>
-                  <option value="<?= esc($loc) ?>"><?= esc($loc) ?></option>
-                <?php endif; ?>
-              <?php endforeach; ?>
-            </select>
+            <input type="text" name="destination" id="add_destination" class="form-control autocomplete-location" 
+                   placeholder="Type or search destination (e.g. ORMOC, TACLOBAN)..." required autocomplete="off"
+                   data-suggestions="<?= esc(json_encode(array_values(array_filter($all_locations ?? [], fn($l) => strtoupper($l) !== 'PALOMPON')))) ?>">
           </div>
 
           <div class="mb-3">
@@ -589,7 +584,9 @@ $isManager = $isAdmin;
 
           <div class="mb-3">
             <label class="form-label fw-semibold">Destination</label>
-            <input type="text" name="destination" id="edit_fare_destination" class="form-control" required>
+            <input type="text" name="destination" id="edit_fare_destination" class="form-control autocomplete-location" 
+                   placeholder="Type or search destination..." required autocomplete="off"
+                   data-suggestions="<?= esc(json_encode(array_values(array_filter($all_locations ?? [], fn($l) => strtoupper($l) !== 'PALOMPON')))) ?>">
           </div>
 
           <div class="mb-3">

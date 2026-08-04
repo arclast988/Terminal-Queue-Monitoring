@@ -59,10 +59,10 @@ class Routes extends BaseController
     {
         $db = \Config\Database::connect();
 
-        $destsResult   = $db->query('SELECT DISTINCT destination FROM routes ORDER BY destination ASC')->getResultArray();
+        $destsResult   = $db->query('SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != "" ORDER BY destination ASC')->getResultArray();
 
         $destinations = array_column($destsResult, 'destination');
-        $allLocations = array_unique($destinations);
+        $allLocations = array_values(array_filter(array_map('strtoupper', array_unique($destinations))));
         sort($allLocations);
 
         return [

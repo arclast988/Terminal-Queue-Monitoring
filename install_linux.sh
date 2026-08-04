@@ -347,3 +347,21 @@ echo
 echo "  Everything auto-starts on boot. Manage the services with:"
 echo "     sudo systemctl status nginx php${PHP_VER}-fpm mariadb jeepney-websocket"
 echo "====================================================================="
+
+# ── 11. Launch browser ──────────────────────────────────────────────────────
+URL="http://localhost/"
+say "Opening ${URL} in browser…"
+if [ -n "${RUN_USER:-}" ] && [ "$RUN_USER" != "root" ] && command -v xdg-open >/dev/null 2>&1; then
+    sudo -u "$RUN_USER" DISPLAY="${DISPLAY:-:0}" xdg-open "$URL" >/dev/null 2>&1 &
+elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open "$URL" >/dev/null 2>&1 &
+elif command -v wslview >/dev/null 2>&1; then
+    wslview "$URL" >/dev/null 2>&1 &
+elif command -v sensible-browser >/dev/null 2>&1; then
+    sensible-browser "$URL" >/dev/null 2>&1 &
+elif command -v cmd.exe >/dev/null 2>&1; then
+    cmd.exe /c start "" "$URL" >/dev/null 2>&1 &
+elif [ -x /mnt/c/Windows/System32/cmd.exe ]; then
+    /mnt/c/Windows/System32/cmd.exe /c start "" "$URL" >/dev/null 2>&1 &
+fi
+

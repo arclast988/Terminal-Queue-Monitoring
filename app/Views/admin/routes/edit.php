@@ -104,37 +104,45 @@
 
                         <div class="mb-4">
                             <label for="destination" class="form-label-modern">Destination <span class="text-danger">*</span></label>
-                            <input type="text" class="input-modern" id="destination" name="destination"
-                                   value="<?= old('destination', $route['destination']) ?>" placeholder="e.g. ORMOC, TACLOBAN" required minlength="2" maxlength="100">
-                            <div class="form-text-modern">Type the destination city/town name.</div>
+                            <input type="text" class="input-modern autocomplete-location" id="destination" name="destination"
+                                   value="<?= old('destination', $route['destination']) ?>" placeholder="Search or type destination (e.g. ORMOC, TACLOBAN)..."
+                                   required minlength="2" maxlength="100" autocomplete="off"
+                                   data-suggestions="<?= esc(json_encode($all_locations ?? [])) ?>">
+                            <div class="form-text-modern"><i class="bi bi-search me-1"></i>Type to search existing locations or enter a new destination name.</div>
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
                             <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
-                            <div class="d-flex flex-column gap-3">
-                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
-                                    <div class="input-group-modern" style="max-width: 250px;">
-                                        <span class="input-group-text-modern">₱</span>
-                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
-                                               value="<?= old('fares.van', $fares['van']) ?>" placeholder="0.00">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                        <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
+                                        <div class="input-group-modern">
+                                            <span class="input-group-text-modern">₱</span>
+                                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
+                                                   value="<?= old('fares.van', $fares['van']) ?>" placeholder="0.00">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
-                                    <div class="input-group-modern" style="max-width: 250px;">
-                                        <span class="input-group-text-modern">₱</span>
-                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
-                                               value="<?= old('fares.jeepney', $fares['jeepney']) ?>" placeholder="0.00">
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                        <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
+                                        <div class="input-group-modern">
+                                            <span class="input-group-text-modern">₱</span>
+                                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
+                                                   value="<?= old('fares.jeepney', $fares['jeepney']) ?>" placeholder="0.00">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                    <div class="fw-bold" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
-                                    <div class="input-group-modern" style="max-width: 250px;">
-                                        <span class="input-group-text-modern">₱</span>
-                                        <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
-                                               value="<?= old('fares.minibus', $fares['minibus']) ?>" placeholder="0.00">
+                                <div class="col-md-4">
+                                    <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                        <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
+                                        <div class="input-group-modern">
+                                            <span class="input-group-text-modern">₱</span>
+                                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
+                                                   value="<?= old('fares.minibus', $fares['minibus']) ?>" placeholder="0.00">
+                                        </div>
                                     </div>
                                 </div>
                             </div>

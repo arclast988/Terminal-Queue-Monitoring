@@ -418,6 +418,49 @@ body {
 .time-display {
     font-size: 16px;
     font-weight: 800;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+/* Table Helper Classes */
+.table-modern .plate-number {
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    background: #f1f5f9;
+    color: #1e293b;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    letter-spacing: 0.5px;
+}
+
+.table-modern .driver-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.table-modern .driver-cell i {
+    color: #66788a;
+    font-size: 12px;
+}
+
+.table-modern .vehicle-type-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-modern .route-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #334155;
+}
     color: var(--primary, #1565c0);
     background-color: var(--primary-soft, #e3f2fd);
     padding: 5px 12px;
