@@ -259,17 +259,18 @@ chmod -R 775 "$PROJECT_ROOT/writable"
 # ── 8. Database ─────────────────────────────────────────────────────────────
 say "Setting up the database…"
 systemctl enable --now mariadb 2>/dev/null || systemctl enable --now mysql 2>/dev/null || die "Could not start MariaDB."
-mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-mysql -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;"
-if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
+MYSQL_CMD="mysql --skip-ssl"
+$MYSQL_CMD -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+$MYSQL_CMD -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+$MYSQL_CMD -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+$MYSQL_CMD -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;"
+if $MYSQL_CMD -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
     ok "Database already populated."
 elif [ -f "$PROJECT_ROOT/jeepneynvans.sql" ]; then
-    mysql "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans.sql"      || warn "Import reported errors."
+    $MYSQL_CMD "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans.sql"      || warn "Import reported errors."
     ok "Imported jeepneynvans.sql"
 elif [ -f "$PROJECT_ROOT/jeepneynvans_clean.sql" ]; then
-    mysql "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans_clean.sql" || warn "Import reported errors."
+    $MYSQL_CMD "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans_clean.sql" || warn "Import reported errors."
     ok "Imported jeepneynvans_clean.sql"
 else
     warn "No SQL dump found — the app will start with an empty database."
