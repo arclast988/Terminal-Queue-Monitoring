@@ -254,6 +254,9 @@
             box-shadow: var(--shadow-lg);
             margin-bottom: 30px;
             border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            z-index: 100;
+            overflow: visible !important;
         }
 
         .filter-form {
@@ -261,6 +264,15 @@
             grid-template-columns: 1fr 1.5fr auto;
             gap: 20px;
             align-items: end;
+            position: relative;
+            z-index: 100;
+            overflow: visible !important;
+        }
+
+        .form-group {
+            position: relative;
+            z-index: 100;
+            overflow: visible !important;
         }
 
         .form-group label {
@@ -273,7 +285,9 @@
             letter-spacing: 0.5px;
         }
 
-        .form-group select {
+        .form-group select,
+        .form-group input,
+        .form-group .autocomplete-wrapper input {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #e2e8f0;
@@ -286,7 +300,9 @@
             outline: none;
         }
 
-        .form-group select:focus {
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group .autocomplete-wrapper input:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
             background: white;

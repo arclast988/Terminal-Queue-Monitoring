@@ -1089,16 +1089,26 @@ body.staff-theme .table .btn-outline-dark:hover {
     /* Form inputs, selects & placeholders */
     body.admin-theme .form-control,
     body.admin-theme .form-select,
+    body.admin-theme .input-modern,
+    body.admin-theme .select-modern,
     body.staff-theme .form-control,
-    body.staff-theme .form-select {
+    body.staff-theme .form-select,
+    body.staff-theme .input-modern,
+    body.staff-theme .select-modern {
         background-color: #0f172a !important;
         border-color: #334155 !important;
         color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
     }
 
     body.admin-theme .form-control::placeholder,
-    body.staff-theme .form-control::placeholder {
+    body.admin-theme .input-modern::placeholder,
+    body.admin-theme .select-modern::placeholder,
+    body.staff-theme .form-control::placeholder,
+    body.staff-theme .input-modern::placeholder,
+    body.staff-theme .select-modern::placeholder {
         color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
         opacity: 1 !important;
     }
 
@@ -1110,8 +1120,12 @@ body.staff-theme .table .btn-outline-dark:hover {
 
     body.admin-theme .form-control:focus,
     body.admin-theme .form-select:focus,
+    body.admin-theme .input-modern:focus,
+    body.admin-theme .select-modern:focus,
     body.staff-theme .form-control:focus,
-    body.staff-theme .form-select:focus {
+    body.staff-theme .form-select:focus,
+    body.staff-theme .input-modern:focus,
+    body.staff-theme .select-modern:focus {
         border-color: #ef5350 !important;
         box-shadow: 0 0 0 2px rgba(239, 83, 80, 0.25) !important;
     }

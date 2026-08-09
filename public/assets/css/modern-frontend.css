@@ -1093,15 +1093,20 @@ body.staff-theme .form-check-input-modern:checked {
     /* Form Controls & Inputs */
     .form-control-modern,
     .form-select-modern,
+    .select-modern,
     .input-modern {
         background-color: #0f172a !important;
         border-color: #334155 !important;
         color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
     }
 
     .form-control-modern::placeholder,
+    .form-select-modern::placeholder,
+    .select-modern::placeholder,
     .input-modern::placeholder {
         color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
         opacity: 1 !important;
     }
 

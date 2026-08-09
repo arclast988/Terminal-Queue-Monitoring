@@ -592,5 +592,55 @@ div:has(> .autocomplete-wrapper:hover) {
     background-color: #334155 !important;
     color: #38bdf8 !important;
   }
+
+  /* Autocomplete search inputs — ensure text is visible on dark background */
+  .autocomplete-wrapper .input-modern,
+  .autocomplete-wrapper .form-control-modern,
+  .autocomplete-wrapper .form-control,
+  .autocomplete-wrapper input[type="text"] {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+    -webkit-text-fill-color: #f1f5f9 !important;
+  }
+
+  .autocomplete-wrapper .input-modern::placeholder,
+  .autocomplete-wrapper .form-control-modern::placeholder,
+  .autocomplete-wrapper .form-control::placeholder,
+  .autocomplete-wrapper input[type="text"]::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
+
+  .autocomplete-wrapper .input-modern:focus,
+  .autocomplete-wrapper .form-control-modern:focus,
+  .autocomplete-wrapper .form-control:focus,
+  .autocomplete-wrapper input[type="text"]:focus {
+    border-color: #ef5350 !important;
+    box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.25) !important;
+  }
+
+  /* Badge inside dropdown items (e.g. "Terminal", "Route", "Type") */
+  .autocomplete-item .badge.bg-light,
+  .autocomplete-item .badge.rounded-pill {
+    background-color: #334155 !important;
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
+    border-color: #475569 !important;
+  }
+
+  /* Search highlight mark — keep visible on dark backgrounds */
+  .autocomplete-item mark,
+  .autocomplete-item mark.bg-warning {
+    background-color: rgba(251, 191, 36, 0.3) !important;
+    color: #fbbf24 !important;
+    -webkit-text-fill-color: #fbbf24 !important;
+  }
+
+  /* Icons inside autocomplete items */
+  .autocomplete-item .text-primary {
+    color: #60a5fa !important;
+  }
 }
 

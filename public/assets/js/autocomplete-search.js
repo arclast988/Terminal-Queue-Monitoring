@@ -1,10 +1,83 @@
 /**
  * Palompon Transit Management System - Searchable Location, Terminal, Route, Role & Select Autocomplete
- * Converts ALL select fields across the application into search-bar style inputs without dropdown arrows.
+ * Converts select fields across the application into search-bar style inputs without dropdown arrows.
  */
 
 (function () {
     'use strict';
+
+    // Inject base dropdown CSS styles to ensure complete appearance on all pages
+    if (!document.getElementById('autocomplete-search-base-styles')) {
+        const style = document.createElement('style');
+        style.id = 'autocomplete-search-base-styles';
+        style.textContent = `
+            .autocomplete-wrapper {
+                position: relative !important;
+                z-index: 1050 !important;
+                overflow: visible !important;
+            }
+            .autocomplete-wrapper:focus-within,
+            .autocomplete-wrapper:hover,
+            .autocomplete-wrapper:active {
+                z-index: 9999 !important;
+                overflow: visible !important;
+            }
+            .autocomplete-dropdown {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+                border-radius: 14px !important;
+                overflow-y: auto !important;
+                z-index: 99999 !important;
+                padding: 6px !important;
+            }
+            .autocomplete-item {
+                color: #1e293b !important;
+                background: #ffffff !important;
+                border-radius: 8px !important;
+                margin-bottom: 2px !important;
+            }
+            .autocomplete-item:last-child {
+                margin-bottom: 0 !important;
+            }
+            .autocomplete-item:hover,
+            .autocomplete-item.active-item {
+                background-color: #f1f5f9 !important;
+                color: #1e40af !important;
+            }
+            .autocomplete-item mark.search-highlight {
+                background: rgba(30, 64, 175, 0.12) !important;
+                color: #1e40af !important;
+                border-radius: 3px !important;
+                padding: 0 3px !important;
+                font-weight: 700 !important;
+            }
+            @media (prefers-color-scheme: dark) {
+                .autocomplete-dropdown {
+                    background: #1e293b !important;
+                    background-color: #1e293b !important;
+                    border-color: #334155 !important;
+                    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6) !important;
+                }
+                .autocomplete-item {
+                    color: #f8fafc !important;
+                    background: #1e293b !important;
+                    border-bottom-color: #334155 !important;
+                }
+                .autocomplete-item:hover,
+                .autocomplete-item.active-item {
+                    background-color: #334155 !important;
+                    color: #60a5fa !important;
+                }
+                .autocomplete-item mark.search-highlight {
+                    background: rgba(251, 191, 36, 0.25) !important;
+                    color: #fbbf24 !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 
     function initLocationAutocomplete() {
         // --- 1. Destination Text Inputs ---
@@ -41,15 +114,17 @@
             dropdown.className = 'autocomplete-dropdown shadow-lg rounded-3 border';
             dropdown.style.cssText = `
                 position: absolute;
-                top: calc(100% + 4px);
+                top: calc(100% + 6px);
                 left: 0;
                 right: 0;
-                z-index: 1200 !important;
+                z-index: 99999 !important;
                 max-height: 230px;
                 overflow-y: auto;
                 display: none;
-                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28) !important;
-                border-radius: 8px;
+                background-color: #ffffff;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+                border-radius: 14px;
+                padding: 6px;
             `;
             wrapper.appendChild(dropdown);
 
@@ -66,15 +141,15 @@
 
                 dropdown.innerHTML = filtered.map((loc, idx) => {
                     let displayName = loc;
-                    if (cleanQuery) {
+                    if (cleanQuery && cleanQuery !== loc.toUpperCase()) {
                         const regex = new RegExp(`(${cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                        displayName = loc.replace(regex, '<mark class="p-0 bg-warning text-dark fw-bold">$1</mark>');
+                        displayName = loc.replace(regex, '<mark class="search-highlight">$1</mark>');
                     }
                     return `
-                        <div class="autocomplete-item px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
-                             data-value="${loc}" data-index="${idx}" style="cursor: pointer; font-size: 14px; transition: background 0.15s ease;">
-                            <span><i class="bi bi-geo-alt-fill text-primary me-2 opacity-75"></i>${displayName}</span>
-                            <span class="badge rounded-pill bg-light text-secondary border px-2 py-1" style="font-size: 11px;">Recorded Destination</span>
+                        <div class="autocomplete-item" data-value="${loc}" data-index="${idx}"
+                             style="cursor: pointer; font-size: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s ease;">
+                            <span style="display: inline-flex; align-items: center; gap: 10px;"><i class="bi bi-geo-alt-fill text-primary opacity-75"></i>${displayName}</span>
+                            <span class="badge rounded-pill" style="font-size: 11px; padding: 4px 10px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; font-weight: 600;">Recorded Destination</span>
                         </div>
                     `;
                 }).join('');
@@ -162,7 +237,7 @@
 
             const fieldName = (selectEl.name || selectEl.id || '').toLowerCase();
 
-            // Create visible search input field (strip select classes to remove dropdown arrow icon)
+            // Create visible search input field
             const searchInput = document.createElement('input');
             searchInput.type = 'text';
             let inputClass = (selectEl.className || 'form-control')
@@ -178,12 +253,13 @@
             else if (fieldName.includes('terminal')) placeholderText = 'Search terminal...';
             else if (fieldName.includes('type')) placeholderText = 'Search vehicle type...';
             else if (fieldName.includes('status')) placeholderText = 'Search status...';
+            else if (fieldName.includes('destination')) placeholderText = 'Search destination...';
             searchInput.placeholder = placeholderText;
             searchInput.autocomplete = 'off';
 
             function getAvailableOptions() {
                 return Array.from(selectEl.options)
-                    .filter(opt => opt.value !== "" && !opt.disabled && opt.style.display !== 'none')
+                    .filter(opt => !opt.disabled && opt.style.display !== 'none')
                     .map(opt => ({
                         value: opt.value,
                         text: opt.text.trim(),
@@ -192,15 +268,12 @@
             }
 
             function updateInputValue() {
-                const opts = getAvailableOptions();
-                const currentSelected = Array.from(selectEl.options).find(o => o.value === selectEl.value && o.value !== "");
-                if (currentSelected) {
+                const currentSelected = Array.from(selectEl.options).find(o => o.value === selectEl.value);
+                if (currentSelected && currentSelected.text.trim() !== '') {
                     searchInput.value = currentSelected.text.trim();
-                } else if (opts.length > 0 && selectEl.value) {
-                    const found = opts.find(o => o.value === selectEl.value);
-                    searchInput.value = found ? found.text : '';
                 } else {
-                    searchInput.value = '';
+                    const firstOpt = selectEl.options[selectEl.selectedIndex];
+                    searchInput.value = firstOpt ? firstOpt.text.trim() : '';
                 }
             }
 
@@ -212,15 +285,17 @@
             dropdown.className = 'autocomplete-dropdown shadow-lg rounded-3 border';
             dropdown.style.cssText = `
                 position: absolute;
-                top: calc(100% + 4px);
+                top: calc(100% + 6px);
                 left: 0;
                 right: 0;
-                z-index: 1200 !important;
+                z-index: 99999 !important;
                 max-height: 230px;
                 overflow-y: auto;
                 display: none;
-                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28) !important;
-                border-radius: 8px;
+                background-color: #ffffff;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+                border-radius: 14px;
+                padding: 6px;
             `;
             wrapper.appendChild(dropdown);
 
@@ -229,6 +304,7 @@
             function renderSelectDropdown(query = '') {
                 const opts = getAvailableOptions();
                 const cleanQuery = query.trim().toUpperCase();
+                const currentSelectedTextUpper = (searchInput.value || '').trim().toUpperCase();
                 const filtered = opts.filter(opt => opt.text.toUpperCase().includes(cleanQuery));
 
                 if (filtered.length === 0) {
@@ -254,19 +330,23 @@
                 } else if (fieldName.includes('status')) {
                     categoryBadge = 'Status';
                     iconClass = 'bi bi-check-circle';
+                } else if (fieldName.includes('destination')) {
+                    categoryBadge = 'Destination';
+                    iconClass = 'bi bi-geo-alt';
                 }
 
                 dropdown.innerHTML = filtered.map((opt, idx) => {
                     let displayName = opt.text;
-                    if (cleanQuery) {
+                    // Only apply text highlight if actively filtering (not just focusing with the full text selected)
+                    if (cleanQuery && cleanQuery !== currentSelectedTextUpper && cleanQuery !== opt.text.toUpperCase()) {
                         const regex = new RegExp(`(${cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-                        displayName = opt.text.replace(regex, '<mark class="p-0 bg-warning text-dark fw-bold">$1</mark>');
+                        displayName = opt.text.replace(regex, '<mark class="search-highlight">$1</mark>');
                     }
                     return `
-                        <div class="autocomplete-item px-3 py-2 border-bottom d-flex align-items-center justify-content-between"
-                             data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}" style="cursor: pointer; font-size: 14px;">
-                            <span><i class="${iconClass} text-primary me-2 opacity-75"></i>${displayName}</span>
-                            <span class="badge rounded-pill bg-light text-secondary border px-2 py-1" style="font-size: 11px;">${categoryBadge}</span>
+                        <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"
+                             style="cursor: pointer; font-size: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s ease;">
+                            <span style="display: inline-flex; align-items: center; gap: 10px;"><i class="${iconClass} text-primary opacity-75"></i>${displayName}</span>
+                            <span class="badge rounded-pill" style="font-size: 11px; padding: 4px 10px; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; font-weight: 600;">${categoryBadge}</span>
                         </div>
                     `;
                 }).join('');
@@ -296,7 +376,7 @@
 
             searchInput.addEventListener('focus', () => {
                 searchInput.select();
-                renderSelectDropdown(searchInput.value);
+                renderSelectDropdown('');
             });
 
             searchInput.addEventListener('input', () => {
@@ -343,6 +423,7 @@
             document.addEventListener('click', (e) => {
                 if (!wrapper.contains(e.target)) {
                     dropdown.style.display = 'none';
+                    updateInputValue();
                 }
             });
         });
