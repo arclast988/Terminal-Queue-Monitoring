@@ -38,8 +38,8 @@ class Contact extends BaseController
         $config = config('Email');
         $toEmail = $config->recipients;
         $subjectLine = ($type === 'report')
-            ? '[PTM Report Issue] ' . ($subject ?: 'Issue reported via website')
-            : '[PTM Contact Us] ' . ($subject ?: 'Message from website');
+            ? '[PTTM Report Issue] ' . ($subject ?: 'Issue reported via website')
+            : '[PTTM Contact Us] ' . ($subject ?: 'Message from website');
 
         $body = "Name: {$name}\nEmail: {$email}\n\nMessage:\n{$message}";
 

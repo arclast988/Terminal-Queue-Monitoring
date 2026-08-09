@@ -128,15 +128,17 @@ select {
    ================================================================= */
 
 html, 
-body,
-.main-content,
+body {
+    background-color: #f1f5f9 !important;
+}
+
 .modal-content {
     background-color: white !important;
 }
 
-body.admin-theme,
+.main-content,
 body.admin-theme .main-content {
-    background-color: #f1f5f9 !important;
+    background-color: transparent !important;
 }
 
 /* =================================================================
@@ -839,9 +841,12 @@ body.admin-theme .table .btn-outline-dark:hover {
    ================================================================= */
 
 /* Staff background and headings */
-body.staff-theme,
-body.staff-theme .main-content {
+body.staff-theme {
     background-color: #f1f5f9 !important;
+}
+
+body.staff-theme .main-content {
+    background-color: transparent !important;
 }
 
 /* Staff theme: ensure headings are readable on dark background */
@@ -945,12 +950,15 @@ body.staff-theme .table .btn-outline-dark:hover {
     /* HTML, Body and Main Content backgrounds in Dark Mode */
     html,
     body,
-    .main-content,
     body.admin-theme,
-    body.admin-theme .main-content,
-    body.staff-theme,
-    body.staff-theme .main-content {
+    body.staff-theme {
         background-color: #0f172a !important;
+    }
+
+    .main-content,
+    body.admin-theme .main-content,
+    body.staff-theme .main-content {
+        background-color: transparent !important;
     }
 
     /* Headings in Dark Mode */

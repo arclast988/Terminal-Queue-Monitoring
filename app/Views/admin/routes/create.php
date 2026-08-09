@@ -145,6 +145,19 @@
                                         </div>
                                     </div>
                                 </div>
+                                <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                                    <?php if (in_array($vehicleType['slug'], ['van', 'jeepney', 'minibus'], true)) continue; ?>
+                                    <div class="col-md-4">
+                                        <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+                                            <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;"><i class="bi bi-truck me-1"></i><?= esc($vehicleType['name']) ?></div>
+                                            <div class="input-group-modern">
+                                                <span class="input-group-text-modern">₱</span>
+                                                <input type="number" step="0.01" min="1" class="input-modern" name="fares[<?= esc($vehicleType['slug']) ?>]"
+                                                       value="<?= old('fares.' . $vehicleType['slug']) ?>" placeholder="0.00">
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
 

@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
 
     <style>
@@ -201,12 +203,14 @@
 
         /* --- Hero Section --- */
         .hero {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 80px 5%;
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px 5% 55px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            min-height: 380px;
+            min-height: 245px;
         }
 
         .hero::before {
@@ -221,19 +225,19 @@
         }
 
         .hero h2 {
-            font-size: 48px;
+            font-size: 38px;
             color: var(--primary-dark);
             font-weight: 800;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             position: relative;
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--primary-dark);
-            opacity: 0.8;
+            opacity: 0.85;
             max-width: 700px;
-            margin: 0 auto 40px;
+            margin: 0 auto 24px;
             position: relative;
         }
 
@@ -241,31 +245,58 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -140px auto 40px !important;
+            margin: -30px auto 40px !important;
             position: relative;
             z-index: 20;
         }
 
         /* --- Search Component --- */
         .search-container {
-            background: white;
-            padding: 20px 25px;
-            border-radius: 20px;
-            box-shadow: var(--shadow-lg);
-            margin-bottom: 40px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
         }
 
-        .search-container input {
+        .search-bar {
+            background: white;
+            padding: 8px;
+            border-radius: 50px;
+            display: flex;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: var(--transition);
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
+        }
+
+        .search-bar input {
             flex: 1;
             border: none;
-            outline: none;
+            padding: 15px 25px;
             font-size: 16px;
-            color: var(--text-main);
+            outline: none;
             background: transparent;
+            font-family: inherit;
+        }
+
+        .search-bar button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .search-bar button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.03);
         }
 
         /* --- Fares Grid --- */
@@ -274,6 +305,7 @@
             grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
             gap: clamp(15px, 2vw, 30px);
             margin-bottom: clamp(30px, 5vw, 60px);
+            align-items: stretch;
         }
 
         .fare-card {
@@ -284,6 +316,9 @@
             transition: var(--transition);
             border: 1px solid #edf2f7;
             animation: fadeInUp 0.5s ease-out both;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .fare-card:hover {
@@ -524,6 +559,13 @@
     <section class="hero">
         <h2>Route Fares</h2>
         <p>Check official fare rates for all destinations to ensure fair pricing.</p>
+
+        <div class="search-container">
+            <form class="search-bar" onsubmit="return false;">
+                <input type="text" id="fareSearch" placeholder="Search by Route, Destination, or Origin..." autocomplete="off">
+                <button type="button" onclick="document.getElementById('fareSearch').focus();">SEARCH</button>
+            </form>
+        </div>
     </section>
 
     <!-- Main Content -->
@@ -661,6 +703,48 @@
                     <?php endif; ?>
                 </div>
             </div>
+            <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                <?php if (in_array($vehicleType['slug'], ['van', 'jeepney', 'minibus'], true)) continue; ?>
+                <?php $typeRoutes = ($routesByType ?? [])[$vehicleType['slug']] ?? []; ?>
+                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>">
+                    <div class="card-header">
+                        <h3><img src="<?= base_url('images/' . vehicle_type_image($vehicleType['slug'])) ?>" alt="<?= esc($vehicleType['name']) ?>" style="width: 45px; height: auto; object-fit: contain;"> <?= esc($vehicleType['name']) ?> Routes</h3>
+                    </div>
+                    <div class="fare-list">
+                        <?php if (!empty($typeRoutes)): ?>
+                            <?php foreach ($typeRoutes as $route): ?>
+                                <div class="fare-item" style="flex-direction: column; align-items: stretch;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div class="dest-info">
+                                            <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
+                                            <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
+                                            <?php if (in_array(session()->get('role'), ['super_admin', 'admin'], true)): ?>
+                                                <a href="<?= base_url('admin/routes/edit/' . $route['id']) ?>" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare"><i class="fas fa-edit"></i></a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <?php if (!empty($route['discounted_fares'])): ?>
+                                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                                        <?php foreach ($route['discounted_fares'] as $df): ?>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                                            <span style="font-size: 13px; color: #475569; font-weight: 500;"><i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i><?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span></span>
+                                            <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <p class="text-muted text-center py-5 px-5">No <?= esc(strtolower($vehicleType['name'])) ?> fares listed.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+
         </div>
 
         <!-- Passenger Discount Rates -->
@@ -713,6 +797,18 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <script>
+    // Live filter for fare search input
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.id === 'fareSearch') {
+            var q = e.target.value.toLowerCase().trim();
+            var items = document.querySelectorAll('.fare-item');
+            items.forEach(function(item) {
+                var text = item.textContent.toLowerCase();
+                item.style.display = (q === '' || text.indexOf(q) !== -1) ? '' : 'none';
+            });
+        }
+    });
+
     // ══════════════════════════════════════════════════
     //  Auto-Refresh: Fare Rates + Discounts (every 10s)
     // ══════════════════════════════════════════════════
@@ -723,6 +819,12 @@
 
     function formatFare(n) {
         return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function escapeHtml(value) {
+        return String(value === null || value === undefined ? '' : value).replace(/[&<>"']/g, function(character) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+        });
     }
 
     function buildFareCard(type, label, badgeClass, imgSrc, routes) {
@@ -818,10 +920,19 @@
             // Rebuild fare grid
             var grid = document.getElementById('faresGrid');
             if (grid) {
-                grid.innerHTML =
-                    buildFareCard('van', 'Van Routes', 'van-badge', baseImgUrl + 'van.png', data.van_routes)
-                    + buildFareCard('jeepney', 'Jeepney Routes', 'jeepney-badge', baseImgUrl + 'jeep.png', data.jeepney_routes)
-                    + buildFareCard('minibus', 'Mini Bus Routes', 'minibus-badge', baseImgUrl + 'minibus.png', data.minibus_routes);
+                var vehicleTypes = Array.isArray(data.vehicle_types) ? data.vehicle_types : [];
+                grid.innerHTML = vehicleTypes.map(function(vehicleType) {
+                    var routes = (data.routes_by_type && data.routes_by_type[vehicleType.slug])
+                        || data[vehicleType.slug + '_routes']
+                        || [];
+                    return buildFareCard(
+                        vehicleType.slug,
+                        escapeHtml(vehicleType.name) + ' Routes',
+                        '',
+                        baseImgUrl + (vehicleType.image || 'minibus.png'),
+                        routes
+                    );
+                }).join('');
             }
 
             // Rebuild discount section

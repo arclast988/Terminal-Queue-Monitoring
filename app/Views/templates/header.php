@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/themes.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/legacy-bridge.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
     <!-- Modern Admin Styling (for logged-in users) - Remove this line to rollback -->
     <?php if (session()->get('isLoggedIn')): ?>
@@ -63,7 +64,7 @@
         }
 
         body.admin-theme .main-content {
-            background-color: var(--bg-main) !important;
+            background-color: transparent !important;
         }
 
         body.admin-theme .border-bottom {
@@ -179,7 +180,7 @@
         }
 
         body.staff-theme .main-content {
-            background-color: var(--bg-main) !important;
+            background-color: transparent !important;
         }
 
         body.staff-theme .border-bottom {
@@ -303,7 +304,7 @@
             max-width: 100%;
             padding: 20px;
             padding-top: 72px;
-            background-color: #f8fafc;
+            background-color: transparent !important;
         }
 
         .footer {
@@ -691,6 +692,32 @@
             body.staff-theme .stat-card-link {
                 color: var(--primary) !important;
             }
+
+        }
+
+        /*
+         * Bootstrap appends .modal-backdrop directly to <body>, while page
+         * modals are rendered inside .main-content. The watermark layer gives
+         * body children a z-index, which otherwise puts the backdrop above
+         * nested modals and captures all of their clicks.
+         */
+        body > .modal-backdrop {
+            position: fixed !important;
+            z-index: 1040 !important;
+        }
+
+        body.modal-open .main-content {
+            z-index: auto !important;
+        }
+
+        body.modal-open > .modal {
+            position: fixed !important;
+            z-index: 1055 !important;
+        }
+
+        /* The navigation should sit below an active modal and backdrop. */
+        body.modal-open header#site-header {
+            z-index: 1030 !important;
         }
     </style>
 </head>

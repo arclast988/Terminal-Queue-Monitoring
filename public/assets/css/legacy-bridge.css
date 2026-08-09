@@ -17,11 +17,13 @@
 /* --------------------------------------------------------------------------
    0. GLOBAL CANVAS — one background source of truth
    -------------------------------------------------------------------------- */
-html body,
-html body .main-content {
+html body {
   background-color: var(--bg-main) !important;
   font-family: var(--font-body) !important;
   color: var(--text-main);
+}
+html body .main-content {
+  background-color: transparent !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -130,9 +132,9 @@ html body .stat-card-label {
   color: var(--text-muted);
 }
 
-html body .stat-card-link,
-html body.admin-theme .stat-card-link,
-html body.staff-theme .stat-card-link {
+html body .stat-card-link:not(.stat-card),
+html body.admin-theme .stat-card-link:not(.stat-card),
+html body.staff-theme .stat-card-link:not(.stat-card) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -144,9 +146,9 @@ html body.staff-theme .stat-card-link {
   transition: gap var(--transition), color var(--transition);
 }
 
-html body .stat-card-link:hover,
-html body.admin-theme .stat-card-link:hover,
-html body.staff-theme .stat-card-link:hover {
+html body .stat-card-link:not(.stat-card):hover,
+html body.admin-theme .stat-card-link:not(.stat-card):hover,
+html body.staff-theme .stat-card-link:not(.stat-card):hover {
   color: var(--primary-dark);
   gap: 10px;
 }

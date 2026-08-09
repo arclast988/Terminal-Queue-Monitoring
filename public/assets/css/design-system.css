@@ -65,6 +65,86 @@ body {
   background-color: var(--bg-main);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Semi-transparent system background watermark (Palompon Photo Slideshow) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  opacity: 0.22;
+  z-index: 0;
+  pointer-events: none;
+  animation: palomponBgSlideshow 30s infinite ease-in-out;
+}
+
+@keyframes palomponBgSlideshow {
+  0%, 17% {
+    background-image: url('/images/bg/bg1_townhall.jpg');
+    opacity: 0.22;
+  }
+  19% {
+    opacity: 0.05;
+  }
+  20%, 37% {
+    background-image: url('/images/bg/bg2_aerial_port.jpg');
+    opacity: 0.22;
+  }
+  39% {
+    opacity: 0.05;
+  }
+  40%, 57% {
+    background-image: url('/images/bg/bg3_aerial_town.jpg');
+    opacity: 0.22;
+  }
+  59% {
+    opacity: 0.05;
+  }
+  60%, 77% {
+    background-image: url('/images/bg/bg4_terminal_exterior.jpg');
+    opacity: 0.22;
+  }
+  79% {
+    opacity: 0.05;
+  }
+  80%, 97% {
+    background-image: url('/images/bg/bg5_terminal_bay.jpg');
+    opacity: 0.22;
+  }
+  99% {
+    opacity: 0.05;
+  }
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+.main-content,
+body.admin-theme .main-content,
+body.staff-theme .main-content,
+body.guest-theme .main-content {
+  background-color: transparent !important;
+}
+
+@media (max-width: 768px) {
+  body::after {
+    opacity: 0.18;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body::after {
+    opacity: 0.15;
+    filter: brightness(1.3) contrast(1.1);
+  }
 }
 
 h1, h2, h3, .h1, .h2, .h3 {

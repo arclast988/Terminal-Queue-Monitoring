@@ -126,7 +126,7 @@ mysql -u jeepney_user -p12345678 jeepneynvans < jeepneynvans.sql
 Edit `.env` to enable contact form / feedback:
 ```ini
 email.fromEmail = your.email@gmail.com
-email.fromName = PTM System
+email.fromName = PTTM System
 email.recipients = support@example.com
 email.SMTPUser = your.email@gmail.com
 email.SMTPPass = your-app-password

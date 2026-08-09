@@ -6,6 +6,7 @@ use App\Models\RouteModel;
 use App\Models\AnnouncementModel;
 use App\Models\TerminalModel;
 use App\Models\FareDiscountModel;
+use App\Models\VehicleTypeModel;
 
 class Fares extends BaseController
 {
@@ -35,9 +36,16 @@ class Fares extends BaseController
             ->orderBy('fare_discounts.type', 'ASC')
             ->findAll();
 
-        $van_routes     = $this->routesByVehicleType('van', $discounts);
-        $jeepney_routes = $this->routesByVehicleType('jeepney', $discounts);
-        $minibus_routes = $this->routesByVehicleType('minibus', $discounts);
+        $vehicleTypes = (new VehicleTypeModel())->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
+        $routesByType = [];
+        foreach ($vehicleTypes as $vehicleType) {
+            $routesByType[$vehicleType['slug']] = $this->routesByVehicleType($vehicleType['slug'], $discounts);
+        }
+
+        // Kept for the public fares view and existing API consumers.
+        $van_routes     = $routesByType['van'] ?? [];
+        $jeepney_routes = $routesByType['jeepney'] ?? [];
+        $minibus_routes = $routesByType['minibus'] ?? [];
 
         $announcements = [];
         try {
@@ -64,6 +72,8 @@ class Fares extends BaseController
             'van_routes'    => $van_routes,
             'jeepney_routes'=> $jeepney_routes,
             'minibus_routes'=> $minibus_routes,
+            'vehicleTypes'  => $vehicleTypes,
+            'routesByType'  => $routesByType,
             'announcements' => $announcements,
             'terminals'     => $terminals,
             'discounts'     => $discounts,
@@ -82,7 +92,8 @@ class Fares extends BaseController
 
         // Cache for a few seconds: the guest fares page polls every 3s, so this
         // keeps data fresh while collapsing load to one DB query per window.
-        $payload = cache('rt_fares_api');
+        // Version the key because the response now also carries configured vehicle types.
+        $payload = cache('rt_fares_api_v2');
         if (! is_array($payload)) {
             $discountModel = new FareDiscountModel();
             $discounts = $discountModel
@@ -94,14 +105,29 @@ class Fares extends BaseController
                 ->orderBy('fare_discounts.type', 'ASC')
                 ->findAll();
 
+            $vehicleTypes = (new VehicleTypeModel())
+                ->where('is_active', 1)
+                ->orderBy('name', 'ASC')
+                ->findAll();
+            foreach ($vehicleTypes as &$vehicleType) {
+                $vehicleType['image'] = vehicle_type_image($vehicleType['slug']);
+            }
+            unset($vehicleType);
+            $routesByType = [];
+            foreach ($vehicleTypes as $vehicleType) {
+                $routesByType[$vehicleType['slug']] = $this->routesByVehicleType($vehicleType['slug'], $discounts);
+            }
+
             $payload = [
                 'van_routes'     => $this->routesByVehicleType('van', $discounts),
                 'jeepney_routes' => $this->routesByVehicleType('jeepney', $discounts),
                 'minibus_routes' => $this->routesByVehicleType('minibus', $discounts),
+                'vehicle_types'  => $vehicleTypes,
+                'routes_by_type' => $routesByType,
                 'discounts'      => $discounts,
             ];
 
-            cache()->save('rt_fares_api', $payload, 3);
+            cache()->save('rt_fares_api_v2', $payload, 3);
         }
 
         // Always read the sync token live so clients keep detecting changes.

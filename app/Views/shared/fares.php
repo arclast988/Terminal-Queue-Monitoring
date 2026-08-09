@@ -270,46 +270,31 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
 </div>
 <?php endif; ?>
 
-<!-- Modern Stat Cards block -->
+<?php
+$fareTypes = array_map(static fn(array $type) => [
+    'key' => $type['slug'],
+    'type' => $type['slug'],
+    'label' => $type['name'] . ' Routes',
+    'img' => vehicle_type_image($type['slug']),
+    'badge' => vehicle_type_badge($type['slug']),
+    'badgeClass' => vehicle_type_class($type['slug']),
+], $vehicleTypes ?? []);
+?>
+
+<!-- Vehicle-type totals are generated from the configured vehicle types. -->
 <div class="row px-3 mt-2">
+<?php foreach ($fareTypes as $ft): ?>
     <div class="col-12 col-md-4 mb-4">
-        <div class="stat-card-modern red-accent fade-in">
-            <div class="stat-card-icon" style="background: #FBE9E9; color: #c62828;">
-                <i class="bi bi-truck"></i>
-            </div>
-            <div class="stat-card-value"><?= count($van_routes ?? []) ?></div>
-            <div class="stat-card-label">Van Routes</div>
+        <div class="stat-card-modern fade-in">
+            <div class="stat-card-icon"><i class="bi bi-truck"></i></div>
+            <div class="stat-card-value"><?= count(($routesByType ?? [])[$ft['key']] ?? []) ?></div>
+            <div class="stat-card-label"><?= esc($ft['label']) ?></div>
         </div>
     </div>
-    <div class="col-12 col-md-4 mb-4">
-        <div class="stat-card-modern blue-accent fade-in">
-            <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
-                <i class="bi bi-bus-front"></i>
-            </div>
-            <div class="stat-card-value"><?= count($jeepney_routes ?? []) ?></div>
-            <div class="stat-card-label">Jeepney Routes</div>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 mb-4">
-        <div class="stat-card-modern success-accent fade-in">
-            <div class="stat-card-icon" style="background: #D1FAE5; color: #2e7d32;">
-                <i class="bi bi-ev-front"></i>
-            </div>
-            <div class="stat-card-value"><?= count($minibus_routes ?? []) ?></div>
-            <div class="stat-card-label">Minibus Routes</div>
-        </div>
-    </div>
+<?php endforeach; ?>
 </div>
 
 <div class="row px-3 mt-2">
-
-<?php
-$fareTypes = [
-    ['key' => 'van_routes',     'type' => 'van',     'label' => 'Van Routes',     'img' => 'van.png',     'badge' => vehicle_type_badge('van'),     'badgeClass' => 'vehicle-type-chip vehicle-type-van'],
-    ['key' => 'jeepney_routes', 'type' => 'jeepney', 'label' => 'Jeepney Routes', 'img' => 'jeep.png',    'badge' => vehicle_type_badge('jeepney'), 'badgeClass' => 'vehicle-type-chip vehicle-type-jeepney'],
-    ['key' => 'minibus_routes', 'type' => 'minibus', 'label' => 'Minibus Routes', 'img' => 'minibus.png', 'badge' => vehicle_type_badge('minibus'), 'badgeClass' => 'vehicle-type-chip vehicle-type-minibus'],
-];
-?>
 
 <?php foreach ($fareTypes as $ft): ?>
 <div class="col-lg-4 mb-4">
@@ -322,7 +307,7 @@ $fareTypes = [
         </div>
         <div class="modern-card-body p-0">
             <div class="list-group list-group-flush fare-list">
-                <?php $routes = ${$ft['key']}; ?>
+                <?php $routes = ($routesByType ?? [])[$ft['key']] ?? []; ?>
                 <?php if (!empty($routes)): ?>
                     <?php foreach ($routes as $route): ?>
                     <div class="list-group-item fare-item" style="flex-direction: column; align-items: stretch; padding: 16px 20px;">
@@ -522,18 +507,12 @@ $isManager = $isAdmin;
           <div class="mb-4">
             <label class="form-label fw-semibold mb-2">Vehicle Type</label>
             <div class="d-flex gap-4 flex-wrap">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="vehicle_type" id="add_van" value="van" checked>
-                <label class="form-check-label" for="add_van"><i class="fas fa-shuttle-van me-1 text-muted"></i> Van</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="vehicle_type" id="add_jeepney" value="jeepney">
-                <label class="form-check-label" for="add_jeepney"><i class="fas fa-bus me-1 text-muted"></i> Jeepney</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="vehicle_type" id="add_minibus" value="minibus">
-                <label class="form-check-label" for="add_minibus"><i class="fas fa-bus-alt me-1 text-muted"></i> Minibus</label>
-              </div>
+              <?php foreach (($vehicleTypes ?? []) as $index => $vehicleType): ?>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="vehicle_type" id="add_<?= esc($vehicleType['slug']) ?>" value="<?= esc($vehicleType['slug']) ?>" <?= $index === 0 ? 'checked' : '' ?>>
+                  <label class="form-check-label" for="add_<?= esc($vehicleType['slug']) ?>"><i class="fas fa-truck me-1 text-muted"></i> <?= esc($vehicleType['name']) ?></label>
+                </div>
+              <?php endforeach; ?>
             </div>
           </div>
 
@@ -600,18 +579,12 @@ $isManager = $isAdmin;
           <div class="mb-4">
             <label class="form-label fw-semibold mb-2">Vehicle Type</label>
             <div class="d-flex gap-4 flex-wrap">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="vehicle_type" id="edit_van" value="van">
-                <label class="form-check-label" for="edit_van"><i class="fas fa-shuttle-van me-1 text-muted"></i> Van</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="vehicle_type" id="edit_jeepney" value="jeepney">
-                <label class="form-check-label" for="edit_jeepney"><i class="fas fa-bus me-1 text-muted"></i> Jeepney</label>
-              </div>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="vehicle_type" id="edit_minibus" value="minibus">
-                <label class="form-check-label" for="edit_minibus"><i class="fas fa-bus-alt me-1 text-muted"></i> Minibus</label>
-              </div>
+              <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="vehicle_type" id="edit_<?= esc($vehicleType['slug']) ?>" value="<?= esc($vehicleType['slug']) ?>">
+                  <label class="form-check-label" for="edit_<?= esc($vehicleType['slug']) ?>"><i class="fas fa-truck me-1 text-muted"></i> <?= esc($vehicleType['name']) ?></label>
+                </div>
+              <?php endforeach; ?>
             </div>
           </div>
 
@@ -738,12 +711,17 @@ document.getElementById('addFareForm')?.addEventListener('submit', function(e) {
     }
 });
 
-// Real-time validation for existing routes
-const existingRoutes = {
-    van: <?= json_encode(array_map(fn($r) => ['terminal_id' => (string) $r['terminal_id'], 'destination' => strtoupper($r['destination'])], $van_routes ?? [])) ?>,
-    jeepney: <?= json_encode(array_map(fn($r) => ['terminal_id' => (string) $r['terminal_id'], 'destination' => strtoupper($r['destination'])], $jeepney_routes ?? [])) ?>,
-    minibus: <?= json_encode(array_map(fn($r) => ['terminal_id' => (string) $r['terminal_id'], 'destination' => strtoupper($r['destination'])], $minibus_routes ?? [])) ?>
-};
+// Real-time validation for existing routes, grouped by configured vehicle type.
+<?php
+$existingRoutes = [];
+foreach (($routesByType ?? []) as $type => $routes) {
+    $existingRoutes[$type] = array_map(fn($route) => [
+        'terminal_id' => (string) $route['terminal_id'],
+        'destination' => strtoupper($route['destination']),
+    ], $routes);
+}
+?>
+const existingRoutes = <?= json_encode($existingRoutes) ?>;
 
 function checkRouteExists(terminalId, dest, type) {
     if (!terminalId || !dest || !type) return false;

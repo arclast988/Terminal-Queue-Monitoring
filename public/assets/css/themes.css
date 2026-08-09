@@ -37,7 +37,7 @@ body.guest-theme {
   color: var(--text-main) !important;
 }
 
-body.guest-theme .main-content { background-color: var(--bg-main) !important; }
+body.guest-theme .main-content { background-color: transparent !important; }
 
 /* --------------------------------------------------------------------------
    ADMIN — deep red authority on cool slate. Dense, operational, precise.
@@ -74,7 +74,7 @@ body.admin-theme {
   color: var(--text-main) !important;
 }
 
-body.admin-theme .main-content { background-color: var(--bg-main) !important; }
+body.admin-theme .main-content { background-color: transparent !important; }
 
 /* --------------------------------------------------------------------------
    DISPATCHER (staff) — harbor blue on cool slate. Calm, focused, real-time.
@@ -111,7 +111,7 @@ body.staff-theme {
   color: var(--text-main) !important;
 }
 
-body.staff-theme .main-content { background-color: var(--bg-main) !important; }
+body.staff-theme .main-content { background-color: transparent !important; }
 
 /* --------------------------------------------------------------------------
    Shared Bootstrap bridges — keep legacy Bootstrap classes on-theme while

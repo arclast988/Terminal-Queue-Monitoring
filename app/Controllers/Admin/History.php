@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\QueueModel;
+use App\Models\VehicleTypeModel;
 
 class History extends BaseController
 {
@@ -40,10 +41,10 @@ class History extends BaseController
 
         // --- Options for Filter Modal ---
         $routeModel = new \App\Models\RouteModel();
-        $vehicleModel = new \App\Models\VehicleModel();
+        $vehicleTypeModel = new VehicleTypeModel();
         
         $destinations = $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll();
-        $vehicleTypes = $vehicleModel->select('type')->distinct()->orderBy('type', 'ASC')->findAll();
+        $vehicleTypes = $vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
         // --- Departure list (paginated, searchable) ---
         $queueModel = new QueueModel();
@@ -60,7 +61,7 @@ class History extends BaseController
             ],
             'departures'   => $departures,
             'destinations' => $routeModel->select('destination, vehicle_type')->distinct()->orderBy('destination', 'ASC')->findAll(),
-            'vehicleTypes' => array_column($vehicleModel->select('type')->distinct()->orderBy('type', 'ASC')->findAll(), 'type'),
+            'vehicleTypes' => $vehicleTypes,
             'pager'        => $queueModel->pager,
             'search'       => $search,
             'from_date'    => $fromDate,

@@ -8,6 +8,7 @@ use App\Models\RouteModel;
 use App\Models\UserModel;
 use App\Models\LogModel;
 use App\Models\UserRouteModel;
+use App\Models\VehicleTypeModel;
 
 class Dashboard extends BaseController
 {
@@ -46,7 +47,7 @@ class Dashboard extends BaseController
                                      ->limit(5)
                                      ->findAll(),
             'destinations' => $routeModel->select('destination, vehicle_type')->distinct()->orderBy('destination', 'ASC')->findAll(),
-            'vehicleTypes' => array_column($vehicleModel->select('type')->distinct()->orderBy('type', 'ASC')->findAll(), 'type')
+            'vehicleTypes' => (new VehicleTypeModel())->where('is_active', 1)->orderBy('name', 'ASC')->findAll()
         ];
 
         return view('admin/dashboard', $data);

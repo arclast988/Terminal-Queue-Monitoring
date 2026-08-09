@@ -3,7 +3,7 @@
     <div class="footer-container">
         <div class="footer-content">
             <div class="f-about">
-                <h3>PTM System</h3>
+                <h3>PTTM System</h3>
                 <p>Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.</p>
             </div>
             <div class="f-links">
@@ -57,7 +57,7 @@
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How do I view route fares? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Click "Fares" in the navigation bar or the "Route Fares" link under Quick Links. Fares are organized by vehicle type: Van, Jeepney, and Minibus.</div>
+            <div class="faq-answer">Click "Fares" in the navigation bar or the "Route Fares" link under Quick Links. Fares are organized by vehicle type.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Is there a mobile app available? <i class="fas fa-chevron-down"></i></button>
@@ -158,7 +158,7 @@
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What vehicle types operate from this terminal? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The terminal serves three vehicle types: <strong>Vans</strong> (express routes), <strong>Jeepneys</strong> (regular routes), and <strong>Minibuses</strong>. You can filter schedules and fares by vehicle type.</div>
+            <div class="faq-answer">Available vehicle types are managed by the terminal administrator. You can filter schedules and fares by vehicle type.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How accurate are the estimated departure times? <i class="fas fa-chevron-down"></i></button>
@@ -179,10 +179,10 @@
         <div style="font-size: 14px; color: #4b5563; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
             <p><strong>Last updated: February 2026</strong></p>
             <h4 style="color: #1f2937; margin: 15px 0 5px;">1. Acceptance of Terms</h4>
-            <p>By accessing and using the Palompon Transit Terminal Monitoring System ("PTM System"), you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
+            <p>By accessing and using the Palompon Transit Terminal Monitoring System ("PTTM System"), you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">2. Description of Service</h4>
-            <p>The PTM System provides real-time information regarding vehicle queues, departure schedules, and route fares within the Palompon Terminal. This is a public information service operated by the Government of Palompon, Leyte.</p>
+            <p>The PTTM System provides real-time information regarding vehicle queues, departure schedules, and route fares within the Palompon Terminal. This is a public information service operated by the Government of Palompon, Leyte.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">3. Use of Information</h4>
             <ul>
@@ -192,7 +192,7 @@
             </ul>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">4. Disclaimer of Warranties</h4>
-            <p>The PTM System is provided "as is" without warranties of any kind, express or implied. We do not guarantee the accuracy, completeness, or timeliness of information displayed.</p>
+            <p>The PTTM System is provided "as is" without warranties of any kind, express or implied. We do not guarantee the accuracy, completeness, or timeliness of information displayed.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">5. Limitation of Liability</h4>
             <p>Palompon Terminal shall not be liable for any loss or damages arising from reliance on the information provided through this system, including missed departures or scheduling inaccuracies.</p>
@@ -208,7 +208,9 @@
 
 /* Footer styling */
 footer {
-    background: #1a202c;
+    background: rgba(26, 32, 44, 0.82) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: white;
     padding: 60px 5% 30px;
     margin-top: 60px;

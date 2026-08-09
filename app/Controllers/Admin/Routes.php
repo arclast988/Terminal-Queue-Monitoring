@@ -7,18 +7,39 @@ use App\Models\RouteModel;
 use App\Models\TerminalModel;
 use App\Models\FareDiscountModel;
 use App\Models\FareModel;
+use App\Models\VehicleTypeModel;
 
 class Routes extends BaseController
 {
     protected $routeModel;
     protected $terminalModel;
     protected $discountModel;
+    protected $vehicleTypeModel;
 
     public function __construct()
     {
         $this->routeModel    = new RouteModel();
         $this->terminalModel = new TerminalModel();
         $this->discountModel = new FareDiscountModel();
+        $this->vehicleTypeModel = new VehicleTypeModel();
+    }
+
+    private function isActiveVehicleType(string $slug): bool
+    {
+        return (bool) $this->vehicleTypeModel->where('slug', $slug)->where('is_active', 1)->first();
+    }
+
+    private function activeVehicleTypeSlugs(): array
+    {
+        return array_column($this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(), 'slug');
+    }
+
+    private function activeVehicleTypes(): array
+    {
+        return $this->vehicleTypeModel
+            ->where('is_active', 1)
+            ->orderBy('name', 'ASC')
+            ->findAll();
     }
 
     public function index()
@@ -177,6 +198,7 @@ class Routes extends BaseController
         $data = [
             'title'         => 'Add New Route',
             'terminals'     => $this->terminalModel->findAll(),
+            'vehicleTypes'  => $this->activeVehicleTypes(),
             'origins'       => $locations['origins'],
             'destinations'  => $locations['destinations'],
             'all_locations' => $locations['all_locations'],
@@ -199,7 +221,7 @@ class Routes extends BaseController
 
             $added = 0;
             foreach ($selectedFares as $vType => $fareVal) {
-                if (in_array($vType, ['jeepney', 'van', 'minibus'], true) && $fareVal !== '' && $fareVal !== null && (float)$fareVal > 0) {
+                if ($this->isActiveVehicleType((string) $vType) && $fareVal !== '' && $fareVal !== null && (float)$fareVal > 0) {
                     $fareFloat = (float) $fareVal;
                     $existing = $this->routeModel->where('terminal_id', $terminalId)
                                                  ->where('destination', $destination)
@@ -233,7 +255,7 @@ class Routes extends BaseController
             'destination'  => 'required|min_length[2]|max_length[100]',
             'fare'         => 'required|decimal|greater_than[0]',
             'terminal_id'  => 'required|integer|is_not_unique[terminals.id]',
-            'vehicle_type' => 'required|in_list[jeepney,van,minibus]'
+            'vehicle_type' => 'required|alpha_dash|max_length[50]'
         ];
 
         if (!$this->validate($rules)) {
@@ -245,6 +267,9 @@ class Routes extends BaseController
         $origin      = strtoupper(trim($terminal['name'] ?? ''));
         $destination = strtoupper(trim($this->request->getPost('destination')));
         $vehicleType = $this->request->getPost('vehicle_type');
+        if (!$this->isActiveVehicleType($vehicleType)) {
+            return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
+        }
         $fare        = $this->request->getPost('fare');
 
         $existing = $this->routeModel->where('terminal_id', $terminalId)
@@ -294,11 +319,8 @@ class Routes extends BaseController
         $groupRoutes = enrich_routes_with_discounts($groupRoutes);
 
         // Put fares into a key-value array by vehicle type
-        $fares = [
-            'van' => null,
-            'jeepney' => null,
-            'minibus' => null
-        ];
+        $vehicleTypes = $this->activeVehicleTypes();
+        $fares = array_fill_keys(array_column($vehicleTypes, 'slug'), null);
         foreach ($groupRoutes as $r) {
             $fares[$r['vehicle_type']] = $r['fare'];
         }
@@ -310,6 +332,7 @@ class Routes extends BaseController
             'route'         => $route,
             'fares'         => $fares,
             'terminals'     => $this->terminalModel->findAll(),
+            'vehicleTypes'  => $vehicleTypes,
             'origins'       => $locations['origins'],
             'destinations'  => $locations['destinations'],
             'all_locations' => $locations['all_locations'],
@@ -332,7 +355,7 @@ class Routes extends BaseController
             'destination'  => 'required|min_length[2]|max_length[100]',
             'fare'         => 'required|decimal|greater_than[0]',
             'terminal_id'  => 'required|integer|is_not_unique[terminals.id]',
-            'vehicle_type' => 'required|in_list[jeepney,van,minibus]'
+            'vehicle_type' => 'required|alpha_dash|max_length[50]'
         ];
 
         if (!$this->validate($rules)) {
@@ -344,6 +367,9 @@ class Routes extends BaseController
         $origin      = strtoupper(trim($terminal['name'] ?? ''));
         $destination = strtoupper(trim($this->request->getPost('destination')));
         $vehicleType = $this->request->getPost('vehicle_type');
+        if (!$this->isActiveVehicleType($vehicleType)) {
+            return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
+        }
         $newFare     = $this->request->getPost('fare');
         $oldFare      = $this->getRegularFare((int) $id);
         if ($oldFare <= 0 && isset($existingRoute['fare'])) {
@@ -436,7 +462,7 @@ class Routes extends BaseController
         $selectedFares = $this->request->getPost('fares');
         $added = 0;
         if (is_array($selectedFares)) {
-            foreach (['van', 'jeepney', 'minibus'] as $vType) {
+            foreach ($this->activeVehicleTypeSlugs() as $vType) {
                 $fareVal = $selectedFares[$vType] ?? null;
                 $hasFare = ($fareVal !== '' && $fareVal !== null && (float)$fareVal > 0);
 

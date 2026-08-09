@@ -7,6 +7,8 @@
     <meta name="description" content="View all completed vehicle departures and search by plate number, destination, or driver.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
     <style>
         /* ===== DESIGN TOKENS ===== */
@@ -39,12 +41,14 @@
 
         /* ===== HERO ===== */
         .hero {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 80px 5%;
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px 5% 55px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            min-height: 380px;
+            min-height: 245px;
         }
         .hero::before {
             content: '';
@@ -59,19 +63,19 @@
         .hero > * { position: relative; z-index: 1; }
 
         .hero h2 {
-            font-size: 48px;
+            font-size: 38px;
             font-weight: 800;
             color: var(--primary-dark);
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             position: relative;
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--primary-dark);
-            opacity: 0.8;
+            opacity: 0.85;
             max-width: 700px;
-            margin: 0 auto 40px;
+            margin: 0 auto 24px;
             position: relative;
         }
 
@@ -152,7 +156,7 @@
         .hist-content {
             width: 90%;
             max-width: 1300px;
-            margin: -30px auto 60px;
+            margin: -30px auto 40px !important;
             position: relative;
             z-index: 10;
         }
@@ -510,21 +514,20 @@
             >
             <button type="submit">SEARCH</button>
         </form>
-
-        <?php if (!empty($search)): ?>
-            <div>
-                <span class="filter-badge">
-                    <i class="fas fa-filter"></i>
-                    Results for: <strong><?= esc($search) ?></strong>
-                    <a href="<?= base_url('history') ?>" title="Clear filter">×</a>
-                </span>
-            </div>
-        <?php endif; ?>
     </div>
 </section>
 
 <!-- ===== MAIN CONTENT ===== -->
 <div class="hist-content">
+    <?php if (!empty($search)): ?>
+        <div style="margin-bottom: 20px;">
+            <span class="filter-badge">
+                <i class="fas fa-filter"></i>
+                Results for: <strong><?= esc($search) ?></strong>
+                <a href="<?= base_url('history') ?>" title="Clear filter">×</a>
+            </span>
+        </div>
+    <?php endif; ?>
 
 
     <!-- Table Card -->
@@ -624,7 +627,7 @@
 
 </div>
 
-<?= view('templates/footer') ?>
+<?= $this->include('templates/guestfooter') ?>
 <style>#confirmActionModal { display: none !important; }</style>
 
 </body>

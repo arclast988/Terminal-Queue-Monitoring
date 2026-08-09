@@ -9,6 +9,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
     <style>
         :root {
@@ -176,28 +178,46 @@
 
         /* --- Hero Section --- */
         .hero {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 80px 5%;
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px 5% 55px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            min-height: 380px;
+            min-height: 245px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 1;
         }
 
         .hero h2 {
-            font-size: 48px;
+            font-size: 38px;
             color: var(--primary-dark);
             font-weight: 800;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             position: relative;
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--primary-dark);
-            opacity: 0.8;
+            opacity: 0.85;
             max-width: 700px;
-            margin: 0 auto 40px;
+            margin: 0 auto 24px;
             position: relative;
         }
 
@@ -215,41 +235,40 @@
             border-radius: 50px;
             display: flex;
             box-shadow: var(--shadow-lg);
-            gap: 0;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             transition: var(--transition);
-            border: 1px solid rgba(0, 0, 0, 0.05);
         }
+
         .search-bar:focus-within {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
         }
+
         .search-bar input {
             flex: 1;
             border: none;
-            padding: 14px 24px;
-            font-size: 15px;
+            padding: 15px 25px;
+            font-size: 16px;
             outline: none;
             background: transparent;
-            font-family: 'Outfit', sans-serif;
-            color: var(--text-main);
-            min-width: 0;
+            font-family: inherit;
         }
-        .search-bar input::placeholder { color: var(--text-muted); }
+
         .search-bar button {
-            background: #1e3a8a;
+            background: var(--primary);
             color: white;
             border: none;
-            padding: 0 32px;
+            padding: 0 35px;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-            white-space: nowrap;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: 0.5px;
+            transition: var(--transition);
         }
-        .search-bar button:hover { background: #1565c0; transform: scale(1.03); }
+
+        .search-bar button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.03);
+        }
 
         .filter-badge {
             display: inline-flex;
@@ -278,7 +297,7 @@
         .container {
             width: 90%;
             max-width: 1200px;
-            margin: -80px auto 60px !important;
+            margin: -30px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -739,7 +758,7 @@
 
     <!-- Hero Section with Search -->
     <section class="hero">
-        <h2><i class="fas fa-search"></i> Search Results</h2>
+        <h2>Search Results</h2>
         <p>Find and track your vehicle information below.</p>
 
         <div class="search-container">
@@ -752,27 +771,24 @@
                     autocomplete="off"
                     autofocus
                 >
-                <button type="submit">
-                    <i class="fas fa-search" style="margin-right:7px;"></i>SEARCH
-                </button>
+                <button type="submit">SEARCH</button>
             </form>
-            <?php if (!empty($search)): ?>
-                <div class="filter-badge">
-                    <span><i class="fas fa-info-circle"></i> <?= $total_results ?> result<?= $total_results != 1 ? 's' : '' ?> found for "<strong><?= esc($search) ?></strong>"</span>
-                    <a href="<?= base_url('search') ?>">&times;</a>
-                </div>
-            <?php endif; ?>
         </div>
     </section>
 
     <!-- Main Content -->
     <div class="container">
 
-        <div class="back-row">
+        <div class="back-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
             <a href="<?= base_url('guest') ?>" class="back-link">
-                <i class="fas fa-arrow-left"></i>
-                <span>Back to Live Monitor</span>
+                <i class="fas fa-arrow-left"></i> Back to Live Monitor
             </a>
+            <?php if (!empty($search)): ?>
+                <div class="filter-badge" style="margin: 0;">
+                    <span><i class="fas fa-info-circle"></i> <?= $total_results ?> result<?= $total_results != 1 ? 's' : '' ?> found for "<strong><?= esc($search) ?></strong>"</span>
+                    <a href="<?= base_url('search') ?>">&times;</a>
+                </div>
+            <?php endif; ?>
         </div>
 
 
@@ -921,6 +937,8 @@
         </div>
         <?php endif; ?>
     </div>
+    <!-- Footer -->
+    <?= $this->include('templates/guestfooter') ?>
 
 </body>
 </html>

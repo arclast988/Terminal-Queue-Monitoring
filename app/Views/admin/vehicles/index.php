@@ -8,6 +8,9 @@
         <i class="bi bi-truck"></i>
         Vehicle Register
     </h1>
+    <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#addVehicleTypeModal">
+        <i class="bi bi-tags"></i> Add Vehicle Type
+    </button>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
@@ -63,9 +66,9 @@
                     <label for="type" class="form-label-modern">Type</label>
                     <select class="form-select-modern" id="type" name="type" required>
                         <option value="">-- Select Type --</option>
-                        <option value="jeepney" <?= old('type') == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
-                        <option value="van" <?= old('type') == 'van' ? 'selected' : '' ?>>Van</option>
-                        <option value="minibus" <?= old('type') == 'minibus' ? 'selected' : '' ?>>Minibus</option>
+                        <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                            <option value="<?= esc($vehicleType['slug']) ?>" <?= old('type') === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-12 col-sm-6 col-xl-3">
@@ -100,19 +103,14 @@
 <?php
 // Count vehicles by type and status
 $totalVehicles = is_array($vehicles) ? count($vehicles) : 0;
-$countJeepney = 0;
-$countVan = 0;
-$countMinibus = 0;
+$typeCounts = array_fill_keys(array_column($vehicleTypes ?? [], 'slug'), 0);
 $countActive = 0;
 $countMaintenance = 0;
 if (!empty($vehicles) && is_array($vehicles)) {
     foreach ($vehicles as $v) {
-        if ($v['type'] === 'jeepney')
-            $countJeepney++;
-        elseif ($v['type'] === 'van')
-            $countVan++;
-        elseif ($v['type'] === 'minibus')
-            $countMinibus++;
+        if (array_key_exists($v['type'], $typeCounts)) {
+            $typeCounts[$v['type']]++;
+        }
         if ($v['status'] === 'active')
             $countActive++;
         else
@@ -142,20 +140,12 @@ if (!empty($vehicles) && is_array($vehicles)) {
             
             <span class="vf-divider"></span>
             
-            <button type="button" class="vf-btn vf-jeepney" id="filter-btn-jeepney" onclick="filterVehicles('jeepney')">
-                <img src="<?= base_url('images/jeep.png') ?>" alt="" style="height:18px; width:auto;"> Jeepney
-                <span class="vf-count"><?= $countJeepney ?></span>
+            <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+            <button type="button" class="vf-btn" id="filter-btn-<?= esc($vehicleType['slug']) ?>" onclick="filterVehicles('<?= esc($vehicleType['slug']) ?>')">
+                <img src="<?= base_url('images/' . vehicle_type_image($vehicleType['slug'])) ?>" alt="" style="height:18px; width:auto;"> <?= esc($vehicleType['name']) ?>
+                <span class="vf-count"><?= $typeCounts[$vehicleType['slug']] ?? 0 ?></span>
             </button>
-            
-            <button type="button" class="vf-btn vf-van" id="filter-btn-van" onclick="filterVehicles('van')">
-                <img src="<?= base_url('images/van.png') ?>" alt="" style="height:18px; width:auto;"> Van
-                <span class="vf-count"><?= $countVan ?></span>
-            </button>
-            
-            <button type="button" class="vf-btn vf-minibus" id="filter-btn-minibus" onclick="filterVehicles('minibus')">
-                <img src="<?= base_url('images/minibus.png') ?>" alt="" style="height:18px; width:auto;"> Minibus
-                <span class="vf-count"><?= $countMinibus ?></span>
-            </button>
+            <?php endforeach; ?>
             
             <span class="vf-divider"></span>
             
@@ -560,14 +550,16 @@ if (!empty($vehicles) && is_array($vehicles)) {
     }
 </style>
 
+<?php $vehicleTypeLabels = array_column($vehicleTypes ?? [], 'name', 'slug'); ?>
 <script>
     let currentFilter = 'all';
+    const vehicleTypeLabels = <?= json_encode($vehicleTypeLabels, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
     function filterVehicles(filter) {
         currentFilter = filter;
         const rows = document.querySelectorAll('#vehicles-table tbody tr[data-type]');
         const filterLabel = document.getElementById('filter-label');
-        const typeFilters = ['jeepney', 'van', 'minibus'];
+        const typeFilters = Object.keys(vehicleTypeLabels);
         const statusFilters = ['active', 'maintenance'];
 
         // Update active button styling
@@ -576,14 +568,11 @@ if (!empty($vehicles) && is_array($vehicles)) {
         if (activeBtn) activeBtn.classList.add('active');
 
         // Filter label map
-        const labelMap = {
+        const labelMap = Object.assign({
             'all': 'all',
-            'jeepney': 'Jeepney',
-            'van': 'Van',
-            'minibus': 'Minibus',
             'active': 'Active',
             'maintenance': 'Maintenance'
-        };
+        }, vehicleTypeLabels);
 
         const searchQuery = document.getElementById('vehicle-search') ? document.getElementById('vehicle-search').value.toLowerCase() : '';
 
@@ -675,5 +664,28 @@ if (!empty($vehicles) && is_array($vehicles)) {
         }
     });
 </script>
+
+<div class="modal fade" id="addVehicleTypeModal" tabindex="-1" aria-labelledby="addVehicleTypeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addVehicleTypeModalLabel"><i class="bi bi-tags me-2"></i>Add Vehicle Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post">
+                <?= csrf_field() ?>
+                <div class="modal-body">
+                    <label for="vehicle_type_name" class="form-label fw-semibold">Vehicle Type Name</label>
+                    <input id="vehicle_type_name" name="name" type="text" class="form-control" placeholder="e.g. Bus" maxlength="80" required>
+                    <div class="form-text">It will be available in Vehicle Register and as a new Route Fares card.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Type</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <?= view('templates/footer') ?>

@@ -85,9 +85,9 @@
                 <label class="form-label-modern">Vehicle Type</label>
                 <select name="type" class="form-select-modern">
                     <option value="">All Types</option>
-                    <option value="van" <?= $vehicle_type == 'van' ? 'selected' : '' ?>>Van</option>
-                    <option value="jeepney" <?= $vehicle_type == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
-                    <option value="minibus" <?= $vehicle_type == 'minibus' ? 'selected' : '' ?>>Minibus</option>
+                    <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                        <option value="<?= esc($vehicleType['slug']) ?>" <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
             <div class="col-md-5">

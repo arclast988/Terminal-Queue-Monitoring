@@ -82,7 +82,7 @@ Edit `.env` in the project root and add:
 
 ```ini
 email.fromEmail = your.gmail@gmail.com
-email.fromName = PTM System
+email.fromName = PTTM System
 email.recipients = support@yourcompany.com
 email.SMTPUser = your.gmail@gmail.com
 email.SMTPPass = your-app-password

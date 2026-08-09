@@ -89,6 +89,7 @@ abstract class BaseController extends Controller
             if (! $isPassengerChange) {
                 $cache->delete('rt_announcements');
                 $cache->delete('rt_fares_api');
+                $cache->delete('rt_fares_api_v2');
             }
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement
@@ -147,7 +148,7 @@ abstract class BaseController extends Controller
         $emailSvc = \Config\Services::email();
 
         $fromEmail = $config->fromEmail ?: $config->SMTPUser;
-        $fromName  = $config->fromName ?: 'PTM System Feedback';
+        $fromName  = $config->fromName ?: 'PTTM System Feedback';
 
         $emailSvc->setFrom($fromEmail, $fromName);
         return $emailSvc;

@@ -18,7 +18,8 @@ if (! function_exists('vehicle_type_key')) {
     function vehicle_type_key(?string $type): string
     {
         $type = strtolower(trim((string) $type));
-        return in_array($type, ['jeepney', 'van', 'minibus'], true) ? $type : 'van';
+        $type = preg_replace('/[^a-z0-9_-]+/', '_', $type) ?: '';
+        return trim($type, '_-') ?: 'vehicle';
     }
 }
 
@@ -31,7 +32,8 @@ if (! function_exists('vehicle_type_label')) {
             'minibus' => 'Minibus',
         ];
 
-        return $labels[vehicle_type_key($type)];
+        $typeKey = vehicle_type_key($type);
+        return $labels[$typeKey] ?? ucwords(str_replace(['_', '-'], ' ', $typeKey));
     }
 }
 
@@ -60,6 +62,6 @@ if (! function_exists('vehicle_type_image')) {
             'van'     => 'van.png',
             'minibus' => 'minibus.png',
         ];
-        return $images[vehicle_type_key($type)] ?? 'van.png';
+        return $images[vehicle_type_key($type)] ?? 'minibus.png';
     }
 }

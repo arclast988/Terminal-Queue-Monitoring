@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
 
     <style>
@@ -201,12 +203,14 @@
 
         /* --- Hero Section --- */
         .hero {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 80px 5%;
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px 5% 55px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            min-height: 380px;
+            min-height: 245px;
         }
 
         .hero::before {
@@ -221,27 +225,76 @@
         }
 
         .hero h2 {
-            font-size: 48px;
+            font-size: 38px;
             color: var(--primary-dark);
             font-weight: 800;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             position: relative;
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--primary-dark);
-            opacity: 0.8;
+            opacity: 0.85;
             max-width: 700px;
-            margin: 0 auto 40px;
+            margin: 0 auto 24px;
             position: relative;
+        }
+
+        /* --- Search Component --- */
+        .search-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .search-bar {
+            background: white;
+            padding: 8px;
+            border-radius: 50px;
+            display: flex;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: var(--transition);
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .search-bar button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .search-bar button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.03);
         }
 
         /* --- Main Content --- */
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -140px auto 40px !important;
+            margin: -30px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -720,7 +773,16 @@
     <!-- Hero Section -->
     <section class="hero">
         <h2>Vehicle Schedules</h2>
-        <p>View departure times, vehicle status, and route information for all vans and jeepneys.</p>
+        <p>View departure times, vehicle status, and route information for all available vehicle types.</p>
+
+        <div class="search-container">
+            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar">
+                <?php if (!empty($vehicle_type)): ?><input type="hidden" name="type" value="<?= esc($vehicle_type) ?>"><?php endif; ?>
+                <?php if (!empty($destination)): ?><input type="hidden" name="destination" value="<?= esc($destination) ?>"><?php endif; ?>
+                <input type="text" name="q" placeholder="Search by Route, Destination, or Plate Number..." value="<?= esc($search ?? '') ?>">
+                <button type="submit">SEARCH</button>
+            </form>
+        </div>
     </section>
 
     <!-- Main Content -->
@@ -732,9 +794,9 @@
                     <label>Vehicle Type</label>
                     <select name="type" id="vehicleTypeSelect">
                         <option value="">All Types</option>
-                        <option value="van" <?= $vehicle_type == 'van' ? 'selected' : '' ?>>Van</option>
-                        <option value="jeepney" <?= $vehicle_type == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
-                        <option value="minibus" <?= $vehicle_type == 'minibus' ? 'selected' : '' ?>>Minibus</option>
+                        <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                            <option value="<?= esc($vehicleType['slug']) ?>" <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="form-group">
@@ -885,7 +947,7 @@
                 return response.json();
             })
             .then(function(data) {
-                renderSchedules(data.schedules);
+                renderSchedules(data.schedules, data.vehicle_types || []);
                 var badge = document.getElementById('scheduleCount');
                 if (badge) badge.innerText = data.count + ' Found';
                 syncDestinationOptions(data.destinations);
@@ -898,7 +960,7 @@
             });
         }
 
-        function renderSchedules(schedules) {
+        function renderSchedules(schedules, vehicleTypes) {
             var tbody = document.getElementById('scheduleTableBody');
             var card = document.querySelector('.schedule-card');
             if (!card) return;
@@ -919,12 +981,14 @@
                 tbody = document.getElementById('scheduleTableBody');
             }
 
-            var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
+            var vehicleTypeMeta = {};
+            (vehicleTypes || []).forEach(function(type) { vehicleTypeMeta[type.slug] = type; });
             var statusClassMap = { 'scheduled': 'status-scheduled', 'waiting': 'status-waiting', 'boarding': 'status-boarding', 'departed': 'status-departed', 'canceled': 'status-canceled' };
             var html = '';
             schedules.forEach(function(s) {
-                var imgFile = imgMap[s.vehicle_type] || 'van.png';
-                var typeLabel = s.vehicle_type.charAt(0).toUpperCase() + s.vehicle_type.slice(1);
+                var typeMeta = vehicleTypeMeta[s.vehicle_type] || {};
+                var imgFile = typeMeta.image || 'minibus.png';
+                var typeLabel = typeMeta.name || s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); });
                 var statusClass = statusClassMap[s.status] || 'status-departed';
                 var dep = '';
                 if (s.status === 'departed' && s.departure_time_formatted) {
@@ -942,7 +1006,7 @@
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
                     '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
-                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + typeLabel + '</span></div></td>' +
+                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + escHtml(typeLabel) + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +

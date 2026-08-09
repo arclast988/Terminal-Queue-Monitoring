@@ -35,7 +35,11 @@
                             <option value="">-- All Types --</option>
                             <?php if (!empty($vehicleTypes)): ?>
                                 <?php foreach ($vehicleTypes as $type): ?>
-                                    <option value="<?= esc($type) ?>"><?= ucfirst(esc($type)) ?></option>
+                                    <?php
+                                    $typeSlug = is_array($type) ? $type['slug'] : $type;
+                                    $typeName = is_array($type) ? $type['name'] : vehicle_type_label($type);
+                                    ?>
+                                    <option value="<?= esc($typeSlug) ?>"><?= esc($typeName) ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>

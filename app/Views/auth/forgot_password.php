@@ -34,20 +34,45 @@
             --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { -webkit-text-size-adjust: 100%; }
-        body {
+        html { -webkit-text-size-adjust: 100%; }        body {
             font-family: var(--font);
-            background: var(--bg);
+            background: transparent;
             color: var(--text);
-            min-height: 100vh;
-            min-height: 100dvh;
-            overflow-x: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            min-height: 100vh; min-height: 100dvh;
+            display: grid; place-items: center;
+            padding: var(--space-6);
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
+            position: relative;
+        }
+
+        /* Semi-transparent system background watermark (Palompon Photo Slideshow) */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            opacity: 0.22;
+            z-index: 0;
+            pointer-events: none;
+            animation: palomponBgSlideshow 30s infinite ease-in-out;
+        }
+
+        @keyframes palomponBgSlideshow {
+            0%, 17% { background-image: url('<?= base_url('images/bg/bg1_townhall.jpg') ?>'); opacity: 0.22; }
+            19% { opacity: 0.05; }
+            20%, 37% { background-image: url('<?= base_url('images/bg/bg2_aerial_port.jpg') ?>'); opacity: 0.22; }
+            39% { opacity: 0.05; }
+            40%, 57% { background-image: url('<?= base_url('images/bg/bg3_aerial_town.jpg') ?>'); opacity: 0.22; }
+            59% { opacity: 0.05; }
+            60%, 77% { background-image: url('<?= base_url('images/bg/bg4_terminal_exterior.jpg') ?>'); opacity: 0.22; }
+            79% { opacity: 0.05; }
+            80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.jpg') ?>'); opacity: 0.22; }
+            99% { opacity: 0.05; }
         }
 
         .scenery { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
@@ -70,12 +95,9 @@
         .brand-mark {
             width: 46px; height: 46px; border-radius: 13px;
             padding: 3px;
-            background: var(--white);
+            background: rgba(255, 255, 255, 0.85);
             border: 1.5px solid var(--border);
             box-shadow: 0 8px 18px -8px rgba(15, 23, 42, .22);
-            display: grid; place-items: center;
-            overflow: hidden;
-            flex-shrink: 0;
         }
         .brand-mark img {
             display: block; width: 100%; height: 100%;
@@ -86,9 +108,11 @@
 
         .card {
             width: 100%;
-            background: var(--white);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: var(--radius-xl);
-            border: 1px solid rgba(229, 231, 235, .8);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow: var(--shadow-card);
             padding: var(--space-8) var(--space-8);
             animation: slideUp .7s cubic-bezier(.22, 1, .36, 1) .2s both;

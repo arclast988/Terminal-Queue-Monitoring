@@ -219,7 +219,7 @@
             });
         });
 
-        // --- 2. Convert ALL Select Elements to Search-Bar Inputs (No Dropdown Arrow) ---
+        // --- 2. Convert all eligible select elements to searchable inputs ---
         const selects = document.querySelectorAll('select:not([data-no-autocomplete])');
 
         selects.forEach(selectEl => {
@@ -257,9 +257,14 @@
             searchInput.placeholder = placeholderText;
             searchInput.autocomplete = 'off';
 
+            function isPlaceholderOption(option) {
+                const text = option.text.trim();
+                return option.value === '' || /^[\s-]*(select|choose)\b.*$/i.test(text);
+            }
+
             function getAvailableOptions() {
                 return Array.from(selectEl.options)
-                    .filter(opt => !opt.disabled && opt.style.display !== 'none')
+                    .filter(opt => !opt.disabled && opt.style.display !== 'none' && !isPlaceholderOption(opt))
                     .map(opt => ({
                         value: opt.value,
                         text: opt.text.trim(),
@@ -269,11 +274,10 @@
 
             function updateInputValue() {
                 const currentSelected = Array.from(selectEl.options).find(o => o.value === selectEl.value);
-                if (currentSelected && currentSelected.text.trim() !== '') {
+                if (currentSelected && !isPlaceholderOption(currentSelected)) {
                     searchInput.value = currentSelected.text.trim();
                 } else {
-                    const firstOpt = selectEl.options[selectEl.selectedIndex];
-                    searchInput.value = firstOpt ? firstOpt.text.trim() : '';
+                    searchInput.value = '';
                 }
             }
 

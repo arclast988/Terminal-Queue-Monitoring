@@ -8,7 +8,8 @@
     <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
     <style>
         :root {
@@ -206,12 +207,14 @@
 
         /* --- Hero Section --- */
         .hero {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-            padding: 80px 5%;
+            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px 5% 55px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            min-height: 380px;
+            min-height: 245px;
         }
 
         .hero::before {
@@ -226,19 +229,19 @@
         }
 
         .hero h2 {
-            font-size: 48px;
+            font-size: 38px;
             color: var(--primary-dark);
             font-weight: 800;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             position: relative;
         }
 
         .hero p {
-            font-size: 18px;
+            font-size: 16px;
             color: var(--primary-dark);
-            opacity: 0.8;
+            opacity: 0.85;
             max-width: 700px;
-            margin: 0 auto 40px;
+            margin: 0 auto 24px;
             position: relative;
         }
 
@@ -295,7 +298,7 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -40px auto 40px;
+            margin: -30px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -364,6 +367,22 @@
             }
         }
 
+        html body .stats-grid .stat-card,
+        html body .stats-grid a.stat-card,
+        html body .stats-grid button.stat-card {
+            margin: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            align-self: stretch !important;
+            height: 100% !important;
+            min-height: 98px !important;
+            box-sizing: border-box !important;
+            text-decoration: none !important;
+            color: inherit !important;
+        }
+
         .stat-card {
             background: white;
             padding: 25px;
@@ -374,6 +393,11 @@
             gap: 20px;
             transition: var(--transition);
             border: 1px solid rgba(0, 0, 0, 0.03);
+            height: 100%;
+            min-height: 98px;
+            box-sizing: border-box;
+            align-self: stretch;
+            margin: 0 !important;
         }
 
         .stat-card:hover {
@@ -386,6 +410,7 @@
             text-decoration: none;
             color: inherit;
             cursor: pointer;
+            margin: 0 !important;
         }
 
         .stat-card-link:focus,
@@ -404,11 +429,16 @@
 
         .stat-card-button {
             width: 100%;
-            border: none;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            background: white;
             color: inherit;
             cursor: pointer;
             font: inherit;
             text-align: left;
+            box-sizing: border-box;
+            align-self: stretch;
+            margin: 0 !important;
         }
 
         .route-average-modal {
@@ -564,6 +594,14 @@
             color: #7b1fa2;
         }
 
+        .stat-info {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
         .stat-info .value {
             font-size: 28px;
             font-weight: 800;
@@ -578,6 +616,10 @@
             text-transform: uppercase;
             font-weight: 600;
             letter-spacing: 0.5px;
+            min-height: 2.6em;
+            display: flex;
+            align-items: center;
+            line-height: 1.3;
         }
 
         /* --- Section Titles --- */
@@ -706,6 +748,53 @@
             border: 1px dashed #e2e8f0;
             font-size: 15px;
             font-weight: 500;
+        }
+
+        /* --- Empty Queue Card --- */
+        .empty-queue-card {
+            background: white;
+            border-radius: 20px;
+            padding: 55px 30px;
+            text-align: center !important;
+            box-shadow: var(--shadow-md);
+            border: 1px dashed #cbd5e1;
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .empty-queue-card .empty-icon-wrapper {
+            width: 72px;
+            height: 72px;
+            background: rgba(30, 64, 175, 0.06);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            color: var(--primary);
+            margin: 0 auto 16px;
+        }
+
+        .empty-queue-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            text-align: center !important;
+        }
+
+        .empty-queue-card p {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin: 0 auto;
+            max-width: 520px;
+            text-align: center !important;
+            line-height: 1.55;
         }
 
         /* --- Fare Badge inside queue card --- */
@@ -1614,8 +1703,12 @@
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <div class="card p-4 text-center">
-                            <p class="text-muted">No vehicles currently in queue.</p>
+                        <div class="empty-queue-card">
+                            <div class="empty-icon-wrapper">
+                                <i class="fas fa-bus-alt"></i>
+                            </div>
+                            <h3>No Vehicles Currently in Queue</h3>
+                            <p>There are no active vehicles waiting or boarding right now. Please check back shortly for live updates.</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -1892,7 +1985,7 @@
                                 initFilterChips();
                             }
                         } else {
-                            queueList.innerHTML = '<div class="card p-4 text-center"><p class="text-muted">No vehicles currently in queue.</p></div>';
+                            queueList.innerHTML = '<div class="empty-queue-card"><div class="empty-icon-wrapper"><i class="fas fa-bus-alt"></i></div><h3>No Vehicles Currently in Queue</h3><p>There are no active vehicles waiting or boarding right now. Please check back shortly for live updates.</p></div>';
                         }
                         applyQueueFilter();
                         observeItems();

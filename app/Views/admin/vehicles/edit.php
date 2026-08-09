@@ -97,9 +97,9 @@
                     <label for="type" class="form-label-modern">Vehicle Type <span class="text-danger">*</span></label>
                     <select class="select-modern" id="type" name="type" required>
                         <option value="">-- Select Type --</option>
-                        <option value="jeepney" <?= (old('type') ?? $vehicle['type']) == 'jeepney' ? 'selected' : '' ?>>Jeepney</option>
-                        <option value="van" <?= (old('type') ?? $vehicle['type']) == 'van' ? 'selected' : '' ?>>Van</option>
-                        <option value="minibus" <?= (old('type') ?? $vehicle['type']) == 'minibus' ? 'selected' : '' ?>>Minibus</option>
+                        <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                            <option value="<?= esc($vehicleType['slug']) ?>" <?= (old('type') ?? $vehicle['type']) === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                        <?php endforeach; ?>
                     </select>
                     <div class="form-text-modern">Accessible to Admin and Super Admin</div>
                 </div>

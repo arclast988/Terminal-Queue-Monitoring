@@ -129,7 +129,7 @@ database.default.port = 3306
 
 # Email (optional - configure for contact form)
 email.fromEmail = your.email@gmail.com
-email.fromName = PTM System
+email.fromName = PTTM System
 email.recipients = support@example.com
 email.SMTPUser = your.email@gmail.com
 email.SMTPPass = your-app-password

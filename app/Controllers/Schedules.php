@@ -6,9 +6,25 @@ use App\Models\QueueModel;
 use App\Models\RouteModel;
 use App\Models\DepartureRuleModel;
 use App\Models\AnnouncementModel;
+use App\Models\VehicleTypeModel;
 
 class Schedules extends BaseController
 {
+    private function activeVehicleTypes(): array
+    {
+        $types = (new VehicleTypeModel())
+            ->where('is_active', 1)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        foreach ($types as &$type) {
+            $type['image'] = vehicle_type_image($type['slug']);
+        }
+        unset($type);
+
+        return $types;
+    }
+
     public function index()
     {
 
@@ -19,6 +35,13 @@ class Schedules extends BaseController
         // Get filter parameters
         $vehicleType = $this->request->getGet('type');
         $destination = $this->request->getGet('destination');
+        $search      = trim((string) $this->request->getGet('q'));
+        $vehicleTypes = $this->activeVehicleTypes();
+        $activeTypeSlugs = array_column($vehicleTypes, 'slug');
+
+        if ($vehicleType && !in_array($vehicleType, $activeTypeSlugs, true)) {
+            $vehicleType = null;
+        }
 
         // Load all departure rules (sorted by time_from)
         $departureRules = $departureRuleModel->orderBy('time_from', 'ASC')->findAll();
@@ -50,12 +73,21 @@ class Schedules extends BaseController
             ->groupEnd();
 
         // Apply filters
-        if ($vehicleType && in_array($vehicleType, ['van', 'jeepney', 'minibus'])) {
+        if ($vehicleType) {
             $builder->where('vehicles.type', $vehicleType);
         }
 
         if ($destination) {
             $builder->where('routes.destination', $destination);
+        }
+
+        if ($search !== '') {
+            $builder->groupStart()
+                ->like('vehicles.plate_number', $search)
+                ->orLike('vehicles.driver_name', $search)
+                ->orLike('routes.destination', $search)
+                ->orLike('terminals.name', $search)
+            ->groupEnd();
         }
 
         // Sort active vehicles (waiting/boarding) first, then departed vehicles, then by their queue position
@@ -89,7 +121,9 @@ class Schedules extends BaseController
             'schedules' => $schedules,
             'vehicle_type' => $vehicleType,
             'destination' => $destination,
+            'search' => $search,
             'all_destinations' => $allDestinations,
+            'vehicleTypes' => $vehicleTypes,
             'announcements' => $announcements
         ];
 
@@ -109,6 +143,10 @@ class Schedules extends BaseController
     {
         $vehicleType = $this->request->getGet('type');
         $destination = $this->request->getGet('destination');
+        $vehicleTypes = $this->activeVehicleTypes();
+        if ($vehicleType && !in_array($vehicleType, array_column($vehicleTypes, 'slug'), true)) {
+            $vehicleType = null;
+        }
 
         // Cache per filter-combination for a couple of seconds so repeated
         // public polls reuse one DB query. The sync token stays live below,
@@ -141,7 +179,7 @@ class Schedules extends BaseController
                     ->groupEnd()
                 ->groupEnd();
 
-            if ($vehicleType && in_array($vehicleType, ['van', 'jeepney', 'minibus'])) {
+            if ($vehicleType) {
                 $builder->where('vehicles.type', $vehicleType);
             }
             if ($destination) {
@@ -174,6 +212,7 @@ class Schedules extends BaseController
                 'schedules'    => $schedules,
                 'count'        => count($schedules),
                 'destinations' => $allDestinations,
+                'vehicle_types' => $vehicleTypes,
             ];
 
             cache()->save($cacheKey, $payload, 2);

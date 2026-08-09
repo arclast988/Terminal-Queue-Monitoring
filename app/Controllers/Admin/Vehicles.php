@@ -5,16 +5,19 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\VehicleModel;
 use App\Models\RouteModel;
+use App\Models\VehicleTypeModel;
 
 class Vehicles extends BaseController
 {
     protected $vehicleModel;
     protected $routeModel;
+    protected $vehicleTypeModel;
 
     public function __construct()
     {
         $this->vehicleModel = new VehicleModel();
         $this->routeModel = new RouteModel();
+        $this->vehicleTypeModel = new VehicleTypeModel();
     }
 
     public function index()
@@ -31,6 +34,7 @@ class Vehicles extends BaseController
             'title' => 'Vehicle Register',
             'vehicles' => $vehicles,
             'routes' => $this->routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
+            'vehicleTypes' => $this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(),
         ];
 
         return view('admin/vehicles/index', $data);
@@ -41,7 +45,7 @@ class Vehicles extends BaseController
         $rules = [
             'plate_number' => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number]',
             'driver_name'  => 'required|min_length[3]|max_length[100]',
-            'type'         => 'required|in_list[jeepney,van,minibus]',
+            'type'         => 'required|max_length[50]',
             'capacity'     => 'required|integer|greater_than[0]',
             'route_id'     => 'required|integer',
         ];
@@ -55,6 +59,9 @@ class Vehicles extends BaseController
 
         // Validate vehicle type matches route type
         $vehicleType = $this->request->getPost('type');
+        if (!$this->vehicleTypeModel->where('slug', $vehicleType)->where('is_active', 1)->first()) {
+            return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
+        }
         if ($route && $route['vehicle_type'] !== $vehicleType) {
             return redirect()->back()->withInput()->with('error', 'Vehicle type (' . ucfirst($vehicleType) . ') must match the route type (' . ucfirst($route['vehicle_type']) . ').');
         }
@@ -85,6 +92,7 @@ class Vehicles extends BaseController
             'title' => 'Edit Vehicle',
             'vehicle' => $vehicle,
             'routes' => $this->routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
+            'vehicleTypes' => $this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(),
         ];
 
         return view('admin/vehicles/edit', $data);
@@ -100,7 +108,7 @@ class Vehicles extends BaseController
         $rules = [
             'plate_number' => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number,id,' . $id . ']',
             'driver_name'  => 'required|min_length[3]|max_length[100]',
-            'type'         => 'required|in_list[jeepney,van,minibus]',
+            'type'         => 'required|max_length[50]',
             'capacity'     => 'required|integer|greater_than[0]',
             'status'       => 'required|in_list[active,maintenance]',
             'route_id'     => 'required|integer',
@@ -113,6 +121,10 @@ class Vehicles extends BaseController
         $routeId = $this->request->getPost('route_id');
         $route = $this->routeModel->withOrigin()->find($routeId);
         $vehicleType = $this->request->getPost('type');
+
+        if (!$this->vehicleTypeModel->where('slug', $vehicleType)->where('is_active', 1)->first()) {
+            return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
+        }
 
         if ($route && $route['vehicle_type'] !== $vehicleType) {
             return redirect()->back()->withInput()->with('error', 'Vehicle type (' . ucfirst($vehicleType) . ') must match the route type (' . ucfirst($route['vehicle_type']) . ').');

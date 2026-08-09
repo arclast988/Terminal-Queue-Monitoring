@@ -60,6 +60,9 @@ $routes->group('admin/vehicles', ['filter' => 'auth:admin'], function ($routes) 
     $routes->post('delete/(:num)', 'Admin\Vehicles::delete/$1');
 });
 
+// Vehicle type configuration — Admin and Super Admin
+$routes->post('admin/vehicle-types/store', 'Admin\VehicleTypes::store', ['filter' => 'auth:admin']);
+
 // Announcements (Accessible by both Admin and Staff)
 $routes->group('admin/announcements', ['filter' => 'auth:admin,staff'], function ($routes) {
     $routes->get('', 'Admin\Announcements::index');
