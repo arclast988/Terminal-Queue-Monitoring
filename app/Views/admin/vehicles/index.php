@@ -8,9 +8,14 @@
         <i class="bi bi-truck"></i>
         Vehicle Register
     </h1>
-    <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#addVehicleTypeModal">
-        <i class="bi bi-tags"></i> Add Vehicle Type
-    </button>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageVehicleTypesModal">
+            <i class="bi bi-gear-fill me-1"></i> Manage Types
+        </button>
+        <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#addVehicleTypeModal">
+            <i class="bi bi-tags me-1"></i> Add Vehicle Type
+        </button>
+    </div>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>
@@ -633,6 +638,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
     }
 </script>
 
+
 <script>
     // Filter route dropdown based on selected vehicle type
     document.addEventListener('DOMContentLoaded', function () {
@@ -663,7 +669,84 @@ if (!empty($vehicles) && is_array($vehicles)) {
             });
         }
     });
+
+    function openAddVehicleTypeModal() {
+        var manageEl = document.getElementById('manageVehicleTypesModal');
+        var addEl = document.getElementById('addVehicleTypeModal');
+        if (!addEl) return;
+
+        function showAdd() {
+            // Remove any leftover backdrops just in case
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            var addModal = bootstrap.Modal.getOrCreateInstance(addEl);
+            addModal.show();
+        }
+
+        if (manageEl) {
+            var manageModal = bootstrap.Modal.getInstance(manageEl);
+            if (manageModal) {
+                // Wait for the manage modal to fully hide before showing add modal
+                manageEl.addEventListener('hidden.bs.modal', function onHidden() {
+                    manageEl.removeEventListener('hidden.bs.modal', onHidden);
+                    showAdd();
+                });
+                manageModal.hide();
+            } else {
+                showAdd();
+            }
+        } else {
+            showAdd();
+        }
+    }
 </script>
+
+<div class="modal fade" id="manageVehicleTypesModal" tabindex="-1" aria-labelledby="manageVehicleTypesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="manageVehicleTypesModalLabel"><i class="bi bi-gear-fill me-2"></i>Manage Vehicle Types</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <?php if (!empty($vehicleTypes)): ?>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($vehicleTypes as $vt): ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="<?= base_url('images/' . vehicle_type_image($vt['slug'])) ?>" alt="" style="height:24px; width:auto;">
+                                    <div>
+                                        <div class="fw-bold text-dark"><?= esc($vt['name']) ?></div>
+                                        <small class="text-muted">Slug: <code><?= esc($vt['slug']) ?></code> &bull; <?= $typeCounts[$vt['slug']] ?? 0 ?> vehicle(s)</small>
+                                    </div>
+                                </div>
+                                <div>
+                                    <form action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline"
+                                          onsubmit="return confirm('WARNING: Are you sure you want to delete vehicle type &quot;<?= esc($vt['name']) ?>&quot;?\n\nThis will ALSO DELETE all cards in Route Fares, connected routes, and vehicles of this type!');">
+                                        <?= csrf_field() ?>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Vehicle Type">
+                                            <i class="bi bi-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="p-4 text-center text-muted">No vehicle types configured.</div>
+                <?php endif; ?>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddVehicleTypeModal()">
+                    <i class="bi bi-plus-lg me-1"></i> Add New Type
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="modal fade" id="addVehicleTypeModal" tabindex="-1" aria-labelledby="addVehicleTypeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -689,3 +772,5 @@ if (!empty($vehicles) && is_array($vehicles)) {
 </div>
 
 <?= view('templates/footer') ?>
+
+
