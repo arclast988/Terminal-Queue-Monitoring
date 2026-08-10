@@ -80,8 +80,8 @@
 </style>
 
 <div class="page-header-modern fade-in">
-    <h1 class="page-title-modern" style="--primary-red: #1565c0; --primary-red-dark: #0d47a1;">
-        <i class="bi bi-person-workspace" style="color: #1565c0;"></i>
+    <h1 class="page-title-modern">
+        <i class="bi bi-person-workspace"></i>
         Dispatcher Dashboard
     </h1>
 </div>

@@ -18,7 +18,7 @@
 <style>
     /* --- Advisory Bar --- */
     .advisory-bar {
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
         color: white;
         padding: 10px 5%;
         display: flex;
@@ -97,7 +97,7 @@
     }
     .guest-header .logo-text h1 {
         font-size: 18px;
-        color: var(--primary-dark);
+        color: #000000;
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.5px;
@@ -137,13 +137,13 @@
         left: 0;
         width: 0;
         height: 2px;
-        background: var(--primary);
+        background: #D62828;
         transition: var(--transition);
     }
     .guest-header .nav-menu a:hover,
     .guest-header .nav-menu a.active {
-        color: var(--primary);
-        background: rgba(21, 101, 192, 0.05);
+        color: #D62828;
+        background: rgba(214, 40, 40, 0.06);
     }
     .guest-header .nav-menu a:hover::after,
     .guest-header .nav-menu a.active::after {
@@ -155,7 +155,7 @@
         box-shadow: none !important;
     }
     .guest-header .nav-menu a.login-btn {
-        background: #1e3a8a;
+        background: #B71C1C;
         color: white !important;
         padding: 10px 25px;
         border-radius: 25px;
@@ -169,7 +169,7 @@
     }
     .guest-header .nav-menu a.login-btn:hover {
         transform: translateY(-1px);
-        background: #172554 !important;
+        background: #8B0000 !important;
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
     .guest-header .nav-menu a.login-btn.btn-success {
@@ -182,7 +182,7 @@
     .guest-header .mobile-toggle {
         display: none;
         font-size: 24px;
-        color: var(--primary);
+        color: #000000;
         cursor: pointer;
     }
 
@@ -199,7 +199,7 @@
         color: #cbd5e0;
     }
     .breadcrumb-section a {
-        color: var(--primary);
+        color: #D62828;
         text-decoration: none;
         font-weight: 500;
     }
@@ -263,11 +263,11 @@
             font-weight: 600;
         }
         .guest-header .nav-menu a.active {
-            background: #e3f2fd;
-            color: var(--primary);
+            background: rgba(214, 40, 40, 0.08);
+            color: #D62828;
         }
         .guest-header .nav-menu a.login-btn {
-            background: #1e3a8a;
+            background: #B71C1C;
             color: white !important;
             text-align: center;
             justify-content: center;
@@ -307,13 +307,13 @@
         </a>
 
         <div class="header-info"
-            style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--text-muted); border-left: 1px solid #eee; padding-left: 20px;">
+            style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #000000; border-left: 1px solid #eee; padding-left: 20px;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-map-marker-alt" style="color: #FF9800; font-size: 16px;"></i>
                 <span style="font-weight: 500;">Central Terminal, Palompon, Leyte</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-clock" style="color: var(--primary); font-size: 16px;"></i>
+                <i class="fas fa-clock" style="color: #000000; font-size: 16px;"></i>
                 <span id="headerClock" style="font-weight: 500;"><?= date('H:i:s') ?></span>
             </div>
         </div>

@@ -41,14 +41,34 @@
 
         /* ===== HERO ===== */
         .hero {
-            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            position: relative;
             padding: 40px 5% 55px;
             text-align: center;
-            position: relative;
             overflow: hidden;
             min-height: 245px;
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            opacity: 0.22;
+            z-index: 0;
+            animation: heroBgSlideshow 30s infinite ease-in-out;
+        }
+        @keyframes heroBgSlideshow {
+            0%, 17% { background-image: url('<?= base_url('images/bg/bg1_townhall.png') ?>'); opacity: 0.22; }
+            19% { opacity: 0.05; }
+            20%, 37% { background-image: url('<?= base_url('images/bg/bg2_aerial_port.png') ?>'); opacity: 0.22; }
+            39% { opacity: 0.05; }
+            40%, 57% { background-image: url('<?= base_url('images/bg/bg3_aerial_town.png') ?>'); opacity: 0.22; }
+            59% { opacity: 0.05; }
+            60%, 77% { background-image: url('<?= base_url('images/bg/bg4_terminal_exterior.png') ?>'); opacity: 0.22; }
+            79% { opacity: 0.05; }
+            80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.png') ?>'); opacity: 0.22; }
+            99% { opacity: 0.05; }
         }
         .hero::before {
             content: '';
@@ -57,26 +77,27 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
+            background: rgba(255, 255, 255, 0.22);
+            z-index: 1;
         }
-        .hero > * { position: relative; z-index: 1; }
+        .hero > * { position: relative; z-index: 2; }
 
         .hero h2 {
             font-size: 38px;
             font-weight: 800;
-            color: var(--primary-dark);
+            color: #000000;
             margin-bottom: 10px;
             position: relative;
+            z-index: 2;
         }
 
         .hero p {
             font-size: 16px;
-            color: var(--primary-dark);
-            opacity: 0.85;
+            color: #000000;
             max-width: 700px;
             margin: 0 auto 24px;
             position: relative;
+            z-index: 2;
         }
 
         /* ===== SEARCH BAR ===== */
@@ -98,8 +119,8 @@
         }
 
         .search-bar:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
+            border-color: #B71C1C;
+            box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.15), var(--shadow-lg);
         }
 
         .search-bar input {
@@ -113,7 +134,7 @@
         }
 
         .search-bar button {
-            background: var(--primary);
+            background: #B71C1C;
             color: white;
             border: none;
             padding: 0 35px;
@@ -124,7 +145,7 @@
         }
 
         .search-bar button:hover {
-            background: var(--primary-dark);
+            background: #8B0000;
             transform: scale(1.03);
         }
 
@@ -216,7 +237,7 @@
         .table-card-header h2 {
             font-size: 20px;
             font-weight: 800;
-            color: #0d47a1;
+            color: #000000;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -534,7 +555,6 @@
     <div class="table-card">
         <div class="table-card-header">
             <h2>
-                <i class="fas fa-check-circle"></i>
                 All Past Departures
             </h2>
             <?php if (!empty($departures)): ?>

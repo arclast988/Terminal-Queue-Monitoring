@@ -68,15 +68,15 @@
         }
 
         @keyframes palomponBgSlideshow {
-            0%, 17% { background-image: url('<?= base_url('images/bg/bg1_townhall.jpg') ?>'); opacity: 0.22; }
+            0%, 17% { background-image: url('<?= base_url('images/bg/bg1_townhall.png') ?>'); opacity: 0.22; }
             19% { opacity: 0.05; }
-            20%, 37% { background-image: url('<?= base_url('images/bg/bg2_aerial_port.jpg') ?>'); opacity: 0.22; }
+            20%, 37% { background-image: url('<?= base_url('images/bg/bg2_aerial_port.png') ?>'); opacity: 0.22; }
             39% { opacity: 0.05; }
-            40%, 57% { background-image: url('<?= base_url('images/bg/bg3_aerial_town.jpg') ?>'); opacity: 0.22; }
+            40%, 57% { background-image: url('<?= base_url('images/bg/bg3_aerial_town.png') ?>'); opacity: 0.22; }
             59% { opacity: 0.05; }
-            60%, 77% { background-image: url('<?= base_url('images/bg/bg4_terminal_exterior.jpg') ?>'); opacity: 0.22; }
+            60%, 77% { background-image: url('<?= base_url('images/bg/bg4_terminal_exterior.png') ?>'); opacity: 0.22; }
             79% { opacity: 0.05; }
-            80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.jpg') ?>'); opacity: 0.22; }
+            80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.png') ?>'); opacity: 0.22; }
             99% { opacity: 0.05; }
         }
 

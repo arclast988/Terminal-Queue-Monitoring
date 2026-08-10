@@ -203,16 +203,35 @@
 
         /* --- Hero Section --- */
         .hero {
-            background: linear-gradient(135deg, rgba(255, 167, 38, 0.72) 0%, rgba(245, 124, 0, 0.78) 100%);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            position: relative;
             padding: 40px 5% 55px;
             text-align: center;
-            position: relative;
             overflow: hidden;
             min-height: 245px;
         }
-
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            opacity: 0.22;
+            z-index: 0;
+            animation: heroBgSlideshow 30s infinite ease-in-out;
+        }
+        @keyframes heroBgSlideshow {
+            0%, 17% { background-image: url('<?= base_url('images/bg/bg1_townhall.png') ?>'); opacity: 0.22; }
+            19% { opacity: 0.05; }
+            20%, 37% { background-image: url('<?= base_url('images/bg/bg2_aerial_port.png') ?>'); opacity: 0.22; }
+            39% { opacity: 0.05; }
+            40%, 57% { background-image: url('<?= base_url('images/bg/bg3_aerial_town.png') ?>'); opacity: 0.22; }
+            59% { opacity: 0.05; }
+            60%, 77% { background-image: url('<?= base_url('images/bg/bg4_terminal_exterior.png') ?>'); opacity: 0.22; }
+            79% { opacity: 0.05; }
+            80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.png') ?>'); opacity: 0.22; }
+            99% { opacity: 0.05; }
+        }
         .hero::before {
             content: '';
             position: absolute;
@@ -220,25 +239,26 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.2) 0%, transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%);
+            background: rgba(255, 255, 255, 0.22);
+            z-index: 1;
         }
 
         .hero h2 {
             font-size: 38px;
-            color: var(--primary-dark);
+            color: #000000;
             font-weight: 800;
             margin-bottom: 10px;
             position: relative;
+            z-index: 2;
         }
 
         .hero p {
             font-size: 16px;
-            color: var(--primary-dark);
-            opacity: 0.85;
+            color: #000000;
             max-width: 700px;
             margin: 0 auto 24px;
             position: relative;
+            z-index: 2;
         }
 
         /* --- Main Content --- */
@@ -269,8 +289,8 @@
         }
 
         .search-bar:focus-within {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.15), var(--shadow-lg);
+            border-color: #B71C1C;
+            box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.15), var(--shadow-lg);
         }
 
         .search-bar input {
@@ -284,7 +304,7 @@
         }
 
         .search-bar button {
-            background: var(--primary);
+            background: #B71C1C;
             color: white;
             border: none;
             padding: 0 35px;
@@ -295,7 +315,7 @@
         }
 
         .search-bar button:hover {
-            background: var(--primary-dark);
+            background: #8B0000;
             transform: scale(1.03);
         }
 
@@ -344,7 +364,7 @@
         .card-header h3 {
             font-size: 20px;
             font-weight: 800;
-            color: var(--primary-dark);
+            color: #000000;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -359,9 +379,9 @@
         .fare-card.vehicle-type-jeepney .card-header { border-top: 3px solid #1565c0; }
         .fare-card.vehicle-type-van     .card-header { border-top: 3px solid #c62828; }
         .fare-card.vehicle-type-minibus .card-header { border-top: 3px solid #2e7d32; }
-        .fare-card.vehicle-type-jeepney .card-header h3 { color: #1565c0; }
-        .fare-card.vehicle-type-van     .card-header h3 { color: #c62828; }
-        .fare-card.vehicle-type-minibus .card-header h3 { color: #2e7d32; }
+        .fare-card.vehicle-type-jeepney .card-header h3 { color: #000000; }
+        .fare-card.vehicle-type-van     .card-header h3 { color: #000000; }
+        .fare-card.vehicle-type-minibus .card-header h3 { color: #000000; }
         .fare-card.vehicle-type-jeepney:hover { border-color: #1565c0; }
         .fare-card.vehicle-type-van:hover     { border-color: #c62828; }
         .fare-card.vehicle-type-minibus:hover { border-color: #2e7d32; }
@@ -758,7 +778,7 @@
         ];
         ?>
         <div style="margin-bottom: 60px;">
-            <h3 style="font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+            <h3 style="font-size: 22px; font-weight: 800; color: #000000; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-percent" style="color: var(--primary);"></i> Passenger Discount Rates
             </h3>
             <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
@@ -881,7 +901,7 @@
         var defaultMeta = { icon: 'fa-tag', badge_class: 'van-badge', label_color: '#1565c0' };
 
         var html = '<div style="margin-bottom: 60px;">'
-            + '<h3 style="font-size: 22px; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">'
+            + '<h3 style="font-size: 22px; font-weight: 800; color: #000000; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">'
             + '<i class="fas fa-percent" style="color: var(--primary);"></i> Passenger Discount Rates</h3>'
             + '<p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Show your valid ID to avail the discount on any route.</p>'
             + '<div class="fares-grid">';
@@ -951,8 +971,6 @@
         .finally(function() { _fareFetchPending = false; });
     }
 
-    // Poll every 3 seconds (matches the rest of the live guest data)
-    setInterval(fetchFareData, 3000);
     </script>
 </body>
 

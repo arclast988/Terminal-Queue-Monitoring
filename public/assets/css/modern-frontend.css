@@ -535,6 +535,33 @@ body > * {
     color: #334155;
 }
 
+/* ------------------------------------------------------------------
+   DARK MODE: Admin/Staff table helper chips stay readable
+   (plate-number, driver-cell, route-info are hardcoded dark in
+   light mode; on dark table rows they must switch to light text)
+   ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  body.admin-theme .table-modern .plate-number,
+  body.staff-theme .table-modern .plate-number {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+  }
+  body.admin-theme .table-modern .driver-cell,
+  body.staff-theme .table-modern .driver-cell {
+    color: #e2e8f0 !important;
+  }
+  body.admin-theme .table-modern .driver-cell i,
+  body.staff-theme .table-modern .driver-cell i {
+    color: #94a3b8 !important;
+  }
+  body.admin-theme .table-modern .route-info,
+  body.staff-theme .table-modern .route-info,
+  body.admin-theme .table-modern .route-info span,
+  body.staff-theme .table-modern .route-info span {
+    color: #e2e8f0 !important;
+  }
+}
+
 .time-display {
     color: var(--primary, #1565c0);
     background-color: var(--primary-soft, #e3f2fd);

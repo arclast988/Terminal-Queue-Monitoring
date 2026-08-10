@@ -6,6 +6,17 @@
  */
 
 /* =================================================================
+   DISABLE SLIDESHOW BACKGROUND ON ADMIN & STAFF PAGES ONLY
+   The Palompon photo watermark should appear ONLY on the login page
+   and guest pages. Admin/staff pages use a clean solid background.
+   ================================================================= */
+body.admin-theme::after,
+body.staff-theme::after {
+    content: none;
+    animation: none;
+}
+
+/* =================================================================
    CRITICAL: DISABLE ALL ANIMATIONS, TRANSITIONS, AND REPAINTS
    ================================================================= */
 
