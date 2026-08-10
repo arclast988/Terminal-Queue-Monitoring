@@ -6,6 +6,34 @@
 (function () {
     'use strict';
 
+    // Helper functions to manage active z-index stacking context for open dropdowns
+    function openDropdown(wrapper, dropdown) {
+        if (!wrapper || !dropdown) return;
+        wrapper.classList.add('is-open');
+        wrapper.style.zIndex = '999999';
+        dropdown.style.display = 'block';
+
+        const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .row, .form-group, fieldset, .modern-card-body');
+        if (parentContainer) {
+            parentContainer.classList.add('autocomplete-parent-active');
+            parentContainer.style.position = 'relative';
+            parentContainer.style.zIndex = '99999';
+        }
+    }
+
+    function closeDropdown(wrapper, dropdown) {
+        if (!wrapper || !dropdown) return;
+        wrapper.classList.remove('is-open');
+        wrapper.style.zIndex = '';
+        dropdown.style.display = 'none';
+
+        const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .row, .form-group, fieldset, .modern-card-body');
+        if (parentContainer) {
+            parentContainer.classList.remove('autocomplete-parent-active');
+            parentContainer.style.zIndex = '';
+        }
+    }
+
     // Inject base dropdown CSS styles to ensure complete appearance on all pages
     if (!document.getElementById('autocomplete-search-base-styles')) {
         const style = document.createElement('style');
@@ -13,23 +41,24 @@
         style.textContent = `
             .autocomplete-wrapper {
                 position: relative !important;
-                z-index: 1050 !important;
+                z-index: 10 !important;
                 overflow: visible !important;
             }
-            .autocomplete-wrapper:focus-within,
-            .autocomplete-wrapper:hover,
-            .autocomplete-wrapper:active {
-                z-index: 9999 !important;
-                overflow: visible !important;
+            .autocomplete-wrapper.is-open {
+                z-index: 999999 !important;
+            }
+            .autocomplete-parent-active {
+                z-index: 99999 !important;
+                position: relative !important;
             }
             .autocomplete-dropdown {
                 background: #ffffff !important;
                 background-color: #ffffff !important;
-                border: 1px solid #e2e8f0 !important;
-                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
                 border-radius: 14px !important;
                 overflow-y: auto !important;
-                z-index: 99999 !important;
+                z-index: 9999999 !important;
                 padding: 6px !important;
             }
             .autocomplete-item {
@@ -117,12 +146,12 @@
                 top: calc(100% + 6px);
                 left: 0;
                 right: 0;
-                z-index: 99999 !important;
+                z-index: 9999999 !important;
                 max-height: 230px;
                 overflow-y: auto;
                 display: none;
                 background-color: #ffffff;
-                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
                 border-radius: 14px;
                 padding: 6px;
             `;
@@ -135,7 +164,7 @@
                 const filtered = suggestions.filter(loc => loc.toUpperCase().includes(cleanQuery));
 
                 if (filtered.length === 0) {
-                    dropdown.style.display = 'none';
+                    closeDropdown(wrapper, dropdown);
                     return;
                 }
 
@@ -154,7 +183,7 @@
                     `;
                 }).join('');
 
-                dropdown.style.display = 'block';
+                openDropdown(wrapper, dropdown);
                 activeIndex = -1;
 
                 dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
@@ -171,7 +200,7 @@
 
             function selectItem(val) {
                 input.value = val;
-                dropdown.style.display = 'none';
+                closeDropdown(wrapper, dropdown);
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.dispatchEvent(new Event('change', { bubbles: true }));
             }
@@ -197,7 +226,7 @@
                         selectItem(items[activeIndex].dataset.value);
                     }
                 } else if (e.key === 'Escape') {
-                    dropdown.style.display = 'none';
+                    closeDropdown(wrapper, dropdown);
                 }
             });
 
@@ -214,7 +243,7 @@
 
             document.addEventListener('click', (e) => {
                 if (!wrapper.contains(e.target)) {
-                    dropdown.style.display = 'none';
+                    closeDropdown(wrapper, dropdown);
                 }
             });
         });
@@ -292,12 +321,12 @@
                 top: calc(100% + 6px);
                 left: 0;
                 right: 0;
-                z-index: 99999 !important;
+                z-index: 9999999 !important;
                 max-height: 230px;
                 overflow-y: auto;
                 display: none;
                 background-color: #ffffff;
-                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15) !important;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
                 border-radius: 14px;
                 padding: 6px;
             `;
@@ -312,7 +341,7 @@
                 const filtered = opts.filter(opt => opt.text.toUpperCase().includes(cleanQuery));
 
                 if (filtered.length === 0) {
-                    dropdown.style.display = 'none';
+                    closeDropdown(wrapper, dropdown);
                     return;
                 }
 
@@ -355,7 +384,7 @@
                     `;
                 }).join('');
 
-                dropdown.style.display = 'block';
+                openDropdown(wrapper, dropdown);
                 activeIndex = -1;
 
                 dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
@@ -373,7 +402,7 @@
             function selectOption(val, text) {
                 selectEl.value = val;
                 searchInput.value = text;
-                dropdown.style.display = 'none';
+                closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));
                 selectEl.dispatchEvent(new Event('change', { bubbles: true }));
             }
@@ -409,7 +438,7 @@
                         selectOption(items[activeIndex].dataset.value, items[activeIndex].dataset.text);
                     }
                 } else if (e.key === 'Escape') {
-                    dropdown.style.display = 'none';
+                    closeDropdown(wrapper, dropdown);
                 }
             });
 
@@ -426,7 +455,7 @@
 
             document.addEventListener('click', (e) => {
                 if (!wrapper.contains(e.target)) {
-                    dropdown.style.display = 'none';
+                    closeDropdown(wrapper, dropdown);
                     updateInputValue();
                 }
             });

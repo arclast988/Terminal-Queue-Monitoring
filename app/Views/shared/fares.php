@@ -272,8 +272,10 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
 
 <?php
 $fareTypes = array_map(static fn(array $type) => [
+    'id' => $type['id'] ?? null,
     'key' => $type['slug'],
     'type' => $type['slug'],
+    'name' => $type['name'],
     'label' => $type['name'] . ' Routes',
     'img' => vehicle_type_image($type['slug']),
     'badge' => vehicle_type_badge($type['slug']),
@@ -304,6 +306,15 @@ $fareTypes = array_map(static fn(array $type) => [
                 <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= esc($ft['label']) ?>" style="width:32px;height:auto; margin-right: 8px;">
                 <?= esc($ft['label']) ?>
             </span>
+            <?php if ($isAdmin && !empty($ft['id'])): ?>
+            <form action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline"
+                  onsubmit="return confirm('WARNING: Delete vehicle type &quot;<?= esc($ft['name']) ?>&quot;?\n\nThis will delete this fare card section, all routes listed inside it, and all connected vehicles!');">
+                <?= csrf_field() ?>
+                <button type="submit" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Vehicle Type & Card">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+            <?php endif; ?>
         </div>
         <div class="modern-card-body p-0">
             <div class="list-group list-group-flush fare-list">

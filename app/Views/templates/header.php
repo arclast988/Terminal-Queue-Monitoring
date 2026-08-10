@@ -697,27 +697,45 @@
 
         /*
          * Bootstrap appends .modal-backdrop directly to <body>, while page
-         * modals are rendered inside .main-content. The watermark layer gives
-         * body children a z-index, which otherwise puts the backdrop above
-         * nested modals and captures all of their clicks.
+         * modals are rendered inside .main-content. The watermark layer
+         * (body > *) gives body children position:relative; z-index:1,
+         * creating stacking contexts that trap nested modals below the backdrop.
+         *
+         * Solution: When a modal is active (body.modal-open), remove position:relative
+         * and z-index from .main-content so it no longer creates an isolated
+         * stacking context. This lets nested modals (z-index: 1055) paint above
+         * .modal-backdrop (z-index: 1040) while keeping .main-content covered.
          */
+
+        /* Backdrop sits above header (1030) and page content */
         body > .modal-backdrop {
             position: fixed !important;
             z-index: 1040 !important;
+            opacity: 0.5 !important;
         }
 
-        body.modal-open .main-content {
+        /* Remove stacking context on .main-content when modal is open */
+        body.modal-open > .main-content {
+            position: static !important;
             z-index: auto !important;
+            transform: none !important;
+            filter: none !important;
         }
 
-        body.modal-open > .modal {
+        /* All modals (whether in body or nested in .main-content) sit above backdrop */
+        body.modal-open .modal {
             position: fixed !important;
             z-index: 1055 !important;
         }
 
-        /* The navigation should sit below an active modal and backdrop. */
+        /* Navigation header sits below backdrop */
         body.modal-open header#site-header {
             z-index: 1030 !important;
+        }
+
+        /* Watermark slideshow stays at base background layer */
+        body.modal-open::after {
+            z-index: 0 !important;
         }
     </style>
 </head>

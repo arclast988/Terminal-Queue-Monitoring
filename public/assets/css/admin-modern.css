@@ -1213,3 +1213,48 @@ body.staff-theme .table .btn-outline-dark:hover {
         color: #ffffff !important;
     }
 }
+
+/* =================================================================
+   SEMI-TRANSPARENT FOOTER FOR ADMIN, SUPERADMIN, AND STAFF
+   ================================================================= */
+
+body.admin-theme footer,
+body.admin-theme .footer,
+body.staff-theme footer,
+body.staff-theme .footer {
+    background: rgba(255, 255, 255, 0.45) !important;
+    backdrop-filter: blur(12px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.7) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03) !important;
+    padding: 16px 24px !important;
+    margin-top: 40px !important;
+    border-radius: 14px 14px 0 0 !important;
+    text-align: center !important;
+    color: #475569 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+body.admin-theme footer p,
+body.admin-theme .footer p,
+body.staff-theme footer p,
+body.staff-theme .footer p {
+    margin: 0 !important;
+    color: inherit !important;
+    font-size: inherit !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.admin-theme footer,
+    body.admin-theme .footer,
+    body.staff-theme footer,
+    body.staff-theme .footer {
+        background: rgba(15, 23, 42, 0.55) !important;
+        border-top-color: rgba(51, 65, 85, 0.6) !important;
+        color: #94a3b8 !important;
+    }
+}
+
