@@ -1,0 +1,1253 @@
+/*
+ * Modern Frontend CSS - Enhanced UI for Palompon Transit
+ * A complete visual overhaul with modern design principles
+ */
+
+:root {
+    /* Primary Colors */
+    --primary-red: #C62828;
+    --primary-red-dark: #B71C1C;
+    --primary-red-light: #E53935;
+    
+    --primary-blue: #1565c0;
+    --primary-blue-dark: #0d47a1;
+    --primary-blue-light: #1976D2;
+    
+    /* Accent Colors */
+    --accent-gold: #FFA726;
+    --accent-gold-dark: #F57C00;
+    
+    /* Semantic Colors */
+    --success: #10b981;
+    --success-light: #D1FAE5;
+    --success-dark: #059669;
+    
+    --warning: #f59e0b;
+    --warning-light: #FEF3C7;
+    --warning-dark: #d97706;
+    
+    --danger: #ef4444;
+    --danger-light: #FEE2E2;
+    --danger-dark: #dc2626;
+    
+    --info: #3b82f6;
+    --info-light: #DBEAFE;
+    --info-dark: #2563eb;
+    
+    /* Neutral Colors */
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-300: #cbd5e1;
+    --slate-400: #94a3b8;
+    --slate-500: #64748b;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-800: #1e293b;
+    --slate-900: #0f172a;
+    
+    /* Gradients */
+    --gradient-red: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+    --gradient-blue: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+    --gradient-gold: linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-gold-dark) 100%);
+    --gradient-success: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    
+    /* Shadows */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.12);
+    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    
+    /* Border Radius */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    
+    /* Transitions */
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =================================================================
+   BASE STYLES
+   ================================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-800);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: relative;
+}
+
+/* =================================================================
+   SEMI-TRANSPARENT SYSTEM BACKGROUND WATERMARK
+   Displays user-submitted Palompon photos as a subtle background layer
+   behind all page content. Fixed so it stays in place during scroll.
+   ================================================================= */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    opacity: 0.22;
+    z-index: 0;
+    pointer-events: none;
+    animation: palomponBgSlideshow 30s infinite ease-in-out;
+}
+
+@keyframes palomponBgSlideshow {
+    0%, 17% {
+        background-image: url('/images/bg/bg1_townhall.jpg');
+        opacity: 0.22;
+    }
+    19% {
+        opacity: 0.05;
+    }
+    20%, 37% {
+        background-image: url('/images/bg/bg2_aerial_port.jpg');
+        opacity: 0.22;
+    }
+    39% {
+        opacity: 0.05;
+    }
+    40%, 57% {
+        background-image: url('/images/bg/bg3_aerial_town.jpg');
+        opacity: 0.22;
+    }
+    59% {
+        opacity: 0.05;
+    }
+    60%, 77% {
+        background-image: url('/images/bg/bg4_terminal_exterior.jpg');
+        opacity: 0.22;
+    }
+    79% {
+        opacity: 0.05;
+    }
+    80%, 97% {
+        background-image: url('/images/bg/bg5_terminal_bay.jpg');
+        opacity: 0.22;
+    }
+    99% {
+        opacity: 0.05;
+    }
+}
+
+/* Ensure all direct body children sit above the watermark */
+body > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Dark mode: reduce opacity further so it blends with dark backgrounds */
+@media (prefers-color-scheme: dark) {
+    body::after {
+        opacity: 0.15;
+        filter: brightness(1.3) contrast(1.1);
+    }
+}
+
+/* =================================================================
+   MODERN CARD STYLES
+   ================================================================= */
+
+.modern-card,
+.card-modern {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--slate-200);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-base);
+    overflow: hidden;
+}
+
+.modern-card:hover,
+.card-modern:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.modern-card-header,
+.card-header-modern {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--slate-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(to bottom, var(--slate-50), white);
+}
+
+.modern-card-title,
+.card-title-modern {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--slate-800);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.modern-card-body,
+.card-body-modern {
+    padding: 24px;
+}
+
+.modern-card-footer,
+.card-footer-modern {
+    padding: 16px 24px;
+    border-top: 1px solid var(--slate-200);
+    background: var(--slate-50);
+}
+
+/* Stat Card - Enhanced */
+.stat-card-modern {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--slate-200);
+    box-shadow: var(--shadow-sm);
+    padding: 24px;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-red);
+    opacity: 1;
+    transition: opacity var(--transition-base);
+}
+
+.stat-card-modern:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+}
+
+.stat-card-modern:hover::before {
+    opacity: 1;
+}
+
+.stat-card-modern.red-accent::before {
+    background: var(--gradient-red);
+}
+
+.stat-card-modern.blue-accent::before {
+    background: var(--gradient-blue);
+}
+
+.stat-card-modern.success-accent::before {
+    background: var(--gradient-success);
+}
+
+.stat-card-modern.gold-accent::before {
+    background: var(--gradient-gold);
+}
+
+.stat-card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 16px;
+    transition: transform var(--transition-base);
+}
+
+.stat-card-modern:hover .stat-card-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.stat-card-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--slate-800);
+    line-height: 1.1;
+    margin-bottom: 4px;
+}
+
+.stat-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--slate-600);
+}
+
+.stat-card-link:not(.stat-card) {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary-red);
+    text-decoration: none;
+    margin-top: 16px;
+    transition: all var(--transition-fast);
+}
+
+.stat-card-link:not(.stat-card):hover {
+    color: var(--primary-red-dark);
+    gap: 10px;
+}
+
+/* =================================================================
+   MODERN BUTTONS
+   ================================================================= */
+
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-modern::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.btn-modern:hover::after {
+    opacity: 1;
+}
+
+.btn-modern-primary {
+    background: var(--gradient-red);
+    color: white;
+    box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35);
+}
+
+.btn-modern-primary:hover {
+    background: linear-gradient(135deg, var(--primary-red-light) 0%, var(--primary-red) 100%);
+    box-shadow: 0 6px 20px rgba(198, 40, 40, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-modern-blue {
+    background: var(--gradient-blue);
+    color: white;
+    box-shadow: 0 4px 14px rgba(21, 101, 192, 0.35);
+}
+
+.btn-modern-blue:hover {
+    background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--primary-blue) 100%);
+    box-shadow: 0 6px 20px rgba(21, 101, 192, 0.45);
+    transform: translateY(-2px);
+}
+
+.btn-modern-outline {
+    background: white;
+    color: var(--slate-700);
+    border: 2px solid var(--slate-300);
+}
+
+.btn-modern-outline:hover {
+    border-color: var(--slate-400);
+    background: var(--slate-50);
+    color: var(--slate-800);
+}
+
+.btn-modern-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+.btn-modern-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border-radius: var(--radius-md);
+}
+
+/* =================================================================
+   MODERN TABLE
+   ================================================================= */
+
+.table-modern {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-modern thead th {
+    padding: 16px 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--slate-600);
+    background: linear-gradient(to bottom, var(--slate-50), var(--slate-100));
+    border-bottom: 2px solid var(--slate-200);
+}
+
+.table-modern thead th:first-child {
+    border-top-left-radius: var(--radius-md);
+}
+
+.table-modern thead th:last-child {
+    border-top-right-radius: var(--radius-md);
+}
+
+.table-modern tbody tr {
+    background: white;
+    transition: all var(--transition-fast);
+}
+
+.table-modern tbody tr:hover {
+    background: var(--slate-50);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.table-modern tbody td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--slate-200);
+    font-size: 14px;
+    color: var(--slate-700);
+}
+
+.table-modern tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =================================================================
+   MODERN BADGES
+   ================================================================= */
+
+.badge-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-modern-success {
+    background: var(--success-light);
+    color: var(--success-dark);
+}
+
+.badge-modern-warning {
+    background: var(--warning-light);
+    color: var(--warning-dark);
+}
+
+.badge-modern-danger {
+    background: var(--danger-light);
+    color: var(--danger-dark);
+}
+
+.badge-modern-info {
+    background: var(--info-light);
+    color: var(--info-dark);
+}
+
+/* Time display badge */
+.time-display {
+    font-size: 16px;
+    font-weight: 800;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+/* Table Helper Classes */
+.table-modern .plate-number {
+    font-weight: 700;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    background: #f1f5f9;
+    color: #1e293b;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    letter-spacing: 0.5px;
+}
+
+.table-modern .driver-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.table-modern .driver-cell i {
+    color: #66788a;
+    font-size: 12px;
+}
+
+.table-modern .vehicle-type-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-modern .route-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #334155;
+}
+
+/* ------------------------------------------------------------------
+   DARK MODE: Admin/Staff table helper chips stay readable
+   (plate-number, driver-cell, route-info are hardcoded dark in
+   light mode; on dark table rows they must switch to light text)
+   ------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  body.admin-theme .table-modern .plate-number,
+  body.staff-theme .table-modern .plate-number {
+    background: #334155 !important;
+    color: #f1f5f9 !important;
+  }
+  body.admin-theme .table-modern .driver-cell,
+  body.staff-theme .table-modern .driver-cell {
+    color: #e2e8f0 !important;
+  }
+  body.admin-theme .table-modern .driver-cell i,
+  body.staff-theme .table-modern .driver-cell i {
+    color: #94a3b8 !important;
+  }
+  body.admin-theme .table-modern .route-info,
+  body.staff-theme .table-modern .route-info,
+  body.admin-theme .table-modern .route-info span,
+  body.staff-theme .table-modern .route-info span {
+    color: #e2e8f0 !important;
+  }
+}
+
+.time-display {
+    color: var(--primary, #1565c0);
+    background-color: var(--primary-soft, #e3f2fd);
+    padding: 5px 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.time-display.departed {
+    background-color: var(--slate-200, #e2e8f0) !important;
+    color: var(--slate-600, #475569) !important;
+}
+
+.time-display.full {
+    background-color: var(--success-light, #d1fae5) !important;
+    color: var(--success-dark, #059669) !important;
+}
+
+/* Action utilities for consistent Edit/Delete styling across admin views.
+   These are the canonical classes to use in templates instead of inline styles.
+   Icons inside buttons will inherit the color. */
+.btn-action-edit,
+.btn-modern.btn-action-edit {
+    background: transparent !important;
+    border: 2px solid var(--primary-blue, #1565c0) !important;
+    color: var(--primary-blue, #1565c0) !important;
+    -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
+}
+.btn-action-edit:hover,
+.btn-modern.btn-action-edit:hover {
+    background: linear-gradient(135deg, var(--primary-blue-light, #1976D2) 0%, var(--primary-blue, #1565c0) 100%) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+.btn-action-delete,
+.btn-modern.btn-action-delete {
+    background: var(--danger-light, #FEE2E2) !important;
+    color: var(--danger-dark, #dc2626) !important;
+    -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+    border: 2px solid transparent !important;
+}
+.btn-action-delete:hover,
+.btn-modern.btn-action-delete:hover {
+    background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .btn-action-edit,
+    .btn-modern.btn-action-edit {
+        background: transparent !important;
+        border-color: #60a5fa !important;
+        color: #60a5fa !important;
+        -webkit-text-fill-color: #60a5fa !important;
+    }
+    .btn-action-edit:hover,
+    .btn-modern.btn-action-edit:hover {
+        background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%) !important;
+        border-color: #1e88e5 !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+    }
+    .btn-action-delete,
+    .btn-modern.btn-action-delete {
+        background: rgba(239, 68, 68, 0.15) !important;
+        color: #f87171 !important;
+        -webkit-text-fill-color: #f87171 !important;
+        border-color: transparent !important;
+    }
+    .btn-action-delete:hover,
+    .btn-modern.btn-action-delete:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+    }
+}
+
+/* =================================================================
+   MODERN INPUTS
+   ================================================================= */
+
+.input-modern,
+.form-control-modern {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 2px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    background: white;
+    color: var(--slate-800);
+    transition: all var(--transition-fast);
+}
+
+.input-modern:focus,
+.form-control-modern:focus {
+    outline: none;
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
+}
+
+.input-modern::placeholder,
+.form-control-modern::placeholder {
+    color: var(--slate-500);
+}
+
+.form-label-modern {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--slate-600);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.input-group-modern {
+    display: flex;
+    gap: 0;
+}
+
+.input-group-modern .input-modern,
+.input-group-modern .form-control-modern {
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+.input-group-modern .btn-modern {
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.page-header-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 32px 0;
+    border-bottom: 1px solid var(--slate-200);
+    margin-bottom: 32px;
+}
+
+.page-title-modern {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--slate-800);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-title-modern i {
+    color: var(--primary-red);
+}
+
+/* =================================================================
+   ALERTS
+   ================================================================= */
+
+.alert-modern {
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    border-left: 4px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+
+.alert-modern-success {
+    background: var(--success-light);
+    border-color: var(--success);
+    color: var(--success-dark);
+}
+
+.alert-modern-warning {
+    background: var(--warning-light);
+    border-color: var(--warning);
+    color: var(--warning-dark);
+}
+
+.alert-modern-danger {
+    background: var(--danger-light);
+    border-color: var(--danger);
+    color: var(--danger-dark);
+}
+
+.alert-modern-info {
+    background: var(--info-light);
+    border-color: var(--info);
+    color: var(--info-dark);
+}
+
+.alert-modern-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+/* =================================================================
+   LOADING STATES
+   ================================================================= */
+
+.skeleton-loader {
+    background: linear-gradient(90deg, var(--slate-200) 25%, var(--slate-100) 50%, var(--slate-200) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* =================================================================
+   UTILITY CLASSES
+   ================================================================= */
+
+.text-gradient-red {
+    background: var(--gradient-red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.text-gradient-blue {
+    background: var(--gradient-blue);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-modern {
+    box-shadow: var(--shadow-md);
+}
+
+.shadow-modern-lg {
+    box-shadow: var(--shadow-lg);
+}
+
+.rounded-modern {
+    border-radius: var(--radius-lg);
+}
+
+/* =================================================================
+   ANIMATIONS (Subtle & Performance-Friendly)
+   ================================================================= */
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-in-right {
+    animation: slideInRight 0.4s ease-out;
+}
+
+/* =================================================================
+    RESPONSIVE DESIGN
+    ================================================================= */
+
+@media (max-width: 768px) {
+    .page-header-modern {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 24px 0;
+    }
+    
+    .page-title-modern {
+        font-size: 24px;
+    }
+    
+    .stat-card-modern {
+        padding: 20px;
+    }
+    
+    .stat-card-value {
+        font-size: 28px;
+    }
+    
+    .table-modern thead {
+        display: none;
+    }
+    
+    .table-modern tbody tr {
+        display: block;
+        margin-bottom: 16px;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--slate-200);
+        padding: 16px;
+    }
+    
+    .table-modern tbody td {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--slate-100);
+    }
+    
+    .table-modern tbody td:last-child {
+        border-bottom: none;
+    }
+    
+    .table-modern tbody td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--slate-600);
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.5px;
+    }
+}
+
+/* =================================================================
+   ADMIN THEME SPECIFIC
+   ================================================================= */
+
+body.admin-theme .stat-card-modern::before {
+    background: var(--gradient-red);
+}
+
+body.admin-theme .btn-modern-primary {
+    background: var(--gradient-red);
+}
+
+body.admin-theme .btn-modern-primary:hover {
+    background: linear-gradient(135deg, var(--primary-red-light) 0%, var(--primary-red) 100%);
+}
+
+body.admin-theme .page-title-modern i {
+    color: var(--primary-red);
+}
+
+body.admin-theme .stat-card-link {
+    color: var(--primary-red);
+}
+
+body.admin-theme .stat-card-link:hover {
+    color: var(--primary-red-dark);
+}
+
+/* =================================================================
+   STAFF THEME SPECIFIC
+   ================================================================= */
+
+body.staff-theme .stat-card-modern::before {
+    background: var(--gradient-blue);
+}
+
+body.staff-theme .btn-modern-primary {
+    background: var(--gradient-blue);
+}
+
+body.staff-theme .btn-modern-primary:hover {
+    background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--primary-blue) 100%);
+}
+
+body.staff-theme .page-title-modern i {
+    color: var(--primary-blue);
+}
+
+body.staff-theme .stat-card-link {
+    color: var(--primary-blue);
+}
+
+body.staff-theme .stat-card-link:hover {
+    color: var(--primary-blue-dark);
+}
+
+/* =================================================================
+   QUICK FIX: Ensure header CTAs and modern buttons always show text
+   - Addresses cases where overlay (::after), cascade, or theme tokens
+     cause button text/icons to become invisible on admin pages.
+   - This is a minimal, targeted patch. Keep selectors specific and
+     use !important only where necessary so it wins the cascade.
+   ================================================================= */
+
+/* Make sure the logout/profile CTA in the header is readable */
+body.admin-theme .logout-btn-custom,
+body.staff-theme .logout-btn-custom,
+.logout-btn-custom {
+    color: var(--nav-cta-text, #B71C1C) !important;
+    -webkit-text-fill-color: var(--nav-cta-text, #B71C1C) !important;
+}
+
+.logout-btn-custom i,
+.logout-btn-custom .fa,
+.logout-btn-custom .bi {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Ensure modern buttons and their icons inherit a visible color */
+.btn-modern,
+.btn-modern i,
+.btn-modern .bi,
+.btn-modern .fa {
+    /* Only target direct interactive elements to avoid overriding
+       nested component styles (SVGs, badges). Using a narrower selector
+       reduces unexpected cascade wins while keeping button text visible. */
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+
+/* Primary modern buttons must have white text on colored backgrounds */
+.btn-modern.btn-modern-primary,
+.btn-modern.btn-modern-primary i,
+.btn-modern.btn-modern-primary .bi {
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+}
+
+/* Outline / neutral modern buttons should be dark on light */
+.btn-modern.btn-modern-outline,
+.btn-modern.btn-modern-outline i,
+.btn-modern.btn-modern-outline .bi {
+    color: var(--slate-800, #1e293b) !important;
+    -webkit-text-fill-color: var(--slate-800, #1e293b) !important;
+}
+
+/* Prevent the decorative ::after overlay from sitting above text */
+.btn-modern::after {
+    z-index: -1 !important;
+    pointer-events: none !important;
+}
+
+/* Radio Card Modern Component */
+.radio-card-modern {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+}
+
+.radio-card-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.radio-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    border: 2px solid var(--slate-200);
+    border-radius: var(--radius-md);
+    background: white;
+    transition: all var(--transition-base);
+    text-align: center;
+    min-width: 100px;
+}
+
+.radio-card-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.radio-card-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--slate-600);
+    display: block;
+}
+
+.radio-card-modern:hover .radio-card-content {
+    border-color: var(--slate-400);
+    background: var(--slate-50);
+}
+
+.radio-card-input:checked + .radio-card-content {
+    border-color: var(--primary-red);
+    background: #fdecea;
+}
+
+.radio-card-input:checked + .radio-card-content .radio-card-label {
+    color: var(--primary-red-dark);
+}
+
+body.staff-theme .radio-card-input:checked + .radio-card-content {
+    border-color: var(--primary-blue);
+    background: #e8effd;
+}
+
+body.staff-theme .radio-card-input:checked + .radio-card-content .radio-card-label {
+    color: var(--primary-blue-dark);
+}
+
+/* Modern Form Checks (Checkboxes & Radios) */
+.form-check-modern {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.form-check-input-modern {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    border: 2px solid var(--slate-300);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.form-check-input-modern:checked {
+    background-color: var(--primary-red);
+    border-color: var(--primary-red);
+}
+
+body.staff-theme .form-check-input-modern:checked {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+}
+
+.form-check-label-modern {
+    font-size: 14px;
+    color: var(--slate-700);
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* ==========================================================================
+   DARK MODE SUPPORT FOR MODERN FRONTEND COMPONENTS
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --slate-50: #0f172a;
+        --slate-100: #1e293b;
+        --slate-200: #334155;
+        --slate-300: #475569;
+        --slate-400: #64748b;
+        --slate-500: #94a3b8;
+        --slate-600: #cbd5e1;
+        --slate-700: #e2e8f0;
+        --slate-800: #f1f5f9;
+        --slate-900: #f8fafc;
+        
+        --success-light: rgba(16, 185, 129, 0.15);
+        --success-dark: #34d399;
+        --warning-light: rgba(245, 158, 11, 0.15);
+        --warning-dark: #fbbf24;
+        --danger-light: rgba(239, 68, 68, 0.15);
+        --danger-dark: #f87171;
+        --info-light: rgba(59, 130, 246, 0.15);
+        --info-dark: #60a5fa;
+    }
+
+    /* Cards & Containers */
+    .modern-card,
+    .stat-card,
+    .quick-action-card,
+    .feature-card,
+    .fare-section-card,
+    .discount-rate-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .modern-card-header,
+    .modern-card-footer {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .modern-card-title,
+    .stat-card-value,
+    .quick-action-card h3,
+    .feature-card-title,
+    .fare-route-text {
+        color: #f1f5f9 !important;
+    }
+
+    .modern-card-subtitle,
+    .stat-card-label,
+    .quick-action-card p,
+    .feature-card-description,
+    .form-text-modern,
+    .form-check-label-modern {
+        color: #cbd5e1 !important;
+    }
+
+    /* Icons in Dark Mode */
+    .stat-card-icon,
+    .quick-action-icon,
+    .feature-card-icon,
+    i.text-muted,
+    i.text-secondary,
+    .fare-item i,
+    .vehicle-type-icon {
+        color: #cbd5e1 !important;
+    }
+
+    /* Tables */
+    .table-modern,
+    .table-modern th,
+    .table-modern td {
+        background-color: transparent !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    .table-modern th {
+        background-color: #0f172a !important;
+        color: #cbd5e1 !important;
+    }
+
+    .table-modern tbody tr:hover {
+        background-color: #334155 !important;
+    }
+
+    /* Form Controls & Inputs */
+    .form-control-modern,
+    .form-select-modern,
+    .select-modern,
+    .input-modern {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+    }
+
+    .form-control-modern::placeholder,
+    .form-select-modern::placeholder,
+    .select-modern::placeholder,
+    .input-modern::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+        opacity: 1 !important;
+    }
+
+    .form-label-modern {
+        color: #e2e8f0 !important;
+    }
+
+    /* Tabs & Filters */
+    .tab-btn {
+        color: #cbd5e1 !important;
+    }
+
+    .tab-btn.active {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    /* Badges */
+    .badge-modern:not([class*="badge-modern-"]) {
+        background-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Radio Cards (e.g. Vehicle Type selectors) */
+    .radio-card-content {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .radio-card-label {
+        color: #f1f5f9 !important;
+    }
+
+    .radio-card-sublabel {
+        color: #94a3b8 !important;
+    }
+
+    .radio-card-input:checked + .radio-card-content {
+        background-color: #1e293b !important;
+        border-color: #ef5350 !important;
+    }
+}

@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\QueueModel;
+use App\Models\AnnouncementModel;
+
+class Search extends BaseController
+{
+    public function index()
+    {
+        $search = $this->request->getGet('q');
+
+        if (!$search) {
+            return redirect()->to('/guest');
+        }
+
+        $queueModel = new QueueModel();
+
+        // Search in active queue
+        // Include vehicles.owner_name so views expecting `owner_name` won't error
+        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+                                    ->withFullJoins()
+                                    ->whereIn('queue.status', ['waiting', 'boarding'])
+                                    ->groupStart()
+                                        ->like('vehicles.plate_number', $search)
+                                        ->orLike('vehicles.driver_name', $search)
+                                        ->orLike('routes.destination', $search)
+                                        ->orLike('terminals.name', $search)
+                                    ->groupEnd()
+                                    ->orderBy('queue.position', 'ASC')
+                                    ->findAll();
+
+        // Search in recent departures
+        // Include vehicles.owner_name for departed results as well
+        $departedResults = (new QueueModel())->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+                                       ->withFullJoins()
+                                       ->where('queue.status', 'departed')
+                                       ->groupStart()
+                                           ->like('vehicles.plate_number', $search)
+                                           ->orLike('vehicles.driver_name', $search)
+                                           ->orLike('routes.destination', $search)
+                                           ->orLike('terminals.name', $search)
+                                       ->groupEnd()
+                                       ->orderBy('departure_time', 'DESC')
+                                       ->limit(20)
+                                       ->findAll();
+
+        $announcements = [];
+        try {
+            $announcements = $this->getActiveAnnouncements();
+        } catch (\Throwable $e) {}
+
+        $data = [
+            'title' => 'Search Results',
+            'search' => $search,
+            'active_results' => $activeResults,
+            'departed_results' => $departedResults,
+            'total_results' => count($activeResults) + count($departedResults),
+            'announcements' => $announcements
+        ];
+
+        return view('public/search', $data);
+    }
+}

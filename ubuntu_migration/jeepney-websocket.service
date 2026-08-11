@@ -1,0 +1,19 @@
+[Unit]
+Description=Jeepney nVans WebSocket Server
+After=network.target mariadb.service
+Wants=mariadb.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/jeepneynvans
+ExecStart=/usr/bin/php8.2 spark ws:serve
+Restart=on-failure
+RestartSec=5s
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=jeepney-websocket
+
+[Install]
+WantedBy=multi-user.target

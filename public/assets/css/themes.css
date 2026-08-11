@@ -1,0 +1,221 @@
+/* ==========================================================================
+   Role Themes — guest / admin / dispatcher (staff)
+   --------------------------------------------------------------------------
+   Each block ONLY overrides design-system tokens, so every component keeps
+   the same structure and behavior while each area gets its own identity.
+   Apply on <body>: body.guest-theme | body.admin-theme | body.staff-theme
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   GUEST — warm crimson brand on soft paper. Public, welcoming, high contrast.
+   -------------------------------------------------------------------------- */
+body.guest-theme {
+  --primary: #1E40AF;
+  --primary-dark: #1E3A8A;
+  --primary-soft: #EFF6FF;
+  --on-primary: #ffffff;
+  --accent: #FFA726;
+
+  /* Navigation: white bar, blue accents */
+  --nav-bg: #ffffff;
+  --nav-text: #1c2430;
+  --nav-text-soft: #5d6b7e;
+  --nav-accent: #1E40AF;
+  --nav-divider: #e2e8f0;
+  --nav-chip-bg: #f1f5f9;
+  --nav-cta-bg: #1E40AF;
+  --nav-cta-text: #ffffff;
+  --nav-drawer-bg: #ffffff;
+
+  --bg-main: #f8fafc;
+  --surface: #ffffff;
+  --surface-sunken: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+body.guest-theme .main-content { background-color: transparent !important; }
+
+/* --------------------------------------------------------------------------
+   ADMIN — deep red authority on cool slate. Dense, operational, precise.
+   -------------------------------------------------------------------------- */
+body.admin-theme {
+  --primary: #B71C1C;
+  --primary-dark: #7F1212;
+  --primary-soft: #FBE9E9;
+  --on-primary: #ffffff;
+  --accent: #FFA726;
+
+  /* Navigation: deep red bar, white text */
+  --nav-bg: #B71C1C;
+  --nav-text: #ffffff;
+  --nav-text-soft: rgba(255, 255, 255, .85);
+  --nav-accent: #ffffff;
+  --nav-divider: rgba(255, 255, 255, .3);
+  --nav-chip-bg: rgba(255, 255, 255, .2);
+  --nav-cta-bg: #ffffff;
+  --nav-cta-text: #B71C1C;
+  --nav-drawer-bg: #9A1515;
+
+  --bg-main: #f1f5f9;
+  --surface: #ffffff;
+  --surface-sunken: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --text-main: #1e293b;
+  --text-muted: #475569;
+  --text-faint: #64748b;
+
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+body.admin-theme .main-content { background-color: transparent !important; }
+
+/* --------------------------------------------------------------------------
+   DISPATCHER (staff) — harbor blue on cool slate. Calm, focused, real-time.
+   -------------------------------------------------------------------------- */
+body.staff-theme {
+  --primary: #1565C0;
+  --primary-dark: #0D47A1;
+  --primary-soft: #E7F0FB;
+  --on-primary: #ffffff;
+  --accent: #00ACC1;
+
+  /* Navigation: harbor blue bar, white text */
+  --nav-bg: #1565C0;
+  --nav-text: #ffffff;
+  --nav-text-soft: rgba(255, 255, 255, .85);
+  --nav-accent: #ffffff;
+  --nav-divider: rgba(255, 255, 255, .3);
+  --nav-chip-bg: rgba(255, 255, 255, .2);
+  --nav-cta-bg: #ffffff;
+  --nav-cta-text: #1565C0;
+  --nav-drawer-bg: #11519A;
+
+  --bg-main: #f1f5f9;
+  --surface: #ffffff;
+  --surface-sunken: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  --text-main: #1e293b;
+  --text-muted: #475569;
+  --text-faint: #64748b;
+
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+body.staff-theme .main-content { background-color: transparent !important; }
+
+/* --------------------------------------------------------------------------
+   Shared Bootstrap bridges — keep legacy Bootstrap classes on-theme while
+   pages are migrated to the design-system classes.
+   -------------------------------------------------------------------------- */
+body.guest-theme .btn-primary,
+body.admin-theme .btn-primary,
+body.staff-theme .btn-primary {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+body.guest-theme .btn-primary:hover,
+body.admin-theme .btn-primary:hover,
+body.staff-theme .btn-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+body.guest-theme .bg-primary,
+body.admin-theme .bg-primary,
+body.staff-theme .bg-primary {
+  background-color: var(--primary) !important;
+}
+
+body.guest-theme .text-primary,
+body.admin-theme .text-primary,
+body.staff-theme .text-primary {
+  color: var(--primary) !important;
+}
+
+body.guest-theme a:not(.btn):not(.nav-link),
+body.admin-theme a:not(.btn):not(.nav-link),
+body.staff-theme a:not(.btn):not(.nav-link) {
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   DARK MODE — respects system preference; overrides tokens for all themes
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  body.guest-theme {
+    --bg-main: #0f172a;
+    --surface: #1e293b;
+    --surface-sunken: #1e293b;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-main: #f8fafc;
+    --text-muted: #cbd5e1;
+    --text-faint: #94a3b8;
+    --nav-bg: #0f172a;
+    --nav-text: #f8fafc;
+    --nav-text-soft: #cbd5e1;
+    --nav-divider: #334155;
+    --nav-chip-bg: #1e293b;
+    --nav-drawer-bg: #0f172a;
+    --primary: #60a5fa;
+    --primary-dark: #3b82f6;
+    --primary-soft: rgba(96, 165, 250, 0.15);
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
+  }
+
+  body.admin-theme {
+    --bg-main: #0f172a;
+    --surface: #1e293b;
+    --surface-sunken: #1e293b;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-main: #f8fafc;
+    --text-muted: #cbd5e1;
+    --text-faint: #94a3b8;
+    --nav-bg: #7F1212;
+    --nav-text: #ffffff;
+    --nav-text-soft: rgba(255, 255, 255, .85);
+    --nav-divider: rgba(255, 255, 255, .3);
+    --nav-chip-bg: rgba(255, 255, 255, .2);
+    --nav-drawer-bg: #5E0E0E;
+    --primary: #ef5350;
+    --primary-dark: #e53935;
+    --primary-soft: #4a1a1a;
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
+  }
+
+  body.staff-theme {
+    --bg-main: #0f172a;
+    --surface: #1e293b;
+    --surface-sunken: #1e293b;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-main: #f8fafc;
+    --text-muted: #cbd5e1;
+    --text-faint: #94a3b8;
+    --nav-bg: #0D47A1;
+    --nav-text: #ffffff;
+    --nav-text-soft: rgba(255, 255, 255, .85);
+    --nav-divider: rgba(255, 255, 255, .3);
+    --nav-chip-bg: rgba(255, 255, 255, .2);
+    --nav-drawer-bg: #0A2D6E;
+    --primary: #42a5f5;
+    --primary-dark: #1e88e5;
+    --primary-soft: #1a2a4a;
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
+  }
+}

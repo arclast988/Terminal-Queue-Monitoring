@@ -1,0 +1,435 @@
+<?= view('templates/header', ['title' => $title]) ?>
+
+<!-- Modern Frontend Styles -->
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+
+<style>
+/* Button sizing (always applies) */
+.card-modern a.btn-modern-outline,
+.page-header-modern a.btn-modern-outline {
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+}
+/* Dark mode only */
+@media (prefers-color-scheme: dark) {
+    .card-modern a.btn-modern-outline,
+    .page-header-modern a.btn-modern-outline,
+    .card-modern a.btn-modern-outline .bi,
+    .card-modern a.btn-modern-outline i,
+    .page-header-modern a.btn-modern-outline .bi,
+    .page-header-modern a.btn-modern-outline i {
+        background: #334155 !important;
+        border-color: #475569 !important;
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+    }
+    .card-modern a.btn-modern-outline:hover,
+    .page-header-modern a.btn-modern-outline:hover,
+    .card-modern a.btn-modern-outline:hover .bi,
+    .card-modern a.btn-modern-outline:hover i,
+    .page-header-modern a.btn-modern-outline:hover .bi,
+    .page-header-modern a.btn-modern-outline:hover i {
+        background: #475569 !important;
+        border-color: #64748b !important;
+        color: #fff !important;
+        -webkit-text-fill-color: #fff !important;
+    }
+}
+</style>
+
+<?php
+$oldWaitMinutes = old('wait_minutes') ?? ($rule['wait_minutes'] ?? 30);
+$defaultHours = old('wait_hours') ?? (int) floor($oldWaitMinutes / 60);
+$defaultMins = old('wait_mins') ?? ($oldWaitMinutes % 60);
+$defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, $defaultMins);
+?>
+
+<div class="page-header-modern">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="page-title-modern">
+                    <i class="bi bi-pencil-square"></i> Edit Departure Rule
+                </h1>
+                <p class="text-muted mb-0">Update departure schedule rule</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <?php if (session()->getFlashdata('errors')): ?>
+                <div class="alert-modern alert-modern-danger mb-4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Validation Errors:</strong>
+                    <ul class="mb-0 mt-2">
+                        <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                            <li><?= esc($error) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
+
+            <div class="card-modern">
+                <div class="card-header-modern">
+                    <i class="bi bi-gear me-2"></i> Rule Configuration
+                </div>
+                <div class="card-body-modern">
+                    <form action="<?= base_url($prefix . '/departure-rules/update/' . $rule['id']) ?>" method="post">
+                        <?= csrf_field() ?>
+
+                        <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
+                        <div class="mb-4">
+                            <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
+                            <select class="select-modern" id="terminal_id" name="terminal_id" required>
+                                <?php if (!$onlyTerminal): ?>
+                                    <option value="">— Select Terminal —</option>
+                                <?php endif; ?>
+                                <?php foreach ($terminals as $t): ?>
+                                    <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id', $rule['terminal_id'] ?? '') == $t['id']) ? 'selected' : '' ?>>
+                                        <?= esc($t['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="route_id" class="form-label-modern">Destination (Optional)</label>
+                            <select class="select-modern" id="route_id" name="route_id">
+                                <option value="">— No specific destination —</option>
+                                <?php foreach (($routes ?? []) as $r): ?>
+                                    <option value="<?= $r['id'] ?>" <?= old('route_id', $rule['route_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
+                                        <?= esc($r['destination']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <div class="form-text-modern">Pick a destination for a route-specific interval, or leave blank for a terminal-wide default rule.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="time_from" class="form-label-modern">Time From <span class="text-danger">*</span></label>
+                                <div class="military-time-wrap">
+                                    <input type="text" class="input-modern military-time-input" id="time_from" name="time_from"
+                                        value="<?= old('time_from') ?? date('H:i', strtotime($rule['time_from'])) ?>" placeholder="HH:MM (e.g. 05:00, 13:30)" maxlength="5" required>
+                                    <button type="button" class="military-time-btn" data-time-target="time_from" title="Open 24-hour time picker">
+                                        <i class="bi bi-clock"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text-modern">24-hour military time format (e.g. 08:00 or 14:30).</div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="time_to" class="form-label-modern">Time To <span class="text-danger">*</span></label>
+                                <div class="military-time-wrap">
+                                    <input type="text" class="input-modern military-time-input" id="time_to" name="time_to"
+                                        value="<?= old('time_to') ?? date('H:i', strtotime($rule['time_to'])) ?>" placeholder="HH:MM (e.g. 09:00, 18:00)" maxlength="5" required>
+                                    <button type="button" class="military-time-btn" data-time-target="time_to" title="Open 24-hour time picker">
+                                        <i class="bi bi-clock"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text-modern">24-hour military time format (e.g. 17:00 or 21:00).</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="wait_duration" class="form-label-modern">Wait Time <span class="text-danger">*</span></label>
+                                <div class="military-time-wrap">
+                                    <input type="text" class="input-modern military-time-input" id="wait_duration" name="wait_duration"
+                                        value="<?= esc($defaultWaitValue) ?>" placeholder="HH:MM (e.g. 00:30)" maxlength="5" required>
+                                    <button type="button" class="military-time-btn" data-time-target="wait_duration" title="Open 24-hour time picker">
+                                        <i class="bi bi-clock"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text-modern">Hours and minutes in 24-hour format (e.g. 00:30 = 30 mins).</div>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="label" class="form-label-modern">Label (Optional)</label>
+                                <input type="text" class="input-modern" id="label" name="label"
+                                    value="<?= old('label') ?? $rule['label'] ?>" placeholder="e.g. Morning Rush">
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-5">
+                            <button type="submit" class="btn btn-modern btn-modern-primary">
+                                <i class="bi bi-save"></i> Update Rule
+                            </button>
+                            <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?= view('templates/footer') ?>
+
+<style>
+    .card, .card-body {
+        overflow: visible !important;
+    }
+
+    .military-time-wrap {
+        position: relative;
+        display: flex;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+
+    .military-time-wrap .input-modern {
+        flex: 1;
+        min-width: 0;
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+    }
+
+    .military-time-btn {
+        width: 44px;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
+        background: #f8fafc;
+        color: #475569;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease-in-out;
+    }
+
+    .military-time-btn:hover {
+        background: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+    }
+
+    .military-time-popover {
+        display: none;
+        position: fixed;
+        width: 310px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+        padding: 0.85rem;
+    }
+
+    .military-time-popover.open {
+        display: block;
+    }
+
+    .military-popover-header {
+        font-size: 0.725rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        margin-bottom: 0.4rem;
+    }
+
+    .military-grid-hours {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+        margin-bottom: 0.65rem;
+    }
+
+    .military-grid-mins {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+    }
+
+    .military-chip {
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 0.775rem;
+        font-weight: 600;
+        border-radius: 0.375rem;
+        padding: 0.25rem 0;
+        text-align: center;
+        cursor: pointer;
+        user-select: none;
+        transition: all 0.12s ease;
+    }
+
+    .military-chip:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .military-chip.selected {
+        background: #0d6efd;
+        border-color: #0d6efd;
+        color: #ffffff;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.military-time-input').forEach(function(input) {
+        input.addEventListener('input', function(e) {
+            let val = input.value.replace(/[^\d:]/g, '');
+            if (!val.includes(':') && val.length === 2 && e.inputType !== 'deleteContentBackward') {
+                let hh = parseInt(val, 10);
+                if (hh > 23) hh = 23;
+                val = String(hh).padStart(2, '0') + ':';
+            }
+            if (val.length > 5) val = val.slice(0, 5);
+            input.value = val;
+        });
+
+        input.addEventListener('blur', function() {
+            let val = input.value.trim();
+            if (!val) return;
+            let digits = val.replace(/\D/g, '');
+            if (digits.length === 1 || digits.length === 2) {
+                let hh = Math.min(23, parseInt(digits, 10) || 0);
+                input.value = String(hh).padStart(2, '0') + ':00';
+            } else if (digits.length === 3) {
+                let hh = Math.min(23, parseInt(digits.slice(0, 1), 10) || 0);
+                let mm = Math.min(59, parseInt(digits.slice(1), 10) || 0);
+                input.value = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+            } else if (digits.length >= 4) {
+                let hh = Math.min(23, parseInt(digits.slice(0, 2), 10) || 0);
+                let mm = Math.min(59, parseInt(digits.slice(2, 4), 10) || 0);
+                input.value = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+            }
+        });
+    });
+
+    let activePopover = null;
+
+    document.querySelectorAll('.military-time-wrap').forEach(function(wrap) {
+        let input = wrap.querySelector('.military-time-input');
+        let btn = wrap.querySelector('.military-time-btn');
+        if (!input || !btn) return;
+
+        let popover = document.createElement('div');
+        popover.className = 'military-time-popover';
+
+        let hoursHeader = document.createElement('div');
+        hoursHeader.className = 'military-popover-header';
+        hoursHeader.textContent = 'Hour (00 - 23)';
+        popover.appendChild(hoursHeader);
+
+        let hoursGrid = document.createElement('div');
+        hoursGrid.className = 'military-grid-hours';
+        for (let h = 0; h < 24; h++) {
+            let chip = document.createElement('div');
+            chip.className = 'military-chip';
+            chip.dataset.type = 'hour';
+            chip.dataset.value = String(h).padStart(2, '0');
+            chip.textContent = String(h).padStart(2, '0');
+            hoursGrid.appendChild(chip);
+        }
+        popover.appendChild(hoursGrid);
+
+        let minsHeader = document.createElement('div');
+        minsHeader.className = 'military-popover-header';
+        minsHeader.textContent = 'Minute (00 - 55)';
+        popover.appendChild(minsHeader);
+
+        let minsGrid = document.createElement('div');
+        minsGrid.className = 'military-grid-mins';
+        let minSteps = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+        minSteps.forEach(function(m) {
+            let chip = document.createElement('div');
+            chip.className = 'military-chip';
+            chip.dataset.type = 'min';
+            chip.dataset.value = String(m).padStart(2, '0');
+            chip.textContent = String(m).padStart(2, '0');
+            minsGrid.appendChild(chip);
+        });
+        popover.appendChild(minsGrid);
+
+        document.body.appendChild(popover);
+
+        function updatePopoverSelection() {
+            let val = input.value.trim();
+            let curH = '00';
+            let curM = '00';
+            if (val.includes(':')) {
+                let parts = val.split(':');
+                curH = String(Math.min(23, parseInt(parts[0], 10) || 0)).padStart(2, '0');
+                curM = String(Math.min(59, parseInt(parts[1], 10) || 0)).padStart(2, '0');
+            }
+            hoursGrid.querySelectorAll('.military-chip').forEach(function(c) {
+                c.classList.toggle('selected', c.dataset.value === curH);
+            });
+            minsGrid.querySelectorAll('.military-chip').forEach(function(c) {
+                c.classList.toggle('selected', c.dataset.value === curM);
+            });
+        }
+
+        function positionPopover() {
+            let rect = btn.getBoundingClientRect();
+            let popH = popover.offsetHeight || 300;
+            let spaceBelow = window.innerHeight - rect.bottom - 10;
+            if (spaceBelow >= popH) {
+                popover.style.top = (rect.bottom + 6) + 'px';
+            } else {
+                popover.style.top = Math.max(10, rect.top - popH - 6) + 'px';
+            }
+            popover.style.left = Math.min(rect.left, window.innerWidth - 320) + 'px';
+        }
+
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (activePopover && activePopover !== popover) {
+                activePopover.classList.remove('open');
+            }
+            updatePopoverSelection();
+            popover.classList.toggle('open');
+            if (popover.classList.contains('open')) {
+                positionPopover();
+            }
+            activePopover = popover.classList.contains('open') ? popover : null;
+        });
+
+        popover.addEventListener('click', function(e) {
+            e.stopPropagation();
+            let chip = e.target.closest('.military-chip');
+            if (!chip) return;
+
+            let val = input.value.trim();
+            let curH = '00';
+            let curM = '00';
+            if (val.includes(':')) {
+                let parts = val.split(':');
+                curH = String(Math.min(23, parseInt(parts[0], 10) || 0)).padStart(2, '0');
+                curM = String(Math.min(59, parseInt(parts[1], 10) || 0)).padStart(2, '0');
+            }
+
+            if (chip.dataset.type === 'hour') {
+                curH = chip.dataset.value;
+            } else if (chip.dataset.type === 'min') {
+                curM = chip.dataset.value;
+            }
+
+            input.value = curH + ':' + curM;
+            updatePopoverSelection();
+        });
+    });
+
+    document.addEventListener('click', function() {
+        if (activePopover) {
+            activePopover.classList.remove('open');
+            activePopover = null;
+        }
+    });
+});
+</script>
+

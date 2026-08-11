@@ -1,0 +1,1260 @@
+/*
+ * Admin & Staff Modern CSS - Dashboard styling for role-based themes
+ * Admin theme: red color scheme (#C62828)
+ * Staff theme: blue color scheme (#1565c0)
+ * Easy rollback: just remove the include from header.php
+ */
+
+/* =================================================================
+   DISABLE SLIDESHOW BACKGROUND ON ADMIN & STAFF PAGES ONLY
+   The Palompon photo watermark should appear ONLY on the login page
+   and guest pages. Admin/staff pages use a clean solid background.
+   ================================================================= */
+body.admin-theme::after,
+body.staff-theme::after {
+    content: none;
+    animation: none;
+}
+
+/* =================================================================
+   CRITICAL: DISABLE ALL ANIMATIONS, TRANSITIONS, AND REPAINTS
+   ================================================================= */
+
+/* Targeted transitions for interactive elements */
+.btn, a, .card, .vf-btn {
+    transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* =================================================================
+   CONSISTENT CURSOR AND HOVER STYLES
+   ================================================================= */
+
+/* Ensure pointer cursor on ALL interactive elements */
+button,
+a,
+select,
+.btn,
+.dropdown-item,
+.dropdown-toggle,
+.dropbtn,
+.nav-menu a,
+.card-footer a,
+.table a,
+.table button,
+input[type="checkbox"],
+input[type="radio"],
+label[for] {
+    cursor: pointer !important;
+}
+
+/* Keep text cursor in text inputs */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="number"],
+textarea {
+    cursor: text !important;
+}
+
+select {
+    cursor: pointer !important;
+}
+
+/* =================================================================
+   BUTTON HOVER STATES - Consistent and visible
+   ================================================================= */
+
+.btn:hover {
+    opacity: 0.85 !important;
+    cursor: pointer !important;
+}
+
+.btn-primary:hover {
+    background: #a52222 !important;
+}
+
+.btn-success:hover {
+    background: #388e3c !important;
+}
+
+.btn-danger:hover {
+    background: #c62828 !important;
+}
+
+.btn-warning:hover {
+    background: #e68a00 !important;
+}
+
+.btn-info:hover {
+    background: #0277bd !important;
+}
+
+.btn-secondary:hover {
+    background: #455a64 !important;
+}
+
+.btn-outline-secondary:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+}
+
+.btn-outline-danger {
+    border: 1px solid #e53935 !important;
+    color: #e53935 !important;
+    background: white !important;
+}
+
+.btn-outline-danger:hover {
+    background: #fef2f2 !important;
+    color: #c62828 !important;
+    border-color: #c62828 !important;
+}
+
+/* Table row hover */
+.table tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+
+.table-striped tbody tr:nth-of-type(odd):hover {
+    background-color: #f1f5f9 !important;
+}
+
+/* Dropdown item hover */
+.dropdown-item:hover,
+.dropdown-content a:hover {
+    background-color: #f1f5f9 !important;
+    color: var(--primary, #C62828) !important;
+}
+
+/* Link hover in cards/tables */
+.card a:hover,
+.table a:hover {
+    opacity: 0.8 !important;
+}
+
+/* =================================================================
+   ENSURE BACKGROUNDS ARE CORRECT
+   ================================================================= */
+
+html, 
+body {
+    background-color: #f1f5f9 !important;
+}
+
+.modal-content {
+    background-color: white !important;
+}
+
+.main-content,
+body.admin-theme .main-content {
+    background-color: transparent !important;
+}
+
+/* =================================================================
+   MODERN CSS VARIABLES - Admin Theme
+   ================================================================= */
+
+:root {
+    --admin-shadow-sm: none;
+    --admin-shadow-md: none;
+    --admin-shadow-lg: none;
+    --admin-transition: none;
+    --admin-radius: 8px;
+    --admin-radius-sm: 6px;
+}
+
+/* =================================================================
+   TEXT CONTRAST FIXES - Ensure readability
+   ================================================================= */
+
+/* Admin theme: ensure headings are readable on dark background */
+body.admin-theme h1,
+body.admin-theme h2,
+body.admin-theme h3,
+body.admin-theme .h1,
+body.admin-theme .h2,
+body.admin-theme .h3 {
+    color: #1e293b !important;
+}
+
+/* Cards (non-colored) always have dark text on white background */
+body.admin-theme .card:not(.text-white) h1,
+body.admin-theme .card:not(.text-white) h2,
+body.admin-theme .card:not(.text-white) h3,
+body.admin-theme .card:not(.text-white) h4,
+body.admin-theme .card:not(.text-white) h5,
+body.admin-theme .card:not(.text-white) h6,
+body.admin-theme .card:not(.text-white) .h1,
+body.admin-theme .card:not(.text-white) .h2,
+body.admin-theme .card:not(.text-white) .h3,
+body.admin-theme .card:not(.text-white) .h4,
+body.admin-theme .card:not(.text-white) .h5,
+body.admin-theme .card:not(.text-white) .h6 {
+    color: #1e293b !important;
+}
+
+/* Card header text must be dark (for non-colored headers) */
+body.admin-theme .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success) {
+    color: #1e293b !important;
+}
+
+/* Form labels inside cards */
+body.admin-theme .card .form-label {
+    color: #475569 !important;
+}
+
+/* Ensure table text is always dark (except .table-dark which needs white) */
+body.admin-theme .table,
+body.admin-theme .table td,
+body.admin-theme .table th {
+    color: #1e293b !important;
+}
+
+body.admin-theme .table-dark,
+body.admin-theme .table-dark th,
+body.admin-theme .table-dark td,
+body.admin-theme thead.table-dark th {
+    color: #fff !important;
+    background-color: var(--primary, #C62828) !important;
+}
+
+/* Alert text is always readable */
+body.admin-theme .alert {
+    color: #1e293b !important;
+}
+
+/* Stat cards: white text on colored backgrounds */
+body.admin-theme .card.text-white h2,
+body.admin-theme .card.text-white h6,
+body.admin-theme .card.text-white .card-title,
+body.admin-theme .card.text-white .card-footer a {
+    color: white !important;
+}
+
+/* =================================================================
+   PAGE HERO - Ensure white text on dark gradient backgrounds
+   ================================================================= */
+
+body.admin-theme .page-hero h1,
+body.admin-theme .page-hero .subtitle,
+body.admin-theme .page-hero .stat-value,
+body.admin-theme .page-hero small,
+body.admin-theme .page-hero .stat-item {
+    color: white !important;
+}
+
+body.admin-theme .page-hero h1 {
+    color: white !important;
+}
+
+body.admin-theme .page-hero .subtitle {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* =================================================================
+   CARD STYLING - Flat Design
+   ================================================================= */
+
+.card:not(.text-white) {
+    background-color: white !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.card.text-white {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger) {
+    background: white !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 1.25rem 1.5rem !important;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.card-header.bg-dark,
+.card-header.bg-primary,
+.card-header.bg-info,
+.card-header.bg-secondary,
+.card-header.bg-success,
+.card-header.bg-warning,
+.card-header.bg-danger {
+    padding: 1.25rem 1.5rem !important;
+    font-weight: 700;
+    border-bottom: none !important;
+}
+
+.card-header.bg-dark.text-white,
+.card-header.bg-primary.text-white,
+.card-header.bg-info.text-white,
+.card-header.bg-secondary.text-white,
+.card-header.bg-success.text-white {
+    color: #fff !important;
+}
+
+.card-body {
+    padding: 1.5rem !important;
+}
+
+.card:not(.text-white) .card-body {
+    background-color: white !important;
+}
+
+/* =================================================================
+   TABLE STYLING - Flat Design
+   ================================================================= */
+
+.table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #e2e8f0;
+    min-width: max-content;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table thead th {
+    background: #f8fafc !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    padding: 1rem 1.25rem !important;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.table tbody td {
+    padding: 0.875rem 1.25rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    background: white;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #fafbfc !important;
+}
+
+/* =================================================================
+   FORM CONTROLS - Flat Design
+   ================================================================= */
+
+.form-control,
+.form-select {
+    border-radius: 4px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 0.5rem 0.75rem !important;
+    transition: none !important;
+    font-size: 14px;
+    pointer-events: auto !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15) !important;
+    pointer-events: auto !important;
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: 13px;
+    color: #334155;
+    margin-bottom: 0.5rem;
+}
+
+/* =================================================================
+   BUTTONS - Flat Design
+   ================================================================= */
+
+.btn {
+    border-radius: 4px !important;
+    padding: 0.5rem 1rem !important;
+    font-weight: 600 !important;
+    transition: none !important;
+    border: none !important;
+    font-size: 14px;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    white-space: normal !important;
+}
+
+.btn-primary {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.btn-success {
+    background: #43a047 !important;
+    color: white !important;
+}
+
+.btn-info {
+    background: #0288d1 !important;
+    color: white !important;
+}
+
+.btn-warning {
+    background: #ffa000 !important;
+    color: #1e293b !important;
+}
+
+.btn-danger {
+    background: #e53935 !important;
+    color: white !important;
+}
+
+.btn-outline-secondary {
+    border: 1px solid #e2e8f0 !important;
+    background: white !important;
+    color: #475569 !important;
+}
+
+/* Ensure depart button works */
+.btn-success {
+    pointer-events: auto !important;
+}
+
+.btn-success:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    pointer-events: auto !important;
+}
+
+/* =================================================================
+   BADGES
+   ================================================================= */
+
+.badge {
+    padding: 0.5rem 0.875rem !important;
+    border-radius: 50px !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    letter-spacing: 0.3px;
+}
+
+/* =================================================================
+   PAGE HEADER
+   ================================================================= */
+
+.border-bottom {
+    border-color: #e2e8f0 !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1.5rem !important;
+}
+
+.h2 {
+    font-weight: 800 !important;
+    color: #1e293b;
+}
+
+/* =================================================================
+   STATS CARDS (colored cards)
+   ================================================================= */
+
+.card.text-white {
+    border-radius: var(--admin-radius) !important;
+}
+
+.card.text-white .card-body {
+    padding: 1.5rem !important;
+    background-color: transparent !important;
+}
+
+.card.text-white .card-footer {
+    background: rgba(0, 0, 0, 0.1) !important;
+    border-top: none !important;
+    padding: 0.75rem 1.5rem !important;
+}
+
+/* =================================================================
+   LIST GROUPS
+   ================================================================= */
+
+.list-group-item {
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    padding: 1rem 1.25rem !important;
+}
+
+.list-group-item:last-child {
+    border-bottom: none !important;
+}
+
+/* =================================================================
+   ALERTS
+   ================================================================= */
+
+.alert {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 6px !important;
+    padding: 1rem 1.25rem !important;
+}
+
+.alert-success {
+    background-color: #ecfdf5 !important;
+    border-color: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+.alert-warning {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #92400e !important;
+}
+
+.alert-danger {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #7f1d1d !important;
+}
+
+/* =================================================================
+   MODALS — Let Bootstrap handle positioning, z-index, pointer-events.
+   Only override visual styling (colors, backdrop opacity).
+   ================================================================= */
+
+/* Semi-transparent backdrop instead of Bootstrap's default 0.5 */
+.modal-backdrop.show {
+    opacity: 0.5 !important;
+}
+
+/* Modal content card styling */
+.modal-content {
+    background-color: white !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    color: #1e293b !important;
+}
+
+/* =================================================================
+   RESPONSIVE ADMIN LAYOUT
+   ================================================================= */
+
+body.admin-theme .main-content,
+body.staff-theme .main-content {
+    min-width: 0;
+}
+
+body.admin-theme .main-content > .d-flex.border-bottom,
+body.staff-theme .main-content > .d-flex.border-bottom {
+    flex-wrap: wrap !important;
+    gap: 0.75rem 1rem;
+}
+
+body.admin-theme .main-content > .d-flex.border-bottom .h2,
+body.staff-theme .main-content > .d-flex.border-bottom .h2,
+body.admin-theme .main-content > .d-flex.border-bottom h1,
+body.staff-theme .main-content > .d-flex.border-bottom h1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+body.admin-theme .btn-toolbar,
+body.staff-theme .btn-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+body.admin-theme .card-header.d-flex,
+body.staff-theme .card-header.d-flex,
+body.admin-theme .card-footer.d-flex,
+body.staff-theme .card-footer.d-flex,
+body.admin-theme .card-body .d-flex,
+body.staff-theme .card-body .d-flex {
+    min-width: 0;
+}
+
+body.admin-theme .card-header.d-flex,
+body.staff-theme .card-header.d-flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+body.admin-theme .input-group,
+body.staff-theme .input-group {
+    min-width: 0;
+}
+
+body.admin-theme .input-group .form-control,
+body.staff-theme .input-group .form-control,
+body.admin-theme .form-control,
+body.staff-theme .form-control,
+body.admin-theme .form-select,
+body.staff-theme .form-select {
+    min-width: 0;
+}
+
+body.admin-theme .badge,
+body.staff-theme .badge {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+    line-height: 1.2;
+}
+
+body.admin-theme .table th,
+body.admin-theme .table td,
+body.staff-theme .table th,
+body.staff-theme .table td {
+    white-space: nowrap;
+}
+
+body.admin-theme .table .btn-group,
+body.staff-theme .table .btn-group {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+}
+
+body.admin-theme .table .btn-group > .btn,
+body.admin-theme .table .btn-group > form,
+body.staff-theme .table .btn-group > .btn,
+body.staff-theme .table .btn-group > form {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+    .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger),
+    .card-header.bg-dark,
+    .card-header.bg-primary,
+    .card-header.bg-info,
+    .card-header.bg-secondary,
+    .card-header.bg-success,
+    .card-header.bg-warning,
+    .card-header.bg-danger {
+        padding: 1rem !important;
+    }
+
+    .card-body,
+    .card.text-white .card-body {
+        padding: 1rem !important;
+    }
+
+    .card.text-white .card-body .d-flex {
+        align-items: flex-start !important;
+        gap: 0.75rem;
+    }
+
+    .card.text-white .card-body i.fs-1 {
+        font-size: 1.75rem !important;
+        flex: 0 0 auto;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: 0.75rem !important;
+    }
+
+    .modal-dialog {
+        width: calc(100% - 1.5rem) !important;
+        max-width: none !important;
+        margin: 0.75rem auto !important;
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: none !important;
+    }
+    
+    .action-label,
+    .user-action-label {
+        display: none !important;
+    }
+    
+    .table .btn-group {
+        flex-direction: row !important;
+    }
+    
+    .table .btn-group .btn {
+        padding: 0.25rem 0.5rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    body.admin-theme .main-content,
+    body.staff-theme .main-content {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    body.admin-theme .main-content > .d-flex.border-bottom,
+    body.staff-theme .main-content > .d-flex.border-bottom {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
+
+    body.admin-theme .main-content > .d-flex.border-bottom .btn-toolbar,
+    body.staff-theme .main-content > .d-flex.border-bottom .btn-toolbar,
+    body.admin-theme .main-content > .d-flex.border-bottom .btn,
+    body.staff-theme .main-content > .d-flex.border-bottom .btn {
+        width: 100%;
+    }
+
+    body.admin-theme .card-header.d-flex,
+    body.staff-theme .card-header.d-flex {
+        align-items: flex-start !important;
+        flex-direction: column;
+    }
+
+    body.admin-theme .btn-toolbar .btn,
+    body.staff-theme .btn-toolbar .btn,
+    body.admin-theme form .d-flex.gap-2 .btn,
+    body.staff-theme form .d-flex.gap-2 .btn {
+        flex: 1 1 100%;
+    }
+
+    body.admin-theme .pagination,
+    body.staff-theme .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    body.admin-theme .table .btn-group,
+    body.staff-theme .table .btn-group {
+        flex-direction: column;
+        width: max-content;
+    }
+
+    body.admin-theme .table .btn-group .btn,
+    body.staff-theme .table .btn-group .btn {
+        width: 100%;
+    }
+}
+
+.modal-header {
+    background-color: white !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #1e293b !important;
+    pointer-events: auto !important;
+}
+
+.modal-title {
+    color: #1e293b !important;
+    pointer-events: auto !important;
+}
+
+.modal-body {
+    background-color: white !important;
+    color: #1e293b !important;
+    padding: 1.5rem !important;
+    pointer-events: auto !important;
+}
+
+.modal-footer {
+    background-color: white !important;
+    border-top: 1px solid #e2e8f0 !important;
+    pointer-events: auto !important;
+}
+
+.modal-body p,
+.modal-body small,
+.modal-body span,
+.modal-body div,
+.modal-header h5 {
+    color: #1e293b !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Ensure modal elements are clickable */
+.modal button,
+.modal input,
+.modal select,
+.modal textarea,
+.modal a {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* =================================================================
+   PAGINATION
+   ================================================================= */
+
+.pagination .page-link {
+    border-radius: var(--admin-radius-sm) !important;
+    margin: 0 3px !important;
+    border: none !important;
+    color: #475569;
+    cursor: pointer !important;
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary) !important;
+}
+
+/* =================================================================
+   BREADCRUMB
+   ================================================================= */
+
+.breadcrumb {
+    background: white;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+/* =================================================================
+   INPUT GROUPS
+   ================================================================= */
+
+.input-group-text {
+    border-radius: var(--admin-radius-sm) 0 0 var(--admin-radius-sm) !important;
+    border: 1px solid #e2e8f0 !important;
+    border-right: none !important;
+    background: #f8fafc !important;
+}
+
+.input-group .form-control {
+    border-radius: 0 var(--admin-radius-sm) var(--admin-radius-sm) 0 !important;
+}
+
+/* =================================================================
+   ADMIN THEME: Quick Actions buttons in tables
+   ================================================================= */
+
+body.admin-theme .table .btn-outline-dark {
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+    background: #fff !important;
+}
+
+body.admin-theme .table .btn-outline-dark:hover {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+/* =================================================================
+   STAFF THEME: Blue color scheme (#1565c0)
+   ================================================================= */
+
+/* Staff background and headings */
+body.staff-theme {
+    background-color: #f1f5f9 !important;
+}
+
+body.staff-theme .main-content {
+    background-color: transparent !important;
+}
+
+/* Staff theme: ensure headings are readable on dark background */
+body.staff-theme h1,
+body.staff-theme h2,
+body.staff-theme h3,
+body.staff-theme .h1,
+body.staff-theme .h2,
+body.staff-theme .h3 {
+    color: #1e293b !important;
+}
+
+/* Cards (non-colored) always have dark text on white background */
+body.staff-theme .card:not(.text-white) h1,
+body.staff-theme .card:not(.text-white) h2,
+body.staff-theme .card:not(.text-white) h3,
+body.staff-theme .card:not(.text-white) h4,
+body.staff-theme .card:not(.text-white) h5,
+body.staff-theme .card:not(.text-white) h6,
+body.staff-theme .card:not(.text-white) .h1,
+body.staff-theme .card:not(.text-white) .h2,
+body.staff-theme .card:not(.text-white) .h3,
+body.staff-theme .card:not(.text-white) .h4,
+body.staff-theme .card:not(.text-white) .h5,
+body.staff-theme .card:not(.text-white) .h6 {
+    color: #1e293b !important;
+}
+
+/* Card header text must be dark (for non-colored headers) */
+body.staff-theme .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success) {
+    color: #1e293b !important;
+}
+
+/* Form labels inside cards */
+body.staff-theme .card .form-label {
+    color: #475569 !important;
+}
+
+/* Ensure table text is always dark (except .table-dark which needs white) */
+body.staff-theme .table,
+body.staff-theme .table td,
+body.staff-theme .table th {
+    color: #1e293b !important;
+}
+
+body.staff-theme .table-dark,
+body.staff-theme .table-dark th,
+body.staff-theme .table-dark td,
+body.staff-theme thead.table-dark th {
+    color: #fff !important;
+    background-color: #1565c0 !important;
+}
+
+/* Alert text is always readable */
+body.staff-theme .alert {
+    color: #1e293b !important;
+}
+
+/* Stat cards: white text on colored backgrounds */
+body.staff-theme .card.text-white h2,
+body.staff-theme .card.text-white h6,
+body.staff-theme .card.text-white .card-title,
+body.staff-theme .card.text-white .card-footer a {
+    color: white !important;
+}
+
+/* Page hero styles for staff */
+body.staff-theme .page-hero h1,
+body.staff-theme .page-hero .subtitle,
+body.staff-theme .page-hero .stat-value,
+body.staff-theme .page-hero small,
+body.staff-theme .page-hero .stat-item {
+    color: white !important;
+}
+
+body.staff-theme .page-hero h1 {
+    color: white !important;
+}
+
+body.staff-theme .page-hero .subtitle {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Staff theme: Quick Actions buttons in tables */
+body.staff-theme .table .btn-outline-dark {
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+    background: #fff !important;
+}
+
+body.staff-theme .table .btn-outline-dark:hover {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+
+
+
+@media (prefers-color-scheme: dark) {
+    /* HTML, Body and Main Content backgrounds in Dark Mode */
+    html,
+    body,
+    body.admin-theme,
+    body.staff-theme {
+        background-color: #0f172a !important;
+    }
+
+    .main-content,
+    body.admin-theme .main-content,
+    body.staff-theme .main-content {
+        background-color: transparent !important;
+    }
+
+    /* Headings in Dark Mode */
+    body.admin-theme h1,
+    body.admin-theme h2,
+    body.admin-theme h3,
+    body.admin-theme h4,
+    body.admin-theme h5,
+    body.admin-theme h6,
+    body.admin-theme .h1,
+    body.admin-theme .h2,
+    body.admin-theme .h3,
+    body.staff-theme h1,
+    body.staff-theme h2,
+    body.staff-theme h3,
+    body.staff-theme h4,
+    body.staff-theme h5,
+    body.staff-theme h6,
+    body.staff-theme .h1,
+    body.staff-theme .h2,
+    body.staff-theme .h3 {
+        color: #f1f5f9 !important;
+    }
+
+    /* Card bodies inside non-colored cards in Dark Mode */
+    body.admin-theme .card:not(.text-white) .card-body,
+    body.staff-theme .card:not(.text-white) .card-body,
+    .card:not(.text-white) .card-body {
+        background-color: #1e293b !important;
+    }
+
+    /* Uncolored Card headers in Dark Mode */
+    body.admin-theme .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger),
+    body.staff-theme .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger),
+    .card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger) {
+        background-color: #1e293b !important;
+        border-bottom-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Strong tags inside tables/cards in Dark Mode */
+    body.admin-theme .table strong,
+    body.staff-theme .table strong,
+    body.admin-theme .card strong,
+    body.staff-theme .card strong {
+        color: #f1f5f9 !important;
+    }
+
+    /* Modal shell */
+    body.admin-theme .modal-content,
+    body.staff-theme .modal-content {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* Modal Header & Footer */
+    body.admin-theme .modal-header,
+    body.staff-theme .modal-header,
+    body.admin-theme .modal-footer,
+    body.staff-theme .modal-footer {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    body.admin-theme .modal-title,
+    body.staff-theme .modal-title {
+        color: #f1f5f9 !important;
+    }
+
+    /* Modal Body */
+    body.admin-theme .modal-body,
+    body.staff-theme .modal-body {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+    }
+
+    /* General Dark Mode Text Visibility Overrides */
+    body.admin-theme,
+    body.staff-theme {
+        color: #f1f5f9 !important;
+    }
+
+    body.admin-theme .text-muted,
+    body.staff-theme .text-muted,
+    body.admin-theme small.text-muted,
+    body.staff-theme small.text-muted,
+    body.admin-theme .form-text,
+    body.staff-theme .form-text,
+    body.admin-theme .subtitle,
+    body.staff-theme .subtitle {
+        color: #94a3b8 !important;
+    }
+
+    body.admin-theme .text-dark,
+    body.staff-theme .text-dark,
+    body.admin-theme .text-secondary,
+    body.staff-theme .text-secondary {
+        color: #cbd5e1 !important;
+    }
+
+    /* Icons in Dark Mode */
+    .stat-card-icon,
+    .quick-action-icon,
+    .feature-card-icon,
+    i.text-muted,
+    i.text-secondary,
+    .fare-item i,
+    .vehicle-type-icon {
+        color: #cbd5e1 !important;
+    }
+
+    /* Ensure icons inside light/pastel stat badges remain sharp dark navy */
+    .stat-card-icon i,
+    .stat-card-modern .stat-card-icon i,
+    .stat-card .rounded-3 i,
+    .stat-card .bg-light i,
+    .stat-card .badge i,
+    .fare-section-card .modern-card-header i {
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        opacity: 1 !important;
+    }
+
+    /* Form labels */
+    body.admin-theme .form-label,
+    body.admin-theme .form-label-modern,
+    body.staff-theme .form-label,
+    body.staff-theme .form-label-modern,
+    body.admin-theme .form-check-label,
+    body.staff-theme .form-check-label {
+        color: #e2e8f0 !important;
+    }
+
+    /* Form inputs, selects & placeholders */
+    body.admin-theme .form-control,
+    body.admin-theme .form-select,
+    body.admin-theme .input-modern,
+    body.admin-theme .select-modern,
+    body.staff-theme .form-control,
+    body.staff-theme .form-select,
+    body.staff-theme .input-modern,
+    body.staff-theme .select-modern {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+    }
+
+    body.admin-theme .form-control::placeholder,
+    body.admin-theme .input-modern::placeholder,
+    body.admin-theme .select-modern::placeholder,
+    body.staff-theme .form-control::placeholder,
+    body.staff-theme .input-modern::placeholder,
+    body.staff-theme .select-modern::placeholder {
+        color: #94a3b8 !important;
+        -webkit-text-fill-color: #94a3b8 !important;
+        opacity: 1 !important;
+    }
+
+    body.admin-theme select option,
+    body.staff-theme select option {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+    }
+
+    body.admin-theme .form-control:focus,
+    body.admin-theme .form-select:focus,
+    body.admin-theme .input-modern:focus,
+    body.admin-theme .select-modern:focus,
+    body.staff-theme .form-control:focus,
+    body.staff-theme .form-select:focus,
+    body.staff-theme .input-modern:focus,
+    body.staff-theme .select-modern:focus {
+        border-color: #ef5350 !important;
+        box-shadow: 0 0 0 2px rgba(239, 83, 80, 0.25) !important;
+    }
+
+    /* Close button — invert to make X crisp white */
+    body.admin-theme .btn-close,
+    body.staff-theme .btn-close {
+        filter: invert(1) grayscale(1) !important;
+        opacity: 0.85 !important;
+    }
+
+    /* Input group prefixes (e.g. ₱ symbol, % symbol) */
+    body.admin-theme .input-group-text,
+    body.staff-theme .input-group-text {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #cbd5e1 !important;
+    }
+
+    /* Cards & Containers in Dark Mode */
+    body.admin-theme .card,
+    body.staff-theme .card,
+    body.admin-theme .fare-section-card,
+    body.staff-theme .fare-section-card,
+    body.admin-theme .discount-rate-card,
+    body.staff-theme .discount-rate-card {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    body.admin-theme .card-header,
+    body.staff-theme .card-header,
+    body.admin-theme .modern-card-header,
+    body.staff-theme .modern-card-header {
+        background-color: #1e293b !important;
+        border-bottom-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    body.admin-theme .fare-item:hover,
+    body.staff-theme .fare-item:hover,
+    body.admin-theme .discount-rate-card:hover .modern-card-header,
+    body.staff-theme .discount-rate-card:hover .modern-card-header {
+        background-color: #334155 !important;
+    }
+
+    /* Tables in Dark Mode */
+    body.admin-theme .table,
+    body.staff-theme .table {
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    body.admin-theme .table th,
+    body.staff-theme .table th,
+    body.admin-theme .table td,
+    body.staff-theme .table td {
+        color: #f1f5f9 !important;
+        border-color: #334155 !important;
+    }
+
+    body.admin-theme .table-hover > tbody > tr:hover > *,
+    body.staff-theme .table-hover > tbody > tr:hover > * {
+        background-color: #334155 !important;
+        color: #ffffff !important;
+    }
+}
+
+/* =================================================================
+   SEMI-TRANSPARENT FOOTER FOR ADMIN, SUPERADMIN, AND STAFF
+   ================================================================= */
+
+body.admin-theme footer,
+body.admin-theme .footer,
+body.staff-theme footer,
+body.staff-theme .footer {
+    background: rgba(255, 255, 255, 0.45) !important;
+    backdrop-filter: blur(12px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.7) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03) !important;
+    padding: 16px 24px !important;
+    margin-top: 40px !important;
+    border-radius: 14px 14px 0 0 !important;
+    text-align: center !important;
+    color: #475569 !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    position: relative !important;
+    z-index: 5 !important;
+}
+
+body.admin-theme footer p,
+body.admin-theme .footer p,
+body.staff-theme footer p,
+body.staff-theme .footer p {
+    margin: 0 !important;
+    color: inherit !important;
+    font-size: inherit !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    body.admin-theme footer,
+    body.admin-theme .footer,
+    body.staff-theme footer,
+    body.staff-theme .footer {
+        background: rgba(15, 23, 42, 0.55) !important;
+        border-top-color: rgba(51, 65, 85, 0.6) !important;
+        color: #94a3b8 !important;
+    }
+}
+
