@@ -1135,28 +1135,13 @@ body.staff-theme .table .btn-outline-dark:hover {
         color: #cbd5e1 !important;
     }
 
-    /* Stat card icon container & icons in Dark Mode */
-    body.dark-mode .stat-card-icon,
-    body.dark-mode .stat-card-modern .stat-card-icon {
-        background: rgba(255, 255, 255, 0.12) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #ffffff !important;
-    }
-
-    body.dark-mode .stat-card-icon i,
-    body.dark-mode .stat-card-modern .stat-card-icon i,
-    body.dark-mode .stat-card .rounded-3 i,
-    body.dark-mode .fare-section-card .modern-card-header i {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        opacity: 1 !important;
-    }
-
-    /* Ensure icons inside light elements in light mode remain sharp dark navy */
-    body:not(.dark-mode) .stat-card-icon i,
-    body:not(.dark-mode) .stat-card-modern .stat-card-icon i,
-    body:not(.dark-mode) .stat-card .bg-light i,
-    body:not(.dark-mode) .stat-card .badge i {
+    /* Ensure icons inside light/pastel stat badges remain sharp dark navy */
+    .stat-card-icon i,
+    .stat-card-modern .stat-card-icon i,
+    .stat-card .rounded-3 i,
+    .stat-card .bg-light i,
+    .stat-card .badge i,
+    .fare-section-card .modern-card-header i {
         color: #0f172a !important;
         -webkit-text-fill-color: #0f172a !important;
         opacity: 1 !important;

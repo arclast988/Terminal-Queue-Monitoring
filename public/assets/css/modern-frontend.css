@@ -1206,20 +1206,6 @@ body.staff-theme .form-check-input-modern:checked {
         color: #cbd5e1 !important;
     }
 
-    body.dark-mode .stat-card-icon,
-    body.dark-mode .stat-card-modern .stat-card-icon {
-        background: rgba(255, 255, 255, 0.12) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        color: #ffffff !important;
-    }
-
-    body.dark-mode .stat-card-icon i,
-    body.dark-mode .stat-card-modern .stat-card-icon i {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        opacity: 1 !important;
-    }
-
     /* Tables */
     .table-modern,
     .table-modern th,
@@ -1249,18 +1235,18 @@ body.staff-theme .form-check-input-modern:checked {
         -webkit-text-fill-color: #f1f5f9 !important;
     }
 
-    body:not(.dark-mode) .modern-card .form-control-modern,
-    body:not(.dark-mode) .modern-card .form-select-modern,
-    body:not(.dark-mode) .modern-card .select-modern,
-    body:not(.dark-mode) .modern-card .input-modern,
-    body:not(.dark-mode) .card-modern .form-control-modern,
-    body:not(.dark-mode) .card-modern .form-select-modern,
-    body:not(.dark-mode) .card-modern .select-modern,
-    body:not(.dark-mode) .card-modern .input-modern,
-    body:not(.dark-mode) .modal-content .form-control-modern,
-    body:not(.dark-mode) .modal-content .form-select-modern,
-    body:not(.dark-mode) .modal-content .select-modern,
-    body:not(.dark-mode) .modal-content .input-modern {
+    .modern-card .form-control-modern,
+    .modern-card .form-select-modern,
+    .modern-card .select-modern,
+    .modern-card .input-modern,
+    .card-modern .form-control-modern,
+    .card-modern .form-select-modern,
+    .card-modern .select-modern,
+    .card-modern .input-modern,
+    .modal-content .form-control-modern,
+    .modal-content .form-select-modern,
+    .modal-content .select-modern,
+    .modal-content .input-modern {
         background-color: #ffffff !important;
         border-color: #cbd5e1 !important;
         color: #0f172a !important;
