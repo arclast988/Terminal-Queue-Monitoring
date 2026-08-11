@@ -82,7 +82,7 @@
     <div class="modern-card-body">
         <form method="get" action="<?= base_url('schedules') ?>" class="row g-3">
             <div class="col-md-4">
-                <label class="form-label-modern">Vehicle Type</label>
+                <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Vehicle Type</label>
                 <select name="type" class="form-select-modern">
                     <option value="">All Types</option>
                     <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
@@ -91,7 +91,7 @@
                 </select>
             </div>
             <div class="col-md-5">
-                <label class="form-label-modern">Destination</label>
+                <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Destination</label>
                 <select name="destination" class="form-select-modern">
                     <option value="">All Destinations</option>
                     <?php foreach ($all_destinations as $dest): ?>

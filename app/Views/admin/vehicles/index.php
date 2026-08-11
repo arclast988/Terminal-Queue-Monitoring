@@ -722,7 +722,10 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                         <small class="text-muted">Slug: <code><?= esc($vt['slug']) ?></code> &bull; <?= $typeCounts[$vt['slug']] ?? 0 ?> vehicle(s)</small>
                                     </div>
                                 </div>
-                                <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editVehicleTypeModal<?= $vt['id'] ?>" title="Edit Vehicle Type">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </button>
                                     <form action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline"
                                           onsubmit="return confirm('WARNING: Are you sure you want to delete vehicle type &quot;<?= esc($vt['name']) ?>&quot;?\n\nThis will ALSO DELETE all cards in Route Fares, connected routes, and vehicles of this type!');">
                                         <?= csrf_field() ?>
@@ -747,6 +750,34 @@ if (!empty($vehicles) && is_array($vehicles)) {
         </div>
     </div>
 </div>
+
+<?php if (!empty($vehicleTypes)): ?>
+    <?php foreach ($vehicleTypes as $vt): ?>
+        <!-- Edit Vehicle Type Modal for <?= esc($vt['name']) ?> -->
+        <div class="modal fade" id="editVehicleTypeModal<?= $vt['id'] ?>" tabindex="-1" aria-labelledby="editVehicleTypeModalLabel<?= $vt['id'] ?>" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post">
+                        <?= csrf_field() ?>
+                        <div class="modal-body">
+                            <label for="edit_vehicle_type_name_<?= $vt['id'] ?>" class="form-label fw-semibold">Vehicle Type Name</label>
+                            <input id="edit_vehicle_type_name_<?= $vt['id'] ?>" name="name" type="text" class="form-control" value="<?= esc($vt['name']) ?>" maxlength="80" required>
+                            <div class="form-text mt-2">Updating the name will update the display name and slug across vehicles and routes.</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+<?php endif; ?>
 
 <div class="modal fade" id="addVehicleTypeModal" tabindex="-1" aria-labelledby="addVehicleTypeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">

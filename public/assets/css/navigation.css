@@ -577,6 +577,25 @@ div:has(> .autocomplete-wrapper:hover) {
   border-radius: 2px;
 }
 
+/* Autocomplete search inputs light-mode text & placeholder contrast */
+.autocomplete-wrapper .input-modern,
+.autocomplete-wrapper .form-control-modern,
+.autocomplete-wrapper .form-control,
+.autocomplete-wrapper input[type="text"] {
+  color: #0f172a !important;
+  font-weight: 500 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.autocomplete-wrapper .input-modern::placeholder,
+.autocomplete-wrapper .form-control-modern::placeholder,
+.autocomplete-wrapper .form-control::placeholder,
+.autocomplete-wrapper input[type="text"]::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+  font-weight: 500 !important;
+}
+
 @media (prefers-color-scheme: dark) {
   .autocomplete-dropdown {
     background: #1e293b !important;
@@ -587,10 +606,22 @@ div:has(> .autocomplete-wrapper:hover) {
     color: #f8fafc !important;
     border-bottom-color: #334155 !important;
   }
+  .autocomplete-item span,
+  .autocomplete-item .autocomplete-item-text {
+    color: #f8fafc !important;
+    -webkit-text-fill-color: #f8fafc !important;
+  }
   .autocomplete-item:hover,
   .autocomplete-item.active-item {
     background-color: #334155 !important;
     color: #38bdf8 !important;
+  }
+  .autocomplete-item:hover span,
+  .autocomplete-item.active-item span,
+  .autocomplete-item:hover .autocomplete-item-text,
+  .autocomplete-item.active-item .autocomplete-item-text {
+    color: #38bdf8 !important;
+    -webkit-text-fill-color: #38bdf8 !important;
   }
 
   /* Autocomplete search inputs — ensure text is visible on dark background */
@@ -608,8 +639,8 @@ div:has(> .autocomplete-wrapper:hover) {
   .autocomplete-wrapper .form-control-modern::placeholder,
   .autocomplete-wrapper .form-control::placeholder,
   .autocomplete-wrapper input[type="text"]::placeholder {
-    color: #94a3b8 !important;
-    -webkit-text-fill-color: #94a3b8 !important;
+    color: #cbd5e1 !important;
+    -webkit-text-fill-color: #cbd5e1 !important;
     opacity: 1 !important;
   }
 
@@ -623,7 +654,8 @@ div:has(> .autocomplete-wrapper:hover) {
 
   /* Badge inside dropdown items (e.g. "Terminal", "Route", "Type") */
   .autocomplete-item .badge.bg-light,
-  .autocomplete-item .badge.rounded-pill {
+  .autocomplete-item .badge.rounded-pill,
+  .autocomplete-item .autocomplete-badge {
     background-color: #334155 !important;
     color: #cbd5e1 !important;
     -webkit-text-fill-color: #cbd5e1 !important;
@@ -632,7 +664,8 @@ div:has(> .autocomplete-wrapper:hover) {
 
   /* Search highlight mark — keep visible on dark backgrounds */
   .autocomplete-item mark,
-  .autocomplete-item mark.bg-warning {
+  .autocomplete-item mark.bg-warning,
+  .autocomplete-item mark.search-highlight {
     background-color: rgba(251, 191, 36, 0.3) !important;
     color: #fbbf24 !important;
     -webkit-text-fill-color: #fbbf24 !important;
@@ -642,5 +675,81 @@ div:has(> .autocomplete-wrapper:hover) {
   .autocomplete-item .text-primary {
     color: #60a5fa !important;
   }
+}
+
+/* Explicit Dark Theme Class Overrides */
+body.admin-theme .autocomplete-dropdown,
+body.staff-theme .autocomplete-dropdown,
+body.dark-mode .autocomplete-dropdown,
+.modal-content .autocomplete-dropdown {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.7) !important;
+}
+body.admin-theme .autocomplete-item,
+body.staff-theme .autocomplete-item,
+body.dark-mode .autocomplete-item,
+.modal-content .autocomplete-item {
+  color: #f8fafc !important;
+  border-bottom-color: #334155 !important;
+}
+body.admin-theme .autocomplete-item span,
+body.staff-theme .autocomplete-item span,
+body.dark-mode .autocomplete-item span,
+.modal-content .autocomplete-item span,
+.modal-content .autocomplete-item .autocomplete-item-text {
+  color: #f8fafc !important;
+  -webkit-text-fill-color: #f8fafc !important;
+}
+body.admin-theme .autocomplete-item:hover,
+body.staff-theme .autocomplete-item:hover,
+body.dark-mode .autocomplete-item:hover,
+.modal-content .autocomplete-item:hover,
+body.admin-theme .autocomplete-item.active-item,
+body.staff-theme .autocomplete-item.active-item,
+body.dark-mode .autocomplete-item.active-item,
+.modal-content .autocomplete-item.active-item {
+  background-color: #334155 !important;
+  color: #38bdf8 !important;
+}
+body.admin-theme .autocomplete-item:hover span,
+body.staff-theme .autocomplete-item:hover span,
+body.dark-mode .autocomplete-item:hover span,
+.modal-content .autocomplete-item:hover span,
+body.admin-theme .autocomplete-item.active-item span,
+body.staff-theme .autocomplete-item.active-item span,
+body.dark-mode .autocomplete-item.active-item span,
+.modal-content .autocomplete-item.active-item span,
+.modal-content .autocomplete-item:hover .autocomplete-item-text,
+.modal-content .autocomplete-item.active-item .autocomplete-item-text {
+  color: #38bdf8 !important;
+  -webkit-text-fill-color: #38bdf8 !important;
+}
+body.admin-theme .autocomplete-wrapper input[type="text"],
+body.staff-theme .autocomplete-wrapper input[type="text"],
+body.dark-mode .autocomplete-wrapper input[type="text"],
+.modal-content .autocomplete-wrapper input[type="text"] {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+}
+body.admin-theme .autocomplete-wrapper input[type="text"]::placeholder,
+body.staff-theme .autocomplete-wrapper input[type="text"]::placeholder,
+body.dark-mode .autocomplete-wrapper input[type="text"]::placeholder,
+.modal-content .autocomplete-wrapper input[type="text"]::placeholder {
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+body.admin-theme .autocomplete-item .badge,
+body.staff-theme .autocomplete-item .badge,
+body.dark-mode .autocomplete-item .badge,
+.modal-content .autocomplete-item .badge,
+.modal-content .autocomplete-item .autocomplete-badge {
+  background-color: #334155 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  border-color: #475569 !important;
 }
 

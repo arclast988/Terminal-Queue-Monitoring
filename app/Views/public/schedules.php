@@ -353,7 +353,7 @@
             font-weight: 700;
             font-size: 13px;
             margin-bottom: 8px;
-            color: var(--text-muted);
+            color: #1e293b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -363,14 +363,22 @@
         .form-group .autocomplete-wrapper input {
             width: 100%;
             padding: 12px 15px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
             border-radius: 12px;
             font-size: 15px;
-            color: var(--text-main);
-            background: #f8fafc;
+            color: #0f172a;
+            font-weight: 500;
+            background: #ffffff;
             cursor: pointer;
             transition: var(--transition);
             outline: none;
+        }
+
+        .form-group input::placeholder,
+        .form-group .autocomplete-wrapper input::placeholder {
+            color: #64748b !important;
+            opacity: 1 !important;
+            font-weight: 500;
         }
 
         .form-group select:focus,

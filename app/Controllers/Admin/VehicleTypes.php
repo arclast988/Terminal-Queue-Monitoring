@@ -109,4 +109,53 @@ class VehicleTypes extends BaseController
 
         return redirect()->back()->with('success', 'Vehicle type "' . $name . '" and all connected fares, routes, and vehicles were deleted successfully.');
     }
+
+    public function update($id)
+    {
+        $types = new VehicleTypeModel();
+        $type  = $types->find($id);
+
+        if (!$type) {
+            return redirect()->back()->with('error', 'Vehicle type not found.');
+        }
+
+        $name = trim((string) $this->request->getPost('name'));
+        if ($name === '' || strlen($name) < 2 || strlen($name) > 80) {
+            return redirect()->back()->with('error', 'Enter a vehicle type name between 2 and 80 characters.');
+        }
+
+        $oldSlug = $type['slug'];
+        $newSlug = strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $name));
+        $newSlug = trim($newSlug, '_');
+
+        // Check for duplicate slug on other types
+        $existing = $types->where('slug', $newSlug)->where('id !=', $id)->first();
+        if ($existing) {
+            return redirect()->back()->with('error', 'A vehicle type with that name/slug already exists.');
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        if ($oldSlug !== $newSlug) {
+            $db->table('routes')->where('vehicle_type', $oldSlug)->update(['vehicle_type' => $newSlug]);
+            $db->table('vehicles')->where('type', $oldSlug)->update(['type' => $newSlug]);
+        }
+
+        $types->update($id, [
+            'name' => $name,
+            'slug' => $newSlug,
+        ]);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->back()->with('error', 'Failed to update vehicle type.');
+        }
+
+        $this->logActivity('Update vehicle type', 'Updated vehicle type ' . $type['name'] . ' to ' . $name . '.');
+        $this->broadcastUpdate('vehicle_type_update', ['action' => 'update', 'old_slug' => $oldSlug, 'new_slug' => $newSlug]);
+
+        return redirect()->back()->with('success', 'Vehicle type updated successfully to "' . $name . '".');
+    }
 }

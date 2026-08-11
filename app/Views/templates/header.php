@@ -389,7 +389,7 @@
             body.admin-theme .footer,
             body.staff-theme .footer {
                 background-color: #0f172a !important;
-                color: #64748b !important;
+                color: #cbd5e1 !important;
                 border-top-color: #1e293b !important;
             }
             body.admin-theme,

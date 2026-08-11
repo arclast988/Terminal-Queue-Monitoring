@@ -27,9 +27,9 @@
             <div class="f-links">
                 <h4>Contact</h4>
                 <ul>
-                    <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-map-marker-alt" style="margin-right: 10px;"></i> Palompon Terminal Center</li>
-                    <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-phone" style="margin-right: 10px;"></i> (053) 555-0123</li>
-                    <li style="font-size: 14px; opacity: 0.7;"><i class="fas fa-envelope" style="margin-right: 10px;"></i> <?= config('Email')->recipients ?></li>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> Palompon Terminal Center</li>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> (053) 555-0123</li>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= config('Email')->recipients ?></li>
                 </ul>
             </div>
         </div>
@@ -228,31 +228,31 @@ footer {
     margin-bottom: 40px;
 }
 
-.f-about h3 { color: var(--accent); margin-bottom: 20px; }
-.f-about p { font-size: 14px; opacity: 0.7; }
+.f-about h3 { color: #f97316; font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+.f-about p { font-size: 14px; color: #e2e8f0; line-height: 1.6; }
 
-.f-links h4 { margin-bottom: 20px; font-size: 16px; position: relative; }
+.f-links h4 { margin-bottom: 20px; font-size: 16px; font-weight: 700; color: #ffffff; position: relative; }
 .f-links h4::after {
     content: '';
     width: 30px;
     height: 2px;
-    background: var(--accent);
+    background: #f97316;
     position: absolute;
     bottom: -8px;
     left: 0;
 }
 
 .f-links ul { list-style: none; padding: 0; margin: 0; }
-.f-links li { margin-bottom: 12px; }
+.f-links li { margin-bottom: 12px; color: #cbd5e1; }
 .f-links a {
-    color: white; text-decoration: none; font-size: 14px; opacity: 0.7;
+    color: #e2e8f0; text-decoration: none; font-size: 14px; font-weight: 500;
     transition: var(--transition);
 }
-.f-links a:hover { opacity: 1; color: var(--accent); padding-left: 5px; }
+.f-links a:hover { color: #f97316; padding-left: 5px; font-weight: 600; }
 
 /* Center copyright */
 .f-copyright {
-    font-size: 13px; opacity: 0.5; text-align: center;
+    font-size: 13px; color: #cbd5e1; text-align: center; font-weight: 500;
     margin-top: 30px; display: flex; justify-content: center; flex-wrap: wrap;
 }
 

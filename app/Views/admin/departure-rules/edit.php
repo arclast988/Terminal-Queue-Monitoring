@@ -216,64 +216,71 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
     .military-time-popover {
         display: none;
         position: fixed;
-        width: 310px;
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 0.75rem;
         box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         z-index: 9999;
-        padding: 0.85rem;
+        padding: 0.75rem 1rem;
     }
 
     .military-time-popover.open {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
-    .military-popover-header {
-        font-size: 0.725rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #64748b;
-        margin-bottom: 0.4rem;
-    }
-
-    .military-grid-hours {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 4px;
-        margin-bottom: 0.65rem;
-    }
-
-    .military-grid-mins {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 4px;
-    }
-
-    .military-chip {
-        border: 1px solid #e2e8f0;
-        background: #f8fafc;
-        color: #334155;
-        font-size: 0.775rem;
-        font-weight: 600;
-        border-radius: 0.375rem;
-        padding: 0.25rem 0;
+    .military-time-popover .tp-input {
+        width: 80px;
+        height: 48px;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.5rem;
         text-align: center;
+        font-size: 1.25rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: #1e293b;
+        outline: none;
+        transition: border-color 0.15s;
+        -moz-appearance: textfield;
+    }
+
+    /* Show spinner arrows */
+    .military-time-popover .tp-input::-webkit-inner-spin-button,
+    .military-time-popover .tp-input::-webkit-outer-spin-button {
+        opacity: 1;
+        height: 44px;
         cursor: pointer;
-        user-select: none;
-        transition: all 0.12s ease;
     }
 
-    .military-chip:hover {
-        background: #e2e8f0;
-        color: #0f172a;
-    }
-
-    .military-chip.selected {
-        background: #0d6efd;
+    .military-time-popover .tp-input:focus {
         border-color: #0d6efd;
-        color: #ffffff;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+    }
+
+    .military-time-popover .tp-sep {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #334155;
+        user-select: none;
+    }
+
+    .military-time-popover .tp-set-btn {
+        height: 48px;
+        padding: 0 22px;
+        border: none;
+        border-radius: 0.5rem;
+        background: #991b1b;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+
+    .military-time-popover .tp-set-btn:hover {
+        background: #7f1d1d;
     }
 </style>
 
@@ -320,70 +327,75 @@ document.addEventListener('DOMContentLoaded', function() {
         let popover = document.createElement('div');
         popover.className = 'military-time-popover';
 
-        let hoursHeader = document.createElement('div');
-        hoursHeader.className = 'military-popover-header';
-        hoursHeader.textContent = 'Hour (00 - 23)';
-        popover.appendChild(hoursHeader);
+        let hhInput = document.createElement('input');
+        hhInput.type = 'number';
+        hhInput.className = 'tp-input';
+        hhInput.min = 0;
+        hhInput.max = 23;
+        hhInput.step = 1;
+        hhInput.placeholder = 'HH';
+        popover.appendChild(hhInput);
 
-        let hoursGrid = document.createElement('div');
-        hoursGrid.className = 'military-grid-hours';
-        for (let h = 0; h < 24; h++) {
-            let chip = document.createElement('div');
-            chip.className = 'military-chip';
-            chip.dataset.type = 'hour';
-            chip.dataset.value = String(h).padStart(2, '0');
-            chip.textContent = String(h).padStart(2, '0');
-            hoursGrid.appendChild(chip);
-        }
-        popover.appendChild(hoursGrid);
+        let sep = document.createElement('span');
+        sep.className = 'tp-sep';
+        sep.textContent = ':';
+        popover.appendChild(sep);
 
-        let minsHeader = document.createElement('div');
-        minsHeader.className = 'military-popover-header';
-        minsHeader.textContent = 'Minute (00 - 55)';
-        popover.appendChild(minsHeader);
+        let mmInput = document.createElement('input');
+        mmInput.type = 'number';
+        mmInput.className = 'tp-input';
+        mmInput.min = 0;
+        mmInput.max = 59;
+        mmInput.step = 1;
+        mmInput.placeholder = 'MM';
+        popover.appendChild(mmInput);
 
-        let minsGrid = document.createElement('div');
-        minsGrid.className = 'military-grid-mins';
-        let minSteps = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
-        minSteps.forEach(function(m) {
-            let chip = document.createElement('div');
-            chip.className = 'military-chip';
-            chip.dataset.type = 'min';
-            chip.dataset.value = String(m).padStart(2, '0');
-            chip.textContent = String(m).padStart(2, '0');
-            minsGrid.appendChild(chip);
-        });
-        popover.appendChild(minsGrid);
+        let setBtn = document.createElement('button');
+        setBtn.type = 'button';
+        setBtn.className = 'tp-set-btn';
+        setBtn.textContent = 'Set';
+        popover.appendChild(setBtn);
 
         document.body.appendChild(popover);
 
-        function updatePopoverSelection() {
+        // Clamp hour to 00-23
+        hhInput.addEventListener('change', function() {
+            let n = parseInt(this.value, 10) || 0;
+            if (n < 0) n = 0;
+            if (n > 23) n = 23;
+            this.value = n;
+        });
+
+        // Clamp minute to 00-59
+        mmInput.addEventListener('change', function() {
+            let n = parseInt(this.value, 10) || 0;
+            if (n < 0) n = 0;
+            if (n > 59) n = 59;
+            this.value = n;
+        });
+
+        function syncFromMain() {
             let val = input.value.trim();
-            let curH = '00';
-            let curM = '00';
+            let h = 0, m = 0;
             if (val.includes(':')) {
                 let parts = val.split(':');
-                curH = String(Math.min(23, parseInt(parts[0], 10) || 0)).padStart(2, '0');
-                curM = String(Math.min(59, parseInt(parts[1], 10) || 0)).padStart(2, '0');
+                h = Math.min(23, parseInt(parts[0], 10) || 0);
+                m = Math.min(59, parseInt(parts[1], 10) || 0);
             }
-            hoursGrid.querySelectorAll('.military-chip').forEach(function(c) {
-                c.classList.toggle('selected', c.dataset.value === curH);
-            });
-            minsGrid.querySelectorAll('.military-chip').forEach(function(c) {
-                c.classList.toggle('selected', c.dataset.value === curM);
-            });
+            hhInput.value = h;
+            mmInput.value = m;
         }
 
         function positionPopover() {
             let rect = btn.getBoundingClientRect();
-            let popH = popover.offsetHeight || 300;
+            let popH = popover.offsetHeight || 50;
             let spaceBelow = window.innerHeight - rect.bottom - 10;
             if (spaceBelow >= popH) {
                 popover.style.top = (rect.bottom + 6) + 'px';
             } else {
                 popover.style.top = Math.max(10, rect.top - popH - 6) + 'px';
             }
-            popover.style.left = Math.min(rect.left, window.innerWidth - 320) + 'px';
+            popover.style.left = Math.min(rect.left, window.innerWidth - 260) + 'px';
         }
 
         btn.addEventListener('click', function(e) {
@@ -391,36 +403,35 @@ document.addEventListener('DOMContentLoaded', function() {
             if (activePopover && activePopover !== popover) {
                 activePopover.classList.remove('open');
             }
-            updatePopoverSelection();
+            syncFromMain();
             popover.classList.toggle('open');
             if (popover.classList.contains('open')) {
                 positionPopover();
+                hhInput.focus();
+                hhInput.select();
             }
             activePopover = popover.classList.contains('open') ? popover : null;
         });
 
+        setBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            let h = String(Math.min(23, parseInt(hhInput.value, 10) || 0)).padStart(2, '0');
+            let m = String(Math.min(59, parseInt(mmInput.value, 10) || 0)).padStart(2, '0');
+            input.value = h + ':' + m;
+            popover.classList.remove('open');
+            activePopover = null;
+        });
+
+        // Allow Enter key to set
+        popover.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setBtn.click();
+            }
+        });
+
         popover.addEventListener('click', function(e) {
             e.stopPropagation();
-            let chip = e.target.closest('.military-chip');
-            if (!chip) return;
-
-            let val = input.value.trim();
-            let curH = '00';
-            let curM = '00';
-            if (val.includes(':')) {
-                let parts = val.split(':');
-                curH = String(Math.min(23, parseInt(parts[0], 10) || 0)).padStart(2, '0');
-                curM = String(Math.min(59, parseInt(parts[1], 10) || 0)).padStart(2, '0');
-            }
-
-            if (chip.dataset.type === 'hour') {
-                curH = chip.dataset.value;
-            } else if (chip.dataset.type === 'min') {
-                curM = chip.dataset.value;
-            }
-
-            input.value = curH + ':' + curM;
-            updatePopoverSelection();
         });
     });
 
