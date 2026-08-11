@@ -149,59 +149,9 @@ body.staff-theme a:not(.btn):not(.nav-link) {
   color: var(--primary);
 }
 
-/* Dark mode token overrides — triggered by body.dark-mode class OR prefers-color-scheme: dark */
-body.dark-mode.guest-theme,
-body.dark-mode.admin-theme,
-body.dark-mode.staff-theme,
-body.dark-mode {
-  --bg-main: #0f172a;
-  --surface: rgba(30, 41, 59, 0.82);
-  --surface-sunken: rgba(15, 23, 42, 0.85);
-  --border: #334155;
-  --border-strong: #475569;
-  --text-main: #f8fafc;
-  --text-muted: #cbd5e1;
-  --text-faint: #94a3b8;
-  background-color: var(--bg-main) !important;
-  color: var(--text-main) !important;
-}
-
-body.dark-mode.guest-theme {
-  --nav-bg: #0f172a;
-  --nav-text: #f8fafc;
-  --nav-text-soft: #cbd5e1;
-  --nav-divider: #334155;
-  --nav-chip-bg: #1e293b;
-  --nav-drawer-bg: #0f172a;
-  --primary: #60a5fa;
-  --primary-dark: #3b82f6;
-  --primary-soft: rgba(96, 165, 250, 0.15);
-}
-
-body.dark-mode.admin-theme {
-  --nav-bg: #7F1212;
-  --nav-text: #ffffff;
-  --nav-text-soft: rgba(255, 255, 255, .85);
-  --nav-divider: rgba(255, 255, 255, .3);
-  --nav-chip-bg: rgba(255, 255, 255, .2);
-  --nav-drawer-bg: #5E0E0E;
-  --primary: #ef5350;
-  --primary-dark: #e53935;
-  --primary-soft: #4a1a1a;
-}
-
-body.dark-mode.staff-theme {
-  --nav-bg: #0D47A1;
-  --nav-text: #ffffff;
-  --nav-text-soft: rgba(255, 255, 255, .85);
-  --nav-divider: rgba(255, 255, 255, .3);
-  --nav-chip-bg: rgba(255, 255, 255, .2);
-  --nav-drawer-bg: #0A2D6E;
-  --primary: #42a5f5;
-  --primary-dark: #1e88e5;
-  --primary-soft: #1a2a4a;
-}
-
+/* ==========================================================================
+   DARK MODE — respects system preference; overrides tokens for all themes
+   ========================================================================== */
 @media (prefers-color-scheme: dark) {
   body.guest-theme {
     --bg-main: #0f172a;

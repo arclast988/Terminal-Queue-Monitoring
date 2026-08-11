@@ -380,18 +380,16 @@
         }
 
         /* =================================================================
-           DARK MODE & GLASSMORPHISM — Admin / Staff / Dark Mode
+           DARK MODE — respects system preference, overrides !important rules
            ================================================================= */
-        html, body {
-            background-color: #0f172a !important;
-        }
-        body,
-        body.admin-theme,
-        body.staff-theme,
-        body.dark-mode {
-            background-color: #0f172a !important;
-            color: #f1f5f9 !important;
-        }
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background-color: #0f172a !important;
+            }
+            body {
+                background-color: #0f172a !important;
+                color: #f1f5f9 !important;
+            }
             body.admin-theme .footer,
             body.staff-theme .footer {
                 background-color: #0f172a !important;
@@ -698,6 +696,8 @@
             body.staff-theme .stat-card-link {
                 color: var(--primary) !important;
             }
+
+        }
 
         /*
          * Bootstrap appends .modal-backdrop directly to <body>, while page

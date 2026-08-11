@@ -69,40 +69,26 @@
             }
 
             /* Dark Mode Rules for Autocomplete Dropdown & Items */
-            body.dark-mode .autocomplete-dropdown,
-            body.admin-theme .autocomplete-dropdown,
-            body.staff-theme .autocomplete-dropdown {
+            body.dark-mode .autocomplete-dropdown {
                 background: #0f172a !important;
                 background-color: #0f172a !important;
                 border: 1px solid #334155 !important;
                 box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6) !important;
             }
-            body.dark-mode .autocomplete-item,
-            body.admin-theme .autocomplete-item,
-            body.staff-theme .autocomplete-item {
+            body.dark-mode .autocomplete-item {
                 color: #f8fafc !important;
                 background: #0f172a !important;
                 background-color: #0f172a !important;
                 border-bottom: 1px solid #1e293b !important;
             }
             body.dark-mode .autocomplete-item span,
-            body.admin-theme .autocomplete-item span,
-            body.staff-theme .autocomplete-item span,
-            body.dark-mode .autocomplete-item .autocomplete-item-text,
-            body.admin-theme .autocomplete-item .autocomplete-item-text,
-            body.staff-theme .autocomplete-item .autocomplete-item-text {
+            body.dark-mode .autocomplete-item .autocomplete-item-text {
                 color: #f8fafc !important;
                 -webkit-text-fill-color: #f8fafc !important;
             }
             body.dark-mode .autocomplete-item:hover,
             body.dark-mode .autocomplete-item.active-item,
-            body.dark-mode .autocomplete-item.selected,
-            body.admin-theme .autocomplete-item:hover,
-            body.admin-theme .autocomplete-item.active-item,
-            body.admin-theme .autocomplete-item.selected,
-            body.staff-theme .autocomplete-item:hover,
-            body.staff-theme .autocomplete-item.active-item,
-            body.staff-theme .autocomplete-item.selected {
+            body.dark-mode .autocomplete-item.selected {
                 background: #1e293b !important;
                 background-color: #1e293b !important;
                 color: #38bdf8 !important;
@@ -112,51 +98,35 @@
             body.dark-mode .autocomplete-item:hover .autocomplete-item-text,
             body.dark-mode .autocomplete-item.active-item .autocomplete-item-text,
             body.dark-mode .autocomplete-item:hover i,
-            body.dark-mode .autocomplete-item.active-item i,
-            body.admin-theme .autocomplete-item:hover span,
-            body.admin-theme .autocomplete-item.active-item span,
-            body.admin-theme .autocomplete-item:hover .autocomplete-item-text,
-            body.admin-theme .autocomplete-item.active-item .autocomplete-item-text,
-            body.admin-theme .autocomplete-item:hover i,
-            body.admin-theme .autocomplete-item.active-item i,
-            body.staff-theme .autocomplete-item:hover span,
-            body.staff-theme .autocomplete-item.active-item span,
-            body.staff-theme .autocomplete-item:hover .autocomplete-item-text,
-            body.staff-theme .autocomplete-item.active-item .autocomplete-item-text,
-            body.staff-theme .autocomplete-item:hover i,
-            body.staff-theme .autocomplete-item.active-item i {
+            body.dark-mode .autocomplete-item.active-item i {
                 color: #38bdf8 !important;
                 -webkit-text-fill-color: #38bdf8 !important;
             }
-            body.dark-mode .autocomplete-item mark.search-highlight,
-            body.admin-theme .autocomplete-item mark.search-highlight,
-            body.staff-theme .autocomplete-item mark.search-highlight {
+            body.dark-mode .autocomplete-item mark.search-highlight {
                 background: rgba(251, 191, 36, 0.3) !important;
                 color: #fbbf24 !important;
             }
-            body.dark-mode .autocomplete-badge,
-            body.admin-theme .autocomplete-badge,
-            body.staff-theme .autocomplete-badge {
+            body.dark-mode .autocomplete-badge {
                 background: #334155 !important;
                 color: #cbd5e1 !important;
                 -webkit-text-fill-color: #cbd5e1 !important;
                 border: 1px solid #475569 !important;
             }
 
-            /* Explicit Light Theme Styling — ONLY when on Guest theme without dark mode */
-            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-dropdown {
+            /* Explicit Light Theme Styling — ONLY when NOT dark mode */
+            body:not(.dark-mode) .autocomplete-dropdown {
                 background: #ffffff !important;
                 background-color: #ffffff !important;
                 border: 1px solid #cbd5e1 !important;
                 box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
             }
-            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item {
+            body:not(.dark-mode) .autocomplete-item {
                 color: #1e293b !important;
                 background: #ffffff !important;
                 border-bottom: 1px solid #f1f5f9 !important;
             }
-            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item span,
-            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item .autocomplete-item-text {
+            body:not(.dark-mode) .autocomplete-item span,
+            body:not(.dark-mode) .autocomplete-item .autocomplete-item-text {
                 color: #1e293b !important;
                 -webkit-text-fill-color: #1e293b !important;
             }

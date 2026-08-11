@@ -26,10 +26,12 @@ body.staff-theme::after {
     animation: palomponBgSlideshow 30s infinite ease-in-out;
 }
 
-body.admin-theme::after,
-body.staff-theme::after {
-    opacity: 0.14;
-    filter: brightness(1.2) contrast(1.1);
+@media (prefers-color-scheme: dark) {
+    body.admin-theme::after,
+    body.staff-theme::after {
+        opacity: 0.14;
+        filter: brightness(1.2) contrast(1.1);
+    }
 }
 
 /* =================================================================
@@ -986,14 +988,14 @@ body.staff-theme .table .btn-outline-dark:hover {
 
 
 
-/* HTML, Body and Main Content backgrounds in Dark Mode / Admin / Staff Glassmorphism */
-html,
-body,
-body.admin-theme,
-body.staff-theme,
-body.dark-mode {
-    background-color: #0f172a !important;
-}
+@media (prefers-color-scheme: dark) {
+    /* HTML, Body and Main Content backgrounds in Dark Mode */
+    html,
+    body,
+    body.admin-theme,
+    body.staff-theme {
+        background-color: #0f172a !important;
+    }
 
     .main-content,
     body.admin-theme .main-content,
@@ -1362,14 +1364,14 @@ body.staff-theme .footer p {
     font-size: inherit !important;
 }
 
-body.admin-theme footer,
-body.admin-theme .footer,
-body.staff-theme footer,
-body.staff-theme .footer,
-body.dark-mode footer,
-body.dark-mode .footer {
-    background: rgba(15, 23, 42, 0.55) !important;
-    border-top-color: rgba(51, 65, 85, 0.6) !important;
-    color: #94a3b8 !important;
+@media (prefers-color-scheme: dark) {
+    body.admin-theme footer,
+    body.admin-theme .footer,
+    body.staff-theme footer,
+    body.staff-theme .footer {
+        background: rgba(15, 23, 42, 0.55) !important;
+        border-top-color: rgba(51, 65, 85, 0.6) !important;
+        color: #94a3b8 !important;
+    }
 }
 

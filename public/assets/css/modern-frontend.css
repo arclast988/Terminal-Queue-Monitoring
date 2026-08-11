@@ -1136,29 +1136,28 @@ body.staff-theme .form-check-input-modern:checked {
 /* ==========================================================================
    DARK MODE SUPPORT FOR MODERN FRONTEND COMPONENTS
    ========================================================================== */
-body.dark-mode,
-body.admin-theme,
-body.staff-theme {
-    --slate-50: #0f172a;
-    --slate-100: #1e293b;
-    --slate-200: #334155;
-    --slate-300: #475569;
-    --slate-400: #64748b;
-    --slate-500: #94a3b8;
-    --slate-600: #cbd5e1;
-    --slate-700: #e2e8f0;
-    --slate-800: #f1f5f9;
-    --slate-900: #f8fafc;
-    
-    --success-light: rgba(16, 185, 129, 0.15);
-    --success-dark: #34d399;
-    --warning-light: rgba(245, 158, 11, 0.15);
-    --warning-dark: #fbbf24;
-    --danger-light: rgba(239, 68, 68, 0.15);
-    --danger-dark: #f87171;
-    --info-light: rgba(59, 130, 246, 0.15);
-    --info-dark: #60a5fa;
-}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --slate-50: #0f172a;
+        --slate-100: #1e293b;
+        --slate-200: #334155;
+        --slate-300: #475569;
+        --slate-400: #64748b;
+        --slate-500: #94a3b8;
+        --slate-600: #cbd5e1;
+        --slate-700: #e2e8f0;
+        --slate-800: #f1f5f9;
+        --slate-900: #f8fafc;
+        
+        --success-light: rgba(16, 185, 129, 0.15);
+        --success-dark: #34d399;
+        --warning-light: rgba(245, 158, 11, 0.15);
+        --warning-dark: #fbbf24;
+        --danger-light: rgba(239, 68, 68, 0.15);
+        --danger-dark: #f87171;
+        --info-light: rgba(59, 130, 246, 0.15);
+        --info-dark: #60a5fa;
+    }
 
     /* Cards & Containers */
     .modern-card,
@@ -1322,3 +1321,4 @@ body.staff-theme {
         background-color: #1e293b !important;
         border-color: #ef5350 !important;
     }
+}
