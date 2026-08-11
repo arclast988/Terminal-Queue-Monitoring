@@ -115,35 +115,35 @@ body::after {
 
 @keyframes palomponBgSlideshow {
     0%, 17% {
-        background-image: url('/images/bg/bg1_townhall.jpg');
+        background-image: url('/images/bg/bg1_townhall.png');
         opacity: 0.22;
     }
     19% {
         opacity: 0.05;
     }
     20%, 37% {
-        background-image: url('/images/bg/bg2_aerial_port.jpg');
+        background-image: url('/images/bg/bg2_aerial_port.png');
         opacity: 0.22;
     }
     39% {
         opacity: 0.05;
     }
     40%, 57% {
-        background-image: url('/images/bg/bg3_aerial_town.jpg');
+        background-image: url('/images/bg/bg3_aerial_town.png');
         opacity: 0.22;
     }
     59% {
         opacity: 0.05;
     }
     60%, 77% {
-        background-image: url('/images/bg/bg4_terminal_exterior.jpg');
+        background-image: url('/images/bg/bg4_terminal_exterior.png');
         opacity: 0.22;
     }
     79% {
         opacity: 0.05;
     }
     80%, 97% {
-        background-image: url('/images/bg/bg5_terminal_bay.jpg');
+        background-image: url('/images/bg/bg5_terminal_bay.png');
         opacity: 0.22;
     }
     99% {
@@ -646,29 +646,61 @@ body > * {
    ================================================================= */
 
 .input-modern,
-.form-control-modern {
+.form-control-modern,
+.select-modern,
+.form-select-modern {
     width: 100%;
     padding: 12px 16px;
     font-size: 14px;
     font-family: inherit;
     border: 1.5px solid #cbd5e1;
     border-radius: var(--radius-md);
-    background: white;
-    color: #0f172a;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
     transition: all var(--transition-fast);
 }
 
+.select-modern,
+.form-select-modern {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 12px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.select-modern option,
+.form-select-modern option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+}
+
 .input-modern:focus,
-.form-control-modern:focus {
+.form-control-modern:focus,
+.select-modern:focus,
+.form-select-modern:focus {
     outline: none;
     border-color: var(--primary-red);
     box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
 }
 
 .input-modern::placeholder,
-.form-control-modern::placeholder {
-    color: #64748b !important;
-    opacity: 1 !important;
+.form-control-modern::placeholder,
+.select-modern::placeholder,
+.form-select-modern::placeholder,
+.form-control::placeholder,
+.form-select::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color: #78889b !important;
+    -webkit-text-fill-color: #78889b !important;
+    opacity: 0.82 !important;
+    font-weight: 400 !important;
 }
 
 .form-label-modern {
@@ -1104,28 +1136,29 @@ body.staff-theme .form-check-input-modern:checked {
 /* ==========================================================================
    DARK MODE SUPPORT FOR MODERN FRONTEND COMPONENTS
    ========================================================================== */
-@media (prefers-color-scheme: dark) {
-    :root {
-        --slate-50: #0f172a;
-        --slate-100: #1e293b;
-        --slate-200: #334155;
-        --slate-300: #475569;
-        --slate-400: #64748b;
-        --slate-500: #94a3b8;
-        --slate-600: #cbd5e1;
-        --slate-700: #e2e8f0;
-        --slate-800: #f1f5f9;
-        --slate-900: #f8fafc;
-        
-        --success-light: rgba(16, 185, 129, 0.15);
-        --success-dark: #34d399;
-        --warning-light: rgba(245, 158, 11, 0.15);
-        --warning-dark: #fbbf24;
-        --danger-light: rgba(239, 68, 68, 0.15);
-        --danger-dark: #f87171;
-        --info-light: rgba(59, 130, 246, 0.15);
-        --info-dark: #60a5fa;
-    }
+body.dark-mode,
+body.admin-theme,
+body.staff-theme {
+    --slate-50: #0f172a;
+    --slate-100: #1e293b;
+    --slate-200: #334155;
+    --slate-300: #475569;
+    --slate-400: #64748b;
+    --slate-500: #94a3b8;
+    --slate-600: #cbd5e1;
+    --slate-700: #e2e8f0;
+    --slate-800: #f1f5f9;
+    --slate-900: #f8fafc;
+    
+    --success-light: rgba(16, 185, 129, 0.15);
+    --success-dark: #34d399;
+    --warning-light: rgba(245, 158, 11, 0.15);
+    --warning-dark: #fbbf24;
+    --danger-light: rgba(239, 68, 68, 0.15);
+    --danger-dark: #f87171;
+    --info-light: rgba(59, 130, 246, 0.15);
+    --info-dark: #60a5fa;
+}
 
     /* Cards & Containers */
     .modern-card,
@@ -1174,6 +1207,20 @@ body.staff-theme .form-check-input-modern:checked {
         color: #cbd5e1 !important;
     }
 
+    body.dark-mode .stat-card-icon,
+    body.dark-mode .stat-card-modern .stat-card-icon {
+        background: rgba(255, 255, 255, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .stat-card-icon i,
+    body.dark-mode .stat-card-modern .stat-card-icon i {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
     /* Tables */
     .table-modern,
     .table-modern th,
@@ -1193,23 +1240,46 @@ body.staff-theme .form-check-input-modern:checked {
     }
 
     /* Form Controls & Inputs */
-    .form-control-modern,
-    .form-select-modern,
-    .select-modern,
-    .input-modern {
+    body.dark-mode .form-control-modern,
+    body.dark-mode .form-select-modern,
+    body.dark-mode .select-modern,
+    body.dark-mode .input-modern {
         background-color: #0f172a !important;
         border-color: #334155 !important;
         color: #f1f5f9 !important;
         -webkit-text-fill-color: #f1f5f9 !important;
     }
 
+    body:not(.dark-mode) .modern-card .form-control-modern,
+    body:not(.dark-mode) .modern-card .form-select-modern,
+    body:not(.dark-mode) .modern-card .select-modern,
+    body:not(.dark-mode) .modern-card .input-modern,
+    body:not(.dark-mode) .card-modern .form-control-modern,
+    body:not(.dark-mode) .card-modern .form-select-modern,
+    body:not(.dark-mode) .card-modern .select-modern,
+    body:not(.dark-mode) .card-modern .input-modern,
+    body:not(.dark-mode) .modal-content .form-control-modern,
+    body:not(.dark-mode) .modal-content .form-select-modern,
+    body:not(.dark-mode) .modal-content .select-modern,
+    body:not(.dark-mode) .modal-content .input-modern {
+        background-color: #ffffff !important;
+        border-color: #cbd5e1 !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+    }
+
     .form-control-modern::placeholder,
     .form-select-modern::placeholder,
     .select-modern::placeholder,
-    .input-modern::placeholder {
+    .input-modern::placeholder,
+    .form-control::placeholder,
+    .form-select::placeholder,
+    input::placeholder,
+    textarea::placeholder {
         color: #94a3b8 !important;
         -webkit-text-fill-color: #94a3b8 !important;
-        opacity: 1 !important;
+        opacity: 0.80 !important;
+        font-weight: 400 !important;
     }
 
     .form-label-modern {
@@ -1252,4 +1322,3 @@ body.staff-theme .form-check-input-modern:checked {
         background-color: #1e293b !important;
         border-color: #ef5350 !important;
     }
-}

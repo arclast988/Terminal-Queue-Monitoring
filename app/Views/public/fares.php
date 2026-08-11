@@ -210,37 +210,10 @@
             min-height: 245px;
         }
         .hero::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: cover;
-            opacity: 0.22;
-            z-index: 0;
-            animation: heroBgSlideshow 30s infinite ease-in-out;
-        }
-        @keyframes heroBgSlideshow {
-            0%, 17% { background-image: url('<?= base_url('images/bg/bg1_townhall.png') ?>'); opacity: 0.22; }
-            19% { opacity: 0.05; }
-            20%, 37% { background-image: url('<?= base_url('images/bg/bg2_aerial_port.png') ?>'); opacity: 0.22; }
-            39% { opacity: 0.05; }
-            40%, 57% { background-image: url('<?= base_url('images/bg/bg3_aerial_town.png') ?>'); opacity: 0.22; }
-            59% { opacity: 0.05; }
-            60%, 77% { background-image: url('<?= base_url('images/bg/bg4_terminal_exterior.png') ?>'); opacity: 0.22; }
-            79% { opacity: 0.05; }
-            80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.png') ?>'); opacity: 0.22; }
-            99% { opacity: 0.05; }
+            display: none !important;
         }
         .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.22);
-            z-index: 1;
+            display: none !important;
         }
 
         .hero h2 {

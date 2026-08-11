@@ -6,14 +6,30 @@
  */
 
 /* =================================================================
-   DISABLE SLIDESHOW BACKGROUND ON ADMIN & STAFF PAGES ONLY
-   The Palompon photo watermark should appear ONLY on the login page
-   and guest pages. Admin/staff pages use a clean solid background.
+   ENABLE SEMI-TRANSPARENT SYSTEM BACKGROUND WATERMARK FOR ADMIN & STAFF
+   Displays user-submitted Palompon photos as a subtle background layer
+   behind admin/staff content, matching guest pages.
    ================================================================= */
 body.admin-theme::after,
 body.staff-theme::after {
-    content: none;
-    animation: none;
+    content: '';
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    opacity: 0.20;
+    z-index: 0;
+    pointer-events: none;
+    animation: palomponBgSlideshow 30s infinite ease-in-out;
+}
+
+body.admin-theme::after,
+body.staff-theme::after {
+    opacity: 0.14;
+    filter: brightness(1.2) contrast(1.1);
 }
 
 /* =================================================================
@@ -254,29 +270,38 @@ body.admin-theme .page-hero .subtitle {
 }
 
 /* =================================================================
-   CARD STYLING - Flat Design
+   CARD STYLING - Semi-transparent Glassmorphism
    ================================================================= */
 
-.card:not(.text-white) {
-    background-color: white !important;
-    border: 1px solid #e2e8f0 !important;
+.card:not(.text-white),
+.modern-card,
+.stat-card-modern,
+.fare-section-card,
+.discount-rate-card {
+    background: rgba(255, 255, 255, 0.82) !important;
+    backdrop-filter: blur(12px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(150%) !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
     border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
     overflow: hidden;
     min-width: 0;
 }
 
 .card.text-white {
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
     border-radius: 8px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
     overflow: hidden;
     min-width: 0;
 }
 
-.card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger) {
-    background: white !important;
-    border-bottom: 1px solid #f1f5f9 !important;
+.card-header:not(.bg-dark):not(.bg-primary):not(.bg-info):not(.bg-secondary):not(.bg-success):not(.bg-warning):not(.bg-danger),
+.modern-card-header {
+    background: rgba(255, 255, 255, 0.88) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(241, 245, 249, 0.8) !important;
     padding: 1.25rem 1.5rem !important;
     font-weight: 700;
     color: #1e293b;
@@ -306,19 +331,23 @@ body.admin-theme .page-hero .subtitle {
     padding: 1.5rem !important;
 }
 
-.card:not(.text-white) .card-body {
-    background-color: white !important;
+.card:not(.text-white) .card-body,
+.modern-card-body {
+    background: transparent !important;
 }
 
 /* =================================================================
-   TABLE STYLING - Flat Design
+   TABLE STYLING - Semi-transparent Glassmorphism
    ================================================================= */
 
 .table {
     border-collapse: collapse;
     border-spacing: 0;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(226, 232, 240, 0.8);
     min-width: max-content;
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
 }
 
 .table-responsive {
@@ -327,9 +356,9 @@ body.admin-theme .page-hero .subtitle {
 }
 
 .table thead th {
-    background: #f8fafc !important;
+    background: rgba(248, 250, 252, 0.88) !important;
     border: none !important;
-    border-bottom: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
     padding: 1rem 1.25rem !important;
     font-size: 12px;
     font-weight: 700;
@@ -957,14 +986,14 @@ body.staff-theme .table .btn-outline-dark:hover {
 
 
 
-@media (prefers-color-scheme: dark) {
-    /* HTML, Body and Main Content backgrounds in Dark Mode */
-    html,
-    body,
-    body.admin-theme,
-    body.staff-theme {
-        background-color: #0f172a !important;
-    }
+/* HTML, Body and Main Content backgrounds in Dark Mode / Admin / Staff Glassmorphism */
+html,
+body,
+body.admin-theme,
+body.staff-theme,
+body.dark-mode {
+    background-color: #0f172a !important;
+}
 
     .main-content,
     body.admin-theme .main-content,
@@ -1021,9 +1050,12 @@ body.staff-theme .table .btn-outline-dark:hover {
     /* Modal shell */
     body.admin-theme .modal-content,
     body.staff-theme .modal-content {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #f1f5f9 !important;
+        background: rgba(30, 41, 59, 0.92) !important;
+        backdrop-filter: blur(16px) saturate(160%) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+        border: 1px solid rgba(51, 65, 85, 0.8) !important;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5) !important;
+        color: #f8fafc !important;
     }
 
     /* Modal Header & Footer */
@@ -1031,27 +1063,28 @@ body.staff-theme .table .btn-outline-dark:hover {
     body.staff-theme .modal-header,
     body.admin-theme .modal-footer,
     body.staff-theme .modal-footer {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #f1f5f9 !important;
+        background: rgba(30, 41, 59, 0.90) !important;
+        border-color: rgba(51, 65, 85, 0.7) !important;
+        color: #f8fafc !important;
     }
 
     body.admin-theme .modal-title,
     body.staff-theme .modal-title {
-        color: #f1f5f9 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
     }
 
     /* Modal Body */
     body.admin-theme .modal-body,
     body.staff-theme .modal-body {
-        background-color: #1e293b !important;
-        color: #f1f5f9 !important;
+        background: transparent !important;
+        color: #f8fafc !important;
     }
 
     /* General Dark Mode Text Visibility Overrides */
     body.admin-theme,
     body.staff-theme {
-        color: #f1f5f9 !important;
+        color: #f8fafc !important;
     }
 
     body.admin-theme .text-muted,
@@ -1062,14 +1095,31 @@ body.staff-theme .table .btn-outline-dark:hover {
     body.staff-theme .form-text,
     body.admin-theme .subtitle,
     body.staff-theme .subtitle {
-        color: #94a3b8 !important;
+        color: #cbd5e1 !important;
+        -webkit-text-fill-color: #cbd5e1 !important;
     }
 
     body.admin-theme .text-dark,
     body.staff-theme .text-dark,
     body.admin-theme .text-secondary,
     body.staff-theme .text-secondary {
-        color: #cbd5e1 !important;
+        color: #e2e8f0 !important;
+        -webkit-text-fill-color: #e2e8f0 !important;
+    }
+
+    /* Headings in Dark Mode */
+    body.admin-theme h1, body.admin-theme h2, body.admin-theme h3,
+    body.admin-theme h4, body.admin-theme h5, body.admin-theme h6,
+    body.staff-theme h1, body.staff-theme h2, body.staff-theme h3,
+    body.staff-theme h4, body.staff-theme h5, body.staff-theme h6,
+    body.admin-theme .h1, body.admin-theme .h2, body.admin-theme .h3,
+    body.staff-theme .h1, body.staff-theme .h2, body.staff-theme .h3,
+    body.admin-theme .fw-bold, body.staff-theme .fw-bold,
+    body.admin-theme .modern-card-title, body.staff-theme .modern-card-title,
+    body.admin-theme .card-title, body.staff-theme .card-title,
+    body.admin-theme .page-title-modern, body.staff-theme .page-title-modern {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
     }
 
     /* Icons in Dark Mode */
@@ -1083,13 +1133,28 @@ body.staff-theme .table .btn-outline-dark:hover {
         color: #cbd5e1 !important;
     }
 
-    /* Ensure icons inside light/pastel stat badges remain sharp dark navy */
-    .stat-card-icon i,
-    .stat-card-modern .stat-card-icon i,
-    .stat-card .rounded-3 i,
-    .stat-card .bg-light i,
-    .stat-card .badge i,
-    .fare-section-card .modern-card-header i {
+    /* Stat card icon container & icons in Dark Mode */
+    body.dark-mode .stat-card-icon,
+    body.dark-mode .stat-card-modern .stat-card-icon {
+        background: rgba(255, 255, 255, 0.12) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+    }
+
+    body.dark-mode .stat-card-icon i,
+    body.dark-mode .stat-card-modern .stat-card-icon i,
+    body.dark-mode .stat-card .rounded-3 i,
+    body.dark-mode .fare-section-card .modern-card-header i {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+    }
+
+    /* Ensure icons inside light elements in light mode remain sharp dark navy */
+    body:not(.dark-mode) .stat-card-icon i,
+    body:not(.dark-mode) .stat-card-modern .stat-card-icon i,
+    body:not(.dark-mode) .stat-card .bg-light i,
+    body:not(.dark-mode) .stat-card .badge i {
         color: #0f172a !important;
         -webkit-text-fill-color: #0f172a !important;
         opacity: 1 !important;
@@ -1102,39 +1167,50 @@ body.staff-theme .table .btn-outline-dark:hover {
     body.staff-theme .form-label-modern,
     body.admin-theme .form-check-label,
     body.staff-theme .form-check-label {
-        color: #e2e8f0 !important;
+        color: #f1f5f9 !important;
     }
 
-    /* Form inputs, selects & placeholders */
+    /* Form inputs, selects & placeholders in Dark Mode */
     body.admin-theme .form-control,
     body.admin-theme .form-select,
     body.admin-theme .input-modern,
     body.admin-theme .select-modern,
+    body.admin-theme .form-control-modern,
+    body.admin-theme .form-select-modern,
     body.staff-theme .form-control,
     body.staff-theme .form-select,
     body.staff-theme .input-modern,
-    body.staff-theme .select-modern {
-        background-color: #0f172a !important;
-        border-color: #334155 !important;
-        color: #f1f5f9 !important;
-        -webkit-text-fill-color: #f1f5f9 !important;
+    body.staff-theme .select-modern,
+    body.staff-theme .form-control-modern,
+    body.staff-theme .form-select-modern {
+        background: rgba(15, 23, 42, 0.85) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border-color: rgba(51, 65, 85, 0.8) !important;
+        color: #f8fafc !important;
+        -webkit-text-fill-color: #f8fafc !important;
     }
 
     body.admin-theme .form-control::placeholder,
+    body.admin-theme .form-control-modern::placeholder,
     body.admin-theme .input-modern::placeholder,
     body.admin-theme .select-modern::placeholder,
+    body.admin-theme .form-select-modern::placeholder,
     body.staff-theme .form-control::placeholder,
+    body.staff-theme .form-control-modern::placeholder,
     body.staff-theme .input-modern::placeholder,
-    body.staff-theme .select-modern::placeholder {
+    body.staff-theme .select-modern::placeholder,
+    body.staff-theme .form-select-modern::placeholder {
         color: #94a3b8 !important;
         -webkit-text-fill-color: #94a3b8 !important;
-        opacity: 1 !important;
+        opacity: 0.80 !important;
+        font-weight: 400 !important;
     }
 
     body.admin-theme select option,
     body.staff-theme select option {
         background-color: #0f172a !important;
-        color: #f1f5f9 !important;
+        color: #f8fafc !important;
     }
 
     body.admin-theme .form-control:focus,
@@ -1159,59 +1235,98 @@ body.staff-theme .table .btn-outline-dark:hover {
     /* Input group prefixes (e.g. ₱ symbol, % symbol) */
     body.admin-theme .input-group-text,
     body.staff-theme .input-group-text {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
+        background: rgba(15, 23, 42, 0.85) !important;
+        border-color: rgba(51, 65, 85, 0.8) !important;
         color: #cbd5e1 !important;
     }
 
     /* Cards & Containers in Dark Mode */
     body.admin-theme .card,
     body.staff-theme .card,
+    body.admin-theme .modern-card,
+    body.staff-theme .modern-card,
     body.admin-theme .fare-section-card,
     body.staff-theme .fare-section-card,
     body.admin-theme .discount-rate-card,
-    body.staff-theme .discount-rate-card {
-        background-color: #1e293b !important;
-        border-color: #334155 !important;
-        color: #f1f5f9 !important;
+    body.staff-theme .discount-rate-card,
+    body.admin-theme .stat-card-modern,
+    body.staff-theme .stat-card-modern {
+        background: rgba(30, 41, 59, 0.82) !important;
+        backdrop-filter: blur(14px) saturate(150%) !important;
+        -webkit-backdrop-filter: blur(14px) saturate(150%) !important;
+        border: 1px solid rgba(51, 65, 85, 0.7) !important;
+        color: #f8fafc !important;
     }
 
     body.admin-theme .card-header,
     body.staff-theme .card-header,
     body.admin-theme .modern-card-header,
     body.staff-theme .modern-card-header {
-        background-color: #1e293b !important;
-        border-bottom-color: #334155 !important;
-        color: #f1f5f9 !important;
+        background: rgba(30, 41, 59, 0.90) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border-bottom-color: rgba(51, 65, 85, 0.8) !important;
+        color: #ffffff !important;
+    }
+
+    body.admin-theme .list-group-item,
+    body.staff-theme .list-group-item,
+    body.admin-theme .fare-item,
+    body.staff-theme .fare-item {
+        background: rgba(30, 41, 59, 0.85) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        border-color: rgba(51, 65, 85, 0.7) !important;
+        color: #f8fafc !important;
     }
 
     body.admin-theme .fare-item:hover,
     body.staff-theme .fare-item:hover,
     body.admin-theme .discount-rate-card:hover .modern-card-header,
     body.staff-theme .discount-rate-card:hover .modern-card-header {
-        background-color: #334155 !important;
+        background-color: rgba(51, 65, 85, 0.9) !important;
     }
 
     /* Tables in Dark Mode */
     body.admin-theme .table,
     body.staff-theme .table {
-        color: #f1f5f9 !important;
-        border-color: #334155 !important;
+        background: rgba(30, 41, 59, 0.78) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        color: #f8fafc !important;
+        border-color: rgba(51, 65, 85, 0.7) !important;
     }
 
     body.admin-theme .table th,
     body.staff-theme .table th,
     body.admin-theme .table td,
     body.staff-theme .table td {
-        color: #f1f5f9 !important;
-        border-color: #334155 !important;
+        color: #f8fafc !important;
+        border-color: rgba(51, 65, 85, 0.7) !important;
+    }
+
+    body.admin-theme .table thead th,
+    body.staff-theme .table thead th {
+        background: rgba(15, 23, 42, 0.88) !important;
+        color: #cbd5e1 !important;
+    }
+
+    body.admin-theme .table tbody tr,
+    body.staff-theme .table tbody tr {
+        background: rgba(30, 41, 59, 0.78) !important;
+    }
+
+    body.admin-theme .table-striped tbody tr:nth-of-type(odd),
+    body.staff-theme .table-striped tbody tr:nth-of-type(odd) {
+        background: rgba(15, 23, 42, 0.70) !important;
     }
 
     body.admin-theme .table-hover > tbody > tr:hover > *,
     body.staff-theme .table-hover > tbody > tr:hover > * {
-        background-color: #334155 !important;
+        background-color: rgba(51, 65, 85, 0.90) !important;
         color: #ffffff !important;
     }
+}
 }
 
 /* =================================================================
@@ -1247,14 +1362,14 @@ body.staff-theme .footer p {
     font-size: inherit !important;
 }
 
-@media (prefers-color-scheme: dark) {
-    body.admin-theme footer,
-    body.admin-theme .footer,
-    body.staff-theme footer,
-    body.staff-theme .footer {
-        background: rgba(15, 23, 42, 0.55) !important;
-        border-top-color: rgba(51, 65, 85, 0.6) !important;
-        color: #94a3b8 !important;
-    }
+body.admin-theme footer,
+body.admin-theme .footer,
+body.staff-theme footer,
+body.staff-theme .footer,
+body.dark-mode footer,
+body.dark-mode .footer {
+    background: rgba(15, 23, 42, 0.55) !important;
+    border-top-color: rgba(51, 65, 85, 0.6) !important;
+    color: #94a3b8 !important;
 }
 

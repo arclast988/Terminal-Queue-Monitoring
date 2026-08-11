@@ -674,6 +674,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
         var manageEl = document.getElementById('manageVehicleTypesModal');
         var addEl = document.getElementById('addVehicleTypeModal');
         if (!addEl) return;
+        addEl.dataset.fromManage = "true";
 
         function showAdd() {
             // Remove any leftover backdrops just in case
@@ -701,6 +702,76 @@ if (!empty($vehicles) && is_array($vehicles)) {
             showAdd();
         }
     }
+
+    function openEditVehicleTypeModal(id) {
+        var manageEl = document.getElementById('manageVehicleTypesModal');
+        var editEl = document.getElementById('editVehicleTypeModal' + id);
+        if (!editEl) return;
+
+        function showEdit() {
+            // Remove any leftover backdrops just in case
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            var editModal = bootstrap.Modal.getOrCreateInstance(editEl);
+            editModal.show();
+        }
+
+        if (manageEl) {
+            var manageModal = bootstrap.Modal.getInstance(manageEl);
+            if (manageModal) {
+                manageEl.addEventListener('hidden.bs.modal', function onHidden() {
+                    manageEl.removeEventListener('hidden.bs.modal', onHidden);
+                    showEdit();
+                });
+                manageModal.hide();
+            } else {
+                showEdit();
+            }
+        } else {
+            showEdit();
+        }
+    }
+
+    function backToManageVehicleTypesModal(currentModalId) {
+        var currentEl = document.getElementById(currentModalId);
+        var manageEl = document.getElementById('manageVehicleTypesModal');
+        if (!currentEl || !manageEl) return;
+
+        function showManage() {
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            var manageModal = bootstrap.Modal.getOrCreateInstance(manageEl);
+            manageModal.show();
+        }
+
+        var currentModal = bootstrap.Modal.getInstance(currentEl);
+        if (currentModal) {
+            currentEl.addEventListener('hidden.bs.modal', function onHidden() {
+                currentEl.removeEventListener('hidden.bs.modal', onHidden);
+                showManage();
+            });
+            currentModal.hide();
+        } else {
+            showManage();
+        }
+    }
+
+    function closeAddVehicleTypeModal() {
+        var addEl = document.getElementById('addVehicleTypeModal');
+        if (addEl && addEl.dataset.fromManage === "true") {
+            delete addEl.dataset.fromManage;
+            backToManageVehicleTypesModal('addVehicleTypeModal');
+        } else if (addEl) {
+            var addModal = bootstrap.Modal.getInstance(addEl);
+            if (addModal) {
+                addModal.hide();
+            }
+        }
+    }
 </script>
 
 <div class="modal fade" id="manageVehicleTypesModal" tabindex="-1" aria-labelledby="manageVehicleTypesModalLabel" aria-hidden="true">
@@ -723,7 +794,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editVehicleTypeModal<?= $vt['id'] ?>" title="Edit Vehicle Type">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditVehicleTypeModal(<?= $vt['id'] ?>)" title="Edit Vehicle Type">
                                         <i class="bi bi-pencil me-1"></i> Edit
                                     </button>
                                     <form action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline"
@@ -759,7 +830,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')" aria-label="Close"></button>
                     </div>
                     <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post">
                         <?= csrf_field() ?>
@@ -769,7 +840,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                             <div class="form-text mt-2">Updating the name will update the display name and slug across vehicles and routes.</div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')">Cancel</button>
                             <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                         </div>
                     </form>
@@ -784,7 +855,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-bold" id="addVehicleTypeModalLabel"><i class="bi bi-tags me-2"></i>Add Vehicle Type</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" onclick="closeAddVehicleTypeModal()" aria-label="Close"></button>
             </div>
             <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post">
                 <?= csrf_field() ?>
@@ -794,7 +865,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                     <div class="form-text">It will be available in Vehicle Register and as a new Route Fares card.</div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="closeAddVehicleTypeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Type</button>
                 </div>
             </form>

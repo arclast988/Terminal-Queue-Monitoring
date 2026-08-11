@@ -591,165 +591,273 @@ div:has(> .autocomplete-wrapper:hover) {
 .autocomplete-wrapper .form-control-modern::placeholder,
 .autocomplete-wrapper .form-control::placeholder,
 .autocomplete-wrapper input[type="text"]::placeholder {
-  color: #64748b !important;
-  opacity: 1 !important;
-  font-weight: 500 !important;
+  color: #78889b !important;
+  -webkit-text-fill-color: #78889b !important;
+  opacity: 0.82 !important;
+  font-weight: 400 !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  .autocomplete-dropdown {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.7) !important;
-  }
-  .autocomplete-item {
-    color: #f8fafc !important;
-    border-bottom-color: #334155 !important;
-  }
-  .autocomplete-item span,
-  .autocomplete-item .autocomplete-item-text {
-    color: #f8fafc !important;
-    -webkit-text-fill-color: #f8fafc !important;
-  }
-  .autocomplete-item:hover,
-  .autocomplete-item.active-item {
-    background-color: #334155 !important;
-    color: #38bdf8 !important;
-  }
-  .autocomplete-item:hover span,
-  .autocomplete-item.active-item span,
-  .autocomplete-item:hover .autocomplete-item-text,
-  .autocomplete-item.active-item .autocomplete-item-text {
-    color: #38bdf8 !important;
-    -webkit-text-fill-color: #38bdf8 !important;
-  }
-
-  /* Autocomplete search inputs — ensure text is visible on dark background */
-  .autocomplete-wrapper .input-modern,
-  .autocomplete-wrapper .form-control-modern,
-  .autocomplete-wrapper .form-control,
-  .autocomplete-wrapper input[type="text"] {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-    color: #f1f5f9 !important;
-    -webkit-text-fill-color: #f1f5f9 !important;
-  }
-
-  .autocomplete-wrapper .input-modern::placeholder,
-  .autocomplete-wrapper .form-control-modern::placeholder,
-  .autocomplete-wrapper .form-control::placeholder,
-  .autocomplete-wrapper input[type="text"]::placeholder {
-    color: #cbd5e1 !important;
-    -webkit-text-fill-color: #cbd5e1 !important;
-    opacity: 1 !important;
-  }
-
-  .autocomplete-wrapper .input-modern:focus,
-  .autocomplete-wrapper .form-control-modern:focus,
-  .autocomplete-wrapper .form-control:focus,
-  .autocomplete-wrapper input[type="text"]:focus {
-    border-color: #ef5350 !important;
-    box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.25) !important;
-  }
-
-  /* Badge inside dropdown items (e.g. "Terminal", "Route", "Type") */
-  .autocomplete-item .badge.bg-light,
-  .autocomplete-item .badge.rounded-pill,
-  .autocomplete-item .autocomplete-badge {
-    background-color: #334155 !important;
-    color: #cbd5e1 !important;
-    -webkit-text-fill-color: #cbd5e1 !important;
-    border-color: #475569 !important;
-  }
-
-  /* Search highlight mark — keep visible on dark backgrounds */
-  .autocomplete-item mark,
-  .autocomplete-item mark.bg-warning,
-  .autocomplete-item mark.search-highlight {
-    background-color: rgba(251, 191, 36, 0.3) !important;
-    color: #fbbf24 !important;
-    -webkit-text-fill-color: #fbbf24 !important;
-  }
-
-  /* Icons inside autocomplete items */
-  .autocomplete-item .text-primary {
-    color: #60a5fa !important;
-  }
-}
-
-/* Explicit Dark Theme Class Overrides */
-body.admin-theme .autocomplete-dropdown,
-body.staff-theme .autocomplete-dropdown,
+/* Dark mode autocomplete — applies to dark mode, admin theme, and staff theme */
 body.dark-mode .autocomplete-dropdown,
-.modal-content .autocomplete-dropdown {
-  background: #1e293b !important;
+body.admin-theme .autocomplete-dropdown,
+body.staff-theme .autocomplete-dropdown {
+  background-color: #0f172a !important;
   border-color: #334155 !important;
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.7) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
 }
-body.admin-theme .autocomplete-item,
-body.staff-theme .autocomplete-item,
+
 body.dark-mode .autocomplete-item,
-.modal-content .autocomplete-item {
-  color: #f8fafc !important;
-  border-bottom-color: #334155 !important;
+body.admin-theme .autocomplete-item,
+body.staff-theme .autocomplete-item {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  background-color: #0f172a !important;
+  border-bottom-color: #1e293b !important;
 }
+
+body.dark-mode .autocomplete-item span,
 body.admin-theme .autocomplete-item span,
 body.staff-theme .autocomplete-item span,
-body.dark-mode .autocomplete-item span,
-.modal-content .autocomplete-item span,
-.modal-content .autocomplete-item .autocomplete-item-text {
-  color: #f8fafc !important;
-  -webkit-text-fill-color: #f8fafc !important;
+body.dark-mode .autocomplete-item .autocomplete-item-text,
+body.admin-theme .autocomplete-item .autocomplete-item-text,
+body.staff-theme .autocomplete-item .autocomplete-item-text {
+  color: #f1f5f9 !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
 }
-body.admin-theme .autocomplete-item:hover,
-body.staff-theme .autocomplete-item:hover,
+
 body.dark-mode .autocomplete-item:hover,
-.modal-content .autocomplete-item:hover,
-body.admin-theme .autocomplete-item.active-item,
-body.staff-theme .autocomplete-item.active-item,
 body.dark-mode .autocomplete-item.active-item,
-.modal-content .autocomplete-item.active-item {
-  background-color: #334155 !important;
+body.dark-mode .autocomplete-item.selected,
+body.admin-theme .autocomplete-item:hover,
+body.admin-theme .autocomplete-item.active-item,
+body.admin-theme .autocomplete-item.selected,
+body.staff-theme .autocomplete-item:hover,
+body.staff-theme .autocomplete-item.active-item,
+body.staff-theme .autocomplete-item.selected {
+  background-color: #1e293b !important;
   color: #38bdf8 !important;
 }
-body.admin-theme .autocomplete-item:hover span,
-body.staff-theme .autocomplete-item:hover span,
+
 body.dark-mode .autocomplete-item:hover span,
-.modal-content .autocomplete-item:hover span,
-body.admin-theme .autocomplete-item.active-item span,
-body.staff-theme .autocomplete-item.active-item span,
 body.dark-mode .autocomplete-item.active-item span,
-.modal-content .autocomplete-item.active-item span,
-.modal-content .autocomplete-item:hover .autocomplete-item-text,
-.modal-content .autocomplete-item.active-item .autocomplete-item-text {
+body.dark-mode .autocomplete-item:hover .autocomplete-item-text,
+body.dark-mode .autocomplete-item.active-item .autocomplete-item-text,
+body.dark-mode .autocomplete-item:hover i,
+body.dark-mode .autocomplete-item.active-item i,
+body.admin-theme .autocomplete-item:hover span,
+body.admin-theme .autocomplete-item.active-item span,
+body.admin-theme .autocomplete-item:hover .autocomplete-item-text,
+body.admin-theme .autocomplete-item.active-item .autocomplete-item-text,
+body.admin-theme .autocomplete-item:hover i,
+body.admin-theme .autocomplete-item.active-item i,
+body.staff-theme .autocomplete-item:hover span,
+body.staff-theme .autocomplete-item.active-item span,
+body.staff-theme .autocomplete-item:hover .autocomplete-item-text,
+body.staff-theme .autocomplete-item.active-item .autocomplete-item-text,
+body.staff-theme .autocomplete-item:hover i,
+body.staff-theme .autocomplete-item.active-item i {
   color: #38bdf8 !important;
   -webkit-text-fill-color: #38bdf8 !important;
 }
-body.admin-theme .autocomplete-wrapper input[type="text"],
-body.staff-theme .autocomplete-wrapper input[type="text"],
+
+body.dark-mode .autocomplete-item-subtitle,
+body.admin-theme .autocomplete-item-subtitle,
+body.staff-theme .autocomplete-item-subtitle {
+  color: #94a3b8 !important;
+}
+
+body.dark-mode .autocomplete-wrapper .input-modern,
+body.dark-mode .autocomplete-wrapper .form-control-modern,
+body.dark-mode .autocomplete-wrapper .form-control,
 body.dark-mode .autocomplete-wrapper input[type="text"],
-.modal-content .autocomplete-wrapper input[type="text"] {
+body.admin-theme .autocomplete-wrapper .input-modern,
+body.admin-theme .autocomplete-wrapper .form-control-modern,
+body.admin-theme .autocomplete-wrapper .form-control,
+body.admin-theme .autocomplete-wrapper input[type="text"],
+body.staff-theme .autocomplete-wrapper .input-modern,
+body.staff-theme .autocomplete-wrapper .form-control-modern,
+body.staff-theme .autocomplete-wrapper .form-control,
+body.staff-theme .autocomplete-wrapper input[type="text"] {
   background-color: #0f172a !important;
   border-color: #334155 !important;
   color: #f1f5f9 !important;
   -webkit-text-fill-color: #f1f5f9 !important;
 }
-body.admin-theme .autocomplete-wrapper input[type="text"]::placeholder,
-body.staff-theme .autocomplete-wrapper input[type="text"]::placeholder,
+
+body.dark-mode .autocomplete-wrapper .input-modern::placeholder,
+body.dark-mode .autocomplete-wrapper .form-control-modern::placeholder,
+body.dark-mode .autocomplete-wrapper .form-control::placeholder,
 body.dark-mode .autocomplete-wrapper input[type="text"]::placeholder,
-.modal-content .autocomplete-wrapper input[type="text"]::placeholder {
-  color: #cbd5e1 !important;
-  -webkit-text-fill-color: #cbd5e1 !important;
-  opacity: 1 !important;
+body.admin-theme .autocomplete-wrapper .input-modern::placeholder,
+body.admin-theme .autocomplete-wrapper .form-control-modern::placeholder,
+body.admin-theme .autocomplete-wrapper .form-control::placeholder,
+body.admin-theme .autocomplete-wrapper input[type="text"]::placeholder,
+body.staff-theme .autocomplete-wrapper .input-modern::placeholder,
+body.staff-theme .autocomplete-wrapper .form-control-modern::placeholder,
+body.staff-theme .autocomplete-wrapper .form-control::placeholder,
+body.staff-theme .autocomplete-wrapper input[type="text"]::placeholder {
+  color: #94a3b8 !important;
+  -webkit-text-fill-color: #94a3b8 !important;
+  opacity: 0.80 !important;
+  font-weight: 400 !important;
 }
-body.admin-theme .autocomplete-item .badge,
-body.staff-theme .autocomplete-item .badge,
-body.dark-mode .autocomplete-item .badge,
-.modal-content .autocomplete-item .badge,
-.modal-content .autocomplete-item .autocomplete-badge {
+
+body.dark-mode .autocomplete-wrapper .input-modern:focus,
+body.dark-mode .autocomplete-wrapper .form-control-modern:focus,
+body.dark-mode .autocomplete-wrapper .form-control:focus,
+body.dark-mode .autocomplete-wrapper input[type="text"]:focus,
+body.admin-theme .autocomplete-wrapper .input-modern:focus,
+body.admin-theme .autocomplete-wrapper .form-control-modern:focus,
+body.admin-theme .autocomplete-wrapper .form-control:focus,
+body.admin-theme .autocomplete-wrapper input[type="text"]:focus,
+body.staff-theme .autocomplete-wrapper .input-modern:focus,
+body.staff-theme .autocomplete-wrapper .form-control-modern:focus,
+body.staff-theme .autocomplete-wrapper .form-control:focus,
+body.staff-theme .autocomplete-wrapper input[type="text"]:focus {
+  border-color: #ef5350 !important;
+  box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.25) !important;
+}
+
+/* Badge inside dropdown items (e.g. "Terminal", "Route", "Type") */
+body.dark-mode .autocomplete-item .badge.bg-light,
+body.dark-mode .autocomplete-item .badge.rounded-pill,
+body.dark-mode .autocomplete-item .autocomplete-badge,
+body.admin-theme .autocomplete-item .badge.bg-light,
+body.admin-theme .autocomplete-item .badge.rounded-pill,
+body.admin-theme .autocomplete-item .autocomplete-badge,
+body.staff-theme .autocomplete-item .badge.bg-light,
+body.staff-theme .autocomplete-item .badge.rounded-pill,
+body.staff-theme .autocomplete-item .autocomplete-badge {
   background-color: #334155 !important;
   color: #cbd5e1 !important;
   -webkit-text-fill-color: #cbd5e1 !important;
   border-color: #475569 !important;
 }
 
+/* Search highlight mark — keep visible on dark backgrounds */
+body.dark-mode .autocomplete-item mark,
+body.dark-mode .autocomplete-item mark.bg-warning,
+body.dark-mode .autocomplete-item mark.search-highlight,
+body.admin-theme .autocomplete-item mark,
+body.admin-theme .autocomplete-item mark.bg-warning,
+body.admin-theme .autocomplete-item mark.search-highlight,
+body.staff-theme .autocomplete-item mark,
+body.staff-theme .autocomplete-item mark.bg-warning,
+body.staff-theme .autocomplete-item mark.search-highlight {
+  background-color: rgba(251, 191, 36, 0.3) !important;
+  color: #fbbf24 !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+}
+
+/* Icons inside autocomplete items */
+body.dark-mode .autocomplete-item .text-primary,
+body.admin-theme .autocomplete-item .text-primary,
+body.staff-theme .autocomplete-item .text-primary {
+  color: #60a5fa !important;
+}
+
+/* Explicit Light Mode Overrides for Autocomplete Dropdown Popups — ONLY on guest theme when NOT dark */
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-dropdown {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
+}
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item {
+  color: #1e293b !important;
+  border-bottom-color: #f1f5f9 !important;
+}
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item span,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item .autocomplete-item-text {
+  color: #1e293b !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+/* ADMIN THEME (RED) — light mode only */
+body.admin-theme:not(.dark-mode) .autocomplete-item i,
+body.admin-theme:not(.dark-mode) .autocomplete-item .autocomplete-item-text i {
+  color: #c62828 !important;
+  -webkit-text-fill-color: #c62828 !important;
+}
+body.admin-theme:not(.dark-mode) .autocomplete-item:hover,
+body.admin-theme:not(.dark-mode) .autocomplete-item.active-item {
+  background-color: #fdecea !important;
+  color: #c62828 !important;
+}
+body.admin-theme:not(.dark-mode) .autocomplete-item:hover span,
+body.admin-theme:not(.dark-mode) .autocomplete-item.active-item span,
+body.admin-theme:not(.dark-mode) .autocomplete-item:hover .autocomplete-item-text,
+body.admin-theme:not(.dark-mode) .autocomplete-item.active-item .autocomplete-item-text,
+body.admin-theme:not(.dark-mode) .autocomplete-item:hover i,
+body.admin-theme:not(.dark-mode) .autocomplete-item.active-item i {
+  color: #c62828 !important;
+  -webkit-text-fill-color: #c62828 !important;
+}
+body.admin-theme:not(.dark-mode) .autocomplete-badge {
+  background-color: #fdecea !important;
+  color: #b71c1c !important;
+  -webkit-text-fill-color: #b71c1c !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+/* STAFF THEME (BLUE) — light mode only */
+body.staff-theme:not(.dark-mode) .autocomplete-item i,
+body.staff-theme:not(.dark-mode) .autocomplete-item .autocomplete-item-text i {
+  color: #1565c0 !important;
+  -webkit-text-fill-color: #1565c0 !important;
+}
+body.staff-theme:not(.dark-mode) .autocomplete-item:hover,
+body.staff-theme:not(.dark-mode) .autocomplete-item.active-item {
+  background-color: #e8effd !important;
+  color: #1565c0 !important;
+}
+body.staff-theme:not(.dark-mode) .autocomplete-item:hover span,
+body.staff-theme:not(.dark-mode) .autocomplete-item.active-item span,
+body.staff-theme:not(.dark-mode) .autocomplete-item:hover .autocomplete-item-text,
+body.staff-theme:not(.dark-mode) .autocomplete-item.active-item .autocomplete-item-text,
+body.staff-theme:not(.dark-mode) .autocomplete-item:hover i,
+body.staff-theme:not(.dark-mode) .autocomplete-item.active-item i {
+  color: #1565c0 !important;
+  -webkit-text-fill-color: #1565c0 !important;
+}
+body.staff-theme:not(.dark-mode) .autocomplete-badge {
+  background-color: #e8effd !important;
+  color: #1565c0 !important;
+  -webkit-text-fill-color: #1565c0 !important;
+  border: 1px solid #93c5fd !important;
+}
+
+/* GUEST THEME (ORANGE) — light mode only */
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item i,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item-text i {
+  color: #ea580c !important;
+  -webkit-text-fill-color: #ea580c !important;
+}
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item {
+  background-color: #fff7ed !important;
+  color: #ea580c !important;
+}
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover span,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item span,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover .autocomplete-item-text,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item .autocomplete-item-text,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover i,
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item i {
+  color: #ea580c !important;
+  -webkit-text-fill-color: #ea580c !important;
+}
+body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-badge {
+  background-color: #fff7ed !important;
+  color: #c2410c !important;
+  -webkit-text-fill-color: #c2410c !important;
+  border: 1px solid #ffedd5 !important;
+}
+
+/* Dark mode badge override (all themes) */
+body.dark-mode .autocomplete-item .badge,
+body.dark-mode .autocomplete-item .autocomplete-badge {
+  background-color: #334155 !important;
+  color: #cbd5e1 !important;
+  -webkit-text-fill-color: #cbd5e1 !important;
+  border-color: #475569 !important;
+}

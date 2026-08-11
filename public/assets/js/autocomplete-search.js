@@ -52,17 +52,12 @@
                 position: relative !important;
             }
             .autocomplete-dropdown {
-                background: #ffffff;
-                border: 1px solid #cbd5e1;
-                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
                 border-radius: 14px;
                 overflow-y: auto;
                 z-index: 9999999 !important;
                 padding: 6px;
             }
             .autocomplete-item {
-                color: #1e293b;
-                background: #ffffff;
                 border-radius: 8px;
                 margin-bottom: 2px;
             }
@@ -72,108 +67,179 @@
             .autocomplete-item:last-child {
                 margin-bottom: 0;
             }
-            .autocomplete-item:hover,
-            .autocomplete-item.active-item {
-                background-color: #f1f5f9;
-                color: #1e40af;
-            }
-            .autocomplete-item mark.search-highlight {
-                background: rgba(30, 64, 175, 0.12);
-                color: #1e40af;
-                border-radius: 3px;
-                padding: 0 3px;
-                font-weight: 700;
-            }
-            .autocomplete-badge {
-                background: #f1f5f9;
-                color: #475569;
-                border: 1px solid #e2e8f0;
-            }
 
             /* Dark Mode Rules for Autocomplete Dropdown & Items */
-            @media (prefers-color-scheme: dark) {
-                .autocomplete-dropdown {
-                    background: #1e293b !important;
-                    background-color: #1e293b !important;
-                    border-color: #334155 !important;
-                    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6) !important;
-                }
-                .autocomplete-item {
-                    color: #f8fafc !important;
-                    background: #1e293b !important;
-                    border-bottom-color: #334155 !important;
-                }
-                .autocomplete-item span,
-                .autocomplete-item .autocomplete-item-text {
-                    color: #f8fafc !important;
-                }
-                .autocomplete-item:hover,
-                .autocomplete-item.active-item {
-                    background-color: #334155 !important;
-                    color: #38bdf8 !important;
-                }
-                .autocomplete-item:hover span,
-                .autocomplete-item.active-item span,
-                .autocomplete-item:hover .autocomplete-item-text,
-                .autocomplete-item.active-item .autocomplete-item-text {
-                    color: #38bdf8 !important;
-                }
-                .autocomplete-item mark.search-highlight {
-                    background: rgba(251, 191, 36, 0.3) !important;
-                    color: #fbbf24 !important;
-                }
-                .autocomplete-badge {
-                    background: #334155 !important;
-                    color: #cbd5e1 !important;
-                    border-color: #475569 !important;
-                }
-            }
-
-            /* Explicit Dark Theme Overrides for Admin / Staff / Dark Modals */
-            body.admin-theme .autocomplete-dropdown,
-            body.staff-theme .autocomplete-dropdown,
             body.dark-mode .autocomplete-dropdown,
-            .modal-content .autocomplete-dropdown {
-                background: #1e293b !important;
-                border-color: #334155 !important;
+            body.admin-theme .autocomplete-dropdown,
+            body.staff-theme .autocomplete-dropdown {
+                background: #0f172a !important;
+                background-color: #0f172a !important;
+                border: 1px solid #334155 !important;
+                box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6) !important;
             }
-            body.admin-theme .autocomplete-item,
-            body.staff-theme .autocomplete-item,
             body.dark-mode .autocomplete-item,
-            .modal-content .autocomplete-item {
+            body.admin-theme .autocomplete-item,
+            body.staff-theme .autocomplete-item {
                 color: #f8fafc !important;
-                background: #1e293b !important;
+                background: #0f172a !important;
+                background-color: #0f172a !important;
+                border-bottom: 1px solid #1e293b !important;
             }
+            body.dark-mode .autocomplete-item span,
             body.admin-theme .autocomplete-item span,
             body.staff-theme .autocomplete-item span,
-            body.dark-mode .autocomplete-item span,
-            .modal-content .autocomplete-item span {
+            body.dark-mode .autocomplete-item .autocomplete-item-text,
+            body.admin-theme .autocomplete-item .autocomplete-item-text,
+            body.staff-theme .autocomplete-item .autocomplete-item-text {
                 color: #f8fafc !important;
+                -webkit-text-fill-color: #f8fafc !important;
             }
+            body.dark-mode .autocomplete-item:hover,
+            body.dark-mode .autocomplete-item.active-item,
+            body.dark-mode .autocomplete-item.selected,
             body.admin-theme .autocomplete-item:hover,
-            body.staff-theme .autocomplete-item:hover,
             body.admin-theme .autocomplete-item.active-item,
+            body.admin-theme .autocomplete-item.selected,
+            body.staff-theme .autocomplete-item:hover,
             body.staff-theme .autocomplete-item.active-item,
-            .modal-content .autocomplete-item:hover,
-            .modal-content .autocomplete-item.active-item {
-                background-color: #334155 !important;
+            body.staff-theme .autocomplete-item.selected {
+                background: #1e293b !important;
+                background-color: #1e293b !important;
                 color: #38bdf8 !important;
             }
+            body.dark-mode .autocomplete-item:hover span,
+            body.dark-mode .autocomplete-item.active-item span,
+            body.dark-mode .autocomplete-item:hover .autocomplete-item-text,
+            body.dark-mode .autocomplete-item.active-item .autocomplete-item-text,
+            body.dark-mode .autocomplete-item:hover i,
+            body.dark-mode .autocomplete-item.active-item i,
             body.admin-theme .autocomplete-item:hover span,
-            body.staff-theme .autocomplete-item:hover span,
             body.admin-theme .autocomplete-item.active-item span,
+            body.admin-theme .autocomplete-item:hover .autocomplete-item-text,
+            body.admin-theme .autocomplete-item.active-item .autocomplete-item-text,
+            body.admin-theme .autocomplete-item:hover i,
+            body.admin-theme .autocomplete-item.active-item i,
+            body.staff-theme .autocomplete-item:hover span,
             body.staff-theme .autocomplete-item.active-item span,
-            .modal-content .autocomplete-item:hover span,
-            .modal-content .autocomplete-item.active-item span {
+            body.staff-theme .autocomplete-item:hover .autocomplete-item-text,
+            body.staff-theme .autocomplete-item.active-item .autocomplete-item-text,
+            body.staff-theme .autocomplete-item:hover i,
+            body.staff-theme .autocomplete-item.active-item i {
                 color: #38bdf8 !important;
+                -webkit-text-fill-color: #38bdf8 !important;
             }
-            body.admin-theme .autocomplete-badge,
-            body.staff-theme .autocomplete-badge,
+            body.dark-mode .autocomplete-item mark.search-highlight,
+            body.admin-theme .autocomplete-item mark.search-highlight,
+            body.staff-theme .autocomplete-item mark.search-highlight {
+                background: rgba(251, 191, 36, 0.3) !important;
+                color: #fbbf24 !important;
+            }
             body.dark-mode .autocomplete-badge,
-            .modal-content .autocomplete-badge {
+            body.admin-theme .autocomplete-badge,
+            body.staff-theme .autocomplete-badge {
                 background: #334155 !important;
                 color: #cbd5e1 !important;
-                border-color: #475569 !important;
+                -webkit-text-fill-color: #cbd5e1 !important;
+                border: 1px solid #475569 !important;
+            }
+
+            /* Explicit Light Theme Styling — ONLY when on Guest theme without dark mode */
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-dropdown {
+                background: #ffffff !important;
+                background-color: #ffffff !important;
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
+            }
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item {
+                color: #1e293b !important;
+                background: #ffffff !important;
+                border-bottom: 1px solid #f1f5f9 !important;
+            }
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item span,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item .autocomplete-item-text {
+                color: #1e293b !important;
+                -webkit-text-fill-color: #1e293b !important;
+            }
+
+            /* --- ADMIN THEME (RED) — light mode only --- */
+            body.admin-theme:not(.dark-mode) .autocomplete-item i,
+            body.admin-theme:not(.dark-mode) .autocomplete-item .autocomplete-item-text i {
+                color: #c62828 !important;
+                -webkit-text-fill-color: #c62828 !important;
+            }
+            body.admin-theme:not(.dark-mode) .autocomplete-item:hover,
+            body.admin-theme:not(.dark-mode) .autocomplete-item.active-item {
+                background-color: #fdecea !important;
+                color: #c62828 !important;
+            }
+            body.admin-theme:not(.dark-mode) .autocomplete-item:hover span,
+            body.admin-theme:not(.dark-mode) .autocomplete-item.active-item span,
+            body.admin-theme:not(.dark-mode) .autocomplete-item:hover .autocomplete-item-text,
+            body.admin-theme:not(.dark-mode) .autocomplete-item.active-item .autocomplete-item-text,
+            body.admin-theme:not(.dark-mode) .autocomplete-item:hover i,
+            body.admin-theme:not(.dark-mode) .autocomplete-item.active-item i {
+                color: #c62828 !important;
+                -webkit-text-fill-color: #c62828 !important;
+            }
+            body.admin-theme:not(.dark-mode) .autocomplete-badge {
+                background: #fdecea !important;
+                color: #b71c1c !important;
+                -webkit-text-fill-color: #b71c1c !important;
+                border: 1px solid #fca5a5 !important;
+            }
+
+            /* --- STAFF THEME (BLUE) — light mode only --- */
+            body.staff-theme:not(.dark-mode) .autocomplete-item i,
+            body.staff-theme:not(.dark-mode) .autocomplete-item .autocomplete-item-text i {
+                color: #1565c0 !important;
+                -webkit-text-fill-color: #1565c0 !important;
+            }
+            body.staff-theme:not(.dark-mode) .autocomplete-item:hover,
+            body.staff-theme:not(.dark-mode) .autocomplete-item.active-item {
+                background-color: #e8effd !important;
+                color: #1565c0 !important;
+            }
+            body.staff-theme:not(.dark-mode) .autocomplete-item:hover span,
+            body.staff-theme:not(.dark-mode) .autocomplete-item.active-item span,
+            body.staff-theme:not(.dark-mode) .autocomplete-item:hover .autocomplete-item-text,
+            body.staff-theme:not(.dark-mode) .autocomplete-item.active-item .autocomplete-item-text,
+            body.staff-theme:not(.dark-mode) .autocomplete-item:hover i,
+            body.staff-theme:not(.dark-mode) .autocomplete-item.active-item i {
+                color: #1565c0 !important;
+                -webkit-text-fill-color: #1565c0 !important;
+            }
+            body.staff-theme:not(.dark-mode) .autocomplete-badge {
+                background: #e8effd !important;
+                color: #1565c0 !important;
+                -webkit-text-fill-color: #1565c0 !important;
+                border: 1px solid #93c5fd !important;
+            }
+
+            /* --- GUEST / DEFAULT THEME — light mode only --- */
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item i,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item-text i {
+                color: #ea580c !important;
+                -webkit-text-fill-color: #ea580c !important;
+            }
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item {
+                background-color: #fff7ed !important;
+                color: #ea580c !important;
+            }
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover span,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item span,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover .autocomplete-item-text,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item .autocomplete-item-text,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item:hover i,
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-item.active-item i {
+                color: #ea580c !important;
+                -webkit-text-fill-color: #ea580c !important;
+            }
+            body:not(.admin-theme):not(.staff-theme):not(.dark-mode) .autocomplete-badge {
+                background: #fff7ed !important;
+                color: #c2410c !important;
+                -webkit-text-fill-color: #c2410c !important;
+                border: 1px solid #ffedd5 !important;
             }
         `;
         document.head.appendChild(style);
@@ -248,7 +314,7 @@
                     return `
                         <div class="autocomplete-item" data-value="${loc}" data-index="${idx}"
                              style="cursor: pointer; font-size: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s ease;">
-                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="bi bi-geo-alt-fill text-primary opacity-75"></i>${displayName}</span>
+                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="bi bi-geo-alt-fill" style="color: #e11d48; font-size: 16px;"></i>${displayName}</span>
                             <span class="badge rounded-pill autocomplete-badge" style="font-size: 11px; padding: 4px 10px; font-weight: 600;">Recorded Destination</span>
                         </div>
                     `;
@@ -396,7 +462,6 @@
                 max-height: 230px;
                 overflow-y: auto;
                 display: none;
-                background-color: #ffffff;
                 box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
                 border-radius: 14px;
                 padding: 6px;
@@ -417,26 +482,33 @@
                 }
 
                 let categoryBadge = 'Option';
-                let iconClass = 'bi bi-geo-alt';
+                let iconClass = 'bi bi-geo-alt-fill';
+                let iconColor = '#2563eb';
 
                 if (fieldName.includes('role')) {
                     categoryBadge = 'Role';
-                    iconClass = 'bi bi-shield-lock';
+                    iconClass = 'bi bi-shield-lock-fill';
+                    iconColor = '#d97706';
                 } else if (fieldName.includes('route')) {
                     categoryBadge = 'Route';
-                    iconClass = 'bi bi-signpost-split';
+                    iconClass = 'bi bi-signpost-split-fill';
+                    iconColor = '#0284c7';
                 } else if (fieldName.includes('terminal')) {
                     categoryBadge = 'Terminal';
-                    iconClass = 'bi bi-building';
+                    iconClass = 'bi bi-building-fill';
+                    iconColor = '#7c3aed';
                 } else if (fieldName.includes('type')) {
                     categoryBadge = 'Type';
-                    iconClass = 'bi bi-truck-front';
+                    iconClass = 'bi bi-truck-front-fill';
+                    iconColor = '#c62828';
                 } else if (fieldName.includes('status')) {
                     categoryBadge = 'Status';
-                    iconClass = 'bi bi-check-circle';
+                    iconClass = 'bi bi-check-circle-fill';
+                    iconColor = '#16a34a';
                 } else if (fieldName.includes('destination')) {
                     categoryBadge = 'Destination';
-                    iconClass = 'bi bi-geo-alt';
+                    iconClass = 'bi bi-geo-alt-fill';
+                    iconColor = '#e11d48';
                 }
 
                 dropdown.innerHTML = filtered.map((opt, idx) => {
@@ -449,7 +521,7 @@
                     return `
                         <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"
                              style="cursor: pointer; font-size: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s ease;">
-                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="${iconClass} text-primary opacity-75"></i>${displayName}</span>
+                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>${displayName}</span>
                             <span class="badge rounded-pill autocomplete-badge" style="font-size: 11px; padding: 4px 10px; font-weight: 600;">${categoryBadge}</span>
                         </div>
                     `;

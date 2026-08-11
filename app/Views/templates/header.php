@@ -112,6 +112,8 @@
             border: 1px solid var(--border) !important;
             color: var(--text-main) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
         }
 
         body.admin-theme .card.text-white {
@@ -210,6 +212,8 @@
             border: 1px solid var(--border) !important;
             color: var(--text-main) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
         }
 
         body.staff-theme .card.text-white {
@@ -376,16 +380,18 @@
         }
 
         /* =================================================================
-           DARK MODE — respects system preference, overrides !important rules
+           DARK MODE & GLASSMORPHISM — Admin / Staff / Dark Mode
            ================================================================= */
-        @media (prefers-color-scheme: dark) {
-            html, body {
-                background-color: #0f172a !important;
-            }
-            body {
-                background-color: #0f172a !important;
-                color: #f1f5f9 !important;
-            }
+        html, body {
+            background-color: #0f172a !important;
+        }
+        body,
+        body.admin-theme,
+        body.staff-theme,
+        body.dark-mode {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
             body.admin-theme .footer,
             body.staff-theme .footer {
                 background-color: #0f172a !important;
@@ -692,8 +698,6 @@
             body.staff-theme .stat-card-link {
                 color: var(--primary) !important;
             }
-
-        }
 
         /*
          * Bootstrap appends .modal-backdrop directly to <body>, while page
