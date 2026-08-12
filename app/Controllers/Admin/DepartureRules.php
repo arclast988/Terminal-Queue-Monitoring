@@ -194,6 +194,8 @@ class DepartureRules extends BaseController
 
         $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . date('H:i', strtotime($timeFrom)) . ' - ' . date('H:i', strtotime($timeTo)) . ', ' . $waitMinutes . ' min).');
 
+        (new \App\Models\QueueModel())->recalculateSchedule();
+
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule added successfully.');
     }
 
@@ -301,6 +303,8 @@ class DepartureRules extends BaseController
 
         $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . date('H:i', strtotime($oldRule['time_from'])) . '-' . date('H:i', strtotime($oldRule['time_to'])) . '). After: ' . $waitMinutes . ' min (' . date('H:i', strtotime($timeFrom)) . '-' . date('H:i', strtotime($timeTo)) . ').');
 
+        (new \App\Models\QueueModel())->recalculateSchedule();
+
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule updated successfully.');
     }
 
@@ -316,6 +320,7 @@ class DepartureRules extends BaseController
             if ($rule) {
                 $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
             }
+            (new \App\Models\QueueModel())->recalculateSchedule();
             return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule deleted successfully.');
         }
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Failed to delete rule.');

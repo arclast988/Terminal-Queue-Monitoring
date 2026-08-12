@@ -74,13 +74,8 @@ class QueueModel extends Model
                     return $cmp !== 0 ? $cmp : ((int) $a['id'] <=> (int) $b['id']);
                 });
 
-                // Determine a consistent departure interval for this destination
-                // group. Resolve ONCE using the current time so every vehicle
-                // gets identical spacing, even if their individual departure
-                // slots cross a rule time-boundary.
                 $terminalId = (int) ($items[0]['terminal_id'] ?? 1);
                 $groupRouteIds = array_values(array_unique(array_column($items, 'route_id')));
-                $waitMinutes = $this->resolveGroupInterval($departureRuleModel, date('H:i:s'), $terminalId, $groupRouteIds);
 
                 $prevEstDeparture = null;
 
@@ -90,10 +85,13 @@ class QueueModel extends Model
                         if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])) {
                             $estTime = $item['estimated_departure'];
                         } else {
+                            $waitMinutes = $this->resolveGroupInterval($departureRuleModel, date('H:i:s'), $terminalId, $groupRouteIds);
                             $estTime = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
                         }
                     } else {
-                        // Subsequent vehicles: offset from previous vehicle's slot
+                        // Subsequent vehicles: offset from previous vehicle's slot using the departure rule active at that previous departure time
+                        $prevTimeStr = date('H:i:s', strtotime($prevEstDeparture));
+                        $waitMinutes = $this->resolveGroupInterval($departureRuleModel, $prevTimeStr, $terminalId, $groupRouteIds);
                         $baseTimestamp = strtotime($prevEstDeparture);
                         $estTime = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes", $baseTimestamp));
                     }

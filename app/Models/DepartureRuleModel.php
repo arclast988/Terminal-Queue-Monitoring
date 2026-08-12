@@ -31,12 +31,18 @@ class DepartureRuleModel extends Model
      */
     public function getRuleForTime(string $time, int $terminalId, ?int $routeId = null): array
     {
+        $timeStr = date('H:i:s', strtotime($time));
+
         // 1. Route-specific rule (destination override).
         if ($routeId !== null) {
-            $rule = $this->where('route_id', $routeId)
-                ->where('time_from <=', $time)
-                ->where('time_to >', $time)
-                ->first();
+            $builder = $this->where('route_id', $routeId)
+                ->where('time_from <=', $timeStr);
+            if ($timeStr >= '23:59:00') {
+                $builder->where('time_to >=', '23:59:00');
+            } else {
+                $builder->where('time_to >', $timeStr);
+            }
+            $rule = $builder->first();
 
             if ($rule) {
                 return $rule;
@@ -44,11 +50,15 @@ class DepartureRuleModel extends Model
         }
 
         // 2. Terminal-wide default rule (no destination attached).
-        $rule = $this->where('terminal_id', $terminalId)
+        $builder = $this->where('terminal_id', $terminalId)
             ->where('route_id', null)
-            ->where('time_from <=', $time)
-            ->where('time_to >', $time)
-            ->first();
+            ->where('time_from <=', $timeStr);
+        if ($timeStr >= '23:59:00') {
+            $builder->where('time_to >=', '23:59:00');
+        } else {
+            $builder->where('time_to >', $timeStr);
+        }
+        $rule = $builder->first();
 
         if ($rule) {
             return $rule;
