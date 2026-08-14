@@ -43,11 +43,12 @@ class Vehicles extends BaseController
     public function store()
     {
         $rules = [
-            'plate_number' => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number]',
-            'driver_name'  => 'required|min_length[3]|max_length[100]',
-            'type'         => 'required|max_length[50]',
-            'capacity'     => 'required|integer|greater_than[0]',
-            'route_id'     => 'required|integer',
+            'plate_number'  => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number]',
+            'operator_name' => 'required|min_length[2]|max_length[100]',
+            'driver_name'   => 'required|min_length[3]|max_length[100]',
+            'type'          => 'required|max_length[50]',
+            'capacity'      => 'required|integer|greater_than[0]',
+            'route_id'      => 'required|integer',
         ];
 
         if (!$this->validate($rules)) {
@@ -67,16 +68,17 @@ class Vehicles extends BaseController
         }
 
         $this->vehicleModel->save([
-            'plate_number' => $this->request->getPost('plate_number'),
-            'driver_name'  => $this->request->getPost('driver_name'),
-            'type'         => $vehicleType,
-            'capacity'     => $this->request->getPost('capacity'),
-            'status'       => 'active',
-            'route_id'     => $routeId,
+            'plate_number'  => $this->request->getPost('plate_number'),
+            'operator_name' => $this->request->getPost('operator_name'),
+            'driver_name'   => $this->request->getPost('driver_name'),
+            'type'          => $vehicleType,
+            'capacity'      => $this->request->getPost('capacity'),
+            'status'        => 'active',
+            'route_id'      => $routeId,
         ]);
 
         $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
-        $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $this->request->getPost('plate_number') . ' (' . $vehicleType . ') - Driver: ' . $this->request->getPost('driver_name') . ' - Route: ' . $routeLabel);
+        $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $this->request->getPost('plate_number') . ' (' . $vehicleType . ') - Operator: ' . $this->request->getPost('operator_name') . ' - Driver: ' . $this->request->getPost('driver_name') . ' - Route: ' . $routeLabel);
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle registered successfully.');
     }
@@ -106,12 +108,13 @@ class Vehicles extends BaseController
         }
 
         $rules = [
-            'plate_number' => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number,id,' . $id . ']',
-            'driver_name'  => 'required|min_length[3]|max_length[100]',
-            'type'         => 'required|max_length[50]',
-            'capacity'     => 'required|integer|greater_than[0]',
-            'status'       => 'required|in_list[active,maintenance]',
-            'route_id'     => 'required|integer',
+            'plate_number'  => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number,id,' . $id . ']',
+            'operator_name' => 'required|min_length[2]|max_length[100]',
+            'driver_name'   => 'required|min_length[3]|max_length[100]',
+            'type'          => 'required|max_length[50]',
+            'capacity'      => 'required|integer|greater_than[0]',
+            'status'        => 'required|in_list[active,maintenance]',
+            'route_id'      => 'required|integer',
         ];
 
         if (!$this->validate($rules)) {
@@ -131,12 +134,13 @@ class Vehicles extends BaseController
         }
 
         $this->vehicleModel->update($id, [
-            'plate_number' => $this->request->getPost('plate_number'),
-            'driver_name'  => $this->request->getPost('driver_name'),
-            'type'         => $vehicleType,
-            'capacity'     => $this->request->getPost('capacity'),
-            'status'       => $this->request->getPost('status'),
-            'route_id'     => $routeId,
+            'plate_number'  => $this->request->getPost('plate_number'),
+            'operator_name' => $this->request->getPost('operator_name'),
+            'driver_name'   => $this->request->getPost('driver_name'),
+            'type'          => $vehicleType,
+            'capacity'      => $this->request->getPost('capacity'),
+            'status'        => $this->request->getPost('status'),
+            'route_id'      => $routeId,
         ]);
 
         // Log route change details if route was reassigned

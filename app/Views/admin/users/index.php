@@ -45,9 +45,9 @@ foreach ($users as $u) {
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <div class="input-group-modern me-3" style="max-width: 280px;">
-                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                <input type="text" class="input-modern border-start-0 ps-0" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)">
+            <div class="user-search-group me-3">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)">
             </div>
             
             <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
@@ -202,6 +202,60 @@ foreach ($users as $u) {
     #users-table th,
     #users-table td {
         vertical-align: middle;
+    }
+
+    /* Search Input Capsule and Alignments */
+    .user-search-group {
+        display: flex !important;
+        align-items: center !important;
+        max-width: 280px;
+        width: 100%;
+        position: relative;
+    }
+
+    .user-search-group .input-group-text {
+        height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 6px 0 6px 14px !important;
+        border: 2px solid #cbd5e1 !important;
+        border-right: none !important;
+        border-top-left-radius: 9999px !important;
+        border-bottom-left-radius: 9999px !important;
+        background-color: var(--card-bg, #fff) !important;
+        color: #64748b !important;
+        font-size: 14px !important;
+        transition: border-color 0.2s ease;
+    }
+
+    .user-search-group .user-search-input {
+        height: 38px !important;
+        border: 2px solid #cbd5e1 !important;
+        border-left: none !important;
+        border-top-right-radius: 9999px !important;
+        border-bottom-right-radius: 9999px !important;
+        padding: 6px 14px 6px 6px !important;
+        font-size: 14px !important;
+        outline: none !important;
+        background-color: var(--card-bg, #fff) !important;
+        color: var(--text-main, #1e293b) !important;
+        width: 100% !important;
+        transition: border-color 0.2s ease;
+    }
+
+    .user-search-group:focus-within .input-group-text,
+    .user-search-group:focus-within .user-search-input {
+        border-color: var(--primary-red, #dc2626) !important;
+    }
+
+    @media (max-width: 576px) {
+        .user-search-group {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin-right: 0 !important;
+            margin-bottom: 8px !important;
+        }
     }
 
     /* Avatar Circles styling */

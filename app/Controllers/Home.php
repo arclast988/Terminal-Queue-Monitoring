@@ -9,6 +9,15 @@ class Home extends BaseController
 {
     public function index()
     {
+        if (session()->get('isLoggedIn')) {
+            $role = session()->get('role');
+            if (in_array($role, ['super_admin', 'admin'], true)) {
+                return redirect()->to('/admin/dashboard');
+            } elseif ($role === 'staff') {
+                return redirect()->to('/staff/dashboard');
+            }
+        }
+
         helper('fare');
 
         $queueModel = new QueueModel();
@@ -21,7 +30,7 @@ class Home extends BaseController
             // Table may not exist yet; show guest page without announcements
         }
 
-        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
+        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
             ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('queue.position', 'ASC')
@@ -62,7 +71,7 @@ class Home extends BaseController
         if (! is_array($payload)) {
             $queueModel = new QueueModel();
 
-            $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity, vehicles.driver_name')
+            $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('queue.position', 'ASC')

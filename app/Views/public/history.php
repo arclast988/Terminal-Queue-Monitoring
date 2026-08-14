@@ -546,7 +546,6 @@
                         <th>Driver</th>
                         <th>Type</th>
                         <th>Route</th>
-                        <th>Departure Time</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -581,19 +580,11 @@
                                         <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
                                     </div>
                                 </td>
-                                <td data-label="Departure Time">
-                                    <span class="time-display">
-                                        <?= date('g:i A', strtotime($item['departure_time'])) ?>
-                                    </span>
-                                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
-                                        <?= date('M d, Y', strtotime($item['departure_time'])) ?>
-                                    </div>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5">
+                            <td colspan="4">
                                 <div class="empty-state">
                                     <div class="empty-icon">
                                         <i class="fas fa-history"></i>

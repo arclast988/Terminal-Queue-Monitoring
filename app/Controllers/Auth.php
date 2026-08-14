@@ -7,8 +7,8 @@ use App\Models\UserModel;
 
 class Auth extends BaseController
 {
-    private const MAX_ATTEMPTS = 5;
-    private const LOCKOUT_MINUTES = 15;
+    private const MAX_ATTEMPTS = 20;
+    private const LOCKOUT_SECONDS = 30;
 
     public function index()
     {
@@ -34,6 +34,16 @@ class Auth extends BaseController
                 return redirect()->to('/login');
             }
 
+            // Reset attempt counter if previous lockout expired
+            if (!empty($user['locked_until']) && strtotime($user['locked_until']) <= time()) {
+                $model->update($user['id'], [
+                    'login_attempts' => 0,
+                    'locked_until'   => null,
+                ]);
+                $user['login_attempts'] = 0;
+                $user['locked_until'] = null;
+            }
+
             $pwdVerify = password_verify($password, $user['password_hash']);
 
             if ($pwdVerify) {
@@ -41,6 +51,8 @@ class Auth extends BaseController
                     'login_attempts' => 0,
                     'locked_until' => null,
                 ]);
+                $cache = \Config\Services::cache();
+                $cache->delete($this->cacheKey());
 
                 $ses_data = [
                     'id' => $user['id'],
@@ -60,12 +72,12 @@ class Auth extends BaseController
             $attempts = $user['login_attempts'] + 1;
             $data = ['login_attempts' => $attempts];
             if ($attempts >= self::MAX_ATTEMPTS) {
-                $data['locked_until'] = date('Y-m-d H:i:s', strtotime('+' . self::LOCKOUT_MINUTES . ' minutes'));
+                $data['locked_until'] = date('Y-m-d H:i:s', time() + self::LOCKOUT_SECONDS);
             }
             $model->update($user['id'], $data);
 
             $msg = $attempts >= self::MAX_ATTEMPTS
-                ? "Account locked due to too many failed attempts. Try again in " . self::LOCKOUT_MINUTES . " minutes."
+                ? "Account locked due to too many failed attempts. Try again in " . self::LOCKOUT_SECONDS . " seconds."
                 : 'Invalid username or password.';
 
             $session->setFlashdata('error', $msg);
@@ -96,9 +108,11 @@ class Auth extends BaseController
 
     private function getLockoutRemaining(?string $lockedUntil): string
     {
-        $remaining = strtotime($lockedUntil) - time();
-        $mins = ceil($remaining / 60);
-        return $mins >= 2 ? "{$mins} minutes" : "{$remaining} seconds";
+        if (!$lockedUntil) {
+            return '0 seconds';
+        }
+        $remaining = max(0, strtotime($lockedUntil) - time());
+        return "{$remaining} seconds";
     }
 
     private function cacheKey(): string
@@ -112,19 +126,24 @@ class Auth extends BaseController
         $key = $this->cacheKey();
         $data = $cache->get($key);
 
-        if (!$data || !isset($data['attempts'])) {
+        if (!is_array($data) || !isset($data['attempts'])) {
             return false;
         }
 
-        if ($data['attempts'] < self::MAX_ATTEMPTS) {
+        if (isset($data['locked_until'])) {
+            if ($data['locked_until'] > time()) {
+                return true;
+            }
+            $cache->delete($key);
             return false;
         }
 
-        if (!isset($data['locked_until'])) {
+        if (isset($data['first_attempt']) && (time() - $data['first_attempt'] > self::LOCKOUT_SECONDS)) {
+            $cache->delete($key);
             return false;
         }
 
-        return $data['locked_until'] > time();
+        return false;
     }
 
     private function getIpLockoutRemaining(): string
@@ -133,9 +152,9 @@ class Auth extends BaseController
         $key = $this->cacheKey();
         $data = $cache->get($key);
 
-        $remaining = ($data['locked_until'] ?? time()) - time();
-        $mins = ceil($remaining / 60);
-        return $mins >= 2 ? "{$mins} minutes" : "{$remaining} seconds";
+        $remaining = is_array($data) && isset($data['locked_until']) ? ($data['locked_until'] - time()) : 0;
+        $remaining = max(0, $remaining);
+        return "{$remaining} seconds";
     }
 
     private function trackIpAttempt(): void
@@ -143,15 +162,26 @@ class Auth extends BaseController
         $cache = \Config\Services::cache();
         $key = $this->cacheKey();
         $data = $cache->get($key);
+        $now = time();
 
-        $attempts = ($data['attempts'] ?? 0) + 1;
-        $entry = ['attempts' => $attempts];
-
-        if ($attempts >= self::MAX_ATTEMPTS) {
-            $entry['locked_until'] = time() + (self::LOCKOUT_MINUTES * 60);
+        if (!is_array($data) || (isset($data['locked_until']) && $data['locked_until'] <= $now) || (isset($data['first_attempt']) && ($now - $data['first_attempt'] > self::LOCKOUT_SECONDS))) {
+            $attempts = 1;
+            $firstAttempt = $now;
+        } else {
+            $attempts = ($data['attempts'] ?? 0) + 1;
+            $firstAttempt = $data['first_attempt'] ?? $now;
         }
 
-        $cache->save($key, $entry, self::LOCKOUT_MINUTES * 60);
+        $entry = [
+            'attempts'      => $attempts,
+            'first_attempt' => $firstAttempt,
+        ];
+
+        if ($attempts >= self::MAX_ATTEMPTS) {
+            $entry['locked_until'] = $now + self::LOCKOUT_SECONDS;
+        }
+
+        $cache->save($key, $entry, self::LOCKOUT_SECONDS * 2);
     }
 
     public function forgotPassword()

@@ -80,14 +80,19 @@
             <?= csrf_field() ?>
             
             <div class="row">
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="plate_number" class="form-label-modern">Plate Number <span class="text-danger">*</span></label>
                     <input type="text" class="input-modern" id="plate_number" name="plate_number" placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?? esc($vehicle['plate_number']) ?>" required>
                     <div class="form-text-modern">Unique identifier (required)</div>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
+                    <label for="operator_name" class="form-label-modern">Operator Name <span class="text-danger">*</span></label>
+                    <input type="text" class="input-modern" id="operator_name" name="operator_name" placeholder="E.G. LETRANSCO" value="<?= old('operator_name') ?? esc($vehicle['operator_name'] ?? '') ?>" required>
+                    <div class="form-text-modern">Operator's full name</div>
+                </div>
+                <div class="col-md-4 mb-3">
                     <label for="driver_name" class="form-label-modern">Driver Name <span class="text-danger">*</span></label>
-                    <input type="text" class="input-modern" id="driver_name" name="driver_name" placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?? esc($vehicle['driver_name']) ?>" required>
+                    <input type="text" class="input-modern" id="driver_name" name="driver_name" placeholder="e.g. Pedro Santos" value="<?= old('driver_name') ?? esc($vehicle['driver_name']) ?>" required>
                     <div class="form-text-modern">Driver's full name</div>
                 </div>
             </div>

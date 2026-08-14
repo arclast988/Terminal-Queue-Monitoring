@@ -172,12 +172,6 @@
         background: #8B0000 !important;
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
-    .guest-header .nav-menu a.login-btn.btn-success {
-        background: #059669;
-    }
-    .guest-header .nav-menu a.login-btn.btn-success:hover {
-        background: #047857 !important;
-    }
     /* --- Mobile Toggle --- */
     .guest-header .mobile-toggle {
         display: none;
@@ -340,7 +334,7 @@
             elseif (session()->get('role') == 'staff')
                 $dashboardUrl = '/staff/dashboard';
             ?>
-            <a href="<?= base_url($dashboardUrl) ?>" class="login-btn btn-success" style="margin-left: 10px;">
+            <a href="<?= base_url($dashboardUrl) ?>" class="login-btn" style="margin-left: 10px;">
                 <i class="fas fa-th-large"></i> Dashboard
             </a>
             <a href="<?= base_url('logout') ?>"

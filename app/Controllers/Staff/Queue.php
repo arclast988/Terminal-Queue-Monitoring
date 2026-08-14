@@ -65,7 +65,7 @@ class Queue extends BaseController
         $assignedRouteIds = $this->getAssignedRouteIds();
 
         // Build queue query
-        $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, vehicles.capacity')
+        $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, vehicles.capacity')
             ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding']);
 
@@ -358,5 +358,39 @@ class Queue extends BaseController
             'capacity' => (int)$vehicle['capacity'],
             'is_full' => $newCount >= (int)$vehicle['capacity']
         ]);
+    }
+
+    public function updateDriver($id)
+    {
+        $queueItem = $this->queueModel->find($id);
+        if (!$queueItem) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Queue item not found.']);
+        }
+
+        if (!$this->hasRouteAccess((int) $queueItem['route_id'])) {
+            $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to change driver on unassigned route ID ' . $queueItem['route_id'] . '.');
+            return $this->response->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
+        }
+
+        $driverName = trim((string) $this->request->getPost('driver_name'));
+        if ($driverName === '' || strlen($driverName) < 2 || strlen($driverName) > 100) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Driver name must be between 2 and 100 characters.']);
+        }
+
+        $vehicle = $this->vehicleModel->find($queueItem['vehicle_id']);
+        if (!$vehicle) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Vehicle not found.']);
+        }
+
+        $this->vehicleModel->update($vehicle['id'], ['driver_name' => $driverName]);
+
+        $this->logActivity('Update driver', 'Updated driver for ' . ($vehicle['plate_number'] ?? 'vehicle') . ' (' . ($vehicle['type'] ?? 'N/A') . ') to ' . $driverName . '.');
+        $this->broadcastUpdate('queue_update', [
+            'action' => 'driver_change',
+            'id' => (int) $id,
+            'driver_name' => $driverName,
+        ]);
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Driver updated to ' . $driverName . '.']);
     }
 }

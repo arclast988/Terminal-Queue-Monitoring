@@ -57,17 +57,22 @@
         <form action="<?= base_url('admin/vehicles/store') ?>" method="post">
             <?= csrf_field() ?>
             <div class="row g-3 align-items-end">
-                <div class="col-12 col-sm-6 col-xl-2">
+                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                    <label for="operator_name" class="form-label-modern">Operator Name</label>
+                    <input type="text" class="form-control-modern" id="operator_name" name="operator_name"
+                        placeholder="E.G. LETRANSCO" value="<?= old('operator_name') ?>" required>
+                </div>
+                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="driver_name" class="form-label-modern">Driver Name</label>
                     <input type="text" class="form-control-modern" id="driver_name" name="driver_name"
-                        placeholder="e.g. Juan Dela Cruz" value="<?= old('driver_name') ?>" required>
+                        placeholder="e.g. Pedro Santos" value="<?= old('driver_name') ?>" required>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-2">
+                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="plate_number" class="form-label-modern">Plate Number</label>
                     <input type="text" class="form-control-modern" id="plate_number" name="plate_number"
                         placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-2">
+                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="type" class="form-label-modern">Type</label>
                     <select class="form-select-modern" id="type" name="type" required>
                         <option value="">-- Select Type --</option>
@@ -76,7 +81,7 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-3">
+                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="route_id" class="form-label-modern">Assigned Route</label>
                     <select class="form-select-modern" id="route_id" name="route_id" required>
                         <option value="">-- Select Route --</option>
@@ -90,12 +95,12 @@
                         <?php endif; ?>
                     </select>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-1">
+                <div class="col-12 col-sm-6 col-md-2 col-xl-1">
                     <label for="capacity" class="form-label-modern">Capacity</label>
                     <input type="number" class="form-control-modern" id="capacity" name="capacity" placeholder="16"
                         value="<?= old('capacity') ?>" min="1" required>
                 </div>
-                <div class="col-12 col-sm-6 col-xl-1">
+                <div class="col-12 col-sm-6 col-md-2 col-xl-1">
                     <button type="submit" class="btn-modern btn-modern-primary w-100">
                         <i class="bi bi-plus-lg"></i> Add
                     </button>
@@ -131,7 +136,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <div class="vehicle-search-group me-3">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate or driver..." onkeyup="filterVehicles(currentFilter)">
+                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate, operator, or driver..." onkeyup="filterVehicles(currentFilter)">
             </div>
             
             <span class="filter-label-text">
@@ -184,6 +189,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                     <tr>
                         <th>#</th>
                         <th>Plate Number</th>
+                        <th>Operator Name</th>
                         <th>Driver Name</th>
                         <th>Vehicle Type</th>
                         <th>Assigned Route</th>
@@ -200,6 +206,12 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 <td data-label="#" class="row-number"><strong><?= $i + 1 ?></strong></td>
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($vehicle['plate_number']) ?></span>
+                                </td>
+                                <td data-label="Operator Name">
+                                    <div class="driver-cell">
+                                        <i class="bi bi-person-fill"></i>
+                                        <?= esc($vehicle['operator_name'] ?? '—') ?>
+                                    </div>
                                 </td>
                                 <td data-label="Driver Name">
                                     <div class="driver-cell">
@@ -260,7 +272,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="no-vehicles-row">
-                            <td colspan="9" style="text-align:center; padding:40px; color:var(--slate-500);">
+                            <td colspan="10" style="text-align:center; padding:40px; color:var(--slate-500);">
                                 <i class="bi bi-inbox" style="font-size:32px; opacity:0.3; margin-bottom:8px;"></i>
                                 <div>No vehicles registered yet.</div>
                             </td>

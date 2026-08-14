@@ -170,9 +170,6 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
-        .nav-menu a.login-btn.btn-success { background: #059669; }
-        .nav-menu a.login-btn.btn-success:hover { background: #047857 !important; }
-
         /* --- Mobile Toggle --- */
         .mobile-toggle {
             display: none;
@@ -684,9 +681,6 @@
 
             .nav-menu a.login-btn { background: #1e3a8a; color: white !important; text-align: center; justify-content: center; margin-top: 10px; margin-left: 0 !important; }
             .nav-menu a.login-btn:hover, .nav-menu a.login-btn:active { background: #172554 !important; transform: scale(0.98); }
-            .nav-menu a.login-btn.btn-success { background: #059669; }
-            .nav-menu a.login-btn.btn-success:hover, .nav-menu a.login-btn.btn-success:active { background: #047857 !important; }
-
             .mobile-toggle {
                 display: block;
                 z-index: 1004;

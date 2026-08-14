@@ -168,6 +168,71 @@
         pointer-events: auto !important;
     }
 
+    /* Change Driver Modal */
+    #changeDriverModal.fade.show {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 1060 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100vh !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        pointer-events: none !important;
+    }
+
+    #changeDriverModal .modal-dialog {
+        position: relative !important;
+        margin: auto !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: auto !important;
+    }
+
+    #changeDriverModal .modal-content {
+        background-color: var(--surface, #ffffff) !important;
+        border: 1px solid var(--border, #e2e8f0) !important;
+        border-radius: 8px !important;
+        pointer-events: auto !important;
+    }
+
+    #changeDriverModal .modal-body {
+        background-color: var(--surface, #ffffff) !important;
+        color: var(--text-main, #1e293b) !important;
+        pointer-events: auto !important;
+    }
+
+    #changeDriverModal .modal-title {
+        color: var(--text-main, #1e293b);
+        font-weight: 700;
+    }
+
+    #changeDriverModal .form-label {
+        color: var(--text-main, #1e293b) !important;
+        font-weight: 600;
+    }
+
+    #changeDriverModal .modal-header {
+        border-bottom-color: var(--border, #e2e8f0);
+    }
+
+    #changeDriverModal .modal-footer {
+        border-top-color: var(--border, #e2e8f0);
+    }
+
+    #changeDriverModal .btn-close {
+        opacity: 0.8;
+    }
+
     /* Modern Queue Card Hover Effects & Transitions */
     .q-card {
         background: var(--surface, #ffffff);
@@ -445,6 +510,23 @@
                     </div>
                 </div>
 
+                <!-- Driver row -->
+                <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex align-items-center gap-2">
+                    <span class="text-muted small flex-shrink-0">Driver</span>
+                    <span id="driver-name-<?= $item['id'] ?>" class="fw-semibold small flex-grow-1 text-truncate">
+                        <i class="bi bi-person-badge me-1"></i><?= esc($item['driver_name'] ?? '—') ?>
+                    </span>
+                    <button type="button"
+                        class="btn-modern btn-modern-outline btn-modern-sm flex-shrink-0"
+                        data-action="change-driver"
+                        data-id="<?= $item['id'] ?>"
+                        data-plate="<?= esc($item['plate_number'], 'attr') ?>"
+                        data-driver="<?= esc($item['driver_name'] ?? '', 'attr') ?>"
+                        title="Change Driver">
+                        <i class="bi bi-person-gear me-1"></i> Change Driver
+                    </button>
+                </div>
+
                 <!-- Passenger counter -->
                 <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex align-items-center gap-2">
                     <span class="text-muted small flex-shrink-0">Passengers</span>
@@ -577,6 +659,37 @@
     </div>
 </div>
 
+<!-- Change Driver Modal -->
+<div class="modal fade" id="changeDriverModal" tabindex="-1" aria-labelledby="changeDriverModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <form id="changeDriverForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="changeDriverModalLabel"><i class="bi bi-person-badge me-2"></i>Change Driver</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label-modern">Vehicle</label>
+                        <div class="form-control bg-light" id="changeDriverVehicle" style="pointer-events:none;border-radius:var(--radius-md);"></div>
+                    </div>
+                    <div class="mb-0">
+                        <label for="changeDriverInput" class="form-label-modern">Driver Name</label>
+                        <input type="text" class="form-control-modern" id="changeDriverInput" name="driver_name"
+                            minlength="2" maxlength="100" autocomplete="off" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modern btn-modern-primary btn-modern-sm" id="changeDriverSubmitBtn">
+                        <i class="bi bi-check-lg me-1"></i> Save Driver
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Departure Warning Modal -->
 <div class="modal fade" id="departureWarningModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -659,6 +772,79 @@
             }
         }
     });
+
+    var changeDriverModalEl = document.getElementById('changeDriverModal');
+    var changeDriverForm = document.getElementById('changeDriverForm');
+    var changeDriverInput = document.getElementById('changeDriverInput');
+    var changeDriverVehicle = document.getElementById('changeDriverVehicle');
+    var changeDriverQueueId = null;
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-action="change-driver"]');
+        if (!btn) return;
+        changeDriverQueueId = btn.getAttribute('data-id');
+        if (changeDriverVehicle) changeDriverVehicle.textContent = btn.getAttribute('data-plate') || '';
+        if (changeDriverInput) {
+            changeDriverInput.value = btn.getAttribute('data-driver') || '';
+            changeDriverInput.classList.remove('is-invalid');
+        }
+        if (changeDriverModalEl && typeof bootstrap !== 'undefined') {
+            var modal = bootstrap.Modal.getInstance(changeDriverModalEl) || bootstrap.Modal.getOrCreateInstance(changeDriverModalEl);
+            if (modal) modal.show();
+        }
+    });
+
+    if (changeDriverForm) {
+        changeDriverForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var driverName = changeDriverInput.value.trim();
+            if (driverName.length < 2 || driverName.length > 100) {
+                changeDriverInput.classList.add('is-invalid');
+                changeDriverInput.focus();
+                return;
+            }
+            changeDriverInput.classList.remove('is-invalid');
+
+            var submitBtn = document.getElementById('changeDriverSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+            var csrfToken = '';
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
+
+            var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+            if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+            var body = new URLSearchParams();
+            body.append('driver_name', driverName);
+
+            fetch('<?= base_url('staff/queue/updateDriver') ?>/' + changeDriverQueueId, {
+                method: 'POST',
+                headers: headers,
+                body: body
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    if (changeDriverModalEl && typeof bootstrap !== 'undefined') {
+                        var modal = bootstrap.Modal.getInstance(changeDriverModalEl);
+                        if (modal) modal.hide();
+                    }
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to update driver.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Driver';
+                }
+            })
+            .catch(function() {
+                alert('Network error. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Driver';
+            });
+        });
+    }
 
     // Initialize real-time sync (polling + WebSocket)
     QueueSync.init({

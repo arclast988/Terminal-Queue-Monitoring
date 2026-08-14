@@ -8,9 +8,9 @@
     <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=2">
     <style>
         :root {
             --primary: #1E40AF;
@@ -159,14 +159,6 @@
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
-        .nav-menu a.login-btn.btn-success {
-            background: #059669;
-        }
-
-        .nav-menu a.login-btn.btn-success:hover {
-            background: #047857 !important;
-        }
-
         .lang-switch {
             padding: 8px 15px;
             border-radius: 6px;
@@ -300,28 +292,30 @@
 
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+            justify-content: center;
             gap: 20px;
             margin-bottom: 40px;
         }
 
         @media (max-width: 768px) {
             .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+                justify-content: center;
                 gap: 12px;
             }
             
             .stat-card {
-                padding: 16px;
+                padding: 14px;
                 flex-direction: row;
                 text-align: left;
                 border-radius: 16px;
             }
             
             .stat-icon-wrapper {
-                width: 48px;
-                height: 48px;
-                font-size: 20px;
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
             }
             
             .stat-info .value {
@@ -352,8 +346,9 @@
 
         @media (max-width: 480px) {
             .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
+                grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+                justify-content: center;
+                gap: 8px;
             }
             
             .container {
@@ -370,9 +365,10 @@
             margin-bottom: 0 !important;
             display: flex !important;
             align-items: center !important;
+            justify-content: center !important;
             align-self: stretch !important;
             height: 100% !important;
-            min-height: 98px !important;
+            min-height: 84px !important;
             box-sizing: border-box !important;
             text-decoration: none !important;
             color: inherit !important;
@@ -380,16 +376,17 @@
 
         .stat-card {
             background: white;
-            padding: 25px;
+            padding: 18px 20px;
             border-radius: 20px;
             box-shadow: var(--shadow-md);
             display: flex;
             align-items: center;
-            gap: 20px;
+            justify-content: center;
+            gap: 16px;
             transition: var(--transition);
             border: 1px solid rgba(0, 0, 0, 0.03);
             height: 100%;
-            min-height: 98px;
+            min-height: 84px;
             box-sizing: border-box;
             align-self: stretch;
             margin: 0 !important;
@@ -1168,15 +1165,6 @@
                 transform: scale(0.98);
             }
 
-            .nav-menu a.login-btn.btn-success {
-                background: #059669;
-            }
-
-            .nav-menu a.login-btn.btn-success:hover,
-            .nav-menu a.login-btn.btn-success:active {
-                background: #047857 !important;
-            }
-
             .mobile-toggle {
                 display: block;
                 z-index: 1004;
@@ -1228,12 +1216,13 @@
             }
 
             .stats-grid {
-                grid-template-columns: 1fr;
-                gap: 15px;
+                grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
+                justify-content: center;
+                gap: 12px;
             }
 
             .stat-card {
-                padding: 20px;
+                padding: 12px;
                 flex-direction: row;
                 text-align: left;
             }
@@ -1533,20 +1522,6 @@
                     <span class="label">Operating Routes</span>
                 </div>
             </a>
-            <a href="<?= base_url('history') ?>" class="stat-card stat-card-link" aria-label="View departure history">
-                <div class="stat-icon-wrapper si-green"><i class="fas fa-check-circle"></i></div>
-                <div class="stat-info">
-                    <span class="value" id="count-departures"><?= $total_departures_today ?></span>
-                    <span class="label">Recent Departures</span>
-                </div>
-            </a>
-            <button type="button" class="stat-card stat-card-button" id="routeAverageCard" aria-haspopup="dialog" aria-controls="routeAverageModal">
-                <div class="stat-icon-wrapper si-purple"><i class="fas fa-clock"></i></div>
-                <div class="stat-info">
-                    <span class="value">View</span>
-                    <span class="label">Avg. Departure Interval</span>
-                </div>
-            </button>
         </div>
 
         <div class="route-average-modal" id="routeAverageModal" aria-hidden="true">
@@ -1650,9 +1625,10 @@
                                 </div>
                                 <div class="queue-details">
                                     <div class="q-info">
-                                        <h4><?= esc($item['plate_number']) ?></h4>
+                                        <?php $opName = !empty($item['operator_name']) ? $item['operator_name'] : ($item['driver_name'] ?? 'N/A'); ?>
+                                        <h4><?= esc($opName) ?> - <?= esc($item['plate_number']) ?></h4>
                                         <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                                            <p><i class="fas fa-user"></i> <?= esc($item['driver_name'] ?? 'N/A') ?></p>
+                                            <p><i class="fas fa-user-tie"></i> Driver: <?= esc($item['driver_name'] ?? 'N/A') ?></p>
                                             <p><i class="fas fa-map-marker-alt"></i> Route: <strong><?= esc($item['origin']) ?>
                                                     - <?= esc($item['destination']) ?></strong></p>
                                         </div>
@@ -1953,9 +1929,9 @@
                                     + '</div>'
                                     + '<div class="queue-details">'
                                     + '<div class="q-info">'
-                                    + '<h4>' + item.plate_number + '</h4>'
+                                    + '<h4>' + (item.operator_name || item.driver_name || 'N/A') + ' - ' + item.plate_number + '</h4>'
                                     + '<div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">'
-                                    + '<p><i class="fas fa-user"></i> ' + (item.driver_name || 'N/A') + '</p>'
+                                    + '<p><i class="fas fa-user-tie"></i> Driver: ' + (item.driver_name || 'N/A') + '</p>'
                                     + '<p><i class="fas fa-map-marker-alt"></i> Route: <strong>' + item.origin + ' - ' + item.destination + '</strong></p>'
                                     + '</div>'
                                     + fareBadge
