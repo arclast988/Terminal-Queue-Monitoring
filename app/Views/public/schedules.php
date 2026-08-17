@@ -534,12 +534,25 @@
             border-radius: 6px;
         }
 
+        .operator-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 14px;
+        }
+        .operator-cell i {
+            color: #64748b;
+            font-size: 13px;
+        }
+
         .driver-cell {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             font-weight: 600;
-            color: var(--text-main);
+            color: #334155;
             font-size: 14px;
         }
         .driver-cell i {
@@ -550,7 +563,7 @@
         .type-badge {
             padding: 5px 12px;
             border-radius: 50px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
         }
@@ -579,7 +592,7 @@
         .status-badge {
             padding: 6px 14px;
             border-radius: 50px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -750,7 +763,7 @@
                 content: attr(data-label);
                 font-weight: 700;
                 color: var(--text-muted);
-                font-size: 11px;
+                font-size: 12px;
                 text-transform: uppercase;
                 text-align: left;
             }
@@ -832,6 +845,7 @@
                         <tr>
                             <th>Queue #</th>
                             <th>Plate Number</th>
+                            <th>Operator</th>
                             <th>Driver</th>
                             <th>Type</th>
                             <th>Route</th>
@@ -846,6 +860,12 @@
                                     <span class="time-display">#<?= esc($schedule['position']) ?></span>
                                 </td>
                                 <td data-label="Plate"><span class="plate-number"><?= esc($schedule['plate_number']) ?></span>
+                                </td>
+                                <td data-label="Operator">
+                                    <div class="operator-cell">
+                                        <i class="fas fa-building text-muted"></i>
+                                        <?= esc(!empty($schedule['operator_name']) ? $schedule['operator_name'] : ($schedule['driver_name'] ?? '—')) ?>
+                                    </div>
                                 </td>
                                 <td data-label="Driver">
                                     <div class="driver-cell">
@@ -879,7 +899,7 @@
                                         <span class="time-display departed">
                                             <?= date('g:i A', strtotime($schedule['departure_time'])) ?>
                                         </span>
-                                        <div style="font-size: 11px; color: var(--text-muted);">Departed</div>
+                                        <div style="font-size: 12.5px; color: var(--text-muted);">Departed</div>
                                     <?php elseif ($schedule['is_full']): ?>
                                         <span class="time-display full">
                                             FULL — Ready
@@ -888,7 +908,7 @@
                                         <span class="time-display">
                                             <?= !empty($schedule['estimated_departure']) ? date('g:i A', strtotime($schedule['estimated_departure'])) : 'Waiting' ?>
                                         </span>
-                                        <div style="font-size: 11px; color: var(--text-muted);">
+                                        <div style="font-size: 12.5px; color: var(--text-muted);">
                                             <?= $schedule['current_passengers'] ?>/<?= $schedule['capacity'] ?> passengers
                                         </div>
                                     <?php endif; ?>
@@ -972,7 +992,7 @@
             if (!tbody) {
                 card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">' + schedules.length + ' Found</span></div>'
                     + '<table class="schedule-table"><thead><tr>'
-                    + '<th>Queue #</th><th>Plate Number</th><th>Driver</th><th>Type</th><th>Route</th><th>Est. Departure</th><th>Status</th>'
+                    + '<th>Queue #</th><th>Plate Number</th><th>Operator</th><th>Driver</th><th>Type</th><th>Route</th><th>Est. Departure</th><th>Status</th>'
                     + '</tr></thead><tbody id="scheduleTableBody"></tbody></table>';
                 tbody = document.getElementById('scheduleTableBody');
             }
@@ -988,19 +1008,21 @@
                 var statusClass = statusClassMap[s.status] || 'status-departed';
                 var dep = '';
                 if (s.status === 'departed' && s.departure_time_formatted) {
-                    dep = '<span class="time-display departed">' + s.departure_time_formatted + '</span><div style="font-size:11px;color:var(--text-muted)">Departed</div>';
+                    dep = '<span class="time-display departed">' + s.departure_time_formatted + '</span><div style="font-size:12.5px;color:var(--text-muted)">Departed</div>';
                 } else if (s.is_full) {
                     dep = '<span class="time-display full">FULL</span>';
                 } else {
-                    dep = '<span class="time-display">' + (s.estimated_departure_formatted || 'Waiting') + '</span><div style="font-size:11px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
+                    dep = '<span class="time-display">' + (s.estimated_departure_formatted || 'Waiting') + '</span><div style="font-size:12.5px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
                 }
                 function escHtml(v) {
                     if (v === null || v === undefined) return '';
                     return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
                 }
+                var opDisplay = s.operator_name ? escHtml(s.operator_name) : (s.driver_name ? escHtml(s.driver_name) : '—');
                 html += '<tr>' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
+                    '<td data-label="Operator"><div class="operator-cell"><i class="fas fa-building text-muted"></i>' + opDisplay + '</div></td>' +
                     '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
                     '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + escHtml(typeLabel) + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +

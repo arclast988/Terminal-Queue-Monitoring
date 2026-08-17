@@ -138,6 +138,8 @@
                     <tr>
                         <th>Queue #</th>
                         <th>Plate Number</th>
+                        <th>Operator</th>
+                        <th>Driver</th>
                         <th>Type</th>
                         <th>Route</th>
                         <th>Est. Departure</th>
@@ -155,6 +157,18 @@
                                 </td>
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($s['plate_number']) ?></span>
+                                </td>
+                                <td data-label="Operator">
+                                    <span class="fw-bold" style="font-size: 14px; color: #0f172a;">
+                                        <i class="bi bi-building text-muted me-1"></i>
+                                        <?= esc(!empty($s['operator_name']) ? $s['operator_name'] : ($s['driver_name'] ?? '—')) ?>
+                                    </span>
+                                </td>
+                                <td data-label="Driver">
+                                    <span class="fw-semibold" style="font-size: 13.5px; color: #334155;">
+                                        <i class="bi bi-person-badge text-primary me-1"></i>
+                                        <?= esc($s['driver_name'] ?? '—') ?>
+                                    </span>
                                 </td>
                                 <td data-label="Type">
                                     <?php

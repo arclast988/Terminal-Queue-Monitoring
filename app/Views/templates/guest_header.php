@@ -96,17 +96,18 @@
         transform: scale(1.05);
     }
     .guest-header .logo-text h1 {
-        font-size: 18px;
+        font-size: 20px;
         color: #000000;
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.5px;
     }
     .guest-header .logo-text p {
-        font-size: 10px;
-        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.8px;
         margin: 0;
     }
     .guest-header .nav-menu {
@@ -117,7 +118,7 @@
     .guest-header .nav-menu a {
         text-decoration: none;
         color: var(--text-muted);
-        font-size: 14px;
+        font-size: 14.5px;
         font-weight: 600;
         transition: var(--transition);
         position: relative;
@@ -189,7 +190,7 @@
     }
     .breadcrumb-section i {
         margin: 0 8px;
-        font-size: 10px;
+        font-size: 11px;
         color: #cbd5e0;
     }
     .breadcrumb-section a {
@@ -208,7 +209,7 @@
     @media (max-width: 768px) {
         .advisory-bar {
             padding: 8px 5%;
-            font-size: 11px;
+            font-size: 12.5px;
         }
         .guest-header {
             padding: 10px 5%;
@@ -225,7 +226,7 @@
             letter-spacing: -0.2px;
         }
         .guest-header .logo-text p {
-            font-size: 8px;
+            font-size: 11px;
         }
     }
 
@@ -301,14 +302,14 @@
         </a>
 
         <div class="header-info"
-            style="display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: #000000; border-left: 1px solid #eee; padding-left: 20px;">
+            style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #1e293b; border-left: 1px solid #eee; padding-left: 20px;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-map-marker-alt" style="color: #FF9800; font-size: 16px;"></i>
-                <span style="font-weight: 500;">Central Terminal, Palompon, Leyte</span>
+                <span style="font-weight: 600; color: #1e293b;">Central Terminal, Palompon, Leyte</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
                 <i class="fas fa-clock" style="color: #000000; font-size: 16px;"></i>
-                <span id="headerClock" style="font-weight: 500;"><?= date('H:i:s') ?></span>
+                <span id="headerClock" style="font-weight: 700; color: #0f172a; font-size: 15px; letter-spacing: 0.5px;"><?= date('H:i:s') ?></span>
             </div>
         </div>
     </div>
@@ -322,9 +323,6 @@
         <a href="<?= base_url('fares') ?>"
             class="<?= (strpos(uri_string(), 'fares') !== false) ? 'active' : '' ?>"><i class="fas fa-tags"></i>
             Fares</a>
-        <a href="<?= base_url('history') ?>"
-            class="<?= (strpos(uri_string(), 'history') !== false) ? 'active' : '' ?>"><i class="fas fa-history"></i>
-            Departures</a>
 
         <?php if (session()->get('isLoggedIn')): ?>
             <?php

@@ -67,7 +67,18 @@
                                         <span class="badge-modern badge-modern-info"><i class="bi bi-pause-circle-fill"></i> Inactive</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Created"><?= $a['created_at'] ? strtoupper(date('M d, Y H:i', strtotime($a['created_at']))) : '-' ?></td>
+                                <td data-label="Created">
+                                    <?php if (!empty($a['created_at'])): ?>
+                                        <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
+                                            <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y', strtotime($a['created_at'])) ?>
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                            <?= date('g:i A', strtotime($a['created_at'])) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
                                 <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">

@@ -118,9 +118,9 @@ foreach ($users as $u) {
                                         <?= esc($initials) ?>
                                     </div>
                                     <div>
-                                        <div class="fw-bold" style="font-size:14px; color: inherit;"><?= esc($user['full_name']) ?></div>
+                                        <div class="fw-bold" style="font-size:14.5px; color: inherit;"><?= esc($user['full_name']) ?></div>
                                         <div>
-                                            <small style="font-size:11px; color: #94a3b8;">@<?= esc($user['username']) ?></small>
+                                            <small style="font-size:12.5px; color: #64748b;">@<?= esc($user['username']) ?></small>
                                         </div>
                                     </div>
                                 </div>
@@ -144,7 +144,7 @@ foreach ($users as $u) {
                                         foreach ($routeParts as $rp):
                                             ?>
                                             <span class="badge-modern badge-modern-primary"
-                                                style="font-size:10px; font-weight:500; white-space: nowrap;"><?= esc($rp) ?></span>
+                                                style="font-size:12.5px; font-weight:600; white-space: nowrap; padding: 3px 8px;"><?= esc($rp) ?></span>
                                         <?php endforeach; ?>
                                     </div>
                                 <?php else: ?>
@@ -289,7 +289,7 @@ foreach ($users as $u) {
         height: 22px !important;
         padding: 0 6px !important;
         border-radius: 12px !important;
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-weight: 700 !important;
         background: #e2e8f0 !important;
         color: #475569 !important;

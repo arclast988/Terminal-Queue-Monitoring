@@ -50,6 +50,7 @@ class Home extends BaseController
             'total_departures_today' => $queueModel->where('status', 'departed')
                 ->like('departure_time', date('Y-m-d'), 'after')
                 ->countAllResults(),
+            'departure_rules' => $this->getDepartureRules(),
             'route_average_departures' => $this->getRouteAverageDepartures(),
             'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
             'announcements' => $announcements
@@ -106,6 +107,7 @@ class Home extends BaseController
                 'active_queue' => $active_queue,
                 'recent_departures' => $recent_departures,
                 'total_departures_today' => $total_departures_today,
+                'departure_rules' => $this->getDepartureRules(),
                 'route_average_departures' => $this->getRouteAverageDepartures(),
                 'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll())
             ];
@@ -121,6 +123,59 @@ class Home extends BaseController
             ->setHeader('Pragma', 'no-cache')
             ->setHeader('Expires', '0')
             ->setJSON($payload);
+    }
+
+    private function getDepartureRules(): array
+    {
+        $departureRuleModel = new \App\Models\DepartureRuleModel();
+        $rules = $departureRuleModel
+            ->select('departure_rules.*, terminals.name as terminal_name, routes.destination as route_destination')
+            ->join('terminals', 'terminals.id = departure_rules.terminal_id', 'left')
+            ->join('routes', 'routes.id = departure_rules.route_id', 'left')
+            ->orderBy('departure_rules.time_from', 'ASC')
+            ->findAll();
+
+        $currentTime = date('H:i:s');
+
+        $formatted = [];
+        foreach ($rules as $rule) {
+            $timeFrom = !empty($rule['time_from']) ? date('g:i A', strtotime($rule['time_from'])) : 'Anytime';
+            $timeTo = !empty($rule['time_to']) ? date('g:i A', strtotime($rule['time_to'])) : 'Anytime';
+            $waitMins = (int) ($rule['wait_minutes'] ?? 30);
+
+            $isActive = false;
+            if (!empty($rule['time_from']) && !empty($rule['time_to'])) {
+                $from = $rule['time_from'];
+                $to = $rule['time_to'];
+                if ($to >= '23:59:00') {
+                    $isActive = ($currentTime >= $from);
+                } else {
+                    $isActive = ($currentTime >= $from && $currentTime < $to);
+                }
+            }
+
+            $scope = 'All Routes';
+            if (!empty($rule['route_destination'])) {
+                $scope = (!empty($rule['terminal_name']) ? $rule['terminal_name'] : 'Palompon') . ' → ' . $rule['route_destination'];
+            }
+
+            $formatted[] = [
+                'id' => $rule['id'],
+                'label' => $rule['label'] ?: 'Standard Schedule',
+                'time_from' => $rule['time_from'],
+                'time_to' => $rule['time_to'],
+                'time_from_formatted' => $timeFrom,
+                'time_to_formatted' => $timeTo,
+                'time_range' => $timeFrom . ' – ' . $timeTo,
+                'wait_minutes' => $waitMins,
+                'interval_label' => 'Every ' . $this->formatIntervalMinutes($waitMins),
+                'route_scope' => $scope,
+                'terminal_name' => $rule['terminal_name'] ?? 'Palompon Central Terminal',
+                'is_active_now' => $isActive,
+            ];
+        }
+
+        return $formatted;
     }
 
     private function getRouteAverageDepartures(): array

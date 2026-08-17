@@ -50,9 +50,14 @@
                                     <strong><?= esc($item['destination']) ?></strong>
                                 </td>
                                 <td data-label="Departure Time">
-                                    <span class="badge-modern badge-modern-info">
-                                        <?= strtoupper(date('M d, Y H:i', strtotime($item['departure_time']))) ?>
-                                    </span>
+                                    <div style="white-space: nowrap;">
+                                        <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;">
+                                            <?= date('g:i A', strtotime($item['departure_time'])) ?>
+                                        </span>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                            <i class="bi bi-calendar3 me-1"></i><?= date('M d, Y', strtotime($item['departure_time'])) ?>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

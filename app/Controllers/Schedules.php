@@ -67,6 +67,7 @@ class Schedules extends BaseController
                 vehicles.plate_number,
                 vehicles.type as vehicle_type,
                 vehicles.capacity,
+                vehicles.operator_name,
                 vehicles.driver_name,
                 routes.destination,
                 terminals.name as origin
@@ -92,6 +93,7 @@ class Schedules extends BaseController
         if ($search !== '') {
             $builder->groupStart()
                 ->like('vehicles.plate_number', $search)
+                ->orLike('vehicles.operator_name', $search)
                 ->orLike('vehicles.driver_name', $search)
                 ->orLike('routes.destination', $search)
                 ->orLike('terminals.name', $search)
@@ -171,6 +173,7 @@ class Schedules extends BaseController
                     vehicles.plate_number,
                     vehicles.type as vehicle_type,
                     vehicles.capacity,
+                    vehicles.operator_name,
                     vehicles.driver_name,
                     routes.destination,
                     terminals.name as origin

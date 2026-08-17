@@ -64,8 +64,12 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                 <td data-label="ID"><strong>#<?= $terminal['id'] ?></strong></td>
                                 <td data-label="Name"><?= esc($terminal['name']) ?></td>
                                 <td data-label="Location"><?= esc($terminal['location']) ?></td>
-                                <td data-label="Capacity"><span class="badge-modern badge-modern-info"><?= $terminal['capacity'] ?> pax</span></td>
-                                <td data-label="Created At"><?= strtoupper(date('M d, Y', strtotime($terminal['created_at']))) ?></td>
+                                <td data-label="Capacity"><span class="badge-modern badge-modern-primary"><?= $terminal['capacity'] ?> pax</span></td>
+                                <td data-label="Created At">
+                                    <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
+                                        <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y', strtotime($terminal['created_at'])) ?>
+                                    </div>
+                                </td>
                                 <?php if ($isAdmin): ?>
                                 <td data-label="Actions">
                                     <div class="d-flex gap-2">

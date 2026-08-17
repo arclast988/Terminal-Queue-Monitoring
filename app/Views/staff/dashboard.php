@@ -32,7 +32,8 @@
         }
         
         .stat-card-label {
-            font-size: 11px;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .table-modern thead {
@@ -61,10 +62,10 @@
         
         .table-modern tbody td::before {
             content: attr(data-label);
-            font-weight: 600;
+            font-weight: 700;
             color: var(--slate-500);
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 12px;
         }
     }
     
@@ -93,7 +94,7 @@
                 <i class="bi bi-clock-history"></i>
             </div>
             <div class="stat-card-value"><?= $active_queue_count ?></div>
-            <div class="stat-card-label">Active in Queue</div>
+            <div class="stat-card-label">Vehicles in Queue</div>
             <a href="<?= base_url('staff/queue') ?>" class="stat-card-link">
                 Manage Queue <i class="bi bi-arrow-right"></i>
             </a>
@@ -104,7 +105,7 @@
         <div class="col-12 col-md-6 col-xl-4 mb-4">
             <div class="modern-card shadow-modern fade-in">
                 <div class="modern-card-body">
-                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted, #475569); margin-bottom: 8px;">
+                    <div style="font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted, #475569); margin-bottom: 8px;">
                         <?= esc($terminal['name']) ?>
                     </div>
                     <div class="d-flex justify-content-between align-items-end">
@@ -129,8 +130,12 @@
         <table class="table-modern">
             <thead>
                 <tr>
-                    <th>Type</th>
+                    <th>Queue #</th>
                     <th>Plate Number</th>
+                    <th>Operator</th>
+                    <th>Driver</th>
+                    <th>Type</th>
+                    <th>Route</th>
                     <th>Departure Time</th>
                     <th>Status</th>
                 </tr>
@@ -139,27 +144,64 @@
                 <?php if (!empty($recent_departures)): ?>
                     <?php foreach ($recent_departures as $dept): ?>
                         <tr>
+                            <td data-label="Queue #">
+                                <span class="badge-modern badge-modern-primary" style="font-weight:700; font-size:13px;">
+                                    #<?= esc($dept['position'] ?? '0') ?>
+                                </span>
+                            </td>
+                            <td data-label="Plate Number">
+                                <span class="plate-number"><?= esc($dept['plate_number']) ?></span>
+                            </td>
+                            <td data-label="Operator">
+                                <span class="fw-bold" style="font-size: 14px; color: #0f172a; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="bi bi-building text-muted"></i>
+                                    <?= esc(!empty($dept['operator_name']) ? $dept['operator_name'] : ($dept['driver_name'] ?? '—')) ?>
+                                </span>
+                            </td>
+                            <td data-label="Driver">
+                                <span class="fw-semibold" style="font-size: 13.5px; color: #334155; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="bi bi-person-badge text-primary"></i>
+                                    <?= esc($dept['driver_name'] ?? '—') ?>
+                                </span>
+                            </td>
                             <td data-label="Type">
                                 <?php 
                                     $vType = $dept['vehicle_type'] ?? '';
                                     $imgFile = vehicle_type_image($vType);
                                 ?>
-                                <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                    <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
-                                </span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
+                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                    </span>
+                                    <?= vehicle_type_badge($vType) ?>
+                                </div>
                             </td>
-                            <td class="fw-bold" data-label="Plate Number"><?= esc($dept['plate_number']) ?></td>
-                            <td data-label="Departure Time"><?= date('H:i', strtotime($dept['departure_time'])) ?></td>
+                            <td data-label="Route">
+                                <div class="d-flex align-items-center gap-2">
+                                    <strong style="color: #334155; font-size: 13.5px;"><?= esc($dept['origin'] ?? 'Palompon') ?></strong>
+                                    <i class="bi bi-arrow-right text-primary"></i>
+                                    <strong style="color: #0f172a; font-size: 13.5px;"><?= esc($dept['destination'] ?? '—') ?></strong>
+                                </div>
+                            </td>
+                            <td data-label="Departure Time">
+                                <div>
+                                    <span class="badge-modern badge-modern-info">
+                                        <i class="bi bi-clock me-1"></i>
+                                        <?= date('H:i', strtotime($dept['departure_time'])) ?>
+                                    </span>
+                                    <div style="font-size: 12px; color: var(--text-muted, #64748b); margin-top: 2px;">Departed</div>
+                                </div>
+                            </td>
                             <td data-label="Status">
-                                <span class="badge-modern badge-modern-success">
-                                    <i class="bi bi-check-circle-fill"></i> Departed
+                                <span style="background-color: #059669; color: #fff; font-weight: 700; font-size: 12px; padding: 5px 14px; border-radius: 50px; display: inline-flex; align-items: center; gap: 5px; letter-spacing: 0.3px; box-shadow: 0 1px 4px rgba(5,150,105,0.25);">
+                                    <i class="bi bi-check-circle-fill"></i> DEPARTED
                                 </span>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">No recent departures today.</td>
+                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">No recent departures today.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

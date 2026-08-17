@@ -359,7 +359,7 @@
         .type-badge {
             padding: 5px 12px;
             border-radius: 50px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
             transition: var(--transition);
@@ -586,9 +586,9 @@
                                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
                                     <?php foreach ($route['discounted_fares'] as $type => $df): ?>
                                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
-                                        <span style="font-size: 13px; color: #475569; font-weight: 500;">
-                                            <i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>
-                                            <?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                        <span style="font-size: 13.5px; color: #334155; font-weight: 600;">
+                                            <i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i>
+                                            <?= esc($df['label']) ?> <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
                                         </span>
                                         <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
                                     </div>
@@ -630,9 +630,9 @@
                                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
                                     <?php foreach ($route['discounted_fares'] as $type => $df): ?>
                                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
-                                        <span style="font-size: 13px; color: #475569; font-weight: 500;">
-                                            <i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>
-                                            <?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                        <span style="font-size: 13.5px; color: #334155; font-weight: 600;">
+                                            <i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i>
+                                            <?= esc($df['label']) ?> <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
                                         </span>
                                         <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
                                     </div>
@@ -674,9 +674,9 @@
                                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
                                     <?php foreach ($route['discounted_fares'] as $type => $df): ?>
                                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
-                                        <span style="font-size: 13px; color: #475569; font-weight: 500;">
-                                            <i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>
-                                            <?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                        <span style="font-size: 13.5px; color: #334155; font-weight: 600;">
+                                            <i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i>
+                                            <?= esc($df['label']) ?> <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
                                         </span>
                                         <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
                                     </div>
@@ -717,7 +717,7 @@
                                     <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
                                         <?php foreach ($route['discounted_fares'] as $df): ?>
                                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
-                                            <span style="font-size: 13px; color: #475569; font-weight: 500;"><i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i><?= esc($df['label']) ?> <span style="color: #94a3b8; font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span></span>
+                                            <span style="font-size: 13.5px; color: #334155; font-weight: 600;"><i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i><?= esc($df['label']) ?> <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span></span>
                                             <span style="font-size: 14px; font-weight: 700; color: #16a34a;">₱<?= number_format($df['amount'], 2) ?></span>
                                         </div>
                                         <?php endforeach; ?>
@@ -839,9 +839,9 @@
                     Object.keys(route.discounted_fares).forEach(function(key) {
                         var df = route.discounted_fares[key];
                         html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">'
-                            + '<span style="font-size: 13px; color: #475569; font-weight: 500;">'
-                            + '<i class="fas fa-tag" style="font-size: 10px; color: #94a3b8; margin-right: 5px;"></i>'
-                            + df.label + ' <span style="color: #94a3b8; font-size: 12px;">(' + Number(df.discount_percent).toFixed(0) + '% off)</span>'
+                            + '<span style="font-size: 13.5px; color: #334155; font-weight: 600;">'
+                            + '<i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i>'
+                            + df.label + ' <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(' + Number(df.discount_percent).toFixed(0) + '% off)</span>'
                             + '</span>'
                             + '<span style="font-size: 14px; font-weight: 700; color: #16a34a;">' + formatFare(df.amount) + '</span>'
                             + '</div>';

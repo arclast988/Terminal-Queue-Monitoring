@@ -237,7 +237,7 @@
             background: #f8fafc;
             padding: 14px 20px;
             text-align: left;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
@@ -351,7 +351,7 @@
             gap: 6px;
             padding: 6px 14px;
             border-radius: 50px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -472,7 +472,7 @@
                 content: attr(data-label);
                 font-weight: 700;
                 color: var(--text-muted);
-                font-size: 11px;
+                font-size: 12px;
                 text-transform: uppercase;
                 text-align: left;
             }
@@ -546,6 +546,7 @@
                         <th>Driver</th>
                         <th>Type</th>
                         <th>Route</th>
+                        <th>Departure Time</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -580,11 +581,19 @@
                                         <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
                                     </div>
                                 </td>
+                                <td data-label="Departure Time">
+                                    <span class="time-display">
+                                        <?= date('g:i A', strtotime($item['departure_time'])) ?>
+                                    </span>
+                                    <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                                        <?= date('M d, Y', strtotime($item['departure_time'])) ?>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4">
+                            <td colspan="5">
                                 <div class="empty-state">
                                     <div class="empty-icon">
                                         <i class="fas fa-history"></i>

@@ -41,7 +41,7 @@ class Dashboard extends BaseController
         $activeQueueCount = $countBuilder->countAllResults();
 
         // Build filtered recent departures
-        $departBuilder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type')
+        $departBuilder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
                                     ->withFullJoins()
                                     ->where('queue.status', 'departed')
                                     ->like('queue.departure_time', date('Y-m-d'), 'after');

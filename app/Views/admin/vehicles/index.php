@@ -250,7 +250,9 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Registered">
-                                    <span class="badge-modern badge-modern-info"><?= strtoupper(date('M d, Y', strtotime($vehicle['created_at']))) ?></span>
+                                    <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
+                                        <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y', strtotime($vehicle['created_at'])) ?>
+                                    </div>
                                 </td>
                                 <td data-label="Action">
                                     <div class="d-flex gap-2">
@@ -470,7 +472,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
         height: 22px !important;
         padding: 0 6px !important;
         border-radius: 12px !important;
-        font-size: 11px !important;
+        font-size: 12px !important;
         font-weight: 700 !important;
         background: #e2e8f0 !important;
         color: #475569 !important;

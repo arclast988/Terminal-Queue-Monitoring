@@ -384,9 +384,9 @@
         }
 
         .results-section-header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            padding: 20px 30px;
+            background: #1e3a8a !important;
+            color: #ffffff !important;
+            padding: 18px 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -400,22 +400,40 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            color: #ffffff !important;
         }
 
-        .results-section-header i {
+        .results-section-header h3 i {
             font-size: 20px;
+            color: #ffffff !important;
         }
 
         .badge-count {
-            background: rgba(255,255,255,0.25);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
+            background: rgba(255,255,255,0.22) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255,255,255,0.3) !important;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12.5px;
             font-weight: 700;
+            letter-spacing: 0.3px;
         }
 
         .section-departures-header {
-            background: linear-gradient(135deg, #64748b, #475569) !important;
+            background: #334155 !important;
+        }
+
+        .operator-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 14px;
+        }
+        .operator-cell i {
+            color: #64748b;
+            font-size: 13px;
         }
 
         .results-table {
@@ -725,7 +743,7 @@
                 content: attr(data-label);
                 font-weight: 700;
                 color: var(--text-muted);
-                font-size: 11px;
+                font-size: 12px;
                 text-transform: uppercase;
                 text-align: left;
             }
@@ -797,9 +815,11 @@
                         <tr>
                             <th>Queue #</th>
                             <th>Plate Number</th>
+                            <th>Operator</th>
                             <th>Driver</th>
                             <th>Type</th>
                             <th>Route</th>
+                            <th>Est. Departure</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -811,6 +831,12 @@
                             </td>
                             <td data-label="Plate Number">
                                 <span class="plate-number"><?= esc($item['plate_number']) ?></span>
+                            </td>
+                            <td data-label="Operator">
+                                <div class="operator-cell">
+                                    <i class="fas fa-building text-muted"></i>
+                                    <?= esc(!empty($item['operator_name']) ? $item['operator_name'] : ($item['driver_name'] ?? '—')) ?>
+                                </div>
                             </td>
                             <td data-label="Driver">
                                 <div class="driver-cell">
@@ -833,6 +859,23 @@
                                     <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 12px;"></i>
                                     <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
                                 </div>
+                            </td>
+                            <td data-label="Est. Departure">
+                                <?php if ($item['status'] === 'departed' && !empty($item['departure_time'])): ?>
+                                    <span class="time-display departed">
+                                        <?= date('g:i A', strtotime($item['departure_time'])) ?>
+                                    </span>
+                                    <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">Departed</div>
+                                <?php else: ?>
+                                    <span class="time-display">
+                                        <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
+                                    </span>
+                                    <?php if (!empty($item['capacity'])): ?>
+                                    <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">
+                                        <?= $item['current_passengers'] ?? 0 ?>/<?= $item['capacity'] ?> passengers
+                                    </div>
+                                    <?php endif; ?>
+                                <?php endif; ?>
                             </td>
                             <td data-label="Status">
                                 <?php if ($item['status'] == 'boarding'): ?>
@@ -860,18 +903,30 @@
                 <table class="results-table">
                     <thead>
                         <tr>
+                            <th>Queue #</th>
                             <th>Plate Number</th>
+                            <th>Operator</th>
                             <th>Driver</th>
                             <th>Type</th>
                             <th>Route</th>
                             <th>Departure Time</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($departed_results as $item): ?>
                         <tr>
+                            <td data-label="Queue #">
+                                <span class="time-display departed">#<?= esc($item['position'] ?? '—') ?></span>
+                            </td>
                             <td data-label="Plate Number">
                                 <span class="plate-number"><?= esc($item['plate_number']) ?></span>
+                            </td>
+                            <td data-label="Operator">
+                                <div class="operator-cell">
+                                    <i class="fas fa-building text-muted"></i>
+                                    <?= esc(!empty($item['operator_name']) ? $item['operator_name'] : ($item['driver_name'] ?? '—')) ?>
+                                </div>
                             </td>
                             <td data-label="Driver">
                                 <div class="driver-cell">
@@ -896,17 +951,19 @@
                                 </div>
                             </td>
                             <td data-label="Departure Time">
-                                <span class="time-display">
+                                <span class="time-display departed">
                                     <?= date('g:i A', strtotime($item['departure_time'])) ?>
                                 </span>
-                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                                     <?= date('M d, Y', strtotime($item['departure_time'])) ?>
                                 </div>
+                            </td>
+                            <td data-label="Status">
+                                <span class="status-badge status-departed">DEPARTED</span>
                             </td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
-
                 </table>
             </div>
         </div>

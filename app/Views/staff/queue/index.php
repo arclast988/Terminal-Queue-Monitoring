@@ -335,8 +335,8 @@
     }
     .btn-counter-max {
         border-radius: var(--radius-sm, 6px) !important;
-        font-size: 11px;
-        font-weight: 700;
+        font-size: 12px;
+        font-weight: 800;
         padding: 6px 12px;
         background-color: var(--slate-100, #f1f5f9);
         color: var(--slate-700, #475569);
@@ -538,7 +538,7 @@
                         <span id="passenger-count-<?= $item['id'] ?>"
                             class="fw-bold <?= $isFull ? 'text-danger' : '' ?>" style="min-width:64px;text-align:center;font-size:15px;">
                             <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
-                            <?php if ($isFull): ?><br><span class="badge-modern badge-modern-danger" style="font-size:9px;">FULL</span><?php endif; ?>
+                            <?php if ($isFull): ?><br><span class="badge-modern badge-modern-danger" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span><?php endif; ?>
                         </span>
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
                             class="btn-counter btn-counter-plus">

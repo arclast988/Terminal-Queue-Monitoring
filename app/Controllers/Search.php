@@ -18,12 +18,12 @@ class Search extends BaseController
         $queueModel = new QueueModel();
 
         // Search in active queue
-        // Include vehicles.owner_name so views expecting `owner_name` won't error
-        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, queue.departure_time, queue.current_passengers, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
                                     ->withFullJoins()
                                     ->whereIn('queue.status', ['waiting', 'boarding'])
                                     ->groupStart()
                                         ->like('vehicles.plate_number', $search)
+                                        ->orLike('vehicles.operator_name', $search)
                                         ->orLike('vehicles.driver_name', $search)
                                         ->orLike('routes.destination', $search)
                                         ->orLike('terminals.name', $search)
@@ -32,12 +32,12 @@ class Search extends BaseController
                                     ->findAll();
 
         // Search in recent departures
-        // Include vehicles.owner_name for departed results as well
-        $departedResults = (new QueueModel())->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+        $departedResults = (new QueueModel())->select('queue.*, queue.estimated_departure, queue.departure_time, queue.current_passengers, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
                                        ->withFullJoins()
                                        ->where('queue.status', 'departed')
                                        ->groupStart()
                                            ->like('vehicles.plate_number', $search)
+                                           ->orLike('vehicles.operator_name', $search)
                                            ->orLike('vehicles.driver_name', $search)
                                            ->orLike('routes.destination', $search)
                                            ->orLike('terminals.name', $search)

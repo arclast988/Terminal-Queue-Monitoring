@@ -356,9 +356,9 @@ $fareTypes = array_map(static fn(array $type) => [
                         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border, #e2e8f0);">
                             <?php foreach ($route['discounted_fares'] as $type => $df): ?>
                             <div class="d-flex justify-content-between align-items-center py-1">
-                                <span class="fare-discount-label" style="font-size: 13px; color: var(--text-muted, #475569); font-weight: 500;">
-                                    <i class="bi bi-tag me-1" style="font-size: 11px;"></i>
-                                    <?= esc($df['label']) ?> <span class="text-muted" style="font-size: 12px;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
+                                <span class="fare-discount-label" style="font-size: 13.5px; color: var(--text-muted, #334155); font-weight: 600;">
+                                    <i class="bi bi-tag me-1" style="font-size: 12.5px;"></i>
+                                    <?= esc($df['label']) ?> <span class="text-muted" style="font-size: 12.5px; font-weight: 500;">(<?= number_format($df['discount_percent'], 0) ?>% off)</span>
                                 </span>
                                 <span style="font-size: 14px; font-weight: 700; color: var(--success, #16a34a);">₱<?= number_format($df['amount'], 2) ?></span>
                             </div>

@@ -48,8 +48,12 @@
                     <?php if (!empty($logs) && is_array($logs)): ?>
                         <?php foreach ($logs as $log): ?>
                             <tr>
-                                <td data-label="ID"><?= $log['id'] ?></td>
-                                <td data-label="Timestamp"><?= $log['timestamp'] ?></td>
+                                <td data-label="ID"><strong>#<?= $log['id'] ?></strong></td>
+                                <td data-label="Timestamp">
+                                    <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
+                                        <i class="bi bi-clock text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y g:i A', strtotime($log['timestamp'])) ?>
+                                    </div>
+                                </td>
                                 <td data-label="User">
                                     <?php if ($log['username']): ?>
                                         <div class="fw-bold"><?= esc($log['username']) ?></div>

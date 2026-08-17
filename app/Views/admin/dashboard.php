@@ -32,7 +32,8 @@
         }
         
         .stat-card-label {
-            font-size: 11px;
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .table-modern thead {
@@ -61,10 +62,10 @@
         
         .table-modern tbody td::before {
             content: attr(data-label);
-            font-weight: 600;
+            font-weight: 700;
             color: var(--slate-500);
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 12px;
         }
     }
     
