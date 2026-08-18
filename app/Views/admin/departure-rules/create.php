@@ -105,7 +105,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                             <select class="select-modern" id="route_id" name="route_id">
                                 <option value="">— No specific destination —</option>
                                 <?php foreach (($routes ?? []) as $r): ?>
-                                <option value="<?= $r['id'] ?>" <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
+                                <option value="<?= $r['id'] ?>" <?= old('route_id', $selectedRouteId ?? '') == $r['id'] ? 'selected' : '' ?>>
                                     <?= esc($r['destination']) ?>
                                 </option>
                                 <?php endforeach; ?>

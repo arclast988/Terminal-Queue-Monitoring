@@ -93,13 +93,38 @@ class DepartureRules extends BaseController
             ->join('terminals', 'terminals.id = departure_rules.terminal_id', 'left')
             ->join('routes', 'routes.id = departure_rules.route_id', 'left')
             ->orderBy('departure_rules.terminal_id', 'ASC')
+            ->orderBy('routes.destination', 'ASC')
             ->orderBy('departure_rules.time_from', 'ASC')
             ->findAll();
 
+        $routes = $this->getRoutesForDropdown();
+
+        // Extract list of all unique route destinations available (from routes table and departure_rules)
+        $destinationsMap = [];
+        foreach ($routes as $r) {
+            if (!empty($r['destination'])) {
+                $dest = strtoupper(trim($r['destination']));
+                if (!isset($destinationsMap[$dest])) {
+                    $destinationsMap[$dest] = $r['id'];
+                }
+            }
+        }
+        foreach ($rules as $rule) {
+            if (!empty($rule['route_destination'])) {
+                $dest = strtoupper(trim($rule['route_destination']));
+                if (!isset($destinationsMap[$dest])) {
+                    $destinationsMap[$dest] = $rule['route_id'] ?? null;
+                }
+            }
+        }
+        ksort($destinationsMap);
+
         $data = [
-            'title'  => 'Departure Rules',
-            'rules'  => $rules,
-            'prefix' => $this->getPrefix()
+            'title'           => 'Departure Rules',
+            'rules'           => $rules,
+            'routes'          => $routes,
+            'destinationsMap' => $destinationsMap,
+            'prefix'          => $this->getPrefix()
         ];
 
         return view('admin/departure-rules/index', $data);
@@ -107,11 +132,14 @@ class DepartureRules extends BaseController
 
     public function create()
     {
+        $selectedRouteId = $this->request->getGet('route_id');
+
         $data = [
-            'title'     => 'Add Departure Rule',
-            'prefix'    => $this->getPrefix(),
-            'terminals' => $this->terminalModel->findAll(),
-            'routes'    => $this->getRoutesForDropdown(),
+            'title'           => 'Add Departure Rule',
+            'prefix'          => $this->getPrefix(),
+            'terminals'       => $this->terminalModel->findAll(),
+            'routes'          => $this->getRoutesForDropdown(),
+            'selectedRouteId' => $selectedRouteId,
         ];
         return view('admin/departure-rules/create', $data);
     }
