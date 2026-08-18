@@ -86,7 +86,7 @@
         cursor: pointer !important;
     }
 
-    /* Add Vehicle to Queue modal */
+    /* Add Vehicle to Queue modal - Viewport Centered & Height Constrained */
     #addToQueueModal.fade.show {
         display: flex !important;
         align-items: center !important;
@@ -102,19 +102,33 @@
         width: 100% !important;
         height: 100% !important;
         min-height: 100vh !important;
-        background: transparent !important;
-        backdrop-filter: none !important;
+        background: rgba(0, 0, 0, 0.4) !important;
         pointer-events: none !important;
     }
 
     #addToQueueModal .modal-dialog {
         position: relative !important;
-        margin: auto !important;
+        margin: 1rem auto !important;
         transform: none !important;
         display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        flex-direction: column !important;
+        max-height: calc(100vh - 2rem) !important;
         pointer-events: auto !important;
+        width: 95% !important;
+        max-width: 720px !important;
+    }
+
+    #addToQueueModal .modal-content {
+        max-height: calc(100vh - 2rem) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    #addToQueueModal .modal-body {
+        overflow-y: auto !important;
+        flex: 1 1 auto !important;
+        max-height: calc(100vh - 180px) !important;
     }
 
     #addToQueueModal .modal-title {
@@ -129,10 +143,12 @@
  
      #addToQueueModal .modal-header {
         border-bottom-color: var(--border, #e2e8f0);
+        flex-shrink: 0 !important;
      }
  
      #addToQueueModal .modal-footer {
         border-top-color: var(--border, #e2e8f0);
+        flex-shrink: 0 !important;
      }
  
      #addToQueueModal .btn-close {
@@ -619,29 +635,156 @@
 <?php endif; ?>
 
 <style>
+    /* Add to Queue Modal Visual Improvements */
+    #addToQueueModal .modal-content {
+        border-radius: 20px !important;
+        box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25) !important;
+        overflow: hidden;
+        border: 1px solid var(--border, #cbd5e1) !important;
+    }
+
+    #addToQueueModal .modal-header {
+        background: var(--surface, #ffffff);
+        border-bottom: 1px solid var(--border, #e2e8f0) !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+
+    .modal-icon-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        flex-shrink: 0;
+    }
+
+    .queue-toolbar-card {
+        background: var(--surface-sunken, #f8fafc);
+        border: 1px solid var(--border, #e2e8f0);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+    }
+
+    .search-input-modern {
+        background-color: var(--surface, #ffffff) !important;
+        border: 1px solid var(--border-strong, #cbd5e1) !important;
+        border-radius: 10px !important;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+    .search-input-modern:focus {
+        border-color: #2563eb !important;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* Vehicle item card styling (Custom Flex - No Bootstrap d-flex to allow display toggling) */
     .vehicle-select-item {
         cursor: pointer;
         user-select: none;
-        border-left: 4px solid transparent !important;
-        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        border-radius: 12px !important;
+        border: 1.5px solid var(--border, #e2e8f0) !important;
+        border-left: 5px solid transparent !important;
+        background: var(--surface, #ffffff);
+        transition: all 0.18s ease-in-out;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.6rem;
     }
     .vehicle-select-item:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-        border-color: var(--bs-border-color-translucent, #cbd5e1);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        border-color: var(--border-strong, #cbd5e1) !important;
     }
     .vehicle-select-item.is-selected {
-        background-color: var(--bs-primary-bg-subtle, #eff6ff) !important;
-        border-color: #93c5fd !important;
-        border-left-color: #2563eb !important;
+        background: #f0f7ff !important;
+        border-color: #3b82f6 !important;
+        border-left: 5px solid #2563eb !important;
         box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12) !important;
+    }
+    .dark .vehicle-select-item.is-selected,
+    [data-bs-theme="dark"] .vehicle-select-item.is-selected {
+        background: rgba(30, 58, 138, 0.3) !important;
+        border-color: #3b82f6 !important;
+        border-left-color: #60a5fa !important;
+    }
+
+    .plate-number-box {
+        font-family: monospace, sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        color: var(--text-main, #0f172a);
+    }
+
+    .badge-departed-status {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        white-space: nowrap;
+    }
+    
+    .badge-ready-status {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        white-space: nowrap;
+    }
+
+    .vehicle-select-list {
+        padding-right: 4px;
     }
     .vehicle-select-list::-webkit-scrollbar {
         width: 6px;
     }
     .vehicle-select-list::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.15);
-        border-radius: 4px;
+        background-color: rgba(148, 163, 184, 0.5);
+        border-radius: 999px;
+    }
+
+    .btn-submit-queue {
+        background: #2563eb;
+        border: 1px solid #2563eb;
+        color: #ffffff;
+        font-weight: 700;
+        border-radius: 10px;
+        padding: 0.6rem 1.3rem;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        transition: all 0.15s ease;
+    }
+    .btn-submit-queue:hover:not(:disabled) {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        color: #ffffff;
+    }
+    .btn-submit-queue:disabled {
+        background: #cbd5e1;
+        border-color: #cbd5e1;
+        color: #64748b;
+        box-shadow: none;
+        cursor: not-allowed;
     }
 </style>
 
@@ -649,16 +792,19 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <form action="<?= base_url('staff/queue/add') ?>" method="post" id="addToQueueForm">
             <?= csrf_field() ?>
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-                <div class="modal-header px-4 py-3 bg-body border-bottom">
+            <div class="modal-content">
+                <!-- Header -->
+                <div class="modal-header">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white shadow-sm" 
-                             style="width: 44px; height: 44px; background: linear-gradient(135deg, #2563eb, #0284c7);">
-                            <i class="bi bi-truck-front-fill fs-4"></i>
+                        <div class="modal-icon-badge">
+                            <i class="bi bi-truck-front-fill fs-5"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold text-body mb-0" style="letter-spacing: -0.01em;">Add Vehicles to Queue</h5>
-                            <span class="text-muted small">Select one or more available vehicles to dispatch</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <h5 class="modal-title fw-bold mb-0">Add Vehicles to Queue</h5>
+                                <span class="badge rounded-pill bg-primary-subtle text-primary fw-bold" style="font-size: 0.7rem;">BATCH DISPATCH</span>
+                            </div>
+                            <span class="text-muted small">Select one or more available vehicles to dispatch into the active queue</span>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -666,7 +812,7 @@
                 
                 <div class="modal-body p-4">
                     <?php if (empty($vehicles)): ?>
-                        <div class="text-center py-5 text-muted">
+                        <div class="text-center py-5">
                             <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-3 text-success">
                                 <i class="bi bi-check-circle-fill fs-1"></i>
                             </div>
@@ -675,64 +821,75 @@
                         </div>
                     <?php else: ?>
                         <!-- Quick Actions & Search Filter Bar -->
-                        <div class="p-2.5 p-sm-3 bg-light rounded-3 mb-3 border">
+                        <div class="queue-toolbar-card mb-3">
                             <div class="row g-2 align-items-center">
                                 <div class="col-12 col-sm">
                                     <div class="input-group input-group-sm">
                                         <span class="input-group-text bg-body border-end-0 text-muted ps-3">
                                             <i class="bi bi-search"></i>
                                         </span>
-                                        <input type="text" id="vehicleModalSearch" class="form-control bg-body border-start-0 ps-0" placeholder="Search plate number, type, destination..." autocomplete="off">
+                                        <input type="text" id="vehicleModalSearch" class="form-control search-input-modern border-start-0 ps-0" placeholder="Search plate number, type, route, driver..." autocomplete="off">
                                     </div>
                                 </div>
                                 <div class="col-12 col-sm-auto d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary fw-semibold px-3" id="selectAllVehiclesBtn" style="border-radius: 8px;">
-                                        <i class="bi bi-check-all me-1"></i>Select All
+                                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
+                                        <i class="bi bi-check-all fs-6"></i> Select All
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" id="deselectAllVehiclesBtn" style="border-radius: 8px;">
-                                        <i class="bi bi-x-circle me-1"></i>Clear
+                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3 d-flex align-items-center gap-1" id="deselectAllVehiclesBtn" style="border-radius: 8px;">
+                                        <i class="bi bi-x-circle"></i> Clear
                                     </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Scrollable Vehicle Card List -->
-                        <div class="vehicle-select-list pe-1 mb-3" style="max-height: 310px; overflow-y: auto;" id="vehicleListContainer">
+                        <div class="vehicle-select-list mb-3" style="max-height: 240px; overflow-y: auto;" id="vehicleListContainer">
                             <?php foreach ($vehicles as $v): ?>
                                 <?php
                                     $vType = $v['type'] ?? '';
                                     $imgFile = vehicle_type_image($vType);
                                     $isDeparted = !empty($v['is_departed']);
                                     $departedTime = $v['departed_time'] ?? '';
+
+                                    $searchableText = strtolower(esc(implode(' ', array_filter([
+                                        $v['plate_number'] ?? '',
+                                        $v['type'] ?? '',
+                                        $v['route_origin'] ?? '',
+                                        $v['route_destination'] ?? '',
+                                        $v['driver_name'] ?? '',
+                                        $v['owner_name'] ?? '',
+                                        $v['operator_name'] ?? ''
+                                    ]))));
                                 ?>
-                                <div class="vehicle-select-item p-3 mb-2 rounded-3 border d-flex align-items-center justify-content-between gap-3 bg-body"
-                                     data-search="<?= strtolower(esc($v['plate_number']) . ' ' . esc($v['type']) . ' ' . esc($v['route_destination'] ?? '')) ?>">
+                                <div class="vehicle-select-item" data-search="<?= $searchableText ?>">
                                     <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
                                         <div class="form-check mb-0 flex-shrink-0">
                                             <input class="form-check-input vehicle-checkbox" type="checkbox" name="vehicle_ids[]" value="<?= $v['id'] ?>" id="veh_check_<?= $v['id'] ?>" style="cursor: pointer; width: 1.3em; height: 1.3em;">
                                         </div>
-                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: rgba(255,255,255,0.9);">
                                             <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 26px; width: auto;">
                                         </div>
                                         <div class="min-w-0 flex-grow-1">
-                                            <div class="d-flex align-items-center gap-2 mb-1">
-                                                <span class="fw-bold fs-6 text-body me-1" style="font-family: monospace, sans-serif; letter-spacing: 0.5px;"><?= esc($v['plate_number']) ?></span>
+                                            <div class="d-flex align-items-center gap-2 mb-0.5">
+                                                <span class="plate-number-box me-1"><?= esc($v['plate_number']) ?></span>
                                                 <?= vehicle_type_badge($vType) ?>
                                             </div>
                                             <div class="text-muted small d-flex align-items-center gap-1 text-truncate">
                                                 <i class="bi bi-geo-alt-fill text-primary small"></i>
-                                                <span class="fw-medium"><?= !empty($v['route_origin']) ? strtoupper(esc($v['route_origin'])) . ' &rarr; ' . strtoupper(esc($v['route_destination'])) : 'No Route' ?></span>
+                                                <span class="fw-semibold text-secondary"><?= !empty($v['route_origin']) ? strtoupper(esc($v['route_origin'])) . ' &rarr; ' . strtoupper(esc($v['route_destination'])) : 'No Route Assigned' ?></span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex-shrink-0 text-end">
                                         <?php if ($isDeparted): ?>
-                                            <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1.5" style="font-size: 11px; font-weight: 600;" title="Currently Departed">
-                                                <i class="bi bi-clock-history me-1"></i>DEPARTED <?= esc($departedTime) ?>
+                                            <span class="badge-departed-status" title="Recently Departed">
+                                                <i class="bi bi-clock-history"></i>
+                                                <span>DEPARTED <?= esc($departedTime) ?></span>
                                             </span>
                                         <?php else: ?>
-                                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5" style="font-size: 11px; font-weight: 600;">
-                                                <i class="bi bi-check-circle-fill me-1"></i>Ready
+                                            <span class="badge-ready-status">
+                                                <i class="bi bi-check-circle-fill"></i>
+                                                <span>READY</span>
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -741,16 +898,18 @@
                         </div>
 
                         <!-- Selection Summary & Info Banner -->
-                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-0 border">
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="badge rounded-pill bg-primary px-3 py-2 fs-6 fw-bold shadow-sm" id="selectedBadge">
-                                    <i class="bi bi-check2-square me-1"></i> <span id="selectedCountNum">0</span> Selected
-                                </span>
-                                <span class="text-muted small" id="selectionHintText">Click any card to select</span>
+                        <div class="p-3 rounded-3 border bg-body-tertiary">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge rounded-pill bg-primary px-3 py-2 fs-6 fw-bold shadow-sm" id="selectedBadge">
+                                        <i class="bi bi-check2-square me-1"></i> <span id="selectedCountNum">0</span> Selected
+                                    </span>
+                                    <span class="text-muted small fw-medium" id="selectionHintText">Click any vehicle card to select</span>
+                                </div>
+                                <div class="text-muted small">
+                                    <i class="bi bi-clock-history me-1 text-primary"></i>ETAs calculated automatically
+                                </div>
                             </div>
-                            <span class="text-muted small d-none d-sm-inline">
-                                <i class="bi bi-clock me-1"></i>ETAs calculated automatically
-                            </span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -758,8 +917,8 @@
                 <div class="modal-footer px-4 py-3 bg-body border-top">
                     <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
                     <?php if (!empty($vehicles)): ?>
-                        <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" id="submitToQueueBtn" style="border-radius: 10px;" disabled>
-                            <i class="bi bi-plus-lg"></i> Add Selected Vehicles to Queue
+                        <button type="submit" class="btn btn-submit-queue d-flex align-items-center gap-2" id="submitToQueueBtn" disabled>
+                            <i class="bi bi-plus-circle-fill fs-6"></i> Add Selected Vehicles to Queue
                         </button>
                     <?php endif; ?>
                 </div>
@@ -1003,6 +1162,11 @@
             if (selectedCountNum) selectedCountNum.textContent = checkedCount;
             if (submitBtn) {
                 submitBtn.disabled = (checkedCount === 0);
+                if (checkedCount > 0) {
+                    submitBtn.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add ' + checkedCount + ' Vehicle' + (checkedCount > 1 ? 's' : '') + ' to Queue';
+                } else {
+                    submitBtn.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add Selected Vehicles to Queue';
+                }
             }
             if (selectedBadge) {
                 if (checkedCount > 0) {
@@ -1044,7 +1208,7 @@
         if (selectAllBtn) {
             selectAllBtn.addEventListener('click', function() {
                 vehicleItems.forEach(function(item) {
-                    if (item.style.display !== 'none') {
+                    if (!item.classList.contains('d-none') && item.style.display !== 'none') {
                         var cb = item.querySelector('.vehicle-checkbox');
                         if (cb) {
                             cb.checked = true;
@@ -1071,11 +1235,13 @@
             modalSearchInput.addEventListener('input', function() {
                 var query = modalSearchInput.value.trim().toLowerCase();
                 vehicleItems.forEach(function(item) {
-                    var searchData = item.getAttribute('data-search') || '';
+                    var searchData = (item.getAttribute('data-search') || '').toLowerCase();
                     if (!query || searchData.indexOf(query) !== -1) {
-                        item.style.display = 'flex';
+                        item.classList.remove('d-none');
+                        item.style.setProperty('display', 'flex', 'important');
                     } else {
-                        item.style.display = 'none';
+                        item.classList.add('d-none');
+                        item.style.setProperty('display', 'none', 'important');
                     }
                 });
             });
@@ -1132,7 +1298,7 @@
                             }, 100);
 
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Add Selected Vehicles to Queue';
+                            updateSelectionCount();
                         } else {
                             addForm.submit();
                         }

@@ -126,17 +126,42 @@ class Queue extends BaseController
                 }
             }
 
-            foreach ($vehicles as &$v) {
+            $currentTime = time();
+            $filteredVehicles = [];
+
+            foreach ($vehicles as $v) {
                 $vId = (int) $v['id'];
                 if (isset($departedMap[$vId]) && !empty($departedMap[$vId])) {
+                    $depTimestamp = strtotime($departedMap[$vId]);
+                    $elapsedMinutes = ($currentTime - $depTimestamp) / 60;
+
+                    // If departed less than 30 minutes ago, hide completely (disappear for 30 mins)
+                    if ($elapsedMinutes < 30) {
+                        continue;
+                    }
+
+                    // Reappeared after 30 mins -> mark as departed
                     $v['is_departed'] = true;
-                    $v['departed_time'] = date('g:i A', strtotime($departedMap[$vId]));
+                    $v['departed_time'] = date('g:i A', $depTimestamp);
+                    $v['departed_timestamp'] = $depTimestamp;
                 } else {
                     $v['is_departed'] = false;
                     $v['departed_time'] = null;
+                    $v['departed_timestamp'] = 0;
                 }
+
+                $filteredVehicles[] = $v;
             }
-            unset($v);
+
+            // Sort: READY vehicles first at the top, DEPARTED vehicles ordered at the bottom of the list
+            usort($filteredVehicles, function($a, $b) {
+                if ($a['is_departed'] !== $b['is_departed']) {
+                    return $a['is_departed'] ? 1 : -1; // ready (false) comes before departed (true)
+                }
+                return strcmp($a['plate_number'], $b['plate_number']);
+            });
+
+            $vehicles = $filteredVehicles;
         }
 
         $data = [
