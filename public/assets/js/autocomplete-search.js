@@ -418,7 +418,8 @@
                     .map(opt => ({
                         value: opt.value,
                         text: opt.text.trim(),
-                        selected: opt.selected
+                        selected: opt.selected,
+                        isDeparted: opt.getAttribute('data-departed') === 'true' || opt.text.toUpperCase().includes('DEPARTED')
                     }));
             }
 
@@ -503,10 +504,11 @@
                         const regex = new RegExp(`(${cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
                         displayName = opt.text.replace(regex, '<mark class="search-highlight">$1</mark>');
                     }
+                    const departedBadgeHtml = opt.isDeparted ? `<span class="badge bg-secondary bg-opacity-75 text-white ms-2" style="font-size: 10px; padding: 2px 7px; border-radius: 4px;"><i class="bi bi-send-check me-1"></i>DEPARTED</span>` : '';
                     return `
                         <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"
                              style="cursor: pointer; font-size: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s ease;">
-                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>${displayName}</span>
+                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>${displayName}${departedBadgeHtml}</span>
                             <span class="badge rounded-pill autocomplete-badge" style="font-size: 11px; padding: 4px 10px; font-weight: 600;">${categoryBadge}</span>
                         </div>
                     `;

@@ -80,29 +80,63 @@ class Queue extends BaseController
 
         $queue = $builder->orderBy('queue.position', 'ASC')->findAll();
 
-        // Filter vehicles: only show vehicles assigned to dispatcher's routes
+        // Get list of vehicle_ids that are currently active in queue (waiting or boarding)
+        $activeQueuedVehicleIds = $this->queueModel
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->findColumn('vehicle_id') ?: [];
+
+        // Filter vehicles: only show vehicles assigned to dispatcher's routes AND not currently queued
         $freshVehicleModel = new VehicleModel();
+        $vehicleBuilder = $freshVehicleModel
+            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
+            ->join('routes', 'routes.id = vehicles.route_id', 'left')
+            ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
+            ->where('vehicles.status', 'active')
+            ->where('vehicles.route_id IS NOT NULL');
+
+        if (!empty($activeQueuedVehicleIds)) {
+            $vehicleBuilder->whereNotIn('vehicles.id', $activeQueuedVehicleIds);
+        }
+
         if ($assignedRouteIds !== null) {
             if (!empty($assignedRouteIds)) {
-                $vehicles = $freshVehicleModel
-                    ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
-                    ->join('routes', 'routes.id = vehicles.route_id', 'left')
-                    ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
-                    ->where('vehicles.status', 'active')
-                    ->where('vehicles.route_id IS NOT NULL')
-                    ->whereIn('vehicles.route_id', $assignedRouteIds)
-                    ->findAll();
+                $vehicles = $vehicleBuilder->whereIn('vehicles.route_id', $assignedRouteIds)->findAll();
             } else {
                 $vehicles = [];
             }
         } else {
-            $vehicles = $freshVehicleModel
-                ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
-                ->join('routes', 'routes.id = vehicles.route_id', 'left')
-                ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
-                ->where('vehicles.status', 'active')
-                ->where('vehicles.route_id IS NOT NULL')
+            $vehicles = $vehicleBuilder->findAll();
+        }
+
+        // Fetch latest departed records for available vehicles to mark departed status & time
+        if (!empty($vehicles)) {
+            $availableVehicleIds = array_column($vehicles, 'id');
+            $departedRecords = $this->queueModel
+                ->select('vehicle_id, departure_time')
+                ->whereIn('vehicle_id', $availableVehicleIds)
+                ->where('status', 'departed')
+                ->orderBy('departure_time', 'DESC')
                 ->findAll();
+
+            $departedMap = [];
+            foreach ($departedRecords as $dep) {
+                $vId = (int) $dep['vehicle_id'];
+                if (!isset($departedMap[$vId])) {
+                    $departedMap[$vId] = $dep['departure_time'];
+                }
+            }
+
+            foreach ($vehicles as &$v) {
+                $vId = (int) $v['id'];
+                if (isset($departedMap[$vId]) && !empty($departedMap[$vId])) {
+                    $v['is_departed'] = true;
+                    $v['departed_time'] = date('g:i A', strtotime($departedMap[$vId]));
+                } else {
+                    $v['is_departed'] = false;
+                    $v['departed_time'] = null;
+                }
+            }
+            unset($v);
         }
 
         $data = [
@@ -117,115 +151,144 @@ class Queue extends BaseController
 
     public function add()
     {
-        $rules = [
-            'vehicle_id' => 'required|integer',
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->with('error', 'Invalid Input');
+        $vehicleIds = $this->request->getPost('vehicle_ids');
+        if (empty($vehicleIds)) {
+            $singleId = $this->request->getPost('vehicle_id');
+            if (!empty($singleId)) {
+                $vehicleIds = [$singleId];
+            }
         }
 
-        $vehicleId = $this->request->getPost('vehicle_id');
-
-        // Get vehicle and its assigned route
-        $vehicle = $this->vehicleModel->find($vehicleId);
-        if (!$vehicle) {
-            return redirect()->back()->with('error', 'Vehicle not found.');
+        if (empty($vehicleIds)) {
+            return redirect()->back()->with('error', 'Please select at least one vehicle.');
         }
 
-        $routeId = $vehicle['route_id'];
-        if (empty($routeId)) {
-            return redirect()->back()->with('error', 'This vehicle has no assigned route. Please contact the administrator.');
+        if (!is_array($vehicleIds)) {
+            $vehicleIds = [$vehicleIds];
         }
 
-        $route = $this->routeModel->find($routeId);
-        if (!$route) {
-            return redirect()->back()->with('error', 'The route assigned to this vehicle no longer exists.');
-        }
+        $addedCount = 0;
+        $addedPlates = [];
+        $errors = [];
+        $warnings = [];
 
-        // Server-side route authorization check
-        if (!$this->hasRouteAccess((int) $routeId)) {
-            $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to add vehicle to unassigned route ID ' . $routeId . '.');
-            return redirect()->back()->with('error', "You don't have access to this route.");
-        }
-
-        // Check if vehicle is already in queue
-        $existingQueue = $this->queueModel->where('vehicle_id', $vehicleId)
-            ->whereIn('status', ['waiting', 'boarding'])
-            ->first();
-
-        if ($existingQueue) {
-            return redirect()->back()->with('warning', $vehicle['plate_number'] . ' is already in the queue!');
-        }
-        
-        // Check for recent departure (within 1 minute)
         $oneMinuteAgo = date('Y-m-d H:i:s', strtotime('-1 minute'));
-        $recentDeparture = $this->queueModel->where('vehicle_id', $vehicleId)
-            ->where('status', 'departed')
-            ->where('departure_time >=', $oneMinuteAgo)
-            ->orderBy('departure_time', 'DESC')
-            ->first();
-
-        if ($recentDeparture) {
-            $departTime = strtotime($recentDeparture['departure_time']);
-            $secondsAgo = time() - $departTime;
-            return redirect()->back()->with('error', 'This vehicle departed only ' . $secondsAgo . ' seconds ago. Please wait 1 minute before adding it back.');
-        }
-
-        // Calculate next position (temporary — reorderByDeparture() finalises it)
-        $lastPosition = $this->queueModel->selectMax('position')->first();
-        $nextPosition = ($lastPosition['position'] ?? 0) + 1;
-
-        // Look up the departure rule for the success message/log only. The
-        // countdown does NOT start here — it starts when boarding begins (see
-        // updateStatus()), so estimated_departure stays null while waiting.
         $departureRuleModel = new DepartureRuleModel();
-        $currentTime = date('H:i:s'); // Server local time (Asia/Manila)
-        $terminalId  = (int) ($route['terminal_id'] ?? 1);
-        $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
-        $waitMinutes = (int) $matchedRule['wait_minutes'];
-        $ruleLabel = $matchedRule['label'] ?? 'Default';
-
-        // Log warning if no rule matched (using fallback)
-        if (empty($matchedRule['time_from'])) {
-            $this->logActivity('No departure rule matched', 'No departure rule covers ' . date('g:i A') . '. Using default of 30 minutes.');
-        }
-
-        $arrivalTime = date('Y-m-d H:i:s');
-        $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
+        $currentTime = date('H:i:s');
 
         $db = \Config\Database::connect();
         $db->transStart();
 
-        $queueId = $this->queueModel->insert([
-            'vehicle_id' => $vehicleId,
-            'route_id' => $routeId,
-            'status' => 'waiting',
-            'position' => $nextPosition,
-            'arrival_time' => $arrivalTime,
-            'estimated_departure' => $estimatedDeparture,
-        ]);
+        foreach ($vehicleIds as $vehicleId) {
+            $vehicleId = (int) $vehicleId;
+            if ($vehicleId <= 0) continue;
 
-        // Order the active queue by departure: this new waiting vehicle lands
-        // after any boarding vehicles, in arrival order among the waiting ones.
-        $this->queueModel->reorderByDeparture();
+            // Get vehicle and its assigned route
+            $vehicle = $this->vehicleModel->find($vehicleId);
+            if (!$vehicle) {
+                $errors[] = 'Vehicle not found.';
+                continue;
+            }
+
+            $routeId = $vehicle['route_id'];
+            if (empty($routeId)) {
+                $errors[] = 'Vehicle ' . $vehicle['plate_number'] . ' has no assigned route.';
+                continue;
+            }
+
+            $route = $this->routeModel->find($routeId);
+            if (!$route) {
+                $errors[] = 'The route assigned to vehicle ' . $vehicle['plate_number'] . ' no longer exists.';
+                continue;
+            }
+
+            // Server-side route authorization check
+            if (!$this->hasRouteAccess((int) $routeId)) {
+                $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to add vehicle to unassigned route ID ' . $routeId . '.');
+                $errors[] = "You don't have access to the route for " . $vehicle['plate_number'] . '.';
+                continue;
+            }
+
+            // Check if vehicle is already in queue
+            $existingQueue = $this->queueModel->where('vehicle_id', $vehicleId)
+                ->whereIn('status', ['waiting', 'boarding'])
+                ->first();
+
+            if ($existingQueue) {
+                $warnings[] = $vehicle['plate_number'] . ' is already in the queue!';
+                continue;
+            }
+
+            // Check for recent departure (within 1 minute)
+            $recentDeparture = $this->queueModel->where('vehicle_id', $vehicleId)
+                ->where('status', 'departed')
+                ->where('departure_time >=', $oneMinuteAgo)
+                ->orderBy('departure_time', 'DESC')
+                ->first();
+
+            if ($recentDeparture) {
+                $departTime = strtotime($recentDeparture['departure_time']);
+                $secondsAgo = time() - $departTime;
+                $errors[] = $vehicle['plate_number'] . ' departed only ' . $secondsAgo . ' seconds ago. Please wait 1 minute before adding it back.';
+                continue;
+            }
+
+            // Calculate next position (temporary — reorderByDeparture() finalises it)
+            $lastPosition = $this->queueModel->selectMax('position')->first();
+            $nextPosition = ($lastPosition['position'] ?? 0) + 1;
+
+            $terminalId  = (int) ($route['terminal_id'] ?? 1);
+            $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
+            $waitMinutes = (int) $matchedRule['wait_minutes'];
+            $ruleLabel   = $matchedRule['label'] ?? 'Default';
+
+            $arrivalTime = date('Y-m-d H:i:s');
+            $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
+
+            $queueId = $this->queueModel->insert([
+                'vehicle_id'          => $vehicleId,
+                'route_id'            => $routeId,
+                'status'              => 'waiting',
+                'position'            => $nextPosition,
+                'arrival_time'        => $arrivalTime,
+                'estimated_departure' => $estimatedDeparture,
+            ]);
+
+            $addedCount++;
+            $addedPlates[] = $vehicle['plate_number'];
+
+            $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
+
+            // Fetch complete queue item for broadcast
+            $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
+                ->withFullJoins()
+                ->where('queue.id', $queueId)
+                ->first();
+
+            $this->broadcastUpdate('queue_update', [
+                'action' => 'add',
+                'queue_item' => $queueItem
+            ]);
+        }
+
+        // Order the active queue by departure
+        if ($addedCount > 0) {
+            $this->queueModel->reorderByDeparture();
+        }
 
         $db->transComplete();
 
-        $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
+        if ($addedCount > 0) {
+            $successMsg = implode(', ', $addedPlates) . ($addedCount > 1 ? ' added to queue.' : ' added to queue.');
+            if (!empty($errors) || !empty($warnings)) {
+                $extra = implode(' ', array_merge($warnings, $errors));
+                return redirect()->to('/staff/queue')->with('success', $successMsg)->with('warning', $extra);
+            }
+            return redirect()->to('/staff/queue')->with('success', $successMsg);
+        }
 
-        // Fetch complete queue item for broadcast
-        $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
-            ->withFullJoins()
-            ->where('queue.id', $queueId)
-            ->first();
-
-        $this->broadcastUpdate('queue_update', [
-            'action' => 'add',
-            'queue_item' => $queueItem
-        ]);
-
-        return redirect()->to('/staff/queue')->with('success', $vehicle['plate_number'] . ' added to queue for ' . ($route['destination'] ?? 'route') . '. Departs ~' . $waitMinutes . ' min (' . $ruleLabel . ').');
+        $errorMsg = !empty($errors) ? implode(' ', $errors) : (!empty($warnings) ? implode(' ', $warnings) : 'No vehicles were added to queue.');
+        return redirect()->to('/staff/queue')->with('error', $errorMsg);
     }
 
     public function updateStatus($id, $status)

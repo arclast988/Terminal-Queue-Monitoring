@@ -618,41 +618,150 @@
     <?php endforeach; ?>
 <?php endif; ?>
 
+<style>
+    .vehicle-select-item {
+        cursor: pointer;
+        user-select: none;
+        border-left: 4px solid transparent !important;
+        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .vehicle-select-item:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border-color: var(--bs-border-color-translucent, #cbd5e1);
+    }
+    .vehicle-select-item.is-selected {
+        background-color: var(--bs-primary-bg-subtle, #eff6ff) !important;
+        border-color: #93c5fd !important;
+        border-left-color: #2563eb !important;
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12) !important;
+    }
+    .vehicle-select-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    .vehicle-select-list::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.15);
+        border-radius: 4px;
+    }
+</style>
+
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
-    <div class="modal-dialog">
-        <form action="<?= base_url('staff/queue/add') ?>" method="post">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <form action="<?= base_url('staff/queue/add') ?>" method="post" id="addToQueueForm">
             <?= csrf_field() ?>
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Add Vehicle to Queue</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label-modern">Select Vehicle</label>
-                        <select name="vehicle_id" id="vehicleSelect" class="form-select-modern" required>
-                            <option value="" data-route="">-- Choose Vehicle --</option>
-                            <?php foreach ($vehicles as $v): ?>
-                                <option value="<?= $v['id'] ?>"
-                                    data-route="<?= !empty($v['route_origin']) ? strtoupper(esc($v['route_origin'])) . ' → ' . strtoupper(esc($v['route_destination'])) : '' ?>"
-                                    data-type="<?= esc($v['type']) ?>">
-                                    <?= esc($v['plate_number']) ?> (<?= ucfirst(esc($v['type'])) ?>)<?= !empty($v['route_destination']) ? ' — ' . strtoupper(esc($v['route_destination'])) : '' ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3" id="routeInfoBox" style="display:none;">
-                        <label class="form-label-modern">Assigned Route</label>
-                        <div class="form-control bg-light" id="routeInfoText" style="pointer-events:none; border-radius: var(--radius-md);"></div>
-                    </div>
-                    <div class="mb-0">
-                        <div class="form-text text-muted">
-                            <i class="bi bi-clock me-1"></i>Estimated departure will be set automatically based on departure time rules.
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-header px-4 py-3 bg-body border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white shadow-sm" 
+                             style="width: 44px; height: 44px; background: linear-gradient(135deg, #2563eb, #0284c7);">
+                            <i class="bi bi-truck-front-fill fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-body mb-0" style="letter-spacing: -0.01em;">Add Vehicles to Queue</h5>
+                            <span class="text-muted small">Select one or more available vehicles to dispatch</span>
                         </div>
                     </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn-modern btn-modern-primary" id="submitToQueueBtn">Add to Queue</button>
+                
+                <div class="modal-body p-4">
+                    <?php if (empty($vehicles)): ?>
+                        <div class="text-center py-5 text-muted">
+                            <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-3 text-success">
+                                <i class="bi bi-check-circle-fill fs-1"></i>
+                            </div>
+                            <h6 class="fw-bold fs-5 text-body">All vehicles are currently queued!</h6>
+                            <p class="small text-muted mb-0">There are no unqueued active vehicles assigned to your routes right now.</p>
+                        </div>
+                    <?php else: ?>
+                        <!-- Quick Actions & Search Filter Bar -->
+                        <div class="p-2.5 p-sm-3 bg-light rounded-3 mb-3 border">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-12 col-sm">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-body border-end-0 text-muted ps-3">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+                                        <input type="text" id="vehicleModalSearch" class="form-control bg-body border-start-0 ps-0" placeholder="Search plate number, type, destination..." autocomplete="off">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-sm-auto d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary fw-semibold px-3" id="selectAllVehiclesBtn" style="border-radius: 8px;">
+                                        <i class="bi bi-check-all me-1"></i>Select All
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3" id="deselectAllVehiclesBtn" style="border-radius: 8px;">
+                                        <i class="bi bi-x-circle me-1"></i>Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scrollable Vehicle Card List -->
+                        <div class="vehicle-select-list pe-1 mb-3" style="max-height: 310px; overflow-y: auto;" id="vehicleListContainer">
+                            <?php foreach ($vehicles as $v): ?>
+                                <?php
+                                    $vType = $v['type'] ?? '';
+                                    $imgFile = vehicle_type_image($vType);
+                                    $isDeparted = !empty($v['is_departed']);
+                                    $departedTime = $v['departed_time'] ?? '';
+                                ?>
+                                <div class="vehicle-select-item p-3 mb-2 rounded-3 border d-flex align-items-center justify-content-between gap-3 bg-body"
+                                     data-search="<?= strtolower(esc($v['plate_number']) . ' ' . esc($v['type']) . ' ' . esc($v['route_destination'] ?? '')) ?>">
+                                    <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                                        <div class="form-check mb-0 flex-shrink-0">
+                                            <input class="form-check-input vehicle-checkbox" type="checkbox" name="vehicle_ids[]" value="<?= $v['id'] ?>" id="veh_check_<?= $v['id'] ?>" style="cursor: pointer; width: 1.3em; height: 1.3em;">
+                                        </div>
+                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 26px; width: auto;">
+                                        </div>
+                                        <div class="min-w-0 flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="fw-bold fs-6 text-body me-1" style="font-family: monospace, sans-serif; letter-spacing: 0.5px;"><?= esc($v['plate_number']) ?></span>
+                                                <?= vehicle_type_badge($vType) ?>
+                                            </div>
+                                            <div class="text-muted small d-flex align-items-center gap-1 text-truncate">
+                                                <i class="bi bi-geo-alt-fill text-primary small"></i>
+                                                <span class="fw-medium"><?= !empty($v['route_origin']) ? strtoupper(esc($v['route_origin'])) . ' &rarr; ' . strtoupper(esc($v['route_destination'])) : 'No Route' ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0 text-end">
+                                        <?php if ($isDeparted): ?>
+                                            <span class="badge rounded-pill bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2.5 py-1.5" style="font-size: 11px; font-weight: 600;" title="Currently Departed">
+                                                <i class="bi bi-clock-history me-1"></i>DEPARTED <?= esc($departedTime) ?>
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5" style="font-size: 11px; font-weight: 600;">
+                                                <i class="bi bi-check-circle-fill me-1"></i>Ready
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+
+                        <!-- Selection Summary & Info Banner -->
+                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-0 border">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge rounded-pill bg-primary px-3 py-2 fs-6 fw-bold shadow-sm" id="selectedBadge">
+                                    <i class="bi bi-check2-square me-1"></i> <span id="selectedCountNum">0</span> Selected
+                                </span>
+                                <span class="text-muted small" id="selectionHintText">Click any card to select</span>
+                            </div>
+                            <span class="text-muted small d-none d-sm-inline">
+                                <i class="bi bi-clock me-1"></i>ETAs calculated automatically
+                            </span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div class="modal-footer px-4 py-3 bg-body border-top">
+                    <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal" style="border-radius: 10px;">Cancel</button>
+                    <?php if (!empty($vehicles)): ?>
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" id="submitToQueueBtn" style="border-radius: 10px;" disabled>
+                            <i class="bi bi-plus-lg"></i> Add Selected Vehicles to Queue
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
         </form>
@@ -855,17 +964,21 @@
         modalSelector: '[id^="confirmDepartModal"]'
     });
 
-    // Handle Add to Queue Form — show route info on vehicle selection
+    // Handle Add to Queue Form — multi-vehicle selection, card click interactivity & availability check
     document.addEventListener('DOMContentLoaded', function() {
-        var addForm = document.querySelector('#addToQueueModal form');
+        var addForm = document.getElementById('addToQueueForm');
         var addModalEl = document.getElementById('addToQueueModal');
         var warningModalEl = document.getElementById('departureWarningModal');
         var warningMsg = document.getElementById('departureWarningMessage');
         var submitBtn = document.getElementById('submitToQueueBtn');
 
-        var vehicleSelect = document.getElementById('vehicleSelect');
-        var routeInfoBox = document.getElementById('routeInfoBox');
-        var routeInfoText = document.getElementById('routeInfoText');
+        var modalSearchInput = document.getElementById('vehicleModalSearch');
+        var vehicleItems = document.querySelectorAll('#vehicleListContainer .vehicle-select-item');
+        var checkboxes = document.querySelectorAll('.vehicle-checkbox');
+        var selectAllBtn = document.getElementById('selectAllVehiclesBtn');
+        var deselectAllBtn = document.getElementById('deselectAllVehiclesBtn');
+        var selectedCountNum = document.getElementById('selectedCountNum');
+        var selectedBadge = document.getElementById('selectedBadge');
 
         function cleanUpAllModals() {
             document.body.classList.remove('modal-open');
@@ -876,61 +989,142 @@
             });
         }
 
+        function updateCardStyle(card) {
+            var cb = card.querySelector('.vehicle-checkbox');
+            if (cb && cb.checked) {
+                card.classList.add('is-selected');
+            } else {
+                card.classList.remove('is-selected');
+            }
+        }
+
+        function updateSelectionCount() {
+            var checkedCount = document.querySelectorAll('.vehicle-checkbox:checked').length;
+            if (selectedCountNum) selectedCountNum.textContent = checkedCount;
+            if (submitBtn) {
+                submitBtn.disabled = (checkedCount === 0);
+            }
+            if (selectedBadge) {
+                if (checkedCount > 0) {
+                    selectedBadge.className = 'badge rounded-pill bg-primary px-3 py-2 fs-6 fw-bold shadow-sm';
+                } else {
+                    selectedBadge.className = 'badge rounded-pill bg-secondary bg-opacity-75 px-3 py-2 fs-6 fw-bold';
+                }
+            }
+        }
+
+        // Entire Card Click Handler
+        vehicleItems.forEach(function(card) {
+            card.addEventListener('click', function(e) {
+                var cb = card.querySelector('.vehicle-checkbox');
+                if (!cb) return;
+
+                // If click was directly on checkbox input, let default behavior run then sync style
+                if (e.target.classList.contains('vehicle-checkbox')) {
+                    updateCardStyle(card);
+                    updateSelectionCount();
+                    return;
+                }
+
+                // Toggle checkbox when clicking anywhere on card
+                cb.checked = !cb.checked;
+                updateCardStyle(card);
+                updateSelectionCount();
+            });
+        });
+
+        checkboxes.forEach(function(cb) {
+            cb.addEventListener('change', function() {
+                var card = cb.closest('.vehicle-select-item');
+                if (card) updateCardStyle(card);
+                updateSelectionCount();
+            });
+        });
+
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                vehicleItems.forEach(function(item) {
+                    if (item.style.display !== 'none') {
+                        var cb = item.querySelector('.vehicle-checkbox');
+                        if (cb) {
+                            cb.checked = true;
+                            updateCardStyle(item);
+                        }
+                    }
+                });
+                updateSelectionCount();
+            });
+        }
+
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(function(cb) {
+                    cb.checked = false;
+                    var card = cb.closest('.vehicle-select-item');
+                    if (card) updateCardStyle(card);
+                });
+                updateSelectionCount();
+            });
+        }
+
+        if (modalSearchInput) {
+            modalSearchInput.addEventListener('input', function() {
+                var query = modalSearchInput.value.trim().toLowerCase();
+                vehicleItems.forEach(function(item) {
+                    var searchData = item.getAttribute('data-search') || '';
+                    if (!query || searchData.indexOf(query) !== -1) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
         if (warningModalEl) {
             warningModalEl.addEventListener('hidden.bs.modal', function () {
                 cleanUpAllModals();
             });
 
-            // Also handle the Understood button directly as a fallback
             var understoodBtn = warningModalEl.querySelector('[data-bs-dismiss="modal"]');
             if (understoodBtn) {
                 understoodBtn.addEventListener('click', function() {
                     var warningModal = bootstrap.Modal.getInstance(warningModalEl);
                     if (warningModal) warningModal.hide();
-                    // Force cleanup after a short delay in case hidden event is delayed
                     setTimeout(cleanUpAllModals, 350);
                 });
             }
         }
 
-        if (vehicleSelect) {
-            vehicleSelect.addEventListener('change', function() {
-                var selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
-                var routeLabel = selectedOption.getAttribute('data-route') || '';
-                if (routeLabel) {
-                    routeInfoText.textContent = routeLabel;
-                    routeInfoBox.style.display = 'block';
-                } else {
-                    routeInfoBox.style.display = 'none';
-                }
-            });
-        }
-
         if (addForm) {
             addForm.addEventListener('submit', function(e) {
-                var vehicleId = addForm.querySelector('select[name="vehicle_id"]').value;
-                if (!vehicleId) return;
+                var checkedCbs = Array.from(document.querySelectorAll('.vehicle-checkbox:checked'));
+                if (checkedCbs.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
 
                 e.preventDefault();
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Checking availability...';
 
-                fetch('<?= base_url('api/check-vehicle-availability') ?>/' + vehicleId)
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.success && !data.available) {
-                            // First: hide the add-to-queue modal completely
+                var checkedIds = checkedCbs.map(function(cb) { return cb.value; });
+                var checkPromises = checkedIds.map(function(id) {
+                    return fetch('<?= base_url('api/check-vehicle-availability') ?>/' + id).then(function(r) { return r.json(); });
+                });
+
+                Promise.all(checkPromises)
+                    .then(function(results) {
+                        var unavailable = results.find(function(data) { return data.success && !data.available; });
+                        if (unavailable) {
                             if (addModalEl && typeof bootstrap !== 'undefined') {
                                 var addModal = bootstrap.Modal.getInstance(addModalEl) || bootstrap.Modal.getOrCreateInstance(addModalEl);
                                 if (addModal) addModal.hide();
                             }
-
-                            // Clean up any lingering backdrops from the add modal
                             cleanUpAllModals();
 
-                            // Show warning after a tick so backdrops are fully cleared
                             setTimeout(function() {
-                                warningMsg.textContent = data.message;
+                                warningMsg.textContent = unavailable.message;
                                 if (warningModalEl && typeof bootstrap !== 'undefined') {
                                     var warningModal = bootstrap.Modal.getOrCreateInstance(warningModalEl);
                                     warningModal.show();
@@ -938,12 +1132,12 @@
                             }, 100);
 
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = 'Add to Queue';
+                            submitBtn.innerHTML = '<i class="bi bi-plus-lg me-1"></i> Add Selected Vehicles to Queue';
                         } else {
                             addForm.submit();
                         }
                     })
-                    .catch(() => {
+                    .catch(function() {
                         addForm.submit();
                     });
             });
