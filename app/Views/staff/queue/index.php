@@ -1222,6 +1222,13 @@
 
         if (deselectAllBtn) {
             deselectAllBtn.addEventListener('click', function() {
+                if (modalSearchInput) {
+                    modalSearchInput.value = '';
+                }
+                vehicleItems.forEach(function(item) {
+                    item.classList.remove('d-none');
+                    item.style.setProperty('display', 'flex', 'important');
+                });
                 checkboxes.forEach(function(cb) {
                     cb.checked = false;
                     var card = cb.closest('.vehicle-select-item');
