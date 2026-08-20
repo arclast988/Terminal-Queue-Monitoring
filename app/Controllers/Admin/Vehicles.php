@@ -67,6 +67,13 @@ class Vehicles extends BaseController
             return redirect()->back()->withInput()->with('error', 'Vehicle type (' . ucfirst($vehicleType) . ') must match the route type (' . ucfirst($route['vehicle_type']) . ').');
         }
 
+        // Driver and Operator must not be the same person
+        $driverName = trim($this->request->getPost('driver_name'));
+        $operatorName = trim($this->request->getPost('operator_name'));
+        if (strtolower($driverName) === strtolower($operatorName)) {
+            return redirect()->back()->withInput()->with('error', 'Driver and Operator must not be the same person.');
+        }
+
         $this->vehicleModel->save([
             'plate_number'  => $this->request->getPost('plate_number'),
             'operator_name' => $this->request->getPost('operator_name'),
@@ -131,6 +138,13 @@ class Vehicles extends BaseController
 
         if ($route && $route['vehicle_type'] !== $vehicleType) {
             return redirect()->back()->withInput()->with('error', 'Vehicle type (' . ucfirst($vehicleType) . ') must match the route type (' . ucfirst($route['vehicle_type']) . ').');
+        }
+
+        // Driver and Operator must not be the same person
+        $driverName = trim($this->request->getPost('driver_name'));
+        $operatorName = trim($this->request->getPost('operator_name'));
+        if (strtolower($driverName) === strtolower($operatorName)) {
+            return redirect()->back()->withInput()->with('error', 'Driver and Operator must not be the same person.');
         }
 
         $this->vehicleModel->update($id, [

@@ -281,6 +281,9 @@ class Queue extends BaseController
 
             $queueId = $this->queueModel->insert([
                 'vehicle_id'          => $vehicleId,
+                'driver_name'         => $vehicle['driver_name'] ?? null,
+                'operator_name'       => $vehicle['operator_name'] ?? $vehicle['owner_name'] ?? null,
+                'plate_number'        => $vehicle['plate_number'] ?? null,
                 'route_id'            => $routeId,
                 'status'              => 'waiting',
                 'position'            => $nextPosition,
@@ -349,6 +352,15 @@ class Queue extends BaseController
         if ($status == 'departed') {
             $data['departure_time'] = date('Y-m-d H:i:s');
             $data['position'] = 0; // Remove from active positions
+            $qItem = $this->queueModel->find($id);
+            if ($qItem) {
+                $veh = (new \App\Models\VehicleModel())->find($qItem['vehicle_id']);
+                if ($veh) {
+                    $data['driver_name']   = !empty($qItem['driver_name']) ? $qItem['driver_name'] : ($veh['driver_name'] ?? null);
+                    $data['operator_name'] = !empty($qItem['operator_name']) ? $qItem['operator_name'] : ($veh['operator_name'] ?? $veh['owner_name'] ?? null);
+                    $data['plate_number']  = !empty($qItem['plate_number']) ? $qItem['plate_number'] : ($veh['plate_number'] ?? null);
+                }
+            }
         } elseif ($status == 'canceled') {
             $data['position'] = 0; // Remove from active positions
             $data['estimated_departure'] = null;

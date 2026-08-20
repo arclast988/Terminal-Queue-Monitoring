@@ -43,7 +43,16 @@
                         <?php foreach ($departures as $item): ?>
                             <tr>
                                 <td class="fw-bold px-4" data-label="Plate Number"><?= esc($item['plate_number']) ?></td>
-                                <td data-label="Driver"><?= esc($item['driver_name'] ?? $item['owner_name'] ?? '—') ?></td>
+                                <td data-label="Driver / Operator">
+                                    <div class="fw-bold"><?= esc($item['driver_name'] ?? '—') ?></div>
+                                    <?php
+                                        $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
+                                        $drName = $item['driver_name'] ?? '';
+                                        if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))):
+                                    ?>
+                                        <small class="text-muted"><i class="bi bi-building me-1"></i><?= esc($opName) ?></small>
+                                    <?php endif; ?>
+                                </td>
                                 <td data-label="Route">
                                     <small class="text-muted"><?= esc($item['origin']) ?></small>
                                     <i class="bi bi-arrow-right text-primary mx-1"></i>
@@ -52,7 +61,7 @@
                                 <td data-label="Departure Time">
                                     <div style="white-space: nowrap;">
                                         <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;">
-                                            <?= date('g:i A', strtotime($item['departure_time'])) ?>
+                                            <?= date('H:i', strtotime($item['departure_time'])) ?>
                                         </span>
                                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                                             <i class="bi bi-calendar3 me-1"></i><?= date('M d, Y', strtotime($item['departure_time'])) ?>

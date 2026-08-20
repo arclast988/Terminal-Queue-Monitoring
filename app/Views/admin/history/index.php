@@ -50,26 +50,41 @@
         .table-modern td {
             color: #e2e8f0 !important;
         }
+    .retention-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
     }
 </style>
 
 <div class="page-header-modern fade-in">
-    <h1 class="page-title-modern">
-        <i class="bi bi-clock-history"></i>
-        Departure History
-    </h1>
-    <div class="d-flex gap-2">
+    <div>
+        <h1 class="page-title-modern mb-1">
+            <i class="bi bi-clock-history"></i>
+            Departure History
+        </h1>
+        <div class="retention-pill">
+            <i class="bi bi-shield-check"></i> Auto-Retention: Departure records are automatically kept for 60 days
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
         <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal">
             <i class="bi bi-file-earmark-text"></i> Generate Report
         </button>
-        <?php if ($stats['total'] > 0): ?>
-                <form action="<?= base_url('admin/history/delete-all') ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete ALL departure records? This action cannot be undone?');">
-                    <?= csrf_field() ?>
-                    <button type="submit" class="btn-modern btn-action-delete" title="Delete All">
-                        <i class="bi bi-trash-fill"></i> Delete All
-                    </button>
-                </form>
-        <?php endif; ?>
+        <?php
+            $exportQuery = !empty($_GET) ? '?' . http_build_query($_GET) : '';
+        ?>
+        <a href="<?= base_url('admin/history/export' . $exportQuery) ?>" class="btn-modern btn-modern-outline" title="Export departure records to CSV">
+            <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+        </a>
     </div>
 </div>
 
@@ -191,11 +206,10 @@
                 <thead>
                     <tr>
                         <th>Plate Number</th>
-                        <th>Driver</th>
+                        <th>Driver / Operator</th>
                         <th>Vehicle</th>
                         <th>Route</th>
                         <th>Departure Time</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -205,11 +219,20 @@
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
-                                <td data-label="Driver">
+                                <td data-label="Driver / Operator">
                                     <div class="driver-cell">
-                                        <i class="bi bi-person-badge"></i>
-                                        <?= esc($item['driver_name'] ?? '—') ?>
+                                        <i class="bi bi-person-badge text-primary"></i>
+                                        <span><?= esc($item['driver_name'] ?? '—') ?></span>
                                     </div>
+                                    <?php
+                                        $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
+                                        $drName = $item['driver_name'] ?? '';
+                                        if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))):
+                                    ?>
+                                        <div class="text-muted" style="font-size: 11.5px; margin-top: 2px; font-weight: 500;">
+                                            <i class="bi bi-building me-1 text-muted"></i><?= esc($opName) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td data-label="Vehicle">
                                     <?php
@@ -225,35 +248,25 @@
                                 </td>
                                 <td data-label="Route">
                                     <div class="route-info">
-                                        <i class="bi bi-geo-alt" style="color: var(--primary-red);"></i>
+                                        <i class="bi bi-geo-alt" style="color: var(--primary, #1565c0);"></i>
                                         <span><?= esc($item['origin'] ?? '') ?> → <?= esc($item['destination'] ?? '') ?></span>
                                     </div>
                                 </td>
                                 <td data-label="Departure Time">
                                     <div style="white-space: nowrap;">
                                         <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;">
-                                            <?= date('g:i A', strtotime($item['departure_time'])) ?>
+                                            <?= date('H:i', strtotime($item['departure_time'])) ?>
                                         </span>
                                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                                             <i class="bi bi-calendar3 me-1"></i><?= date('M d, Y', strtotime($item['departure_time'])) ?>
                                         </div>
                                     </div>
                                 </td>
-                                <td data-label="Actions">
-                                    <div class="d-flex gap-2">
-                                        <form action="<?= base_url('admin/history/delete/' . $item['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this departure record?');">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="5" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 No departure records found.
                             </td>
@@ -263,7 +276,7 @@
             </table>
         </div>
     </div>
-    <?php if ($pager): ?>
+    <?php if ($pager && $pager->getPageCount() > 1): ?>
         <div class="modern-card-footer bg-white py-3 d-flex justify-content-center">
             <?= $pager->links() ?>
         </div>

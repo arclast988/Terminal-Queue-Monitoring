@@ -1018,15 +1018,22 @@
         .plate-badge {
             display: inline-flex;
             align-items: center;
+            gap: 4px;
             background: #f1f5f9;
             color: #1e293b;
             border: 1.5px solid #cbd5e1;
             border-radius: 8px;
             padding: 3px 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+
+        .plate-badge .plate-val {
             font-family: 'Courier New', monospace;
             font-size: 14.5px;
             font-weight: 800;
             letter-spacing: 0.5px;
+            color: #0f172a;
         }
 
         .queue-card-route-driver {
@@ -1123,14 +1130,22 @@
         }
 
         .progress-modern {
-            height: 6px;
+            height: 8px;
             background: #e2e8f0;
             border-radius: 10px;
             flex: 1;
-            min-width: 70px;
-            max-width: 130px;
+            min-width: 80px;
+            max-width: 140px;
             overflow: hidden;
             margin: 0;
+            display: flex;
+        }
+
+        .progress-modern .progress-bar,
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.4s ease;
         }
 
         /* Right: Departure Ticket Container */
@@ -1782,7 +1797,7 @@
                                                 <span class="text-muted fw-semibold">Operator:</span> <?= esc($opName) ?>
                                             </span>
                                             <span class="plate-badge">
-                                                <i class="bi bi-card-text me-1 text-muted"></i><?= esc($item['plate_number']) ?>
+                                                <span class="text-muted fw-semibold">Plate Number:</span> <span class="plate-val"><?= esc($item['plate_number']) ?></span>
                                             </span>
                                         </div>
                                     </div>
@@ -2250,7 +2265,7 @@
                                     + '<div class="queue-card-header">'
                                     + '<div class="operator-plate-wrap">'
                                     + '<span class="operator-title"><span class="text-muted fw-semibold">Operator:</span> ' + opName + '</span>'
-                                    + '<span class="plate-badge"><i class="bi bi-card-text me-1 text-muted"></i>' + item.plate_number + '</span>'
+                                    + '<span class="plate-badge"><span class="text-muted fw-semibold">Plate Number:</span> <span class="plate-val">' + item.plate_number + '</span></span>'
                                     + '</div>'
                                     + '</div>'
                                     + '<div class="queue-card-route-driver">'
@@ -2274,7 +2289,7 @@
                                     + fullBadge
                                     + '</div>'
                                     + '<div class="progress progress-modern">'
-                                    + '<div class="progress-bar" style="width:' + percent + '%;background:' + (percent >= 100 ? '#ef4444' : '#2563eb') + ';"></div>'
+                                    + '<div class="progress-bar" style="width:' + percent + '%; height: 100%; background:' + (percent >= 100 ? '#ef4444' : '#2563eb') + ';"></div>'
                                     + '</div>'
                                     + '</div>'
                                     + '</div>'

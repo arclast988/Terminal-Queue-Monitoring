@@ -398,27 +398,31 @@
             searchInput.style.display = 'block';
 
             let placeholderText = 'Search option...';
-            if (fieldName.includes('role')) placeholderText = 'Search role...';
+            if (fieldName.includes('action')) placeholderText = 'Search action...';
+            else if (fieldName.includes('user') || fieldName.includes('driver') || fieldName.includes('operator')) placeholderText = 'Search user...';
+            else if (fieldName.includes('role')) placeholderText = 'Search role...';
             else if (fieldName.includes('route')) placeholderText = 'Search assigned route...';
             else if (fieldName.includes('terminal')) placeholderText = 'Search terminal...';
-            else if (fieldName.includes('type')) placeholderText = 'Search vehicle type...';
+            else if (fieldName.includes('vehicle_type') || (fieldName.includes('type') && !fieldName.includes('action'))) placeholderText = 'Search vehicle type...';
             else if (fieldName.includes('status')) placeholderText = 'Search status...';
             else if (fieldName.includes('destination')) placeholderText = 'Search destination...';
             searchInput.placeholder = placeholderText;
             searchInput.autocomplete = 'off';
 
             function isPlaceholderOption(option) {
-                const text = option.text.trim();
-                return option.value === '' || /^[\s-]*(select|choose)\b.*$/i.test(text);
+                if (!option) return true;
+                const text = (option.text || '').trim();
+                return option.value === '' || /^[\s-]*(select|choose|all)\b.*$/i.test(text);
             }
 
             function getAvailableOptions() {
                 return Array.from(selectEl.options)
-                    .filter(opt => !opt.disabled && opt.style.display !== 'none' && !isPlaceholderOption(opt))
+                    .filter(opt => !opt.disabled && opt.style.display !== 'none')
                     .map(opt => ({
                         value: opt.value,
                         text: opt.text.trim(),
                         selected: opt.selected,
+                        isPlaceholder: isPlaceholderOption(opt),
                         isDeparted: opt.getAttribute('data-departed') === 'true' || opt.text.toUpperCase().includes('DEPARTED')
                     }));
             }
@@ -442,10 +446,12 @@
                 position: absolute;
                 top: calc(100% + 6px);
                 left: 0;
-                right: 0;
+                min-width: max(100%, 260px);
+                max-width: min(380px, 92vw);
                 z-index: 9999999 !important;
-                max-height: 230px;
+                max-height: 240px;
                 overflow-y: auto;
+                overflow-x: hidden;
                 display: none;
                 background-color: #ffffff;
                 box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
@@ -468,10 +474,18 @@
                 }
 
                 let categoryBadge = 'Option';
-                let iconClass = 'bi bi-geo-alt-fill';
+                let iconClass = 'bi bi-check2-circle';
                 let iconColor = '#2563eb';
 
-                if (fieldName.includes('role')) {
+                if (fieldName.includes('action')) {
+                    categoryBadge = 'Action';
+                    iconClass = 'bi bi-lightning-charge-fill';
+                    iconColor = '#d97706';
+                } else if (fieldName.includes('user') || fieldName.includes('driver') || fieldName.includes('operator')) {
+                    categoryBadge = 'User';
+                    iconClass = 'bi bi-person-fill';
+                    iconColor = '#7c3aed';
+                } else if (fieldName.includes('role')) {
                     categoryBadge = 'Role';
                     iconClass = 'bi bi-shield-lock-fill';
                     iconColor = '#d97706';
@@ -483,7 +497,7 @@
                     categoryBadge = 'Terminal';
                     iconClass = 'bi bi-building-fill';
                     iconColor = '#7c3aed';
-                } else if (fieldName.includes('type')) {
+                } else if (fieldName.includes('vehicle_type') || (fieldName.includes('type') && !fieldName.includes('action'))) {
                     categoryBadge = 'Type';
                     iconClass = 'bi bi-truck-front-fill';
                     iconColor = '#c62828';
@@ -505,11 +519,19 @@
                         displayName = opt.text.replace(regex, '<mark class="search-highlight">$1</mark>');
                     }
                     const departedBadgeHtml = opt.isDeparted ? `<span class="badge bg-secondary bg-opacity-75 text-white ms-2" style="font-size: 10px; padding: 2px 7px; border-radius: 4px;"><i class="bi bi-send-check me-1"></i>DEPARTED</span>` : '';
+                    const isAllOption = /^all\b/i.test(opt.text);
+                    const itemBadge = isAllOption ? 'All' : categoryBadge;
+                    const itemIcon = isAllOption ? 'bi bi-grid-fill' : iconClass;
+                    const itemColor = isAllOption ? '#64748b' : iconColor;
+
                     return `
                         <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"
-                             style="cursor: pointer; font-size: 14px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s ease;">
-                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 10px;"><i class="${iconClass}" style="color: ${iconColor}; font-size: 16px;"></i>${displayName}${departedBadgeHtml}</span>
-                            <span class="badge rounded-pill autocomplete-badge" style="font-size: 11px; padding: 4px 10px; font-weight: 600;">${categoryBadge}</span>
+                             style="cursor: pointer; font-size: 13.5px; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 8px; transition: background 0.15s ease;">
+                            <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <i class="${itemIcon}" style="color: ${itemColor}; font-size: 15px; flex-shrink: 0;"></i>
+                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${displayName}</span>${departedBadgeHtml}
+                            </span>
+                            <span class="badge rounded-pill autocomplete-badge" style="font-size: 10.5px; padding: 3px 8px; font-weight: 700; flex-shrink: 0;">${itemBadge}</span>
                         </div>
                     `;
                 }).join('');
@@ -531,7 +553,12 @@
 
             function selectOption(val, text) {
                 selectEl.value = val;
-                searchInput.value = text;
+                const optObj = Array.from(selectEl.options).find(o => o.value === val);
+                if (optObj && isPlaceholderOption(optObj)) {
+                    searchInput.value = '';
+                } else {
+                    searchInput.value = text;
+                }
                 closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));
                 selectEl.dispatchEvent(new Event('change', { bubbles: true }));

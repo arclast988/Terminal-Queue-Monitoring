@@ -73,7 +73,7 @@
                                             <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y', strtotime($a['created_at'])) ?>
                                         </div>
                                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-                                            <?= date('g:i A', strtotime($a['created_at'])) ?>
+                                            <?= date('H:i', strtotime($a['created_at'])) ?>
                                         </div>
                                     <?php else: ?>
                                         <span class="text-muted">—</span>

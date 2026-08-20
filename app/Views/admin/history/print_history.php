@@ -294,7 +294,7 @@
                 <th>Date & Time</th>
                 <th>Plate Number</th>
                 <th>Vehicle Type</th>
-                <th>Driver / Owner</th>
+                <th>Driver / Operator</th>
                 <th>Route</th>
                 <th>Pax</th>
             </tr>
@@ -312,8 +312,14 @@
                         <td style="font-family: monospace; font-size: 14px; font-weight: 600;"><?= esc($row['plate_number']) ?></td>
                         <td><?= vehicle_type_badge($row['vehicle_type']) ?></td>
                         <td>
-                            <?= esc($row['driver_name'] ?? $row['owner_name'] ?? '—') ?>
-                            <br><small style="color: #94a3b8; font-size: 10px;"><?= $row['driver_name'] ? 'Driver' : 'Owner' ?></small>
+                            <strong><?= esc($row['driver_name'] ?? '—') ?></strong>
+                            <?php
+                                $opName = $row['operator_name'] ?: ($row['owner_name'] ?? '');
+                                $drName = $row['driver_name'] ?? '';
+                                if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))):
+                            ?>
+                                <br><small style="color: #64748b; font-size: 11px;">Op: <?= esc($opName) ?></small>
+                            <?php endif; ?>
                         </td>
                         <td>
                             <small style="color: #94a3b8;"><?= esc($row['origin']) ?></small>

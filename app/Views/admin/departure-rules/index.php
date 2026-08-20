@@ -62,17 +62,17 @@
 }
 
 .rule-filter-btn:hover {
-    border-color: #b91c1c;
-    color: #b91c1c;
-    background: rgba(185, 28, 28, 0.04);
+    border-color: var(--primary, #1565C0);
+    color: var(--primary, #1565C0);
+    background: var(--primary-soft, rgba(21, 101, 192, 0.06));
     transform: translateY(-1px);
 }
 
 .rule-filter-btn.active {
-    background: #991b1b;
-    border-color: #991b1b;
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(153, 27, 27, 0.25);
+    background: var(--primary, #1565C0);
+    border-color: var(--primary, #1565C0);
+    color: var(--on-primary, #ffffff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .rule-filter-btn .badge-count {
@@ -121,13 +121,13 @@
     }
     .rule-filter-btn:hover {
         background: #1e293b;
-        border-color: #475569;
+        border-color: var(--primary, #1565C0);
         color: #f8fafc;
     }
     .rule-filter-btn.active {
-        background: #b91c1c;
-        border-color: #b91c1c;
-        color: #ffffff;
+        background: var(--primary, #1565C0);
+        border-color: var(--primary, #1565C0);
+        color: var(--on-primary, #ffffff);
     }
     .route-tag-pill {
         background: #334155;
@@ -186,7 +186,7 @@
                     }
                 ?>
                 <button class="rule-filter-btn" data-route-filter="<?= esc(strtolower($destName)) ?>" data-route-id="<?= esc($rId ?? '') ?>">
-                    <i class="bi bi-geo-alt-fill text-danger"></i> <?= esc($destName) ?>
+                    <i class="bi bi-geo-alt-fill" style="color: var(--primary, #1565C0);"></i> <?= esc($destName) ?>
                     <span class="badge-count"><?= $count ?></span>
                 </button>
             <?php endforeach; ?>
@@ -212,7 +212,7 @@
 <div class="modern-card shadow-modern fade-in">
     <div class="modern-card-header d-flex align-items-center justify-content-between">
         <span class="modern-card-title">
-            <i class="bi bi-list" style="color: var(--primary-red);"></i>
+            <i class="bi bi-list" style="color: var(--primary, #1565C0);"></i>
             Rule List <span id="active-filter-title" class="text-muted fs-6 font-normal ms-2"></span>
         </span>
     </div>
@@ -247,8 +247,8 @@
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Time From"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('g:i A', strtotime($rule['time_from'])) ?></span></td>
-                                <td data-label="Time To"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('g:i A', strtotime($rule['time_to'])) ?></span></td>
+                                <td data-label="Time From"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
+                                <td data-label="Time To"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
                                 <td data-label="Wait Time">
                                     <?php
                                         $mins = (int)$rule['wait_minutes'];

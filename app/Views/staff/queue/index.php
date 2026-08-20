@@ -537,7 +537,7 @@
                     <div class="col-6 py-1">
                         <div class="text-muted small">Est. departure</div>
                         <div class="fw-semibold small text-primary">
-                            <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
+                            <?= !empty($item['estimated_departure']) ? date('H:i', strtotime($item['estimated_departure'])) : 'Waiting' ?>
                         </div>
                         <?php if (!empty($item['estimated_departure']) && in_array($item['status'], ['waiting', 'boarding'])): ?>
                             <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>

@@ -46,6 +46,7 @@ abstract class BaseController extends Controller
 
     /**
      * Log an activity for the System Activity Log (admin). Safe if logs table missing.
+     * Also opportunistically enforces 60-day log retention policy.
      */
     protected function logActivity(string $action, string $details): void
     {
@@ -57,9 +58,15 @@ abstract class BaseController extends Controller
             $logModel = new LogModel();
             $logModel->insert([
                 'user_id' => $userId,
-                'action' => $action,
+                'action'  => $action,
                 'details' => $details
             ]);
+
+            // Opportunistically prune logs older than 60 days (throttled to run at most every 6 hours)
+            if (!cache('rt_logs_last_purged')) {
+                $logModel->purgeOldLogs(60);
+                cache()->save('rt_logs_last_purged', time(), 21600);
+            }
         } catch (\Throwable $e) {
             // Ignore if logs table missing or any DB error
         }

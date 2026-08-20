@@ -10,6 +10,10 @@ class History extends BaseController
 {
     public function index()
     {
+        $queueModel = new QueueModel();
+        // Automatically enforce 60-day retention policy
+        $queueModel->purgeOldDepartures(60);
+
         $search = $this->request->getGet('q');
         $fromDate = $this->request->getGet('from_date');
         $toDate = $this->request->getGet('to_date');
@@ -20,7 +24,7 @@ class History extends BaseController
         $monthStr = date('Y-m');
         $yearStr  = date('Y');
 
-        // --- Stats (single query with conditional aggregation) ---
+        // --- Stats (single query with conditional aggregation within retention) ---
         $db = \Config\Database::connect();
         $statsResult = $db->table('queue')
             ->select("
@@ -47,7 +51,6 @@ class History extends BaseController
         $vehicleTypes = $vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
         // --- Departure list (paginated, searchable) ---
-        $queueModel = new QueueModel();
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $destFilter, $typeFilter);
         $departures = $builder->orderBy('queue.departure_time', 'DESC')->paginate(20);
 
@@ -75,6 +78,9 @@ class History extends BaseController
 
     public function print()
     {
+        $queueModel = new QueueModel();
+        $queueModel->purgeOldDepartures(60);
+
         $search = $this->request->getGet('q');
         $fromDate = $this->request->getGet('from_date');
         $toDate = $this->request->getGet('to_date');
@@ -98,23 +104,77 @@ class History extends BaseController
         return view('admin/history/print_history', $data);
     }
 
+    public function export()
+    {
+        $queueModel = new QueueModel();
+        $queueModel->purgeOldDepartures(60);
+
+        $search = $this->request->getGet('q');
+        $fromDate = $this->request->getGet('from_date');
+        $toDate = $this->request->getGet('to_date');
+        $destFilter = $this->request->getGet('destination');
+        $typeFilter = $this->request->getGet('vehicle_type');
+
+        $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $destFilter, $typeFilter);
+        $results = $builder->orderBy('queue.departure_time', 'DESC')->findAll();
+
+        $filename = 'departure_history_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, ['Departure Time', 'Plate Number', 'Vehicle Type', 'Driver', 'Operator', 'Origin', 'Destination', 'Passengers']);
+
+        foreach ($results as $row) {
+            fputcsv($output, [
+                date('Y-m-d h:i A', strtotime($row['departure_time'])),
+                $row['plate_number'] ?? '—',
+                ucfirst($row['vehicle_type'] ?? '—'),
+                $row['driver_name'] ?? '—',
+                $row['operator_name'] ?? $row['owner_name'] ?? '—',
+                $row['origin'] ?? 'Palompon',
+                $row['destination'] ?? '—',
+                $row['current_passengers'] ?? 0
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
     private function _getFilteredBuilder($search, $fromDate, $toDate, $destination, $vehicleType)
     {
         $queueModel = new QueueModel();
-        $builder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.owner_name, vehicles.type as vehicle_type, routes.destination, terminals.name as origin, queue.departure_time, queue.current_passengers')
-                              ->withFullJoins()
-                              ->where('queue.status', 'departed')
-                              ->where('queue.departure_time IS NOT NULL');
-
-        // Default to current year ONLY if no filters applied
-        if (!$fromDate && !$toDate) {
-            $builder->like('queue.departure_time', date('Y'), 'after');
-        }
+        $builder = $queueModel->select('
+            queue.*, 
+            COALESCE(NULLIF(queue.plate_number, ""), vehicles.plate_number) as plate_number, 
+            COALESCE(NULLIF(queue.driver_name, ""), vehicles.driver_name) as driver_name, 
+            COALESCE(NULLIF(queue.operator_name, ""), NULLIF(vehicles.operator_name, ""), vehicles.owner_name) as operator_name, 
+            vehicles.owner_name, 
+            vehicles.type as vehicle_type, 
+            routes.destination, 
+            terminals.name as origin, 
+            queue.departure_time, 
+            queue.current_passengers
+        ')
+        ->withFullJoins()
+        ->where('queue.status', 'departed')
+        ->where('queue.departure_time IS NOT NULL');
 
         if ($search) {
             $builder->groupStart()
-                    ->like('vehicles.plate_number', $search)
+                    ->like('queue.plate_number', $search)
+                    ->orLike('vehicles.plate_number', $search)
+                    ->orLike('queue.driver_name', $search)
                     ->orLike('vehicles.driver_name', $search)
+                    ->orLike('queue.operator_name', $search)
+                    ->orLike('vehicles.operator_name', $search)
+                    ->orLike('vehicles.owner_name', $search)
                     ->orLike('routes.destination', $search)
                     ->orLike('terminals.name', $search)
                     ->groupEnd();
@@ -137,44 +197,5 @@ class History extends BaseController
         }
 
         return $builder;
-    }
-
-    public function delete($id)
-    {
-        $queueModel = new QueueModel();
-        $departure = $queueModel->find($id);
-
-        if (!$departure || $departure['status'] !== 'departed') {
-            return redirect()->to('/admin/history')->with('error', 'Departure record not found.');
-        }
-
-        // Fetch vehicle details for activity log
-        $vehicleModel = new \App\Models\VehicleModel();
-        $vehicle = $vehicleModel->find($departure['vehicle_id']);
-        $plateNumber = $vehicle ? $vehicle['plate_number'] : 'Unknown Vehicle';
-
-        $queueModel->delete($id);
-
-        $this->logActivity('Delete Departure Record', "Deleted departure record for vehicle $plateNumber.");
-
-        return redirect()->to('/admin/history')->with('success', 'Departure record deleted successfully.');
-    }
-
-    public function deleteAll()
-    {
-        $queueModel = new QueueModel();
-        
-        // Find all departed queue records
-        $departedCount = $queueModel->where('status', 'departed')->countAllResults();
-
-        if ($departedCount === 0) {
-            return redirect()->to('/admin/history')->with('error', 'No departure records to delete.');
-        }
-
-        $queueModel->where('status', 'departed')->delete();
-
-        $this->logActivity('Delete All Departure Records', "Deleted all departed queue records ($departedCount records).");
-
-        return redirect()->to('/admin/history')->with('success', 'All departure records deleted successfully.');
     }
 }

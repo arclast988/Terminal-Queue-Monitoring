@@ -270,7 +270,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
         padding: 0 22px;
         border: none;
         border-radius: 0.5rem;
-        background: #991b1b;
+        background: var(--primary, #1565C0);
         color: #fff;
         font-size: 1rem;
         font-weight: 700;
@@ -280,7 +280,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
     }
 
     .military-time-popover .tp-set-btn:hover {
-        background: #7f1d1d;
+        background: var(--primary-dark, #0D47A1);
     }
 </style>
 

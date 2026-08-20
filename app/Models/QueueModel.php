@@ -12,7 +12,7 @@ class QueueModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['vehicle_id', 'route_id', 'status', 'current_passengers', 'position', 'arrival_time', 'estimated_departure', 'departure_time'];
+    protected $allowedFields    = ['vehicle_id', 'driver_name', 'operator_name', 'plate_number', 'route_id', 'status', 'current_passengers', 'position', 'arrival_time', 'estimated_departure', 'departure_time'];
 
     // Dates
     protected $useTimestamps = false; // Manually handling arrival_time and departure_time
@@ -173,5 +173,19 @@ class QueueModel extends Model
         return $this->join('vehicles', 'vehicles.id = queue.vehicle_id')
                     ->join('routes', 'routes.id = queue.route_id')
                     ->join('terminals', 'terminals.id = routes.terminal_id');
+    }
+
+    /**
+     * Automatically purge departed queue records older than the specified retention days (default: 60 days).
+     *
+     * @param int $days Number of days to retain departure records (default: 60)
+     * @return int Number of deleted rows
+     */
+    public function purgeOldDepartures(int $days = 60): int
+    {
+        $cutoff = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        return (int) $this->where('status', 'departed')
+            ->where('departure_time <', $cutoff)
+            ->delete();
     }
 }

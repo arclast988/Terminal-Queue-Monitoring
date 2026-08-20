@@ -16,4 +16,16 @@ class LogModel extends Model
 
     // Dates
     protected $useTimestamps = false; // Manually handling timestamp
+
+    /**
+     * Automatically purge logs older than the specified retention days (default: 60 days).
+     *
+     * @param int $days Number of days to retain logs (default 60)
+     * @return int Number of deleted rows
+     */
+    public function purgeOldLogs(int $days = 60): int
+    {
+        $cutoff = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+        return (int) $this->where('timestamp <', $cutoff)->delete();
+    }
 }

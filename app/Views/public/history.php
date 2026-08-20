@@ -543,7 +543,7 @@
                 <thead>
                     <tr>
                         <th>Plate Number</th>
-                        <th>Driver</th>
+                        <th>Driver / Operator</th>
                         <th>Type</th>
                         <th>Route</th>
                         <th>Departure Time</th>
@@ -556,11 +556,20 @@
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
-                                <td data-label="Driver">
+                                <td data-label="Driver / Operator">
                                     <div class="driver-cell">
                                         <i class="fas fa-user-tie"></i>
-                                        <?= esc($item['driver_name'] ?? '—') ?>
+                                        <span><?= esc($item['driver_name'] ?? '—') ?></span>
                                     </div>
+                                    <?php
+                                        $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
+                                        $drName = $item['driver_name'] ?? '';
+                                        if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))):
+                                    ?>
+                                        <div class="text-muted" style="font-size: 11.5px; margin-top: 2px; color: #64748b;">
+                                            <i class="fas fa-building me-1" style="font-size: 10px;"></i><?= esc($opName) ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td data-label="Type">
                                     <?php
