@@ -1880,12 +1880,52 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
+
+            <!-- Route Filter Bar -->
+            <div style="padding: 12px 24px 0; border-bottom: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 12px;">
+                    <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; white-space: nowrap;">
+                        <i class="fas fa-filter" style="margin-right: 4px;"></i>Route:
+                    </span>
+                    <div id="rulesRouteFilterGroup" style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <?php
+                            // Extract unique route scopes from departure rules
+                            $rulesList = $departure_rules ?? [];
+                            $uniqueScopes = [];
+                            foreach ($rulesList as $r) {
+                                $s = $r['route_scope'] ?? 'All Routes';
+                                if (!in_array($s, $uniqueScopes)) {
+                                    $uniqueScopes[] = $s;
+                                }
+                            }
+                        ?>
+                        <button type="button" class="rules-route-chip active" data-route="all"
+                            style="padding: 5px 14px; border-radius: 20px; border: 1.5px solid #2563eb; background: #2563eb; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;">
+                            All
+                        </button>
+                        <?php foreach ($uniqueScopes as $scope): ?>
+                            <?php
+                                // Extract just the destination for the chip label
+                                $chipLabel = $scope;
+                                if (strpos($scope, '→') !== false) {
+                                    $parts = explode('→', $scope);
+                                    $chipLabel = trim(end($parts));
+                                }
+                            ?>
+                            <button type="button" class="rules-route-chip" data-route="<?= esc($scope, 'attr') ?>"
+                                style="padding: 5px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: #ffffff; color: #64748b; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;">
+                                <?= esc($chipLabel) ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
             <div class="route-average-body">
                 <div class="route-average-list" id="routeAverageList">
-                    <?php $rulesList = $departure_rules ?? []; ?>
                     <?php if (!empty($rulesList)): ?>
                         <?php foreach ($rulesList as $rule): ?>
-                            <div class="route-average-item <?= !empty($rule['is_active_now']) ? 'is-active-rule' : '' ?>">
+                            <div class="route-average-item <?= !empty($rule['is_active_now']) ? 'is-active-rule' : '' ?>" data-rule-route="<?= esc($rule['route_scope'] ?? 'All Routes', 'attr') ?>">
                                 <div style="min-width: 0; flex: 1;">
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <div class="route-average-route">
@@ -1907,10 +1947,54 @@
                     <?php else: ?>
                         <div class="route-average-empty">No departure rules configured.</div>
                     <?php endif; ?>
+
+                    <!-- No results message (hidden by default) -->
+                    <div class="route-average-empty" id="rulesNoResults" style="display: none;">No rules match the selected route.</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+    // Departure Rules route filter
+    (function() {
+        var filterGroup = document.getElementById('rulesRouteFilterGroup');
+        if (!filterGroup) return;
+
+        filterGroup.addEventListener('click', function(e) {
+            var chip = e.target.closest('.rules-route-chip');
+            if (!chip) return;
+
+            // Update active chip styles
+            filterGroup.querySelectorAll('.rules-route-chip').forEach(function(c) {
+                c.classList.remove('active');
+                c.style.background = '#ffffff';
+                c.style.color = '#64748b';
+                c.style.borderColor = '#e2e8f0';
+            });
+            chip.classList.add('active');
+            chip.style.background = '#2563eb';
+            chip.style.color = '#fff';
+            chip.style.borderColor = '#2563eb';
+
+            // Filter items
+            var route = chip.dataset.route;
+            var items = document.querySelectorAll('#routeAverageList .route-average-item');
+            var visible = 0;
+            items.forEach(function(item) {
+                if (route === 'all' || item.dataset.ruleRoute === route) {
+                    item.style.display = '';
+                    visible++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            var noRes = document.getElementById('rulesNoResults');
+            if (noRes) noRes.style.display = (visible === 0) ? '' : 'none';
+        });
+    })();
+    </script>
 
     <?= $this->include('templates/guestfooter') ?>
 

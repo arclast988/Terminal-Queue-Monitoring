@@ -317,6 +317,26 @@
         transform: scale(1.05);
     }
 
+    /* Countdown Timer Styles */
+    .countdown-timer {
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+        display: inline-block;
+        letter-spacing: 0.3px;
+        margin-top: 2px;
+    }
+    .countdown-timer.cd-plenty { background: #e8f5e9; color: #2e7d32; }
+    .countdown-timer.cd-soon { background: #fff3e0; color: #e65100; }
+    .countdown-timer.cd-imminent { background: #ffebee; color: #c62828; animation: cdPulse 1s infinite; }
+    .countdown-timer.cd-passed { background: #e3f2fd; color: #1565c0; }
+
+    @keyframes cdPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+
     /* Passenger Counter Controls */
     .btn-counter {
         width: 36px;
@@ -519,6 +539,9 @@
                         <div class="fw-semibold small text-primary">
                             <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
                         </div>
+                        <?php if (!empty($item['estimated_departure']) && in_array($item['status'], ['waiting', 'boarding'])): ?>
+                            <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
+                        <?php endif; ?>
                     </div>
                     <div class="col-6 py-1">
                         <div class="text-muted small">Capacity</div>
@@ -1122,6 +1145,56 @@
         tableSelector: 'table tbody',
         modalSelector: '[id^="confirmDepartModal"]'
     });
+
+    // Countdown timer updater
+    function updateCountdowns() {
+        var timers = document.querySelectorAll('.countdown-timer[data-departure]');
+        var now = new Date();
+        timers.forEach(function(el) {
+            var dep = new Date(el.dataset.departure);
+            var diff = dep - now;
+            if (isNaN(dep.getTime())) { el.textContent = ''; return; }
+
+            el.classList.remove('cd-plenty', 'cd-soon', 'cd-imminent', 'cd-passed');
+
+            if (diff <= 0) {
+                var overMin = Math.floor(Math.abs(diff) / 60000);
+                if (overMin < 5) {
+                    el.textContent = '\u23F1 Departing soon!';
+                    el.classList.add('cd-imminent');
+                } else {
+                    el.textContent = '\u23F1 ' + overMin + 'm overdue';
+                    el.classList.add('cd-passed');
+                }
+                return;
+            }
+
+            var totalSec = Math.floor(diff / 1000);
+            var hrs = Math.floor(totalSec / 3600);
+            var mins = Math.floor((totalSec % 3600) / 60);
+            var secs = totalSec % 60;
+
+            var label = '';
+            if (hrs > 0) {
+                label = hrs + 'h ' + mins + 'm';
+            } else if (mins > 0) {
+                label = mins + 'm ' + secs + 's';
+            } else {
+                label = secs + 's';
+            }
+            el.textContent = '\u23F1 ' + label;
+
+            if (totalSec <= 120) {
+                el.classList.add('cd-imminent');
+            } else if (totalSec <= 600) {
+                el.classList.add('cd-soon');
+            } else {
+                el.classList.add('cd-plenty');
+            }
+        });
+    }
+    setInterval(updateCountdowns, 1000);
+    updateCountdowns();
 
     // Handle Add to Queue Form — multi-vehicle selection, card click interactivity & availability check
     document.addEventListener('DOMContentLoaded', function() {

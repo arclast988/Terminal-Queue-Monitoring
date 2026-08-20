@@ -127,12 +127,14 @@ class Queue extends BaseController
             }
 
             $currentTime = time();
+            $todayDate = date('Y-m-d');
             $filteredVehicles = [];
 
             foreach ($vehicles as $v) {
                 $vId = (int) $v['id'];
                 if (isset($departedMap[$vId]) && !empty($departedMap[$vId])) {
                     $depTimestamp = strtotime($departedMap[$vId]);
+                    $depDate = date('Y-m-d', $depTimestamp);
                     $elapsedMinutes = ($currentTime - $depTimestamp) / 60;
 
                     // If departed less than 30 minutes ago, hide completely (disappear for 30 mins)
@@ -140,10 +142,17 @@ class Queue extends BaseController
                         continue;
                     }
 
-                    // Reappeared after 30 mins -> mark as departed
-                    $v['is_departed'] = true;
-                    $v['departed_time'] = date('g:i A', $depTimestamp);
-                    $v['departed_timestamp'] = $depTimestamp;
+                    // Only show departed badge if the departure was today;
+                    // previous-day departures are treated as READY
+                    if ($depDate === $todayDate) {
+                        $v['is_departed'] = true;
+                        $v['departed_time'] = date('g:i A', $depTimestamp);
+                        $v['departed_timestamp'] = $depTimestamp;
+                    } else {
+                        $v['is_departed'] = false;
+                        $v['departed_time'] = null;
+                        $v['departed_timestamp'] = 0;
+                    }
                 } else {
                     $v['is_departed'] = false;
                     $v['departed_time'] = null;
