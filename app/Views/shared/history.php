@@ -33,6 +33,7 @@
                 <thead class="bg-light">
                     <tr>
                         <th class="px-4">Plate Number</th>
+                        <th>Operator</th>
                         <th>Driver</th>
                         <th>Route</th>
                         <th>Departure Time</th>
@@ -43,15 +44,19 @@
                         <?php foreach ($departures as $item): ?>
                             <tr>
                                 <td class="fw-bold px-4" data-label="Plate Number"><?= esc($item['plate_number']) ?></td>
-                                <td data-label="Driver / Operator">
-                                    <div class="fw-bold"><?= esc($item['driver_name'] ?? '—') ?></div>
+                                <td data-label="Operator">
                                     <?php
                                         $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
                                         $drName = $item['driver_name'] ?? '';
-                                        if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))):
                                     ?>
-                                        <small class="text-muted"><i class="bi bi-building me-1"></i><?= esc($opName) ?></small>
+                                    <?php if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))): ?>
+                                        <div class="fw-bold"><i class="bi bi-building me-1 text-muted"></i><?= esc($opName) ?></div>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
                                     <?php endif; ?>
+                                </td>
+                                <td data-label="Driver">
+                                    <div class="fw-bold"><i class="bi bi-person-badge me-1 text-primary"></i><?= esc($item['driver_name'] ?? '—') ?></div>
                                 </td>
                                 <td data-label="Route">
                                     <small class="text-muted"><?= esc($item['origin']) ?></small>
@@ -72,7 +77,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-muted">
+                            <td colspan="5" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 No departure history found.
                             </td>

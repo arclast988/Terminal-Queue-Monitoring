@@ -206,7 +206,8 @@
                 <thead>
                     <tr>
                         <th>Plate Number</th>
-                        <th>Driver / Operator</th>
+                        <th>Operator</th>
+                        <th>Driver</th>
                         <th>Vehicle</th>
                         <th>Route</th>
                         <th>Departure Time</th>
@@ -219,20 +220,25 @@
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
-                                <td data-label="Driver / Operator">
+                                <td data-label="Operator">
+                                    <?php
+                                        $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
+                                        $drName = $item['driver_name'] ?? '';
+                                    ?>
+                                    <?php if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))): ?>
+                                        <div class="driver-cell">
+                                            <i class="bi bi-building text-muted"></i>
+                                            <span><?= esc($opName) ?></span>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="text-muted">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Driver">
                                     <div class="driver-cell">
                                         <i class="bi bi-person-badge text-primary"></i>
                                         <span><?= esc($item['driver_name'] ?? '—') ?></span>
                                     </div>
-                                    <?php
-                                        $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
-                                        $drName = $item['driver_name'] ?? '';
-                                        if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))):
-                                    ?>
-                                        <div class="text-muted" style="font-size: 11.5px; margin-top: 2px; font-weight: 500;">
-                                            <i class="bi bi-building me-1 text-muted"></i><?= esc($opName) ?>
-                                        </div>
-                                    <?php endif; ?>
                                 </td>
                                 <td data-label="Vehicle">
                                     <?php
@@ -266,7 +272,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
                                 No departure records found.
                             </td>
