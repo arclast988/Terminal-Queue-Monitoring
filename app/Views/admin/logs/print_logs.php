@@ -312,6 +312,7 @@
     <div class="header">
         <div class="terminal-info">
             <h1>Palompon Transit Terminal</h1>
+            <p><i class="fas fa-map-marker-alt text-danger"></i> Palompon, Leyte, Philippines &bull; <i class="fas fa-phone text-primary"></i> Terminal Operations Office</p>
             <p>Integrated Terminal Management System &bull; System Activity Audit Log</p>
         </div>
         <div class="report-meta">
@@ -431,5 +432,11 @@
         <div>Page generated on <?= date('Y-m-d H:i:s') ?></div>
     </div>
 
+    <script>
+        // ESC to close preview window
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') window.close();
+        });
+    </script>
 </body>
 </html>

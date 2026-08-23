@@ -41,7 +41,7 @@ class Dashboard extends BaseController
             ],
             'unassignedVehicles' => $unassignedVehicles,
             'unassignedStaff'    => $unassignedStaff,
-            'recent_logs' => $logModel->select('audit_logs.*, users.username')
+            'recent_logs' => $logModel->select('audit_logs.*, users.username, users.full_name, users.role, users.email')
                                      ->join('users', 'users.id = audit_logs.user_id', 'left')
                                      ->orderBy('timestamp', 'DESC')
                                      ->limit(5)
@@ -53,5 +53,3 @@ class Dashboard extends BaseController
         return view('admin/dashboard', $data);
     }
 }
-
-

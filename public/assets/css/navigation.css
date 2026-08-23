@@ -64,28 +64,15 @@ header#site-header {
   white-space: nowrap !important;
 }
 
-/* Admin & Staff logo text – solid black in light mode */
+/* Admin & Staff logo text – crisp white for strong contrast against colored navbars */
 body.admin-theme #site-header .logo-text h1,
 body.admin-theme .logo-section .logo-text h1,
 body.admin-theme .logo-text h1,
 body.staff-theme #site-header .logo-text h1,
 body.staff-theme .logo-section .logo-text h1,
 body.staff-theme .logo-text h1 {
-  color: #000000 !important;
-  -webkit-text-fill-color: #000000 !important;
-}
-
-/* Admin & Staff logo text – white in dark mode */
-@media (prefers-color-scheme: dark) {
-  body.admin-theme #site-header .logo-text h1,
-  body.admin-theme .logo-section .logo-text h1,
-  body.admin-theme .logo-text h1,
-  body.staff-theme #site-header .logo-text h1,
-  body.staff-theme .logo-section .logo-text h1,
-  body.staff-theme .logo-text h1 {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Base logo subtitle – white for public/guest headers */

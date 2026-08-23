@@ -2,9 +2,11 @@
 <div class="modal fade" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white p-3">
-                <h5 class="modal-title" id="reportFilterModalLabel"><i class="fas fa-filter me-2 text-white"></i> Report Configuration</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header text-white p-3" style="background: linear-gradient(135deg, #C62828 0%, #B71C1C 100%) !important; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                <h5 class="modal-title fw-bold" id="reportFilterModalLabel" style="color: #ffffff !important; display: flex; align-items: center; font-size: 1.15rem;">
+                    <i class="fas fa-filter me-2" style="color: #ffffff !important;"></i> Report Configuration
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1) !important; opacity: 0.9 !important;"></button>
             </div>
             <form id="reportForm" method="get" target="_blank" action="<?= base_url('admin/history/print') ?>">
                 <div class="modal-body p-4">

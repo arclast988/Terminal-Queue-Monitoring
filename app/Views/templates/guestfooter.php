@@ -339,6 +339,7 @@ footer {
 
 <!-- ===== Footer JS ===== -->
 <script src="<?= base_url('assets/js/autocomplete-search.js') ?>"></script>
+<script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script>
 function openSupportModal(modalId){
     const modal = document.getElementById(modalId);

@@ -331,27 +331,87 @@ html body .badge-modern-primary { background: #e0e7ff !important; color: #3730a3
 /* --------------------------------------------------------------------------
    7. ALERTS  (.alert-modern-* -> .alert--*)
    -------------------------------------------------------------------------- */
-html body .alert-modern {
+@keyframes alertSlideInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+html body .alert-modern,
+html body .alert-success-banner,
+html body .alert-error-banner,
+html body .alert:not(.alert-permanent) {
   padding: var(--space-4) var(--space-5);
   border-radius: var(--radius-md);
   border: 1px solid transparent;
   border-left-width: 4px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-5);
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   font-size: .925rem;
+  animation: alertSlideInDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              margin 0.4s ease, 
+              padding 0.4s ease;
+  overflow: hidden;
 }
 
-html body .alert-modern-success { background: var(--success-soft); border-left-color: var(--success); color: #0a6e4d; }
-html body .alert-modern-warning { background: var(--warning-soft); border-left-color: var(--warning); color: #92500a; }
-html body .alert-modern-danger  { background: var(--danger-soft);  border-left-color: var(--danger);  color: #991b1b; }
-html body .alert-modern-info    { background: var(--info-soft);    border-left-color: var(--info);    color: #1d4ed8; }
+html body .alert-modern-success,
+html body .alert-success-banner { 
+  background: var(--success-soft); 
+  border-left-color: var(--success); 
+  color: #0a6e4d; 
+}
 
-html body .alert-modern-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: .1em; }
+html body .alert-modern-warning { 
+  background: var(--warning-soft); 
+  border-left-color: var(--warning); 
+  color: #92500a; 
+}
 
-html body .alert-modern a { color: inherit; font-weight: 700; }
+html body .alert-modern-danger,
+html body .alert-error-banner { 
+  background: var(--danger-soft);  
+  border-left-color: var(--danger);  
+  color: #991b1b; 
+}
+
+html body .alert-modern-info { 
+  background: var(--info-soft);    
+  border-left-color: var(--info);    
+  color: #1d4ed8; 
+}
+
+html body .alert-modern-icon { 
+  font-size: 1.25rem; 
+  flex-shrink: 0; 
+}
+
+html body .alert-modern a { 
+  color: inherit; 
+  font-weight: 700; 
+}
+
+html body .alert-dismissing {
+  opacity: 0 !important;
+  transform: translateY(-10px) scale(0.97) !important;
+  max-height: 0 !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-width: 0 !important;
+  pointer-events: none !important;
+}
 
 /* --------------------------------------------------------------------------
    8. FORMS  (.input-modern -> .input)

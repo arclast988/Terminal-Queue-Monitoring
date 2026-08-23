@@ -549,12 +549,24 @@
                     </div>
                 </div>
 
-                <!-- Driver row -->
-                <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex align-items-center gap-2">
-                    <span class="text-muted small flex-shrink-0">Driver</span>
-                    <span id="driver-name-<?= $item['id'] ?>" class="fw-semibold small flex-grow-1 text-truncate">
-                        <i class="bi bi-person-badge me-1"></i><?= esc($item['driver_name'] ?? '—') ?>
-                    </span>
+                <!-- Operator & Driver row -->
+                <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <?php
+                            $opName = $item['operator_name'] ?: ($item['owner_name'] ?? '');
+                            $drName = $item['driver_name'] ?? '';
+                        ?>
+                        <?php if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))): ?>
+                            <span class="small text-truncate" title="Operator: <?= esc($opName) ?>">
+                                <span class="text-muted"><i class="bi bi-building me-1"></i>Op:</span>
+                                <strong><?= esc($opName) ?></strong>
+                            </span>
+                        <?php endif; ?>
+                        <span id="driver-name-<?= $item['id'] ?>" class="small text-truncate" title="Driver: <?= esc($drName) ?>">
+                            <span class="text-muted"><i class="bi bi-person-badge me-1"></i>Driver:</span>
+                            <strong class="text-dark"><?= esc($drName ?: '—') ?></strong>
+                        </span>
+                    </div>
                     <button type="button"
                         class="btn-modern btn-modern-outline btn-modern-sm flex-shrink-0"
                         data-action="change-driver"

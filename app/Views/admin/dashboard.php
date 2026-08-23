@@ -170,29 +170,75 @@
     </div>
 </div>
 
-<h2 class="mt-5 mb-3 fade-in" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Activity</h2>
+<div class="d-flex justify-content-between align-items-center mt-5 mb-3 fade-in">
+    <h2 class="mb-0" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">
+        <i class="bi bi-clock-history me-1 text-primary"></i> Recent Activity
+    </h2>
+    <a href="<?= base_url('admin/logs') ?>" class="btn-modern btn-modern-outline btn-modern-sm">
+        View All Logs <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+</div>
 <div class="modern-card shadow-modern fade-in">
     <div class="table-responsive">
         <table class="table-modern">
             <thead>
                 <tr>
-                    <th>Time</th>
-                    <th>User</th>
-                    <th>Action</th>
+                    <th style="width: 175px;">Timestamp</th>
+                    <th style="width: 220px;">User</th>
+                    <th style="width: 210px;">Action</th>
+                    <th>Details</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($recent_logs)): ?>
                     <?php foreach ($recent_logs as $log): ?>
+                        <?php
+                            $actLower = strtolower($log['action'] ?? '');
+                            $badgeClass = 'action-badge-default';
+                            if (strpos($actLower, 'login') !== false || strpos($actLower, 'auth') !== false) {
+                                $badgeClass = 'action-badge-success';
+                            } elseif (strpos($actLower, 'add') !== false || strpos($actLower, 'create') !== false || strpos($actLower, 'register') !== false) {
+                                $badgeClass = 'action-badge-info';
+                            } elseif (strpos($actLower, 'update') !== false || strpos($actLower, 'edit') !== false || strpos($actLower, 'reassign') !== false) {
+                                $badgeClass = 'action-badge-warning';
+                            } elseif (strpos($actLower, 'delete') !== false || strpos($actLower, 'remove') !== false) {
+                                $badgeClass = 'action-badge-danger';
+                            }
+                        ?>
                         <tr>
-                            <td data-label="Time"><?= date('Y-m-d H:i', strtotime($log['timestamp'])) ?></td>
-                            <td data-label="User"><?= esc($log['username'] ?? 'System') ?></td>
-                            <td data-label="Action"><?= esc($log['action']) ?></td>
+                            <td data-label="Timestamp">
+                                <div style="white-space: nowrap; font-size: 13.5px; font-weight: 700; color: var(--text-main, #0f172a);">
+                                    <i class="bi bi-calendar3 text-muted me-1" style="font-size: 11px;"></i><?= date('M d, Y', strtotime($log['timestamp'])) ?>
+                                </div>
+                                <div class="text-muted" style="font-size: 12px; font-weight: 600; font-family: monospace; margin-top: 2px;">
+                                    <i class="bi bi-clock text-muted me-1" style="font-size: 11px;"></i><?= date('H:i:s', strtotime($log['timestamp'])) ?>
+                                </div>
+                            </td>
+                            <td data-label="User">
+                                <?php if (!empty($log['username'])): ?>
+                                    <div style="font-weight: 700; font-size: 13.5px; color: var(--text-main, #0f172a);">
+                                        <?= esc($log['email'] ?: $log['username']) ?>
+                                    </div>
+                                    <small class="text-muted d-block" style="font-size: 12px;">
+                                        <?= esc($log['full_name'] ?? $log['username']) ?>
+                                    </small>
+                                <?php else: ?>
+                                    <span class="text-muted fst-italic" style="font-size: 13px;">System / Automatic</span>
+                                <?php endif; ?>
+                            </td>
+                            <td data-label="Action">
+                                <span class="action-badge-pill <?= $badgeClass ?>">
+                                    <?= esc($log['action']) ?>
+                                </span>
+                            </td>
+                            <td data-label="Details" class="log-details-cell" style="font-size: 13px;">
+                                <?= esc($log['details'] ?? '—') ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="3" style="text-align: center; padding: 40px; color: var(--slate-500);">No recent activity</td>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--slate-500);">No recent activity recorded</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

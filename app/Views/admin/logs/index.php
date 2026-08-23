@@ -392,6 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var quickButtons = document.querySelectorAll('.quick-chip-btn');
     var fromInput = document.getElementById('fromDate');
     var toInput = document.getElementById('toDate');
+    var form = document.getElementById('logsFilterForm');
 
     quickButtons.forEach(function(btn) {
         btn.addEventListener('click', function(e) {
@@ -406,6 +407,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 b.classList.remove('active');
             });
             this.classList.add('active');
+
+            if (form) {
+                form.submit();
+            }
         });
     });
 });

@@ -731,6 +731,7 @@
         </footer>
     </div>
 
+    <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script>
         (function () {
             // --- Show / hide password ---

@@ -1009,12 +1009,7 @@
             flex-wrap: wrap;
         }
 
-        .operator-title {
-            font-size: 17.5px;
-            font-weight: 800;
-            color: #0f172a;
-        }
-
+        .operator-badge,
         .plate-badge {
             display: inline-flex;
             align-items: center;
@@ -1026,6 +1021,12 @@
             padding: 3px 10px;
             font-size: 13.5px;
             font-weight: 700;
+        }
+
+        .operator-badge .operator-val {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
         }
 
         .plate-badge .plate-val {
@@ -1535,10 +1536,7 @@
                     border-radius: 16px;
                 }
 
-                .operator-title {
-                    font-size: 15.5px;
-                }
-
+                .operator-badge,
                 .plate-badge {
                     font-size: 13px;
                     padding: 2px 7px;
@@ -1793,8 +1791,8 @@
                                     <div class="queue-card-header">
                                         <div class="operator-plate-wrap">
                                             <?php $opName = !empty($item['operator_name']) ? $item['operator_name'] : ($item['driver_name'] ?? 'N/A'); ?>
-                                            <span class="operator-title">
-                                                <span class="text-muted fw-semibold">Operator:</span> <?= esc($opName) ?>
+                                            <span class="operator-badge">
+                                                <span class="text-muted fw-semibold">Operator:</span> <span class="operator-val"><?= esc($opName) ?></span>
                                             </span>
                                             <span class="plate-badge">
                                                 <span class="text-muted fw-semibold">Plate Number:</span> <span class="plate-val"><?= esc($item['plate_number']) ?></span>
@@ -1896,24 +1894,26 @@
                 </button>
             </div>
 
-            <!-- Route Filter Bar -->
+            <?php
+                // Extract unique specific route scopes from departure rules (exclude 'All Routes')
+                $rulesList = $departure_rules ?? [];
+                $uniqueScopes = [];
+                foreach ($rulesList as $r) {
+                    $s = trim($r['route_scope'] ?? '');
+                    if (!empty($s) && strtolower($s) !== 'all routes' && strtolower($s) !== 'all' && !in_array($s, $uniqueScopes)) {
+                        $uniqueScopes[] = $s;
+                    }
+                }
+            ?>
+
+            <!-- Route Filter Bar (only shown when specific route rules exist) -->
+            <?php if (!empty($uniqueScopes)): ?>
             <div style="padding: 12px 24px 0; border-bottom: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 12px;">
                     <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; white-space: nowrap;">
                         <i class="fas fa-filter" style="margin-right: 4px;"></i>Route:
                     </span>
                     <div id="rulesRouteFilterGroup" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <?php
-                            // Extract unique route scopes from departure rules
-                            $rulesList = $departure_rules ?? [];
-                            $uniqueScopes = [];
-                            foreach ($rulesList as $r) {
-                                $s = $r['route_scope'] ?? 'All Routes';
-                                if (!in_array($s, $uniqueScopes)) {
-                                    $uniqueScopes[] = $s;
-                                }
-                            }
-                        ?>
                         <button type="button" class="rules-route-chip active" data-route="all"
                             style="padding: 5px 14px; border-radius: 20px; border: 1.5px solid #2563eb; background: #2563eb; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;">
                             All
@@ -1935,6 +1935,7 @@
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <div class="route-average-body">
                 <div class="route-average-list" id="routeAverageList">
@@ -1997,7 +1998,7 @@
             var items = document.querySelectorAll('#routeAverageList .route-average-item');
             var visible = 0;
             items.forEach(function(item) {
-                if (route === 'all' || item.dataset.ruleRoute === route) {
+                if (route === 'all' || item.dataset.ruleRoute === route || item.dataset.ruleRoute === 'All Routes') {
                     item.style.display = '';
                     visible++;
                 } else {
@@ -2264,7 +2265,7 @@
                                     + '<div class="queue-card-body">'
                                     + '<div class="queue-card-header">'
                                     + '<div class="operator-plate-wrap">'
-                                    + '<span class="operator-title"><span class="text-muted fw-semibold">Operator:</span> ' + opName + '</span>'
+                                    + '<span class="operator-badge"><span class="text-muted fw-semibold">Operator:</span> <span class="operator-val">' + opName + '</span></span>'
                                     + '<span class="plate-badge"><span class="text-muted fw-semibold">Plate Number:</span> <span class="plate-val">' + item.plate_number + '</span></span>'
                                     + '</div>'
                                     + '</div>'

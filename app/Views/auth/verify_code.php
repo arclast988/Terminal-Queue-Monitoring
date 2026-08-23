@@ -424,6 +424,6 @@
             }
         }, 1000);
     });
-    </script>
+    <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 </body>
 </html>

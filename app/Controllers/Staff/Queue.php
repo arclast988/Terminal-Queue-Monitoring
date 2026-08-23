@@ -65,7 +65,17 @@ class Queue extends BaseController
         $assignedRouteIds = $this->getAssignedRouteIds();
 
         // Build queue query
-        $builder = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, vehicles.capacity')
+        $builder = $this->queueModel->select('
+            queue.*, 
+            COALESCE(NULLIF(queue.plate_number, ""), vehicles.plate_number) as plate_number, 
+            COALESCE(NULLIF(queue.driver_name, ""), vehicles.driver_name) as driver_name, 
+            COALESCE(NULLIF(queue.operator_name, ""), NULLIF(vehicles.operator_name, ""), vehicles.owner_name) as operator_name, 
+            vehicles.owner_name, 
+            vehicles.type as vehicle_type, 
+            terminals.name as origin, 
+            routes.destination, 
+            vehicles.capacity
+        ')
             ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding']);
 

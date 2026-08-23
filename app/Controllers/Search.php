@@ -31,21 +31,6 @@ class Search extends BaseController
                                     ->orderBy('queue.position', 'ASC')
                                     ->findAll();
 
-        // Search in recent departures
-        $departedResults = (new QueueModel())->select('queue.*, queue.estimated_departure, queue.departure_time, queue.current_passengers, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
-                                       ->withFullJoins()
-                                       ->where('queue.status', 'departed')
-                                       ->groupStart()
-                                           ->like('vehicles.plate_number', $search)
-                                           ->orLike('vehicles.operator_name', $search)
-                                           ->orLike('vehicles.driver_name', $search)
-                                           ->orLike('routes.destination', $search)
-                                           ->orLike('terminals.name', $search)
-                                       ->groupEnd()
-                                       ->orderBy('departure_time', 'DESC')
-                                       ->limit(20)
-                                       ->findAll();
-
         $announcements = [];
         try {
             $announcements = $this->getActiveAnnouncements();
@@ -55,8 +40,7 @@ class Search extends BaseController
             'title' => 'Search Results',
             'search' => $search,
             'active_results' => $activeResults,
-            'departed_results' => $departedResults,
-            'total_results' => count($activeResults) + count($departedResults),
+            'total_results' => count($activeResults),
             'announcements' => $announcements
         ];
 

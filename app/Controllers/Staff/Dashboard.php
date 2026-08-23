@@ -7,6 +7,7 @@ use App\Models\QueueModel;
 use App\Models\TerminalModel;
 use App\Models\AnnouncementModel;
 use App\Models\UserRouteModel;
+use App\Models\VehicleTypeModel;
 
 class Dashboard extends BaseController
 {
@@ -14,6 +15,7 @@ class Dashboard extends BaseController
     {
         $queueModel = new QueueModel();
         $terminalModel = new TerminalModel();
+        $vehicleTypeModel = new VehicleTypeModel();
 
         $announcements = [];
         try {
@@ -41,7 +43,17 @@ class Dashboard extends BaseController
         $activeQueueCount = $countBuilder->countAllResults();
 
         // Build filtered recent departures
-        $departBuilder = $queueModel->select('queue.*, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+        $departBuilder = $queueModel->select('
+            queue.*, 
+            COALESCE(NULLIF(queue.plate_number, ""), vehicles.plate_number) as plate_number, 
+            COALESCE(NULLIF(queue.driver_name, ""), vehicles.driver_name) as driver_name, 
+            COALESCE(NULLIF(queue.operator_name, ""), NULLIF(vehicles.operator_name, ""), vehicles.owner_name) as operator_name, 
+            vehicles.owner_name, 
+            vehicles.capacity, 
+            vehicles.type as vehicle_type, 
+            routes.destination, 
+            terminals.name as origin
+        ')
                                     ->withFullJoins()
                                     ->where('queue.status', 'departed')
                                     ->like('queue.departure_time', date('Y-m-d'), 'after');
@@ -53,7 +65,7 @@ class Dashboard extends BaseController
             }
         }
         $recentDepartures = $departBuilder->orderBy('departure_time', 'DESC')
-                                          ->limit(5)
+                                          ->limit(30)
                                           ->findAll();
 
         $data = [
@@ -61,7 +73,8 @@ class Dashboard extends BaseController
             'announcements' => $announcements,
             'active_queue_count' => $activeQueueCount,
             'recent_departures' => $recentDepartures,
-            'terminals' => $terminalModel->findAll()
+            'terminals' => $terminalModel->findAll(),
+            'vehicleTypes' => $vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll()
         ];
 
         return view('staff/dashboard', $data);

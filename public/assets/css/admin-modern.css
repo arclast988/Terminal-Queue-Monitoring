@@ -810,6 +810,18 @@ body.staff-theme .table .btn-group > form {
     visibility: visible !important;
 }
 
+.modal-header.bg-primary .modal-title,
+.modal-header.bg-primary h5,
+.modal-header.bg-danger .modal-title,
+.modal-header.bg-danger h5,
+.modal-header.text-white .modal-title,
+.modal-header.text-white h5,
+.modal-header[style*="background"] .modal-title,
+.modal-header[style*="background"] h5 {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
 /* Ensure modal elements are clickable */
 .modal button,
 .modal input,
@@ -821,19 +833,86 @@ body.staff-theme .table .btn-group > form {
 }
 
 /* =================================================================
-   PAGINATION
+   PAGINATION — Modern Spaced Pill Buttons
    ================================================================= */
 
-.pagination .page-link {
-    border-radius: var(--admin-radius-sm) !important;
-    margin: 0 3px !important;
-    border: none !important;
-    color: #475569;
-    cursor: pointer !important;
+.modern-pagination-nav {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0.5rem 0 !important;
 }
 
-.pagination .page-item.active .page-link {
-    background: var(--primary) !important;
+.pagination,
+ul.pagination,
+.pagination-modern {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex-wrap: wrap !important;
+}
+
+.pagination li,
+ul.pagination li,
+.pagination .page-item {
+    display: inline-flex !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.pagination a,
+.pagination span,
+ul.pagination li a,
+ul.pagination li span,
+.pagination .page-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #334155 !important;
+    font-size: 13.5px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    line-height: 1 !important;
+}
+
+.pagination a:hover,
+ul.pagination li a:hover,
+.pagination .page-link:hover {
+    border-color: var(--primary-red, #C62828) !important;
+    background: #fef2f2 !important;
+    color: var(--primary-red, #C62828) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(198, 40, 40, 0.15) !important;
+}
+
+.pagination li.active a,
+.pagination li.active span,
+ul.pagination li.active a,
+ul.pagination li.active span,
+.pagination .page-item.active .page-link,
+.pagination .page-item.active a {
+    background: var(--primary-red, #C62828) !important;
+    border-color: var(--primary-red, #C62828) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.3) !important;
+    cursor: default !important;
+    transform: none !important;
 }
 
 /* =================================================================
