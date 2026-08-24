@@ -97,13 +97,11 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
 
     // History
     $routes->get('history', 'Admin\History::index');
-    $routes->get('history/export', 'Admin\History::export');
     $routes->get('history/print', 'Admin\History::print');
 
     // Logs
     $routes->get('logs', 'Admin\Logs::index');
     $routes->get('logs/print', 'Admin\Logs::print');
-    $routes->get('logs/export', 'Admin\Logs::export');
 
 
     // Departure Rules

@@ -103,48 +103,7 @@ class Logs extends BaseController
         return view('admin/logs/print_logs', $data);
     }
 
-    public function export()
-    {
-        // Enforce retention policy
-        $this->logModel->purgeOldLogs(60);
 
-        $search       = trim((string) $this->request->getGet('q'));
-        $fromDate     = trim((string) $this->request->getGet('from_date'));
-        $toDate       = trim((string) $this->request->getGet('to_date'));
-        $actionFilter = trim((string) $this->request->getGet('action_type'));
-        $userFilter   = trim((string) $this->request->getGet('user_id'));
-
-        $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $actionFilter, $userFilter);
-        $logs    = $builder->orderBy('audit_logs.timestamp', 'DESC')->findAll();
-
-        $filename = 'system_activity_logs_' . date('Ymd_His') . '.csv';
-
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-
-        $output = fopen('php://output', 'w');
-        // Add UTF-8 BOM for Excel compatibility
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-        fputcsv($output, ['Log ID', 'Timestamp', 'Username', 'Full Name', 'Role', 'Action', 'Details']);
-
-        foreach ($logs as $log) {
-            fputcsv($output, [
-                '#' . $log['id'],
-                date('Y-m-d h:i A', strtotime($log['timestamp'])),
-                $log['username'] ?? 'System/Guest',
-                $log['full_name'] ?? 'System/Guest',
-                !empty($log['role']) ? ucfirst($log['role']) : 'N/A',
-                $log['action'],
-                $log['details'] ?? ''
-            ]);
-        }
-
-        fclose($output);
-        exit;
-    }
 
     private function _getFilteredBuilder(string $search, string $fromDate, string $toDate, string $actionFilter, string $userFilter)
     {

@@ -172,9 +172,7 @@
         <a href="<?= base_url('admin/logs/print' . $queryUrl) ?>" target="_blank" class="btn-modern btn-modern-primary" title="Print or preview log report">
             <i class="bi bi-file-earmark-text"></i> Generate Report
         </a>
-        <a href="<?= base_url('admin/logs/export' . $queryUrl) ?>" class="btn-modern btn-modern-outline" title="Export logs as CSV spreadsheet">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
-        </a>
+
     </div>
 </div>
 
@@ -295,7 +293,7 @@
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-header d-flex align-items-center justify-content-between">
         <span class="modern-card-title" style="font-size: 16px;">
-            <i class="bi bi-list-ul" style="color: var(--primary, #1565c0);"></i>
+            <i class="bi bi-list-ul" style="color: var(--primary-red, #b71c1c);"></i>
             Log Entries
             <?php if (!empty($logs)): ?>
                 <span class="badge-modern badge-modern-secondary ms-2" style="font-size: 13px;"><?= count($logs) ?> on this page</span>

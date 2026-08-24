@@ -4,6 +4,20 @@
 <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
 <style>
+    .retention-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0fdf4;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        border-radius: 20px;
+        padding: 5px 14px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+    }
+
     .table-modern .plate-number {
         font-weight: 700;
         font-family: 'Courier New', monospace;
@@ -32,6 +46,45 @@
         gap: 10px;
     }
 
+    .quick-chips-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    /* Red theme quick chips */
+    html body .quick-chip {
+        padding: 6px 16px;
+        border-radius: 20px;
+        border: 1.5px solid #cbd5e1 !important;
+        background: #f8fafc !important;
+        color: #475569 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        outline: none;
+    }
+
+    html body .quick-chip:hover {
+        border-color: #b71c1c !important;
+        color: #b71c1c !important;
+        background: #fef2f2 !important;
+    }
+
+    html body .quick-chip.active {
+        background: #b71c1c !important;
+        border-color: #b71c1c !important;
+        color: #ffffff !important;
+    }
+
     @media (prefers-color-scheme: dark) {
         .table-modern .plate-number {
             background: #334155 !important;
@@ -50,41 +103,37 @@
         .table-modern td {
             color: #e2e8f0 !important;
         }
-    .retention-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #f0fdf4;
-        color: #15803d;
-        border: 1px solid #bbf7d0;
-        border-radius: 20px;
-        padding: 5px 14px;
-        font-size: 12.5px;
-        font-weight: 700;
-        letter-spacing: 0.3px;
+        .retention-pill {
+            background: #064e3b !important;
+            color: #6ee7b7 !important;
+            border-color: #047857 !important;
+        }
+        html body .quick-chip {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+            color: #cbd5e1 !important;
+        }
+        html body .quick-chip.active {
+            background: #b71c1c !important;
+            border-color: #b71c1c !important;
+            color: #ffffff !important;
+        }
     }
 </style>
 
 <div class="page-header-modern fade-in">
     <div>
         <h1 class="page-title-modern mb-1">
-            <i class="bi bi-clock-history"></i>
-            Departure History
+            <i class="bi bi-clock-history"></i> System Departure History
         </h1>
         <div class="retention-pill">
             <i class="bi bi-shield-check"></i> Auto-Retention: Departure records are automatically kept for 60 days
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal">
+        <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal" title="Generate Departure Report">
             <i class="bi bi-file-earmark-text"></i> Generate Report
         </button>
-        <?php
-            $exportQuery = !empty($_GET) ? '?' . http_build_query($_GET) : '';
-        ?>
-        <a href="<?= base_url('admin/history/export' . $exportQuery) ?>" class="btn-modern btn-modern-outline" title="Export departure records to CSV">
-            <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
-        </a>
     </div>
 </div>
 
@@ -102,16 +151,15 @@
     </div>
 <?php endif; ?>
 
-<!-- Stat Cards -->
+<!-- Summary Stat Cards -->
 <div class="row mb-4">
     <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="stat-card-modern blue-accent fade-in">
             <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
                 <i class="bi bi-truck"></i>
             </div>
-            <div class="stat-card-value"><?= $stats['total'] ?></div>
+            <div class="stat-card-value"><?= number_format($stats['total'] ?? 0) ?></div>
             <div class="stat-card-label">Total Departed</div>
-            <a href="<?= base_url('admin/history') ?>" class="stat-card-link">View Details <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
     <div class="col-12 col-md-6 col-xl-3 mb-4">
@@ -119,19 +167,17 @@
             <div class="stat-card-icon" style="background: #D1FAE5; color: #059669;">
                 <i class="bi bi-calendar-check"></i>
             </div>
-            <div class="stat-card-value"><?= $stats['today'] ?></div>
-            <div class="stat-card-label">Today</div>
-            <a href="<?= base_url('admin/history') . '?from_date=' . date('Y-m-d') . '&to_date=' . date('Y-m-d') ?>" class="stat-card-link">View Details <i class="bi bi-arrow-right"></i></a>
+            <div class="stat-card-value"><?= number_format($stats['today'] ?? 0) ?></div>
+            <div class="stat-card-label">Departed Today</div>
         </div>
     </div>
     <div class="col-12 col-md-6 col-xl-3 mb-4">
-        <div class="stat-card-modern info-accent fade-in">
-            <div class="stat-card-icon" style="background: #DBEAFE; color: #1976D2;">
+        <div class="stat-card-modern gold-accent fade-in">
+            <div class="stat-card-icon" style="background: #FEF3C7; color: #d97706;">
                 <i class="bi bi-calendar-month"></i>
             </div>
-            <div class="stat-card-value"><?= $stats['month'] ?></div>
+            <div class="stat-card-value"><?= number_format($stats['month'] ?? 0) ?></div>
             <div class="stat-card-label">This Month</div>
-            <a href="<?= base_url('admin/history') . '?from_date=' . date('Y-m-01') . '&to_date=' . date('Y-m-t') ?>" class="stat-card-link">View Details <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
     <div class="col-12 col-md-6 col-xl-3 mb-4">
@@ -139,78 +185,100 @@
             <div class="stat-card-icon" style="background: #F1F5F9; color: #475569;">
                 <i class="bi bi-calendar-range"></i>
             </div>
-            <div class="stat-card-value"><?= $stats['year'] ?></div>
+            <div class="stat-card-value"><?= number_format($stats['year'] ?? 0) ?></div>
             <div class="stat-card-label">This Year</div>
-            <a href="<?= base_url('admin/history') . '?from_date=' . date('Y-01-01') . '&to_date=' . date('Y-12-31') ?>" class="stat-card-link">View Details <i class="bi bi-arrow-right"></i></a>
         </div>
     </div>
 </div>
 
-<!-- Filters & Search -->
+<!-- Search & Filters -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
-        <form method="get" action="<?= base_url('admin/history') ?>" class="row g-3">
-            <div class="col-12 col-md-4">
-                <label class="form-label-modern">Search Records</label>
-                <div class="input-group-modern">
-                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
-                    <input type="text" class="input-modern border-start-0" name="q" placeholder="Plate, Driver, or Destination..." value="<?= esc($search ?? '') ?>">
-                </div>
+        <form method="get" action="<?= base_url('admin/history') ?>" id="historyFilterForm" class="row g-3 align-items-end">
+            <div class="col-12 col-lg-3 col-md-6">
+                <label class="form-label-modern"><i class="bi bi-search me-1"></i> Keyword Search</label>
+                <input type="text" class="input-modern" name="q" placeholder="Plate, Driver, or Destination..." value="<?= esc($search ?? '') ?>">
             </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label-modern">From Date</label>
-                <input type="date" class="input-modern" name="from_date" value="<?= esc($from_date ?? '') ?>">
+            <div class="col-12 col-lg-2 col-md-3">
+                <label class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> From Date</label>
+                <input type="date" class="input-modern" name="from_date" id="fromDate" value="<?= esc($from_date ?? '') ?>">
             </div>
-            <div class="col-12 col-md-3">
-                <label class="form-label-modern">To Date</label>
-                <input type="date" class="input-modern" name="to_date" value="<?= esc($to_date ?? '') ?>">
+            <div class="col-12 col-lg-2 col-md-3">
+                <label class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> To Date</label>
+                <input type="date" class="input-modern" name="to_date" id="toDate" value="<?= esc($to_date ?? '') ?>">
             </div>
-            <div class="col-12 col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn-modern btn-modern-primary w-100">
+            <div class="col-12 col-lg-2 col-md-4">
+                <label class="form-label-modern"><i class="bi bi-geo-alt me-1"></i> Destination</label>
+                <select name="destination" class="input-modern">
+                    <option value="">All Destinations</option>
+                    <?php if (!empty($destinations)): ?>
+                        <?php foreach ($destinations as $d): ?>
+                            <option value="<?= esc($d['destination']) ?>" <?= ($destination ?? '') === $d['destination'] ? 'selected' : '' ?>>
+                                <?= esc($d['destination']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+            <div class="col-12 col-lg-2 col-md-4">
+                <label class="form-label-modern"><i class="bi bi-truck me-1"></i> Vehicle Type</label>
+                <select name="vehicle_type" class="input-modern">
+                    <option value="">All Types</option>
+                    <?php if (!empty($vehicleTypes)): ?>
+                        <?php foreach ($vehicleTypes as $vt): ?>
+                            <option value="<?= esc($vt['slug'] ?? $vt['name']) ?>" <?= ($vehicle_type ?? '') === ($vt['slug'] ?? $vt['name']) ? 'selected' : '' ?>>
+                                <?= esc($vt['name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </select>
+            </div>
+            <div class="col-12 col-lg-1 col-md-4">
+                <button type="submit" class="btn-modern btn-modern-primary w-100" style="height: 42px;">
                     <i class="bi bi-funnel-fill"></i> Filter
                 </button>
             </div>
         </form>
-        
-        <?php if (!empty($search) || !empty($from_date) || !empty($to_date)): ?>
-            <div class="mt-3 d-flex align-items-center gap-2 flex-wrap">
-                <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase;">Active Filters:</span>
-                <?php if ($search): ?>
-                    <span class="badge-modern badge-modern-info">"<?= esc($search) ?>"</span>
-                <?php endif; ?>
-                <?php if ($from_date): ?>
-                    <span class="badge-modern badge-modern-primary">From: <?= esc($from_date) ?></span>
-                <?php endif; ?>
-                <?php if ($to_date): ?>
-                    <span class="badge-modern badge-modern-primary">To: <?= esc($to_date) ?></span>
-                <?php endif; ?>
-                <a href="<?= base_url('admin/history') ?>" class="btn-modern btn-modern-sm btn-modern-outline ms-2">
-                    <i class="bi bi-x-circle"></i> Clear All
+
+        <div class="quick-chips-row">
+            <span class="text-muted" style="font-size: 12px; font-weight: 700; text-transform: uppercase;">
+                <i class="bi bi-clock-history me-1"></i> Quick Ranges:
+            </span>
+            <button type="button" class="quick-chip quick-chip-btn <?= empty($from_date) && empty($to_date) ? 'active' : '' ?>" data-from="" data-to="">All (60d)</button>
+            <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d') && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d') ?>" data-to="<?= date('Y-m-d') ?>">Today</button>
+            <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-7 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-7 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 7 Days</button>
+            <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-30 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-30 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 30 Days</button>
+            <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($destination) || !empty($vehicle_type)): ?>
+                <a href="<?= base_url('admin/history') ?>" class="btn-modern btn-modern-sm btn-modern-outline ms-auto" title="Clear all filters">
+                    <i class="bi bi-x-circle me-1"></i> Clear Filters
                 </a>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
 <!-- Departures Table -->
 <div class="modern-card shadow-modern fade-in mb-4">
-    <div class="modern-card-header">
-        <span class="modern-card-title">
-            <i class="bi bi-list-ul" style="color: var(--primary-red);"></i>
+    <div class="modern-card-header d-flex align-items-center justify-content-between">
+        <span class="modern-card-title" style="font-size: 16px;">
+            <i class="bi bi-list-ul" style="color: var(--primary-red, #b71c1c);"></i>
             Departure Records
+            <?php if (!empty($departures)): ?>
+                <span class="badge-modern badge-modern-secondary ms-2" style="font-size: 13px;"><?= count($departures) ?> on this page</span>
+            <?php endif; ?>
         </span>
     </div>
-    <div class="modern-card-body">
+    <div class="modern-card-body p-0">
         <div class="table-responsive">
             <table class="table-modern">
                 <thead>
                     <tr>
-                        <th>Plate Number</th>
+                        <th style="width: 140px;">Plate Number</th>
                         <th>Operator</th>
                         <th>Driver</th>
                         <th>Vehicle</th>
                         <th>Route</th>
-                        <th>Departure Time</th>
+                        <th style="width: 160px;">Departure Time</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -274,7 +342,8 @@
                         <tr>
                             <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                No departure records found.
+                                <div class="fw-bold fs-6">No departure records found</div>
+                                <small>Try adjusting your search criteria or date filters.</small>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -291,7 +360,34 @@
 
 <?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
 
-<?= view('templates/footer') ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var quickButtons = document.querySelectorAll('.quick-chip-btn');
+    var fromInput = document.getElementById('fromDate');
+    var toInput = document.getElementById('toDate');
+    var form = document.getElementById('historyFilterForm');
+
+    quickButtons.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var from = this.getAttribute('data-from') || '';
+            var to = this.getAttribute('data-to') || '';
+            
+            if (fromInput) fromInput.value = from;
+            if (toInput) toInput.value = to;
+
+            quickButtons.forEach(function(b) {
+                b.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            if (form) {
+                form.submit();
+            }
+        });
+    });
+});
+</script>
 
 <script src="<?= base_url('js/ws-client.js') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js') ?>"></script>
@@ -301,17 +397,19 @@
         onlyWS:        true,
         pollInterval:  30000,
         refreshUrl:    window.location.href,
-        tableSelector: '.table-hover tbody',
+        tableSelector: '.table-modern tbody',
         extraRefresh:  function(newDoc) {
             // Update stat cards
-            var newCards = newDoc.querySelectorAll('.card.text-white h2');
-            var curCards = document.querySelectorAll('.card.text-white h2');
+            var newCards = newDoc.querySelectorAll('.stat-card-value');
+            var curCards = document.querySelectorAll('.stat-card-value');
             newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].textContent = card.textContent; });
 
             // Update pagination
-            var newPager = newDoc.querySelector('.card-footer');
-            var curPager = document.querySelector('.card-footer');
+            var newPager = newDoc.querySelector('.modern-card-footer');
+            var curPager = document.querySelector('.modern-card-footer');
             if (newPager && curPager) curPager.innerHTML = newPager.innerHTML;
         }
     });
 </script>
+
+<?= view('templates/footer') ?>

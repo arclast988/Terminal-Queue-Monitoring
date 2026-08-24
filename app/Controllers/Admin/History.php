@@ -104,48 +104,7 @@ class History extends BaseController
         return view('admin/history/print_history', $data);
     }
 
-    public function export()
-    {
-        $queueModel = new QueueModel();
-        $queueModel->purgeOldDepartures(60);
 
-        $search = $this->request->getGet('q');
-        $fromDate = $this->request->getGet('from_date');
-        $toDate = $this->request->getGet('to_date');
-        $destFilter = $this->request->getGet('destination');
-        $typeFilter = $this->request->getGet('vehicle_type');
-
-        $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $destFilter, $typeFilter);
-        $results = $builder->orderBy('queue.departure_time', 'DESC')->findAll();
-
-        $filename = 'departure_history_' . date('Ymd_His') . '.csv';
-
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-
-        $output = fopen('php://output', 'w');
-        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-        fputcsv($output, ['Departure Time', 'Plate Number', 'Vehicle Type', 'Driver', 'Operator', 'Origin', 'Destination', 'Passengers']);
-
-        foreach ($results as $row) {
-            fputcsv($output, [
-                date('Y-m-d h:i A', strtotime($row['departure_time'])),
-                $row['plate_number'] ?? '—',
-                ucfirst($row['vehicle_type'] ?? '—'),
-                $row['driver_name'] ?? '—',
-                $row['operator_name'] ?? $row['owner_name'] ?? '—',
-                $row['origin'] ?? 'Palompon',
-                $row['destination'] ?? '—',
-                $row['current_passengers'] ?? 0
-            ]);
-        }
-
-        fclose($output);
-        exit;
-    }
 
     private function _getFilteredBuilder($search, $fromDate, $toDate, $destination, $vehicleType)
     {
