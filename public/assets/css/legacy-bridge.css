@@ -599,24 +599,4 @@ html body .form-check-label-modern {
   user-select: none;
 }
 
-/* ==========================================================================
-   DARK MODE OVERRIDES FOR LEGACY BRIDGE COMPONENTS
-   ========================================================================== */
-@media (prefers-color-scheme: dark) {
-  html body .alert-modern-success { background: #064e3b !important; border-left-color: #10b981 !important; color: #6ee7b7 !important; }
-  html body .alert-modern-warning { background: #451a03 !important; border-left-color: #f59e0b !important; color: #fde68a !important; }
-  html body .alert-modern-danger  { background: #451a1a !important; border-left-color: #ef4444 !important; color: #fca5a5 !important; }
-  html body .alert-modern-info    { background: #172554 !important; border-left-color: #3b82f6 !important; color: #93c5fd !important; }
 
-  html body .badge-modern-super-admin { background: #7c3aed !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-  html body .badge-modern-success { background: #064e3b !important; color: #a7f3d0 !important; -webkit-text-fill-color: #a7f3d0 !important; border: 1px solid #059669 !important; }
-  html body .badge-modern-warning { background: #78350f !important; color: #fde68a !important; -webkit-text-fill-color: #fde68a !important; border: 1px solid #d97706 !important; }
-  html body .badge-modern-danger  { background: #881337 !important; color: #fecdd3 !important; -webkit-text-fill-color: #fecdd3 !important; border: 1px solid #be123c !important; }
-  html body .badge-modern-info    { background: #075985 !important; color: #bae6fd !important; -webkit-text-fill-color: #bae6fd !important; border: 1px solid #0284c7 !important; }
-  html body .badge-modern-primary { background: #312e81 !important; color: #c7d2fe !important; -webkit-text-fill-color: #c7d2fe !important; border: 1px solid #4338ca !important; }
-
-  html body .stat-card-modern { background-color: #1e293b !important; border-color: #334155 !important; color: #f1f5f9 !important; }
-  html body .stat-card-title  { color: #94a3b8 !important; }
-  html body .stat-card-number { color: #f1f5f9 !important; }
-  html body .stat-card-subtext { color: #cbd5e1 !important; }
-}

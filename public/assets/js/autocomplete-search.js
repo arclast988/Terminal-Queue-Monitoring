@@ -90,42 +90,7 @@
                 border: 1px solid #e2e8f0;
             }
 
-            /* Dark Mode Rules for Autocomplete Dropdown & Items (Only when body.dark-mode is active) */
-            body.dark-mode .autocomplete-dropdown {
-                background: #1e293b !important;
-                background-color: #1e293b !important;
-                border-color: #334155 !important;
-                box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6) !important;
-            }
-            body.dark-mode .autocomplete-item {
-                color: #f8fafc !important;
-                background: #1e293b !important;
-                border-bottom-color: #334155 !important;
-            }
-            body.dark-mode .autocomplete-item span,
-            body.dark-mode .autocomplete-item .autocomplete-item-text {
-                color: #f8fafc !important;
-            }
-            body.dark-mode .autocomplete-item:hover,
-            body.dark-mode .autocomplete-item.active-item {
-                background-color: #334155 !important;
-                color: #38bdf8 !important;
-            }
-            body.dark-mode .autocomplete-item:hover span,
-            body.dark-mode .autocomplete-item.active-item span,
-            body.dark-mode .autocomplete-item:hover .autocomplete-item-text,
-            body.dark-mode .autocomplete-item.active-item .autocomplete-item-text {
-                color: #38bdf8 !important;
-            }
-            body.dark-mode .autocomplete-item mark.search-highlight {
-                background: rgba(251, 191, 36, 0.3) !important;
-                color: #fbbf24 !important;
-            }
-            body.dark-mode .autocomplete-badge {
-                background: #334155 !important;
-                color: #cbd5e1 !important;
-                border-color: #475569 !important;
-            }
+
 
             /* Explicit Light Theme Styling (Base Container) */
             .autocomplete-dropdown {

@@ -134,26 +134,7 @@
         color: #ffffff !important;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .log-id-badge {
-            background: #334155;
-            color: #f8fafc;
-            border-color: #475569;
-        }
-        .table-modern .log-details-cell {
-            color: #cbd5e1;
-        }
-        html body .quick-chip {
-            background: #0f172a !important;
-            border-color: #334155 !important;
-            color: #cbd5e1 !important;
-        }
-        html body .quick-chip.active {
-            background: #b71c1c !important;
-            border-color: #b71c1c !important;
-            color: #ffffff !important;
-        }
-    }
+
 </style>
 
 <div class="page-header-modern fade-in">
@@ -172,7 +153,6 @@
         <a href="<?= base_url('admin/logs/print' . $queryUrl) ?>" target="_blank" class="btn-modern btn-modern-primary" title="Print or preview log report">
             <i class="bi bi-file-earmark-text"></i> Generate Report
         </a>
-
     </div>
 </div>
 

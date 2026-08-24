@@ -433,21 +433,6 @@
             margin: 0 !important;
         }
 
-        @media (prefers-color-scheme: dark) {
-            html body .stats-grid .stat-card,
-            html body .stats-grid .stat-card-button,
-            html body .stats-grid .stat-card-link {
-                background: #ffffff !important;
-                color: #1c2430 !important;
-                border-color: rgba(0, 0, 0, 0.03) !important;
-            }
-            .stats-grid .stat-info .value {
-                color: #1c2430 !important;
-            }
-            .stats-grid .stat-info .label {
-                color: #475569 !important;
-            }
-        }
 
         .route-average-modal {
             position: fixed;

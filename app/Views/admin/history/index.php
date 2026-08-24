@@ -85,40 +85,7 @@
         color: #ffffff !important;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .table-modern .plate-number {
-            background: #334155 !important;
-            color: #f1f5f9 !important;
-        }
-        .table-modern .driver-cell {
-            color: #e2e8f0 !important;
-        }
-        .table-modern .driver-cell i {
-            color: #94a3b8 !important;
-        }
-        .table-modern .route-info,
-        .table-modern .route-info span {
-            color: #e2e8f0 !important;
-        }
-        .table-modern td {
-            color: #e2e8f0 !important;
-        }
-        .retention-pill {
-            background: #064e3b !important;
-            color: #6ee7b7 !important;
-            border-color: #047857 !important;
-        }
-        html body .quick-chip {
-            background: #0f172a !important;
-            border-color: #334155 !important;
-            color: #cbd5e1 !important;
-        }
-        html body .quick-chip.active {
-            background: #b71c1c !important;
-            border-color: #b71c1c !important;
-            color: #ffffff !important;
-        }
-    }
+
 </style>
 
 <div class="page-header-modern fade-in">

@@ -105,36 +105,7 @@
     border: 1px solid #cbd5e1;
 }
 
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-    .rule-filter-container {
-        background: #1e293b;
-        border-color: #334155;
-    }
-    .rule-filter-label {
-        color: #94a3b8;
-    }
-    .rule-filter-btn {
-        background: #0f172a;
-        border-color: #334155;
-        color: #cbd5e1;
-    }
-    .rule-filter-btn:hover {
-        background: #1e293b;
-        border-color: var(--primary, #1565C0);
-        color: #f8fafc;
-    }
-    .rule-filter-btn.active {
-        background: var(--primary, #1565C0);
-        border-color: var(--primary, #1565C0);
-        color: var(--on-primary, #ffffff);
-    }
-    .route-tag-pill {
-        background: #334155;
-        color: #f1f5f9;
-        border-color: #475569;
-    }
-}
+
 </style>
 
 <div class="page-header-modern fade-in">

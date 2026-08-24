@@ -13,6 +13,8 @@
    1. TOKENS
    -------------------------------------------------------------------------- */
 :root {
+  color-scheme: light;
+
   /* Typography */
   --font-display: 'Bricolage Grotesque', 'Outfit', sans-serif;
   --font-body: 'Outfit', sans-serif;
@@ -140,12 +142,7 @@ body.guest-theme .main-content {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  body::after {
-    opacity: 0.15;
-    filter: brightness(1.3) contrast(1.1);
-  }
-}
+
 
 h1, h2, h3, .h1, .h2, .h3 {
   font-family: var(--font-display);

@@ -1256,42 +1256,6 @@ a[title*="edit" i]:hover {
   border-color: var(--primary-blue, #1565c0) !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  /* Edit icons – bright blue for dark backgrounds */
-  body.admin-theme .btn-modern .bi.bi-pencil,
-  body.admin-theme .btn-modern .bi-pencil-fill,
-  body.admin-theme .bi.bi-pencil,
-  body.admin-theme .bi.bi-pencil-fill,
-  body.staff-theme .btn-modern .bi.bi-pencil,
-  body.staff-theme .btn-modern .bi-pencil-fill,
-  body.staff-theme .bi.bi-pencil,
-  body.staff-theme .bi.bi-pencil-fill {
-    color: #60a5fa !important;
-    -webkit-text-fill-color: #60a5fa !important;
-  }
-  /* Edit buttons – transparent bg, blue outline + text (same pattern as light) */
-  a.btn-modern[title*="edit" i],
-  button.btn-modern[title*="edit" i],
-  a[title*="edit" i],
-  button[title*="edit" i],
-  .btn-modern.btn-modern-outline-primary {
-    background: transparent !important;
-    border-color: #60a5fa !important;
-    color: #60a5fa !important;
-    -webkit-text-fill-color: #60a5fa !important;
-  }
-  /* Edit hover – fills blue, white text (same pattern as light) */
-  a.btn-modern[title*="edit" i]:hover,
-  button.btn-modern[title*="edit" i]:hover,
-  a[title*="edit" i]:hover,
-  button[title*="edit" i]:hover,
-  .btn-modern.btn-modern-outline-primary:hover {
-    background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%) !important;
-    border-color: #1e88e5 !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-  }
-}
 
 /* Delete (red) */
 /* Match titles/values containing "delete" (case-insensitive) to cover
@@ -1350,43 +1314,6 @@ a[title*="delete" i]:hover {
   color: #fff !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  /* Delete buttons – soft dark-red bg, red text (mirrors light mode's pink bg + red text) */
-  button.btn-modern[title*="delete" i],
-  input[type="submit"][title*="delete" i],
-  input[type="submit"][value*="delete" i],
-  a[title*="delete" i],
-  button[title*="delete" i],
-  input[title*="delete" i],
-  .btn-modern.btn-modern-outline-danger {
-    background: rgba(239, 68, 68, 0.15) !important;
-    color: #f87171 !important;
-    -webkit-text-fill-color: #f87171 !important;
-    border-color: transparent !important;
-  }
-  /* Delete icons – red for dark mode */
-  .btn-modern[title*="delete" i] i,
-  input[type="submit"][title*="delete" i] i,
-  a[title*="delete" i] i,
-  .btn-modern .bi.bi-trash,
-  .btn-modern .bi-trash-fill,
-  .bi.bi-trash,
-  .bi.bi-trash-fill,
-  .btn-modern.btn-modern-outline-danger i {
-    color: #f87171 !important;
-    -webkit-text-fill-color: #f87171 !important;
-  }
-  /* Delete hover – fills red, white text (same pattern as light) */
-  button.btn-modern[title*="delete" i]:hover,
-  input[type="submit"][title*="delete" i]:hover,
-  button[title*="delete" i]:hover,
-  a[title*="delete" i]:hover,
-  .btn-modern.btn-modern-outline-danger:hover {
-    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
-  }
-}
 
 /* Force Edit Button Icons to turn White on Hover */
 a.btn-modern[title*="edit" i]:hover i,

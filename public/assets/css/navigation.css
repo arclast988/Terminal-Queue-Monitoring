@@ -456,41 +456,6 @@ body.staff-theme .logo-text h1 {
   -webkit-text-fill-color: #0284c7 !important;
 }
 
-/* Dark mode dropdown overrides */
-@media (prefers-color-scheme: dark) {
-  body.admin-theme .nav-menu .dropdown-content,
-  body.staff-theme .nav-menu .dropdown-content,
-  .nav-menu .dropdown-content {
-    background: #1e293b !important;
-    border-color: #334155 !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
-  }
-  body.admin-theme .nav-menu .dropdown-content a,
-  body.staff-theme .nav-menu .dropdown-content a,
-  .nav-menu .dropdown-content a {
-    color: #f8fafc !important;
-    -webkit-text-fill-color: #f8fafc !important;
-  }
-  body.admin-theme .nav-menu .dropdown-content a i,
-  body.staff-theme .nav-menu .dropdown-content a i,
-  .nav-menu .dropdown-content a i {
-    color: #94a3b8 !important;
-    -webkit-text-fill-color: #94a3b8 !important;
-  }
-  .nav-menu .dropdown-content a:hover,
-  .nav-menu .dropdown-content a:focus,
-  .nav-menu .dropdown-content a.active {
-    background-color: #334155 !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
-  }
-  .nav-menu .dropdown-content a:hover i,
-  .nav-menu .dropdown-content a:focus i,
-  .nav-menu .dropdown-content a.active i {
-    color: #38bdf8 !important;
-    -webkit-text-fill-color: #38bdf8 !important;
-  }
-}
 
 /* --- Searchable Autocomplete Component Styles ---------------------------- */
 .modern-card,
@@ -584,80 +549,6 @@ div:has(> .autocomplete-wrapper:hover) {
   font-weight: 400 !important;
 }
 
-@media (prefers-color-scheme: dark) {
-  body.dark-mode .autocomplete-dropdown {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-  }
-
-  body.dark-mode .autocomplete-item {
-    color: #f1f5f9 !important;
-    border-bottom-color: #1e293b !important;
-  }
-
-  body.dark-mode .autocomplete-item:hover,
-  body.dark-mode .autocomplete-item.selected {
-    background-color: #1e293b !important;
-    color: #38bdf8 !important;
-  }
-
-  body.dark-mode .autocomplete-item-subtitle {
-    color: #94a3b8 !important;
-  }
-
-  body.dark-mode .autocomplete-wrapper .input-modern,
-  body.dark-mode .autocomplete-wrapper .form-control-modern,
-  body.dark-mode .autocomplete-wrapper .form-control,
-  body.dark-mode .autocomplete-wrapper input[type="text"] {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-    color: #f1f5f9 !important;
-    -webkit-text-fill-color: #f1f5f9 !important;
-  }
-
-  body.dark-mode .autocomplete-wrapper .input-modern::placeholder,
-  body.dark-mode .autocomplete-wrapper .form-control-modern::placeholder,
-  body.dark-mode .autocomplete-wrapper .form-control::placeholder,
-  body.dark-mode .autocomplete-wrapper input[type="text"]::placeholder {
-    color: #94a3b8 !important;
-    -webkit-text-fill-color: #94a3b8 !important;
-    opacity: 0.80 !important;
-    font-weight: 400 !important;
-  }
-
-  .autocomplete-wrapper .input-modern:focus,
-  .autocomplete-wrapper .form-control-modern:focus,
-  .autocomplete-wrapper .form-control:focus,
-  .autocomplete-wrapper input[type="text"]:focus {
-    border-color: #ef5350 !important;
-    box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.25) !important;
-  }
-
-  /* Badge inside dropdown items (e.g. "Terminal", "Route", "Type") */
-  body.dark-mode .autocomplete-item .badge.bg-light,
-  body.dark-mode .autocomplete-item .badge.rounded-pill,
-  body.dark-mode .autocomplete-item .autocomplete-badge {
-    background-color: #334155 !important;
-    color: #cbd5e1 !important;
-    -webkit-text-fill-color: #cbd5e1 !important;
-    border-color: #475569 !important;
-  }
-
-  /* Search highlight mark — keep visible on dark backgrounds */
-  body.dark-mode .autocomplete-item mark,
-  body.dark-mode .autocomplete-item mark.bg-warning,
-  body.dark-mode .autocomplete-item mark.search-highlight {
-    background-color: rgba(251, 191, 36, 0.3) !important;
-    color: #fbbf24 !important;
-    -webkit-text-fill-color: #fbbf24 !important;
-  }
-
-  /* Icons inside autocomplete items */
-  body.dark-mode .autocomplete-item .text-primary {
-    color: #60a5fa !important;
-  }
-}
 
 /* Explicit Light Container & Theme Overrides for Autocomplete Dropdown Popups */
 .autocomplete-dropdown {
@@ -755,11 +646,5 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
   -webkit-text-fill-color: #c2410c !important;
   border: 1px solid #ffedd5 !important;
 }
-body.dark-mode .autocomplete-item .badge,
-body.dark-mode .autocomplete-item .autocomplete-badge {
-  background-color: #334155 !important;
-  color: #cbd5e1 !important;
-  -webkit-text-fill-color: #cbd5e1 !important;
-  border-color: #475569 !important;
-}
+
 
