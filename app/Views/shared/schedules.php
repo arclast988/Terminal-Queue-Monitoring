@@ -148,11 +148,14 @@
                 </thead>
                 <tbody>
                     <?php if (!empty($schedules)): ?>
-                        <?php foreach ($schedules as $s): ?>
+                        <?php foreach ($schedules as $index => $s): ?>
                             <tr>
                                 <td data-label="Queue #">
+                                    <?php 
+                                        $queueNum = !empty($s['position']) && (int)$s['position'] > 0 ? (int)$s['position'] : ($index + 1);
+                                    ?>
                                     <span class="badge-modern badge-modern-primary">
-                                        #<?= esc($s['position']) ?>
+                                        #<?= esc($queueNum) ?>
                                     </span>
                                 </td>
                                 <td data-label="Plate Number">
@@ -183,7 +186,7 @@
                                     </div>
                                 </td>
                                 <td data-label="Route">
-                                    <div class="d-flex align-items-center gap-2">
+                                    <div class="d-flex align-items-center gap-2" style="white-space: nowrap;">
                                         <strong><?= esc($s['origin']) ?></strong>
                                         <i class="bi bi-arrow-right text-muted"></i>
                                         <strong><?= esc($s['destination']) ?></strong>
@@ -229,7 +232,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-calendar-x fs-1 mb-3 d-block"></i>
                                 <p class="mb-0">No scheduled departures found.</p>
                             </td>

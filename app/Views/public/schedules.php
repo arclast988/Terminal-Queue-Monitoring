@@ -854,10 +854,13 @@
                         </tr>
                     </thead>
                     <tbody id="scheduleTableBody">
-                        <?php foreach ($schedules as $schedule): ?>
+                        <?php foreach ($schedules as $index => $schedule): ?>
                             <tr>
                                 <td data-label="Queue #">
-                                    <span class="time-display">#<?= esc($schedule['position']) ?></span>
+                                    <?php 
+                                        $queueNum = !empty($schedule['position']) && (int)$schedule['position'] > 0 ? (int)$schedule['position'] : ($index + 1);
+                                    ?>
+                                    <span class="time-display">#<?= esc($queueNum) ?></span>
                                 </td>
                                 <td data-label="Plate"><span class="plate-number"><?= esc($schedule['plate_number']) ?></span>
                                 </td>

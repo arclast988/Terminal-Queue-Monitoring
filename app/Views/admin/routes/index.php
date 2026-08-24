@@ -35,10 +35,29 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     </div>
 <?php endif; ?>
 
+<!-- Search Bar -->
+<div class="modern-card shadow-modern fade-in mb-4">
+    <div class="modern-card-body py-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <!-- Search Input Capsule -->
+            <div class="route-search-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="route-search-input" id="route-search" placeholder="Search destination, origin, vehicle type, or fare..." onkeyup="filterRoutes()" autocomplete="off">
+                <button type="button" class="btn-clear-search" id="clear-route-search" onclick="clearRouteSearch()" style="display:none;" title="Clear search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            </div>
+            <div id="route-count-display" style="font-size: 13.5px; font-weight: 600; color: var(--text-muted, #64748b);">
+                Total: <strong style="color: var(--text-main, #0f172a);"><?= !empty($groupedRoutes) ? count($groupedRoutes) : 0 ?></strong> route<?= (!empty($groupedRoutes) && count($groupedRoutes) !== 1) ? 's' : '' ?>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php if (!empty($groupedRoutes)): ?>
-    <div class="d-flex flex-column gap-4 fade-in">
+    <div class="d-flex flex-column gap-4 fade-in" id="routes-container">
         <?php foreach ($groupedRoutes as $routeKey => $group): ?>
-            <div class="modern-card shadow-modern mb-0">
+            <div class="modern-card shadow-modern mb-0 route-card-item" data-destination="<?= esc(strtolower($group['destination'])) ?>" data-terminal="<?= esc(strtolower($group['terminal_name'])) ?>">
                 <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-4" style="background: var(--surface-sunken, #f8fafc); border-bottom: 1px solid var(--border, #e2e8f0);">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
@@ -91,6 +110,13 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 </div>
             </div>
         <?php endforeach; ?>
+        
+        <div id="no-routes-match" class="modern-card shadow-modern fade-in text-center py-5" style="display: none;">
+            <div class="py-4 text-muted">
+                <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
+                No routes match your search query.
+            </div>
+        </div>
     </div>
 <?php else: ?>
     <div class="modern-card shadow-modern fade-in text-center py-5">
@@ -100,5 +126,109 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         </div>
     </div>
 <?php endif; ?>
+
+<style>
+    .route-search-group {
+        display: flex;
+        align-items: center;
+        position: relative;
+        max-width: 480px;
+        width: 100%;
+    }
+    .route-search-group .input-group-text {
+        height: 40px;
+        background: #f8fafc;
+        border: 1.5px solid #cbd5e1;
+        border-right: none;
+        border-radius: 20px 0 0 20px;
+        color: #64748b;
+        padding: 0 14px;
+        font-size: 14px;
+    }
+    .route-search-input {
+        height: 40px;
+        width: 100%;
+        padding: 6px 36px 6px 10px;
+        font-size: 13.5px;
+        font-family: inherit;
+        border: 1.5px solid #cbd5e1;
+        border-left: none;
+        background: #ffffff;
+        color: #1e293b;
+        border-radius: 0 20px 20px 0;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    .route-search-group:focus-within .input-group-text,
+    .route-search-group:focus-within .route-search-input {
+        border-color: var(--primary, #b71c1c);
+        box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.12);
+    }
+    .btn-clear-search {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        transition: color 0.15s ease;
+    }
+    .btn-clear-search:hover {
+        color: #475569;
+    }
+</style>
+
+<script>
+    function filterRoutes() {
+        const input = document.getElementById('route-search');
+        const clearBtn = document.getElementById('clear-route-search');
+        const query = input ? input.value.toLowerCase().trim() : '';
+        const cards = document.querySelectorAll('.route-card-item');
+        const noMatch = document.getElementById('no-routes-match');
+        const countDisplay = document.getElementById('route-count-display');
+        const totalCards = cards.length;
+        let visibleCount = 0;
+
+        if (clearBtn) {
+            clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+        }
+
+        cards.forEach(card => {
+            const text = card.innerText.toLowerCase();
+            if (!query || text.includes(query)) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (noMatch) {
+            noMatch.style.display = (visibleCount === 0 && totalCards > 0) ? '' : 'none';
+        }
+
+        if (countDisplay) {
+            if (query) {
+                countDisplay.innerHTML = `Showing <strong style="color: var(--text-main, #0f172a);">${visibleCount}</strong> of ${totalCards} route${totalCards !== 1 ? 's' : ''}`;
+            } else {
+                countDisplay.innerHTML = `Total: <strong style="color: var(--text-main, #0f172a);">${totalCards}</strong> route${totalCards !== 1 ? 's' : ''}`;
+            }
+        }
+    }
+
+    function clearRouteSearch() {
+        const input = document.getElementById('route-search');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        filterRoutes();
+    }
+</script>
 
 <?= view('templates/footer') ?>

@@ -47,6 +47,12 @@
             border: 1px solid var(--slate-200);
             padding: 14px;
         }
+
+        .table-modern tbody tr[style*="display: none"],
+        .table-modern tbody tr[style*="display:none"],
+        .table-modern tbody tr.d-none {
+            display: none !important;
+        }
         
         .table-modern tbody td {
             display: flex;
@@ -66,6 +72,16 @@
             color: var(--slate-500);
             text-transform: uppercase;
             font-size: 12px;
+        }
+
+        .table-modern tbody tr td[colspan] {
+            display: block !important;
+            text-align: center !important;
+            justify-content: center !important;
+            padding: 24px 16px !important;
+        }
+        .table-modern tbody tr td[colspan]::before {
+            display: none !important;
         }
     }
     
@@ -199,7 +215,6 @@ if (!empty($recent_departures)) {
         <table class="table-modern">
             <thead>
                 <tr>
-                    <th>Queue #</th>
                     <th>Plate Number</th>
                     <th>Operator</th>
                     <th>Driver</th>
@@ -213,11 +228,6 @@ if (!empty($recent_departures)) {
                 <?php if (!empty($recent_departures)): ?>
                     <?php foreach ($recent_departures as $dept): ?>
                         <tr data-vehicle-type="<?= esc(strtolower($dept['vehicle_type'] ?? '')) ?>">
-                            <td data-label="Queue #">
-                                <span class="badge-modern badge-modern-primary" style="font-weight:700; font-size:13px;">
-                                    #<?= esc($dept['position'] ?? '0') ?>
-                                </span>
-                            </td>
                             <td data-label="Plate Number">
                                 <span class="plate-number"><?= esc($dept['plate_number']) ?></span>
                             </td>
@@ -267,11 +277,11 @@ if (!empty($recent_departures)) {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">No recent departures today.</td>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">No recent departures today.</td>
                     </tr>
                 <?php endif; ?>
-                <tr id="no-departures-match" style="display:none;">
-                    <td colspan="8" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">
+                <tr id="no-departures-match" class="d-none" style="display:none !important;">
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">
                         <i class="bi bi-search fs-3 d-block mb-2 text-muted opacity-50"></i>
                         No departures match the selected search or filter.
                     </td>
@@ -353,10 +363,10 @@ if (!empty($recent_departures)) {
         transform: translateY(-1px);
     }
     .dep-filter-btn.active {
-        background: #C62828 !important;
-        border-color: #C62828 !important;
+        background: var(--primary, #1565c0) !important;
+        border-color: var(--primary, #1565c0) !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(198, 40, 40, 0.25);
+        box-shadow: 0 4px 10px rgba(21, 101, 192, 0.25);
     }
     .dep-filter-btn .dep-chip-count {
         display: inline-flex;
@@ -410,33 +420,39 @@ if (!empty($recent_departures)) {
             const matchesQuery = (!query || text.includes(query));
 
             if (matchesType && matchesQuery) {
-                row.style.display = '';
+                row.style.removeProperty('display');
+                row.classList.remove('d-none');
                 visibleCount++;
             } else {
-                row.style.display = 'none';
+                row.style.setProperty('display', 'none', 'important');
+                row.classList.add('d-none');
             }
         });
 
         const noMatchRow = document.getElementById('no-departures-match');
         if (noMatchRow) {
-            noMatchRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
+            if (visibleCount === 0 && rows.length > 0) {
+                noMatchRow.style.removeProperty('display');
+                noMatchRow.classList.remove('d-none');
+            } else {
+                noMatchRow.style.setProperty('display', 'none', 'important');
+                noMatchRow.classList.add('d-none');
+            }
         }
     }
 
     QueueSync.init({
         pollInterval: 3000,
         refreshUrl:   '<?= base_url('staff/dashboard') ?>',
-        tableSelector: '.table-hover tbody',
+        tableSelector: '#departures-table-body',
         extraRefresh: function(newDoc) {
             // Update Active in Queue count
-            var newCount = newDoc.querySelector('.card.bg-primary .card-body h2');
-            var curCount = document.querySelector('.card.bg-primary .card-body h2');
+            var newCount = newDoc.querySelector('.stat-card-value');
+            var curCount = document.querySelector('.stat-card-value');
             if (newCount && curCount) curCount.textContent = newCount.textContent;
 
-            // Update stat cards (terminal capacity, etc.)
-            var newCards = newDoc.querySelectorAll('.card.border-info .card-body');
-            var curCards = document.querySelectorAll('.card.border-info .card-body');
-            newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].innerHTML = card.innerHTML; });
+            // Re-apply filter if needed
+            filterDepartures();
         }
     });
 </script>

@@ -821,6 +821,49 @@
         box-shadow: none;
         cursor: not-allowed;
     }
+
+    @media (max-width: 768px) {
+        #addToQueueModal.fade.show {
+            padding: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        #addToQueueModal .modal-dialog {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            max-height: 94vh !important;
+        }
+        #addToQueueModal .modal-content {
+            max-height: 94vh !important;
+            border-radius: 14px !important;
+        }
+        #addToQueueModal .modal-header {
+            padding: 12px 14px !important;
+        }
+        #addToQueueModal .modal-body {
+            padding: 12px 12px !important;
+            max-height: calc(94vh - 130px) !important;
+        }
+        #addToQueueModal .modal-footer {
+            padding: 10px 14px !important;
+        }
+        .vehicle-select-list {
+            max-height: 48vh !important;
+        }
+        .vehicle-select-item {
+            padding: 10px 10px !important;
+        }
+        .vehicle-select-item .plate-number-box {
+            font-size: 0.95rem !important;
+        }
+        .vehicle-select-item .badge-departed-status,
+        .vehicle-select-item .badge-ready-status {
+            font-size: 0.7rem !important;
+            padding: 0.2rem 0.5rem !important;
+        }
+    }
 </style>
 
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
@@ -845,7 +888,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 
-                <div class="modal-body p-4">
+                <div class="modal-body p-3 p-md-4">
                     <?php if (empty($vehicles)): ?>
                         <div class="text-center py-5">
                             <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-3 text-success">
@@ -878,7 +921,7 @@
                         </div>
 
                         <!-- Scrollable Vehicle Card List -->
-                        <div class="vehicle-select-list mb-3" style="max-height: 240px; overflow-y: auto;" id="vehicleListContainer">
+                        <div class="vehicle-select-list mb-3" style="max-height: 260px; overflow-y: auto;" id="vehicleListContainer">
                             <?php foreach ($vehicles as $v): ?>
                                 <?php
                                     $vType = $v['type'] ?? '';
@@ -901,32 +944,34 @@
                                         <div class="form-check mb-0 flex-shrink-0">
                                             <input class="form-check-input vehicle-checkbox" type="checkbox" name="vehicle_ids[]" value="<?= $v['id'] ?>" id="veh_check_<?= $v['id'] ?>" style="cursor: pointer; width: 1.3em; height: 1.3em;">
                                         </div>
-                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: rgba(255,255,255,0.9);">
-                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 26px; width: auto;">
+                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(255,255,255,0.9);">
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;">
                                         </div>
                                         <div class="min-w-0 flex-grow-1">
-                                            <div class="d-flex align-items-center gap-2 mb-0.5">
-                                                <span class="plate-number-box me-1"><?= esc($v['plate_number']) ?></span>
-                                                <?= vehicle_type_badge($vType) ?>
+                                            <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="plate-number-box"><?= esc($v['plate_number']) ?></span>
+                                                    <?= vehicle_type_badge($vType) ?>
+                                                </div>
+                                                <div class="flex-shrink-0">
+                                                    <?php if ($isDeparted): ?>
+                                                        <span class="badge-departed-status" title="Recently Departed">
+                                                            <i class="bi bi-clock-history"></i>
+                                                            <span>DEPARTED <?= esc($departedTime) ?></span>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="badge-ready-status">
+                                                            <i class="bi bi-check-circle-fill"></i>
+                                                            <span>READY</span>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                             <div class="text-muted small d-flex align-items-center gap-1 text-truncate">
                                                 <i class="bi bi-geo-alt-fill text-primary small"></i>
                                                 <span class="fw-semibold text-secondary"><?= !empty($v['route_origin']) ? strtoupper(esc($v['route_origin'])) . ' &rarr; ' . strtoupper(esc($v['route_destination'])) : 'No Route Assigned' ?></span>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="flex-shrink-0 text-end">
-                                        <?php if ($isDeparted): ?>
-                                            <span class="badge-departed-status" title="Recently Departed">
-                                                <i class="bi bi-clock-history"></i>
-                                                <span>DEPARTED <?= esc($departedTime) ?></span>
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge-ready-status">
-                                                <i class="bi bi-check-circle-fill"></i>
-                                                <span>READY</span>
-                                            </span>
-                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -1233,6 +1278,8 @@
             });
         }
 
+        var selectedOrder = [];
+
         function updateCardStyle(card) {
             var cb = card.querySelector('.vehicle-checkbox');
             if (cb && cb.checked) {
@@ -1243,7 +1290,13 @@
         }
 
         function updateSelectionCount() {
-            var checkedCount = document.querySelectorAll('.vehicle-checkbox:checked').length;
+            // Keep selectedOrder in sync with checked checkboxes
+            selectedOrder = selectedOrder.filter(function(id) {
+                var cb = document.querySelector('.vehicle-checkbox[value="' + id + '"]');
+                return cb && cb.checked;
+            });
+
+            var checkedCount = selectedOrder.length;
             if (selectedCountNum) selectedCountNum.textContent = checkedCount;
             if (submitBtn) {
                 submitBtn.disabled = (checkedCount === 0);
@@ -1268,8 +1321,15 @@
                 var cb = card.querySelector('.vehicle-checkbox');
                 if (!cb) return;
 
-                // If click was directly on checkbox input, let default behavior run then sync style
+                var vId = cb.value;
+
+                // If click was directly on checkbox input
                 if (e.target.classList.contains('vehicle-checkbox')) {
+                    if (cb.checked) {
+                        if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
+                    } else {
+                        selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
+                    }
                     updateCardStyle(card);
                     updateSelectionCount();
                     return;
@@ -1277,6 +1337,11 @@
 
                 // Toggle checkbox when clicking anywhere on card
                 cb.checked = !cb.checked;
+                if (cb.checked) {
+                    if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
+                } else {
+                    selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
+                }
                 updateCardStyle(card);
                 updateSelectionCount();
             });
@@ -1284,7 +1349,13 @@
 
         checkboxes.forEach(function(cb) {
             cb.addEventListener('change', function() {
-                var card = cb.closest('.vehicle-select-item');
+                var vId = this.value;
+                if (this.checked) {
+                    if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
+                } else {
+                    selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
+                }
+                var card = this.closest('.vehicle-select-item');
                 if (card) updateCardStyle(card);
                 updateSelectionCount();
             });
@@ -1292,11 +1363,13 @@
 
         if (selectAllBtn) {
             selectAllBtn.addEventListener('click', function() {
+                selectedOrder = [];
                 vehicleItems.forEach(function(item) {
                     if (!item.classList.contains('d-none') && item.style.display !== 'none') {
                         var cb = item.querySelector('.vehicle-checkbox');
                         if (cb) {
                             cb.checked = true;
+                            selectedOrder.push(cb.value);
                             updateCardStyle(item);
                         }
                     }
@@ -1307,6 +1380,7 @@
 
         if (deselectAllBtn) {
             deselectAllBtn.addEventListener('click', function() {
+                selectedOrder = [];
                 if (modalSearchInput) {
                     modalSearchInput.value = '';
                 }
@@ -1356,8 +1430,7 @@
 
         if (addForm) {
             addForm.addEventListener('submit', function(e) {
-                var checkedCbs = Array.from(document.querySelectorAll('.vehicle-checkbox:checked'));
-                if (checkedCbs.length === 0) {
+                if (selectedOrder.length === 0) {
                     e.preventDefault();
                     return;
                 }
@@ -1366,8 +1439,7 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Checking availability...';
 
-                var checkedIds = checkedCbs.map(function(cb) { return cb.value; });
-                var checkPromises = checkedIds.map(function(id) {
+                var checkPromises = selectedOrder.map(function(id) {
                     return fetch('<?= base_url('api/check-vehicle-availability') ?>/' + id).then(function(r) { return r.json(); });
                 });
 
@@ -1392,10 +1464,31 @@
                             submitBtn.disabled = false;
                             updateSelectionCount();
                         } else {
+                            // Append vehicle_ids in the EXACT selected order
+                            addForm.querySelectorAll('input[name="vehicle_ids[]"]').forEach(function(el) {
+                                el.remove();
+                            });
+                            selectedOrder.forEach(function(id) {
+                                var hiddenInput = document.createElement('input');
+                                hiddenInput.type = 'hidden';
+                                hiddenInput.name = 'vehicle_ids[]';
+                                hiddenInput.value = id;
+                                addForm.appendChild(hiddenInput);
+                            });
                             addForm.submit();
                         }
                     })
                     .catch(function() {
+                        addForm.querySelectorAll('input[name="vehicle_ids[]"]').forEach(function(el) {
+                            el.remove();
+                        });
+                        selectedOrder.forEach(function(id) {
+                            var hiddenInput = document.createElement('input');
+                            hiddenInput.type = 'hidden';
+                            hiddenInput.name = 'vehicle_ids[]';
+                            hiddenInput.value = id;
+                            addForm.appendChild(hiddenInput);
+                        });
                         addForm.submit();
                     });
             });

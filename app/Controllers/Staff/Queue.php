@@ -223,6 +223,9 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
 
+        $baseArrivalTimestamp = time();
+        $selectionIndex = 0;
+
         foreach ($vehicleIds as $vehicleId) {
             $vehicleId = (int) $vehicleId;
             if ($vehicleId <= 0) continue;
@@ -286,8 +289,9 @@ class Queue extends BaseController
             $waitMinutes = (int) $matchedRule['wait_minutes'];
             $ruleLabel   = $matchedRule['label'] ?? 'Default';
 
-            $arrivalTime = date('Y-m-d H:i:s');
-            $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
+            // Stagger arrival_time by selection order to guarantee FIFO queue ranking
+            $arrivalTime = date('Y-m-d H:i:s', $baseArrivalTimestamp + $selectionIndex);
+            $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes", $baseArrivalTimestamp + $selectionIndex));
 
             $queueId = $this->queueModel->insert([
                 'vehicle_id'          => $vehicleId,
@@ -301,6 +305,7 @@ class Queue extends BaseController
                 'estimated_departure' => $estimatedDeparture,
             ]);
 
+            $selectionIndex++;
             $addedCount++;
             $addedPlates[] = $vehicle['plate_number'];
 
