@@ -101,37 +101,6 @@
         color: #1e293b;
         font-size: 13.5px;
     }
-
-    /* Pager styling */
-    .pager-wrap {
-        padding: 16px 20px;
-        display: flex;
-        justify-content: center;
-    }
-    .pager-wrap .pagination {
-        margin: 0;
-        gap: 6px;
-        display: flex;
-        flex-wrap: wrap;
-        list-style: none;
-        padding: 0;
-    }
-    .pager-wrap .pagination li a {
-        display: inline-block;
-        border-radius: 8px;
-        font-weight: 600;
-        color: var(--primary, #1565c0);
-        border: 1px solid #cbd5e1;
-        padding: 6px 12px;
-        text-decoration: none;
-        font-size: 13px;
-        background: #ffffff;
-    }
-    .pager-wrap .pagination li.active a {
-        background: var(--primary, #1565c0);
-        border-color: var(--primary, #1565c0);
-        color: #ffffff;
-    }
 </style>
 
 <div class="page-header-modern fade-in">

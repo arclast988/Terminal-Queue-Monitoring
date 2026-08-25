@@ -180,7 +180,7 @@
 </div>
 <div class="modern-card shadow-modern fade-in">
     <div class="table-responsive">
-        <table class="table-modern">
+        <table class="table-modern" id="adminRecentActivityTable">
             <thead>
                 <tr>
                     <th style="width: 175px;">Timestamp</th>
@@ -256,14 +256,16 @@
 <script src="<?= base_url('js/queue-sync.js') ?>"></script>
 <script>
     QueueSync.init({
-        pollInterval: 5000,
+        pollInterval: 8000,
         refreshUrl:   '<?= base_url('admin/dashboard') ?>',
-        tableSelector: '.table-striped tbody',
+        tableSelector: '#adminRecentActivityTable tbody',
         extraRefresh: function(newDoc) {
-            // Update all stat cards
-            var newCards = newDoc.querySelectorAll('.card.text-white .card-body h2');
-            var curCards = document.querySelectorAll('.card.text-white .card-body h2');
-            newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].textContent = card.textContent; });
+            // Update all stat cards dynamically
+            var newCards = newDoc.querySelectorAll('.stat-card-value');
+            var curCards = document.querySelectorAll('.stat-card-value');
+            newCards.forEach(function(card, i) { 
+                if (curCards[i]) curCards[i].textContent = card.textContent; 
+            });
         }
     });
 </script>

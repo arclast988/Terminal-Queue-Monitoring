@@ -121,6 +121,16 @@
                 if (message.type === 'queue_update' && _config && _config.onQueueUpdate) {
                     _config.onQueueUpdate(message);
                 }
+
+                // Convenience: fare_update specific handler
+                if (message.type === 'fare_update' && _config && _config.onFareUpdate) {
+                    _config.onFareUpdate(message);
+                }
+
+                // Convenience: announcement_update specific handler
+                if (message.type === 'announcement_update' && _config && _config.onAnnouncementUpdate) {
+                    _config.onAnnouncementUpdate(message);
+                }
             } catch (e) {
                 // Ignore malformed messages
             }

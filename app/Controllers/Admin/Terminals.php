@@ -48,6 +48,9 @@ class Terminals extends BaseController
             'capacity' => $this->request->getPost('capacity')
         ]);
 
+        $this->logActivity('Create terminal', 'Added terminal: ' . $this->request->getPost('name'));
+        $this->broadcastUpdate('fare_update', ['action' => 'terminal_created']);
+
         return redirect()->to('/admin/terminals')->with('success', 'Terminal added successfully.');
     }
 
@@ -85,12 +88,20 @@ class Terminals extends BaseController
             'capacity' => $this->request->getPost('capacity')
         ]);
 
+        $this->logActivity('Update terminal', 'Updated terminal: ' . $this->request->getPost('name'));
+        $this->broadcastUpdate('fare_update', ['action' => 'terminal_updated', 'id' => (int) $id]);
+
         return redirect()->to('/admin/terminals')->with('success', 'Terminal updated successfully.');
     }
 
     public function delete($id)
     {
+        $terminal = $this->terminalModel->find($id);
         if ($this->terminalModel->delete($id)) {
+            if ($terminal) {
+                $this->logActivity('Delete terminal', 'Deleted terminal: ' . $terminal['name']);
+            }
+            $this->broadcastUpdate('fare_update', ['action' => 'terminal_deleted', 'id' => (int) $id]);
             return redirect()->to('/admin/terminals')->with('success', 'Terminal deleted successfully.');
         }
         return redirect()->to('/admin/terminals')->with('error', 'Failed to delete terminal.');

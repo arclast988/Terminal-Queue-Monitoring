@@ -252,7 +252,7 @@
             </div>
         </form>
 
-        <div class="quick-chips-row">
+        <div class="quick-chips-row" id="logsQuickChipsRow">
             <span class="text-muted" style="font-size: 12px; font-weight: 700; text-transform: uppercase;">
                 <i class="bi bi-clock-history me-1"></i> Quick Ranges:
             </span>
@@ -260,29 +260,31 @@
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d') && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d') ?>" data-to="<?= date('Y-m-d') ?>">Today</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-7 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-7 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 7 Days</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-30 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-30 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 30 Days</button>
-            <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($action_type) || !empty($user_id)): ?>
-                <a href="<?= base_url('admin/logs') ?>" class="btn-modern btn-modern-sm btn-modern-outline ms-auto" title="Clear all filters">
-                    <i class="bi bi-x-circle me-1"></i> Clear Filters
-                </a>
-            <?php endif; ?>
+            <span id="clearFilterContainer" class="ms-auto">
+                <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($action_type) || !empty($user_id)): ?>
+                    <a href="<?= base_url('admin/logs') ?>" id="clearFiltersBtn" class="btn-modern btn-modern-sm btn-modern-outline" title="Clear all filters">
+                        <i class="bi bi-x-circle me-1"></i> Clear Filters
+                    </a>
+                <?php endif; ?>
+            </span>
         </div>
     </div>
 </div>
 
 <!-- Table Card -->
-<div class="modern-card shadow-modern fade-in mb-4">
+<div class="modern-card shadow-modern fade-in mb-4" id="logsTableCard">
     <div class="modern-card-header d-flex align-items-center justify-content-between">
-        <span class="modern-card-title" style="font-size: 16px;">
+        <span class="modern-card-title" id="logsTableTitle" style="font-size: 16px;">
             <i class="bi bi-list-ul" style="color: var(--primary-red, #b71c1c);"></i>
             Log Entries
             <?php if (!empty($logs)): ?>
-                <span class="badge-modern badge-modern-secondary ms-2" style="font-size: 13px;"><?= count($logs) ?> on this page</span>
+                <span class="badge-modern badge-modern-secondary ms-2" id="logsCountBadge" style="font-size: 13px;"><?= count($logs) ?> on this page</span>
             <?php endif; ?>
         </span>
     </div>
     <div class="modern-card-body p-0">
         <div class="table-responsive">
-            <table class="table-modern">
+            <table class="table-modern" id="logsTable">
                 <thead>
                     <tr>
                         <th style="width: 85px;">ID</th>
@@ -358,38 +360,202 @@
             </table>
         </div>
     </div>
-    <?php if ($pager && $pager->getPageCount() > 1): ?>
-        <div class="modern-card-footer bg-white py-3 d-flex justify-content-center">
-            <?= $pager->links() ?>
-        </div>
-    <?php endif; ?>
+    <div id="logsPaginationWrap">
+        <?php if ($pager && $pager->getPageCount() > 1): ?>
+            <div class="modern-card-footer bg-white py-3 d-flex justify-content-center">
+                <?= $pager->links() ?>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var quickButtons = document.querySelectorAll('.quick-chip-btn');
+    var form = document.getElementById('logsFilterForm');
     var fromInput = document.getElementById('fromDate');
     var toInput = document.getElementById('toDate');
-    var form = document.getElementById('logsFilterForm');
+    var tableCard = document.getElementById('logsTableCard');
 
-    quickButtons.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
+    function updateActiveChips(from, to) {
+        var quickButtons = document.querySelectorAll('#logsQuickChipsRow .quick-chip-btn');
+        quickButtons.forEach(function(btn) {
+            var btnFrom = btn.getAttribute('data-from') || '';
+            var btnTo = btn.getAttribute('data-to') || '';
+            if (btnFrom === from && btnTo === to) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    var isFetching = false;
+    function fetchFilteredLogs(url, pushState) {
+        if (typeof pushState === 'undefined') pushState = true;
+        if (isFetching) return;
+        isFetching = true;
+
+        if (tableCard) {
+            tableCard.style.opacity = '0.5';
+            tableCard.style.pointerEvents = 'none';
+            tableCard.style.transition = 'opacity 0.15s ease';
+        }
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.text();
+        })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+
+            // 1. Update Table Body
+            var newTbody = doc.querySelector('#logsTable tbody');
+            var curTbody = document.querySelector('#logsTable tbody');
+            if (newTbody && curTbody) {
+                curTbody.innerHTML = newTbody.innerHTML;
+            }
+
+            // 2. Update Header / Count Badge
+            var newTitle = doc.getElementById('logsTableTitle');
+            var curTitle = document.getElementById('logsTableTitle');
+            if (newTitle && curTitle) {
+                curTitle.innerHTML = newTitle.innerHTML;
+            }
+
+            // 3. Update Pagination
+            var newPagerWrap = doc.getElementById('logsPaginationWrap');
+            var curPagerWrap = document.getElementById('logsPaginationWrap');
+            if (newPagerWrap && curPagerWrap) {
+                curPagerWrap.innerHTML = newPagerWrap.innerHTML;
+            }
+
+            // 4. Update Clear Filter Button
+            var newClearWrap = doc.getElementById('clearFilterContainer');
+            var curClearWrap = document.getElementById('clearFilterContainer');
+            if (newClearWrap && curClearWrap) {
+                curClearWrap.innerHTML = newClearWrap.innerHTML;
+            }
+
+            // 5. Update Stat Cards
+            var newCards = doc.querySelectorAll('.stat-card-value');
+            var curCards = document.querySelectorAll('.stat-card-value');
+            newCards.forEach(function(card, i) {
+                if (curCards[i]) curCards[i].textContent = card.textContent;
+            });
+
+            // 6. Sync inputs with URL params
+            try {
+                var urlObj = new URL(url, window.location.origin);
+                var params = urlObj.searchParams;
+                var qInput = form ? form.querySelector('[name="q"]') : null;
+                var actionInput = form ? form.querySelector('[name="action_type"]') : null;
+                var userInput = form ? form.querySelector('[name="user_id"]') : null;
+
+                if (qInput) qInput.value = params.get('q') || '';
+                if (fromInput) fromInput.value = params.get('from_date') || '';
+                if (toInput) toInput.value = params.get('to_date') || '';
+                if (actionInput) actionInput.value = params.get('action_type') || '';
+                if (userInput) userInput.value = params.get('user_id') || '';
+
+                updateActiveChips(params.get('from_date') || '', params.get('to_date') || '');
+            } catch(e) {}
+
+            // 7. Update URL in browser
+            if (pushState) {
+                window.history.pushState({ url: url }, '', url);
+            }
+        })
+        .catch(function(err) {
+            console.error('AJAX logs filter error:', err);
+            window.location.href = url;
+        })
+        .finally(function() {
+            isFetching = false;
+            if (tableCard) {
+                tableCard.style.opacity = '1';
+                tableCard.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
+    // Intercept clicks on Quick Chips, Clear Filters, and Pagination links
+    document.addEventListener('click', function(e) {
+        // Quick Range Chip click
+        var chipBtn = e.target.closest('#logsQuickChipsRow .quick-chip-btn');
+        if (chipBtn) {
             e.preventDefault();
-            var from = this.getAttribute('data-from') || '';
-            var to = this.getAttribute('data-to') || '';
-            
+            var from = chipBtn.getAttribute('data-from') || '';
+            var to = chipBtn.getAttribute('data-to') || '';
+
             if (fromInput) fromInput.value = from;
             if (toInput) toInput.value = to;
 
-            quickButtons.forEach(function(b) {
-                b.classList.remove('active');
-            });
-            this.classList.add('active');
+            updateActiveChips(from, to);
 
-            if (form) {
-                form.submit();
+            var formData = new FormData(form);
+            var params = new URLSearchParams();
+            for (var pair of formData.entries()) {
+                if (pair[1] !== '') {
+                    params.append(pair[0], pair[1]);
+                }
             }
+            var targetUrl = form.action + (params.toString() ? '?' + params.toString() : '');
+            fetchFilteredLogs(targetUrl, true);
+            return;
+        }
+
+        // Clear Filters click
+        var clearBtn = e.target.closest('#clearFiltersBtn');
+        if (clearBtn) {
+            e.preventDefault();
+            if (form) form.reset();
+            if (fromInput) fromInput.value = '';
+            if (toInput) toInput.value = '';
+            updateActiveChips('', '');
+            var targetUrl = clearBtn.getAttribute('href') || form.action;
+            fetchFilteredLogs(targetUrl, true);
+            return;
+        }
+
+        // Pagination links click
+        var pageLink = e.target.closest('#logsPaginationWrap a');
+        if (pageLink) {
+            e.preventDefault();
+            var targetUrl = pageLink.getAttribute('href');
+            if (targetUrl) {
+                fetchFilteredLogs(targetUrl, true);
+                if (tableCard) {
+                    tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+            return;
+        }
+    });
+
+    // Intercept Form Submit (Filter button or Enter key in search)
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(form);
+            var params = new URLSearchParams();
+            for (var pair of formData.entries()) {
+                if (pair[1] !== '') {
+                    params.append(pair[0], pair[1]);
+                }
+            }
+            var targetUrl = form.action + (params.toString() ? '?' + params.toString() : '');
+            updateActiveChips(fromInput ? fromInput.value : '', toInput ? toInput.value : '');
+            fetchFilteredLogs(targetUrl, true);
         });
+    }
+
+    // Handle browser back and forward navigation
+    window.addEventListener('popstate', function(e) {
+        fetchFilteredLogs(window.location.href, false);
     });
 });
 </script>

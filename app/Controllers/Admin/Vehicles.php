@@ -86,6 +86,7 @@ class Vehicles extends BaseController
 
         $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
         $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $this->request->getPost('plate_number') . ' (' . $vehicleType . ') - Operator: ' . $this->request->getPost('operator_name') . ' - Driver: ' . $this->request->getPost('driver_name') . ' - Route: ' . $routeLabel);
+        $this->broadcastUpdate('queue_update', ['action' => 'vehicle_created']);
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle registered successfully.');
     }
@@ -168,6 +169,8 @@ class Vehicles extends BaseController
             $this->logActivity('Update vehicle', 'Updated vehicle ' . $this->request->getPost('plate_number'));
         }
 
+        $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
+
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle updated successfully.');
     }
 
@@ -178,6 +181,7 @@ class Vehicles extends BaseController
             if ($vehicle) {
                 $this->logActivity('Delete vehicle', 'Deleted vehicle ' . $vehicle['plate_number'] . '.');
             }
+            $this->broadcastUpdate('queue_update', ['action' => 'vehicle_deleted', 'id' => (int) $id]);
             return redirect()->to('/admin/vehicles')->with('success', 'Vehicle deleted successfully.');
         }
         return redirect()->to('/admin/vehicles')->with('error', 'Failed to delete vehicle.');

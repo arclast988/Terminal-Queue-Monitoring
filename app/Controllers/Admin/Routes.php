@@ -18,9 +18,9 @@ class Routes extends BaseController
 
     public function __construct()
     {
-        $this->routeModel    = new RouteModel();
-        $this->terminalModel = new TerminalModel();
-        $this->discountModel = new FareDiscountModel();
+        $this->routeModel       = new RouteModel();
+        $this->terminalModel    = new TerminalModel();
+        $this->discountModel    = new FareDiscountModel();
         $this->vehicleTypeModel = new VehicleTypeModel();
     }
 
@@ -57,8 +57,8 @@ class Routes extends BaseController
             if (!isset($groupedRoutes[$key])) {
                 $groupedRoutes[$key] = [
                     'terminal_name' => $route['terminal_name'] ?? $route['origin'] ?? '',
-                    'destination' => $route['destination'],
-                    'items' => []
+                    'destination'   => $route['destination'],
+                    'items'         => []
                 ];
             }
             $groupedRoutes[$key]['items'][] = $route;
@@ -80,8 +80,7 @@ class Routes extends BaseController
     {
         $db = \Config\Database::connect();
 
-        $destsResult   = $db->query('SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != "" ORDER BY destination ASC')->getResultArray();
-
+        $destsResult  = $db->query('SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != "" ORDER BY destination ASC')->getResultArray();
         $destinations = array_column($destsResult, 'destination');
         $allLocations = array_values(array_filter(array_map('strtoupper', array_unique($destinations))));
         sort($allLocations);
@@ -245,6 +244,7 @@ class Routes extends BaseController
 
             if ($added > 0) {
                 $this->logActivity('Create route', "$origin → $destination ($added vehicle type(s)).");
+                $this->broadcastUpdate('fare_update', ['action' => 'route_created']);
                 return redirect()->to('/admin/routes')->with('success', "Route ($origin → $destination) saved with $added vehicle type(s).");
             } else {
                 return redirect()->back()->withInput()->with('error', 'Please enter a valid fare for at least one vehicle type.');
@@ -294,6 +294,7 @@ class Routes extends BaseController
         $this->replaceRouteFares((int) $insertedId, (int) $terminalId, (float) $fare);
 
         $this->logActivity('Create route', "$origin → $destination ($vehicleType, ₱$fare).");
+        $this->broadcastUpdate('fare_update', ['action' => 'route_created']);
 
         return redirect()->to('/admin/routes')->with('success', 'New route and fare added successfully.');
     }
@@ -371,7 +372,7 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
         }
         $newFare     = $this->request->getPost('fare');
-        $oldFare      = $this->getRegularFare((int) $id);
+        $oldFare     = $this->getRegularFare((int) $id);
         if ($oldFare <= 0 && isset($existingRoute['fare'])) {
             $oldFare = (float) $existingRoute['fare'];
         }
@@ -386,7 +387,7 @@ class Routes extends BaseController
         }
 
         // --- GROUP RENAMING PREVENTION OF DESYNC ---
-        $oldTerminalId = $existingRoute['terminal_id'];
+        $oldTerminalId  = $existingRoute['terminal_id'];
         $oldDestination = $existingRoute['destination'];
 
         if ($oldTerminalId != $terminalId || $oldDestination !== $destination) {
@@ -411,7 +412,7 @@ class Routes extends BaseController
         }
 
         $this->replaceRouteFares((int) $id, (int) $terminalId, (float) $newFare);
-        $newFareFloat = (float)$newFare;
+        $newFareFloat = (float) $newFare;
 
         if (abs($oldFare - $newFareFloat) > 0.00001) {
             $this->logActivity(
@@ -427,6 +428,8 @@ class Routes extends BaseController
             $this->logActivity('Update route', $origin . ' to ' . $destination . ' (' . $vehicleType . ').');
         }
 
+        $this->broadcastUpdate('fare_update', ['action' => 'route_updated', 'id' => (int) $id]);
+
         return redirect()->back()->with('success', 'Route updated successfully.');
     }
 
@@ -437,7 +440,7 @@ class Routes extends BaseController
             return redirect()->to('/admin/routes')->with('error', 'Route not found.');
         }
 
-        $oldTerminalId = $existingRoute['terminal_id'];
+        $oldTerminalId  = $existingRoute['terminal_id'];
         $oldDestination = $existingRoute['destination'];
 
         $terminalId  = $this->request->getPost('terminal_id');
@@ -499,6 +502,8 @@ class Routes extends BaseController
         }
 
         $this->logActivity('Update route group', "$origin → $destination.");
+        $this->broadcastUpdate('fare_update', ['action' => 'route_group_updated', 'id' => (int) $id]);
+
         return redirect()->to('/admin/routes')->with('success', 'Route group updated successfully.');
     }
 
@@ -509,7 +514,7 @@ class Routes extends BaseController
             return redirect()->to('/admin/routes')->with('error', 'Route not found.');
         }
 
-        $terminalId = $route['terminal_id'];
+        $terminalId  = $route['terminal_id'];
         $destination = $route['destination'];
 
         $groupRoutes = $this->routeModel
@@ -533,6 +538,7 @@ class Routes extends BaseController
 
         if ($deletedCount > 0) {
             $this->logActivity('Delete route group', "Deleted $deletedCount vehicle type(s) for route to $destination.");
+            $this->broadcastUpdate('fare_update', ['action' => 'route_group_deleted']);
         }
 
         if ($failedCount > 0) {
@@ -551,6 +557,7 @@ class Routes extends BaseController
             if ($route) {
                 $this->logActivity('Delete route', $route['origin'] . ' → ' . $route['destination'] . '.');
             }
+            $this->broadcastUpdate('fare_update', ['action' => 'route_deleted', 'id' => (int) $id]);
             return redirect()->back()->with('success', 'Route deleted successfully.');
         }
         return redirect()->back()->with('error', 'Failed to delete route.');
@@ -590,6 +597,7 @@ class Routes extends BaseController
         $this->recalculateFaresForDiscount(array_merge($discount, $updatedData));
 
         $this->logActivity('Update discount', $discount['type'] . ' discount updated to ' . $this->request->getPost('discount_percent') . '%.');
+        $this->broadcastUpdate('fare_update', ['action' => 'discount_updated', 'id' => (int) $id]);
 
         return redirect()->back()->with('success', 'Discount updated successfully.');
     }
@@ -610,7 +618,7 @@ class Routes extends BaseController
             return redirect()->to('/fares')->with('errors', $this->validator->getErrors());
         }
 
-        $type = strtolower(trim($this->request->getPost('type')));
+        $type       = strtolower(trim($this->request->getPost('type')));
         $terminalId = (int) $this->request->getPost('terminal_id');
 
         // Prevent duplicate types within the same terminal.
@@ -633,6 +641,7 @@ class Routes extends BaseController
         }
 
         $this->logActivity('Add discount', $this->request->getPost('label') . ' discount added at ' . $this->request->getPost('discount_percent') . '%.');
+        $this->broadcastUpdate('fare_update', ['action' => 'discount_created']);
 
         return redirect()->to('/fares')->with('success', 'Discount added successfully.');
     }
@@ -655,6 +664,7 @@ class Routes extends BaseController
         $this->discountModel->delete($id);
 
         $this->logActivity('Delete discount', $discount['type'] . ' discount (' . $discount['label'] . ') deleted.');
+        $this->broadcastUpdate('fare_update', ['action' => 'discount_deleted', 'id' => (int) $id]);
 
         return redirect()->to('/fares')->with('success', 'Discount deleted successfully.');
     }

@@ -1114,3 +1114,114 @@ body.staff-theme .form-check-input-modern:checked {
     pointer-events: none !important;
 }
 
+/* =================================================================
+   MODERN PAGINATION (SHARED)
+   ================================================================= */
+.modern-pagination-nav,
+.pager-wrap {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 1.5rem 0 !important;
+}
+
+.pagination,
+ul.pagination,
+.pagination-modern {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex-wrap: wrap !important;
+}
+
+.pagination li,
+ul.pagination li,
+.pagination .page-item,
+.pagination-modern .page-item {
+    display: inline-flex !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+.pagination a,
+.pagination span,
+ul.pagination li a,
+ul.pagination li span,
+.pagination .page-link,
+.pagination-modern .page-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 40px !important;
+    height: 40px !important;
+    padding: 0 12px !important;
+    border-radius: 10px !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #1e293b !important;
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    line-height: 1 !important;
+    user-select: none !important;
+}
+
+.pagination a i,
+.pagination .page-link i,
+.pagination-modern .page-link i {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.pagination a:hover,
+ul.pagination li a:hover,
+.pagination .page-link:hover,
+.pagination-modern .page-link:hover {
+    border-color: var(--primary-red, #b91c1c) !important;
+    background: #fef2f2 !important;
+    color: var(--primary-red, #b91c1c) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.15) !important;
+}
+
+.pagination li.active a,
+.pagination li.active span,
+ul.pagination li.active a,
+ul.pagination li.active span,
+.pagination .page-item.active .page-link,
+.pagination-modern .page-item.active .page-link,
+.pagination .page-item.active a {
+    background: var(--primary-red, #b91c1c) !important;
+    border-color: var(--primary-red, #b91c1c) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35) !important;
+    cursor: default !important;
+    transform: none !important;
+}
+
+.pagination .page-item.disabled .page-link,
+.pagination-modern .page-item.disabled .page-link,
+.pagination li.disabled a,
+.pagination li.disabled span {
+    opacity: 0.4 !important;
+    pointer-events: none !important;
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    box-shadow: none !important;
+}
+
+

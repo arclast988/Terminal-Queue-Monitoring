@@ -1174,16 +1174,24 @@
             })
             .then(function(r) { return r.json(); })
             .then(function(data) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Driver';
                 if (data.success) {
                     if (changeDriverModalEl && typeof bootstrap !== 'undefined') {
                         var modal = bootstrap.Modal.getInstance(changeDriverModalEl);
                         if (modal) modal.hide();
                     }
-                    window.location.reload();
+                    var btn = document.querySelector('[data-action="change-driver"][data-id="' + changeDriverQueueId + '"]');
+                    if (btn) {
+                        btn.setAttribute('data-driver', driverName);
+                        var driverSpan = btn.closest('td') ? btn.closest('td').querySelector('.driver-name-text') : null;
+                        if (driverSpan) driverSpan.textContent = driverName;
+                    }
+                    if (typeof QueueSync !== 'undefined' && QueueSync.refresh) {
+                        QueueSync.refresh();
+                    }
                 } else {
                     alert(data.message || 'Failed to update driver.');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Driver';
                 }
             })
             .catch(function() {

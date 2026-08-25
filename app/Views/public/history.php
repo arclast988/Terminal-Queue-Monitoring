@@ -386,29 +386,6 @@
             display: flex;
             justify-content: center;
         }
-        /* CI4 default pager outputs: nav > ul.pagination > li > a */
-        .pager-wrap nav { display: flex; justify-content: center; }
-        .pager-wrap .pagination { margin: 0; gap: 6px; display: flex; flex-wrap: wrap; list-style: none; padding: 0; }
-        .pager-wrap .pagination li a {
-            display: inline-block;
-            border-radius: 10px;
-            font-weight: 600;
-            font-family: 'Outfit', sans-serif;
-            color: var(--primary);
-            border: 1px solid #e2e8f0;
-            padding: 8px 14px;
-            text-decoration: none;
-            transition: var(--transition);
-        }
-        .pager-wrap .pagination li.active a {
-            background: var(--primary-dark);
-            border-color: var(--primary-dark);
-            color: white;
-        }
-        .pager-wrap .pagination li a:hover {
-            background: #e3f2fd;
-            border-color: var(--primary);
-        }
 
         /* ===== MOBILE CARD VIEW (≤ 768px) ===== */
         .mobile-cards { display: none; }

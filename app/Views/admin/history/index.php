@@ -207,7 +207,7 @@
             </div>
         </form>
 
-        <div class="quick-chips-row">
+        <div class="quick-chips-row" id="historyQuickChipsRow">
             <span class="text-muted" style="font-size: 12px; font-weight: 700; text-transform: uppercase;">
                 <i class="bi bi-clock-history me-1"></i> Quick Ranges:
             </span>
@@ -215,19 +215,21 @@
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d') && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d') ?>" data-to="<?= date('Y-m-d') ?>">Today</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-7 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-7 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 7 Days</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-30 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-30 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 30 Days</button>
-            <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($destination) || !empty($vehicle_type)): ?>
-                <a href="<?= base_url('admin/history') ?>" class="btn-modern btn-modern-sm btn-modern-outline ms-auto" title="Clear all filters">
-                    <i class="bi bi-x-circle me-1"></i> Clear Filters
-                </a>
-            <?php endif; ?>
+            <span id="clearFilterContainer" class="ms-auto">
+                <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($destination) || !empty($vehicle_type)): ?>
+                    <a href="<?= base_url('admin/history') ?>" id="clearFiltersBtn" class="btn-modern btn-modern-sm btn-modern-outline" title="Clear all filters">
+                        <i class="bi bi-x-circle me-1"></i> Clear Filters
+                    </a>
+                <?php endif; ?>
+            </span>
         </div>
     </div>
 </div>
 
 <!-- Departures Table -->
-<div class="modern-card shadow-modern fade-in mb-4">
+<div class="modern-card shadow-modern fade-in mb-4" id="historyTableCard">
     <div class="modern-card-header d-flex align-items-center justify-content-between">
-        <span class="modern-card-title" style="font-size: 16px;">
+        <span class="modern-card-title" id="historyTableTitle" style="font-size: 16px;">
             <i class="bi bi-list-ul" style="color: var(--primary-red, #b71c1c);"></i>
             Departure Records
             <?php if (!empty($departures)): ?>
@@ -237,7 +239,7 @@
     </div>
     <div class="modern-card-body p-0">
         <div class="table-responsive">
-            <table class="table-modern">
+            <table class="table-modern" id="historyTable">
                 <thead>
                     <tr>
                         <th style="width: 140px;">Plate Number</th>
@@ -296,7 +298,7 @@
                                 <td data-label="Departure Time">
                                     <div style="white-space: nowrap;">
                                         <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;">
-                                            <?= date('H:i', strtotime($item['departure_time'])) ?>
+                                             <?= date('H:i', strtotime($item['departure_time'])) ?>
                                         </span>
                                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                                             <i class="bi bi-calendar3 me-1"></i><?= date('M d, Y', strtotime($item['departure_time'])) ?>
@@ -318,65 +320,227 @@
             </table>
         </div>
     </div>
-    <?php if ($pager && $pager->getPageCount() > 1): ?>
-        <div class="modern-card-footer bg-white py-3 d-flex justify-content-center">
-            <?= $pager->links() ?>
-        </div>
-    <?php endif; ?>
+    <div id="historyPaginationWrap">
+        <?php if ($pager && $pager->getPageCount() > 1): ?>
+            <div class="modern-card-footer bg-white py-3 d-flex justify-content-center">
+                <?= $pager->links() ?>
+            </div>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var quickButtons = document.querySelectorAll('.quick-chip-btn');
-    var fromInput = document.getElementById('fromDate');
-    var toInput = document.getElementById('toDate');
-    var form = document.getElementById('historyFilterForm');
-
-    quickButtons.forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            var from = this.getAttribute('data-from') || '';
-            var to = this.getAttribute('data-to') || '';
-            
-            if (fromInput) fromInput.value = from;
-            if (toInput) toInput.value = to;
-
-            quickButtons.forEach(function(b) {
-                b.classList.remove('active');
-            });
-            this.classList.add('active');
-
-            if (form) {
-                form.submit();
-            }
-        });
-    });
-});
-</script>
-
 <script src="<?= base_url('js/ws-client.js') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js') ?>"></script>
 <script>
-    // Initialize real-time sync (polling + WebSocket)
-    QueueSync.init({
-        onlyWS:        true,
-        pollInterval:  30000,
-        refreshUrl:    window.location.href,
-        tableSelector: '.table-modern tbody',
-        extraRefresh:  function(newDoc) {
-            // Update stat cards
-            var newCards = newDoc.querySelectorAll('.stat-card-value');
-            var curCards = document.querySelectorAll('.stat-card-value');
-            newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].textContent = card.textContent; });
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('historyFilterForm');
+    var fromInput = document.getElementById('fromDate');
+    var toInput = document.getElementById('toDate');
+    var tableCard = document.getElementById('historyTableCard');
 
-            // Update pagination
-            var newPager = newDoc.querySelector('.modern-card-footer');
-            var curPager = document.querySelector('.modern-card-footer');
-            if (newPager && curPager) curPager.innerHTML = newPager.innerHTML;
+    function updateActiveChips(from, to) {
+        var quickButtons = document.querySelectorAll('#historyQuickChipsRow .quick-chip-btn');
+        quickButtons.forEach(function(btn) {
+            var btnFrom = btn.getAttribute('data-from') || '';
+            var btnTo = btn.getAttribute('data-to') || '';
+            if (btnFrom === from && btnTo === to) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    var isFetching = false;
+    function fetchFilteredHistory(url, pushState) {
+        if (typeof pushState === 'undefined') pushState = true;
+        if (isFetching) return;
+        isFetching = true;
+
+        if (tableCard) {
+            tableCard.style.opacity = '0.5';
+            tableCard.style.pointerEvents = 'none';
+            tableCard.style.transition = 'opacity 0.15s ease';
+        }
+
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.text();
+        })
+        .then(function(html) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(html, 'text/html');
+
+            // 1. Update Table Body
+            var newTbody = doc.querySelector('#historyTable tbody');
+            var curTbody = document.querySelector('#historyTable tbody');
+            if (newTbody && curTbody) {
+                curTbody.innerHTML = newTbody.innerHTML;
+            }
+
+            // 2. Update Header / Count Badge
+            var newTitle = doc.getElementById('historyTableTitle');
+            var curTitle = document.getElementById('historyTableTitle');
+            if (newTitle && curTitle) {
+                curTitle.innerHTML = newTitle.innerHTML;
+            }
+
+            // 3. Update Pagination
+            var newPagerWrap = doc.getElementById('historyPaginationWrap');
+            var curPagerWrap = document.getElementById('historyPaginationWrap');
+            if (newPagerWrap && curPagerWrap) {
+                curPagerWrap.innerHTML = newPagerWrap.innerHTML;
+            }
+
+            // 4. Update Clear Filter Button
+            var newClearWrap = doc.getElementById('clearFilterContainer');
+            var curClearWrap = document.getElementById('clearFilterContainer');
+            if (newClearWrap && curClearWrap) {
+                curClearWrap.innerHTML = newClearWrap.innerHTML;
+            }
+
+            // 5. Update Stat Cards
+            var newCards = doc.querySelectorAll('.stat-card-value');
+            var curCards = document.querySelectorAll('.stat-card-value');
+            newCards.forEach(function(card, i) {
+                if (curCards[i]) curCards[i].textContent = card.textContent;
+            });
+
+            // 6. Sync inputs with URL params
+            try {
+                var urlObj = new URL(url, window.location.origin);
+                var params = urlObj.searchParams;
+                var qInput = form ? form.querySelector('[name="q"]') : null;
+                var destInput = form ? form.querySelector('[name="destination"]') : null;
+                var vTypeInput = form ? form.querySelector('[name="vehicle_type"]') : null;
+
+                if (qInput) qInput.value = params.get('q') || '';
+                if (fromInput) fromInput.value = params.get('from_date') || '';
+                if (toInput) toInput.value = params.get('to_date') || '';
+                if (destInput) destInput.value = params.get('destination') || '';
+                if (vTypeInput) vTypeInput.value = params.get('vehicle_type') || '';
+
+                updateActiveChips(params.get('from_date') || '', params.get('to_date') || '');
+            } catch(e) {}
+
+            // 7. Update URL in browser
+            if (pushState) {
+                window.history.pushState({ url: url }, '', url);
+            }
+        })
+        .catch(function(err) {
+            console.error('AJAX history filter error:', err);
+            window.location.href = url;
+        })
+        .finally(function() {
+            isFetching = false;
+            if (tableCard) {
+                tableCard.style.opacity = '1';
+                tableCard.style.pointerEvents = 'auto';
+            }
+        });
+    }
+
+    // Intercept clicks on Quick Chips, Clear Filters, and Pagination links
+    document.addEventListener('click', function(e) {
+        // Quick Range Chip click
+        var chipBtn = e.target.closest('#historyQuickChipsRow .quick-chip-btn');
+        if (chipBtn) {
+            e.preventDefault();
+            var from = chipBtn.getAttribute('data-from') || '';
+            var to = chipBtn.getAttribute('data-to') || '';
+
+            if (fromInput) fromInput.value = from;
+            if (toInput) toInput.value = to;
+
+            updateActiveChips(from, to);
+
+            var formData = new FormData(form);
+            var params = new URLSearchParams();
+            for (var pair of formData.entries()) {
+                if (pair[1] !== '') {
+                    params.append(pair[0], pair[1]);
+                }
+            }
+            var targetUrl = form.action + (params.toString() ? '?' + params.toString() : '');
+            fetchFilteredHistory(targetUrl, true);
+            return;
+        }
+
+        // Clear Filters click
+        var clearBtn = e.target.closest('#clearFiltersBtn');
+        if (clearBtn) {
+            e.preventDefault();
+            if (form) form.reset();
+            if (fromInput) fromInput.value = '';
+            if (toInput) toInput.value = '';
+            updateActiveChips('', '');
+            var targetUrl = clearBtn.getAttribute('href') || form.action;
+            fetchFilteredHistory(targetUrl, true);
+            return;
+        }
+
+        // Pagination links click
+        var pageLink = e.target.closest('#historyPaginationWrap a');
+        if (pageLink) {
+            e.preventDefault();
+            var targetUrl = pageLink.getAttribute('href');
+            if (targetUrl) {
+                fetchFilteredHistory(targetUrl, true);
+                if (tableCard) {
+                    tableCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }
+            return;
         }
     });
+
+    // Intercept Form Submit (Filter button or Enter key in search)
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(form);
+            var params = new URLSearchParams();
+            for (var pair of formData.entries()) {
+                if (pair[1] !== '') {
+                    params.append(pair[0], pair[1]);
+                }
+            }
+            var targetUrl = form.action + (params.toString() ? '?' + params.toString() : '');
+            updateActiveChips(fromInput ? fromInput.value : '', toInput ? toInput.value : '');
+            fetchFilteredHistory(targetUrl, true);
+        });
+    }
+
+    // Handle browser back and forward navigation
+    window.addEventListener('popstate', function(e) {
+        fetchFilteredHistory(window.location.href, false);
+    });
+
+    // Real-time sync (polling + WebSocket)
+    if (typeof QueueSync !== 'undefined') {
+        QueueSync.init({
+            onlyWS:        true,
+            pollInterval:  30000,
+            refreshUrl:    window.location.href,
+            tableSelector: '#historyTable tbody',
+            extraRefresh:  function(newDoc) {
+                var newCards = newDoc.querySelectorAll('.stat-card-value');
+                var curCards = document.querySelectorAll('.stat-card-value');
+                newCards.forEach(function(card, i) { if (curCards[i]) curCards[i].textContent = card.textContent; });
+
+                var newPagerWrap = newDoc.getElementById('historyPaginationWrap');
+                var curPagerWrap = document.getElementById('historyPaginationWrap');
+                if (newPagerWrap && curPagerWrap) curPagerWrap.innerHTML = newPagerWrap.innerHTML;
+            }
+        });
+    }
+});
 </script>
 
 <?= view('templates/footer') ?>
