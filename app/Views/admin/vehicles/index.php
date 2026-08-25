@@ -552,6 +552,19 @@ if (!empty($vehicles) && is_array($vehicles)) {
         }
     }
 
+    @media (max-width: 768px) {
+        .vehicle-search-group {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin-right: 0 !important;
+            margin-bottom: 8px !important;
+        }
+        .filter-label-text {
+            width: 100%;
+            margin-bottom: 4px;
+        }
+    }
+
     @media (max-width: 575.98px) {
         .vf-divider {
             display: none !important;

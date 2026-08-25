@@ -477,6 +477,19 @@ if (!empty($recent_departures)) {
         width: auto;
         object-fit: contain;
     }
+
+    @media (max-width: 768px) {
+        .departure-search-group {
+            max-width: 100% !important;
+            min-width: 0 !important;
+            width: 100% !important;
+            margin-bottom: 8px;
+        }
+        .filter-label-text {
+            width: 100%;
+            margin-bottom: 4px;
+        }
+    }
 </style>
 
 <?= $this->include('templates/footer') ?>

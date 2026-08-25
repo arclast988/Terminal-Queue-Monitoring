@@ -259,7 +259,7 @@ foreach ($users as $u) {
         border-color: var(--primary-red, #dc2626) !important;
     }
 
-    @media (max-width: 576px) {
+    @media (max-width: 768px) {
         .user-search-group {
             max-width: 100% !important;
             width: 100% !important;

@@ -183,6 +183,12 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     .btn-clear-search:hover {
         color: #475569;
     }
+    @media (max-width: 768px) {
+        .route-search-group {
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+    }
 </style>
 
 <script>

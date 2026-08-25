@@ -151,13 +151,22 @@
     }
     
     .table-modern tbody tr td[colspan] {
-        display: block !important;
-        text-align: center !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
         justify-content: center !important;
-        padding: 24px 16px !important;
+        text-align: center !important;
+        padding: 28px 16px !important;
+    }
+    .table-modern tbody tr td[colspan] > *,
+    .table-modern tbody tr td[colspan] * {
+        text-align: center !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
     }
     .table-modern tbody tr td[colspan]::before {
         display: none !important;
+        content: none !important;
     }
 }
 </style>

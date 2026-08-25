@@ -532,32 +532,60 @@ textarea.input:focus {
    10. EMPTY STATE
    -------------------------------------------------------------------------- */
 .empty-state {
-  text-align: center;
+  text-align: center !important;
   padding: var(--space-8) var(--space-5);
   color: var(--text-muted);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
 }
 
-.empty-state i, .empty-state .bi {
-  font-size: 2.2rem;
+.empty-state > *,
+.empty-state * {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  align-self: center !important;
+}
+
+.empty-state i, .empty-state .bi, .empty-state .far, .empty-state .fas {
+  font-size: 2.5rem !important;
   color: var(--text-faint);
-  display: block;
-  margin-bottom: var(--space-3);
-  opacity: 0.55;
+  display: block !important;
+  margin: 0 auto var(--space-3) auto !important;
+  opacity: 0.65;
+  text-align: center !important;
 }
 
 .empty-state__title,
-.empty-state-title { 
-  font-weight: 700; 
-  font-size: 15px;
-  color: var(--text-main); 
-  margin-bottom: var(--space-1); 
+.empty-state-title,
+.empty-state h3,
+.empty-state h4 { 
+  font-weight: 700 !important; 
+  font-size: 16px !important;
+  color: var(--text-main) !important; 
+  margin: 0 auto var(--space-1) auto !important;
+  text-align: center !important;
+  display: block !important;
 }
 
 .empty-state__subtitle,
-.empty-state-subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-  display: block;
+.empty-state-subtitle,
+.empty-state p,
+.empty-state small {
+  font-size: 13.5px !important;
+  color: var(--text-muted) !important;
+  display: block !important;
+  text-align: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+  line-height: 1.5 !important;
+  overflow-wrap: break-word !important;
+  word-break: normal !important;
+  box-sizing: border-box !important;
 }
 
 /* Table empty cell standard */
@@ -565,15 +593,31 @@ textarea.input:focus {
   text-align: center !important;
   padding: 48px 20px !important;
   color: var(--text-muted);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.empty-state-table > *,
+.empty-state-table * {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  align-self: center !important;
 }
 
 .empty-state-table i,
-.empty-state-table .bi {
-  font-size: 2.2rem;
-  color: var(--text-faint);
-  display: block;
-  margin: 0 auto 12px auto;
-  opacity: 0.5;
+.empty-state-table .bi,
+.empty-state-table .far,
+.empty-state-table .fas {
+  font-size: 2.5rem !important;
+  color: var(--text-faint) !important;
+  display: block !important;
+  margin: 0 auto 12px auto !important;
+  opacity: 0.65 !important;
+  text-align: center !important;
 }
 
 /* --------------------------------------------------------------------------

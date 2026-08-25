@@ -1050,16 +1050,60 @@ body.staff-theme .form-select:focus {
 
 /* ---- 6. Consistent empty/loading states ---- */
 .empty-state {
-    text-align: center;
-    padding: 2.5rem 1rem;
-    color: var(--text-muted, #475569);
+    text-align: center !important;
+    padding: 2.5rem 1rem !important;
+    color: var(--text-muted, #64748b) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 100% !important;
 }
 
-.empty-state i {
-    font-size: 2.25rem;
-    margin-bottom: 0.75rem;
-    display: block;
-    color: var(--text-faint, #64748b);
+.empty-state > *,
+.empty-state * {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+}
+
+.empty-state i,
+.empty-state .bi,
+.empty-state .far,
+.empty-state .fas {
+    font-size: 2.5rem !important;
+    color: #94a3b8 !important;
+    opacity: 0.65 !important;
+    display: block !important;
+    margin: 0 auto 12px auto !important;
+    text-align: center !important;
+}
+
+.empty-state__title,
+.empty-state-title,
+.empty-state h3,
+.empty-state h4,
+.empty-state .fs-6 {
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    color: var(--text-main, #1e293b) !important;
+    margin: 0 auto 6px auto !important;
+    text-align: center !important;
+    display: block !important;
+}
+
+.empty-state__subtitle,
+.empty-state-subtitle,
+.empty-state p,
+.empty-state small {
+    font-size: 13.5px !important;
+    color: var(--text-muted, #64748b) !important;
+    display: block !important;
+    text-align: center !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+    line-height: 1.5 !important;
 }
 
 .spinner-border {
@@ -1549,20 +1593,68 @@ a[title*="delete" i]:hover .bi,
     color: #0f172a !important;
   }
 
+  /* Normal Data Cell */
+  html body table.table-modern tbody tr td[data-label],
+  html body table.table tbody tr td[data-label] {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 8px 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    min-height: 38px !important;
+    width: 100% !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+  }
+
+  /* Empty State & Colspan Rows & Centered Cells on Mobile */
+  html body table.table-modern tbody tr:has(td[colspan]),
+  html body table.table-modern tbody tr:has(td.empty-state-table),
+  html body table.table tbody tr:has(td[colspan]),
+  html body table.table tbody tr:has(td.empty-state-table),
+  html body table.table-modern tbody tr.no-match-row,
+  html body table.table-modern tbody tr[id*="no-"],
+  html body table.table-modern tbody tr[id*="empty"] {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   html body table.table-modern tbody tr td[colspan],
   html body table.table tbody tr td[colspan],
   html body table.table-modern tbody tr td.empty-state-table,
-  html body table.table tbody tr td.empty-state-table {
-    display: block !important;
-    text-align: center !important;
+  html body table.table tbody tr td.empty-state-table,
+  html body table.table-modern tbody tr td.text-center:not([data-label]),
+  html body table.table tbody tr td.text-center:not([data-label]) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
     justify-content: center !important;
-    padding: 32px 16px !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 28px 8px !important;
+    border: none !important;
+    border-bottom: none !important;
+    min-height: auto !important;
   }
+
   html body table.table-modern tbody tr td[colspan]::before,
   html body table.table tbody tr td[colspan]::before,
   html body table.table-modern tbody tr td.empty-state-table::before,
-  html body table.table tbody tr td.empty-state-table::before {
+  html body table.table tbody tr td.empty-state-table::before,
+  html body table.table-modern tbody tr td:not([data-label])::before,
+  html body table.table tbody tr td:not([data-label])::before {
     display: none !important;
+    content: none !important;
   }
 
   html body table.table-modern tbody tr td:last-child,
@@ -1570,9 +1662,9 @@ a[title*="delete" i]:hover .bi,
     border-bottom: none !important;
   }
 
-  /* Label (Left Column) */
-  html body table.table-modern tbody tr td::before,
-  html body table.table tbody tr td::before {
+  /* Label (Left Column) for data cells */
+  html body table.table-modern tbody tr td[data-label]::before,
+  html body table.table tbody tr td[data-label]::before {
     content: attr(data-label) !important;
     font-weight: 700 !important;
     color: #64748b !important;
@@ -1585,20 +1677,102 @@ a[title*="delete" i]:hover .bi,
     white-space: nowrap !important;
   }
 
-  /* Value Container (Right Column) */
-  html body table.table-modern tbody tr td > *,
-  html body table.table tbody tr td > * {
+  /* Value Container (Right Column) for data cells */
+  html body table.table-modern tbody tr td[data-label] > *,
+  html body table.table tbody tr td[data-label] > * {
     flex: 0 1 auto !important;
     text-align: right !important;
     word-break: normal !important;
     overflow-wrap: break-word !important;
   }
 
-  /* Force ALL text inside table cells to be crisp dark navy */
-  html body table.table-modern tbody tr td,
-  html body table.table-modern tbody tr td *,
-  html body table.table tbody tr td,
-  html body table.table tbody tr td * {
+  /* Empty state, centered cell, and colspan children: ALWAYS centered */
+  html body table.table-modern tbody tr td[colspan] > *,
+  html body table.table tbody tr td[colspan] > *,
+  html body table.table-modern tbody tr td.empty-state-table > *,
+  html body table.table tbody tr td.empty-state-table > *,
+  html body table.table-modern tbody tr td.text-center:not([data-label]) > *,
+  html body table.table tbody tr td.text-center:not([data-label]) > *,
+  html body table.table-modern tbody tr td[colspan] *,
+  html body table.table tbody tr td[colspan] *,
+  html body table.table-modern tbody tr td.empty-state-table *,
+  html body table.table tbody tr td.empty-state-table *,
+  html body table.table-modern tbody tr td.text-center:not([data-label]) *,
+  html body table.table tbody tr td.text-center:not([data-label]) * {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    align-self: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Empty state icons in tables on mobile */
+  html body table.table-modern tbody tr td[colspan] i,
+  html body table.table tbody tr td[colspan] i,
+  html body table.table-modern tbody tr td.empty-state-table i,
+  html body table.table tbody tr td.empty-state-table i,
+  html body table.table-modern tbody tr td[colspan] .bi,
+  html body table.table tbody tr td[colspan] .bi,
+  html body table.table-modern tbody tr td.empty-state-table .bi,
+  html body table.table tbody tr td.empty-state-table .bi {
+    font-size: 2.5rem !important;
+    color: #94a3b8 !important;
+    opacity: 0.65 !important;
+    display: block !important;
+    margin: 0 auto 12px auto !important;
+    text-align: center !important;
+  }
+
+  /* Empty state titles in tables on mobile */
+  html body table.table-modern tbody tr td[colspan] .empty-state-title,
+  html body table.table tbody tr td[colspan] .empty-state-title,
+  html body table.table-modern tbody tr td.empty-state-table .empty-state-title,
+  html body table.table tbody tr td.empty-state-table .empty-state-title,
+  html body table.table-modern tbody tr td[colspan] .fw-bold,
+  html body table.table tbody tr td[colspan] .fw-bold {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin: 0 auto 4px auto !important;
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+  }
+
+  /* Empty state subtitles in tables on mobile */
+  html body table.table-modern tbody tr td[colspan] .empty-state-subtitle,
+  html body table.table tbody tr td[colspan] .empty-state-subtitle,
+  html body table.table-modern tbody tr td.empty-state-table .empty-state-subtitle,
+  html body table.table tbody tr td.empty-state-table .empty-state-subtitle,
+  html body table.table-modern tbody tr td[colspan] small,
+  html body table.table tbody tr td[colspan] small,
+  html body table.table-modern tbody tr td.empty-state-table small,
+  html body table.table tbody tr td.empty-state-table small {
+    font-size: 13px !important;
+    color: #64748b !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    line-height: 1.5 !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-break: normal !important;
+    box-sizing: border-box !important;
+    padding: 0 4px !important;
+  }
+
+  /* Force regular text inside table cells to be dark navy */
+  html body table.table-modern tbody tr td[data-label],
+  html body table.table-modern tbody tr td[data-label] *:not(.badge-modern):not(.btn-modern):not(i):not(small),
+  html body table.table tbody tr td[data-label],
+  html body table.table tbody tr td[data-label] *:not(.badge-modern):not(.btn-modern):not(i):not(small) {
     color: #0f172a !important;
   }
 
@@ -1747,5 +1921,37 @@ a[title*="delete" i]:hover .bi,
     align-items: center !important;
     justify-content: center !important;
     gap: 4px !important;
+  }
+
+  /* ── Mobile Search Groups & Filter Bars ── */
+  .departure-search-group,
+  .vehicle-search-group,
+  .user-search-group,
+  .route-search-group,
+  .input-group-modern {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-right: 0 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .vf-divider {
+    display: none !important;
+  }
+
+  .route-filter-wrapper {
+    margin-bottom: 16px !important;
+  }
+
+  .route-filter-bar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 6px !important;
+    scrollbar-width: none;
+  }
+  .route-filter-bar::-webkit-scrollbar {
+    display: none;
   }
 }
