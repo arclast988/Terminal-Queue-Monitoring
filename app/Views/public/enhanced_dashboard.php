@@ -1974,9 +1974,9 @@
                 c.style.borderColor = '#e2e8f0';
             });
             chip.classList.add('active');
-            chip.style.background = '#2563eb';
+            chip.style.background = '#000000';
             chip.style.color = '#fff';
-            chip.style.borderColor = '#2563eb';
+            chip.style.borderColor = '#000000';
 
             // Filter items
             var route = chip.dataset.route;

@@ -325,7 +325,7 @@
                 <span id="resendWait">Resend code in <span class="countdown" id="countdown">60</span>s</span>
                 <form id="resendForm" action="<?= base_url('resend-reset-code/' . $token) ?>" method="post" style="display:inline;">
                     <?= csrf_field() ?>
-                    <a class="resend-link disabled" id="resendLink" onclick="document.getElementById('resendForm').submit(); return false;">
+                    <a class="resend-link disabled" id="resendLink" style="display:none;" href="#" onclick="document.getElementById('resendForm').submit(); return false;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
                             <path d="M3 3v5h5"/>
@@ -358,7 +358,9 @@
             input.addEventListener('input', function (e) {
                 const val = this.value.replace(/\D/g, '');
                 this.value = val.charAt(0) || '';
-                if (val && idx < inputs.length - 1) inputs[idx + 1].focus();
+                if (val && idx < inputs.length - 1) {
+                    inputs[idx + 1].focus();
+                }
                 updateState();
             });
 
@@ -370,6 +372,12 @@
                 }
                 if (e.key === 'ArrowLeft'  && idx > 0) inputs[idx - 1].focus();
                 if (e.key === 'ArrowRight' && idx < inputs.length - 1) inputs[idx + 1].focus();
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!btn.disabled) {
+                        form.requestSubmit ? form.requestSubmit() : form.submit();
+                    }
+                }
             });
 
             input.addEventListener('focus', function () { this.select(); });
@@ -377,7 +385,9 @@
             input.addEventListener('paste', function (e) {
                 e.preventDefault();
                 const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
-                for (let i = 0; i < Math.min(paste.length, inputs.length); i++) inputs[i].value = paste[i];
+                for (let i = 0; i < Math.min(paste.length, inputs.length); i++) {
+                    inputs[i].value = paste[i];
+                }
                 const focusIdx = Math.min(paste.length, inputs.length - 1);
                 inputs[focusIdx].focus();
                 updateState();
@@ -416,14 +426,18 @@
 
         const timer = setInterval(function () {
             seconds--;
-            countdownEl.textContent = seconds;
+            if (countdownEl) countdownEl.textContent = seconds;
             if (seconds <= 0) {
                 clearInterval(timer);
-                resendWait.style.display = 'none';
-                resendLink.classList.remove('disabled');
+                if (resendWait) resendWait.style.display = 'none';
+                if (resendLink) {
+                    resendLink.classList.remove('disabled');
+                    resendLink.style.display = 'inline-flex';
+                }
             }
         }, 1000);
     });
+    </script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 </body>
 </html>

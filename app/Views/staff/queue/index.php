@@ -498,7 +498,7 @@
                 $isBoarding = $item['status'] === 'boarding';
                 $isWaiting  = $item['status'] === 'waiting';
             ?>
-            <div class="q-card mb-3 fade-in" id="card-<?= $item['id'] ?>">
+            <div class="q-card mb-3 fade-in" id="card-<?= $item['id'] ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
 
                 <!-- Header row: position badge + plate + status -->
                 <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">

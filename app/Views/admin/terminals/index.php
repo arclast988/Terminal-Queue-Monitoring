@@ -89,7 +89,11 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?= $isAdmin ? '6' : '5' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">No terminals found.</td>
+                            <td colspan="<?= $isAdmin ? '6' : '5' ?>" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-building fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No terminals found</div>
+                                <small class="empty-state-subtitle"><?= $isAdmin ? 'Click Add New Terminal above to create one.' : 'No active terminals are currently registered.' ?></small>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

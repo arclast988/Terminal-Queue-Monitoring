@@ -111,18 +111,20 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
             </div>
         <?php endforeach; ?>
         
-        <div id="no-routes-match" class="modern-card shadow-modern fade-in text-center py-5" style="display: none;">
+        <div id="no-routes-match" class="modern-card shadow-modern fade-in text-center py-5 empty-state" style="display: none;">
             <div class="py-4 text-muted">
                 <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
-                No routes match your search query.
+                <div class="fw-bold fs-6 empty-state-title">No routes match your search query</div>
+                <small class="empty-state-subtitle">Try searching with a different origin or destination name.</small>
             </div>
         </div>
     </div>
 <?php else: ?>
-    <div class="modern-card shadow-modern fade-in text-center py-5">
+    <div class="modern-card shadow-modern fade-in text-center py-5 empty-state">
         <div class="py-4 text-muted">
-            <i class="bi bi-signpost-split fs-1 d-block mb-3"></i>
-            No routes found. Click <strong>Add New Route</strong> to create one.
+            <i class="bi bi-signpost-split fs-1 d-block mb-3 opacity-50"></i>
+            <div class="fw-bold fs-6 empty-state-title">No routes found</div>
+            <small class="empty-state-subtitle">Click <strong>Add New Route</strong> above to create your first route.</small>
         </div>
     </div>
 <?php endif; ?>

@@ -98,7 +98,11 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?= in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true) ? '6' : '5' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">No announcements yet. Add one to show on the guest dashboard.</td>
+                            <td colspan="<?= in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true) ? '6' : '5' ?>" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-megaphone fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No announcements yet</div>
+                                <small class="empty-state-subtitle">Add an announcement to broadcast real-time notices to passengers.</small>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

@@ -542,9 +542,39 @@ textarea.input:focus {
   color: var(--text-faint);
   display: block;
   margin-bottom: var(--space-3);
+  opacity: 0.55;
 }
 
-.empty-state__title { font-weight: 700; color: var(--text-main); margin-bottom: var(--space-1); }
+.empty-state__title,
+.empty-state-title { 
+  font-weight: 700; 
+  font-size: 15px;
+  color: var(--text-main); 
+  margin-bottom: var(--space-1); 
+}
+
+.empty-state__subtitle,
+.empty-state-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  display: block;
+}
+
+/* Table empty cell standard */
+.empty-state-table {
+  text-align: center !important;
+  padding: 48px 20px !important;
+  color: var(--text-muted);
+}
+
+.empty-state-table i,
+.empty-state-table .bi {
+  font-size: 2.2rem;
+  color: var(--text-faint);
+  display: block;
+  margin: 0 auto 12px auto;
+  opacity: 0.5;
+}
 
 /* --------------------------------------------------------------------------
    11. MOBILE BEHAVIOR

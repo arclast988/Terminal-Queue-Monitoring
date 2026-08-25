@@ -220,7 +220,7 @@
                     </svg>
                 </span>
                 <h1>Forgot password?</h1>
-                <p class="sub">Enter your username and we'll help you reset it.</p>
+                <p class="sub">Enter your username or email and we'll send you a verification code.</p>
             </div>
 
             <?php if (session()->getFlashdata('error')): ?>
@@ -244,8 +244,8 @@
             <form action="<?= base_url('forgot-password') ?>" method="post" novalidate>
                 <?= csrf_field() ?>
                 <div class="field">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required autofocus>
+                    <label for="username">Username or Email</label>
+                    <input type="text" id="username" name="username" value="<?= esc(old('username', '')) ?>" placeholder="Enter your username or email" autocomplete="username" required autofocus>
                 </div>
                 <button type="submit" class="btn">
                     <span>Continue</span>

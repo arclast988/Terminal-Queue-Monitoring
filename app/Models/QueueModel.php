@@ -98,39 +98,22 @@ class QueueModel extends Model
 
                     $prevEstDeparture = $estTime;
 
-                    if ($item['estimated_departure'] !== $estTime) {
-                        $this->update($item['id'], ['estimated_departure' => $estTime]);
+                    $updateData = [];
+                    if (($item['estimated_departure'] ?? '') !== $estTime) {
+                        $updateData['estimated_departure'] = $estTime;
+                    }
+
+                    // Assign sequential per-route position (1, 2, 3, ...) for this destination
+                    $routePosition = $index + 1;
+                    if ((int) ($item['position'] ?? 0) !== $routePosition) {
+                        $updateData['position'] = $routePosition;
+                    }
+
+                    if (!empty($updateData)) {
+                        $this->update($item['id'], $updateData);
                     }
                 }
             }
-        }
-
-        // 2. Update global position ranks
-        $allActive = $this->whereIn('status', ['waiting', 'boarding'])->findAll();
-        usort($allActive, static function ($a, $b) {
-            $aBoarding = ($a['status'] === 'boarding');
-            $bBoarding = ($b['status'] === 'boarding');
-            if ($aBoarding !== $bBoarding) {
-                return $aBoarding ? -1 : 1;
-            }
-            $aEst = (string) ($a['estimated_departure'] ?? '');
-            $bEst = (string) ($b['estimated_departure'] ?? '');
-            if ($aEst !== '' && $bEst !== '') {
-                $cmp = strcmp($aEst, $bEst);
-                if ($cmp !== 0) {
-                    return $cmp;
-                }
-            }
-            $cmp = strcmp((string) ($a['arrival_time'] ?? ''), (string) ($b['arrival_time'] ?? ''));
-            return $cmp !== 0 ? $cmp : ((int) $a['id'] <=> (int) $b['id']);
-        });
-
-        $pos = 1;
-        foreach ($allActive as $row) {
-            if ((int) $row['position'] !== $pos) {
-                $this->update($row['id'], ['position' => $pos]);
-            }
-            $pos++;
         }
     }
 

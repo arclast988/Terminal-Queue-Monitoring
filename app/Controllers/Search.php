@@ -29,6 +29,7 @@ class Search extends BaseController
                                         ->orLike('terminals.name', $search)
                                     ->groupEnd()
                                     ->orderBy('queue.position', 'ASC')
+                                    ->orderBy('routes.destination', 'ASC')
                                     ->findAll();
 
         $announcements = [];

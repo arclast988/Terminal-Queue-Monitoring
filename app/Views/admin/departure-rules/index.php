@@ -79,7 +79,7 @@
     background: var(--primary, #1565C0) !important;
     border-color: var(--primary, #1565C0) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .rule-filter-btn.active i {
@@ -314,13 +314,18 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr id="empty-all-rules-row">
-                            <td colspan="<?= session()->get('role') !== 'staff' ? '7' : '7' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">No departure rules configured. Default of 30 minutes will be used.</td>
+                            <td colspan="7" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-clock-history fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No departure rules configured</div>
+                                <small class="empty-state-subtitle">The terminal default interval (30 minutes) will be used.</small>
+                            </td>
                         </tr>
                     <?php endif; ?>
                     <tr id="empty-filter-row" class="d-none" style="display: none !important;">
-                        <td colspan="<?= session()->get('role') !== 'staff' ? '7' : '7' ?>" style="text-align: center; padding: 40px; color: var(--slate-500);">
-                            <i class="bi bi-search" style="font-size: 24px; display: block; margin-bottom: 8px; opacity: 0.5;"></i>
-                            <span id="empty-filter-text">No departure rules configured for this route.</span>
+                        <td colspan="7" class="text-center py-5 text-muted empty-state-table">
+                            <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
+                            <div class="fw-bold fs-6 empty-state-title" id="empty-filter-text">No departure rules configured for this route</div>
+                            <small class="empty-state-subtitle">No custom dispatch interval has been configured for this destination.</small>
                             <?php if (session()->get('role') !== 'staff'): ?>
                             <div class="mt-3">
                                 <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-for-route" class="btn-modern btn-modern-sm btn-modern-primary d-inline-flex align-items-center gap-1">

@@ -135,9 +135,22 @@ $fareTypes = array_map(static fn(array $type) => [
         </div>
     </div>
 <?php endforeach; ?>
+<!-- Search & Filter Bar -->
+<div class="modern-card shadow-modern fade-in mx-3 mb-4">
+    <div class="modern-card-body py-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="fare-search-group" style="display:flex; align-items:center; max-width:380px; width:100%;">
+                <span class="input-group-text" style="height:38px; border:1.5px solid #cbd5e1; border-right:none; border-radius:20px 0 0 20px; background:#fff; color:#64748b; padding:0 12px;"><i class="bi bi-search"></i></span>
+                <input type="text" id="fareSearch" class="form-control" placeholder="Search destination, route, discount..." onkeyup="filterFares()" style="height:38px; border:1.5px solid #cbd5e1; border-left:none; border-radius:0 20px 20px 0; outline:none; font-size:13.5px; box-shadow:none;">
+            </div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-muted, #64748b);">
+                <i class="bi bi-info-circle me-1"></i> Showing fares across all configured vehicle types
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="row px-3 mt-2">
+<div class="row px-3 mt-2" id="fareCardsGrid">
 
 <?php foreach ($fareTypes as $ft): ?>
 <div class="col-lg-4 mb-4">
@@ -668,9 +681,29 @@ if (editDiscountModal) {
 
 // Fare search filter
 function filterFares() {
-    const query = document.getElementById('fareSearch')?.value.toLowerCase() ?? '';
-    document.querySelectorAll('.fare-item').forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(query) ? '' : 'none';
+    const query = document.getElementById('fareSearch')?.value.toLowerCase().trim() ?? '';
+    const cards = document.querySelectorAll('#fareCardsGrid .fare-section-card');
+
+    cards.forEach(card => {
+        const items = card.querySelectorAll('.fare-item');
+        let cardVisibleCount = 0;
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (!query || text.includes(query)) {
+                item.style.display = '';
+                cardVisibleCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        const col = card.closest('.col-lg-4');
+        if (col) {
+            if (query && items.length > 0 && cardVisibleCount === 0) {
+                col.style.display = 'none';
+            } else {
+                col.style.display = '';
+            }
+        }
     });
 }
 

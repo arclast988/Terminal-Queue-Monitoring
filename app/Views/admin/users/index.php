@@ -96,98 +96,108 @@ foreach ($users as $u) {
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($users as $i => $user): ?>
-                        <tr data-role="<?= esc($user['role']) ?>">
-                            <td class="row-number" data-label="#"><?= $i + 1 ?></td>
-                            <td data-label="User">
-                                <?php
-                                $nameParts = explode(' ', trim($user['full_name']));
-                                $initials = '';
-                                if (!empty($nameParts[0])) {
-                                    $initials .= strtoupper(substr($nameParts[0], 0, 1));
-                                }
-                                if (count($nameParts) >= 2 && !empty($nameParts[count($nameParts) - 1])) {
-                                    $initials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
-                                }
-                                if (empty($initials)) {
-                                    $initials = strtoupper(substr($user['username'], 0, 2));
-                                }
-                                ?>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' || $user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher' ?>">
-                                        <?= esc($initials) ?>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold" style="font-size:14.5px; color: inherit;"><?= esc($user['full_name']) ?></div>
+                    <?php if (!empty($users)): ?>
+                        <?php foreach ($users as $i => $user): ?>
+                            <tr data-role="<?= esc($user['role']) ?>">
+                                <td class="row-number" data-label="#"><?= $i + 1 ?></td>
+                                <td data-label="User">
+                                    <?php
+                                    $nameParts = explode(' ', trim($user['full_name']));
+                                    $initials = '';
+                                    if (!empty($nameParts[0])) {
+                                        $initials .= strtoupper(substr($nameParts[0], 0, 1));
+                                    }
+                                    if (count($nameParts) >= 2 && !empty($nameParts[count($nameParts) - 1])) {
+                                        $initials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
+                                    }
+                                    if (empty($initials)) {
+                                        $initials = strtoupper(substr($user['username'], 0, 2));
+                                    }
+                                    ?>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' || $user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher' ?>">
+                                            <?= esc($initials) ?>
+                                        </div>
                                         <div>
-                                            <small style="font-size:12.5px; color: #64748b;">@<?= esc($user['username']) ?></small>
+                                            <div class="fw-bold" style="font-size:14.5px; color: inherit;"><?= esc($user['full_name']) ?></div>
+                                            <div>
+                                                <small style="font-size:12.5px; color: #64748b;">@<?= esc($user['username']) ?></small>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td data-label="Role">
-                                <?php if ($user['role'] === 'super_admin'): ?>
-                                    <span class="badge-modern badge-modern-super-admin">Super Admin</span>
-                                <?php else: ?>
-                                    <span class="badge-modern badge-modern-<?= $user['role'] === 'admin' ? 'danger' : 'info' ?>">
-                                        <?= $user['role'] === 'staff' ? 'Dispatcher' : 'Admin' ?>
-                                    </span>
-                                <?php endif; ?>
-                            </td>
-                            <td style="max-width: 350px;" data-label="Assigned Routes">
-                                <?php if ($user['role'] === 'super_admin' || $user['role'] === 'admin'): ?>
-                                    <span class="badge-modern badge-modern-success">All Routes</span>
-                                <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
-                                    <div class="badge-scroll-wrap" style="display: flex; gap: 4px; padding-bottom: 4px;" title="<?= esc($user['assigned_routes_label']) ?>">
-                                        <?php
-                                        $routeParts = explode(', ', $user['assigned_routes_label']);
-                                        foreach ($routeParts as $rp):
-                                            ?>
-                                            <span class="badge-modern badge-modern-primary"
-                                                style="font-size:12.5px; font-weight:600; white-space: nowrap; padding: 3px 8px;"><?= esc($rp) ?></span>
-                                        <?php endforeach; ?>
+                                </td>
+                                <td data-label="Role">
+                                    <?php if ($user['role'] === 'super_admin'): ?>
+                                        <span class="badge-modern badge-modern-super-admin">Super Admin</span>
+                                    <?php else: ?>
+                                        <span class="badge-modern badge-modern-<?= $user['role'] === 'admin' ? 'danger' : 'info' ?>">
+                                            <?= $user['role'] === 'staff' ? 'Dispatcher' : 'Admin' ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="max-width: 350px;" data-label="Assigned Routes">
+                                    <?php if ($user['role'] === 'super_admin' || $user['role'] === 'admin'): ?>
+                                        <span class="badge-modern badge-modern-success">All Routes</span>
+                                    <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
+                                        <div class="badge-scroll-wrap" style="display: flex; gap: 4px; padding-bottom: 4px;" title="<?= esc($user['assigned_routes_label']) ?>">
+                                            <?php
+                                            $routeParts = explode(', ', $user['assigned_routes_label']);
+                                            foreach ($routeParts as $rp):
+                                                ?>
+                                                <span class="badge-modern badge-modern-primary"
+                                                    style="font-size:12.5px; font-weight:600; white-space: nowrap; padding: 3px 8px;"><?= esc($rp) ?></span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="badge-modern badge-modern-warning">No Routes</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td data-label="Action">
+                                    <?php
+                                    $currentUserId = (int) session()->get('id');
+                                    $currentUserRole = session()->get('role');
+                                    $targetUserId = (int) $user['id'];
+                                    $targetUserRole = $user['role'];
+
+                                    $canEdit = ($targetUserId === $currentUserId) || 
+                                               ($currentUserRole === 'super_admin') || 
+                                               ($currentUserRole === 'admin' && $targetUserRole === 'staff');
+
+                                    $canDelete = ($targetUserId !== $currentUserId) && 
+                                                 ($targetUserRole !== 'super_admin') && 
+                                                 (($currentUserRole === 'super_admin') || 
+                                                  ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
+                                    ?>
+                                    <div class="btn-group-modern" role="group">
+                                        <?php if ($canEdit): ?>
+                                            <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
+                                                class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
+                                                <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if ($canDelete): ?>
+                                            <form action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post"
+                                                class="d-inline"
+                                                onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
+                                                <?= csrf_field() ?>
+                                                <button type="submit" class="btn-modern btn-action-delete btn-modern-sm" title="Delete">
+                                                    <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
                                     </div>
-                                <?php else: ?>
-                                    <span class="badge-modern badge-modern-warning">No Routes</span>
-                                <?php endif; ?>
-                            </td>
-                            <td data-label="Action">
-                                <?php
-                                $currentUserId = (int) session()->get('id');
-                                $currentUserRole = session()->get('role');
-                                $targetUserId = (int) $user['id'];
-                                $targetUserRole = $user['role'];
-
-                                $canEdit = ($targetUserId === $currentUserId) || 
-                                           ($currentUserRole === 'super_admin') || 
-                                           ($currentUserRole === 'admin' && $targetUserRole === 'staff');
-
-                                $canDelete = ($targetUserId !== $currentUserId) && 
-                                             ($targetUserRole !== 'super_admin') && 
-                                             (($currentUserRole === 'super_admin') || 
-                                              ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
-                                ?>
-                                <div class="btn-group-modern" role="group">
-                                    <?php if ($canEdit): ?>
-                                        <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
-                                            class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
-                                            <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
-                                        </a>
-                                    <?php endif; ?>
-                                    <?php if ($canDelete): ?>
-                                        <form action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Delete user <?= esc($user['username']) ?>?')">
-                                            <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-action-delete btn-modern-sm" title="Delete">
-                                                <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
-                                            </button>
-                                        </form>
-                                    <?php endif; ?>
-                                </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-people fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No users found</div>
+                                <small class="empty-state-subtitle">No user accounts exist in the system.</small>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -461,12 +471,13 @@ foreach ($users as $u) {
             if (!emptyRow) {
                 emptyRow = document.createElement('tr');
                 emptyRow.classList.add('no-filter-results');
-                emptyRow.innerHTML = '<td colspan="5" class="text-center py-4 text-muted"><i class="bi bi-inbox me-2"></i>No users match the selected filter.</td>';
+                emptyRow.innerHTML = '<td colspan="5" class="text-center py-5 text-muted empty-state-table"><i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i><div class="fw-bold fs-6 empty-state-title">No users match the selected filter</div><small class="empty-state-subtitle">Try selecting a different role or clearing your search.</small></td>';
                 document.querySelector('#users-table tbody').appendChild(emptyRow);
             }
-            emptyRow.style.display = '';
+            emptyRow.style.removeProperty('display');
+            emptyRow.classList.remove('d-none');
         } else if (emptyRow) {
-            emptyRow.style.display = 'none';
+            emptyRow.remove();
         }
     }
 </script>

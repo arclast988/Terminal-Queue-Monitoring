@@ -347,10 +347,10 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-1 d-block mb-3"></i>
-                                <div class="fw-bold fs-6">No activity logs found</div>
-                                <small>Try adjusting your search criteria or date filters.</small>
+                            <td colspan="5" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-activity fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No activity logs found</div>
+                                <small class="empty-state-subtitle">Try adjusting your search criteria or date filters.</small>
                             </td>
                         </tr>
                     <?php endif; ?>

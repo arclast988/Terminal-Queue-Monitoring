@@ -21,8 +21,8 @@
 
     <style>
         :root {
-            --primary: #1E40AF;
-            --primary-dark: #1E3A8A;
+            --primary: #B71C1C;
+            --primary-dark: #8B0000;
             --accent: #FFA726;
             --accent-dark: #F57C00;
             --success: #43a047;
@@ -769,6 +769,79 @@
             }
 
         }
+
+        /* --- Route Filter Capsule Bar (matching screenshot) --- */
+        .route-filter-wrapper {
+            margin-bottom: 24px;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #edf2f7;
+            animation: fadeInUp 0.5s ease-out both;
+        }
+
+        .route-filter-label {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .route-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 2px 8px 2px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .route-filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .route-chip {
+            padding: 7px 18px;
+            border-radius: 20px;
+            border: 1.5px solid #e2e8f0;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .route-chip:hover {
+            border-color: #D62828;
+            color: #D62828;
+            background: rgba(214, 40, 40, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .route-chip.active {
+            background: #000000 !important;
+            border-color: #000000 !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            transform: translateY(0);
+        }
     </style>
 </head>
 
@@ -833,6 +906,23 @@
             <?php endif; ?>
         </div>
 
+        <!-- Quick Route Filter Bar (Pills) placed UNDER the filter box -->
+        <div class="route-filter-wrapper">
+            <div class="route-filter-label">
+                <i class="fas fa-route" style="color: var(--primary);"></i> Route Destinations:
+            </div>
+            <div class="route-filter-bar" id="routeFilterBar">
+                <button type="button" class="route-chip <?= empty($destination) ? 'active' : '' ?>" data-dest="all" onclick="selectRouteFilter('all', this)">
+                    All Routes
+                </button>
+                <?php foreach ($all_destinations as $dest): ?>
+                    <button type="button" class="route-chip <?= (strcasecmp($destination ?? '', $dest) === 0) ? 'active' : '' ?>" data-dest="<?= esc(strtolower($dest)) ?>" onclick="selectRouteFilter('<?= esc(strtolower($dest)) ?>', this)">
+                        <?= strtoupper(esc($dest)) ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
         <!-- Schedule List -->
         <div class="schedule-card">
             <div class="card-header">
@@ -855,7 +945,7 @@
                     </thead>
                     <tbody id="scheduleTableBody">
                         <?php foreach ($schedules as $index => $schedule): ?>
-                            <tr>
+                            <tr data-destination="<?= esc(strtolower($schedule['destination'] ?? '')) ?>" data-type="<?= esc(strtolower($schedule['vehicle_type'] ?? '')) ?>">
                                 <td data-label="Queue #">
                                     <?php 
                                         $queueNum = !empty($schedule['position']) && (int)$schedule['position'] > 0 ? (int)$schedule['position'] : ($index + 1);
@@ -950,6 +1040,65 @@
         var currentDest = '<?= esc($destination) ?>';
         var _fetchPending = false;
 
+        function selectRouteFilter(dest, btn) {
+            currentDest = (dest === 'all') ? '' : dest;
+
+            // Update chip active classes
+            document.querySelectorAll('#routeFilterBar .route-chip').forEach(function(c) {
+                c.classList.remove('active');
+            });
+            if (btn) {
+                btn.classList.add('active');
+            }
+
+            // Sync select dropdown
+            var destSelect = document.getElementById('destinationSelect');
+            if (destSelect) {
+                var targetVal = (dest === 'all') ? '' : dest;
+                for (var i = 0; i < destSelect.options.length; i++) {
+                    if (targetVal === '' && destSelect.options[i].value === '') {
+                        destSelect.selectedIndex = i;
+                        break;
+                    } else if (destSelect.options[i].value.toLowerCase() === targetVal.toLowerCase()) {
+                        destSelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            // Instant client-side filter
+            filterTableClientSide();
+
+            // Fetch live update with new filter
+            fetchSchedulesStatus();
+        }
+
+        function filterTableClientSide() {
+            var rows = document.querySelectorAll('#scheduleTableBody tr');
+            var visibleCount = 0;
+            rows.forEach(function(row) {
+                var rowDest = (row.getAttribute('data-destination') || '').toLowerCase();
+                var rowType = (row.getAttribute('data-type') || '').toLowerCase();
+
+                var matchesDest = (!currentDest || currentDest === 'all' || rowDest === currentDest.toLowerCase());
+                var matchesType = (!currentType || currentType === 'all' || rowType === currentType.toLowerCase());
+
+                if (matchesDest && matchesType) {
+                    row.style.removeProperty('display');
+                    row.classList.remove('d-none');
+                    visibleCount++;
+                } else {
+                    row.style.setProperty('display', 'none', 'important');
+                    row.classList.add('d-none');
+                }
+            });
+
+            var badge = document.getElementById('scheduleCount');
+            if (badge) {
+                badge.innerText = visibleCount + ' Found';
+            }
+        }
+
         function fetchSchedulesStatus() {
             if (_fetchPending) return;
             _fetchPending = true;
@@ -1022,7 +1171,7 @@
                     return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
                 }
                 var opDisplay = s.operator_name ? escHtml(s.operator_name) : (s.driver_name ? escHtml(s.driver_name) : '—');
-                html += '<tr>' +
+                html += '<tr data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml((s.vehicle_type || '').toLowerCase()) + '">' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
                     '<td data-label="Operator"><div class="operator-cell"><i class="fas fa-building text-muted"></i>' + opDisplay + '</div></td>' +
@@ -1036,40 +1185,55 @@
             tbody.innerHTML = html;
         }
 
-        // Rebuild the Destination filter options when the route list changes,
-        // without disrupting a user who's mid-selection. Preserves the current value.
+        // Rebuild Destination filter options and route chips when route list changes
         function syncDestinationOptions(destinations) {
             var sel = document.getElementById('destinationSelect');
-            if (!sel || !Array.isArray(destinations)) return;
-            if (document.activeElement === sel) return; // don't interrupt the user
-            var desired = [''].concat(destinations);
-            var existing = Array.prototype.map.call(sel.options, function (o) { return o.value; });
-            var same = existing.length === desired.length && existing.every(function (v, i) { return v === desired[i]; });
-            if (same) return;
-            var current = sel.value;
-            sel.innerHTML = '';
-            var all = document.createElement('option');
-            all.value = '';
-            all.textContent = 'All Destinations';
-            sel.appendChild(all);
-            destinations.forEach(function (d) {
-                var o = document.createElement('option');
-                o.value = d;
-                o.textContent = d;
-                sel.appendChild(o);
-            });
-            sel.value = current; // restore selection if still present
+            if (sel && Array.isArray(destinations) && document.activeElement !== sel) {
+                var desired = [''].concat(destinations);
+                var existing = Array.prototype.map.call(sel.options, function (o) { return o.value; });
+                var same = existing.length === desired.length && existing.every(function (v, i) { return v === desired[i]; });
+                if (!same) {
+                    var current = sel.value;
+                    sel.innerHTML = '';
+                    var all = document.createElement('option');
+                    all.value = '';
+                    all.textContent = 'All Destinations';
+                    sel.appendChild(all);
+                    destinations.forEach(function (d) {
+                        var o = document.createElement('option');
+                        o.value = d;
+                        o.textContent = d;
+                        sel.appendChild(o);
+                    });
+                    sel.value = current;
+                }
+            }
+
+            // Sync Route Filter Bar chips
+            var bar = document.getElementById('routeFilterBar');
+            if (bar && Array.isArray(destinations)) {
+                var existingChips = Array.from(bar.querySelectorAll('.route-chip[data-dest]:not([data-dest="all"])')).map(c => c.getAttribute('data-dest'));
+                var desiredChips = destinations.map(d => d.toLowerCase());
+                if (existingChips.join(',') !== desiredChips.join(',')) {
+                    var activeDest = currentDest ? currentDest.toLowerCase() : 'all';
+                    var chipHtml = '<button type="button" class="route-chip' + (activeDest === 'all' ? ' active' : '') + '" data-dest="all" onclick="selectRouteFilter(\'all\', this)">All Routes</button>';
+                    destinations.forEach(function(d) {
+                        var isAct = (activeDest === d.toLowerCase());
+                        chipHtml += '<button type="button" class="route-chip' + (isAct ? ' active' : '') + '" data-dest="' + d.toLowerCase() + '" onclick="selectRouteFilter(\'' + d.toLowerCase() + '\', this)">' + d.toUpperCase() + '</button>';
+                    });
+                    bar.innerHTML = chipHtml;
+                }
+            }
         }
 
-        // Initialize real-time sync. WebSocket messages refresh immediately;
-        // polling still runs as the fallback if the socket is unavailable.
+        // Initialize real-time sync
         document.addEventListener('DOMContentLoaded', function() {
             QueueSync.init({
                 pollInterval:  3000,
                 customRefresh: fetchSchedulesStatus,
                 customWSHandler: fetchSchedulesStatus
             });
-            fetchSchedulesStatus(); // Initial load
+            fetchSchedulesStatus();
         });
     </script>
 </body>

@@ -34,6 +34,7 @@ class Home extends BaseController
             ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('queue.position', 'ASC')
+            ->orderBy('routes.destination', 'ASC')
             ->findAll();
 
 
@@ -76,6 +77,7 @@ class Home extends BaseController
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('queue.position', 'ASC')
+                ->orderBy('routes.destination', 'ASC')
                 ->findAll();
 
             foreach ($active_queue as &$item) {

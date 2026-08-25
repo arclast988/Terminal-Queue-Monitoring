@@ -238,7 +238,11 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: var(--slate-500);">No recent activity recorded</td>
+                        <td colspan="4" class="text-center py-5 text-muted empty-state-table">
+                            <i class="bi bi-activity fs-1 d-block mb-3 opacity-50"></i>
+                            <div class="fw-bold fs-6 empty-state-title">No recent activity recorded</div>
+                            <small class="empty-state-subtitle">System actions and user events will appear here in real-time.</small>
+                        </td>
                     </tr>
                 <?php endif; ?>
             </tbody>

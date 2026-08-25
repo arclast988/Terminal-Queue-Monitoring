@@ -1,161 +1,127 @@
-<?= $this->include('templates/header') ?>
-
-<!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
-
-<style>
-    /* Staff/Dispatcher-specific responsive enhancements */
-    @media (max-width: 768px) {
-        .page-header-modern {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
-            padding: 20px 0;
-        }
-        
-        .page-title-modern {
-            font-size: 22px;
-        }
-        
-        .stat-card-modern {
-            padding: 18px;
-        }
-        
-        .stat-card-icon {
-            width: 48px;
-            height: 48px;
-            font-size: 20px;
-        }
-        
-        .stat-card-value {
-            font-size: 26px;
-        }
-        
-        .stat-card-label {
-            font-size: 13px;
-            font-weight: 600;
-        }
-        
-        .table-modern thead {
-            display: none;
-        }
-        
-        .table-modern tbody tr {
-            display: block;
-            margin-bottom: 12px;
-            border-radius: 10px;
-            border: 1px solid var(--slate-200);
-            padding: 14px;
-        }
-
-        .table-modern tbody tr[style*="display: none"],
-        .table-modern tbody tr[style*="display:none"],
-        .table-modern tbody tr.d-none {
-            display: none !important;
-        }
-        
-        .table-modern tbody td {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--slate-100);
-            font-size: 13px;
-        }
-        
-        .table-modern tbody td:last-child {
-            border-bottom: none;
-        }
-        
-        .table-modern tbody td::before {
-            content: attr(data-label);
-            font-weight: 700;
-            color: var(--slate-500);
-            text-transform: uppercase;
-            font-size: 12px;
-        }
-
-        .table-modern tbody tr td[colspan] {
-            display: block !important;
-            text-align: center !important;
-            justify-content: center !important;
-            padding: 24px 16px !important;
-        }
-        .table-modern tbody tr td[colspan]::before {
-            display: none !important;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        .stat-card-modern {
-            padding: 16px;
-        }
-        
-        .stat-card-value {
-            font-size: 22px;
-        }
-    }
-</style>
+<?= view('templates/header', ['title' => $title]) ?>
 
 <div class="page-header-modern fade-in">
     <h1 class="page-title-modern">
-        <i class="bi bi-person-workspace"></i>
-        Dispatcher Dashboard
+        <i class="bi bi-speedometer2"></i>
+        <?= esc($title) ?>
     </h1>
 </div>
 
-<div class="row">
-    <div class="col-12 col-md-6 col-xl-4 mb-4">
+<?php if (session()->getFlashdata('success')): ?>
+    <div class="alert-modern alert-modern-success fade-in">
+        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('success')) ?></div>
+    </div>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="alert-modern alert-modern-danger fade-in">
+        <i class="bi bi-x-circle-fill alert-modern-icon"></i>
+        <div><?= esc(session()->getFlashdata('error')) ?></div>
+    </div>
+<?php endif; ?>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
         <div class="stat-card-modern blue-accent fade-in">
             <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
-                <i class="bi bi-clock-history"></i>
+                <i class="bi bi-people"></i>
             </div>
-            <div class="stat-card-value"><?= $active_queue_count ?></div>
-            <div class="stat-card-label">Vehicles in Queue</div>
-            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link">
+            <div class="stat-card-value"><?= esc($active_queue_count) ?></div>
+            <div class="stat-card-label">Active in Queue</div>
+            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link" style="color: #1565c0;">
                 Manage Queue <i class="bi bi-arrow-right"></i>
             </a>
         </div>
     </div>
-    
-    <?php foreach ($terminals as $terminal): ?>
-        <div class="col-12 col-md-6 col-xl-4 mb-4">
-            <div class="modern-card shadow-modern fade-in">
-                <div class="modern-card-body">
-                    <div style="font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted, #475569); margin-bottom: 8px;">
-                        <?= esc($terminal['name']) ?>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-end">
-                        <div>
-                            <div style="font-size: 28px; font-weight: 800; color: var(--text-main, #1e293b); line-height: 1.1;">
-                                <?= esc($terminal['capacity']) ?>
-                                <span style="font-size: 12px; font-weight: 600; color: var(--text-muted, #475569);">pax capacity</span>
-                            </div>
-                        </div>
-                        <i class="bi bi-building fs-2" style="color: var(--primary, #60a5fa); opacity: 0.7;"></i>
-                    </div>
-                    <p style="margin: 8px 0 0; font-size: 13px; color: var(--text-muted, #475569);"><?= esc($terminal['location']) ?></p>
+    <div class="col-md-6">
+        <div class="stat-card-modern fade-in">
+            <div class="stat-card-icon" style="background: #F1F5F9; color: #475569;">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-card-value"><?= strtoupper(date('D, M j')) ?></div>
+            <div class="stat-card-label">Today's Date</div>
+            <div class="stat-card-link" style="color: #64748b;">
+                Active Duty
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Per-Route Queue Breakdown Cards -->
+<?php if (!empty($routeBreakdowns)): ?>
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <h6 class="text-uppercase text-muted fw-bold mb-2" style="font-size: 12px; letter-spacing: 0.8px;">
+            <i class="bi bi-diagram-3 me-1"></i> Queue by Route
+        </h6>
+    </div>
+    <?php foreach ($routeBreakdowns as $rb): ?>
+    <div class="col-sm-6 col-lg-3">
+        <div class="modern-card shadow-modern fade-in h-100" style="border-left: 3px solid #1565c0;">
+            <div class="modern-card-body p-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="fw-bold text-dark text-truncate" style="font-size: 14px;" title="<?= esc($rb['destination']) ?>">
+                        <?= esc($rb['destination']) ?>
+                    </span>
+                    <span class="badge-modern badge-modern-primary" style="font-size: 11px;">
+                        <?= (int)$rb['queue_count'] ?> vehicles
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 12px;">
+                    <span>Wait: ~<?= (int)$rb['est_wait_minutes'] ?> mins</span>
+                    <span>Cap: <?= (int)$rb['total_capacity'] ?> pax</span>
                 </div>
             </div>
         </div>
+    </div>
     <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<!-- Quick Actions -->
+<div class="modern-card shadow-modern fade-in mb-4">
+    <div class="modern-card-header">
+        <span class="modern-card-title">
+            <i class="bi bi-lightning-charge" style="color: #1565c0;"></i>
+            Quick Actions
+        </span>
+    </div>
+    <div class="modern-card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <a href="<?= base_url('staff/queue') ?>" class="btn-modern btn-modern-primary w-100" style="padding: 14px; text-decoration: none;">
+                    <i class="bi bi-clock-history"></i>
+                    Queue Operations
+                </a>
+            </div>
+            <div class="col-md-6">
+                <a href="<?= base_url('schedules') ?>" class="btn-modern btn-modern-outline w-100" style="padding: 14px; text-decoration: none;">
+                    <i class="bi bi-calendar3"></i>
+                    View Public Schedules
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php
-// Calculate vehicle type counts for recent departures
-$totalDepartures = count($recent_departures ?? []);
+// Compute vehicle type counts and route destinations
 $typeCounts = [];
-if (!empty($vehicleTypes)) {
-    foreach ($vehicleTypes as $vt) {
-        $typeCounts[strtolower($vt['slug'])] = 0;
-    }
-}
+$totalDepartures = !empty($recent_departures) ? count($recent_departures) : 0;
+$uniqueDestinations = [];
+
 if (!empty($recent_departures)) {
     foreach ($recent_departures as $dept) {
-        $vtSlug = strtolower($dept['vehicle_type'] ?? '');
-        if (isset($typeCounts[$vtSlug])) {
-            $typeCounts[$vtSlug]++;
-        } else {
-            $typeCounts[$vtSlug] = 1;
+        $vt = strtolower($dept['vehicle_type'] ?? 'other');
+        $typeCounts[$vt] = ($typeCounts[$vt] ?? 0) + 1;
+
+        if ($vt === 'modern jeepney' || $vt === 'traditional jeepney') {
+            $typeCounts['jeepney'] = ($typeCounts['jeepney'] ?? 0) + 1;
+        }
+
+        if (!empty($dept['destination']) && !in_array($dept['destination'], $uniqueDestinations)) {
+            $uniqueDestinations[] = $dept['destination'];
         }
     }
 }
@@ -164,7 +130,7 @@ if (!empty($recent_departures)) {
 <h4 class="mt-5 mb-3 fade-in" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Departures</h4>
 
 <!-- Search Bar and Vehicle Type Filters -->
-<div class="modern-card shadow-modern fade-in mb-4">
+<div class="modern-card shadow-modern fade-in mb-3">
     <div class="modern-card-body py-3">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <!-- Search Input Capsule -->
@@ -175,7 +141,7 @@ if (!empty($recent_departures)) {
 
             <!-- Vehicle Type Filter Chips -->
             <div class="d-flex flex-wrap align-items-center gap-2">
-                <span class="filter-label-text"><i class="bi bi-funnel me-1"></i>FILTER:</span>
+                <span class="filter-label-text"><i class="bi bi-funnel me-1"></i>TYPE:</span>
                 <button type="button" class="dep-filter-btn active" data-type="all" onclick="setDepartureTypeFilter('all', this)">
                     <i class="bi bi-grid-fill me-1"></i> All <span class="dep-chip-count" id="count-all"><?= $totalDepartures ?></span>
                 </button>
@@ -187,8 +153,12 @@ if (!empty($recent_departures)) {
                             $img = vehicle_type_image($slug);
                         ?>
                         <button type="button" class="dep-filter-btn" data-type="<?= esc($slug) ?>" onclick="setDepartureTypeFilter('<?= esc($slug) ?>', this)">
-                            <img src="<?= base_url('images/' . $img) ?>" alt="<?= esc($vt['name']) ?>">
-                            <?= esc($vt['name']) ?> <span class="dep-chip-count"><?= $count ?></span>
+                            <?php if ($img): ?>
+                                <img src="<?= base_url('images/' . $img) ?>" alt="<?= esc($vt['name']) ?>" class="dep-filter-icon">
+                            <?php else: ?>
+                                <i class="bi bi-truck me-1"></i>
+                            <?php endif; ?>
+                            <?= esc($vt['name']) ?> <span class="dep-chip-count" id="count-<?= esc($slug) ?>"><?= $count ?></span>
                         </button>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -210,6 +180,33 @@ if (!empty($recent_departures)) {
     </div>
 </div>
 
+<?php if (!empty($uniqueDestinations)): ?>
+<!-- Quick Route Filter Bar (Pill Chips) placed UNDER search and type filters -->
+<div class="route-filter-wrapper fade-in mb-4">
+    <div class="route-filter-label">
+        <i class="bi bi-geo-alt-fill" style="color: var(--primary, #1565c0);"></i> Route Destinations:
+    </div>
+    <div class="route-filter-bar" id="staffDepRouteFilterBar">
+        <button type="button" class="route-chip active" data-dest="all" onclick="setDepartureRouteFilter('all', this)">
+            All Routes
+            <span class="chip-count"><?= $totalDepartures ?></span>
+        </button>
+        <?php foreach ($uniqueDestinations as $dest): ?>
+            <?php
+                $cnt = 0;
+                foreach ($recent_departures as $d) {
+                    if (strcasecmp($d['destination'] ?? '', $dest) === 0) $cnt++;
+                }
+            ?>
+            <button type="button" class="route-chip" data-dest="<?= esc(strtolower($dest)) ?>" onclick="setDepartureRouteFilter('<?= esc(strtolower($dest)) ?>', this)">
+                <?= strtoupper(esc($dest)) ?>
+                <span class="chip-count"><?= $cnt ?></span>
+            </button>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="modern-card shadow-modern fade-in">
     <div class="table-responsive">
         <table class="table-modern">
@@ -227,7 +224,7 @@ if (!empty($recent_departures)) {
             <tbody id="departures-table-body">
                 <?php if (!empty($recent_departures)): ?>
                     <?php foreach ($recent_departures as $dept): ?>
-                        <tr data-vehicle-type="<?= esc(strtolower($dept['vehicle_type'] ?? '')) ?>">
+                        <tr data-vehicle-type="<?= esc(strtolower($dept['vehicle_type'] ?? '')) ?>" data-destination="<?= esc(strtolower($dept['destination'] ?? '')) ?>">
                             <td data-label="Plate Number">
                                 <span class="plate-number"><?= esc($dept['plate_number']) ?></span>
                             </td>
@@ -277,13 +274,18 @@ if (!empty($recent_departures)) {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">No recent departures today.</td>
+                        <td colspan="7" class="text-center py-5 text-muted empty-state-table">
+                            <i class="bi bi-clock-history fs-1 d-block mb-3 opacity-50"></i>
+                            <div class="fw-bold fs-6 empty-state-title">No recent departures today</div>
+                            <small class="empty-state-subtitle">Vehicles that depart today will appear here in real-time.</small>
+                        </td>
                     </tr>
                 <?php endif; ?>
                 <tr id="no-departures-match" class="d-none" style="display:none !important;">
-                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted, #475569);">
-                        <i class="bi bi-search fs-3 d-block mb-2 text-muted opacity-50"></i>
-                        No departures match the selected search or filter.
+                    <td colspan="7" class="text-center py-5 text-muted empty-state-table">
+                        <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
+                        <div class="fw-bold fs-6 empty-state-title">No departures match your filter</div>
+                        <small class="empty-state-subtitle">Try selecting a different vehicle type, route, or clear your search.</small>
                     </td>
                 </tr>
             </tbody>
@@ -292,21 +294,106 @@ if (!empty($recent_departures)) {
 </div>
 
 <style>
+    /* Route Filter Capsule Bar */
+    .route-filter-wrapper {
+        margin-bottom: 24px;
+        background: #ffffff;
+        padding: 16px 20px;
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
+        border: 1px solid #e2e8f0;
+    }
+    .route-filter-label {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .route-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 4px 2px 8px 2px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .route-filter-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .route-chip {
+        padding: 8px 20px;
+        border-radius: 25px;
+        border: 1.5px solid #cbd5e1;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        user-select: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .route-chip:hover {
+        border-color: var(--primary, #1565c0);
+        color: var(--primary, #1565c0);
+        background: rgba(21, 101, 192, 0.04);
+        transform: translateY(-1px);
+    }
+    .route-chip.active {
+        background: var(--primary, #1565c0) !important;
+        border-color: var(--primary, #1565c0) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
+        transform: translateY(0);
+    }
+    .route-chip .chip-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        background: #e2e8f0;
+        color: #475569;
+        margin-left: 2px;
+    }
+    .route-chip.active .chip-count {
+        background: rgba(255, 255, 255, 0.25);
+        color: #ffffff;
+    }
+
     /* Search capsule */
     .departure-search-group {
         display: flex;
         align-items: center;
         max-width: 380px;
         min-width: 240px;
+        width: 100%;
     }
     .departure-search-group .input-group-text {
         height: 36px;
-        background: #f8fafc;
+        padding: 6px 12px;
+        background: #ffffff;
         border: 1.5px solid #cbd5e1;
         border-right: none;
         border-radius: 20px 0 0 20px;
         color: #64748b;
-        padding: 0 12px;
         font-size: 14px;
     }
     .departure-search-input {
@@ -398,10 +485,18 @@ if (!empty($recent_departures)) {
 <script src="<?= base_url('js/queue-sync.js') ?>"></script>
 <script>
     let currentVehicleTypeFilter = 'all';
+    let currentRouteFilter = 'all';
 
     function setDepartureTypeFilter(type, btn) {
         currentVehicleTypeFilter = type;
         document.querySelectorAll('.dep-filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        filterDepartures();
+    }
+
+    function setDepartureRouteFilter(dest, btn) {
+        currentRouteFilter = dest;
+        document.querySelectorAll('#staffDepRouteFilterBar .route-chip').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
         filterDepartures();
     }
@@ -414,12 +509,14 @@ if (!empty($recent_departures)) {
 
         rows.forEach(row => {
             const vType = (row.getAttribute('data-vehicle-type') || '').toLowerCase();
+            const dest = (row.getAttribute('data-destination') || '').toLowerCase();
             const text = row.innerText.toLowerCase();
 
             const matchesType = (currentVehicleTypeFilter === 'all' || vType === currentVehicleTypeFilter);
+            const matchesRoute = (currentRouteFilter === 'all' || dest === currentRouteFilter);
             const matchesQuery = (!query || text.includes(query));
 
-            if (matchesType && matchesQuery) {
+            if (matchesType && matchesRoute && matchesQuery) {
                 row.style.removeProperty('display');
                 row.classList.remove('d-none');
                 visibleCount++;

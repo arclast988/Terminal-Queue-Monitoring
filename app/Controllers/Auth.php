@@ -195,28 +195,29 @@ class Auth extends BaseController
     public function sendResetCode()
     {
         $session = session();
-        $username = $this->request->getVar('username');
+        $username = trim((string) $this->request->getVar('username'));
 
         if (empty($username)) {
-            $session->setFlashdata('error', 'Please enter your username.');
-            return redirect()->to('/forgot-password');
+            $session->setFlashdata('error', 'Please enter your username or email address.');
+            return redirect()->to('/forgot-password')->withInput();
         }
 
         $model = new UserModel();
-        $user = $model->where('username', $username)->first();
+        $user = $model->where('username', $username)->orWhere('email', $username)->first();
 
         if (!$user) {
-            $session->setFlashdata('error', 'Username not found.');
-            return redirect()->to('/forgot-password');
+            $session->setFlashdata('error', 'Account not found. Please verify your username or email.');
+            return redirect()->to('/forgot-password')->withInput();
         }
 
+        $accountUsername = $user['username'];
         $email = $user['email'] ?? '';
         if (empty($email)) {
-            if (filter_var($username, FILTER_VALIDATE_EMAIL)) {
-                $email = $username;
+            if (filter_var($accountUsername, FILTER_VALIDATE_EMAIL)) {
+                $email = $accountUsername;
             } else {
                 $session->setFlashdata('error', 'No email address associated with this account. Please contact your administrator.');
-                return redirect()->to('/forgot-password');
+                return redirect()->to('/forgot-password')->withInput();
             }
         }
 
@@ -224,14 +225,14 @@ class Auth extends BaseController
 
         // Rate limiting: check if a token was created for this username within the last 60 seconds
         $recentToken = $db->table('password_reset_tokens')
-            ->where('username', $username)
+            ->where('username', $accountUsername)
             ->where('used', 0)
             ->where('created_at >', date('Y-m-d H:i:s', strtotime('-60 seconds')))
             ->get()
             ->getRow();
         if ($recentToken) {
-            $session->setFlashdata('error', 'Please wait at least 60 seconds before requesting another verification code.');
-            return redirect()->to('/forgot-password');
+            $session->setFlashdata('error', 'A verification code was already requested recently. Please check your email or wait before requesting another.');
+            return redirect()->to("/verify-reset-code/{$recentToken->token}");
         }
 
         // Generate 6-digit code and token
@@ -239,13 +240,13 @@ class Auth extends BaseController
         $token = bin2hex(random_bytes(32));
         $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
-        // Invalidate old tokens for this username to prevent replay attacks
+        // Invalidate old unused tokens for this username
         $db->table('password_reset_tokens')
-            ->where('username', $username)
+            ->where('username', $accountUsername)
             ->update(['used' => 1]);
 
         $db->table('password_reset_tokens')->insert([
-            'username'      => $username,
+            'username'      => $accountUsername,
             'token'         => $token,
             'reset_code'    => $resetCode,
             'email'         => $email,
@@ -263,15 +264,16 @@ class Auth extends BaseController
         $emailSvc = $this->getConfiguredEmailService();
         $emailSvc->setTo($email);
         $emailSvc->setSubject('[Palompon Transit] Password Reset Verification Code');
-        $emailSvc->setMessage($this->buildOtpEmailHtml($username, $resetCode, false));
+        $emailSvc->setMessage($this->buildOtpEmailHtml($accountUsername, $resetCode, false));
 
         $devMsg = '';
         if (!$emailSvc->send()) {
+            log_message('error', 'Failed to send OTP verification email: ' . $emailSvc->printDebugger(['headers']));
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
                 $session->setFlashdata('error', 'Failed to send verification email. Please check server SMTP configuration.');
-                return redirect()->to('/forgot-password');
+                return redirect()->to('/forgot-password')->withInput();
             }
         }
 
@@ -294,8 +296,12 @@ class Auth extends BaseController
             ->getRow();
 
         if (!$record) {
-            session()->setFlashdata('error', 'This link is invalid or has expired.');
+            session()->setFlashdata('error', 'This reset link is invalid or has expired. Please request a new code.');
             return redirect()->to('/forgot-password');
+        }
+
+        if ($record->verified == 1) {
+            return redirect()->to("/reset-password/{$token}");
         }
 
         return view('auth/verify_code', [
@@ -308,7 +314,7 @@ class Auth extends BaseController
     {
         $session = session();
         $db = \Config\Database::connect();
-        $resetCode = $this->request->getVar('reset_code');
+        $resetCode = trim((string) $this->request->getVar('reset_code'));
 
         $record = $db->table('password_reset_tokens')
             ->where('token', $token)
@@ -318,8 +324,13 @@ class Auth extends BaseController
             ->getRow();
 
         if (!$record) {
-            $session->setFlashdata('error', 'This reset session has expired. Please try again.');
+            $session->setFlashdata('error', 'This reset session has expired. Please request a new code.');
             return redirect()->to('/forgot-password');
+        }
+
+        if (empty($resetCode) || strlen($resetCode) !== 6 || !ctype_digit($resetCode)) {
+            $session->setFlashdata('error', 'Please enter the complete 6-digit verification code.');
+            return redirect()->to("/verify-reset-code/{$token}");
         }
 
         if ($record->code_attempts >= 5) {
@@ -347,7 +358,7 @@ class Auth extends BaseController
             }
 
             $remaining = 5 - $newAttempts;
-            $session->setFlashdata('error', "Invalid verification code. Please check your email and try again. ({$remaining} attempts remaining)");
+            $session->setFlashdata('error', "Invalid verification code. Please check your email and try again. ({$remaining} attempt" . ($remaining === 1 ? '' : 's') . " remaining)");
             return redirect()->to("/verify-reset-code/{$token}");
         }
 
@@ -410,6 +421,7 @@ class Auth extends BaseController
 
         $devMsg = '';
         if (!$emailSvc->send()) {
+            log_message('error', 'Failed to resend OTP verification email: ' . $emailSvc->printDebugger(['headers']));
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
@@ -482,14 +494,16 @@ class Auth extends BaseController
 
         if (!$record) {
             return view('auth/reset_password', [
-                'token' => $token,
-                'error' => 'This reset session is invalid, unverified, or has expired.',
+                'token'   => $token,
+                'error'   => 'This reset session is invalid, unverified, or has expired.',
+                'invalid' => true,
             ]);
         }
 
         return view('auth/reset_password', [
-            'token' => $token,
-            'error' => null,
+            'token'   => $token,
+            'error'   => null,
+            'invalid' => false,
         ]);
     }
 
@@ -511,20 +525,22 @@ class Auth extends BaseController
             return redirect()->to('/login');
         }
 
-        $password = $this->request->getVar('password');
-        $confirm = $this->request->getVar('confirm_password');
+        $password = (string) $this->request->getVar('password');
+        $confirm = (string) $this->request->getVar('confirm_password');
 
         if (strlen($password) < 6) {
             return view('auth/reset_password', [
-                'token' => $token,
-                'error' => 'Password must be at least 6 characters.',
+                'token'   => $token,
+                'error'   => 'Password must be at least 6 characters.',
+                'invalid' => false,
             ]);
         }
 
         if ($password !== $confirm) {
             return view('auth/reset_password', [
-                'token' => $token,
-                'error' => 'Passwords do not match.',
+                'token'   => $token,
+                'error'   => 'Passwords do not match.',
+                'invalid' => false,
             ]);
         }
 
@@ -537,7 +553,9 @@ class Auth extends BaseController
         }
 
         $model->update($user['id'], [
-            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+            'password_hash'  => password_hash($password, PASSWORD_DEFAULT),
+            'login_attempts' => 0,
+            'locked_until'   => null,
         ]);
 
         $db->table('password_reset_tokens')

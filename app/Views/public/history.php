@@ -13,8 +13,8 @@
     <style>
         /* ===== DESIGN TOKENS ===== */
         :root {
-            --primary:       #1E40AF;
-            --primary-dark:  #1E3A8A;
+            --primary:       #B71C1C;
+            --primary-dark:  #8B0000;
             --accent:        #FFA726;
             --accent-dark:   #F57C00;
             --success:       #43a047;
@@ -477,11 +477,71 @@
                 text-align: left;
             }
 
-            .table-card-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+        /* Route Filter Capsule Bar (matching screenshot) */
+        .route-filter-wrapper {
+            margin-bottom: 24px;
+            background: #ffffff;
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
+            border: 1px solid #e2e8f0;
         }
-
-        @media (max-width: 420px) {
-            .btn-back span { display: none; }
+        .route-filter-label {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .route-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 2px 8px 2px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .route-filter-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .route-chip {
+            padding: 8px 20px;
+            border-radius: 25px;
+            border: 1.5px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 13.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            text-decoration: none !important;
+        }
+        .route-chip:hover {
+            border-color: var(--primary, #1E40AF);
+            color: var(--primary, #1E40AF);
+            background: rgba(30, 64, 175, 0.05);
+            transform: translateY(-1px);
+        }
+        .route-chip.active {
+            background: var(--primary, #1E40AF) !important;
+            border-color: var(--primary, #1E40AF) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25);
+            transform: translateY(0);
         }
     </style>
 </head>
@@ -499,6 +559,9 @@
 
     <div class="search-container">
         <form method="get" action="<?= base_url('history') ?>" class="search-bar">
+            <?php if (!empty($destination) && $destination !== 'all'): ?>
+                <input type="hidden" name="destination" value="<?= esc($destination) ?>">
+            <?php endif; ?>
             <input
                 type="text"
                 name="q"
@@ -513,16 +576,52 @@
 
 <!-- ===== MAIN CONTENT ===== -->
 <div class="hist-content">
-    <?php if (!empty($search)): ?>
-        <div style="margin-bottom: 20px;">
-            <span class="filter-badge">
-                <i class="fas fa-filter"></i>
-                Results for: <strong><?= esc($search) ?></strong>
-                <a href="<?= base_url('history') ?>" title="Clear filter">×</a>
-            </span>
+    <?php if (!empty($destinations)): ?>
+        <!-- Route Destination Filter Bar (Pill Chips) -->
+        <div class="route-filter-wrapper">
+            <div class="route-filter-label">
+                <i class="fas fa-map-marker-alt" style="color: #B71C1C;"></i> Route Filter:
+            </div>
+            <div class="route-filter-bar">
+                <a href="<?= base_url('history' . (!empty($search) ? '?q=' . urlencode($search) : '')) ?>" class="route-chip <?= empty($destination) || $destination === 'all' ? 'active' : '' ?>">
+                    All Routes
+                </a>
+                <?php foreach ($destinations as $d): ?>
+                    <?php
+                        $dName = $d['destination'] ?? '';
+                        if (empty($dName)) continue;
+                        $params = [];
+                        $params['destination'] = $dName;
+                        if (!empty($search)) $params['q'] = $search;
+                        $chipUrl = base_url('history?' . http_build_query($params));
+                        $isChipActive = (strcasecmp($destination ?? '', $dName) === 0);
+                    ?>
+                    <a href="<?= $chipUrl ?>" class="route-chip <?= $isChipActive ? 'active' : '' ?>">
+                        <?= strtoupper(esc($dName)) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
     <?php endif; ?>
 
+    <?php if (!empty($search) || (!empty($destination) && $destination !== 'all')): ?>
+        <div style="margin-bottom: 20px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <?php if (!empty($search)): ?>
+                <span class="filter-badge">
+                    <i class="fas fa-filter"></i>
+                    Keyword: <strong><?= esc($search) ?></strong>
+                    <a href="<?= base_url('history' . (!empty($destination) ? '?destination=' . urlencode($destination) : '')) ?>" title="Clear search">×</a>
+                </span>
+            <?php endif; ?>
+            <?php if (!empty($destination) && $destination !== 'all'): ?>
+                <span class="filter-badge">
+                    <i class="fas fa-map-marker-alt"></i>
+                    Route: <strong><?= strtoupper(esc($destination)) ?></strong>
+                    <a href="<?= base_url('history' . (!empty($search) ? '?q=' . urlencode($search) : '')) ?>" title="Clear route filter">×</a>
+                </span>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Table Card -->
     <div class="table-card">

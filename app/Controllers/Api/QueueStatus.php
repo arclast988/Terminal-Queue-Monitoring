@@ -26,6 +26,7 @@ class QueueStatus extends Controller
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('queue.position', 'ASC')
+                ->orderBy('routes.destination', 'ASC')
                 ->findAll();
 
             // Build a simple lookup by queue ID

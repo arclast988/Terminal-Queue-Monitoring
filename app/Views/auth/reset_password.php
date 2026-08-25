@@ -263,15 +263,24 @@
                 <p class="sub">Create a new password for your account.</p>
             </div>
 
-            <?php if (isset($error) && $error): ?>
+            <?php $displayError = $error ?? session()->getFlashdata('error'); ?>
+            <?php if ($displayError): ?>
                 <div class="alert alert-danger" role="alert">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/>
                     </svg>
-                    <span><?= $error ?></span>
+                    <span><?= esc($displayError) ?></span>
                 </div>
             <?php endif; ?>
 
+            <?php if (!empty($invalid)): ?>
+                <a href="<?= base_url('forgot-password') ?>" class="btn" style="text-decoration: none;">
+                    <span>Request New Verification Code</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                    </svg>
+                </a>
+            <?php else: ?>
             <form action="<?= base_url('reset-password/' . $token) ?>" method="post" novalidate>
                 <?= csrf_field() ?>
 
@@ -325,6 +334,7 @@
                     </svg>
                 </button>
             </form>
+            <?php endif; ?>
 
             <a class="back" href="<?= base_url('login') ?>">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

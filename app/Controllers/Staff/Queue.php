@@ -88,7 +88,7 @@ class Queue extends BaseController
             }
         }
 
-        $queue = $builder->orderBy('queue.position', 'ASC')->findAll();
+        $queue = $builder->orderBy('queue.position', 'ASC')->orderBy('routes.destination', 'ASC')->findAll();
 
         // Get list of vehicle_ids that are currently active in queue (waiting or boarding)
         $activeQueuedVehicleIds = $this->queueModel
@@ -280,8 +280,8 @@ class Queue extends BaseController
                 continue;
             }
 
-            // Calculate next position (temporary — reorderByDeparture() finalises it)
-            $lastPosition = $this->queueModel->selectMax('position')->first();
+            // Calculate next position for this route (temporary — reorderByDeparture() finalises it)
+            $lastPosition = $this->queueModel->where('route_id', $routeId)->whereIn('status', ['waiting', 'boarding'])->selectMax('position')->first();
             $nextPosition = ($lastPosition['position'] ?? 0) + 1;
 
             $terminalId  = (int) ($route['terminal_id'] ?? 1);

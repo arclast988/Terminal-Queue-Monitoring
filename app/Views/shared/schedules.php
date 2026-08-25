@@ -46,6 +46,111 @@
         display: inline-block;
         letter-spacing: 0.5px;
     }
+
+    /* Route Filter Capsule Bar (matching screenshot) */
+    .route-filter-wrapper {
+        margin-bottom: 24px;
+        background: #ffffff;
+        padding: 16px 20px;
+        border-radius: 16px;
+        box-shadow: var(--shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
+        border: 1px solid #e2e8f0;
+    }
+    .route-filter-label {
+        font-size: 12.5px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .route-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        overflow-x: auto;
+        padding: 4px 2px 8px 2px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .route-filter-bar::-webkit-scrollbar {
+        display: none;
+    }
+    .route-chip {
+        padding: 8px 20px;
+        border-radius: 25px;
+        border: 1.5px solid #cbd5e1;
+        background: #f8fafc;
+        color: #334155;
+        font-size: 13.5px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        user-select: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .route-chip:hover {
+        border-color: var(--primary, #1565C0);
+        color: var(--primary, #1565C0);
+        background: var(--primary-soft, rgba(21, 101, 192, 0.06));
+        transform: translateY(-1px);
+    }
+    .route-chip.active {
+        background: var(--primary, #1565C0) !important;
+        border-color: var(--primary, #1565C0) !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        transform: translateY(0);
+    }
+    .route-chip .chip-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 10px;
+        font-size: 11.5px;
+        font-weight: 700;
+        background: #e2e8f0;
+        color: #475569;
+        margin-left: 2px;
+    }
+    .route-chip.active .chip-count {
+        background: rgba(255, 255, 255, 0.25);
+        color: #ffffff;
+    }
+
+    body.admin-theme .route-chip:hover {
+        border-color: var(--primary-red, #C62828);
+        color: var(--primary-red, #C62828);
+        background: rgba(198, 40, 40, 0.06);
+    }
+    body.admin-theme .route-chip.active {
+        background: var(--primary-red, #C62828) !important;
+        border-color: var(--primary-red, #C62828) !important;
+        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25);
+    }
+    body.staff-theme .route-chip:hover {
+        border-color: var(--primary-blue, #1565c0);
+        color: var(--primary-blue, #1565c0);
+        background: rgba(21, 101, 192, 0.06);
+    }
+    body.staff-theme .route-chip.active {
+        background: var(--primary-blue, #1565c0) !important;
+        border-color: var(--primary-blue, #1565c0) !important;
+        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
+    }
 </style>
 
 <div class="page-header-modern fade-in">
@@ -62,7 +167,7 @@
             <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
                 <i class="bi bi-bus-front"></i>
             </div>
-            <div class="stat-card-value"><?= count($schedules) ?></div>
+            <div class="stat-card-value" id="statTodayDepartures"><?= count($schedules) ?></div>
             <div class="stat-card-label">Today's Departures</div>
         </div>
     </div>
@@ -80,10 +185,10 @@
 <!-- Filter Section -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
-        <form method="get" action="<?= base_url('schedules') ?>" class="row g-3">
+        <form method="get" action="<?= base_url('schedules') ?>" class="row g-3" id="sharedFilterForm">
             <div class="col-md-4">
                 <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Vehicle Type</label>
-                <select name="type" class="form-select-modern">
+                <select name="type" id="sharedTypeSelect" class="form-select-modern">
                     <option value="">All Types</option>
                     <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                         <option value="<?= esc($vehicleType['slug']) ?>" <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
@@ -92,7 +197,7 @@
             </div>
             <div class="col-md-5">
                 <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Destination</label>
-                <select name="destination" class="form-select-modern">
+                <select name="destination" id="sharedDestSelect" class="form-select-modern">
                     <option value="">All Destinations</option>
                     <?php foreach ($all_destinations as $dest): ?>
                         <option value="<?= esc($dest) ?>" <?= $destination == $dest ? 'selected' : '' ?>><?= esc($dest) ?></option>
@@ -122,6 +227,33 @@
     </div>
 </div>
 
+<!-- Quick Route Filter Bar (Pill Chips) placed UNDER the filter inputs -->
+<div class="route-filter-wrapper fade-in">
+    <div class="route-filter-label">
+        <i class="bi bi-geo-alt-fill" style="color: var(--primary, #1565C0);"></i> Route Destinations:
+    </div>
+    <div class="route-filter-bar" id="sharedRouteFilterBar">
+        <button type="button" class="route-chip <?= empty($destination) ? 'active' : '' ?>" data-dest="all" onclick="filterSharedSchedules('all', this)">
+            All Routes
+            <span class="chip-count" id="count-all-dest"><?= count($schedules) ?></span>
+        </button>
+        <?php foreach ($all_destinations as $dest): ?>
+            <?php
+                $destCount = 0;
+                foreach ($schedules as $item) {
+                    if (strcasecmp($item['destination'] ?? '', $dest) === 0) {
+                        $destCount++;
+                    }
+                }
+            ?>
+            <button type="button" class="route-chip <?= (strcasecmp($destination ?? '', $dest) === 0) ? 'active' : '' ?>" data-dest="<?= esc(strtolower($dest)) ?>" onclick="filterSharedSchedules('<?= esc(strtolower($dest)) ?>', this)">
+                <?= strtoupper(esc($dest)) ?>
+                <span class="chip-count"><?= $destCount ?></span>
+            </button>
+        <?php endforeach; ?>
+    </div>
+</div>
+
 <!-- Schedules Table -->
 <div class="modern-card shadow-modern fade-in">
     <div class="modern-card-header">
@@ -129,11 +261,11 @@
             <i class="bi bi-list-task" style="color: var(--primary-red);"></i>
             Today's Schedules
         </span>
-        <span class="badge-modern badge-modern-primary"><?= count($schedules) ?> vehicles</span>
+        <span class="badge-modern badge-modern-primary" id="scheduleVehicleBadge"><?= count($schedules) ?> vehicles</span>
     </div>
     <div class="modern-card-body p-0">
         <div class="table-responsive">
-            <table class="table-modern">
+            <table class="table-modern" id="sharedScheduleTable">
                 <thead>
                     <tr>
                         <th>Queue #</th>
@@ -146,11 +278,11 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="sharedScheduleTableBody">
                     <?php if (!empty($schedules)): ?>
                         <?php foreach ($schedules as $index => $s): ?>
-                            <tr>
-                                <td data-label="Queue #">
+                            <tr data-destination="<?= esc(strtolower($s['destination'] ?? '')) ?>" data-type="<?= esc(strtolower($s['vehicle_type'] ?? '')) ?>">
+                                <td data-label="Queue #" class="cell-queue-num">
                                     <?php 
                                         $queueNum = !empty($s['position']) && (int)$s['position'] > 0 ? (int)$s['position'] : ($index + 1);
                                     ?>
@@ -231,13 +363,21 @@
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
-                                <i class="bi bi-calendar-x fs-1 mb-3 d-block"></i>
-                                <p class="mb-0">No scheduled departures found.</p>
+                        <tr class="no-schedules-row">
+                            <td colspan="8" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-calendar-x fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No scheduled departures found</div>
+                                <small class="empty-state-subtitle">No vehicle departures have been scheduled for today yet.</small>
                             </td>
                         </tr>
                     <?php endif; ?>
+                    <tr id="shared-no-filter-match" class="d-none" style="display:none !important;">
+                        <td colspan="8" class="text-center py-5 text-muted empty-state-table">
+                            <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
+                            <div class="fw-bold fs-6 empty-state-title">No schedules match the selected filter</div>
+                            <small class="empty-state-subtitle">Try choosing a different destination route or vehicle type.</small>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -249,22 +389,87 @@
 <script src="<?= base_url('js/ws-client.js') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js') ?>"></script>
 <script>
+    var currentSharedDestFilter = '<?= esc(strtolower($destination ?? 'all')) ?>';
+
+    function filterSharedSchedules(dest, btn) {
+        currentSharedDestFilter = dest;
+
+        // Update active chip
+        document.querySelectorAll('#sharedRouteFilterBar .route-chip').forEach(function(c) {
+            c.classList.remove('active');
+        });
+        if (btn) {
+            btn.classList.add('active');
+        }
+
+        // Sync with Destination dropdown
+        var destSelect = document.getElementById('sharedDestSelect');
+        if (destSelect) {
+            for (var i = 0; i < destSelect.options.length; i++) {
+                if (dest === 'all' && destSelect.options[i].value === '') {
+                    destSelect.selectedIndex = i;
+                    break;
+                } else if (destSelect.options[i].value.toLowerCase() === dest.toLowerCase()) {
+                    destSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        applySharedFilter();
+    }
+
+    function applySharedFilter() {
+        var rows = document.querySelectorAll('#sharedScheduleTableBody tr:not(#shared-no-filter-match):not(.no-schedules-row)');
+        var visibleCount = 0;
+
+        rows.forEach(function(row) {
+            var rowDest = (row.getAttribute('data-destination') || '').toLowerCase();
+            var matches = (currentSharedDestFilter === 'all' || !currentSharedDestFilter || rowDest === currentSharedDestFilter);
+
+            if (matches) {
+                row.style.removeProperty('display');
+                row.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                row.style.setProperty('display', 'none', 'important');
+                row.classList.add('d-none');
+            }
+        });
+
+        // Handle no-match row
+        var noMatch = document.getElementById('shared-no-filter-match');
+        if (noMatch) {
+            if (visibleCount === 0 && rows.length > 0) {
+                noMatch.style.removeProperty('display');
+                noMatch.classList.remove('d-none');
+            } else {
+                noMatch.style.setProperty('display', 'none', 'important');
+                noMatch.classList.add('d-none');
+            }
+        }
+
+        // Update badge
+        var badge = document.getElementById('scheduleVehicleBadge');
+        if (badge) {
+            badge.textContent = visibleCount + ' vehicles';
+        }
+    }
+
     // Initialize real-time sync (polling + WebSocket)
     QueueSync.init({
         onlyWS:        true,
         pollInterval:  3000,
         refreshUrl:    window.location.href,
-        tableSelector: 'table tbody',
+        tableSelector: '#sharedScheduleTableBody',
         extraRefresh:  function(newDoc) {
             // Update stats
-            var newStats = newDoc.querySelectorAll('.stat-value');
-            var curStats = document.querySelectorAll('.stat-value');
-            newStats.forEach(function(s, i) { if (curStats[i]) curStats[i].textContent = s.textContent; });
+            var newStats = newDoc.querySelector('#statTodayDepartures');
+            var curStats = document.querySelector('#statTodayDepartures');
+            if (newStats && curStats) curStats.textContent = newStats.textContent;
 
-            // Update vehicle count badge
-            var newBadge = newDoc.querySelector('.badge-modern-primary');
-            var curBadge = document.querySelector('.badge-modern-primary');
-            if (newBadge && curBadge) curBadge.textContent = newBadge.textContent;
+            // Re-apply route filter
+            applySharedFilter();
         }
     });
 </script>

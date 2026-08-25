@@ -100,9 +100,10 @@ class Schedules extends BaseController
             ->groupEnd();
         }
 
-        // Sort active vehicles (waiting/boarding) first, then departed vehicles, then by their queue position
+        // Sort active vehicles (waiting/boarding) first, then departed vehicles, then by queue position and route destination
         $schedules = $builder->orderBy("CASE WHEN queue.status = 'departed' THEN 1 ELSE 0 END", 'ASC')
                              ->orderBy('queue.position', 'ASC')
+                             ->orderBy('routes.destination', 'ASC')
                              ->findAll();
 
         // Calculate full status
@@ -196,6 +197,7 @@ class Schedules extends BaseController
 
             $schedules = $builder->orderBy("CASE WHEN queue.status = 'departed' THEN 1 ELSE 0 END", 'ASC')
                                  ->orderBy('queue.position', 'ASC')
+                                 ->orderBy('routes.destination', 'ASC')
                                  ->findAll();
 
             foreach ($schedules as &$s) {

@@ -274,9 +274,10 @@ if (!empty($vehicles) && is_array($vehicles)) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="no-vehicles-row">
-                            <td colspan="10" style="text-align:center; padding:40px; color:var(--slate-500);">
-                                <i class="bi bi-inbox" style="font-size:32px; opacity:0.3; margin-bottom:8px;"></i>
-                                <div>No vehicles registered yet.</div>
+                            <td colspan="10" class="text-center py-5 text-muted empty-state-table">
+                                <i class="bi bi-truck fs-1 d-block mb-3 opacity-50"></i>
+                                <div class="fw-bold fs-6 empty-state-title">No vehicles registered yet</div>
+                                <small class="empty-state-subtitle">Use the form above to register your first terminal vehicle.</small>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -642,12 +643,13 @@ if (!empty($vehicles) && is_array($vehicles)) {
             if (!emptyRow) {
                 emptyRow = document.createElement('tr');
                 emptyRow.classList.add('no-filter-results');
-                emptyRow.innerHTML = '<td colspan="9" class="text-center py-4 text-muted"><i class="bi bi-inbox me-2"></i>No vehicles match the selected filter.</td>';
+                emptyRow.innerHTML = '<td colspan="10" class="text-center py-5 text-muted empty-state-table"><i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i><div class="fw-bold fs-6 empty-state-title">No vehicles match the selected filter</div><small class="empty-state-subtitle">Try selecting a different filter or clearing your search.</small></td>';
                 document.querySelector('#vehicles-table tbody').appendChild(emptyRow);
             }
-            emptyRow.style.display = '';
+            emptyRow.style.removeProperty('display');
+            emptyRow.classList.remove('d-none');
         } else if (emptyRow) {
-            emptyRow.style.display = 'none';
+            emptyRow.remove();
         }
     }
 </script>

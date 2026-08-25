@@ -14,6 +14,7 @@ class History extends BaseController
 
         // Get filter parameters
         $search = $this->request->getGet('q');
+        $destination = $this->request->getGet('destination');
 
         // Announcements for the guest header marquee
         $announcements = [];
@@ -21,6 +22,10 @@ class History extends BaseController
             $announcements = $this->getActiveAnnouncements();
         } catch (\Throwable $e) {
         }
+
+        // Fetch distinct destinations for filter pills
+        $routeModel = new \App\Models\RouteModel();
+        $destinations = $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll();
 
         $builder = $queueModel->select('
             queue.*, 
@@ -34,6 +39,10 @@ class History extends BaseController
         ')
         ->withFullJoins()
         ->where('queue.status', 'departed');
+
+        if ($destination && $destination !== 'all') {
+            $builder->where('routes.destination', $destination);
+        }
 
         if ($search) {
             $builder->groupStart()
@@ -54,6 +63,8 @@ class History extends BaseController
             'departures' => $departures,
             'pager' => $queueModel->pager,
             'search' => $search,
+            'destination' => $destination,
+            'destinations' => $destinations,
             'announcements' => $announcements,
         ];
 
