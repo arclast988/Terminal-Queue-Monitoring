@@ -55,7 +55,6 @@ CREATE TABLE vehicle_types (
     id SERIAL PRIMARY KEY,
     name VARCHAR(80) NOT NULL,
     slug VARCHAR(50) NOT NULL UNIQUE,
-    color VARCHAR(30) DEFAULT '#c62828',
     icon VARCHAR(50) DEFAULT 'fa-bus',
     is_active SMALLINT DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -207,14 +206,10 @@ CREATE TABLE audit_logs (
 -- --------------------------------------------------------------------
 CREATE TABLE password_reset_tokens (
     id SERIAL PRIMARY KEY,
-    user_id INT NULL REFERENCES users(id) ON DELETE CASCADE,
-    username VARCHAR(100) NOT NULL,
-    email VARCHAR(255) NULL,
+    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL UNIQUE,
     reset_code VARCHAR(10) NULL,
     code_attempts INT NOT NULL DEFAULT 0,
-    used SMALLINT NOT NULL DEFAULT 0,
-    verified SMALLINT NOT NULL DEFAULT 0,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -255,11 +250,11 @@ ON CONFLICT (id) DO NOTHING;
 SELECT setval('terminals_id_seq', (SELECT MAX(id) FROM terminals));
 
 -- 3. Vehicle Types
-INSERT INTO vehicle_types (id, name, slug, color, icon, is_active, created_at, updated_at) VALUES
-(1, 'Van', 'van', '#c62828', 'fa-van-shuttle', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52'),
-(2, 'Jeepney', 'jeepney', '#1565c0', 'fa-truck-front', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52'),
-(3, 'Minibus', 'minibus', '#2e7d32', 'fa-bus', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52'),
-(4, 'Bus', 'bus', '#ea580c', 'fa-bus-simple', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52')
+INSERT INTO vehicle_types (id, name, slug, icon, is_active, created_at, updated_at) VALUES
+(1, 'Van', 'van', 'fa-van-shuttle', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52'),
+(2, 'Jeepney', 'jeepney', 'fa-truck-front', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52'),
+(3, 'Minibus', 'minibus', 'fa-bus', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52'),
+(4, 'Bus', 'bus', 'fa-bus-simple', 1, '2026-08-09 18:14:52', '2026-08-09 18:14:52')
 ON CONFLICT (slug) DO NOTHING;
 
 SELECT setval('vehicle_types_id_seq', (SELECT MAX(id) FROM vehicle_types));
@@ -345,7 +340,7 @@ SELECT setval('fares_id_seq', (SELECT MAX(id) FROM fares));
 
 -- 9. Departure Rules
 INSERT INTO departure_rules (id, terminal_id, route_id, time_from, time_to, wait_minutes, label, created_at, updated_at) VALUES
-(1, 1, NULL, '00:00:00', '05:00:00', 60, 'Late Night / Early Morning', '2026-06-03 11:18:52', '2026-06-18 16:01:31'),
+(1, 1, NULL, '04:00:00', '05:00:00', 60, 'Late Night / Early Morning', '2026-06-03 11:18:52', '2026-06-18 16:01:31'),
 (2, 1, NULL, '05:00:00', '09:00:00', 30, 'Morning Rush', '2026-06-03 11:18:52', '2026-06-03 11:18:52'),
 (3, 1, NULL, '09:00:00', '12:00:00', 40, 'Mid-Morning', '2026-06-03 11:18:52', '2026-06-03 11:18:52'),
 (4, 1, NULL, '12:00:00', '15:00:00', 40, 'Afternoon', '2026-06-03 11:18:52', '2026-06-03 11:18:52'),

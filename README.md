@@ -73,8 +73,10 @@ Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for yo
 ### Troubleshooting
 - **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `sudo systemctl status php-fpm`.
 - **"Unable to connect to the database"** → PostgreSQL isn't started (`sudo systemctl status postgresql`), or `.env` credentials don't match.
-- **Real-time not updating** → run `VERIFY_SETUP.bat` or `diagnose_windows.bat` (checks Nginx proxy, ports 8081/8082, and WebSocket server daemon).
-- **Login fails** → confirm the import created the `users` table with the default seeds (`admin` / `admin123`).
+- **Real-time not updating** → run `diagnose.ps1` (checks Nginx, the WebSocket server, and `ws_server.pid`).
+- **Login fails** → confirm the import created the `users` table with at least one admin row.
+- **Real-time not updating** → run `diagnose.ps1` (checks Nginx, the WebSocket server, and `ws_server.pid`).
+- **Login fails** → confirm the import created the `users` table with at least one admin row.
 
 ### Security, Performance & Code Optimization Updates (June 2026)
 
@@ -95,14 +97,6 @@ We recently performed a system-wide audit and optimization:
 - **Global Filter Optimization**: Removed redundant filters (`forcehttps`, `pagecache`) to eliminate per-request redirect and caching overhead.
 - **Vehicle Image Centralization**: Eliminated duplicate vehicle type-to-image mapping blocks across views via a central `vehicle_type_image()` helper in `app/Common.php`.
 - **Database Query Portability**: Refactored MySQL-specific date functions (`YEAR()`, `DATE()`, `CURDATE()`) using standard SQL comparison and `LIKE` queries to make the application fully compatible with SQLite3 (used for local unit testing) and MySQL.
-
-### Real-Time, Performance & Health Audit Updates (September 2026)
-- **Unblocked WebSocket Broadcast Delivery**: Removed brittle `ws_server.pid` file dependencies in `BaseController::broadcastUpdate()`, establishing reliable direct loopback broadcasts with non-blocking socket timeouts.
-- **Race Condition Elimination**: Deferred queue broadcasts in `Staff/Queue.php` until after PostgreSQL transaction commits, preventing clients from fetching and caching stale queue states.
-- **Polling Throttling & Bandwidth Reduction**: Paused 3-second HTTP polling in `queue-sync.js` while WebSocket connections are active, and reduced announcement marquee polling from 3s to 30s with a 300s cache TTL.
-- **Database Caching & Midnight Rule Gap**: Cached `get_db_vehicle_types()` with 1-hour TTL to eliminate continuous `information_schema` queries on every request, and extended Departure Rule 1 to `00:00:00` to cover the midnight to 4:00 AM dispatch interval.
-- **Form Accessibility & HTML5 Validation**: Replaced `display: none` select replacement in `autocomplete-search.js` with accessible off-screen styling to prevent browser validation crashes on required select controls.
-- **Automated Verification**: Provided `VERIFY_SETUP.bat` and `VERIFY_SETUP.sh` to validate all services, database tables, PHP-FPM sockets, and WebSocket connectivity in one click.
 
 ---
 

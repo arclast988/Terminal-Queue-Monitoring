@@ -35,6 +35,7 @@ class Schedules extends BaseController
 
     public function index()
     {
+
         $queueModel = new QueueModel();
         $routeModel = new RouteModel();
         $departureRuleModel = new DepartureRuleModel();
@@ -53,7 +54,7 @@ class Schedules extends BaseController
         // Load all departure rules (sorted by time_from)
         $departureRules = $departureRuleModel->orderBy('time_from', 'ASC')->findAll();
 
-        // Build query - Active waiting and boarding vehicles only
+        // Build query - Based on the queue table for today's schedules
         $builder = $queueModel->select('
                 queue.id as queue_id,
                 queue.status,
@@ -72,7 +73,14 @@ class Schedules extends BaseController
                 terminals.name as origin
             ')
             ->withFullJoins()
-            ->whereIn('queue.status', ['waiting', 'boarding']);
+            ->groupStart()
+                ->whereIn('queue.status', ['waiting', 'boarding'])
+                ->orGroupStart()
+                    ->where('queue.status', 'departed')
+                    ->where('queue.arrival_time >=', date('Y-m-d 00:00:00'))
+                    ->where('queue.arrival_time <=', date('Y-m-d 23:59:59'))
+                ->groupEnd()
+            ->groupEnd();
 
         // Apply filters
         if ($vehicleType) {
@@ -80,7 +88,7 @@ class Schedules extends BaseController
         }
 
         if ($destination) {
-            $builder->where('routes.destination', strtoupper($destination));
+            $builder->where('routes.destination', $destination);
         }
 
         if ($search !== '') {
@@ -93,11 +101,10 @@ class Schedules extends BaseController
             ->groupEnd();
         }
 
-        // Sort active vehicles: Alphabetical destination, boarding first, then queue position
-        $schedules = $builder->orderBy('routes.destination', 'ASC')
-                             ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+        // Sort active vehicles (waiting/boarding) first, then departed vehicles, then by queue position and route destination
+        $schedules = $builder->orderBy("CASE WHEN queue.status = 'departed' THEN 1 ELSE 0 END", 'ASC')
                              ->orderBy('queue.position', 'ASC')
-                             ->orderBy('queue.estimated_departure', 'ASC')
+                             ->orderBy('routes.destination', 'ASC')
                              ->findAll();
 
         // Calculate full status
@@ -105,23 +112,6 @@ class Schedules extends BaseController
             $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
         }
         unset($s);
-
-        // Compute active counts per destination (for filter chips with counts)
-        $activeCountsRaw = $queueModel->select('routes.destination, count(queue.id) as total')
-            ->join('routes', 'routes.id = queue.route_id')
-            ->whereIn('queue.status', ['waiting', 'boarding'])
-            ->groupBy('routes.destination')
-            ->orderBy('routes.destination', 'ASC')
-            ->findAll();
-
-        $activeDestCounts = [];
-        $totalActiveCount = 0;
-        foreach ($activeCountsRaw as $row) {
-            $destName = $row['destination'];
-            $cnt = (int) $row['total'];
-            $activeDestCounts[$destName] = $cnt;
-            $totalActiveCount += $cnt;
-        }
 
         // Destination options from admin-managed routes (so admin can add/edit/delete and they appear here)
         $allDestinations = $routeModel->select('destination')
@@ -135,17 +125,15 @@ class Schedules extends BaseController
         } catch (\Throwable $e) {}
 
         $data = [
-            'title'              => 'Vehicle Schedules',
-            'body_class'         => session()->get('isLoggedIn') ? '' : 'public-page',
-            'schedules'          => $schedules,
-            'vehicle_type'       => $vehicleType,
-            'destination'        => $destination,
-            'search'             => $search,
-            'all_destinations'   => $allDestinations,
-            'active_dest_counts' => $activeDestCounts,
-            'total_active_count' => $totalActiveCount,
-            'vehicleTypes'       => $vehicleTypes,
-            'announcements'      => $announcements
+            'title' => 'Vehicle Schedules',
+            'body_class' => session()->get('isLoggedIn') ? '' : 'public-page',
+            'schedules' => $schedules,
+            'vehicle_type' => $vehicleType,
+            'destination' => $destination,
+            'search' => $search,
+            'all_destinations' => $allDestinations,
+            'vehicleTypes' => $vehicleTypes,
+            'announcements' => $announcements
         ];
 
         // Use shared view for logged-in users, public view for guests
@@ -158,13 +146,12 @@ class Schedules extends BaseController
     /**
      * JSON endpoint for real-time schedule updates.
      * Called by WebSocket onmessage or polling fallback.
-     * Accepts ?type=, ?destination=, and ?q= filter params.
+     * Accepts same ?type= and ?destination= filter params.
      */
     public function status()
     {
         $vehicleType = $this->request->getGet('type');
         $destination = $this->request->getGet('destination');
-        $search      = trim((string) $this->request->getGet('q'));
         $vehicleTypes = $this->activeVehicleTypes();
         if ($vehicleType && !in_array($vehicleType, array_column($vehicleTypes, 'slug'), true)) {
             $vehicleType = null;
@@ -173,7 +160,7 @@ class Schedules extends BaseController
         // Cache per filter-combination for a couple of seconds so repeated
         // public polls reuse one DB query. The sync token stays live below,
         // and broadcastUpdate() clears these keys so changes appear instantly.
-        $cacheKey = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? '') . '|' . $search);
+        $cacheKey = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? ''));
         $payload  = cache($cacheKey);
         if (! is_array($payload)) {
             $queueModel = new QueueModel();
@@ -194,28 +181,25 @@ class Schedules extends BaseController
                     terminals.name as origin
                 ')
                 ->withFullJoins()
-                ->whereIn('queue.status', ['waiting', 'boarding']);
+                ->groupStart()
+                    ->whereIn('queue.status', ['waiting', 'boarding'])
+                    ->orGroupStart()
+                        ->where('queue.status', 'departed')
+                        ->where('queue.arrival_time >=', date('Y-m-d 00:00:00'))
+                        ->where('queue.arrival_time <=', date('Y-m-d 23:59:59'))
+                    ->groupEnd()
+                ->groupEnd();
 
             if ($vehicleType) {
                 $builder->where('vehicles.type', $vehicleType);
             }
             if ($destination) {
-                $builder->where('routes.destination', strtoupper($destination));
-            }
-            if ($search !== '') {
-                $builder->groupStart()
-                    ->like('vehicles.plate_number', $search)
-                    ->orLike('vehicles.operator_name', $search)
-                    ->orLike('vehicles.driver_name', $search)
-                    ->orLike('routes.destination', $search)
-                    ->orLike('terminals.name', $search)
-                ->groupEnd();
+                $builder->where('routes.destination', $destination);
             }
 
-            $schedules = $builder->orderBy('routes.destination', 'ASC')
-                                 ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+            $schedules = $builder->orderBy("CASE WHEN queue.status = 'departed' THEN 1 ELSE 0 END", 'ASC')
                                  ->orderBy('queue.position', 'ASC')
-                                 ->orderBy('queue.estimated_departure', 'ASC')
+                                 ->orderBy('routes.destination', 'ASC')
                                  ->findAll();
 
             foreach ($schedules as &$s) {
@@ -230,23 +214,6 @@ class Schedules extends BaseController
             }
             unset($s);
 
-            // Compute active counts per destination (for live filter chips with counts)
-            $activeCountsRaw = $queueModel->select('routes.destination, count(queue.id) as total')
-                ->join('routes', 'routes.id = queue.route_id')
-                ->whereIn('queue.status', ['waiting', 'boarding'])
-                ->groupBy('routes.destination')
-                ->orderBy('routes.destination', 'ASC')
-                ->findAll();
-
-            $activeDestCounts = [];
-            $totalActiveCount = 0;
-            foreach ($activeCountsRaw as $row) {
-                $destName = $row['destination'];
-                $cnt = (int) $row['total'];
-                $activeDestCounts[$destName] = $cnt;
-                $totalActiveCount += $cnt;
-            }
-
             // Destination filter options, so the guest dropdown can refresh live
             // when an admin adds/removes a route (rides this same 3s poll).
             $allDestinations = (new RouteModel())
@@ -254,12 +221,10 @@ class Schedules extends BaseController
             $allDestinations = array_values(array_unique($allDestinations));
 
             $payload = [
-                'schedules'          => $schedules,
-                'count'              => count($schedules),
-                'destinations'       => $allDestinations,
-                'active_dest_counts' => $activeDestCounts,
-                'total_active_count' => $totalActiveCount,
-                'vehicle_types'      => $vehicleTypes,
+                'schedules'    => $schedules,
+                'count'        => count($schedules),
+                'destinations' => $allDestinations,
+                'vehicle_types' => $vehicleTypes,
             ];
 
             cache()->save($cacheKey, $payload, 2);

@@ -94,7 +94,7 @@ fi
 # missing extensions.
 if [ -n "$PHP_VER" ]; then
     WANTED_PKGS=(
-        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-pgsql" "php${PHP_VER}-sqlite3" "php${PHP_VER}-intl" "php${PHP_VER}-mbstring"
+        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-pgsql" "php${PHP_VER}-intl" "php${PHP_VER}-mbstring"
         "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip" "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
     )
     PKGS_TO_INSTALL=()
@@ -109,7 +109,7 @@ if [ -n "$PHP_VER" ]; then
     PHP_BIN="php${PHP_VER}"
 else
     WANTED_PKGS=(
-        php-cli php-fpm php-pgsql php-sqlite3 php-intl php-mbstring
+        php-cli php-fpm php-pgsql php-intl php-mbstring
         php-curl php-xml php-zip php-gd php-common
     )
     PKGS_TO_INSTALL=()
