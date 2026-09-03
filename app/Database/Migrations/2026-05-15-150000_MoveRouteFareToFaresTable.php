@@ -72,7 +72,16 @@ class MoveRouteFareToFaresTable extends Migration
             ]);
         }
 
-        if ($db->tableExists('fares')) {
+        $faresTableRow = $db->query("SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.tables
+            WHERE table_schema = current_schema()
+              AND table_name = 'fares'
+        ) AS exists")->getRow();
+        $hasFaresTable = is_object($faresTableRow)
+            && in_array(strtolower((string) $faresTableRow->exists), ['t', 'true', '1'], true);
+
+        if ($hasFaresTable) {
             $db->query('
                 UPDATE routes
                 SET fare = fares.amount
