@@ -70,8 +70,19 @@ jobs:
           echo "database.tests.port = 5432"
         } >> .env
 
+    - name: Bootstrap CI writable directories
+      run: |
+        mkdir -p writable/cache writable/logs writable/session writable/uploads
+        chmod -R 0777 writable
+        ls -ld writable writable/cache writable/logs writable/session writable/uploads
+
     - name: Install Dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Fix writable permissions
+      run: |
+        mkdir -p writable/cache writable/logs writable/session writable/uploads
+        chmod -R 0777 writable
 
     - name: Wait for PostgreSQL
       run: |
