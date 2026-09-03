@@ -24,7 +24,17 @@ class MoveRouteFareToFaresTable extends Migration
             $this->forge->createTable('fares');
         }
 
-        if ($db->fieldExists('fare', 'routes')) {
+        $existsRow = $db->query("SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = 'routes'
+              AND column_name = 'fare'
+        ) AS exists")->getRow();
+        $hasFareColumn = is_object($existsRow)
+            && in_array(strtolower((string) $existsRow->exists), ['t', 'true', '1'], true);
+
+        if ($hasFareColumn) {
             $db->query("
                 INSERT INTO fares (route_id, amount, created_at, updated_at)
                 SELECT id, fare, COALESCE(created_at, NOW()), NOW()
@@ -40,7 +50,17 @@ class MoveRouteFareToFaresTable extends Migration
     {
         $db = \Config\Database::connect();
 
-        if (!$db->fieldExists('fare', 'routes')) {
+        $existsRow = $db->query("SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = 'routes'
+              AND column_name = 'fare'
+        ) AS exists")->getRow();
+        $hasFareColumn = is_object($existsRow)
+            && in_array(strtolower((string) $existsRow->exists), ['t', 'true', '1'], true);
+
+        if (!$hasFareColumn) {
             $this->forge->addColumn('routes', [
                 'fare' => [
                     'type'       => 'DECIMAL',
