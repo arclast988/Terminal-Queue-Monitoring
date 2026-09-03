@@ -15,12 +15,11 @@ class AddEmailToUsers extends Migration
                     'type'       => 'VARCHAR',
                     'constraint' => 100,
                     'null'       => true,
-                    'after'      => 'password_hash',
                 ]
             ]);
-            
+
             // Add unique index on email
-            $db->query("ALTER TABLE users ADD UNIQUE KEY idx_email (email)");
+            $db->query('CREATE UNIQUE INDEX idx_email ON users (email)');
         }
     }
 

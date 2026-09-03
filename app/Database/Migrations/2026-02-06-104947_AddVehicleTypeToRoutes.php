@@ -10,8 +10,8 @@ class AddVehicleTypeToRoutes extends Migration
     {
         $fields = [
             'vehicle_type' => [
-                'type'       => 'ENUM',
-                'constraint' => ['jeepney', 'van'],
+                'type'       => 'VARCHAR',
+                'constraint' => 50,
                 'default'    => 'van',
                 'after'      => 'fare'
             ],

@@ -18,17 +18,17 @@ class CreateUserRoutesTable extends Migration
             return;
         }
 
-        $sql = "CREATE TABLE `user_routes` (
-            `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            `user_id` INT UNSIGNED NOT NULL,
-            `route_id` INT UNSIGNED NOT NULL,
-            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
-            FOREIGN KEY (`route_id`) REFERENCES `routes`(`id`) ON DELETE CASCADE,
-            UNIQUE KEY `unique_user_route` (`user_id`, `route_id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-        $db->query($sql);
+        $this->forge->addField([
+            'id'         => ['type' => 'INT', 'auto_increment' => true],
+            'user_id'    => ['type' => 'INT', 'null' => false],
+            'route_id'   => ['type' => 'INT', 'null' => false],
+            'created_at' => ['type' => 'TIMESTAMP', 'null' => true],
+        ]);
+        $this->forge->addKey('id', true);
+        $this->forge->addForeignKey('user_id', 'users', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addForeignKey('route_id', 'routes', 'id', 'CASCADE', 'CASCADE');
+        $this->forge->addUniqueKey(['user_id', 'route_id'], 'unique_user_route');
+        $this->forge->createTable('user_routes');
     }
 
     public function down()

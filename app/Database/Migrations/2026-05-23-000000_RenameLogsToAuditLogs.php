@@ -14,20 +14,20 @@ class RenameLogsToAuditLogs extends Migration
             return;
         }
 
-        $db->query('RENAME TABLE `logs` TO `audit_logs`');
+        $db->query('ALTER TABLE logs RENAME TO audit_logs');
 
-        if ($this->foreignKeyExists('audit_logs', 'logs_user_id_foreign')) {
-            $db->query('ALTER TABLE `audit_logs` DROP FOREIGN KEY `logs_user_id_foreign`');
+        if ($this->constraintExists('logs_user_id_foreign')) {
+            $db->query('ALTER TABLE audit_logs DROP CONSTRAINT logs_user_id_foreign');
             $db->query(
-                'ALTER TABLE `audit_logs`
-                 ADD CONSTRAINT `audit_logs_user_id_foreign`
-                 FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+                'ALTER TABLE audit_logs
+                 ADD CONSTRAINT audit_logs_user_id_foreign
+                 FOREIGN KEY (user_id) REFERENCES users(id)
                  ON DELETE SET NULL ON UPDATE CASCADE'
             );
         }
 
-        if ($this->indexExists('audit_logs', 'idx_logs_timestamp')) {
-            $db->query('ALTER TABLE `audit_logs` RENAME INDEX `idx_logs_timestamp` TO `idx_audit_logs_timestamp`');
+        if ($this->indexExists('idx_logs_timestamp')) {
+            $db->query('ALTER INDEX idx_logs_timestamp RENAME TO idx_audit_logs_timestamp');
         }
     }
 
@@ -39,59 +39,49 @@ class RenameLogsToAuditLogs extends Migration
             return;
         }
 
-        $db->query('RENAME TABLE `audit_logs` TO `logs`');
+        $db->query('ALTER TABLE audit_logs RENAME TO logs');
 
-        if ($this->foreignKeyExists('logs', 'audit_logs_user_id_foreign')) {
-            $db->query('ALTER TABLE `logs` DROP FOREIGN KEY `audit_logs_user_id_foreign`');
+        if ($this->constraintExists('audit_logs_user_id_foreign')) {
+            $db->query('ALTER TABLE logs DROP CONSTRAINT audit_logs_user_id_foreign');
             $db->query(
-                'ALTER TABLE `logs`
-                 ADD CONSTRAINT `logs_user_id_foreign`
-                 FOREIGN KEY (`user_id`) REFERENCES `users`(`id`)
+                'ALTER TABLE logs
+                 ADD CONSTRAINT logs_user_id_foreign
+                 FOREIGN KEY (user_id) REFERENCES users(id)
                  ON DELETE SET NULL ON UPDATE CASCADE'
             );
         }
 
-        if ($this->indexExists('logs', 'idx_audit_logs_timestamp')) {
-            $db->query('ALTER TABLE `logs` RENAME INDEX `idx_audit_logs_timestamp` TO `idx_logs_timestamp`');
+        if ($this->indexExists('idx_audit_logs_timestamp')) {
+            $db->query('ALTER INDEX idx_audit_logs_timestamp RENAME TO idx_logs_timestamp');
         }
     }
 
     private function tableExists(string $table): bool
     {
         $db = \Config\Database::connect();
-        $row = $db->query(
-            'SELECT COUNT(1) AS c
-             FROM information_schema.tables
-             WHERE table_schema = DATABASE() AND table_name = ?',
-            [$table]
-        )->getRow();
-        return (int) ($row->c ?? 0) > 0;
+        return $db->tableExists($table);
     }
 
-    private function indexExists(string $table, string $indexName): bool
+    private function indexExists(string $indexName): bool
     {
         $db = \Config\Database::connect();
         $row = $db->query(
-            'SELECT COUNT(1) AS c
-             FROM information_schema.statistics
-             WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?',
-            [$table, $indexName]
-        )->getRow();
-        return (int) ($row->c ?? 0) > 0;
+            'SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ?',
+            [$indexName]
+        )->getRowArray();
+        return (bool) $row;
     }
 
-    private function foreignKeyExists(string $table, string $constraintName): bool
+    private function constraintExists(string $constraintName): bool
     {
         $db = \Config\Database::connect();
         $row = $db->query(
-            'SELECT COUNT(1) AS c
-             FROM information_schema.table_constraints
-             WHERE table_schema = DATABASE()
-               AND table_name = ?
+            "SELECT 1 FROM information_schema.table_constraints
+             WHERE constraint_schema = current_schema()
                AND constraint_name = ?
-               AND constraint_type = \'FOREIGN KEY\'',
-            [$table, $constraintName]
-        )->getRow();
-        return (int) ($row->c ?? 0) > 0;
+               AND constraint_type = 'FOREIGN KEY'",
+            [$constraintName]
+        )->getRowArray();
+        return (bool) $row;
     }
 }

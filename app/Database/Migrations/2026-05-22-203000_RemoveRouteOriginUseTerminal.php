@@ -15,27 +15,15 @@ class RemoveRouteOriginUseTerminal extends Migration
             return;
         }
 
-        $this->dropIndexIfExists($db, 'routes', 'unique_terminal_destination_vehicle');
+        $this->dropIndexIfExists($db, 'unique_terminal_destination_vehicle');
 
         if ($db->fieldExists('origin', 'routes')) {
-            $db->query('ALTER TABLE `routes` DROP COLUMN `origin`');
+            $db->query('ALTER TABLE routes DROP COLUMN origin');
         }
 
-        if ($db->fieldExists('terminal_id', 'routes')) {
-            $db->query('ALTER TABLE `routes` MODIFY `terminal_id` INT(11) UNSIGNED NOT NULL AFTER `id`');
-        }
-
-        if ($db->fieldExists('destination', 'routes')) {
-            $db->query('ALTER TABLE `routes` MODIFY `destination` VARCHAR(100) NOT NULL AFTER `terminal_id`');
-        }
-
-        if ($db->fieldExists('vehicle_type', 'routes')) {
-            $db->query("ALTER TABLE `routes` MODIFY `vehicle_type` ENUM('jeepney','van','minibus') NOT NULL DEFAULT 'van' AFTER `destination`");
-        }
-
-        if ($db->fieldExists('created_at', 'routes')) {
-            $db->query('ALTER TABLE `routes` MODIFY `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP AFTER `vehicle_type`');
-        }
+        // PostgreSQL doesn't support column reordering (MODIFY ... AFTER),
+        // so we skip the reorder statements that were in the MySQL version.
+        // Column order doesn't affect application behaviour.
 
         $this->addUniqueIndexIfMissing($db, 'routes', 'unique_terminal_destination_vehicle', ['terminal_id', 'destination', 'vehicle_type']);
     }
@@ -48,61 +36,46 @@ class RemoveRouteOriginUseTerminal extends Migration
             return;
         }
 
-        $this->dropIndexIfExists($db, 'routes', 'unique_terminal_destination_vehicle');
+        $this->dropIndexIfExists($db, 'unique_terminal_destination_vehicle');
 
         if (!$db->fieldExists('origin', 'routes')) {
-            $db->query("ALTER TABLE `routes` ADD COLUMN `origin` VARCHAR(100) NOT NULL DEFAULT '' AFTER `id`");
+            $db->query("ALTER TABLE routes ADD COLUMN origin VARCHAR(100) NOT NULL DEFAULT ''");
         }
 
         if ($db->tableExists('terminals')) {
             $db->query("
                 UPDATE routes
-                JOIN terminals ON terminals.id = routes.terminal_id
-                SET routes.origin = UPPER(TRIM(terminals.name))
+                SET origin = UPPER(TRIM(terminals.name))
+                FROM terminals
+                WHERE terminals.id = routes.terminal_id
             ");
-        }
-
-        if ($db->fieldExists('destination', 'routes')) {
-            $db->query('ALTER TABLE `routes` MODIFY `destination` VARCHAR(100) NOT NULL AFTER `origin`');
-        }
-
-        if ($db->fieldExists('vehicle_type', 'routes')) {
-            $db->query("ALTER TABLE `routes` MODIFY `vehicle_type` ENUM('jeepney','van','minibus') NOT NULL DEFAULT 'van' AFTER `destination`");
-        }
-
-        if ($db->fieldExists('terminal_id', 'routes')) {
-            $db->query('ALTER TABLE `routes` MODIFY `terminal_id` INT(11) UNSIGNED NOT NULL AFTER `vehicle_type`');
-        }
-
-        if ($db->fieldExists('created_at', 'routes')) {
-            $db->query('ALTER TABLE `routes` MODIFY `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP AFTER `terminal_id`');
         }
     }
 
     private function addUniqueIndexIfMissing(BaseConnection $db, string $table, string $indexName, array $columns): void
     {
-        if ($this->indexExists($db, $table, $indexName)) {
+        if ($this->indexExists($db, $indexName)) {
             return;
         }
 
-        $columnList = implode('`, `', $columns);
-        $db->query("ALTER TABLE `{$table}` ADD UNIQUE KEY `{$indexName}` (`{$columnList}`)");
+        $columnList = '"' . implode('", "', $columns) . '"';
+        $db->query("ALTER TABLE \"{$table}\" ADD CONSTRAINT \"{$indexName}\" UNIQUE ({$columnList})");
     }
 
-    private function dropIndexIfExists(BaseConnection $db, string $table, string $indexName): void
+    private function dropIndexIfExists(BaseConnection $db, string $indexName): void
     {
-        if (!$this->indexExists($db, $table, $indexName)) {
+        if (!$this->indexExists($db, $indexName)) {
             return;
         }
 
-        $db->query("ALTER TABLE `{$table}` DROP INDEX `{$indexName}`");
+        $db->query("DROP INDEX \"{$indexName}\"");
     }
 
-    private function indexExists(BaseConnection $db, string $table, string $indexName): bool
+    private function indexExists(BaseConnection $db, string $indexName): bool
     {
         $row = $db->query(
-            'SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ? LIMIT 1',
-            [$table, $indexName]
+            'SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ?',
+            [$indexName]
         )->getRowArray();
 
         return (bool) $row;

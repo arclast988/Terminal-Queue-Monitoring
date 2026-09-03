@@ -24,18 +24,16 @@ class AddRouteIdToDepartureRules extends Migration
                 'route_id' => [
                     'type'       => 'INT',
                     'constraint' => 11,
-                    'unsigned'   => true,
                     'null'       => true,
-                    'after'      => 'terminal_id',
                 ],
             ]);
         }
 
-        if (! $this->foreignKeyExists('departure_rules', 'fk_departure_rules_route')) {
+        if (! $this->constraintExists('fk_departure_rules_route')) {
             $db->query(
-                'ALTER TABLE `departure_rules`
-                 ADD CONSTRAINT `fk_departure_rules_route`
-                 FOREIGN KEY (`route_id`) REFERENCES `routes`(`id`)
+                'ALTER TABLE departure_rules
+                 ADD CONSTRAINT fk_departure_rules_route
+                 FOREIGN KEY (route_id) REFERENCES routes(id)
                  ON DELETE SET NULL ON UPDATE CASCADE'
             );
         }
@@ -45,8 +43,8 @@ class AddRouteIdToDepartureRules extends Migration
     {
         $db = \Config\Database::connect();
 
-        if ($this->foreignKeyExists('departure_rules', 'fk_departure_rules_route')) {
-            $db->query('ALTER TABLE `departure_rules` DROP FOREIGN KEY `fk_departure_rules_route`');
+        if ($this->constraintExists('fk_departure_rules_route')) {
+            $db->query('ALTER TABLE departure_rules DROP CONSTRAINT fk_departure_rules_route');
         }
 
         if ($db->fieldExists('route_id', 'departure_rules')) {
@@ -54,18 +52,16 @@ class AddRouteIdToDepartureRules extends Migration
         }
     }
 
-    private function foreignKeyExists(string $table, string $constraintName): bool
+    private function constraintExists(string $constraintName): bool
     {
         $db = \Config\Database::connect();
         $row = $db->query(
-            'SELECT COUNT(1) AS c
-             FROM information_schema.table_constraints
-             WHERE table_schema = DATABASE()
-               AND table_name = ?
+            "SELECT 1 FROM information_schema.table_constraints
+             WHERE constraint_schema = current_schema()
                AND constraint_name = ?
-               AND constraint_type = \'FOREIGN KEY\'',
-            [$table, $constraintName]
-        )->getRow();
-        return (int) ($row->c ?? 0) > 0;
+               AND constraint_type = 'FOREIGN KEY'",
+            [$constraintName]
+        )->getRowArray();
+        return (bool) $row;
     }
 }

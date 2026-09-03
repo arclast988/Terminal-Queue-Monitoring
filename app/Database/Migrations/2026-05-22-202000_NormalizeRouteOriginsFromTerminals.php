@@ -20,9 +20,10 @@ class NormalizeRouteOriginsFromTerminals extends Migration
 
         $db->query("
             UPDATE routes
-            JOIN terminals ON terminals.id = routes.terminal_id
-            SET routes.origin = UPPER(TRIM(terminals.name))
-            WHERE routes.origin <> UPPER(TRIM(terminals.name))
+            SET origin = UPPER(TRIM(terminals.name))
+            FROM terminals
+            WHERE terminals.id = routes.terminal_id
+              AND routes.origin <> UPPER(TRIM(terminals.name))
         ");
     }
 

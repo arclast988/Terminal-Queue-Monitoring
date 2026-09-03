@@ -15,7 +15,7 @@ class HardenFareRedesignTerminalIndexes extends Migration
             return;
         }
 
-        $this->dropIndexIfExists($db, 'fare_discounts', 'fare_discounts_type_unique');
+        $this->dropIndexIfExists($db, 'fare_discounts_type_unique');
         $this->addUniqueIndexIfMissing($db, 'fare_discounts', 'fare_discounts_terminal_type_unique', ['terminal_id', 'type']);
 
         foreach ($this->getTerminalIds($db) as $terminalId) {
@@ -31,7 +31,7 @@ class HardenFareRedesignTerminalIndexes extends Migration
             return;
         }
 
-        $this->dropIndexIfExists($db, 'fare_discounts', 'fare_discounts_terminal_type_unique');
+        $this->dropIndexIfExists($db, 'fare_discounts_terminal_type_unique');
         $this->addUniqueIndexIfMissing($db, 'fare_discounts', 'fare_discounts_type_unique', ['type']);
     }
 
@@ -68,28 +68,28 @@ class HardenFareRedesignTerminalIndexes extends Migration
 
     private function addUniqueIndexIfMissing(BaseConnection $db, string $table, string $indexName, array $columns): void
     {
-        if ($this->indexExists($db, $table, $indexName)) {
+        if ($this->indexExists($db, $indexName)) {
             return;
         }
 
-        $columnList = implode('`, `', $columns);
-        $db->query("ALTER TABLE `{$table}` ADD UNIQUE KEY `{$indexName}` (`{$columnList}`)");
+        $columnList = '"' . implode('", "', $columns) . '"';
+        $db->query("ALTER TABLE \"{$table}\" ADD CONSTRAINT \"{$indexName}\" UNIQUE ({$columnList})");
     }
 
-    private function dropIndexIfExists(BaseConnection $db, string $table, string $indexName): void
+    private function dropIndexIfExists(BaseConnection $db, string $indexName): void
     {
-        if (!$this->indexExists($db, $table, $indexName)) {
+        if (!$this->indexExists($db, $indexName)) {
             return;
         }
 
-        $db->query("ALTER TABLE `{$table}` DROP INDEX `{$indexName}`");
+        $db->query("DROP INDEX \"{$indexName}\"");
     }
 
-    private function indexExists(BaseConnection $db, string $table, string $indexName): bool
+    private function indexExists(BaseConnection $db, string $indexName): bool
     {
         $row = $db->query(
-            "SELECT 1 FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ? LIMIT 1",
-            [$table, $indexName]
+            "SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ?",
+            [$indexName]
         )->getRowArray();
 
         return (bool) $row;

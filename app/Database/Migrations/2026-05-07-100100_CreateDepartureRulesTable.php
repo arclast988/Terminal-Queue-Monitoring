@@ -13,8 +13,8 @@ use CodeIgniter\Database\Migration;
  * it. A fresh `php spark migrate` would leave the application broken
  * without this file.
  *
- * Idempotent: uses CREATE TABLE IF NOT EXISTS, so it is safe to run
- * against the live DB where the table is already populated.
+ * Idempotent: uses createTable with IF NOT EXISTS, so it is safe to
+ * run against the live DB where the table is already populated.
  */
 class CreateDepartureRulesTable extends Migration
 {
@@ -26,18 +26,17 @@ class CreateDepartureRulesTable extends Migration
             return;
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS `departure_rules` (
-            `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-            `time_from` TIME NOT NULL,
-            `time_to` TIME NOT NULL,
-            `wait_minutes` INT(11) NOT NULL DEFAULT 30,
-            `label` VARCHAR(50) DEFAULT NULL,
-            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
-
-        $db->query($sql);
+        $this->forge->addField([
+            'id'           => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
+            'time_from'    => ['type' => 'TIME', 'null' => false],
+            'time_to'      => ['type' => 'TIME', 'null' => false],
+            'wait_minutes' => ['type' => 'INT', 'constraint' => 11, 'default' => 30],
+            'label'        => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => true],
+            'created_at'   => ['type' => 'TIMESTAMP', 'null' => true],
+            'updated_at'   => ['type' => 'TIMESTAMP', 'null' => true],
+        ]);
+        $this->forge->addKey('id', true);
+        $this->forge->createTable('departure_rules', true);
 
         // Seed the default time-bracketed rules used by the system.
         // Skipped if any rows already exist (additional safety on top of tableExists check).

@@ -13,8 +13,8 @@ use CodeIgniter\Database\Migration;
  * it. A fresh `php spark migrate` would leave the Fares page broken
  * without this file.
  *
- * Idempotent: uses CREATE TABLE IF NOT EXISTS, so it is safe to run
- * against the live DB where the table is already populated.
+ * Idempotent: uses createTable with IF NOT EXISTS, so it is safe to
+ * run against the live DB where the table is already populated.
  */
 class CreateFareDiscountsTable extends Migration
 {
@@ -26,19 +26,18 @@ class CreateFareDiscountsTable extends Migration
             return;
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS `fare_discounts` (
-            `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-            `type` VARCHAR(50) NOT NULL,
-            `label` VARCHAR(100) NOT NULL,
-            `discount_percent` DECIMAL(5,2) NOT NULL DEFAULT 0.00,
-            `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-            `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
-            `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`),
-            UNIQUE KEY `fare_discounts_type_unique` (`type`)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
-
-        $db->query($sql);
+        $this->forge->addField([
+            'id'               => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
+            'type'             => ['type' => 'VARCHAR', 'constraint' => 50, 'null' => false],
+            'label'            => ['type' => 'VARCHAR', 'constraint' => 100, 'null' => false],
+            'discount_percent' => ['type' => 'DECIMAL', 'constraint' => '5,2', 'default' => 0.00],
+            'is_active'        => ['type' => 'SMALLINT', 'constraint' => 1, 'default' => 1],
+            'created_at'       => ['type' => 'TIMESTAMP', 'null' => true],
+            'updated_at'       => ['type' => 'TIMESTAMP', 'null' => true],
+        ]);
+        $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('type', 'fare_discounts_type_unique');
+        $this->forge->createTable('fare_discounts', true);
 
         // Seed the default discount types used by the public fare display.
         $count = $db->table('fare_discounts')->countAllResults();

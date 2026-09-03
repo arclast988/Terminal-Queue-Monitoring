@@ -8,36 +8,30 @@ class AddSuperAdminRole extends Migration
 {
     public function up()
     {
-        $db = \Config\Database::connect();
-        if ($db->DBDriver === 'SQLite3') {
-            $this->forge->modifyColumn('users', [
-                'role' => [
-                    'type'       => 'TEXT',
-                    'null'       => false,
-                    'default'    => 'staff'
-                ]
-            ]);
-        } else {
-            $db->query("ALTER TABLE `users`
-                MODIFY `role` ENUM('super_admin','admin','staff') NOT NULL DEFAULT 'staff'");
-        }
+        // The role column is now VARCHAR, so no ALTER needed to allow new values.
+        // Just update the default to 'staff' via Forge (idempotent).
+        $this->forge->modifyColumn('users', [
+            'role' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'null'       => false,
+                'default'    => 'staff',
+            ],
+        ]);
     }
 
     public function down()
     {
         $db = \Config\Database::connect();
-        $db->query("UPDATE `users` SET `role` = 'admin' WHERE `role` = 'super_admin'");
-        if ($db->DBDriver === 'SQLite3') {
-            $this->forge->modifyColumn('users', [
-                'role' => [
-                    'type'       => 'TEXT',
-                    'null'       => false,
-                    'default'    => 'staff'
-                ]
-            ]);
-        } else {
-            $db->query("ALTER TABLE `users`
-                MODIFY `role` ENUM('admin','staff') NOT NULL DEFAULT 'staff'");
-        }
+        $db->query("UPDATE users SET role = 'admin' WHERE role = 'super_admin'");
+
+        $this->forge->modifyColumn('users', [
+            'role' => [
+                'type'       => 'VARCHAR',
+                'constraint' => 20,
+                'null'       => false,
+                'default'    => 'staff',
+            ],
+        ]);
     }
 }

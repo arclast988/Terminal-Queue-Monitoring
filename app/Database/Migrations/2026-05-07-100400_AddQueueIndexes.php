@@ -22,53 +22,50 @@ class AddQueueIndexes extends Migration
 {
     public function up()
     {
-        $this->ensureIndex('queue', 'idx_queue_status', '(`status`)');
-        $this->ensureIndex('queue', 'idx_queue_status_position', '(`status`, `position`)');
-        $this->ensureIndex('queue', 'idx_queue_departure_time', '(`departure_time`)');
-        $this->ensureIndex('audit_logs',  'idx_audit_logs_timestamp', '(`timestamp`)');
+        $this->ensureIndex('queue', 'idx_queue_status', ['status']);
+        $this->ensureIndex('queue', 'idx_queue_status_position', ['status', 'position']);
+        $this->ensureIndex('queue', 'idx_queue_departure_time', ['departure_time']);
+        $this->ensureIndex('audit_logs',  'idx_audit_logs_timestamp', ['timestamp']);
     }
 
     public function down()
     {
-        $this->dropIndex('queue', 'idx_queue_status');
-        $this->dropIndex('queue', 'idx_queue_status_position');
-        $this->dropIndex('queue', 'idx_queue_departure_time');
-        $this->dropIndex('audit_logs',  'idx_audit_logs_timestamp');
+        $this->dropIndex('idx_queue_status');
+        $this->dropIndex('idx_queue_status_position');
+        $this->dropIndex('idx_queue_departure_time');
+        $this->dropIndex('idx_audit_logs_timestamp');
     }
 
-    private function ensureIndex(string $table, string $indexName, string $columnsSql): void
+    private function ensureIndex(string $table, string $indexName, array $columns): void
     {
         $db = \Config\Database::connect();
 
-        $row = $db->query(
-            'SELECT COUNT(1) AS c
-             FROM information_schema.statistics
-             WHERE table_schema = DATABASE()
-               AND table_name   = ?
-               AND index_name   = ?',
-            [$table, $indexName]
-        )->getRow();
-
-        if ((int) ($row->c ?? 0) === 0) {
-            $db->query("CREATE INDEX `{$indexName}` ON `{$table}` {$columnsSql}");
+        if ($this->indexExists($db, $indexName)) {
+            return;
         }
+
+        $columnList = '"' . implode('", "', $columns) . '"';
+        $db->query("CREATE INDEX \"{$indexName}\" ON \"{$table}\" ({$columnList})");
     }
 
-    private function dropIndex(string $table, string $indexName): void
+    private function dropIndex(string $indexName): void
     {
         $db = \Config\Database::connect();
 
-        $row = $db->query(
-            'SELECT COUNT(1) AS c
-             FROM information_schema.statistics
-             WHERE table_schema = DATABASE()
-               AND table_name   = ?
-               AND index_name   = ?',
-            [$table, $indexName]
-        )->getRow();
-
-        if ((int) ($row->c ?? 0) > 0) {
-            $db->query("DROP INDEX `{$indexName}` ON `{$table}`");
+        if (!$this->indexExists($db, $indexName)) {
+            return;
         }
+
+        $db->query("DROP INDEX \"{$indexName}\"");
+    }
+
+    private function indexExists(\CodeIgniter\Database\BaseConnection $db, string $indexName): bool
+    {
+        $row = $db->query(
+            'SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ?',
+            [$indexName]
+        )->getRowArray();
+
+        return (bool) $row;
     }
 }

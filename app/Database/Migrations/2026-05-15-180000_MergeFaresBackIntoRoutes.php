@@ -17,7 +17,6 @@ class MergeFaresBackIntoRoutes extends Migration
                     'constraint' => '10,2',
                     'null'       => false,
                     'default'    => 0,
-                    'after'      => 'destination',
                 ],
             ]);
         }
@@ -25,8 +24,9 @@ class MergeFaresBackIntoRoutes extends Migration
         if ($db->tableExists('fares')) {
             $db->query('
                 UPDATE routes
-                JOIN fares ON fares.route_id = routes.id
-                SET routes.fare = fares.amount
+                SET fare = fares.amount
+                FROM fares
+                WHERE fares.route_id = routes.id
             ');
 
             try {
@@ -45,11 +45,11 @@ class MergeFaresBackIntoRoutes extends Migration
 
         if (!$db->tableExists('fares')) {
             $this->forge->addField([
-                'id'         => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
-                'route_id'   => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
+                'id'         => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
+                'route_id'   => ['type' => 'INT', 'constraint' => 11],
                 'amount'     => ['type' => 'DECIMAL', 'constraint' => '10,2'],
-                'created_at' => ['type' => 'DATETIME', 'null' => true],
-                'updated_at' => ['type' => 'DATETIME', 'null' => true],
+                'created_at' => ['type' => 'TIMESTAMP', 'null' => true],
+                'updated_at' => ['type' => 'TIMESTAMP', 'null' => true],
             ]);
             $this->forge->addKey('id', true);
             $this->forge->addUniqueKey('route_id');
@@ -62,7 +62,7 @@ class MergeFaresBackIntoRoutes extends Migration
                 INSERT INTO fares (route_id, amount, created_at, updated_at)
                 SELECT id, fare, COALESCE(created_at, NOW()), NOW()
                 FROM routes
-                ON DUPLICATE KEY UPDATE amount = VALUES(amount), updated_at = VALUES(updated_at)
+                ON CONFLICT (route_id) DO UPDATE SET amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at
             ");
             $this->forge->dropColumn('routes', 'fare');
         }
