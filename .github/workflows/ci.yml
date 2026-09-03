@@ -20,7 +20,7 @@ jobs:
           POSTGRES_DB: jeepneynvans_test
         ports:
           - 5432:5432
-        options: --health-cmd="pg_isready -U jeepney_user" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="pg_isready -U jeepney_user -d jeepneynvans_test" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
     - name: Checkout Code
@@ -72,6 +72,15 @@ jobs:
 
     - name: Install Dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
+
+    - name: Wait for PostgreSQL
+      run: |
+        until pg_isready -h 127.0.0.1 -U jeepney_user -d jeepneynvans_test; do
+          echo 'waiting for postgres...'
+          sleep 1
+        done
+      env:
+        PGPASSWORD: jeepney_pass
 
     - name: Check PHP Syntax (Lint)
       run: find . -name "*.php" ! -path "./vendor/*" -print0 | xargs -0 -n 1 -P 8 php -l
