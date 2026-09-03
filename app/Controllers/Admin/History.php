@@ -104,16 +104,14 @@ class History extends BaseController
         return view('admin/history/print_history', $data);
     }
 
-
-
     private function _getFilteredBuilder($search, $fromDate, $toDate, $destination, $vehicleType)
     {
         $queueModel = new QueueModel();
         $builder = $queueModel->select('
             queue.*, 
-            vehicles.plate_number, 
-            vehicles.driver_name, 
-            COALESCE(NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name) as operator_name,
+            COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number, 
+            COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name, 
+            COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name) as operator_name,
             vehicles.owner_name, 
             vehicles.type as vehicle_type, 
             routes.destination, 
@@ -127,10 +125,9 @@ class History extends BaseController
 
         if ($search) {
             $builder->groupStart()
-                    ->like('vehicles.plate_number', $search)
-                    ->orLike('vehicles.driver_name', $search)
-                    ->orLike('vehicles.operator_name', $search)
-                    ->orLike('vehicles.owner_name', $search)
+                    ->like('COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number)', $search)
+                    ->orLike('COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name)', $search)
+                    ->orLike('COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name)', $search)
                     ->orLike('routes.destination', $search)
                     ->orLike('terminals.name', $search)
                     ->groupEnd();
