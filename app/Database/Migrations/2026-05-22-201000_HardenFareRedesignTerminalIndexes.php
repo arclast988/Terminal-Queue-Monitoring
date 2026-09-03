@@ -15,7 +15,7 @@ class HardenFareRedesignTerminalIndexes extends Migration
             return;
         }
 
-        $this->dropIndexIfExists($db, 'fare_discounts_type_unique');
+        $this->dropIndexIfExists($db, 'fare_discounts', 'fare_discounts_type_unique');
         $this->addUniqueIndexIfMissing($db, 'fare_discounts', 'fare_discounts_terminal_type_unique', ['terminal_id', 'type']);
 
         foreach ($this->getTerminalIds($db) as $terminalId) {
@@ -31,7 +31,7 @@ class HardenFareRedesignTerminalIndexes extends Migration
             return;
         }
 
-        $this->dropIndexIfExists($db, 'fare_discounts_terminal_type_unique');
+        $this->dropIndexIfExists($db, 'fare_discounts', 'fare_discounts_terminal_type_unique');
         $this->addUniqueIndexIfMissing($db, 'fare_discounts', 'fare_discounts_type_unique', ['type']);
     }
 
@@ -76,22 +76,35 @@ class HardenFareRedesignTerminalIndexes extends Migration
         $db->query("ALTER TABLE \"{$table}\" ADD CONSTRAINT \"{$indexName}\" UNIQUE ({$columnList})");
     }
 
-    private function dropIndexIfExists(BaseConnection $db, string $indexName): void
+    private function dropIndexIfExists(BaseConnection $db, string $table, string $indexName): void
     {
         if (!$this->indexExists($db, $indexName)) {
             return;
         }
 
-        $db->query("DROP INDEX \"{$indexName}\"");
+        try {
+            $db->query("DROP INDEX \"{$indexName}\"");
+        } catch (\Throwable $e) {
+            $db->query("ALTER TABLE \"{$table}\" DROP CONSTRAINT IF EXISTS \"{$indexName}\"");
+        }
     }
 
     private function indexExists(BaseConnection $db, string $indexName): bool
     {
-        $row = $db->query(
+        $indexRow = $db->query(
             "SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ?",
             [$indexName]
         )->getRowArray();
 
-        return (bool) $row;
+        if ($indexRow) {
+            return true;
+        }
+
+        $constraintRow = $db->query(
+            'SELECT 1 FROM pg_constraint WHERE conname = ? AND connamespace = current_schema()::regnamespace',
+            [$indexName]
+        )->getRowArray();
+
+        return (bool) $constraintRow;
     }
 }
