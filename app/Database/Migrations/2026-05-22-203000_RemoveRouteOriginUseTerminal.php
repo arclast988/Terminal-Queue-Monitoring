@@ -68,16 +68,29 @@ class RemoveRouteOriginUseTerminal extends Migration
             return;
         }
 
-        $db->query("DROP INDEX \"{$indexName}\"");
+        try {
+            $db->query("DROP INDEX \"{$indexName}\"");
+        } catch (\Throwable $e) {
+            $db->query("ALTER TABLE \"routes\" DROP CONSTRAINT IF EXISTS \"{$indexName}\"");
+        }
     }
 
     private function indexExists(BaseConnection $db, string $indexName): bool
     {
-        $row = $db->query(
+        $indexRow = $db->query(
             'SELECT 1 FROM pg_indexes WHERE schemaname = current_schema() AND indexname = ?',
             [$indexName]
         )->getRowArray();
 
-        return (bool) $row;
+        if ($indexRow) {
+            return true;
+        }
+
+        $constraintRow = $db->query(
+            'SELECT 1 FROM pg_constraint WHERE conname = ? AND connamespace = current_schema()::regnamespace',
+            [$indexName]
+        )->getRowArray();
+
+        return (bool) $constraintRow;
     }
 }
