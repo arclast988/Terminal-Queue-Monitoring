@@ -111,7 +111,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
             </div>
         <?php endforeach; ?>
         
-        <div id="no-routes-match" class="modern-card shadow-modern fade-in text-center py-5 empty-state" style="display: none;">
+        <div id="no-routes-match" class="modern-card shadow-modern fade-in text-center py-5 empty-state d-none" style="display: none !important;">
             <div class="py-4 text-muted">
                 <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
                 <div class="fw-bold fs-6 empty-state-title">No routes match your search query</div>
@@ -209,15 +209,24 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         cards.forEach(card => {
             const text = card.innerText.toLowerCase();
             if (!query || text.includes(query)) {
-                card.style.display = '';
+                card.style.removeProperty('display');
+                card.classList.remove('d-none');
                 visibleCount++;
             } else {
-                card.style.display = 'none';
+                card.style.setProperty('display', 'none', 'important');
+                card.classList.add('d-none');
             }
         });
 
         if (noMatch) {
-            noMatch.style.display = (visibleCount === 0 && totalCards > 0) ? '' : 'none';
+            const showEmpty = (visibleCount === 0 && totalCards > 0);
+            if (showEmpty) {
+                noMatch.style.removeProperty('display');
+                noMatch.classList.remove('d-none');
+            } else {
+                noMatch.style.setProperty('display', 'none', 'important');
+                noMatch.classList.add('d-none');
+            }
         }
 
         if (countDisplay) {

@@ -62,7 +62,7 @@ PHPVER="$(ls /etc/php 2>/dev/null | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail 
 systemctl stop jeepney-websocket >/dev/null 2>&1 || true
 systemctl stop nginx >/dev/null 2>&1 || true
 systemctl stop "php${PHPVER}-fpm" >/dev/null 2>&1 || systemctl stop php-fpm >/dev/null 2>&1 || true
-systemctl stop mariadb >/dev/null 2>&1 || systemctl stop mysql >/dev/null 2>&1 || true
+systemctl stop postgresql >/dev/null 2>&1 || true
 
 CODE="$(curl -s -o /dev/null -w '%{http_code}' http://localhost/ 2>/dev/null || echo 000)"
 
@@ -76,5 +76,5 @@ case "$CODE" in
         echo "         Something may still be listening on port 80."
         ;;
 esac
-printf '  To bring services back up, run:\n    sudo systemctl start nginx php%s-fpm mariadb jeepney-websocket\n' "$PHPVER"
+printf '  To bring services back up, run:\n    sudo systemctl start nginx php%s-fpm postgresql jeepney-websocket\n' "$PHPVER"
 echo

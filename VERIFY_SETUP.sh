@@ -66,26 +66,26 @@ elif [ "$PLATFORM" = "LINUX" ]; then
     fi
 fi
 
-# 3. Check MariaDB
-say "Checking MariaDB..."
-if command -v mysqld >/dev/null 2>&1 || command -v mariadbd >/dev/null 2>&1; then
-    ok "MariaDB installed"
+# 3. Check PostgreSQL
+say "Checking PostgreSQL..."
+if command -v psql >/dev/null 2>&1; then
+    ok "PostgreSQL client installed"
 else
-    fail "MariaDB not installed"
+    fail "PostgreSQL client (psql) not installed"
 fi
 
-if mysql -u jeepney_user -p12345678 -e "SELECT 1;" >/dev/null 2>&1; then
-    ok "Can connect to MariaDB as jeepney_user"
+if PGPASSWORD='12345678' psql -h 127.0.0.1 -U jeepney_user -d jeepneynvans -c "SELECT 1;" >/dev/null 2>&1; then
+    ok "Can connect to PostgreSQL as jeepney_user"
     
-    # Check database
-    if mysql -u jeepney_user -p12345678 jeepneynvans -e "SHOW TABLES LIKE 'users';" | grep -q users; then
-        TABLE_COUNT=$(mysql -u jeepney_user -p12345678 jeepneynvans -e "SHOW TABLES;" | wc -l)
-        ok "Database 'jeepneynvans' has $((TABLE_COUNT - 1)) tables"
+    # Check database tables
+    if PGPASSWORD='12345678' psql -h 127.0.0.1 -U jeepney_user -d jeepneynvans -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users';" | grep -q 1; then
+        TABLE_COUNT=$(PGPASSWORD='12345678' psql -h 127.0.0.1 -U jeepney_user -d jeepneynvans -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';")
+        ok "PostgreSQL Database 'jeepneynvans' has ${TABLE_COUNT} tables"
     else
         fail "Database 'jeepneynvans' exists but 'users' table not found"
     fi
 else
-    fail "Cannot connect to MariaDB (user: jeepney_user, pass: 12345678)"
+    fail "Cannot connect to PostgreSQL (user: jeepney_user, pass: 12345678, port: 5432)"
 fi
 
 # 4. Check .env

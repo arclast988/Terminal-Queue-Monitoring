@@ -19,14 +19,14 @@ The Palompon Transit Management System now has **real-time WebSocket support** f
 - Broadcasts to all connected WebSocket clients
 - Sends sync tokens for data consistency
 
-### 3. **Queue Operations with Real-Time Updates**
+### 3. **Operations with Real-Time Updates**
 - Staff Queue: `app/Controllers/Staff/Queue.php`
-  - Adding vehicles to queue ✓
+  - Adding vehicles to queue (broadcasts after transaction commit) ✓
   - Changing queue status (waiting → boarding → departed) ✓
-  - Updating passenger counts ✓
-- Admin Queue: `app/Controllers/Admin/Queue.php`
-  - Same operations with broadcasts ✓
-- All changes trigger `queue_update` broadcasts automatically
+  - Updating passenger counts with debouncing ✓
+- Admin Actions: `app/Controllers/Admin/Announcements.php`, `VehicleTypes.php`, `DepartureRules.php`
+  - Announcement and configuration updates broadcast immediately ✓
+- All changes trigger real-time broadcasts automatically
 
 ### 4. **Client-Side Real-Time Handler**
 - Location: `app/Views/staff/queue/index.php` (line 411+)
@@ -44,8 +44,8 @@ The Palompon Transit Management System now has **real-time WebSocket support** f
 
 Double-click **`start_system.bat`** in the project root. It runs the whole stack inside WSL (Ubuntu):
 
-- Detects your installed PHP version and starts MariaDB, PHP-FPM, and Nginx
-- Creates the database/user and imports the SQL dump if the tables are missing
+- Detects your installed PHP version and starts PostgreSQL, PHP-FPM, and Nginx
+- Creates the PostgreSQL database/user and imports the PostgreSQL schema if tables are missing
 - Starts the WebSocket server (`php spark ws:serve`) as a background process
 - Waits for Nginx to respond, then opens the site
 
@@ -59,7 +59,7 @@ Open a WSL (Ubuntu) shell and run:
 
 ```bash
 cd /mnt/c/path/to/jeepneynvans     # wherever you cloned it
-sudo service mariadb start
+sudo service postgresql start
 sudo service php<VERSION>-fpm start      # use whatever version is installed (e.g. 8.2, 8.3, 8.4)
 sudo service nginx start
 php spark ws:serve                 # WebSocket server — leave this running
@@ -123,8 +123,8 @@ Open browser DevTools (F12) on Staff Queue page:
 ### No Auto-Reload When Queue Changes
 - Check browser console for errors (F12)
 - Make sure JavaScript is enabled
-- Verify WebSocket connection in console
-- **Broadcasts are gated on `writable/ws_server.pid`** — `broadcastUpdate()` only sends to the server when that file exists. The WS server creates it on startup and removes it on shutdown. If it's missing, the server isn't running; start it via `start_system.bat`.
+- Verify WebSocket connection in console (`[WS] Connected to ws://localhost/ws`)
+- Verify WebSocket server is running (`ss -ltn | grep :8082` in WSL). `broadcastUpdate()` connects directly to local loopback port 8082 with automatic non-blocking timeout. If the service was stopped, restart it via `start_system.bat`.
 
 ### Port Already in Use
 - If port 8081 or 8082 in use:
@@ -145,7 +145,7 @@ Open browser DevTools (F12) on Staff Queue page:
 | `app/Controllers/Staff/Queue.php` | Queue operations with broadcasts |
 | `public/js/ws-client.js` | Shared client-side WebSocket module |
 | `app/Views/staff/queue/index.php` | WebSocket client handler |
-| `start_system.bat` | One-click WSL launcher (Nginx + PHP-FPM + MariaDB + WS) |
+| `start_system.bat` | One-click WSL launcher (Nginx + PHP-FPM + PostgreSQL + WS) |
 | `ubuntu_migration/` | Production Ubuntu provisioning (`deploy.sh`, `nginx.conf`, systemd unit) |
 
 ---

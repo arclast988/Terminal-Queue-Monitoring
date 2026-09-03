@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Local WSL bring-up for the Palompon Transit Management System.
-# Starts Nginx + PHP-FPM + MariaDB + the WebSocket server, adapting to whatever
+# Starts Nginx + PHP-FPM + PostgreSQL + the WebSocket server, adapting to whatever
 # PHP version is installed. Invoked by start_system.bat (run as root inside WSL).
 
 # Project root is passed by start_system.bat (auto-detected); fall back to the default path.
@@ -45,7 +45,7 @@ if [ -f "$NGINX_SRC_CONF" ]; then
     sed -i "s#root [^;]*;#root ${PROJECT_ROOT}/public;#" "/etc/nginx/sites-available/${NGINX_SITE}" || true
     sed -i "s#proxy_pass http://127.0.0.1:8081;#proxy_pass http://127.0.0.1:${WS_PORT};#" "/etc/nginx/sites-available/${NGINX_SITE}" || true
     ln -sf "/etc/nginx/sites-available/${NGINX_SITE}" "/etc/nginx/sites-enabled/"
-    rm -f /etc/nginx/sites-enabled/default
+    rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/jeepneynvans
     echo "[OK] Nginx configuration synchronized (php${PHPVER}-fpm.sock, WS port ${WS_PORT})."
     echo "     Root path: ${PROJECT_ROOT}/public"
 else
@@ -66,7 +66,7 @@ fi
 mkdir -p /var/run/php
 
 # --- 4. Start core services ---
-service mysql start 2>/dev/null || service mariadb start 2>/dev/null
+service postgresql start 2>/dev/null
 service "php${PHPVER}-fpm" start 2>/dev/null
 
 # After starting FPM, wait briefly for the socket file to appear and symlink
@@ -88,22 +88,27 @@ if [ ! -S "$FPM_SOCK_VAR" ] && [ ! -S "$FPM_SOCK_REAL" ]; then
 fi
 
 service nginx restart 2>/dev/null || service nginx start 2>/dev/null
-echo "[OK] MariaDB, PHP-FPM, and Nginx started."
+echo "[OK] PostgreSQL, PHP-FPM, and Nginx started."
 
-# --- 5. Database: ensure DB + user, import if empty ---
-mysql -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" 2>/dev/null
-mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" 2>/dev/null
-mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;" 2>/dev/null
-if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
-    echo "[OK] Database already populated."
-else
-    echo "[INFO] Database tables not found. Importing SQL dump..."
-    mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans.sql" 2>/dev/null \
-        || mysql "${DB_NAME}" < "${PROJECT_ROOT}/jeepneynvans_clean.sql" 2>/dev/null
-    if mysql -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
-        echo "[OK] Database imported successfully."
+# --- 5. Database: ensure PostgreSQL DB + user, import if empty ---
+su - postgres -c "psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';\"" 2>/dev/null | grep -q 1 || \
+    su - postgres -c "psql -c \"CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';\"" 2>/dev/null
+su - postgres -c "psql -c \"ALTER USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';\"" 2>/dev/null
+
+su - postgres -c "psql -tAc \"SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';\"" 2>/dev/null | grep -q 1 || \
+    su - postgres -c "psql -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\"" 2>/dev/null
+su - postgres -c "psql -c \"GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};\"" 2>/dev/null
+
+if su - postgres -c "psql -d ${DB_NAME} -tAc \"SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users';\"" 2>/dev/null | grep -q 1; then
+    echo "[OK] PostgreSQL Database already populated."
+elif [ -f "${PROJECT_ROOT}/app/Database/postgres_schema.sql" ]; then
+    echo "[INFO] Importing PostgreSQL schema (postgres_schema.sql)..."
+    su - postgres -c "psql -d ${DB_NAME} -f '${PROJECT_ROOT}/app/Database/postgres_schema.sql'" >/dev/null 2>&1
+    su - postgres -c "psql -d ${DB_NAME} -c \"GRANT ALL ON ALL TABLES IN SCHEMA public TO ${DB_USER}; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO ${DB_USER};\"" >/dev/null 2>&1
+    if su - postgres -c "psql -d ${DB_NAME} -tAc \"SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users';\"" 2>/dev/null | grep -q 1; then
+        echo "[OK] PostgreSQL database imported successfully."
     else
-        echo "[ERROR] Database import failed - verify jeepneynvans.sql exists in the project root."
+        echo -e "${RED}[ERROR] PostgreSQL database import failed.${NC}"
     fi
 fi
 
@@ -141,5 +146,5 @@ case "$CODE" in
 esac
 echo "  - Web URL:          http://localhost/"
 echo "  - WebSocket Server: ws://localhost:${WS_PORT}"
-echo "  - Database User:    ${DB_USER} / ${DB_PASS}"
+echo "  - PostgreSQL User:  ${DB_USER} / ${DB_PASS} (Port 5432)"
 echo "====================================================================="

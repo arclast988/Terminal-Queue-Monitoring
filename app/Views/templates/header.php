@@ -9,6 +9,11 @@
     <meta name="csrf-header" content="<?= csrf_header() ?>">
     <meta name="color-scheme" content="light">
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
+
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -296,41 +301,86 @@
 
         /* Reserve space for fixed header so content is not hidden underneath */
         .main-content {
-            flex: 1;
-            width: 100%;
-            max-width: 100%;
-            padding: 20px;
-            padding-top: 72px;
+            flex: 1 0 auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 20px 24px 40px 24px !important;
+            padding-top: 80px !important;
             background-color: transparent !important;
+            box-sizing: border-box !important;
         }
 
-        .footer {
-            background-color: #f8fafc;
-            color: var(--text-muted, #64748b);
-            padding: 10px 0;
-            text-align: center;
-            margin-top: auto;
-            border-top: 1px solid #e2e8f0;
+        footer,
+        .footer,
+        footer.footer,
+        body.admin-theme footer,
+        body.admin-theme .footer,
+        body.staff-theme footer,
+        body.staff-theme .footer {
+            flex-shrink: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: auto 0 0 0 !important;
+            padding: 16px 24px !important;
+            background: rgba(255, 255, 255, 0.75) !important;
+            backdrop-filter: blur(12px) saturate(160%) !important;
+            -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+            border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
+            border-radius: 0 !important;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02) !important;
+            text-align: center !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #64748b !important;
+            font-weight: 500 !important;
+            font-size: 13.5px !important;
+            position: relative !important;
+            z-index: 10 !important;
+            box-sizing: border-box !important;
+        }
+
+        footer p,
+        .footer p,
+        body.admin-theme footer p,
+        body.admin-theme .footer p,
+        body.staff-theme footer p,
+        body.staff-theme .footer p {
+            margin: 0 !important;
+            padding: 0 !important;
+            color: inherit !important;
+            font-size: inherit !important;
+            font-weight: inherit !important;
+            text-align: center !important;
+            width: 100% !important;
         }
 
         /* Schedules/Fares: same header as dashboard, but content area full-width (no padding) */
         body.public-page .main-content {
-            padding: 0;
-            padding-top: 72px;
+            padding: 0 !important;
+            padding-top: 72px !important;
         }
 
         /* Force header to stay fixed - cannot be overridden by page styles */
+        html,
         html.layout-lock {
+            height: 100% !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
             width: 100% !important;
             max-width: 100% !important;
         }
 
+        body,
         body.layout-lock {
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
             overflow-x: hidden !important;
             width: 100% !important;
             max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         body.layout-lock header#site-header {
@@ -352,8 +402,18 @@
             }
 
             .main-content {
-                padding: 15px;
-                padding-top: 72px;
+                padding: 15px 16px 30px 16px !important;
+                padding-top: 76px !important;
+            }
+
+            footer,
+            .footer,
+            body.admin-theme footer,
+            body.admin-theme .footer,
+            body.staff-theme footer,
+            body.staff-theme .footer {
+                padding: 14px 16px !important;
+                font-size: 12.5px !important;
             }
 
             .row {
@@ -364,6 +424,28 @@
             .row > * {
                 padding-left: 7.5px;
                 padding-right: 7.5px;
+            }
+        }
+
+        @media (max-width: 420px) {
+            body.layout-lock header#site-header {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+
+            .main-content {
+                padding: 10px 10px 24px 10px !important;
+                padding-top: 72px !important;
+            }
+
+            .row {
+                margin-left: -5px !important;
+                margin-right: -5px !important;
+            }
+
+            .row > * {
+                padding-left: 5px !important;
+                padding-right: 5px !important;
             }
         }
 

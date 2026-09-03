@@ -2,49 +2,48 @@
 
 A CodeIgniter 4 web app for managing van/jeepney terminal queues, routes, vehicle dispatch, and admin audit logs.
 
-## Setup (Windows/WSL or native Linux — Nginx + PHP-FPM + MariaDB, no XAMPP)
+## Setup (Ubuntu Server / Linux & Windows WSL — Nginx + PHP-FPM + PostgreSQL, no XAMPP)
 
-This project runs on **Nginx + PHP-FPM + MariaDB** inside **WSL (Ubuntu)** — no XAMPP/Apache.
+This project runs on **Nginx + PHP-FPM + PostgreSQL** — pure enterprise-grade stack with zero XAMPP/Apache dependency.
 
 ### Prerequisites
-- **WSL 2** with Ubuntu, and inside it: **PHP 8.2+** (CLI + FPM), **Nginx**, and **MariaDB**.
-  - Need to install them? Double-click `install_system.bat` — one-time Windows installer that sets up WSL, Ubuntu, the full LAMP stack, Composer, and the project's PHP dependencies. (On a **native Linux** machine — Mint/Ubuntu/Debian — skip all of this and use `install_linux.sh`; see the **Linux quick start** below.)
+- Ubuntu Server or WSL 2 with: **PHP 8.2+** (CLI + FPM with `php-pgsql`), **Nginx**, and **PostgreSQL**.
+  - Need to install them? Run `sudo ./install_linux.sh` on native Linux or double-click `install_system.bat` on Windows — sets up the full stack, Composer, and PostgreSQL database.
 - **Git**.
 
 ### Local quick start (Windows)
-1. **Clone into any folder** (e.g. `C:\projects\jeepneynvans`) — keep the folder name `jeepneynvans`. The launcher auto-detects its own location, so it does **not** need to live in XAMPP's `htdocs`; you can move it out and uninstall XAMPP entirely.
+1. **Clone into any folder** (e.g. `C:\projects\jeepneynvans`) — keep the folder name `jeepneynvans`.
 2. **Create your `.env`** — copy the bundled template:
    ```
    copy env .env
    ```
-   The launcher's defaults already match (DB user `jeepney_user` / `12345678`); only edit `.env` to change credentials or enable email.
+   The launcher's defaults already match (DB user `jeepney_user` / `12345678`, PostgreSQL port `5432`).
 3. **Double-click `start_system.bat`.** It runs everything inside WSL:
-   - detects your installed PHP version and starts MariaDB, PHP-FPM, and Nginx,
-   - auto-creates the database and `jeepney_user`, importing `jeepneynvans.sql` if the tables are missing,
+   - detects your installed PHP version and starts PostgreSQL, PHP-FPM, and Nginx,
+   - auto-creates the PostgreSQL database and `jeepney_user`, importing `app/Database/postgres_schema.sql` if tables are missing,
    - starts the real-time WebSocket server,
    - waits for Nginx, then opens the app.
 4. **Open the app:** <http://localhost/>
-5. **Sign in** with a seeded account from the dump (usernames are in the `users` table; ask the project owner for the password).
-6. **Stopping the system** — double-click `stop_system.bat` to shut down MariaDB, PHP-FPM, Nginx, and the WebSocket server. Database data is preserved.
+5. **Sign in** with a seeded account (`admin` / `admin123`, `staff` / `staff123`).
+6. **Stopping the system** — double-click `stop_system.bat` to shut down PostgreSQL, PHP-FPM, Nginx, and the WebSocket server. Database data is preserved.
 
 ### Local quick start (from inside a WSL terminal)
-If you're already at a WSL bash prompt (e.g. `jaylo@DESKTOP-XXXX:~$`), use the bash wrappers instead of the `.bat` files:
+If you're already at a WSL bash prompt (e.g. `user@DESKTOP:~$`), use the bash wrappers instead of the `.bat` files:
 ```
 cd /mnt/c/path/to/jeepneynvans
 ./start_system.sh     # bring everything up (auto-elevates with sudo)
 ./stop_system.sh      # shut everything down
 ```
-Both scripts auto-detect the project root, sanity-check that they're running in WSL, and reuse the same Linux-side logic (`ubuntu_migration/wsl_local_up.sh` / `wsl_local_down.sh`) as the `.bat` launchers — so behavior and output are identical. First run may need `chmod +x start_system.sh stop_system.sh`.
 
-### Linux quick start (Mint / Ubuntu / Debian — native, no WSL)
-On a real Linux machine, one script installs **and** starts everything (as systemd services that auto-start on boot):
+### Linux quick start (Ubuntu Server / Debian / Mint — native, no WSL)
+On a Linux server, one script installs **and** starts everything (as systemd services that auto-start on boot):
 1. **Clone the project:**
    ```
    cd ~
    git clone https://github.com/jaylocano-stack/Capstone-Project.git jeepneynvans
    cd jeepneynvans
    ```
-2. **Run the one-shot installer** — installs PHP + Nginx + MariaDB + Composer, creates and seeds the database, sets up the WebSocket service, and starts it all:
+2. **Run the one-shot installer** — installs PHP + Nginx + PostgreSQL + Composer, creates and seeds the PostgreSQL database, sets up the WebSocket service, and starts it all:
    ```
    sudo ./install_linux.sh
    ```
@@ -52,38 +51,30 @@ On a real Linux machine, one script installs **and** starts everything (as syste
 3. **Open the app:** <http://localhost/>
 4. **Manage it afterwards** (no launcher needed — it runs on boot):
    ```
-   sudo systemctl status  nginx php<VERSION>-fpm mariadb jeepney-websocket
-   sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket   # or stop / start
+   sudo systemctl status  nginx php<VERSION>-fpm postgresql jeepney-websocket
+   sudo systemctl restart nginx php<VERSION>-fpm postgresql jeepney-websocket   # or stop / start
    ```
-   The installer prints the exact command with the PHP version it installed (replace `<VERSION>` with `8.2`, `8.3`, `8.4`, `8.5`, etc. depending on your installed PHP version).
 
-> ℹ️ `start_system.sh` / `stop_system.sh` now support both WSL and native Linux. On native Mint/Ubuntu/Debian, they start/stop the installed `nginx`, `php*-fpm`, `mariadb`/`mysql`, and `jeepney-websocket` services via `sudo`.
-
-### Database
-The app's defaults live in `app/Config/Database.php` and are created automatically by `start_system.bat`:
+### Database (PostgreSQL)
+The app's defaults live in `app/Config/Database.php` and `.env`:
 ```
 hostname = 127.0.0.1
 database = jeepneynvans
 username = jeepney_user
 password = 12345678
-port     = 3306
+driver   = Postgre
+port     = 5432
+schema   = public
 ```
-To use different credentials, set the matching `database.default.*` keys in `.env`.
-
-#### Empty database via migrations (no sample data)
-From the project root inside WSL: `php spark migrate`, then create a first admin user (via a seeder or manually).
 
 ### Real-time WebSocket features
 Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for you. See **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for details. The app still works without it — pages fall back to polling.
 
-### Production (Ubuntu server)
-For a single machine the **Linux quick start** above (`install_linux.sh`) is the simplest path — it provisions the whole stack plus the WebSocket systemd service in one shot. For a manual/step-by-step provision on **Ubuntu** you can also use `ubuntu_migration/deploy.sh`; either way see **[WEBSOCKET_SETUP.md](WEBSOCKET_SETUP.md)** for the Nginx site and WebSocket service details.
-
 ### Troubleshooting
-- **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `wsl ss -ltn` and `ls /run/php/`.
-- **"Unable to connect to the database"** → MariaDB isn't started (`wsl sudo service mariadb start`), or `.env` credentials don't match.
-- **Real-time not updating** → run `diagnose.ps1` (checks Nginx, the WebSocket server, and `ws_server.pid`).
-- **Login fails** → confirm the import created the `users` table with at least one admin row.
+- **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `sudo systemctl status php-fpm`.
+- **"Unable to connect to the database"** → PostgreSQL isn't started (`sudo systemctl status postgresql`), or `.env` credentials don't match.
+- **Real-time not updating** → run `VERIFY_SETUP.bat` or `diagnose_windows.bat` (checks Nginx proxy, ports 8081/8082, and WebSocket server daemon).
+- **Login fails** → confirm the import created the `users` table with the default seeds (`admin` / `admin123`).
 
 ### Security, Performance & Code Optimization Updates (June 2026)
 
@@ -104,6 +95,14 @@ We recently performed a system-wide audit and optimization:
 - **Global Filter Optimization**: Removed redundant filters (`forcehttps`, `pagecache`) to eliminate per-request redirect and caching overhead.
 - **Vehicle Image Centralization**: Eliminated duplicate vehicle type-to-image mapping blocks across views via a central `vehicle_type_image()` helper in `app/Common.php`.
 - **Database Query Portability**: Refactored MySQL-specific date functions (`YEAR()`, `DATE()`, `CURDATE()`) using standard SQL comparison and `LIKE` queries to make the application fully compatible with SQLite3 (used for local unit testing) and MySQL.
+
+### Real-Time, Performance & Health Audit Updates (September 2026)
+- **Unblocked WebSocket Broadcast Delivery**: Removed brittle `ws_server.pid` file dependencies in `BaseController::broadcastUpdate()`, establishing reliable direct loopback broadcasts with non-blocking socket timeouts.
+- **Race Condition Elimination**: Deferred queue broadcasts in `Staff/Queue.php` until after PostgreSQL transaction commits, preventing clients from fetching and caching stale queue states.
+- **Polling Throttling & Bandwidth Reduction**: Paused 3-second HTTP polling in `queue-sync.js` while WebSocket connections are active, and reduced announcement marquee polling from 3s to 30s with a 300s cache TTL.
+- **Database Caching & Midnight Rule Gap**: Cached `get_db_vehicle_types()` with 1-hour TTL to eliminate continuous `information_schema` queries on every request, and extended Departure Rule 1 to `00:00:00` to cover the midnight to 4:00 AM dispatch interval.
+- **Form Accessibility & HTML5 Validation**: Replaced `display: none` select replacement in `autocomplete-search.js` with accessible off-screen styling to prevent browser validation crashes on required select controls.
+- **Automated Verification**: Provided `VERIFY_SETUP.bat` and `VERIFY_SETUP.sh` to validate all services, database tables, PHP-FPM sockets, and WebSocket connectivity in one click.
 
 ---
 

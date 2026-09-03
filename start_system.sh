@@ -76,7 +76,7 @@ PHPVER="$(ls /etc/php 2>/dev/null | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail 
 
 systemctl start nginx
 systemctl start "php${PHPVER}-fpm" >/dev/null 2>&1 || systemctl start php-fpm >/dev/null 2>&1
-systemctl start mariadb >/dev/null 2>&1 || systemctl start mysql >/dev/null 2>&1
+systemctl start postgresql >/dev/null 2>&1
 systemctl start jeepney-websocket >/dev/null 2>&1 || true
 
 echo "[OK] Services started."
@@ -89,6 +89,6 @@ else
 fi
 
 echo
-printf '  To stop services, run:\n    sudo systemctl stop nginx php%s-fpm mariadb jeepney-websocket\n' "$PHPVER"
+printf '  To stop services, run:\n    sudo systemctl stop nginx php%s-fpm postgresql jeepney-websocket\n' "$PHPVER"
 echo
 exit 0

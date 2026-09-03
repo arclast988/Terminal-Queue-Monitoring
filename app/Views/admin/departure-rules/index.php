@@ -118,7 +118,7 @@
 }
 
 #departure-rules-table {
-    table-layout: fixed;
+    table-layout: auto;
     width: 100%;
 }
 
@@ -127,13 +127,76 @@
     vertical-align: middle;
 }
 
-#departure-rules-table th:nth-child(1) { width: 15%; }
-#departure-rules-table th:nth-child(2) { width: 17%; }
-#departure-rules-table th:nth-child(3) { width: 12%; }
-#departure-rules-table th:nth-child(4) { width: 12%; }
-#departure-rules-table th:nth-child(5) { width: 13%; }
-#departure-rules-table th:nth-child(6) { width: 17%; }
-#departure-rules-table th:nth-child(7) { width: 14%; }
+#departure-rules-table th:last-child,
+#departure-rules-table td:last-child {
+    white-space: nowrap;
+    width: 170px;
+}
+
+.btn-action-edit {
+    background: #ffffff !important;
+    border: 1.5px solid var(--primary-blue, #1565c0) !important;
+    color: var(--primary-blue, #1565c0) !important;
+    -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    font-size: 13.5px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+.btn-action-edit i {
+    color: var(--primary-blue, #1565c0) !important;
+    font-size: 13px !important;
+}
+.btn-action-edit:hover {
+    background: var(--primary-blue, #1565c0) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: var(--primary-blue, #1565c0) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(21, 101, 192, 0.25) !important;
+}
+.btn-action-edit:hover i {
+    color: #ffffff !important;
+}
+
+.btn-action-delete {
+    background: var(--danger-light, #fee2e2) !important;
+    border: 1.5px solid transparent !important;
+    color: var(--danger-dark, #dc2626) !important;
+    -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    font-size: 13.5px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+.btn-action-delete i {
+    color: var(--danger-dark, #dc2626) !important;
+    font-size: 13px !important;
+}
+.btn-action-delete:hover {
+    background: var(--danger-dark, #dc2626) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: var(--danger-dark, #dc2626) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25) !important;
+}
+.btn-action-delete:hover i {
+    color: #ffffff !important;
+}
 
 @media (max-width: 768px) {
     #departure-rules-table {
@@ -257,12 +320,12 @@
                     <tr>
                         <th>Terminal</th>
                         <th>Destination</th>
-                        <th>Time From</th>
-                        <th>Time To</th>
-                        <th>Wait Time</th>
+                        <th>Time From (HH:MM)</th>
+                        <th>Time To (HH:MM)</th>
+                        <th>Wait Time (HH:MM)</th>
                         <th>Label</th>
                         <?php if (session()->get('role') !== 'staff'): ?>
-                        <th>Actions</th>
+                        <th>Action</th>
                         <?php else: ?>
                         <th>Status</th>
                         <?php endif; ?>
@@ -285,9 +348,9 @@
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Time From"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
-                                <td data-label="Time To"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
-                                <td data-label="Wait Time">
+                                <td data-label="Time From (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
+                                <td data-label="Time To (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
+                                <td data-label="Wait Time (HH:MM)">
                                     <?php
                                         $mins = (int)$rule['wait_minutes'];
                                         $h = floor($mins / 60);
@@ -301,7 +364,7 @@
                                     <span style="color: #475569; font-weight: 500; font-size: 13.5px;"><?= esc(!empty($rule['label']) && $rule['label'] !== '-' ? $rule['label'] : '—') ?></span>
                                 </td>
                                 <?php if (session()->get('role') !== 'staff'): ?>
-                                <td data-label="Actions">
+                                <td data-label="Action">
                                     <div class="d-flex gap-2">
                                         <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> Edit
@@ -337,8 +400,8 @@
                             <small class="empty-state-subtitle">No custom dispatch interval has been configured for this destination.</small>
                             <?php if (session()->get('role') !== 'staff'): ?>
                             <div class="mt-3">
-                                <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-for-route" class="btn-modern btn-modern-sm btn-modern-primary d-inline-flex align-items-center gap-1">
-                                    <i class="bi bi-plus-circle"></i> Add Rule For This Route
+                                <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-for-route" class="btn-modern btn-modern-sm btn-modern-primary" style="font-size: 13.5px; font-weight: 700; padding: 7px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
+                                    <i class="bi bi-plus-circle" style="font-size: 14px !important; display: inline-block !important; margin: 0 !important; color: #ffffff !important; opacity: 1 !important;"></i> Add Rule For This Route
                                 </a>
                             </div>
                             <?php endif; ?>

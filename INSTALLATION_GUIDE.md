@@ -4,7 +4,7 @@
 
 ### Windows 10/11 (Recommended: WSL 2 + Ubuntu)
 1. Double-click **`install_system.bat`** (admin mode required)
-   - Automatically installs WSL 2, Ubuntu, PHP (8.2-8.4 range), Nginx, MariaDB, Composer
+   - Automatically installs WSL 2, Ubuntu, PHP (8.2-8.4 range), Nginx, PostgreSQL, Composer
    - Takes 5-10 minutes on first run
 2. After install, double-click **`start_system.bat`** to launch
 3. Browser opens to `http://localhost/` automatically
@@ -19,8 +19,8 @@ sudo ./install_linux.sh
 After install, manage services via:
 ```bash
 # (Replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
-sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket
-sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php<VERSION>-fpm postgresql jeepney-websocket
+sudo systemctl status nginx php<VERSION>-fpm postgresql jeepney-websocket
 ```
 
 ---
@@ -29,11 +29,13 @@ sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket
 
 ### Database Credentials (Windows & Linux)
 ```
-Hostname: localhost (127.0.0.1)
+Engine:   PostgreSQL
+Hostname: 127.0.0.1 (localhost)
 Database: jeepneynvans
 User:     jeepney_user
 Password: 12345678
-Port:     3306
+Port:     5432
+Schema:   public
 ```
 
 ### Application URL
@@ -49,7 +51,9 @@ database.default.hostname = 127.0.0.1
 database.default.database = jeepneynvans
 database.default.username = jeepney_user
 database.default.password = 12345678
-database.default.DBDriver = MySQLi
+database.default.DBDriver = Postgre
+database.default.port = 5432
+database.default.schema = public
 ```
 
 ---
@@ -59,15 +63,15 @@ database.default.DBDriver = MySQLi
 ### Windows (WSL)
 - **WSL not available**: Windows 10 build 19041+ or Windows 11 required
 - **502 Bad Gateway**: PHP-FPM socket mismatch. Re-run `start_system.bat`
-- **Database connection error**: Check MariaDB is running: `wsl sudo service mariadb status`
+- **Database connection error**: Check PostgreSQL is running: `wsl sudo service postgresql status`
 
 ### Linux
 - **Permission denied**: Run `sudo chmod +x *.sh` first
 - **Port 80 in use**: Another service is running on port 80. Stop it or change Nginx port
-- **Database won't start**: Check MariaDB logs: `sudo journalctl -u mariadb -n 50`
+- **Database won't start**: Check PostgreSQL logs: `sudo journalctl -u postgresql -n 50`
 
 ### Both Platforms
-- **"Unable to connect to database"**: Verify `.env` credentials match MariaDB setup
+- **"Unable to connect to database"**: Verify `.env` credentials match PostgreSQL setup
 - **"baseURL is not a valid URL"**: Ensure `.env` has valid URL like `http://localhost/`
 
 ---
@@ -76,21 +80,18 @@ database.default.DBDriver = MySQLi
 
 ### Backup current database
 ```bash
-# Windows (WSL terminal)
-mysqldump -u jeepney_user -p12345678 jeepneynvans > ~/backup_$(date +%Y%m%d).sql
-
-# Linux
-mysqldump -u jeepney_user -p12345678 jeepneynvans > ~/backup_$(date +%Y%m%d).sql
+# Windows (WSL terminal) & Linux
+PGPASSWORD='12345678' pg_dump -h 127.0.0.1 -U jeepney_user -d jeepneynvans > ~/backup_$(date +%Y%m%d).sql
 ```
 
 ### Restore from backup
 ```bash
-mysql -u jeepney_user -p12345678 jeepneynvans < ~/backup_YYYYMMDD.sql
+PGPASSWORD='12345678' psql -h 127.0.0.1 -U jeepney_user -d jeepneynvans < ~/backup_YYYYMMDD.sql
 ```
 
 ### Update with new SQL schema
 ```bash
-mysql -u jeepney_user -p12345678 jeepneynvans < jeepneynvans.sql
+sudo -u postgres psql -d jeepneynvans -f app/Database/postgres_schema.sql
 ```
 
 ---
@@ -114,8 +115,8 @@ mysql -u jeepney_user -p12345678 jeepneynvans < jeepneynvans.sql
 - **Logs**: Check Windows Event Viewer or WSL `/var/log/nginx/`
 
 ### Linux
-- **Start**: `sudo systemctl start nginx php<VERSION>-fpm mariadb jeepney-websocket` (replace <VERSION> with installed version)
-- **Stop**: `sudo systemctl stop nginx php<VERSION>-fpm mariadb jeepney-websocket`
+- **Start**: `sudo systemctl start nginx php<VERSION>-fpm postgresql jeepney-websocket` (replace <VERSION> with installed version)
+- **Stop**: `sudo systemctl stop nginx php<VERSION>-fpm postgresql jeepney-websocket`
 - **Status**: `systemctl status nginx` (shows 2 sec response time if healthy)
 - **Logs**: `sudo tail -f /var/log/nginx/error.log`
 

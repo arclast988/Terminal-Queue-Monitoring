@@ -4,14 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - Palompon Transit</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
     <style>
         :root {
             --primary: #1E40AF;
@@ -179,10 +183,10 @@
         /* --- Hero Section --- */
         .hero {
             position: relative;
-            padding: 40px 5% 55px;
+            padding: 35px 5% 25px;
             text-align: center;
-            overflow: hidden;
-            min-height: 245px;
+            overflow: visible !important;
+            min-height: auto;
         }
         .hero::after {
             display: none !important;
@@ -200,7 +204,7 @@
             font-size: 38px;
             color: #000000;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             position: relative;
             z-index: 2;
         }
@@ -209,7 +213,7 @@
             font-size: 16px;
             color: #000000;
             max-width: 700px;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
             position: relative;
         }
 
@@ -288,8 +292,8 @@
         /* --- Main Content --- */
         .container {
             width: 90%;
-            max-width: 1200px;
-            margin: -30px auto 40px !important;
+            max-width: 1400px;
+            margin: 25px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -630,10 +634,6 @@
             font-size: 14px;
         }
 
-        @media (max-width: 992px) {
-            .header-info { display: none !important; }
-        }
-
         @media (max-width: 768px) {
             header { padding: 10px 5%; min-height: 65px; border-bottom: 1px solid #eee; }
             .nav-menu {
@@ -652,27 +652,6 @@
                 gap: 12px;
             }
 
-            .nav-menu.open {
-                right: 0;
-            }
-
-            .nav-menu a {
-                width: 100%;
-                padding: 12px 18px;
-                border-radius: 12px;
-                background: #f8fafc;
-                font-size: 15px;
-                font-weight: 600;
-            }
-
-            .nav-menu a.active {
-                background: #e3f2fd;
-                color: var(--primary);
-            }
-
-            .nav-menu a.login-btn { background: #1e3a8a; color: white !important; text-align: center; justify-content: center; margin-top: 10px; margin-left: 0 !important; }
-            .nav-menu a.login-btn:hover, .nav-menu a.login-btn:active { background: #172554 !important; transform: scale(0.98); }
-
             .mobile-toggle {
                 display: block;
                 z-index: 1004;
@@ -682,24 +661,34 @@
             .logo-text h1 { font-size: 15px; letter-spacing: -0.2px; }
             .logo-text p { font-size: 8px; }
             .logo { width: 40px; height: 40px; border-radius: 8px; }
-            .hero { padding: 50px 5% 80px; }
-            .container { margin-top: -30px !important; }
+            .hero { padding: 25px 5% 20px !important; }
+            .container { width: 92% !important; margin: 20px auto 30px !important; }
             .hero h2 { font-size: 28px; }
+            .hero p { font-size: 14px; margin-bottom: 16px; }
             .search-bar {
-                flex-direction: column;
-                border-radius: 18px;
-                padding: 10px;
-                gap: 8px;
+                flex-direction: row;
+                border-radius: 50px;
+                padding: 6px 8px;
+                align-items: center;
+                gap: 0;
             }
             .search-bar input {
-                padding: 12px 16px;
-                text-align: center;
-                width: 100%;
+                padding: 10px 14px;
+                font-size: 13.5px;
+                text-align: left;
+                min-width: 0;
+                flex: 1;
+                width: auto;
             }
             .search-bar button {
-                padding: 12px;
-                border-radius: 12px;
-                width: 100%;
+                padding: 0 18px;
+                height: 42px;
+                border-radius: 50px;
+                font-size: 12.5px;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+                width: auto;
             }
             .results-table, 
             .results-table thead, 

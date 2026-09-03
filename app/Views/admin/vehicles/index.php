@@ -101,7 +101,7 @@
                         value="<?= old('capacity') ?>" min="1" required>
                 </div>
                 <div class="col-12 col-sm-6 col-md-2 col-xl-1">
-                    <button type="submit" class="btn-modern btn-modern-primary w-100">
+                    <button type="submit" class="btn-modern btn-modern-primary w-100" style="min-height: 44px;">
                         <i class="bi bi-plus-lg"></i> Add
                     </button>
                 </div>
@@ -151,8 +151,18 @@ if (!empty($vehicles) && is_array($vehicles)) {
             <span class="vf-divider"></span>
             
             <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+            <?php 
+                $tabImg = vehicle_type_image($vehicleType['slug']);
+                $tabCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
+                $tabIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+            ?>
             <button type="button" class="vf-btn" id="filter-btn-<?= esc($vehicleType['slug']) ?>" onclick="filterVehicles('<?= esc($vehicleType['slug']) ?>')">
-                <img src="<?= base_url('images/' . vehicle_type_image($vehicleType['slug'])) ?>" alt="" style="height:18px; width:auto;"> <?= esc($vehicleType['name']) ?>
+                <?php if (!empty($tabImg)): ?>
+                    <img src="<?= base_url('images/' . $tabImg) ?>" alt="" style="height:18px; width:auto;">
+                <?php else: ?>
+                    <i class="fas <?= esc($tabIco) ?>" style="color: <?= esc($tabCol) ?>; font-size: 13px;"></i>
+                <?php endif; ?>
+                <?= esc($vehicleType['name']) ?>
                 <span class="vf-count"><?= $typeCounts[$vehicleType['slug']] ?? 0 ?></span>
             </button>
             <?php endforeach; ?>
@@ -222,10 +232,20 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 <td data-label="Vehicle Type">
                                     <?php $imgFile = vehicle_type_image($vehicle['type']); ?>
                                     <div class="vehicle-type-cell">
-                                        <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
-                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
-                                                style="height:28px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
-                                        </span>
+                                        <?php if (!empty($imgFile)): ?>
+                                            <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
+                                                <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
+                                                    style="height:28px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
+                                            </span>
+                                        <?php else: ?>
+                                            <?php 
+                                                $cellCol = vehicle_type_color($vehicle['type']);
+                                                $cellIco = vehicle_type_icon($vehicle['type']);
+                                            ?>
+                                            <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>" style="display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:8px; background:<?= esc($cellCol) ?>18; border:1px solid <?= esc($cellCol) ?>40; color:<?= esc($cellCol) ?>; font-size:16px;">
+                                                <i class="fas <?= esc($cellIco) ?>" title="<?= vehicle_type_label($vehicle['type']) ?>"></i>
+                                            </span>
+                                        <?php endif; ?>
                                         <?= vehicle_type_badge($vehicle['type']) ?>
                                     </div>
                                 </td>
@@ -801,36 +821,339 @@ if (!empty($vehicles) && is_array($vehicles)) {
             }
         }
     }
+
+    function getContrastTextColor(hexColor) {
+        if (!hexColor) return '#ffffff';
+        var hex = hexColor.replace('#', '').trim();
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        if (hex.length < 6) return '#ffffff';
+        var r = parseInt(hex.substr(0, 2), 16) || 0;
+        var g = parseInt(hex.substr(2, 2), 16) || 0;
+        var b = parseInt(hex.substr(4, 2), 16) || 0;
+        var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return (brightness > 155) ? '#0f172a' : '#ffffff';
+    }
+
+    function applyIconButtonColor(btn, color) {
+        if (!btn) return;
+        var contrastColor = getContrastTextColor(color);
+        btn.classList.add('active');
+        btn.classList.remove('bg-primary', 'text-white', 'border-primary');
+        btn.style.setProperty('background-color', color, 'important');
+        btn.style.setProperty('border-color', color, 'important');
+        btn.style.setProperty('color', contrastColor, 'important');
+        btn.style.setProperty('box-shadow', '0 2px 6px ' + color + '55', 'important');
+        var iconEl = btn.querySelector('i');
+        if (iconEl) {
+            iconEl.style.setProperty('color', contrastColor, 'important');
+        }
+        var textEl = btn.querySelector('span');
+        if (textEl) {
+            textEl.style.setProperty('color', contrastColor, 'important');
+        }
+    }
+
+    function resetIconButton(btn) {
+        if (!btn) return;
+        btn.classList.remove('active', 'bg-primary', 'text-white', 'border-primary');
+        btn.style.removeProperty('background-color');
+        btn.style.removeProperty('border-color');
+        btn.style.removeProperty('color');
+        btn.style.removeProperty('box-shadow');
+        var iconEl = btn.querySelector('i');
+        if (iconEl) iconEl.style.removeProperty('color');
+        var textEl = btn.querySelector('span');
+        if (textEl) textEl.style.removeProperty('color');
+    }
+
+    function selectAddVtColor(color, btn) {
+        document.getElementById('add_vt_color').value = color;
+        document.getElementById('add_vt_color_input').value = color;
+        var contrastColor = getContrastTextColor(color);
+
+        var badge = document.getElementById('add_vt_color_badge');
+        if (badge) {
+            badge.textContent = color;
+            badge.style.setProperty('background-color', color, 'important');
+            badge.style.setProperty('color', contrastColor, 'important');
+            badge.style.border = (contrastColor === '#0f172a') ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.25)';
+        }
+
+        document.querySelectorAll('.add-color-swatch').forEach(function(el) {
+            el.classList.remove('active');
+            var ic = el.querySelector('i');
+            if (ic) ic.classList.add('d-none');
+        });
+        if (btn) {
+            btn.classList.add('active');
+            var ic = btn.querySelector('i');
+            if (ic) {
+                ic.classList.remove('d-none');
+                ic.style.color = contrastColor;
+            }
+        }
+
+        // Selected icon button follows the newly assigned color
+        var activeIconBtn = document.querySelector('.add-icon-btn.active');
+        if (activeIconBtn) {
+            applyIconButtonColor(activeIconBtn, color);
+        }
+
+        updateAddVtPreview();
+    }
+
+    function selectAddVtIcon(icon, btn) {
+        document.getElementById('add_vt_icon').value = icon;
+        var currentColor = (document.getElementById('add_vt_color') && document.getElementById('add_vt_color').value) ? document.getElementById('add_vt_color').value : '#1565c0';
+
+        document.querySelectorAll('.add-icon-btn').forEach(function(el) {
+            resetIconButton(el);
+        });
+        if (btn) {
+            applyIconButtonColor(btn, currentColor);
+        }
+        updateAddVtPreview();
+    }
+
+    function updateAddVtPreview() {
+        var nameInput = document.getElementById('vehicle_type_name');
+        var name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'New Vehicle';
+        var color = (document.getElementById('add_vt_color') && document.getElementById('add_vt_color').value) ? document.getElementById('add_vt_color').value : '#1565c0';
+        var icon = (document.getElementById('add_vt_icon') && document.getElementById('add_vt_icon').value) ? document.getElementById('add_vt_icon').value : 'fa-bus-simple';
+        var contrastColor = getContrastTextColor(color);
+        var isLightColor = (contrastColor === '#0f172a');
+
+        var card = document.getElementById('add_vt_preview_card');
+        var title = document.getElementById('add_vt_preview_title');
+        var iconEl = document.getElementById('add_vt_preview_icon');
+        var badge = document.getElementById('add_vt_preview_badge');
+
+        var cardTopBorder = isLightColor ? '#94a3b8' : color;
+        var titleColor = isLightColor ? '#0f172a' : color;
+
+        if (card) card.style.borderTop = '3.5px solid ' + cardTopBorder;
+        if (title) { title.style.color = titleColor; title.textContent = name + ' Routes'; }
+        if (iconEl) {
+            iconEl.style.setProperty('background-color', color, 'important');
+            iconEl.style.setProperty('color', contrastColor, 'important');
+            iconEl.style.border = isLightColor ? '1.5px solid #cbd5e1' : 'none';
+            iconEl.innerHTML = '<i class="fas ' + icon + '" style="color: ' + contrastColor + ' !important;"></i>';
+        }
+        if (badge) {
+            badge.style.backgroundColor = isLightColor ? '#f1f5f9' : (color + '18');
+            badge.style.color = isLightColor ? '#0f172a' : color;
+            badge.style.borderColor = isLightColor ? '#cbd5e1' : (color + '40');
+            badge.textContent = name;
+        }
+    }
+
+    function selectEditVtColor(id, color, btn) {
+        document.getElementById('edit_vt_color_' + id).value = color;
+        document.getElementById('edit_vt_color_input_' + id).value = color;
+        var contrastColor = getContrastTextColor(color);
+
+        var badge = document.getElementById('edit_vt_color_badge_' + id);
+        if (badge) {
+            badge.textContent = color;
+            badge.style.setProperty('background-color', color, 'important');
+            badge.style.setProperty('color', contrastColor, 'important');
+            badge.style.border = (contrastColor === '#0f172a') ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.25)';
+        }
+
+        document.querySelectorAll('.edit-color-swatch-' + id).forEach(function(el) {
+            el.classList.remove('active');
+            var ic = el.querySelector('i');
+            if (ic) ic.classList.add('d-none');
+        });
+        if (btn) {
+            btn.classList.add('active');
+            var ic = btn.querySelector('i');
+            if (ic) {
+                ic.classList.remove('d-none');
+                ic.style.color = contrastColor;
+            }
+        }
+
+        // Selected icon button follows the newly assigned color
+        var activeIconBtn = document.querySelector('.edit-icon-btn-' + id + '.active');
+        if (activeIconBtn) {
+            applyIconButtonColor(activeIconBtn, color);
+        }
+
+        updateEditVtPreview(id);
+    }
+
+    function selectEditVtIcon(id, icon, btn) {
+        document.getElementById('edit_vt_icon_' + id).value = icon;
+        var currentColor = (document.getElementById('edit_vt_color_' + id) && document.getElementById('edit_vt_color_' + id).value) ? document.getElementById('edit_vt_color_' + id).value : '#1565c0';
+
+        document.querySelectorAll('.edit-icon-btn-' + id).forEach(function(el) {
+            resetIconButton(el);
+        });
+        if (btn) {
+            applyIconButtonColor(btn, currentColor);
+        }
+        updateEditVtPreview(id);
+    }
+
+    function updateEditVtPreview(id) {
+        var nameInput = document.getElementById('edit_vehicle_type_name_' + id);
+        var name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'Vehicle';
+        var color = document.getElementById('edit_vt_color_' + id).value;
+        var icon = document.getElementById('edit_vt_icon_' + id).value;
+        var contrastColor = getContrastTextColor(color);
+        var isLightColor = (contrastColor === '#0f172a');
+
+        var card = document.getElementById('edit_vt_preview_card_' + id);
+        var title = document.getElementById('edit_vt_preview_title_' + id);
+        var iconEl = document.getElementById('edit_vt_preview_icon_' + id);
+        var badge = document.getElementById('edit_vt_preview_badge_' + id);
+
+        var cardTopBorder = isLightColor ? '#94a3b8' : color;
+        var titleColor = isLightColor ? '#0f172a' : color;
+
+        if (card) card.style.borderTop = '3.5px solid ' + cardTopBorder;
+        if (title) { title.style.color = titleColor; title.textContent = name + ' Routes'; }
+        if (iconEl) {
+            iconEl.style.setProperty('background-color', color, 'important');
+            iconEl.style.setProperty('color', contrastColor, 'important');
+            iconEl.style.border = isLightColor ? '1.5px solid #cbd5e1' : 'none';
+            iconEl.innerHTML = '<i class="fas ' + icon + '" style="color: ' + contrastColor + ' !important;"></i>';
+        }
+        if (badge) {
+            badge.style.backgroundColor = isLightColor ? '#f1f5f9' : (color + '18');
+            badge.style.color = isLightColor ? '#0f172a' : color;
+            badge.style.borderColor = isLightColor ? '#cbd5e1' : (color + '40');
+            badge.textContent = name;
+        }
+    }
+
+    function initAddVehicleTypeModal() {
+        var color = (document.getElementById('add_vt_color') && document.getElementById('add_vt_color').value) ? document.getElementById('add_vt_color').value : '#1565c0';
+        var activeBtn = document.querySelector('.add-icon-btn.active');
+        if (activeBtn) {
+            applyIconButtonColor(activeBtn, color);
+        }
+        var badge = document.getElementById('add_vt_color_badge');
+        if (badge) {
+            var contrastColor = getContrastTextColor(color);
+            badge.style.setProperty('background-color', color, 'important');
+            badge.style.setProperty('color', contrastColor, 'important');
+            badge.style.border = (contrastColor === '#0f172a') ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.25)';
+        }
+        updateAddVtPreview();
+    }
+
+    function initEditVehicleTypeModal(id) {
+        var colorInput = document.getElementById('edit_vt_color_' + id);
+        var color = colorInput ? colorInput.value : '#1565c0';
+        var activeBtn = document.querySelector('.edit-icon-btn-' + id + '.active');
+        if (activeBtn) {
+            applyIconButtonColor(activeBtn, color);
+        }
+        var badge = document.getElementById('edit_vt_color_badge_' + id);
+        if (badge) {
+            var contrastColor = getContrastTextColor(color);
+            badge.style.setProperty('background-color', color, 'important');
+            badge.style.setProperty('color', contrastColor, 'important');
+            badge.style.border = (contrastColor === '#0f172a') ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.25)';
+        }
+        updateEditVtPreview(id);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var addModalEl = document.getElementById('addVehicleTypeModal');
+        if (addModalEl) {
+            addModalEl.addEventListener('show.bs.modal', function() {
+                initAddVehicleTypeModal();
+            });
+        }
+        document.querySelectorAll('[id^="editVehicleTypeModal"]').forEach(function(modalEl) {
+            modalEl.addEventListener('show.bs.modal', function() {
+                var id = this.id.replace('editVehicleTypeModal', '');
+                if (id) {
+                    initEditVehicleTypeModal(id);
+                }
+            });
+        });
+    });
 </script>
 
+<?php
+$transitIcons = [
+    ['icon' => 'fa-van-shuttle', 'label' => 'Van / Shuttle'],
+    ['icon' => 'fa-truck-front', 'label' => 'Jeepney'],
+    ['icon' => 'fa-bus', 'label' => 'Minibus'],
+    ['icon' => 'fa-bus-simple', 'label' => 'Bus / Coach'],
+    ['icon' => 'fa-motorcycle', 'label' => 'Tricycle'],
+    ['icon' => 'fa-motorcycle', 'label' => 'Motorcycle'],
+    ['icon' => 'fa-car', 'label' => 'Car / Sedan'],
+    ['icon' => 'fa-taxi', 'label' => 'Taxi / Cab'],
+];
+
+$colorPalette = [
+    '#c62828', // Red
+    '#1565c0', // Blue
+    '#2e7d32', // Green
+    '#ea580c', // Orange
+    '#7c3aed', // Purple
+    '#0891b2', // Cyan
+    '#e11d48', // Rose
+    '#ca8a04', // Gold
+    '#059669', // Emerald
+    '#4f46e5', // Indigo
+    '#475569', // Slate
+    '#db2777', // Magenta
+];
+
+$usedColors = array_filter(array_column($vehicleTypes ?? [], 'color'));
+$availableColors = array_values(array_diff($colorPalette, $usedColors));
+$suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
+?>
+
 <div class="modal fade" id="manageVehicleTypesModal" tabindex="-1" aria-labelledby="manageVehicleTypesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="manageVehicleTypesModalLabel"><i class="bi bi-gear-fill me-2"></i>Manage Vehicle Types</h5>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 550px; width: calc(100% - 1.5rem);">
+        <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem);">
+            <div class="modal-header py-2 px-3 bg-white" style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border, #e2e8f0);">
+                <h5 class="modal-title fw-bold fs-6 mb-0" id="manageVehicleTypesModalLabel"><i class="bi bi-gear-fill me-2"></i>Manage Vehicle Types</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <?php if (!empty($vehicleTypes)): ?>
                     <div class="list-group list-group-flush">
                         <?php foreach ($vehicleTypes as $vt): ?>
-                            <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="<?= base_url('images/' . vehicle_type_image($vt['slug'])) ?>" alt="" style="height:24px; width:auto;">
-                                    <div>
-                                        <div class="fw-bold text-dark"><?= esc($vt['name']) ?></div>
-                                        <small class="text-muted">Slug: <code><?= esc($vt['slug']) ?></code> &bull; <?= $typeCounts[$vt['slug']] ?? 0 ?> vehicle(s)</small>
+                            <?php 
+                                $vtColor = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($vt['slug']);
+                                $vtIcon = !empty($vt['icon']) ? $vt['icon'] : vehicle_type_icon($vt['slug']);
+                                $vtContrast = contrast_text_color($vtColor);
+                                $vtIsLight = ($vtContrast === '#0f172a');
+                            ?>
+                            <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3 no-stack flex-nowrap gap-2">
+                                <div class="d-flex align-items-center gap-2 gap-sm-3 flex-grow-1" style="min-width: 0;">
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; color: <?= esc($vtContrast) ?>; <?= $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '' ?>">
+                                        <i class="fas <?= esc($vtIcon) ?>" style="font-size: 15px; color: <?= esc($vtContrast) ?> !important;"></i>
+                                    </div>
+                                    <div style="min-width: 0; flex: 1;">
+                                        <div class="fw-bold text-dark d-flex align-items-center gap-2 flex-wrap" style="font-size: 13.5px; line-height: 1.3;">
+                                            <span class="text-truncate"><?= esc($vt['name']) ?></span>
+                                            <span class="badge rounded-pill flex-shrink-0" style="background-color: <?= $vtIsLight ? '#f1f5f9' : (esc($vtColor) . '18') ?>; color: <?= $vtIsLight ? '#0f172a' : esc($vtColor) ?>; border: 1px solid <?= $vtIsLight ? '#cbd5e1' : (esc($vtColor) . '40') ?>; font-size: 11px;">
+                                                <?= esc($vtColor) ?>
+                                            </span>
+                                        </div>
+                                        <small class="text-muted d-block text-truncate" style="font-size: 11.5px;">Slug: <code><?= esc($vt['slug']) ?></code> &bull; <?= $typeCounts[$vt['slug']] ?? 0 ?> vehicle(s)</small>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openEditVehicleTypeModal(<?= $vt['id'] ?>)" title="Edit Vehicle Type">
-                                        <i class="bi bi-pencil me-1"></i> Edit
+                                <div class="d-flex align-items-center gap-1 gap-sm-2 flex-shrink-0 ms-auto">
+                                    <button type="button" class="btn btn-sm btn-action-edit" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" onclick="openEditVehicleTypeModal(<?= $vt['id'] ?>)" title="Edit Vehicle Type">
+                                        <i class="bi bi-pencil me-1"></i>Edit
                                     </button>
-                                    <form action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline"
+                                    <form action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline m-0 p-0"
                                           onsubmit="return confirm('WARNING: Are you sure you want to delete vehicle type &quot;<?= esc($vt['name']) ?>&quot;?\n\nThis will ALSO DELETE all cards in Route Fares, connected routes, and vehicles of this type!');">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Vehicle Type">
-                                            <i class="bi bi-trash me-1"></i> Delete
+                                        <button type="submit" class="btn btn-sm btn-action-delete" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" title="Delete Vehicle Type">
+                                            <i class="bi bi-trash me-1"></i>Delete
                                         </button>
                                     </form>
                                 </div>
@@ -841,11 +1164,11 @@ if (!empty($vehicles) && is_array($vehicles)) {
                     <div class="p-4 text-center text-muted">No vehicle types configured.</div>
                 <?php endif; ?>
             </div>
-            <div class="modal-footer justify-content-between">
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="openAddVehicleTypeModal()">
-                    <i class="bi bi-plus-lg me-1"></i> Add New Type
+            <div class="modal-footer py-2 px-3 bg-white d-flex align-items-center justify-content-between flex-nowrap w-100" style="position: sticky; bottom: 0; z-index: 10; border-top: 1px solid var(--border, #e2e8f0);">
+                <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" onclick="openAddVehicleTypeModal()">
+                    <i class="bi bi-plus-lg"></i> Add New Type
                 </button>
-                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-sm btn-secondary px-3" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -853,24 +1176,101 @@ if (!empty($vehicles) && is_array($vehicles)) {
 
 <?php if (!empty($vehicleTypes)): ?>
     <?php foreach ($vehicleTypes as $vt): ?>
+        <?php 
+            $curColor = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($vt['slug']);
+            $curIcon = !empty($vt['icon']) ? $vt['icon'] : vehicle_type_icon($vt['slug']);
+        ?>
         <!-- Edit Vehicle Type Modal for <?= esc($vt['name']) ?> -->
         <div class="modal fade" id="editVehicleTypeModal<?= $vt['id'] ?>" tabindex="-1" aria-labelledby="editVehicleTypeModalLabel<?= $vt['id'] ?>" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 500px; width: calc(100% - 1.5rem);">
+                <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem);">
+                    <div class="modal-header py-2 px-3 bg-white" style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border, #e2e8f0);">
+                        <h5 class="modal-title fw-bold fs-6 mb-0" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
                         <button type="button" class="btn-close" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')" aria-label="Close"></button>
                     </div>
-                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post">
+                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" class="d-flex flex-column flex-grow-1 overflow-hidden">
                         <?= csrf_field() ?>
-                        <div class="modal-body">
-                            <label for="edit_vehicle_type_name_<?= $vt['id'] ?>" class="form-label fw-semibold">Vehicle Type Name</label>
-                            <input id="edit_vehicle_type_name_<?= $vt['id'] ?>" name="name" type="text" class="form-control" value="<?= esc($vt['name']) ?>" maxlength="80" required>
-                            <div class="form-text mt-2">Updating the name will update the display name and slug across vehicles and routes.</div>
+                        <div class="modal-body py-2 px-3">
+                            <!-- Name -->
+                            <div class="mb-2">
+                                <label for="edit_vehicle_type_name_<?= $vt['id'] ?>" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
+                                <input id="edit_vehicle_type_name_<?= $vt['id'] ?>" name="name" type="text" class="form-control form-control-sm" value="<?= esc($vt['name']) ?>" maxlength="80" required oninput="updateEditVtPreview(<?= $vt['id'] ?>)">
+                                <div class="form-text mt-0" style="font-size: 11px;">Updates display name and slug across vehicles and routes.</div>
+                            </div>
+
+                            <!-- Color Assignment -->
+                            <?php $curContrast = contrast_text_color($curColor); ?>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
+                                    <span>Assign Color</span>
+                                    <span id="edit_vt_color_badge_<?= $vt['id'] ?>" class="badge rounded-pill px-2 py-0" style="background-color: <?= esc($curColor) ?>; color: <?= esc($curContrast) ?>; font-size: 11px; <?= ($curContrast === '#0f172a') ? 'border: 1px solid rgba(0,0,0,0.2);' : '' ?>">
+                                        <?= esc($curColor) ?>
+                                    </span>
+                                </label>
+                                <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
+                                    <?php foreach ($colorPalette as $c): ?>
+                                        <?php $cContrast = contrast_text_color($c); ?>
+                                        <button type="button" 
+                                                class="btn p-0 rounded-circle border-0 position-relative edit-color-swatch-<?= $vt['id'] ?> <?= (strtolower($c) === strtolower($curColor)) ? 'active' : '' ?>" 
+                                                style="width: 26px; height: 26px; background-color: <?= $c ?>; transition: transform 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                                                data-color="<?= $c ?>"
+                                                onclick="selectEditVtColor(<?= $vt['id'] ?>, '<?= $c ?>', this)">
+                                            <i class="bi bi-check fw-bold <?= (strtolower($c) === strtolower($curColor)) ? '' : 'd-none' ?>" style="font-size: 16px; line-height: 26px; color: <?= $cContrast ?>;"></i>
+                                        </button>
+                                    <?php endforeach; ?>
+                                    <div class="d-inline-flex align-items-center gap-1 ms-1">
+                                        <input type="color" id="edit_vt_color_input_<?= $vt['id'] ?>" class="form-control form-control-color p-0 border-0" value="<?= esc($curColor) ?>" title="Custom Color Picker" style="width: 28px; height: 28px; cursor: pointer; border-radius: 50%;" onchange="selectEditVtColor(<?= $vt['id'] ?>, this.value, null)">
+                                        <small class="text-muted" style="font-size: 11px;">Custom</small>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="edit_vt_color_<?= $vt['id'] ?>" name="color" value="<?= esc($curColor) ?>">
+                            </div>
+
+                            <!-- Icon Selection -->
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold mb-1" style="font-size: 13px;">Assign Icon <small class="text-muted fw-normal">(Reflects vehicle type)</small></label>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <?php foreach ($transitIcons as $ti): ?>
+                                        <?php 
+                                            $isSelected = ($ti['icon'] === $curIcon); 
+                                            $editBtnStyle = $isSelected 
+                                                ? "border-radius: 6px; font-size: 11.5px; padding: 3px 8px; background-color: " . esc($curColor) . " !important; border-color: " . esc($curColor) . " !important; color: " . esc($curContrast) . " !important; box-shadow: 0 2px 6px " . esc($curColor) . "55 !important;"
+                                                : "border-radius: 6px; font-size: 11.5px; padding: 3px 8px;";
+                                        ?>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 edit-icon-btn-<?= $vt['id'] ?> <?= $isSelected ? 'active' : '' ?>" 
+                                                data-icon="<?= $ti['icon'] ?>"
+                                                onclick="selectEditVtIcon(<?= $vt['id'] ?>, '<?= $ti['icon'] ?>', this)"
+                                                style="<?= $editBtnStyle ?>">
+                                            <i class="fas <?= $ti['icon'] ?>" <?= $isSelected ? 'style="color: ' . esc($curContrast) . ' !important;"' : '' ?>></i>
+                                            <span <?= $isSelected ? 'style="color: ' . esc($curContrast) . ' !important;"' : '' ?>><?= esc($ti['label']) ?></span>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                                <input type="hidden" id="edit_vt_icon_<?= $vt['id'] ?>" name="icon" value="<?= esc($curIcon) ?>">
+                            </div>
+
+                            <!-- Live Preview -->
+                            <div class="p-2 rounded-3" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                                <small class="text-uppercase fw-bold text-muted d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Live Preview (Route Fares Card)</small>
+                                <div class="rounded-3 shadow-sm bg-white p-2" id="edit_vt_preview_card_<?= $vt['id'] ?>" style="border-top: 3.5px solid <?= esc($curColor) ?>;">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span id="edit_vt_preview_icon_<?= $vt['id'] ?>" class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 26px; height: 26px; background-color: <?= esc($curColor) ?>; color: <?= esc($curContrast) ?>; font-size: 12px;">
+                                                <i class="fas <?= esc($curIcon) ?>" style="color: <?= esc($curContrast) ?> !important;"></i>
+                                            </span>
+                                            <strong id="edit_vt_preview_title_<?= $vt['id'] ?>" style="color: <?= esc($curColor) ?>; font-size: 13px;"><?= esc($vt['name']) ?> Routes</strong>
+                                        </div>
+                                        <span id="edit_vt_preview_badge_<?= $vt['id'] ?>" class="badge rounded-pill" style="background-color: <?= esc($curColor) ?>18; color: <?= esc($curColor) ?>; border: 1px solid <?= esc($curColor) ?>40; font-size: 11px;">
+                                            <?= esc($vt['name']) ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')">Cancel</button>
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
+                        <div class="modal-footer py-2 px-3 bg-white justify-content-between" style="position: sticky; bottom: 0; z-index: 10; border-top: 1px solid var(--border, #e2e8f0);">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                         </div>
                     </form>
                 </div>
@@ -880,22 +1280,99 @@ if (!empty($vehicles) && is_array($vehicles)) {
 <?php endif; ?>
 
 <div class="modal fade" id="addVehicleTypeModal" tabindex="-1" aria-labelledby="addVehicleTypeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" id="addVehicleTypeModalLabel"><i class="bi bi-tags me-2"></i>Add Vehicle Type</h5>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 500px; width: calc(100% - 1.5rem);">
+        <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem);">
+            <div class="modal-header py-2 px-3 bg-white" style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border, #e2e8f0);">
+                <h5 class="modal-title fw-bold fs-6 mb-0" id="addVehicleTypeModalLabel"><i class="bi bi-tags me-2"></i>Add Vehicle Type</h5>
                 <button type="button" class="btn-close" onclick="closeAddVehicleTypeModal()" aria-label="Close"></button>
             </div>
-            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post">
+            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post" class="d-flex flex-column flex-grow-1 overflow-hidden">
                 <?= csrf_field() ?>
-                <div class="modal-body">
-                    <label for="vehicle_type_name" class="form-label fw-semibold">Vehicle Type Name</label>
-                    <input id="vehicle_type_name" name="name" type="text" class="form-control" placeholder="e.g. Bus" maxlength="80" required>
-                    <div class="form-text">It will be available in Vehicle Register and as a new Route Fares card.</div>
+                <div class="modal-body py-2 px-3">
+                    <!-- Vehicle Type Name -->
+                    <div class="mb-2">
+                        <label for="vehicle_type_name" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
+                        <input id="vehicle_type_name" name="name" type="text" class="form-control form-control-sm" placeholder="e.g. Bus, Tricycle, Taxi" maxlength="80" required oninput="updateAddVtPreview()">
+                        <div class="form-text mt-0" style="font-size: 11px;">It will be available in Vehicle Register and as a new Route Fares card.</div>
+                    </div>
+
+                    <!-- Assign Color -->
+                    <?php $sugContrast = contrast_text_color($suggestedColor); ?>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
+                            <span>Assign Color <small class="text-muted fw-normal">(Distinct from other vehicles)</small></span>
+                            <span id="add_vt_color_badge" class="badge rounded-pill px-2 py-0" style="background-color: <?= esc($suggestedColor) ?>; color: <?= esc($sugContrast) ?>; font-size: 11px; <?= ($sugContrast === '#0f172a') ? 'border: 1px solid rgba(0,0,0,0.2);' : '' ?>">
+                                <?= esc($suggestedColor) ?>
+                            </span>
+                        </label>
+                        <div class="d-flex flex-wrap gap-2 align-items-center mb-1" id="add_vt_palette">
+                            <?php foreach ($colorPalette as $c): ?>
+                                <?php 
+                                    $isUsed = in_array(strtolower($c), array_map('strtolower', $usedColors), true); 
+                                    $cContrast = contrast_text_color($c);
+                                ?>
+                                <button type="button" 
+                                        class="btn p-0 rounded-circle border-0 position-relative add-color-swatch <?= ($c === $suggestedColor) ? 'active' : '' ?>" 
+                                        style="width: 26px; height: 26px; background-color: <?= $c ?>; transition: transform 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                                        data-color="<?= $c ?>"
+                                        onclick="selectAddVtColor('<?= $c ?>', this)"
+                                        title="<?= $isUsed ? 'Already in use by another type' : 'Available distinct color' ?>">
+                                    <i class="bi bi-check fw-bold <?= ($c === $suggestedColor) ? '' : 'd-none' ?>" style="font-size: 16px; line-height: 26px; color: <?= $cContrast ?>;"></i>
+                                </button>
+                            <?php endforeach; ?>
+                            <div class="d-inline-flex align-items-center gap-1 ms-1">
+                                <input type="color" id="add_vt_color_input" class="form-control form-control-color p-0 border-0" value="<?= esc($suggestedColor) ?>" title="Custom Color Picker" style="width: 28px; height: 28px; cursor: pointer; border-radius: 50%;" onchange="selectAddVtColor(this.value, null)">
+                                <small class="text-muted" style="font-size: 11px;">Custom</small>
+                            </div>
+                        </div>
+                        <input type="hidden" id="add_vt_color" name="color" value="<?= esc($suggestedColor) ?>">
+                    </div>
+
+                    <!-- Assign Icon -->
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold mb-1" style="font-size: 13px;">Assign Icon <small class="text-muted fw-normal">(Reflects vehicle type)</small></label>
+                        <div class="d-flex flex-wrap gap-1" id="add_vt_icons">
+                            <?php foreach ($transitIcons as $idx => $ti): ?>
+                                <?php 
+                                    $isInitActive = ($ti['icon'] === 'fa-bus-simple');
+                                    $addBtnStyle = $isInitActive 
+                                        ? "border-radius: 6px; font-size: 11.5px; padding: 3px 8px; background-color: " . esc($suggestedColor) . " !important; border-color: " . esc($suggestedColor) . " !important; color: " . esc($sugContrast) . " !important; box-shadow: 0 2px 6px " . esc($suggestedColor) . "55 !important;"
+                                        : "border-radius: 6px; font-size: 11.5px; padding: 3px 8px;";
+                                ?>
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 add-icon-btn <?= $isInitActive ? 'active' : '' ?>" 
+                                        data-icon="<?= $ti['icon'] ?>"
+                                        onclick="selectAddVtIcon('<?= $ti['icon'] ?>', this)"
+                                        style="<?= $addBtnStyle ?>">
+                                    <i class="fas <?= $ti['icon'] ?>" <?= $isInitActive ? 'style="color: ' . esc($sugContrast) . ' !important;"' : '' ?>></i>
+                                    <span <?= $isInitActive ? 'style="color: ' . esc($sugContrast) . ' !important;"' : '' ?>><?= esc($ti['label']) ?></span>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                        <input type="hidden" id="add_vt_icon" name="icon" value="fa-bus-simple">
+                    </div>
+
+                    <!-- Live Preview -->
+                    <div class="p-2 rounded-3" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                        <small class="text-uppercase fw-bold text-muted d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Live Preview (Route Fares Card)</small>
+                        <div class="rounded-3 shadow-sm bg-white p-2" id="add_vt_preview_card" style="border-top: 3.5px solid <?= esc($suggestedColor) ?>;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span id="add_vt_preview_icon" class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 26px; height: 26px; background-color: <?= esc($suggestedColor) ?>; color: <?= esc($sugContrast) ?>; font-size: 12px;">
+                                        <i class="fas fa-bus-simple" style="color: <?= esc($sugContrast) ?> !important;"></i>
+                                    </span>
+                                    <strong id="add_vt_preview_title" style="color: <?= esc($suggestedColor) ?>; font-size: 13px;">New Vehicle Routes</strong>
+                                </div>
+                                <span id="add_vt_preview_badge" class="badge rounded-pill" style="background-color: <?= esc($suggestedColor) ?>18; color: <?= esc($suggestedColor) ?>; border: 1px solid <?= esc($suggestedColor) ?>40; font-size: 11px;">
+                                    New Vehicle
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" onclick="closeAddVehicleTypeModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Add Type</button>
+                <div class="modal-footer py-2 px-3 bg-white justify-content-between" style="position: sticky; bottom: 0; z-index: 10; border-top: 1px solid var(--border, #e2e8f0);">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeAddVehicleTypeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-plus-lg me-1"></i>Add Vehicle Type</button>
                 </div>
             </form>
         </div>

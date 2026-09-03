@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Schedules - Palompon Transit</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +19,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
 
     <style>
         :root {
@@ -201,10 +205,10 @@
         /* --- Hero Section --- */
         .hero {
             position: relative;
-            padding: 40px 5% 55px;
+            padding: 35px 5% 25px;
             text-align: center;
-            overflow: hidden;
-            min-height: 245px;
+            overflow: visible !important;
+            min-height: auto;
         }
         .hero::after {
             display: none !important;
@@ -217,7 +221,7 @@
             font-size: 38px;
             color: #000000;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             position: relative;
             z-index: 2;
         }
@@ -226,7 +230,7 @@
             font-size: 16px;
             color: #000000;
             max-width: 700px;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
             position: relative;
             z-index: 2;
         }
@@ -284,7 +288,7 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -30px auto 40px !important;
+            margin: 25px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -426,7 +430,8 @@
         .schedule-card {
             background: white;
             border-radius: 20px;
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             box-shadow: var(--shadow-md);
             border: 1px solid #edf2f7;
         }
@@ -648,10 +653,6 @@
 
 
         /* --- Responsive Queries --- */
-        @media (max-width: 992px) {
-            .header-info { display: none !important; }
-        }
-
         @media (max-width: 768px) {
             header { padding: 10px 5%; min-height: 65px; border-bottom: 1px solid #eee; }
             .logo { width: 40px; height: 40px; border-radius: 8px; }
@@ -674,26 +675,6 @@
                 gap: 12px;
             }
 
-            .nav-menu.open {
-                right: 0;
-            }
-
-            .nav-menu a {
-                width: 100%;
-                padding: 12px 18px;
-                border-radius: 12px;
-                background: #f8fafc;
-                font-size: 15px;
-                font-weight: 600;
-            }
-
-            .nav-menu a.active {
-                background: #e3f2fd;
-                color: var(--primary);
-            }
-
-            .nav-menu a.login-btn { background: #1e3a8a; color: white !important; text-align: center; justify-content: center; margin-top: 10px; margin-left: 0 !important; }
-            .nav-menu a.login-btn:hover, .nav-menu a.login-btn:active { background: #172554 !important; transform: scale(0.98); }
             .mobile-toggle {
                 display: block;
                 z-index: 1004;
@@ -701,7 +682,7 @@
             }
 
             .hero {
-                padding: 40px 5%;
+                padding: 25px 5% 20px !important;
             }
 
             .hero h2 {
@@ -710,17 +691,49 @@
 
             .hero p {
                 font-size: 14px;
-                margin-bottom: 20px;
+                margin-bottom: 16px;
+            }
+
+            .container {
+                width: 92% !important;
+                margin: 20px auto 30px !important;
             }
 
             .filter-box {
                 padding: 15px;
-                margin-top: -20px;
+                margin-top: 0;
+                margin-bottom: 20px;
             }
 
             .filter-form {
                 grid-template-columns: 1fr;
                 gap: 15px;
+            }
+
+            .search-bar {
+                flex-direction: row;
+                border-radius: 50px;
+                padding: 6px 8px;
+                align-items: center;
+                gap: 0;
+            }
+            .search-bar input {
+                padding: 10px 14px;
+                font-size: 13.5px;
+                text-align: left;
+                min-width: 0;
+                flex: 1;
+                width: auto;
+            }
+            .search-bar button {
+                padding: 0 18px;
+                height: 42px;
+                border-radius: 50px;
+                font-size: 12.5px;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+                width: auto;
             }
 
             .schedule-table thead {
@@ -808,12 +821,12 @@
         }
 
         .route-chip {
-            padding: 7px 18px;
+            padding: 6px 14px;
             border-radius: 20px;
             border: 1.5px solid #e2e8f0;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 13.5px;
+            background: #ffffff;
+            color: #334155;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -823,9 +836,9 @@
             align-items: center;
             gap: 6px;
             text-transform: uppercase;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             user-select: none;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         }
 
         .route-chip:hover {
@@ -841,6 +854,110 @@
             color: #ffffff !important;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
             transform: translateY(0);
+        }
+
+        .chip-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 0 6px;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+
+        .route-chip.active .chip-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        /* --- Compact Mobile (≤ 420px) --- */
+        @media (max-width: 420px) {
+            .hero {
+                padding: 18px 4% 14px !important;
+            }
+            .hero h2 {
+                font-size: 22px !important;
+            }
+            .hero p {
+                font-size: 12.5px !important;
+                margin-bottom: 10px !important;
+            }
+            .container {
+                width: 96% !important;
+                margin: 14px auto 24px !important;
+                padding: 0 !important;
+            }
+            .search-container {
+                max-width: 100% !important;
+                padding: 0 2px !important;
+            }
+            .search-bar {
+                padding: 4px 6px !important;
+                border-radius: 30px !important;
+            }
+            .search-bar input {
+                padding: 8px 10px !important;
+                font-size: 12px !important;
+            }
+            .search-bar button {
+                padding: 0 12px !important;
+                height: 36px !important;
+                font-size: 11px !important;
+            }
+            .filter-box {
+                padding: 10px !important;
+                border-radius: 12px !important;
+            }
+            .route-filter-wrapper {
+                padding: 10px !important;
+                border-radius: 12px !important;
+                margin-bottom: 12px !important;
+            }
+            .route-filter-label {
+                font-size: 11px !important;
+                margin-bottom: 6px !important;
+            }
+            .route-filter-bar {
+                gap: 6px !important;
+            }
+            .route-chip {
+                padding: 5px 12px !important;
+                font-size: 11px !important;
+                border-radius: 18px !important;
+                gap: 5px !important;
+            }
+            .chip-count {
+                font-size: 10px !important;
+                min-width: 18px !important;
+                height: 18px !important;
+                padding: 0 4px !important;
+            }
+            .card-header {
+                padding: 12px 10px !important;
+                gap: 8px !important;
+            }
+            .card-header h3 {
+                font-size: 14px !important;
+            }
+            .schedule-table tr {
+                padding: 8px 10px !important;
+                border-radius: 10px !important;
+                margin-bottom: 10px !important;
+            }
+            .schedule-table td {
+                padding: 5px 0 !important;
+                font-size: 12px !important;
+            }
+            .schedule-table td::before {
+                font-size: 10px !important;
+            }
         }
     </style>
 </head>
@@ -858,10 +975,10 @@
         <p>View departure times, vehicle status, and route information for all available vehicle types.</p>
 
         <div class="search-container">
-            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar">
+            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar" id="scheduleSearchForm">
                 <?php if (!empty($vehicle_type)): ?><input type="hidden" name="type" value="<?= esc($vehicle_type) ?>"><?php endif; ?>
                 <?php if (!empty($destination)): ?><input type="hidden" name="destination" value="<?= esc($destination) ?>"><?php endif; ?>
-                <input type="text" name="q" placeholder="Search by Route, Destination, or Plate Number..." value="<?= esc($search ?? '') ?>">
+                <input type="text" name="q" id="scheduleSearchInput" placeholder="Search by Route, Destination, or Plate Number..." value="<?= esc($search ?? '') ?>" autocomplete="off">
                 <button type="submit">SEARCH</button>
             </form>
         </div>
@@ -913,11 +1030,11 @@
             </div>
             <div class="route-filter-bar" id="routeFilterBar">
                 <button type="button" class="route-chip <?= empty($destination) ? 'active' : '' ?>" data-dest="all" onclick="selectRouteFilter('all', this)">
-                    All Routes
+                    All Routes <span class="chip-count"><?= (int)($total_active_count ?? count($schedules)) ?></span>
                 </button>
-                <?php foreach ($all_destinations as $dest): ?>
+                <?php foreach (($active_dest_counts ?? []) as $dest => $cnt): ?>
                     <button type="button" class="route-chip <?= (strcasecmp($destination ?? '', $dest) === 0) ? 'active' : '' ?>" data-dest="<?= esc(strtolower($dest)) ?>" onclick="selectRouteFilter('<?= esc(strtolower($dest)) ?>', this)">
-                        <?= strtoupper(esc($dest)) ?>
+                        <?= strtoupper(esc($dest)) ?> <span class="chip-count"><?= (int)$cnt ?></span>
                     </button>
                 <?php endforeach; ?>
             </div>
@@ -1038,6 +1155,7 @@
         <script>
         var currentType = '<?= esc($vehicle_type) ?>';
         var currentDest = '<?= esc($destination) ?>';
+        var currentSearch = '<?= esc($search ?? '') ?>';
         var _fetchPending = false;
 
         function selectRouteFilter(dest, btn) {
@@ -1076,14 +1194,17 @@
         function filterTableClientSide() {
             var rows = document.querySelectorAll('#scheduleTableBody tr');
             var visibleCount = 0;
+            var q = (currentSearch || '').toLowerCase();
             rows.forEach(function(row) {
                 var rowDest = (row.getAttribute('data-destination') || '').toLowerCase();
                 var rowType = (row.getAttribute('data-type') || '').toLowerCase();
+                var rowText = (row.innerText || '').toLowerCase();
 
                 var matchesDest = (!currentDest || currentDest === 'all' || rowDest === currentDest.toLowerCase());
                 var matchesType = (!currentType || currentType === 'all' || rowType === currentType.toLowerCase());
+                var matchesSearch = (!q || rowText.indexOf(q) !== -1);
 
-                if (matchesDest && matchesType) {
+                if (matchesDest && matchesType && matchesSearch) {
                     row.style.removeProperty('display');
                     row.classList.remove('d-none');
                     visibleCount++;
@@ -1105,7 +1226,8 @@
 
             var params = [];
             if (currentType) params.push('type=' + encodeURIComponent(currentType));
-            if (currentDest) params.push('destination=' + encodeURIComponent(currentDest));
+            if (currentDest && currentDest !== 'all') params.push('destination=' + encodeURIComponent(currentDest));
+            if (currentSearch) params.push('q=' + encodeURIComponent(currentSearch));
             params.push('_=' + Date.now());
             var fetchUrl = '<?= base_url('schedules/status') ?>?' + params.join('&');
 
@@ -1117,8 +1239,8 @@
             .then(function(data) {
                 renderSchedules(data.schedules, data.vehicle_types || []);
                 var badge = document.getElementById('scheduleCount');
-                if (badge) badge.innerText = data.count + ' Found';
-                syncDestinationOptions(data.destinations);
+                if (badge) badge.innerText = (data.count !== undefined ? data.count : data.schedules.length) + ' Found';
+                syncDestinationOptions(data.destinations, data.active_dest_counts, data.total_active_count);
             })
             .catch(function(e) {
                 console.error('Fetch error:', e);
@@ -1134,13 +1256,11 @@
             if (!card) return;
 
             if (schedules.length === 0) {
-                // Show empty state, remove table if it exists
                 card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">0 Found</span></div>'
-                    + '<div class="empty-state"><i class="far fa-calendar-times"></i><h4>No schedules available</h4></div>';
+                    + '<div class="empty-state"><i class="far fa-calendar-times"></i><h4>No schedules available</h4><p>No active vehicles waiting or boarding right now.</p></div>';
                 return;
             }
 
-            // If tbody doesn't exist (page loaded with empty state), create the table
             if (!tbody) {
                 card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">' + schedules.length + ' Found</span></div>'
                     + '<table class="schedule-table"><thead><tr>'
@@ -1157,11 +1277,9 @@
                 var typeMeta = vehicleTypeMeta[s.vehicle_type] || {};
                 var imgFile = typeMeta.image || 'minibus.png';
                 var typeLabel = typeMeta.name || s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); });
-                var statusClass = statusClassMap[s.status] || 'status-departed';
+                var statusClass = statusClassMap[s.status] || 'status-waiting';
                 var dep = '';
-                if (s.status === 'departed' && s.departure_time_formatted) {
-                    dep = '<span class="time-display departed">' + s.departure_time_formatted + '</span><div style="font-size:12.5px;color:var(--text-muted)">Departed</div>';
-                } else if (s.is_full) {
+                if (s.is_full) {
                     dep = '<span class="time-display full">FULL</span>';
                 } else {
                     dep = '<span class="time-display">' + (s.estimated_departure_formatted || 'Waiting') + '</span><div style="font-size:12.5px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
@@ -1186,7 +1304,7 @@
         }
 
         // Rebuild Destination filter options and route chips when route list changes
-        function syncDestinationOptions(destinations) {
+        function syncDestinationOptions(destinations, activeCounts, totalCount) {
             var sel = document.getElementById('destinationSelect');
             if (sel && Array.isArray(destinations) && document.activeElement !== sel) {
                 var desired = [''].concat(destinations);
@@ -1209,25 +1327,36 @@
                 }
             }
 
-            // Sync Route Filter Bar chips
+            // Sync Route Filter Bar chips — only show active routes with vehicles & include count badges
             var bar = document.getElementById('routeFilterBar');
-            if (bar && Array.isArray(destinations)) {
-                var existingChips = Array.from(bar.querySelectorAll('.route-chip[data-dest]:not([data-dest="all"])')).map(c => c.getAttribute('data-dest'));
-                var desiredChips = destinations.map(d => d.toLowerCase());
-                if (existingChips.join(',') !== desiredChips.join(',')) {
-                    var activeDest = currentDest ? currentDest.toLowerCase() : 'all';
-                    var chipHtml = '<button type="button" class="route-chip' + (activeDest === 'all' ? ' active' : '') + '" data-dest="all" onclick="selectRouteFilter(\'all\', this)">All Routes</button>';
-                    destinations.forEach(function(d) {
-                        var isAct = (activeDest === d.toLowerCase());
-                        chipHtml += '<button type="button" class="route-chip' + (isAct ? ' active' : '') + '" data-dest="' + d.toLowerCase() + '" onclick="selectRouteFilter(\'' + d.toLowerCase() + '\', this)">' + d.toUpperCase() + '</button>';
-                    });
-                    bar.innerHTML = chipHtml;
-                }
+            if (bar && activeCounts && typeof activeCounts === 'object') {
+                var activeDestNames = Object.keys(activeCounts).sort();
+                var activeDest = currentDest ? currentDest.toLowerCase() : 'all';
+                var totCount = (totalCount !== undefined) ? totalCount : 0;
+
+                var chipHtml = '<button type="button" class="route-chip' + (activeDest === 'all' ? ' active' : '') + '" data-dest="all" onclick="selectRouteFilter(\'all\', this)">'
+                    + 'All Routes <span class="chip-count">' + totCount + '</span></button>';
+
+                activeDestNames.forEach(function(d) {
+                    var isAct = (activeDest === d.toLowerCase());
+                    var cnt = activeCounts[d] || 0;
+                    chipHtml += '<button type="button" class="route-chip' + (isAct ? ' active' : '') + '" data-dest="' + d.toLowerCase() + '" onclick="selectRouteFilter(\'' + d.toLowerCase() + '\', this)">'
+                        + d.toUpperCase() + ' <span class="chip-count">' + cnt + '</span></button>';
+                });
+                bar.innerHTML = chipHtml;
             }
         }
 
-        // Initialize real-time sync
+        // Initialize real-time sync & search input listeners
         document.addEventListener('DOMContentLoaded', function() {
+            var searchInput = document.getElementById('scheduleSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    currentSearch = this.value.trim();
+                    filterTableClientSide();
+                });
+            }
+
             QueueSync.init({
                 pollInterval:  3000,
                 customRefresh: fetchSchedulesStatus,

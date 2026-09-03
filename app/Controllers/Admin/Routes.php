@@ -80,7 +80,7 @@ class Routes extends BaseController
     {
         $db = \Config\Database::connect();
 
-        $destsResult  = $db->query('SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != "" ORDER BY destination ASC')->getResultArray();
+        $destsResult  = $db->query("SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != '' ORDER BY destination ASC")->getResultArray();
         $destinations = array_column($destsResult, 'destination');
         $allLocations = array_values(array_filter(array_map('strtoupper', array_unique($destinations))));
         sort($allLocations);
@@ -236,6 +236,7 @@ class Routes extends BaseController
                         ]);
                         if ($insertedId) {
                             $this->replaceRouteFares((int)$insertedId, (int)$terminalId, $fareFloat);
+                            (new \App\Models\UserRouteModel())->autoAssignNewRouteToStaff((int)$insertedId, (int)$terminalId, $destination);
                         }
                     }
                     $added++;
@@ -486,6 +487,7 @@ class Routes extends BaseController
                         ]);
                         if ($insertedId) {
                             $this->replaceRouteFares((int)$insertedId, (int)$terminalId, $fareFloat);
+                            (new \App\Models\UserRouteModel())->autoAssignNewRouteToStaff((int)$insertedId, (int)$terminalId, $destination);
                         }
                     }
                     $added++;

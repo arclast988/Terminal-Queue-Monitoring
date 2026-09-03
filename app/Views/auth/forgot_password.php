@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#D62828">
     <title>Reset Password · Palompon Transit</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -184,7 +188,11 @@
             body { padding: 20px 16px; }
             .card { padding: var(--space-6); border-radius: var(--radius-lg); }
         }
-        @media (max-width: 400px) { .card { padding: 28px 20px; } }
+        @media (max-width: 420px) {
+            body { padding: 16px 10px; }
+            .card { padding: 20px 14px; border-radius: var(--radius-md); }
+            .title { font-size: 20px; }
+        }
     </style>
 </head>
 <body>

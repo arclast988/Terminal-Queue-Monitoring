@@ -32,7 +32,7 @@ Double-click: diagnose_windows.bat
 
 This will check:
 - ✓ WSL is installed
-- ✓ Services are running (Nginx, PHP-FPM, MariaDB/MySQL)
+- ✓ Services are running (Nginx, PHP-FPM, PostgreSQL)
 - ✓ Your project path is correct
 - ✓ Port 80 is accessible
 - ✓ WebSockets process status
@@ -46,7 +46,7 @@ This will check:
 | **WSL not installed** | Run `install_system.bat` as Admin, then **reboot** |
 | **"wsl: command not found"** | Windows build too old. Upgrade to Windows 10 Build 19041+ |
 | **Nginx won't start** | Another app using port 80. Stop it: `netstat -ano \| findstr ":80"` |
-| **Database not found** | Make sure `.sql` files exist in project root |
+| **Database not found** | Make sure `app/Database/postgres_schema.sql` exists |
 | **PHP version error** | Delete WSL: `wsl --unregister Ubuntu`, then rerun `install_system.bat` |
 
 ---
@@ -56,8 +56,13 @@ This will check:
 Once the site loads:
 
 ```
-Username: admin123
-Password: admin123
+Super Admin:
+  Username: admin
+  Password: admin123
+
+Staff (Dispatcher):
+  Username: staff
+  Password: staff123
 ```
 
 (See `INSTALLATION_GUIDE.md` for more details)

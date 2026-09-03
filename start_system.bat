@@ -22,7 +22,7 @@ echo =====================================================================
 echo   Palompon Transit Management System - WSL Launcher
 echo =====================================================================
 echo.
-echo Starting services: Nginx, PHP-FPM, MariaDB, WebSocket Server...
+echo Starting services: Nginx, PHP-FPM, PostgreSQL, WebSocket Server...
 echo This may take 10-15 seconds on first run.
 echo.
 

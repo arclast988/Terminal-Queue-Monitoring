@@ -13,21 +13,17 @@
 
 </style>
 
-<div class="page-header-modern">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="page-title-modern">
-                    <i class="bi bi-plus-circle"></i> Add New Route / Fare
-                </h1>
-                <p class="text-muted mb-0">Create a new route and set initial fare details</p>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
-                    <i class="bi bi-arrow-left"></i> Back to List
-                </a>
-            </div>
-        </div>
+<div class="page-header-modern fade-in">
+    <div>
+        <h1 class="page-title-modern">
+            <i class="bi bi-plus-circle"></i> Add New Route / Fare
+        </h1>
+        <p class="text-muted mb-0">Create a new route and set initial fare details</p>
+    </div>
+    <div class="mt-3 mt-md-0">
+        <a href="<?= base_url('admin/routes') ?>" class="btn-modern btn-modern-outline">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
     </div>
 </div>
 
@@ -91,45 +87,23 @@
                             <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
                             <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
                             <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                        <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;">🚐 Van</div>
-                                        <div class="input-group-modern">
-                                            <span class="input-group-text-modern">₱</span>
-                                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[van]"
-                                                   value="<?= old('fares.van', old('fare')) ?>" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                        <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;">🚌 Jeepney</div>
-                                        <div class="input-group-modern">
-                                            <span class="input-group-text-modern">₱</span>
-                                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[jeepney]"
-                                                   value="<?= old('fares.jeepney') ?>" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                        <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;">🚍 Mini Bus</div>
-                                        <div class="input-group-modern">
-                                            <span class="input-group-text-modern">₱</span>
-                                            <input type="number" step="0.01" min="1" class="input-modern" name="fares[minibus]"
-                                                   value="<?= old('fares.minibus') ?>" placeholder="0.00">
-                                        </div>
-                                    </div>
-                                </div>
                                 <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                                    <?php if (in_array($vehicleType['slug'], ['van', 'jeepney', 'minibus'], true)) continue; ?>
-                                    <div class="col-md-4">
-                                        <div class="p-3 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
-                                            <div class="fw-bold mb-2" style="color: var(--text-main); font-size: 15px;"><i class="bi bi-truck me-1"></i><?= esc($vehicleType['name']) ?></div>
+                                    <?php
+                                        $vtSlug = $vehicleType['slug'];
+                                        $vtCol  = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vtSlug);
+                                        $vtIco  = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
+                                        $val    = old('fares.' . $vtSlug, ($vtSlug === 'van' ? old('fare') : ''));
+                                    ?>
+                                    <div class="col-12 col-sm-6 col-md-4">
+                                        <div class="p-3 border rounded-3 h-100" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important; border-top: 3.5px solid <?= esc($vtCol) ?> !important;">
+                                            <div class="fw-bold mb-2 d-flex align-items-center gap-2" style="color: <?= esc($vtCol) ?>; font-size: 15px;">
+                                                <i class="fas <?= esc($vtIco) ?>"></i>
+                                                <span style="color: var(--text-main);"><?= esc($vehicleType['name']) ?></span>
+                                            </div>
                                             <div class="input-group-modern">
                                                 <span class="input-group-text-modern">₱</span>
-                                                <input type="number" step="0.01" min="1" class="input-modern" name="fares[<?= esc($vehicleType['slug']) ?>]"
-                                                       value="<?= old('fares.' . $vehicleType['slug']) ?>" placeholder="0.00">
+                                                <input type="number" step="0.01" min="1" class="input-modern" name="fares[<?= esc($vtSlug) ?>]"
+                                                       value="<?= esc($val) ?>" placeholder="0.00">
                                             </div>
                                         </div>
                                     </div>
@@ -137,11 +111,11 @@
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-5">
-                            <button type="submit" class="btn btn-modern btn-modern-primary">
+                        <div class="d-flex flex-column flex-sm-row gap-2 mt-4 mt-md-5 form-actions-modern">
+                            <button type="submit" class="btn-modern btn-modern-primary">
                                 <i class="bi bi-save"></i> Save Route
                             </button>
-                            <a href="<?= base_url('admin/routes') ?>" class="btn btn-modern btn-modern-outline">
+                            <a href="<?= base_url('admin/routes') ?>" class="btn-modern btn-modern-outline">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
                         </div>

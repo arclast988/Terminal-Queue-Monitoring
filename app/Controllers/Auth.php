@@ -246,6 +246,7 @@ class Auth extends BaseController
             ->update(['used' => 1]);
 
         $db->table('password_reset_tokens')->insert([
+            'user_id'       => $user['id'] ?? null,
             'username'      => $accountUsername,
             'token'         => $token,
             'reset_code'    => $resetCode,

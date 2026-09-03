@@ -23,7 +23,7 @@
 ### Windows
 1. [ ] Extract project folder anywhere
 2. [ ] Right-click `install_system.bat` → Run as Administrator
-3. [ ] Wait for automatic WSL, Ubuntu, PHP, Nginx, MariaDB installation (5-10 min)
+3. [ ] Wait for automatic WSL, Ubuntu, PHP, Nginx, PostgreSQL installation (5-10 min)
 4. [ ] At end, press any key to continue
 5. [ ] Double-click `start_system.bat`
 6. [ ] Browser should auto-open to `http://localhost/`
@@ -54,9 +54,9 @@
 - [ ] To start again: Double-click `start_system.bat`
 
 ### Linux Only
-- [ ] Check services are running: `sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket` (replace <VERSION> with installed version)
-- [ ] To stop services: `sudo systemctl stop nginx php<VERSION>-fpm mariadb jeepney-websocket`
-- [ ] To start services: `sudo systemctl start nginx php<VERSION>-fpm mariadb jeepney-websocket`
+- [ ] Check services are running: `sudo systemctl status nginx php<VERSION>-fpm postgresql jeepney-websocket` (replace <VERSION> with installed version)
+- [ ] To stop services: `sudo systemctl stop nginx php<VERSION>-fpm postgresql jeepney-websocket`
+- [ ] To start services: `sudo systemctl start nginx php<VERSION>-fpm postgresql jeepney-websocket`
 
 ---
 
@@ -127,7 +127,7 @@ sudo systemctl status nginx
 # Windows: Double-click stop_system.bat, then start_system.bat
 
 # Linux (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
-sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php<VERSION>-fpm postgresql jeepney-websocket
 ```
 
 ### View error logs
@@ -139,9 +139,9 @@ wsl sudo tail -f /var/log/nginx/error.log
 sudo tail -f /var/log/nginx/error.log
 ```
 
-### Reset database (keep same structure)
+### Reset database schema & seed
 ```bash
-mysql -u jeepney_user -p12345678 jeepneynvans -e "SET FOREIGN_KEY_CHECKS=0; TRUNCATE users; TRUNCATE terminals; TRUNCATE routes; SET FOREIGN_KEY_CHECKS=1;"
+sudo -u postgres psql -d jeepneynvans -f app/Database/postgres_schema.sql
 ```
 
 ---
@@ -150,10 +150,10 @@ mysql -u jeepney_user -p12345678 jeepneynvans -e "SET FOREIGN_KEY_CHECKS=0; TRUN
 
 | Problem | Solution |
 |---------|----------|
-| "Connection refused" | Check MariaDB is running |
+| "Connection refused" | Check PostgreSQL is running |
 | "502 Bad Gateway" | Restart PHP-FPM |
 | "Port 80 already in use" | Stop other web servers (Apache, IIS, etc.) |
-| "Cannot connect to database" | Verify username/password in `.env` |
+| "Cannot connect to database" | Verify username/password/port (5432) in `.env` |
 | "White screen or error page" | Check logs in `writable/logs/` |
 | "WebSocket not working" | Restart the WebSocket service (systemctl restart jeepney-websocket) |
 

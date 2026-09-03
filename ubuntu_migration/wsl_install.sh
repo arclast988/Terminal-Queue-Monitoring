@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Local WSL stack installer for the Palompon Transit Management System.
-# Installs MariaDB, PHP 8.2+ (auto-detected), Nginx, Composer, and the project's PHP
-# dependencies so start_system.bat can launch the app.
+# Installs PostgreSQL, PHP 8.2+ (auto-detected), Nginx, Composer, and the project's PHP
+# dependencies inside WSL Ubuntu. Invoked by install_system.bat.
 # Idempotent - safe to re-run. Invoked by install_system.bat as root inside WSL.
 
 set -e
@@ -26,12 +26,12 @@ rm -f /etc/apt/sources.list.d/ondrej-*.list 2>/dev/null
 apt-get update -y || echo "[WARN] apt-get update finished with warnings."
 apt-get install -y git curl unzip software-properties-common ca-certificates lsb-release gnupg sed
 
-# --- 2. MariaDB ---
+# --- 2. PostgreSQL ---
 echo ""
-echo "[2/6] Installing MariaDB..."
-apt-get install -y mariadb-server mariadb-client
-service mariadb start 2>/dev/null || service mysql start 2>/dev/null || true
-echo "[OK] MariaDB installed."
+echo "[2/6] Installing PostgreSQL..."
+apt-get install -y postgresql postgresql-contrib
+service postgresql start 2>/dev/null || true
+echo "[OK] PostgreSQL installed."
 
 # --- 3. PHP version resolution + CodeIgniter 4 extensions ---
 # Resolution order (mirrors install_linux.sh):
@@ -94,7 +94,7 @@ fi
 # missing extensions.
 if [ -n "$PHP_VER" ]; then
     WANTED_PKGS=(
-        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl" "php${PHP_VER}-mbstring"
+        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-pgsql" "php${PHP_VER}-sqlite3" "php${PHP_VER}-intl" "php${PHP_VER}-mbstring"
         "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip" "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
     )
     PKGS_TO_INSTALL=()
@@ -109,7 +109,7 @@ if [ -n "$PHP_VER" ]; then
     PHP_BIN="php${PHP_VER}"
 else
     WANTED_PKGS=(
-        php-cli php-fpm php-mysql php-intl php-mbstring
+        php-cli php-fpm php-pgsql php-sqlite3 php-intl php-mbstring
         php-curl php-xml php-zip php-gd php-common
     )
     PKGS_TO_INSTALL=()
@@ -158,7 +158,7 @@ fi
 echo ""
 echo "====================================================================="
 echo "  INSTALLATION COMPLETE."
-echo "  - MariaDB, PHP, Nginx, Composer installed."
+echo "  - PostgreSQL, PHP, Nginx, Composer installed."
 echo "  - Project dependencies installed in ${PROJECT_ROOT}/vendor."
 echo ""
 echo "  Next: from Windows, double-click start_system.bat."

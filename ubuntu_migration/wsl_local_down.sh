@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Local WSL teardown for the Palompon Transit Management System.
-# Stops the WebSocket server, Nginx, PHP-FPM, and MariaDB that were started by
+# Stops the WebSocket server, Nginx, PHP-FPM, and PostgreSQL that were started by
 # wsl_local_up.sh. Database data files on disk are preserved so a stop/start
 # round-trip is non-destructive. Invoked by stop_system.bat (run as root in WSL).
 
@@ -34,10 +34,10 @@ service nginx stop 2>/dev/null && echo "[OK] Nginx stopped." \
 service "php${PHPVER}-fpm" stop 2>/dev/null && echo "[OK] PHP-FPM (php${PHPVER}-fpm) stopped." \
     || echo "[INFO] PHP-FPM (php${PHPVER}-fpm) was not running."
 
-if service mysql stop 2>/dev/null || service mariadb stop 2>/dev/null; then
-    echo "[OK] MariaDB stopped (data preserved on disk)."
+if service postgresql stop 2>/dev/null; then
+    echo "[OK] PostgreSQL stopped (data preserved on disk)."
 else
-    echo "[INFO] MariaDB was not running."
+    echo "[INFO] PostgreSQL was not running."
 fi
 
 # --- 4. Confirm the web stack is actually down ---

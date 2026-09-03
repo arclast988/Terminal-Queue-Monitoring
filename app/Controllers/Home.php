@@ -33,23 +33,35 @@ class Home extends BaseController
         $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
             ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding'])
-            ->orderBy('queue.position', 'ASC')
             ->orderBy('routes.destination', 'ASC')
+            ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+            ->orderBy('queue.position', 'ASC')
+            ->orderBy('queue.estimated_departure', 'ASC')
             ->findAll();
 
 
         $data = [
             'title' => 'Live Terminal Monitor',
             'active_queue' => $active_queue,
-            'recent_departures' => $queueModel->select('queue.*, vehicles.plate_number, vehicles.capacity, queue.current_passengers, vehicles.driver_name, terminals.name as origin, routes.destination')
+            'recent_departures' => $queueModel->select('
+                queue.*, 
+                COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number, 
+                vehicles.capacity, 
+                queue.current_passengers, 
+                COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name, 
+                terminals.name as origin, 
+                routes.destination
+            ')
                 ->withFullJoins()
                 ->where('queue.status', 'departed')
-                ->like('queue.departure_time', date('Y-m-d'), 'after')
+                ->where('queue.departure_time >=', date('Y-m-d 00:00:00'))
+                ->where('queue.departure_time <=', date('Y-m-d 23:59:59'))
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
                 ->findAll(),
             'total_departures_today' => $queueModel->where('status', 'departed')
-                ->like('departure_time', date('Y-m-d'), 'after')
+                ->where('departure_time >=', date('Y-m-d 00:00:00'))
+                ->where('departure_time <=', date('Y-m-d 23:59:59'))
                 ->countAllResults(),
             'departure_rules' => $this->getDepartureRules(),
             'route_average_departures' => $this->getRouteAverageDepartures(),
@@ -76,8 +88,10 @@ class Home extends BaseController
             $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
-                ->orderBy('queue.position', 'ASC')
                 ->orderBy('routes.destination', 'ASC')
+                ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+                ->orderBy('queue.position', 'ASC')
+                ->orderBy('queue.estimated_departure', 'ASC')
                 ->findAll();
 
             foreach ($active_queue as &$item) {
@@ -86,10 +100,17 @@ class Home extends BaseController
             }
             unset($item);
 
-            $recent_departures = $queueModel->select('queue.*, vehicles.plate_number, terminals.name as origin, routes.destination')
+            $recent_departures = $queueModel->select('
+                queue.*, 
+                COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number, 
+                COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name, 
+                terminals.name as origin, 
+                routes.destination
+            ')
                 ->withFullJoins()
                 ->where('queue.status', 'departed')
-                ->like('queue.departure_time', date('Y-m-d'), 'after')
+                ->where('queue.departure_time >=', date('Y-m-d 00:00:00'))
+                ->where('queue.departure_time <=', date('Y-m-d 23:59:59'))
                 ->orderBy('queue.departure_time', 'DESC')
                 ->limit(10)
                 ->findAll();
@@ -100,7 +121,8 @@ class Home extends BaseController
             unset($dept);
 
             $total_departures_today = $queueModel->where('status', 'departed')
-                ->like('departure_time', date('Y-m-d'), 'after')
+                ->where('departure_time >=', date('Y-m-d 00:00:00'))
+                ->where('departure_time <=', date('Y-m-d 23:59:59'))
                 ->countAllResults();
 
             $routeModel = new \App\Models\RouteModel();
@@ -190,7 +212,8 @@ class Home extends BaseController
             ->join('terminals', 'terminals.id = routes.terminal_id')
             ->where('queue.status', 'departed')
             ->where('queue.departure_time IS NOT NULL', null, false)
-            ->like('queue.departure_time', date('Y-m-d'), 'after')
+            ->where('queue.departure_time >=', date('Y-m-d 00:00:00'))
+            ->where('queue.departure_time <=', date('Y-m-d 23:59:59'))
             ->orderBy('terminals.name', 'ASC')
             ->orderBy('routes.destination', 'ASC')
             ->orderBy('queue.departure_time', 'ASC')

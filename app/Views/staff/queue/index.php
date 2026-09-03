@@ -506,9 +506,15 @@
                     <?php
                         $vType = $item['vehicle_type'] ?? '';
                         $imgFile = vehicle_type_image($vType);
+                        $itemCol = vehicle_type_color($vType);
+                        $itemIco = vehicle_type_icon($vType);
                     ?>
                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
-                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">
+                        <?php if (!empty($imgFile)): ?>
+                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">
+                        <?php else: ?>
+                            <i class="fas <?= esc($itemIco) ?>" style="color: <?= esc($itemCol) ?>; font-size: 16px;"></i>
+                        <?php endif; ?>
                     </span>
                     <span class="fw-semibold flex-grow-1"><?= esc($item['plate_number']) ?>
                         <?= vehicle_type_badge($vType) ?>
@@ -535,7 +541,7 @@
                         <div class="fw-semibold small"><?= date('H:i', strtotime($item['arrival_time'])) ?></div>
                     </div>
                     <div class="col-6 py-1">
-                        <div class="text-muted small">Est. departure</div>
+                        <div class="text-muted small">Est. departure (HH:MM)</div>
                         <div class="fw-semibold small text-primary">
                             <?= !empty($item['estimated_departure']) ? date('H:i', strtotime($item['estimated_departure'])) : 'Waiting' ?>
                         </div>
@@ -653,10 +659,6 @@
                                 </button>
                                 <button onclick="updateStatus(<?= $item['id'] ?>, 'departed', 'confirmDepartModal<?= $item['id'] ?>', this)" 
                                    id="confirmDepartBtn<?= $item['id'] ?>" 
-                                   data-action="update-status"
-                                   data-id="<?= $item['id'] ?>"
-                                   data-status="departed"
-                                   data-modal-id="confirmDepartModal<?= $item['id'] ?>"
                                    class="btn-modern btn-modern-sm btn-modern-danger">
                                     Depart
                                 </button>
@@ -868,11 +870,10 @@
 
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <form action="<?= base_url('staff/queue/add') ?>" method="post" id="addToQueueForm">
+        <form action="<?= base_url('staff/queue/add') ?>" method="post" id="addToQueueForm" class="modal-content">
             <?= csrf_field() ?>
-            <div class="modal-content">
-                <!-- Header -->
-                <div class="modal-header">
+            <!-- Header -->
+            <div class="modal-header">
                     <div class="d-flex align-items-center gap-3">
                         <div class="modal-icon-badge">
                             <i class="bi bi-truck-front-fill fs-5"></i>
@@ -944,8 +945,16 @@
                                         <div class="form-check mb-0 flex-shrink-0">
                                             <input class="form-check-input vehicle-checkbox" type="checkbox" name="vehicle_ids[]" value="<?= $v['id'] ?>" id="veh_check_<?= $v['id'] ?>" style="cursor: pointer; width: 1.3em; height: 1.3em;">
                                         </div>
+                                        <?php
+                                            $vCol = vehicle_type_color($vType);
+                                            $vIco = vehicle_type_icon($vType);
+                                        ?>
                                         <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(255,255,255,0.9);">
-                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;">
+                                            <?php if (!empty($imgFile)): ?>
+                                                <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;">
+                                            <?php else: ?>
+                                                <i class="fas <?= esc($vIco) ?>" style="color: <?= esc($vCol) ?>; font-size: 16px;"></i>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="min-w-0 flex-grow-1">
                                             <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
@@ -1002,7 +1011,6 @@
                         </button>
                     <?php endif; ?>
                 </div>
-            </div>
         </form>
     </div>
 </div>
@@ -1010,29 +1018,27 @@
 <!-- Change Driver Modal -->
 <div class="modal fade" id="changeDriverModal" tabindex="-1" aria-labelledby="changeDriverModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
-        <form id="changeDriverForm">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="changeDriverModalLabel"><i class="bi bi-person-badge me-2"></i>Change Driver</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <form id="changeDriverForm" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="changeDriverModalLabel"><i class="bi bi-person-badge me-2"></i>Change Driver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label-modern">Vehicle</label>
+                    <div class="form-control bg-light" id="changeDriverVehicle" style="pointer-events:none;border-radius:var(--radius-md);"></div>
                 </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label-modern">Vehicle</label>
-                        <div class="form-control bg-light" id="changeDriverVehicle" style="pointer-events:none;border-radius:var(--radius-md);"></div>
-                    </div>
-                    <div class="mb-0">
-                        <label for="changeDriverInput" class="form-label-modern">Driver Name</label>
-                        <input type="text" class="form-control-modern" id="changeDriverInput" name="driver_name"
-                            minlength="2" maxlength="100" autocomplete="off" required>
-                    </div>
+                <div class="mb-0">
+                    <label for="changeDriverInput" class="form-label-modern">Driver Name</label>
+                    <input type="text" class="form-control-modern" id="changeDriverInput" name="driver_name"
+                        minlength="2" maxlength="100" autocomplete="off" required>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-modern btn-modern-primary btn-modern-sm" id="changeDriverSubmitBtn">
-                        <i class="bi bi-check-lg me-1"></i> Save Driver
-                    </button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-modern btn-modern-outline" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn-modern btn-modern-primary" id="changeDriverSubmitBtn">
+                    <i class="bi bi-check-lg me-1"></i>Save Driver
+                </button>
             </div>
         </form>
     </div>
@@ -1184,11 +1190,14 @@
                     var btn = document.querySelector('[data-action="change-driver"][data-id="' + changeDriverQueueId + '"]');
                     if (btn) {
                         btn.setAttribute('data-driver', driverName);
-                        var driverSpan = btn.closest('td') ? btn.closest('td').querySelector('.driver-name-text') : null;
-                        if (driverSpan) driverSpan.textContent = driverName;
                     }
-                    if (typeof QueueSync !== 'undefined' && QueueSync.refresh) {
-                        QueueSync.refresh();
+                    var driverSpan = document.getElementById('driver-name-' + changeDriverQueueId);
+                    if (driverSpan) {
+                        driverSpan.setAttribute('title', 'Driver: ' + driverName);
+                        var strongEl = driverSpan.querySelector('strong');
+                        if (strongEl) {
+                            strongEl.textContent = driverName;
+                        }
                     }
                 } else {
                     alert(data.message || 'Failed to update driver.');

@@ -97,16 +97,10 @@ abstract class BaseController extends Controller
                 $cache->delete('rt_announcements');
                 $cache->delete('rt_fares_api');
                 $cache->delete('rt_fares_api_v2');
+                $cache->delete('db_vehicle_types');
             }
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement
-        }
-
-        // Only attempt WebSocket broadcast if the server is confirmed running
-        // (indicated by the presence of a PID file written by the WS server on startup)
-        $pidFile = WRITEPATH . 'ws_server.pid';
-        if (!file_exists($pidFile)) {
-            return; // No WS server running — polling handles sync
         }
 
         $msgId = bin2hex(random_bytes(4));

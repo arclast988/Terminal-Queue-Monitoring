@@ -95,13 +95,13 @@ if "%PHPFPM_STATE%"=="active" (
 
 echo.
 set "DB_STATE="
-for /f "delims=" %%s in ('wsl -u root bash -lc "if systemctl is-active mariadb >/dev/null 2>&1; then echo active; elif systemctl is-active mysql >/dev/null 2>&1; then echo active; elif service mariadb status >/dev/null 2>&1; then echo active; elif service mysql status >/dev/null 2>&1; then echo active; else echo inactive; fi"') do set "DB_STATE=%%s"
+for /f "delims=" %%s in ('wsl -u root bash -lc "if systemctl is-active postgresql >/dev/null 2>&1; then echo active; elif service postgresql status >/dev/null 2>&1; then echo active; else echo inactive; fi"') do set "DB_STATE=%%s"
 if "%DB_STATE%"=="active" (
-    echo   [OK] MariaDB/MySQL is running
+    echo   [OK] PostgreSQL is running
 ) else (
-    echo   [FAIL] MariaDB/MySQL is NOT running
-    echo   [INFO] MariaDB/MySQL status:
-    wsl -u root bash -lc "systemctl status mariadb --no-pager --lines=8 2>/dev/null || systemctl status mysql --no-pager --lines=8 2>/dev/null || service mariadb status 2>/dev/null || service mysql status 2>/dev/null || echo '   [INFO] mariadb/mysql service not found or not running'"
+    echo   [FAIL] PostgreSQL is NOT running
+    echo   [INFO] PostgreSQL status:
+    wsl -u root bash -lc "systemctl status postgresql --no-pager --lines=8 2>/dev/null || service postgresql status 2>/dev/null || echo '   [INFO] postgresql service not found or not running'"
 )
 
 echo.
@@ -131,14 +131,14 @@ if defined PROJECT_WSL (
     echo.
 )
 
-REM === Check 7: SQL Files ===
-echo [CHECK 7] SQL Database Files...
+REM === Check 7: PostgreSQL Schema File ===
+echo [CHECK 7] PostgreSQL Database Schema File...
 if defined PROJECT_WSL (
-    for /f "delims=" %%f in ('wsl ls -la "%PROJECT_WSL%"/*.sql 2^>nul') do (
+    for /f "delims=" %%f in ('wsl ls -la "%PROJECT_WSL%/app/Database/postgres_schema.sql" 2^>nul') do (
         echo   %%f
     )
     if errorlevel 1 (
-        echo   [WARN] No .sql files found in project root
+        echo   [WARN] app/Database/postgres_schema.sql not found
     )
     echo.
 ) else (

@@ -91,7 +91,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
-                                <label for="time_from" class="form-label-modern">Time From <span class="text-danger">*</span></label>
+                                <label for="time_from" class="form-label-modern">Time From (HH:MM) <span class="text-danger">*</span></label>
                                 <div class="military-time-wrap">
                                     <input type="text" class="input-modern military-time-input" id="time_from" name="time_from"
                                         value="<?= old('time_from') ?? date('H:i', strtotime($rule['time_from'])) ?>" placeholder="HH:MM (e.g. 05:00, 13:30)" maxlength="5" required>
@@ -102,7 +102,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                                 <div class="form-text-modern">24-hour military time format (e.g. 08:00 or 14:30).</div>
                             </div>
                             <div class="col-md-6 mb-4">
-                                <label for="time_to" class="form-label-modern">Time To <span class="text-danger">*</span></label>
+                                <label for="time_to" class="form-label-modern">Time To (HH:MM) <span class="text-danger">*</span></label>
                                 <div class="military-time-wrap">
                                     <input type="text" class="input-modern military-time-input" id="time_to" name="time_to"
                                         value="<?= old('time_to') ?? date('H:i', strtotime($rule['time_to'])) ?>" placeholder="HH:MM (e.g. 09:00, 18:00)" maxlength="5" required>
@@ -116,7 +116,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
-                                <label for="wait_duration" class="form-label-modern">Wait Time <span class="text-danger">*</span></label>
+                                <label for="wait_duration" class="form-label-modern">Wait Time (HH:MM) <span class="text-danger">*</span></label>
                                 <div class="military-time-wrap">
                                     <input type="text" class="input-modern military-time-input" id="wait_duration" name="wait_duration"
                                         value="<?= esc($defaultWaitValue) ?>" placeholder="HH:MM (e.g. 00:30)" maxlength="5" required>

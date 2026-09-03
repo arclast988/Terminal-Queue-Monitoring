@@ -31,8 +31,8 @@
         z-index: 1;
     }
     .advisory-icon {
-        width: 24px;
-        height: 24px;
+        width: 28px;
+        height: 28px;
         background: white;
         border-radius: 50%;
         display: flex;
@@ -41,6 +41,12 @@
         color: var(--primary);
         font-weight: 800;
         flex-shrink: 0;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .advisory-icon:hover {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 3px rgba(255,255,255,0.35);
     }
     .advisory-text {
         overflow: hidden;
@@ -49,7 +55,123 @@
     .marquee {
         display: inline-block;
         padding-left: 100%;
-        animation: gh-marquee 15s linear infinite;
+        animation: gh-marquee 35s linear infinite;
+        font-weight: 800;
+        font-size: 16px;
+        letter-spacing: 0.5px;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .marquee:hover {
+        animation-play-state: paused;
+    }
+
+    /* --- Announcement Modal --- */
+    .ann-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .ann-modal-overlay.open {
+        display: flex;
+    }
+    .ann-modal {
+        background: white;
+        border-radius: 16px;
+        max-width: 520px;
+        width: 100%;
+        max-height: 70vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+        animation: annSlideUp 0.3s ease;
+    }
+    .ann-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid #eee;
+        background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
+        border-radius: 16px 16px 0 0;
+        color: white;
+    }
+    .ann-modal-header h3 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #ffffff;
+    }
+    .ann-modal-header h3 i {
+        color: #ffffff;
+    }
+    .ann-modal-close {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    .ann-modal-close:hover {
+        background: rgba(255,255,255,0.35);
+    }
+    .ann-modal-body {
+        padding: 16px 22px 22px;
+    }
+    .ann-modal-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .ann-modal-list li {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 15.5px;
+        color: #1e293b;
+        line-height: 1.65;
+    }
+    .ann-modal-list li:last-child {
+        border-bottom: none;
+    }
+    .ann-bullet {
+        width: 8px;
+        height: 8px;
+        background: #B71C1C;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 7px;
+    }
+    .ann-modal-empty {
+        text-align: center;
+        color: #94a3b8;
+        padding: 30px 0;
+        font-size: 14px;
+    }
+    .ann-modal-empty i {
+        font-size: 32px;
+        margin-bottom: 10px;
+        display: block;
+        color: #cbd5e1;
+    }
+    @keyframes annSlideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to   { transform: translateY(0); opacity: 1; }
     }
     @keyframes gh-marquee {
         0%   { transform: translate(0, 0); }
@@ -199,34 +321,68 @@
         font-weight: 500;
     }
 
-    /* --- Responsive --- */
-    @media (max-width: 1200px) {
-        .guest-header .header-info {
-            display: none !important;
-        }
+    .guest-header .header-info {
+        display: flex;
+        align-items: center;
+        border-left: 1.5px solid #e2e8f0;
+        padding-left: 18px;
+        height: 28px;
+        margin-top: -6px;
+    }
+    .header-clock-pill {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+        line-height: 1;
+    }
+    .header-clock-pill i {
+        color: #D62828;
+        font-size: 15px;
     }
 
+    /* --- Responsive --- */
     @media (max-width: 768px) {
         .advisory-bar {
             padding: 8px 5%;
             font-size: 12.5px;
         }
         .guest-header {
-            padding: 10px 5%;
-            min-height: 65px;
+            padding: 10px 4%;
+            min-height: 60px;
             border-bottom: 1px solid #eee;
         }
+        .guest-header .logo-container {
+            gap: 12px !important;
+        }
         .guest-header .logo {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 8px;
         }
         .guest-header .logo-text h1 {
-            font-size: 15px;
+            font-size: 14px;
             letter-spacing: -0.2px;
         }
         .guest-header .logo-text p {
-            font-size: 11px;
+            font-size: 9px;
+        }
+        .guest-header .header-info {
+            padding-left: 10px !important;
+            border-left: 1.5px solid #e2e8f0 !important;
+            display: flex !important;
+            height: 22px !important;
+            margin-top: -4px !important;
+        }
+        .header-clock-pill {
+            font-size: 12.5px !important;
+            gap: 4px !important;
+        }
+        .header-clock-pill i {
+            font-size: 12px !important;
         }
     }
 
@@ -273,12 +429,51 @@
             display: block;
         }
     }
+
+    @media (max-width: 420px) {
+        .advisory-bar {
+            padding: 6px 3%;
+            font-size: 11px;
+        }
+        .guest-header {
+            padding: 8px 3% !important;
+            min-height: 54px !important;
+        }
+        .guest-header .logo-container {
+            gap: 8px !important;
+        }
+        .guest-header .logo {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 6px !important;
+        }
+        .guest-header .logo-text h1 {
+            font-size: 13px !important;
+        }
+        .guest-header .logo-text p {
+            font-size: 7.5px !important;
+        }
+        .guest-header .header-info {
+            padding-left: 8px !important;
+        }
+        .header-clock-pill {
+            font-size: 11px !important;
+            gap: 3px !important;
+        }
+        .header-clock-pill i {
+            font-size: 11px !important;
+        }
+        .breadcrumb-section {
+            padding: 8px 3% !important;
+            font-size: 11px !important;
+        }
+    }
 </style>
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
 <div class="advisory-bar">
-    <div class="advisory-icon"><i class="fas fa-bullhorn"></i></div>
+    <div class="advisory-icon" onclick="openAnnouncementModal()" title="View Announcements"><i class="fas fa-bullhorn"></i></div>
     <div class="advisory-text">
         <div class="marquee">
             <?php if (!empty($announcements) && is_array($announcements)): ?>
@@ -290,9 +485,36 @@
     </div>
 </div>
 
+<!-- Announcement Modal -->
+<div class="ann-modal-overlay" id="annModalOverlay" onclick="closeAnnouncementModal(event)">
+    <div class="ann-modal" onclick="event.stopPropagation()">
+        <div class="ann-modal-header">
+            <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
+            <button class="ann-modal-close" onclick="closeAnnouncementModal()">&times;</button>
+        </div>
+        <div class="ann-modal-body">
+            <ul class="ann-modal-list" id="annModalList">
+                <?php if (!empty($announcements) && is_array($announcements)): ?>
+                    <?php foreach ($announcements as $ann): ?>
+                        <li>
+                            <span class="ann-bullet"></span>
+                            <span><?= esc($ann['message']) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <li class="ann-modal-empty">
+                        <i class="fas fa-info-circle"></i>
+                        No announcements at this time.
+                    </li>
+                <?php endif; ?>
+            </ul>
+        </div>
+    </div>
+</div>
+
 <!-- Header & Navigation -->
 <header class="guest-header">
-    <div style="display: flex; align-items: center; gap: 40px;">
+    <div class="logo-container" style="display: flex; align-items: center; gap: 24px;">
         <a href="<?= base_url('guest') ?>" class="logo-section">
             <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Logo" class="logo">
             <div class="logo-text">
@@ -302,14 +524,10 @@
         </a>
 
         <div class="header-info"
-            style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #1e293b; border-left: 1px solid #eee; padding-left: 20px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-map-marker-alt" style="color: #FF9800; font-size: 16px;"></i>
-                <span style="font-weight: 600; color: #1e293b;">Central Terminal, Palompon, Leyte</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fas fa-clock" style="color: #000000; font-size: 16px;"></i>
-                <span id="headerClock" style="font-weight: 700; color: #0f172a; font-size: 15px; letter-spacing: 0.5px;"><?= date('H:i:s') ?></span>
+            style="display: flex; align-items: center; border-left: 1px solid #eee; padding-left: 18px;">
+            <div class="header-clock-pill" style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #0f172a; font-size: 14px; letter-spacing: 0.5px;">
+                <i class="fas fa-clock" style="color: #D62828; font-size: 14px;"></i>
+                <span id="headerClock"><?= date('h:i:s A') ?></span>
             </div>
         </div>
     </div>
@@ -393,11 +611,12 @@
         var el = document.getElementById('headerClock');
         if (el) {
             setInterval(function () {
-                el.innerText = new Date().toLocaleTimeString([], {
+                el.innerText = new Date().toLocaleTimeString('en-US', {
+                    timeZone: 'Asia/Manila',
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
-                    hour12: false
+                    hour12: true
                 });
             }, 1000);
         }
@@ -423,10 +642,23 @@
                         lastText = text;
                         bar.textContent = text;
                     }
+                    // Also update modal list
+                    var modalList = document.getElementById('annModalList');
+                    if (modalList) {
+                        if (msgs.length) {
+                            modalList.innerHTML = msgs.map(function(m) {
+                                var safe = m.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                return '<li><span class="ann-bullet"></span><span>' + safe + '</span></li>';
+                            }).join('');
+                        } else {
+                            modalList.innerHTML = '<li class="ann-modal-empty"><i class="fas fa-info-circle"></i>No announcements at this time.</li>';
+                        }
+                    }
                 })
                 .catch(function () { /* keep current text on error */ });
         }
-        setInterval(refreshAnnouncements, 3000);
+        // Check for announcement changes every 30 seconds
+        setInterval(refreshAnnouncements, 30000);
     })();
 
     function toggleMenu() {
@@ -461,5 +693,14 @@
         }
         window.addEventListener('resize', syncPadding, { passive: true });
     })();
+    function openAnnouncementModal() {
+        document.getElementById('annModalOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeAnnouncementModal(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('annModalOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
 </script>
 

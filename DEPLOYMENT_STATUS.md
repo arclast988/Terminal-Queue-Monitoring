@@ -10,7 +10,7 @@ This document summarizes the successful configuration for **Windows 10/11 (WSL)*
 ```cmd
 REM 1. Extract project folder anywhere (no XAMPP required)
 REM 2. Right-click install_system.bat → Run as Administrator
-REM    (Wait 5-10 minutes for WSL, Ubuntu, PHP, Nginx, MariaDB installation)
+REM    (Wait 5-10 minutes for WSL, Ubuntu, PHP, Nginx, PostgreSQL installation)
 REM 3. Double-click start_system.bat
 REM    (Browser opens to http://localhost/)
 REM 4. To stop: Double-click stop_system.bat
@@ -26,7 +26,7 @@ sudo chmod +x install_linux.sh
 sudo ./install_linux.sh
 
 # 3. Start services (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
-sudo systemctl start nginx php<VERSION>-fpm mariadb jeepney-websocket
+sudo systemctl start nginx php<VERSION>-fpm postgresql jeepney-websocket
 
 # 4. Open browser to http://localhost/
 ```
@@ -39,12 +39,12 @@ All critical system checks **PASSED**:
 
 | Check | Status | Details |
 |-------|--------|---------|
-| PHP | ✓ PASS | PHP 8.4.21 installed |
+| PHP | ✓ PASS | PHP 8.2+ installed with `php-pgsql` |
 | Nginx | ✓ PASS | Web server running, HTTP 200 response |
-| MariaDB | ✓ PASS | Database accessible, 12 tables created |
-| Configuration | ✓ PASS | .env configured correctly |
+| PostgreSQL | ✓ PASS | Database accessible, 14 tables created |
+| Configuration | ✓ PASS | .env configured correctly for Postgre |
 | Project Files | ✓ PASS | All directories present (app, public, system, vendor, writable) |
-| Composer | ✓ PASS | 23 packages installed |
+| Composer | ✓ PASS | Dependencies installed |
 | WebSocket | ✓ PASS | Real-time service running |
 
 ---
@@ -53,11 +53,14 @@ All critical system checks **PASSED**:
 
 ### Credentials (Both Windows & Linux)
 ```
+Engine:   PostgreSQL
 Host:     127.0.0.1 (localhost)
 Database: jeepneynvans
 User:     jeepney_user
 Password: 12345678
-Port:     3306
+Port:     5432
+Schema:   public
+```
 ```
 
 ### Current Schema (13 Tables)
@@ -84,13 +87,13 @@ Port:     3306
 # Check service status (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
 wsl sudo service nginx status
 wsl sudo service php<VERSION>-fpm status
-wsl sudo service mariadb status
+wsl sudo service postgresql status
 wsl pgrep -f 'spark ws:serve'
 
 # Restart services
 wsl sudo service nginx restart
 wsl sudo service php<VERSION>-fpm restart
-wsl sudo service mariadb restart
+wsl sudo service postgresql restart
 
 # View logs
 wsl sudo tail -f /var/log/nginx/error.log
@@ -99,10 +102,10 @@ wsl sudo tail -f /var/log/nginx/error.log
 ### Linux
 ```bash
 # Check service status (replace <VERSION> with installed version, e.g. 8.2, 8.3, 8.4)
-sudo systemctl status nginx php<VERSION>-fpm mariadb jeepney-websocket
+sudo systemctl status nginx php<VERSION>-fpm postgresql jeepney-websocket
 
 # Restart services
-sudo systemctl restart nginx php<VERSION>-fpm mariadb jeepney-websocket
+sudo systemctl restart nginx php<VERSION>-fpm postgresql jeepney-websocket
 
 # View logs
 sudo tail -f /var/log/nginx/error.log
@@ -119,13 +122,14 @@ CI_ENVIRONMENT = development
 app.baseURL = 'http://localhost/'
 session.savePath = '/tmp'
 
-# Database
+# Database (PostgreSQL)
 database.default.hostname = 127.0.0.1
 database.default.database = jeepneynvans
 database.default.username = jeepney_user
 database.default.password = 12345678
-database.default.DBDriver = MySQLi
-database.default.port = 3306
+database.default.DBDriver = Postgre
+database.default.port = 5432
+database.default.schema = public
 
 # Email (optional - configure for contact form)
 email.fromEmail = your.email@gmail.com
@@ -171,9 +175,9 @@ Both proxy:
 
 ### "Connection refused" / "Unable to connect to database"
 ```bash
-# Check MariaDB is running
-sudo systemctl status mariadb  # Linux
-wsl sudo service mariadb status  # Windows WSL
+# Check PostgreSQL is running
+sudo systemctl status postgresql  # Linux
+wsl sudo service postgresql status  # Windows WSL
 
 # Verify credentials in .env match
 cat .env | grep database.default

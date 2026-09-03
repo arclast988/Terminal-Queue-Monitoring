@@ -19,6 +19,36 @@ body.modal-open .fare-item {
 /* Fare Card/Item Hover & Transition Animation */
 .fare-section-card {
     transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+.fare-section-card .modern-card-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+.fare-section-card .fare-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+}
+.fare-empty-item {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px !important;
+    flex: 1 1 auto;
+    min-height: 180px;
+    background: transparent !important;
+    border: none !important;
+}
+.fare-empty-item i {
+    font-size: 32px;
+    color: #94a3b8;
+    margin-bottom: 8px;
+    opacity: 0.7;
 }
 .fare-section-card:hover {
     transform: translateY(-4px);
@@ -67,9 +97,18 @@ body.staff-theme .card .fare-section-title.vehicle-type-van     { color: #c62828
 body .card .fare-section-title.vehicle-type-minibus,
 body.admin-theme .card .fare-section-title.vehicle-type-minibus,
 body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32 !important; }
-.fare-section-card.vehicle-type-jeepney .modern-card-header { border-top: 3px solid #1565c0; }
-.fare-section-card.vehicle-type-van     .modern-card-header { border-top: 3px solid #c62828; }
-.fare-section-card.vehicle-type-minibus .modern-card-header { border-top: 3px solid #2e7d32; }
+.stat-card-modern[style*="--card-accent"]::before {
+    background: var(--card-accent) !important;
+}
+.stat-card-modern[style*="--card-accent"]:hover {
+    border-color: var(--card-accent) !important;
+}
+.fare-section-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.fare-section-card:hover {
+    transform: translateY(-2px);
+}
 .fare-route-text {
     font-size: 15px;
     color: var(--text-main, #1e293b);
@@ -118,28 +157,44 @@ $fareTypes = array_map(static fn(array $type) => [
     'type' => $type['slug'],
     'name' => $type['name'],
     'label' => $type['name'] . ' Routes',
+    'color' => !empty($type['color']) ? $type['color'] : vehicle_type_color($type['slug']),
+    'icon' => !empty($type['icon']) ? $type['icon'] : vehicle_type_icon($type['slug']),
+    'bi_icon' => vehicle_type_bi_icon($type['slug'], $type['icon'] ?? null),
     'img' => vehicle_type_image($type['slug']),
     'badge' => vehicle_type_badge($type['slug']),
     'badgeClass' => vehicle_type_class($type['slug']),
 ], $vehicleTypes ?? []);
 ?>
 
-<!-- Vehicle-type totals are generated from the configured vehicle types. -->
+<!-- Vehicle-type totals are generated from the configured vehicle types with their assigned colors -->
 <div class="row px-3 mt-2">
 <?php foreach ($fareTypes as $ft): ?>
+    <?php
+        $vtColor = $ft['color'];
+        $vtBiIcon = $ft['bi_icon'];
+        $isLightColor = (contrast_text_color($vtColor) === '#0f172a');
+        $cardAccent = $isLightColor ? '#94a3b8' : $vtColor;
+        $statIconBg = $isLightColor ? '#f1f5f9' : ($vtColor . '18');
+        $statIconColor = $isLightColor ? '#0f172a' : $vtColor;
+        $statIconBorder = $isLightColor ? 'border: 1.5px solid #cbd5e1 !important;' : '';
+    ?>
     <div class="col-12 col-md-4 mb-4">
-        <div class="stat-card-modern fade-in">
-            <div class="stat-card-icon"><i class="bi bi-truck"></i></div>
+        <div class="stat-card-modern fade-in" style="--card-accent: <?= esc($cardAccent) ?>;">
+            <div class="stat-card-icon" style="background-color: <?= esc($statIconBg) ?> !important; color: <?= esc($statIconColor) ?> !important; <?= $statIconBorder ?>">
+                <i class="bi <?= esc($vtBiIcon) ?>"></i>
+            </div>
             <div class="stat-card-value"><?= count(($routesByType ?? [])[$ft['key']] ?? []) ?></div>
             <div class="stat-card-label"><?= esc($ft['label']) ?></div>
         </div>
     </div>
 <?php endforeach; ?>
+</div>
+
 <!-- Search & Filter Bar -->
 <div class="modern-card shadow-modern fade-in mx-3 mb-4">
     <div class="modern-card-body py-3">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="fare-search-group" style="display:flex; align-items:center; max-width:380px; width:100%;">
+            <div class="fare-search-group" style="display:flex; align-items:center; max-width:420px; width:100%;">
                 <span class="input-group-text" style="height:38px; border:1.5px solid #cbd5e1; border-right:none; border-radius:20px 0 0 20px; background:#fff; color:#64748b; padding:0 12px;"><i class="bi bi-search"></i></span>
                 <input type="text" id="fareSearch" class="form-control" placeholder="Search destination, route, discount..." onkeyup="filterFares()" style="height:38px; border:1.5px solid #cbd5e1; border-left:none; border-radius:0 20px 20px 0; outline:none; font-size:13.5px; box-shadow:none;">
             </div>
@@ -153,12 +208,24 @@ $fareTypes = array_map(static fn(array $type) => [
 <div class="row px-3 mt-2" id="fareCardsGrid">
 
 <?php foreach ($fareTypes as $ft): ?>
+<?php
+    $vtColor = $ft['color'];
+    $vtIcon = $ft['icon'];
+    $isLightColor = (contrast_text_color($vtColor) === '#0f172a');
+    $cardTopBorder = $isLightColor ? '#94a3b8' : $vtColor;
+    $headerTitleColor = $isLightColor ? '#0f172a' : $vtColor;
+    $iconBoxBg = $vtColor;
+    $iconBoxColor = $isLightColor ? '#0f172a' : '#ffffff';
+    $iconBoxBorder = $isLightColor ? 'border: 1.5px solid #cbd5e1 !important;' : '';
+?>
 <div class="col-lg-4 mb-4">
-    <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in">
+    <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in" style="border-top: 3.5px solid <?= esc($cardTopBorder) ?> !important;">
         <div class="modern-card-header d-flex justify-content-between align-items-center">
-            <span class="modern-card-title fare-section-title <?= vehicle_type_class($ft['type']) ?>">
-                <img src="<?= base_url('images/' . $ft['img']) ?>" alt="<?= esc($ft['label']) ?>" style="width:32px;height:auto; margin-right: 8px;">
-                <?= esc($ft['label']) ?>
+            <span class="modern-card-title fare-section-title d-flex align-items-center gap-2" style="color: <?= esc($headerTitleColor) ?> !important;">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 28px; height: 28px; background-color: <?= esc($iconBoxBg) ?>; color: <?= esc($iconBoxColor) ?>; <?= $iconBoxBorder ?> font-size: 13px;">
+                    <i class="fas <?= esc($vtIcon) ?>" style="color: <?= esc($iconBoxColor) ?> !important;"></i>
+                </span>
+                <span class="fw-bold" style="color: <?= esc($headerTitleColor) ?> !important;"><?= esc($ft['label']) ?></span>
             </span>
             <?php if ($isAdmin && !empty($ft['id'])): ?>
             <form action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline"
@@ -222,9 +289,9 @@ $fareTypes = array_map(static fn(array $type) => [
                     </div>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <div class="list-group-item text-center text-muted py-4">
+                    <div class="list-group-item text-center text-muted fare-empty-item">
                         <i class="bi bi-geo fs-3 mb-2 d-block" style="color:#94a3b8;"></i>
-                        No fares listed yet.
+                        <span>No <?= esc(strtolower($ft['label'])) ?> listed yet.</span>
                     </div>
                 <?php endif; ?>
             </div>
@@ -373,9 +440,16 @@ $isManager = $isAdmin;
             <label class="form-label fw-semibold mb-2">Vehicle Type</label>
             <div class="d-flex gap-4 flex-wrap">
               <?php foreach (($vehicleTypes ?? []) as $index => $vehicleType): ?>
+                <?php
+                    $vtCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
+                    $vtIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                ?>
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="vehicle_type" id="add_<?= esc($vehicleType['slug']) ?>" value="<?= esc($vehicleType['slug']) ?>" <?= $index === 0 ? 'checked' : '' ?>>
-                  <label class="form-check-label" for="add_<?= esc($vehicleType['slug']) ?>"><i class="fas fa-truck me-1 text-muted"></i> <?= esc($vehicleType['name']) ?></label>
+                  <label class="form-check-label d-inline-flex align-items-center gap-1" for="add_<?= esc($vehicleType['slug']) ?>">
+                    <i class="fas <?= esc($vtIco) ?>" style="color: <?= esc($vtCol) ?>;"></i> 
+                    <span><?= esc($vehicleType['name']) ?></span>
+                  </label>
                 </div>
               <?php endforeach; ?>
             </div>
@@ -445,9 +519,16 @@ $isManager = $isAdmin;
             <label class="form-label fw-semibold mb-2">Vehicle Type</label>
             <div class="d-flex gap-4 flex-wrap">
               <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                <?php
+                    $vtCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
+                    $vtIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                ?>
                 <div class="form-check">
                   <input class="form-check-input" type="radio" name="vehicle_type" id="edit_<?= esc($vehicleType['slug']) ?>" value="<?= esc($vehicleType['slug']) ?>">
-                  <label class="form-check-label" for="edit_<?= esc($vehicleType['slug']) ?>"><i class="fas fa-truck me-1 text-muted"></i> <?= esc($vehicleType['name']) ?></label>
+                  <label class="form-check-label d-inline-flex align-items-center gap-1" for="edit_<?= esc($vehicleType['slug']) ?>">
+                    <i class="fas <?= esc($vtIco) ?>" style="color: <?= esc($vtCol) ?>;"></i> 
+                    <span><?= esc($vehicleType['name']) ?></span>
+                  </label>
                 </div>
               <?php endforeach; ?>
             </div>
@@ -685,23 +766,42 @@ function filterFares() {
     const cards = document.querySelectorAll('#fareCardsGrid .fare-section-card');
 
     cards.forEach(card => {
+        const titleEl = card.querySelector('.fare-section-title');
+        const headerText = titleEl ? titleEl.textContent.toLowerCase() : '';
+        const headerMatches = Boolean(query && headerText.includes(query));
+        
         const items = card.querySelectorAll('.fare-item');
+        const emptyState = card.querySelector('.fare-empty-item');
         let cardVisibleCount = 0;
+
         items.forEach(item => {
             const text = item.textContent.toLowerCase();
-            if (!query || text.includes(query)) {
+            if (!query || headerMatches || text.includes(query)) {
                 item.style.display = '';
                 cardVisibleCount++;
             } else {
                 item.style.display = 'none';
             }
         });
-        const col = card.closest('.col-lg-4');
-        if (col) {
-            if (query && items.length > 0 && cardVisibleCount === 0) {
-                col.style.display = 'none';
+
+        if (emptyState) {
+            if (!query || headerMatches) {
+                emptyState.style.display = '';
             } else {
+                emptyState.style.display = 'none';
+            }
+        }
+
+        const col = card.closest('.col-lg-4, .col-12');
+        if (col) {
+            if (!query) {
                 col.style.display = '';
+            } else {
+                if (cardVisibleCount > 0 || (items.length === 0 && headerMatches)) {
+                    col.style.display = '';
+                } else {
+                    col.style.display = 'none';
+                }
             }
         }
     });

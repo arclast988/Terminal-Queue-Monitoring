@@ -553,30 +553,73 @@ body > * {
    Icons inside buttons will inherit the color. */
 .btn-action-edit,
 .btn-modern.btn-action-edit {
-    background: transparent !important;
-    border: 2px solid var(--primary-blue, #1565c0) !important;
-    color: var(--primary-blue, #1565c0) !important;
-    -webkit-text-fill-color: var(--primary-blue, #1565c0) !important;
+    background: #ffffff !important;
+    border: 2px solid #0066cc !important;
+    color: #0066cc !important;
+    -webkit-text-fill-color: #0066cc !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 5px 14px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-edit i,
+.btn-modern.btn-action-edit i {
+    color: #0066cc !important;
+    font-size: 14px !important;
 }
 .btn-action-edit:hover,
 .btn-modern.btn-action-edit:hover {
-    background: linear-gradient(135deg, var(--primary-blue-light, #1976D2) 0%, var(--primary-blue, #1565c0) 100%) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    background: #0066cc !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #0066cc !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 102, 204, 0.25) !important;
+}
+.btn-action-edit:hover i,
+.btn-modern.btn-action-edit:hover i {
+    color: #ffffff !important;
 }
 
 .btn-action-delete,
 .btn-modern.btn-action-delete {
-    background: var(--danger-light, #FEE2E2) !important;
-    color: var(--danger-dark, #dc2626) !important;
-    -webkit-text-fill-color: var(--danger-dark, #dc2626) !important;
-    border: 2px solid transparent !important;
+    background: #fee2e2 !important;
+    border: 1.5px solid transparent !important;
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626 !important;
+    font-weight: 700 !important;
+    border-radius: 6px !important;
+    padding: 5px 14px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+.btn-action-delete i,
+.btn-modern.btn-action-delete i {
+    color: #dc2626 !important;
+    font-size: 14px !important;
 }
 .btn-action-delete:hover,
 .btn-modern.btn-action-delete:hover {
-    background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
-    color: #fff !important;
-    -webkit-text-fill-color: #fff !important;
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #dc2626 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25) !important;
+}
+.btn-action-delete:hover i,
+.btn-modern.btn-action-delete:hover i {
+    color: #ffffff !important;
 }
 
 
@@ -653,16 +696,97 @@ textarea::placeholder {
 
 .input-group-modern {
     display: flex;
-    gap: 0;
+    align-items: stretch;
+    width: 100%;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.input-group-text-modern {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    background-color: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-right: none;
+    border-top-left-radius: var(--radius-md);
+    border-bottom-left-radius: var(--radius-md);
+    white-space: nowrap;
+    user-select: none;
+    line-height: 1;
+    min-height: 44px;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast, 0.15s ease);
+}
+
+.input-group-text-modern i,
+.input-group-text-modern .bi {
+    font-size: 15px;
+    color: #64748b;
+    display: inline-block;
+    line-height: 1;
 }
 
 .input-group-modern .input-modern,
-.input-group-modern .form-control-modern {
-    border-radius: var(--radius-md) 0 0 var(--radius-md);
+.input-group-modern .form-control-modern,
+.input-group-modern .select-modern,
+.input-group-modern .form-select-modern {
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
+    border-radius: var(--radius-md);
+    min-height: 44px;
+    box-sizing: border-box;
 }
 
-.input-group-modern .btn-modern {
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+/* When preceded by an addon on the left */
+.input-group-modern > .input-group-text-modern:first-child + .input-modern,
+.input-group-modern > .input-group-text-modern:first-child + .form-control-modern,
+.input-group-modern > .input-group-text-modern:first-child + .select-modern,
+.input-group-modern > .input-group-text-modern:first-child + .form-select-modern {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* When followed by an addon or button on the right */
+.input-group-modern > .input-modern:not(:last-child),
+.input-group-modern > .form-control-modern:not(:last-child),
+.input-group-modern > .select-modern:not(:last-child),
+.input-group-modern > .form-select-modern:not(:last-child) {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.input-group-modern > .btn-modern,
+.input-group-modern > .btn {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: var(--radius-md) !important;
+    border-bottom-right-radius: var(--radius-md) !important;
+    border-left: none !important;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.input-group-modern > .input-group-text-modern:last-child {
+    border-left: none;
+    border-right: 1.5px solid #cbd5e1;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+}
+
+.input-group-modern:focus-within > .input-group-text-modern {
+    border-color: var(--primary, #1565C0);
 }
 
 .page-header-modern {

@@ -20,11 +20,10 @@ apt update && apt upgrade -y
 echo "=== [2/9] Installing Core Utilities ==="
 apt install -y git curl unzip software-properties-common ca-certificates lsb-release gnupg
 
-echo "=== [3/9] Installing MariaDB (MySQL Database Server) ==="
-apt install -y mariadb-server mariadb-client
-# Secure installation configurations are handled below. MariaDB starts automatically.
-systemctl enable mariadb
-systemctl start mariadb
+echo "=== [3/9] Installing PostgreSQL Database Server ==="
+apt install -y postgresql postgresql-contrib
+systemctl enable postgresql
+systemctl start postgresql
 
 echo "=== [4/9] Adding PHP 8.2+ Repository & Installing PHP ==="
 # Add Ondrej Surý's PHP repository (the official gold standard for Debian/Ubuntu PHP versions)
@@ -55,7 +54,7 @@ fi
 
 # Install PHP extensions (skip packages not available in the repo).
 WANTED_PKGS=(
-    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl"
+    "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-pgsql" "php${PHP_VER}-intl"
     "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip"
     "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
 )
@@ -103,7 +102,7 @@ echo "Created directory /var/www/jeepneynvans"
 
 echo "=== [9/9] Next Steps Checklist ==="
 echo "─────────────────────────────────────────────────────────────────────────────"
-echo " SUCCESS: Basic server stack (Nginx, PHP 8.2, MariaDB, Composer, UFW) set up!"
+echo " SUCCESS: Basic server stack (Nginx, PHP 8.2, PostgreSQL, Composer, UFW) set up!"
 echo "─────────────────────────────────────────────────────────────────────────────"
 echo "To complete your migration, follow these remaining steps on the server:"
 echo ""
@@ -119,23 +118,23 @@ echo "3. Setup file permissions so the web server can read/write data:"
 echo "   sudo chown -R www-data:www-data /var/www/jeepneynvans"
 echo "   sudo chmod -R 775 /var/www/jeepneynvans/writable"
 echo ""
-echo "4. Create the Database and User in MariaDB/MySQL:"
-echo "   sudo mysql -u root"
-echo "   > CREATE DATABASE jeepneynvans CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-echo "   > CREATE USER 'jeepney_user'@'localhost' IDENTIFIED BY '12345678';"
-echo "   > GRANT ALL PRIVILEGES ON jeepneynvans.* TO 'jeepney_user'@'localhost';"
-echo "   > FLUSH PRIVILEGES;"
-echo "   > EXIT;"
+echo "4. Create the Database and User in PostgreSQL:"
+echo "   sudo -u postgres psql -c \"CREATE DATABASE jeepneynvans;\""
+echo "   sudo -u postgres psql -c \"CREATE USER jeepney_user WITH ENCRYPTED PASSWORD '12345678';\""
+echo "   sudo -u postgres psql -c \"GRANT ALL PRIVILEGES ON DATABASE jeepneynvans TO jeepney_user;\""
 echo ""
-echo "5. Import your database SQL dump:"
-echo "   sudo mysql -u jeepney_user -p jeepneynvans < /var/www/jeepneynvans/jeepneynvans.sql"
+echo "5. Import your PostgreSQL schema and initial seeds:"
+echo "   sudo -u postgres psql -d jeepneynvans -f /var/www/jeepneynvans/app/Database/postgres_schema.sql"
+echo "   sudo -u postgres psql -d jeepneynvans -c \"GRANT ALL ON ALL TABLES IN SCHEMA public TO jeepney_user; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO jeepney_user;\""
 echo ""
 echo "6. Setup your Environment Variables (.env):"
 echo "   cd /var/www/jeepneynvans"
-echo "   sudo cp .env.example .env (if not present) and edit it:"
+echo "   sudo cp env .env (if not present) and edit it:"
 echo "   - Change 'CI_ENVIRONMENT' to 'production'"
 echo "   - Set 'app.baseURL' to your domain or server IP (e.g. 'http://123.45.67.89/')"
-echo "   - Verify 'database.default.hostname' is 'localhost' or '127.0.0.1'"
+echo "   - Verify 'database.default.DBDriver' is 'Postgre'"
+echo "   - Verify 'database.default.port' is 5432"
+echo "   - Verify 'database.default.schema' is 'public'"
 echo ""
 echo "7. Copy the Nginx configuration file:"
 echo "   sudo cp /var/www/jeepneynvans/ubuntu_migration/nginx.conf /etc/nginx/sites-available/jeepneynvans"

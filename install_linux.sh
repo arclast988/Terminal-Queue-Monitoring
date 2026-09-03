@@ -78,7 +78,7 @@ rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-*.list 2>/dev/null
 apt-get update -y || warn "apt update finished with warnings."
 apt-get install -y git curl unzip ca-certificates lsb-release gnupg software-properties-common
 
-apt-get install -y mariadb-server mariadb-client
+apt-get install -y postgresql postgresql-contrib
 
 # PHP 8.2+ — add PPA for supported Ubuntu/Mint LTS codenames, or fallback to distro packages
 . /etc/os-release 2>/dev/null || true
@@ -140,13 +140,13 @@ fi
 
 if [ -n "$PHP_VER" ]; then
     WANTED_PKGS=(
-        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-mysql" "php${PHP_VER}-intl"
+        "php${PHP_VER}-cli" "php${PHP_VER}-fpm" "php${PHP_VER}-pgsql" "php${PHP_VER}-sqlite3" "php${PHP_VER}-intl"
         "php${PHP_VER}-mbstring" "php${PHP_VER}-curl" "php${PHP_VER}-xml" "php${PHP_VER}-zip"
         "php${PHP_VER}-gd" "php${PHP_VER}-opcache" "php${PHP_VER}-common"
     )
 else
     WANTED_PKGS=(
-        "php-cli" "php-fpm" "php-mysql" "php-intl"
+        "php-cli" "php-fpm" "php-pgsql" "php-sqlite3" "php-intl"
         "php-mbstring" "php-curl" "php-xml" "php-zip"
         "php-gd" "php-opcache" "php-common"
     )
@@ -210,12 +210,13 @@ CI_ENVIRONMENT = development
 # machine's LAN IP (or '' to auto-detect the request host) in .env on that box.
 app.baseURL = 'http://localhost/'
 app.indexPage = ''
-database.default.hostname = localhost
+database.default.hostname = 127.0.0.1
 database.default.database = ${DB_NAME}
 database.default.username = ${DB_USER}
 database.default.password = ${DB_PASS}
-database.default.DBDriver = MySQLi
-database.default.port = 3306
+database.default.DBDriver = Postgre
+database.default.port = 5432
+database.default.schema = public
 EOF
     ok "Wrote environment + database settings to .env."
 else
@@ -257,23 +258,30 @@ chown -R "$RUN_USER":"$RUN_GROUP" "$PROJECT_ROOT/writable"
 chmod -R 775 "$PROJECT_ROOT/writable"
 
 # ── 8. Database ─────────────────────────────────────────────────────────────
-say "Setting up the database…"
-systemctl enable --now mariadb 2>/dev/null || systemctl enable --now mysql 2>/dev/null || die "Could not start MariaDB."
-MYSQL_CMD="mysql --skip-ssl"
-$MYSQL_CMD -e "CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
-$MYSQL_CMD -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-$MYSQL_CMD -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-$MYSQL_CMD -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost'; FLUSH PRIVILEGES;"
-if $MYSQL_CMD -e "SELECT 1 FROM ${DB_NAME}.users LIMIT 1;" >/dev/null 2>&1; then
-    ok "Database already populated."
-elif [ -f "$PROJECT_ROOT/jeepneynvans.sql" ]; then
-    $MYSQL_CMD "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans.sql"      || warn "Import reported errors."
-    ok "Imported jeepneynvans.sql"
-elif [ -f "$PROJECT_ROOT/jeepneynvans_clean.sql" ]; then
-    $MYSQL_CMD "${DB_NAME}" < "$PROJECT_ROOT/jeepneynvans_clean.sql" || warn "Import reported errors."
-    ok "Imported jeepneynvans_clean.sql"
+say "Setting up the PostgreSQL database…"
+systemctl enable --now postgresql 2>/dev/null || die "Could not start PostgreSQL."
+
+# Create PostgreSQL user if not exists
+sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='${DB_USER}';" 2>/dev/null | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';"
+
+# Ensure password matches
+sudo -u postgres psql -c "ALTER USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASS}';"
+
+# Create database if not exists
+sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}';" 2>/dev/null | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};"
+
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+
+if sudo -u postgres psql -d "${DB_NAME}" -tAc "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users';" 2>/dev/null | grep -q 1; then
+    ok "PostgreSQL Database already populated."
+elif [ -f "$PROJECT_ROOT/app/Database/postgres_schema.sql" ]; then
+    sudo -u postgres psql -d "${DB_NAME}" -f "$PROJECT_ROOT/app/Database/postgres_schema.sql" || warn "Import reported errors."
+    sudo -u postgres psql -d "${DB_NAME}" -c "GRANT ALL ON ALL TABLES IN SCHEMA public TO ${DB_USER}; GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO ${DB_USER};"
+    ok "Imported app/Database/postgres_schema.sql"
 else
-    warn "No SQL dump found — the app will start with an empty database."
+    warn "No PostgreSQL schema found — the app will start with an empty database."
 fi
 
 # ── 9. WebSocket server (systemd, runs as the login user) ───────────────────
@@ -282,8 +290,8 @@ PHP_BIN="$(command -v "php${PHP_VER}" || command -v php)"
 cat > /etc/systemd/system/jeepney-websocket.service <<EOF
 [Unit]
 Description=Jeepney nVans WebSocket Server
-After=network.target mariadb.service
-Wants=mariadb.service
+After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=simple
@@ -345,7 +353,7 @@ echo "  Local:    http://localhost/"
 echo "  Database: ${DB_USER} / ${DB_PASS}   (db: ${DB_NAME})"
 echo
 echo "  Everything auto-starts on boot. Manage the services with:"
-echo "     sudo systemctl status nginx php${PHP_VER}-fpm mariadb jeepney-websocket"
+echo "     sudo systemctl status nginx php${PHP_VER}-fpm postgresql jeepney-websocket"
 echo "====================================================================="
 
 # ── 11. Launch browser ──────────────────────────────────────────────────────

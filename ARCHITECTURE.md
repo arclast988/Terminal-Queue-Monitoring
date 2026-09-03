@@ -35,16 +35,16 @@ Everything else is **100% identical**.
     │                  │          │                          │
     │ Installs:        │          │ Installs:                │
     │ • WSL 2 kernel   │          │ • apt packages           │
-    │ • Ubuntu distro  │          │ • MariaDB                │
+    │ • Ubuntu distro  │          │ • PostgreSQL             │
     │ • Inside Ubuntu: │          │ • PHP (8.2 - 8.4)        │
-    │   - MariaDB      │          │ • Nginx                  │
+    │   - PostgreSQL   │          │ • Nginx                  │
     │   - PHP (8.2-8.4)│          │ • Composer               │
     │   - Nginx        │          │ • WebSocket systemd      │
     │   - Composer     │          │                          │
     │ • PHP deps       │          │ Creates systemd services:│
     │                  │          │ • nginx                  │
     │ Creates .env     │          │ • php<VERSION>-fpm      │
-    │                  │          │ • mariadb                │
+    │                  │          │ • postgresql             │
     │ Auto-starts via: │          │ • jeepney-websocket     │
     │ • start_system   │          │                          │
     │   .bat           │          │ Auto-starts on boot      │
@@ -55,17 +55,17 @@ Everything else is **100% identical**.
     ├──────────────────┤          ├──────────────────────────┤
     │ start_system.bat │          │ systemctl commands       │
     │ Starts:          │          │                          │
-    │ • MariaDB        │          │ sudo systemctl start:    │
+    │ • PostgreSQL     │          │ sudo systemctl start:    │
     │ • PHP-FPM        │          │ • nginx                  │
     │ • Nginx          │          │ • php<VERSION>-fpm      │
-    │ • WebSocket      │          │ • mariadb                │
+    │ • WebSocket      │          │ • postgresql             │
     │                  │          │ • jeepney-websocket     │
     │ stop_system.bat  │          │                          │
     │ Stops all        │          │ sudo systemctl stop:     │
     │                  │          │ • jeepney-websocket     │
     │ Services run in  │          │ • nginx                  │
     │ WSL Ubuntu       │          │ • php<VERSION>-fpm      │
-    │                  │          │ • mariadb                │
+    │                  │          │ • postgresql             │
     │ Browser: auto    │          │                          │
     │ opens localhost  │          │ Browser: manual          │
     │                  │          │ open http://localhost/   │
@@ -79,7 +79,7 @@ Everything else is **100% identical**.
     │   public/        │          │   public/                │
     │ • PHP-FPM runs   │          │ • PHP-FPM runs           │
     │   app/           │          │   app/                   │
-    │ • MariaDB at     │          │ • MariaDB at             │
+    │ • PostgreSQL at  │          │ • PostgreSQL at          │
     │   localhost      │          │   localhost              │
     │ • WebSocket at   │          │ • WebSocket at           │
     │   :8081          │          │   :8081                  │
@@ -94,7 +94,7 @@ Everything else is **100% identical**.
 
 ### ✓ IDENTICAL (Same on both)
 - **Application code** (`app/`, `system/`, `public/`)
-- **Database schema** (`jeepneynvans.sql`)
+- **Database schema** (`app/Database/postgres_schema.sql`)
 - **Configuration structure** (`.env`)
 - **Nginx route logic** (CodeIgniter URL rewriting)
 - **PHP code** (all PHP files)
@@ -136,7 +136,7 @@ C:\Users\User\Downloads\jeepneynvans> install_system.bat
 → Detects Windows 10 build
 → Installs WSL 2 (if needed)
 → Installs Ubuntu (if needed)
-→ Inside Ubuntu: apt-get install php nginx mariadb composer
+→ Inside Ubuntu: apt-get install php nginx postgresql composer
 → Creates .env
 → Application ready
 ```
@@ -145,8 +145,8 @@ C:\Users\User\Downloads\jeepneynvans> install_system.bat
 ```bash
 $ sudo ./install_linux.sh
 → Detects Linux (apt-get available)
-→ apt-get install php nginx mariadb composer
-→ systemctl enable nginx mariadb php<VERSION>-fpm
+→ apt-get install php nginx postgresql composer
+→ systemctl enable nginx postgresql php<VERSION>-fpm
 → Creates .env
 → Application ready
 ```
@@ -159,7 +159,7 @@ $ sudo ./install_linux.sh
 
 Both platforms serve on:
 - **Browser**: `http://localhost/`
-- **Database**: `127.0.0.1:3306`
+- **Database**: `127.0.0.1:5432` (PostgreSQL)
 - **WebSocket**: `ws://localhost:8081` (proxied via Nginx)
 
 No code changes needed between platforms.
@@ -177,19 +177,19 @@ No code changes needed between platforms.
 3. Nginx (running in Ubuntu) receives on 127.0.0.1:80
 4. Nginx reads public/index.php
 5. PHP-FPM (in Ubuntu) processes app/Controllers/Queue.php
-6. Query runs against MariaDB (in Ubuntu)
+6. Query runs against PostgreSQL (in Ubuntu)
 7. Response sent back through same path
 8. Browser displays queue UI
 ```
 
-### Linux (Nginx → PHP → MariaDB)
+### Linux (Nginx → PHP → PostgreSQL)
 ```
 1. Browser makes HTTP request to localhost
 2. Native Linux networking routes to 127.0.0.1
 3. Nginx (native) receives on 127.0.0.1:80
 4. Nginx reads public/index.php
 5. PHP-FPM (native) processes app/Controllers/Queue.php
-6. Query runs against MariaDB (native)
+6. Query runs against PostgreSQL (native)
 7. Response sent back
 8. Browser displays queue UI
 ```
@@ -209,7 +209,9 @@ database.default.hostname = 127.0.0.1
 database.default.database = jeepneynvans
 database.default.username = jeepney_user
 database.default.password = 12345678
-database.default.DBDriver = MySQLi
+database.default.DBDriver = Postgre
+database.default.port = 5432
+database.default.schema = public
 ```
 
 CodeIgniter reads these values the same way on both platforms.

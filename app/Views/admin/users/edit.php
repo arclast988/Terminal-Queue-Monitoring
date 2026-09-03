@@ -53,12 +53,12 @@
 
                     <div class="row">
                         <div class="col-12 col-lg-6 mb-3">
-                            <label for="username" class="form-label-modern">Username <span class="text-muted small">(Google / Email account)</span></label>
+                            <label for="username" class="form-label-modern">Username <span class="text-muted small">(Gmail account)</span></label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-person-fill"></i></span>
-                                <input type="email" class="input-modern" id="username" name="username" value="<?= old('username', $user['username']) ?>" required placeholder="e.g. jdoe@email.com">
+                                <input type="email" class="input-modern" id="username" name="username" value="<?= old('username', $user['username']) ?>" required placeholder="e.g. jdoe@gmail.com">
                             </div>
-                            <div class="form-text-modern">Used for signing in and password reset. Must be a valid Google or email account.</div>
+                            <div class="form-text-modern">Used for signing in and password reset. Must be a valid Gmail account.</div>
                         </div>
 
                         <div class="col-12 col-lg-6 mb-3">
@@ -238,8 +238,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function toggleRouteSection() {
-        if (!roleSelect || !routeSection) return;
-        routeSection.style.display = roleSelect.value === 'staff' ? 'block' : 'none';
+        if (!routeSection) return;
+        var currentRole = roleSelect ? roleSelect.value : (document.querySelector('input[name="role"]') || {}).value || '';
+        routeSection.style.display = currentRole === 'staff' ? 'block' : 'none';
     }
 
     if (togglePassword && passwordInput) {

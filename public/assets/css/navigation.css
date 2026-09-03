@@ -647,4 +647,13 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
   border: 1px solid #ffedd5 !important;
 }
 
+/* Ensure modals and backdrops are always above the fixed navigation */
+.modal-backdrop {
+  z-index: 100010 !important;
+}
+.modal {
+  z-index: 100020 !important;
+}
+
+
 

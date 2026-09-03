@@ -349,6 +349,17 @@
             <span class="filter-value"><?= esc($action_type) ?></span>
         </div>
         <?php endif; ?>
+        <?php if (!empty($selected_user)): ?>
+        <div class="filter-item">
+            <span class="filter-label">User Filter</span>
+            <span class="filter-value"><?= esc($selected_user['full_name'] ?: $selected_user['username']) ?></span>
+        </div>
+        <?php elseif (!empty($user_id)): ?>
+        <div class="filter-item">
+            <span class="filter-label">User Filter</span>
+            <span class="filter-value">User #<?= esc($user_id) ?></span>
+        </div>
+        <?php endif; ?>
         <?php if (!empty($search)): ?>
         <div class="filter-item">
             <span class="filter-label">Keyword Query</span>
@@ -393,7 +404,11 @@
                         <td>
                             <div class="log-user"><?= esc($row['full_name'] ?? $row['username'] ?? 'System/Guest') ?></div>
                             <div class="log-role">
-                                <?= esc($row['email'] ?: ($row['username'] ? '@' . $row['username'] : 'Automatic')) ?> &bull; <?= esc(ucwords(str_replace('_', ' ', $row['role'] ?? 'System'))) ?>
+                                <?= esc($row['email'] ?: ($row['username'] ? '@' . $row['username'] : 'Automatic')) ?> &bull; <?php 
+                                    $printRole = $row['role'] ?? 'System';
+                                    if ($printRole === 'staff') $printRole = 'Dispatcher';
+                                    else $printRole = ucwords(str_replace('_', ' ', $printRole));
+                                ?><?= esc($printRole) ?>
                             </div>
                         </td>
                         <td>

@@ -5,12 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal Status - Palompon Transit</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
     <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=2">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=2">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
     <style>
         :root {
             --primary: #1E40AF;
@@ -200,10 +204,10 @@
         /* --- Hero Section --- */
         .hero {
             position: relative;
-            padding: 40px 5% 55px;
+            padding: 35px 5% 25px;
             text-align: center;
-            overflow: hidden;
-            min-height: 245px;
+            overflow: visible !important;
+            min-height: auto;
             z-index: 1;
         }
         .hero::after {
@@ -218,7 +222,7 @@
             font-size: 38px;
             color: #000000;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             position: relative;
             z-index: 2;
         }
@@ -227,7 +231,7 @@
             font-size: 16px;
             color: #000000;
             max-width: 700px;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
             position: relative;
             z-index: 2;
         }
@@ -285,7 +289,7 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -30px auto 40px !important;
+            margin: 25px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -327,20 +331,29 @@
             }
 
             .search-bar {
-                flex-direction: column;
-                border-radius: 18px;
-                padding: 10px;
-                gap: 8px;
+                flex-direction: row;
+                border-radius: 50px;
+                padding: 6px 8px;
+                align-items: center;
+                gap: 0;
             }
             .search-bar input {
-                padding: 12px 16px;
-                text-align: center;
-                width: 100%;
+                padding: 10px 14px;
+                font-size: 13.5px;
+                text-align: left;
+                min-width: 0;
+                flex: 1;
+                width: auto;
             }
             .search-bar button {
-                padding: 12px;
-                border-radius: 12px;
-                width: 100%;
+                padding: 0 18px;
+                height: 42px;
+                border-radius: 50px;
+                font-size: 12.5px;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+                width: auto;
             }
         }
 
@@ -901,13 +914,13 @@
             top: 0;
             bottom: 0;
             width: 5px;
-            background: #cbd5e1;
+            background: var(--card-stripe-color, #cbd5e1);
             transition: background 0.25s ease;
         }
 
-        .queue-card[data-vehicle-type="minibus"]::before { background: #16a34a; }
-        .queue-card[data-vehicle-type="van"]::before { background: #dc2626; }
-        .queue-card[data-vehicle-type="jeepney"]::before { background: #2563eb; }
+        .queue-card[data-vehicle-type="minibus"]::before { background: var(--card-stripe-color, #16a34a); }
+        .queue-card[data-vehicle-type="van"]::before { background: var(--card-stripe-color, #dc2626); }
+        .queue-card[data-vehicle-type="jeepney"]::before { background: var(--card-stripe-color, #2563eb); }
 
         .queue-card:hover {
             transform: translateY(-3px);
@@ -1312,12 +1325,6 @@
         }
 
         /* --- Responsive Queries --- */
-        @media (max-width: 1200px) {
-            .header-info {
-                display: none !important;
-            }
-        }
-
         @media (max-width: 640px) {
             .quick-filter-bar {
                 padding: 12px 15px;
@@ -1362,39 +1369,6 @@
                 gap: 12px;
             }
 
-            .nav-menu.open {
-                right: 0;
-            }
-
-            .nav-menu a {
-                width: 100%;
-                padding: 12px 18px;
-                border-radius: 12px;
-                background: #f8fafc;
-                font-size: 15px;
-                font-weight: 600;
-            }
-
-            .nav-menu a.active {
-                background: #e3f2fd;
-                color: var(--primary);
-            }
-
-            .nav-menu a.login-btn {
-                background: #1e3a8a;
-                color: white !important;
-                text-align: center;
-                justify-content: center;
-                margin-top: 10px;
-                margin-left: 0 !important;
-            }
-
-            .nav-menu a.login-btn:hover,
-            .nav-menu a.login-btn:active {
-                background: #172554 !important;
-                transform: scale(0.98);
-            }
-
             .mobile-toggle {
                 display: block;
                 z-index: 1004;
@@ -1402,47 +1376,93 @@
             }
         }
 
-        @media (min-width: 769px) and (max-width: 1200px) {
-            .mobile-toggle {
-                display: block;
-                z-index: 1004;
-                position: relative;
+        @media (max-width: 991px) {
+            .queue-card {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .queue-card-left {
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 12px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #f1f5f9;
+            }
+
+            .vehicle-thumb-box {
+                width: 60px;
+                height: 54px;
+            }
+
+            .queue-card-departure {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 16px;
+            }
+
+            .dep-time-group {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .dep-time-highlight {
+                font-size: 18px;
             }
         }
 
         @media (max-width: 768px) {
             .hero {
-                padding: 60px 5%;
+                padding: 25px 5% 20px !important;
             }
 
             .hero h2 {
-                font-size: 32px;
+                font-size: 28px;
             }
 
             .hero p {
-                font-size: 15px;
+                font-size: 14px;
+                margin-bottom: 16px;
             }
 
             .search-bar {
-                padding: 5px;
-                flex-direction: column;
-                border-radius: 20px;
+                padding: 6px 8px;
+                flex-direction: row;
+                border-radius: 50px;
+                align-items: center;
+                gap: 0;
             }
 
             .search-bar input {
-                padding: 12px 15px;
-                text-align: center;
+                padding: 10px 14px;
+                font-size: 13.5px;
+                text-align: left;
+                min-width: 0;
+                flex: 1;
+                width: auto;
             }
 
             .search-bar button {
-                padding: 12px;
-                border-radius: 15px;
-                width: 100%;
+                padding: 0 18px;
+                height: 42px;
+                border-radius: 50px;
+                font-size: 12.5px;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+                width: auto;
             }
 
             .container {
-                width: 92%;
-                margin-top: -30px;
+                width: 92% !important;
+                margin: 20px auto 30px !important;
             }
 
             .stats-grid {
@@ -1478,83 +1498,64 @@
                 flex-direction: column;
                 gap: 8px;
             }
-
-            /* --- Responsive Queue Card --- */
-            @media (max-width: 991px) {
-                .queue-card {
-                    flex-direction: column;
-                    align-items: stretch;
-                    gap: 16px;
-                    padding: 16px;
-                }
-
-                .queue-card-left {
-                    flex-direction: row;
-                    justify-content: flex-start;
-                    align-items: center;
-                    gap: 12px;
-                    padding-bottom: 10px;
-                    border-bottom: 1px solid #f1f5f9;
-                }
-
-                .vehicle-thumb-box {
-                    width: 60px;
-                    height: 54px;
-                }
-
-                .queue-card-departure {
-                    width: 100%;
-                    flex-direction: row;
-                    justify-content: space-between;
-                    padding: 10px 16px;
-                }
-
-                .dep-time-highlight {
-                    font-size: 18px;
-                }
-            }
-
-            @media (max-width: 480px) {
-                .queue-card {
-                    padding: 12px;
-                    gap: 12px;
-                    border-radius: 16px;
-                }
-
-                .operator-badge,
-                .plate-badge {
-                    font-size: 13px;
-                    padding: 2px 7px;
-                }
-
-                .route-pill-badge, .driver-info-pill {
-                    font-size: 12.5px;
-                    padding: 4px 10px;
-                }
-
-                .passenger-status-block {
-                    min-width: 100%;
-                }
-            }
-
         }
 
-        @media (max-width: 380px) {
+        @media (max-width: 480px) {
+            .queue-card {
+                padding: 12px;
+                gap: 12px;
+                border-radius: 16px;
+            }
+
+            .operator-badge,
+            .plate-badge {
+                font-size: 13px;
+                padding: 2px 7px;
+            }
+
+            .route-pill-badge, .driver-info-pill {
+                font-size: 12.5px;
+                padding: 4px 10px;
+            }
+
+            .passenger-status-block {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 420px) {
             .hero h2 {
                 font-size: 20px;
             }
-
+            .hero p {
+                font-size: 12.5px !important;
+            }
             .stat-info .value {
                 font-size: 16px;
             }
-
             .queue-pos {
                 width: 40px;
                 height: 40px;
             }
-
             .queue-pos span:last-child {
                 font-size: 16px;
+            }
+            .queue-card {
+                padding: 10px !important;
+                gap: 10px !important;
+                border-radius: 12px !important;
+            }
+            .operator-badge,
+            .plate-badge {
+                font-size: 12px !important;
+                padding: 2px 6px !important;
+            }
+            .route-pill-badge, .driver-info-pill {
+                font-size: 11.5px !important;
+                padding: 3px 8px !important;
+            }
+            .passenger-status-block {
+                min-width: 100% !important;
             }
         }
 
@@ -1747,28 +1748,30 @@
                             <?php
                             $vType = $item['vehicle_type'] ?? '';
                             $imgFile = vehicle_type_image($vType);
+                            $vColor = vehicle_type_color($vType);
+                            $vContrast = contrast_text_color($vColor);
+                            $vIsLight = ($vContrast === '#0f172a');
                             $fkey = strtolower(trim($item['origin'])) . '|' . strtolower(trim($item['destination'])) . '|' . strtolower(trim($vType));
                             $cardFare = $fareMap[$fkey] ?? null;
                             ?>
                             <div class="queue-card queue-card-<?= esc($vType) ?>"
+                                 style="--card-stripe-color: <?= esc($vColor) ?>; border-left: 5px solid <?= esc($vColor) ?> !important;"
                                  data-vehicle-type="<?= esc($vType) ?>"
                                  data-destination="<?= esc(strtolower($item['destination'])) ?>">
                                 
                                 <!-- Left: Vehicle Identity Block -->
                                 <div class="queue-card-left">
-                                    <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc($vType) ?>" class="vehicle-thumb-img">
-                                        <?php
-                                            $posColors = ['van' => '#dc2626', 'jeepney' => '#2563eb', 'minibus' => '#16a34a'];
-                                            $posColor = $posColors[$vType] ?? '#0f172a';
-                                        ?>
-                                        <span class="queue-badge-pill" style="background: <?= $posColor ?>;">
+                                    <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12; border-color: <?= esc($vColor) ?>35;">
+                                        <?php if (!empty($imgFile)): ?>
+                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img">
+                                        <?php else: ?>
+                                            <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>;"></i>
+                                        <?php endif; ?>
+                                        <span class="queue-badge-pill" style="background: <?= esc($vColor) ?>; color: <?= esc($vContrast) ?>; <?= $vIsLight ? 'border: 2px solid #cbd5e1;' : '' ?>">
                                             #<?= $item['position'] ?>
                                         </span>
                                     </div>
-                                    <span class="vehicle-type-chip vehicle-type-<?= esc(vehicle_type_key($vType)) ?>">
-                                        <?= esc(vehicle_type_label($vType)) ?>
-                                    </span>
+                                    <?= vehicle_type_badge($vType) ?>
                                 </div>
 
                                 <!-- Center: Primary Vehicle & Route Information -->
@@ -1815,7 +1818,18 @@
                                             </div>
                                             <div class="progress progress-modern">
                                                 <?php $percent = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100); ?>
-                                                <div class="progress-bar" style="width: <?= $percent ?>%; height: 100%; background: <?= $percent >= 100 ? '#ef4444' : '#2563eb' ?>;"></div>
+                                                <?php
+                                                    if ($percent >= 90) {
+                                                        $barColor = '#ef4444'; // Red
+                                                    } elseif ($percent >= 70) {
+                                                        $barColor = '#f97316'; // Orange
+                                                    } elseif ($percent >= 50) {
+                                                        $barColor = '#eab308'; // Yellow
+                                                    } else {
+                                                        $barColor = '#22c55e'; // Green
+                                                    }
+                                                ?>
+                                                <div class="progress-bar" style="width: <?= $percent ?>%; height: 100%; background: <?= $barColor ?>;"></div>
                                             </div>
                                         </div>
                                     </div>
@@ -1823,21 +1837,6 @@
 
                                 <!-- Right: Departure Time Ticket / Card -->
                                 <div class="queue-card-departure">
-                                    <div class="dep-header-label">EST. DEPARTURE</div>
-                                    <div class="dep-time-highlight">
-                                        <?php
-                                        if ($item['status'] == 'departed' && $item['departure_time']):
-                                            echo date('h:i A', strtotime($item['departure_time']));
-                                        elseif ($item['estimated_departure']):
-                                            echo date('h:i A', strtotime($item['estimated_departure']));
-                                        else:
-                                            echo 'Waiting';
-                                        endif;
-                                        ?>
-                                    </div>
-                                    <?php if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])): ?>
-                                        <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
-                                    <?php endif; ?>
                                     <div class="dep-status-tag <?= $item['status'] === 'boarding' ? 'status-boarding' : ($item['status'] === 'departed' ? 'status-departed' : 'status-waiting') ?>">
                                         <?php if ($item['status'] == 'departed'): ?>
                                             <i class="fas fa-check-circle me-1"></i> Departed
@@ -1845,6 +1844,23 @@
                                             <i class="fas fa-clock me-1"></i> Boarding
                                         <?php else: ?>
                                             <i class="fas fa-hourglass-half me-1"></i> Waiting
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="dep-header-label">EST. DEPARTURE</div>
+                                    <div class="dep-time-group">
+                                        <div class="dep-time-highlight">
+                                            <?php
+                                            if ($item['status'] == 'departed' && $item['departure_time']):
+                                                echo date('h:i A', strtotime($item['departure_time']));
+                                            elseif ($item['estimated_departure']):
+                                                echo date('h:i A', strtotime($item['estimated_departure']));
+                                            else:
+                                                echo 'Waiting';
+                                            endif;
+                                            ?>
+                                        </div>
+                                        <?php if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])): ?>
+                                            <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
                                         <?php endif; ?>
                                     </div>
                                 </div>
@@ -2090,6 +2106,23 @@
             });
         }
 
+        // Vehicle Types Metadata (Colors, Icons, Images, Labels) for dynamic card rendering
+        var vehicleTypeMeta = <?= json_encode(array_reduce(
+            array_keys(get_db_vehicle_types() + ['van'=>1,'jeepney'=>1,'minibus'=>1,'bus'=>1,'taxi'=>1,'car'=>1,'tricecle'=>1,'tricycle'=>1,'motorcycle'=>1]),
+            function($acc, $k) {
+                $color = vehicle_type_color($k);
+                $acc[$k] = [
+                    'color'    => $color,
+                    'contrast' => contrast_text_color($color),
+                    'image'    => vehicle_type_image($k),
+                    'icon'     => vehicle_type_icon($k),
+                    'label'    => vehicle_type_label($k),
+                ];
+                return $acc;
+            },
+            []
+        )) ?>;
+
         // Fingerprint cache to avoid flickering DOM rewrites when data hasn't changed
         var _lastQueueFingerprint = '';
         var _lastDepartureRulesFingerprint = makeFingerprint(departureRules);
@@ -2217,6 +2250,7 @@
                             var queueHtml = '';
                             data.active_queue.forEach(function (item) {
                                 var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
+                                var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
                                 var fullBadge = Number(item.current_passengers) >= Number(item.capacity)
                                     ? '<span class="badge-full-tag">FULL</span>' : '';
                                 var statusClass = 'status-waiting';
@@ -2228,24 +2262,35 @@
                                     statusClass = 'status-boarding';
                                     statusIcon = '<i class="fas fa-clock me-1"></i> Boarding';
                                 }
-                                var imgMap = { 'van': 'van.png', 'jeepney': 'jeep.png', 'minibus': 'minibus.png' };
                                 var vType = (item.vehicle_type || '').toLowerCase();
-                                var imgFile = imgMap[vType] || 'van.png';
-                                var posColors = { van: '#dc2626', jeepney: '#2563eb', minibus: '#16a34a' };
-                                var posColor = posColors[vType] || '#0f172a';
+                                var vMeta = (vehicleTypeMeta && vehicleTypeMeta[vType]) ? vehicleTypeMeta[vType] : {
+                                    color: '#1565c0',
+                                    contrast: '#ffffff',
+                                    image: 'van.png',
+                                    icon: 'fa-bus',
+                                    label: vType.charAt(0).toUpperCase() + vType.slice(1)
+                                };
+                                var posColor = vMeta.color;
+                                var posContrast = vMeta.contrast;
+                                var imgFile = vMeta.image || 'van.png';
+                                var vTypeLabel = vMeta.label;
+                                var isLight = (posContrast === '#0f172a');
+                                var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
+                                var badgeStyle = isLight 
+                                    ? 'background-color: #f1f5f9 !important; color: #0f172a !important; border: 1.5px solid #cbd5e1 !important; font-weight: 800;'
+                                    : 'background-color: ' + posColor + '18 !important; color: ' + posColor + ' !important; border: 1.5px solid ' + posColor + '44 !important; font-weight: 800;';
+
                                 var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
-                                var vTypeNames = { 'jeepney': 'Jeepney', 'van': 'Van', 'minibus': 'Minibus' };
-                                var vTypeLabel = vTypeNames[vType] || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Vehicle');
                                 var opName = item.operator_name || item.driver_name || 'N/A';
                                 var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
                                 
-                                queueHtml += '<div class="queue-card queue-card-' + vType + '" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '">'
+                                queueHtml += '<div class="queue-card queue-card-' + vType + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '">'
                                     + '<div class="queue-card-left">'
-                                    + '<div class="vehicle-thumb-box vehicle-type-' + vType + '">'
-                                    + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vType + '" class="vehicle-thumb-img">'
-                                    + '<span class="queue-badge-pill" style="background:' + posColor + ';">#' + item.position + '</span>'
+                                    + '<div class="vehicle-thumb-box vehicle-type-' + vType + '" style="background:' + posColor + '12; border-color:' + posColor + '35;">'
+                                    + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img">'
+                                    + '<span class="queue-badge-pill" style="background:' + posColor + '; color:' + posContrast + '; ' + pillBorder + '">#' + item.position + '</span>'
                                     + '</div>'
-                                    + '<span class="vehicle-type-chip vehicle-type-' + vType + '">' + vTypeLabel + '</span>'
+                                    + '<span class="vehicle-type-chip vehicle-type-' + vType + '" style="' + badgeStyle + '">' + vTypeLabel + '</span>'
                                     + '</div>'
                                     + '<div class="queue-card-body">'
                                     + '<div class="queue-card-header">'
@@ -2275,16 +2320,18 @@
                                     + fullBadge
                                     + '</div>'
                                     + '<div class="progress progress-modern">'
-                                    + '<div class="progress-bar" style="width:' + percent + '%; height: 100%; background:' + (percent >= 100 ? '#ef4444' : '#2563eb') + ';"></div>'
+                                    + '<div class="progress-bar" style="width:' + percent + '%; height: 100%; background:' + barColor + ';"></div>'
                                     + '</div>'
                                     + '</div>'
                                     + '</div>'
                                     + '</div>'
                                     + '<div class="queue-card-departure">'
+                                    + '<div class="dep-status-tag ' + statusClass + '">' + statusIcon + '</div>'
                                     + '<div class="dep-header-label">EST. DEPARTURE</div>'
+                                    + '<div class="dep-time-group">'
                                     + '<div class="dep-time-highlight">' + (item.estimated_departure_formatted || 'Waiting') + '</div>'
                                     + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
-                                    + '<div class="dep-status-tag ' + statusClass + '">' + statusIcon + '</div>'
+                                    + '</div>'
                                     + '</div>'
                                     + '</div>';
                             });

@@ -67,9 +67,9 @@ class Queue extends BaseController
         // Build queue query
         $builder = $this->queueModel->select('
             queue.*, 
-            COALESCE(NULLIF(queue.plate_number, ""), vehicles.plate_number) as plate_number, 
-            COALESCE(NULLIF(queue.driver_name, ""), vehicles.driver_name) as driver_name, 
-            COALESCE(NULLIF(queue.operator_name, ""), NULLIF(vehicles.operator_name, ""), vehicles.owner_name) as operator_name, 
+            COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number,
+            COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name,
+            COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name) as operator_name,
             vehicles.owner_name, 
             vehicles.type as vehicle_type, 
             terminals.name as origin, 
@@ -88,7 +88,11 @@ class Queue extends BaseController
             }
         }
 
-        $queue = $builder->orderBy('queue.position', 'ASC')->orderBy('routes.destination', 'ASC')->findAll();
+        $queue = $builder
+            ->orderBy('routes.destination', 'ASC')
+            ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+            ->orderBy('queue.position', 'ASC')
+            ->findAll();
 
         // Get list of vehicle_ids that are currently active in queue (waiting or boarding)
         $activeQueuedVehicleIds = $this->queueModel
@@ -172,12 +176,47 @@ class Queue extends BaseController
                 $filteredVehicles[] = $v;
             }
 
-            // Sort: READY vehicles first at the top, DEPARTED vehicles ordered at the bottom of the list
+            // Sort:
+            // 1. Group by Destination Alphabetically (e.g. Bato, Maasin, Ormoc)
+            // 2. READY vehicles first, DEPARTED vehicles at the bottom of the list (FIFO trip rotation)
+            // 3. For same destination & status, sort by Vehicle Type Alphabetically (e.g. Bus, Car, Jeepney, Minibus, Taxi, Tricycle, Van)
+            // 4. If DEPARTED of the same type, oldest departure first (FIFO trip rotation)
+            // 5. If READY of the same type, sort by plate number alphabetically, then database ID
             usort($filteredVehicles, function($a, $b) {
+                // 1. Group by Destination Alphabetically
+                $destCmp = strcmp((string)($a['route_destination'] ?? ''), (string)($b['route_destination'] ?? ''));
+                if ($destCmp !== 0) {
+                    return $destCmp;
+                }
+
+                // 2. READY vehicles first, DEPARTED vehicles at bottom
                 if ($a['is_departed'] !== $b['is_departed']) {
                     return $a['is_departed'] ? 1 : -1; // ready (false) comes before departed (true)
                 }
-                return strcmp($a['plate_number'], $b['plate_number']);
+
+                // 3. Vehicle Type Alphabetically (e.g. Taxi before Van)
+                $typeA = strtolower(vehicle_type_label($a['type'] ?? ''));
+                $typeB = strtolower(vehicle_type_label($b['type'] ?? ''));
+                $typeCmp = strcmp($typeA, $typeB);
+                if ($typeCmp !== 0) {
+                    return $typeCmp;
+                }
+
+                // 4. If both DEPARTED of the same type, oldest departure first
+                if (!empty($a['is_departed'])) {
+                    $timeCmp = ($a['departed_timestamp'] ?? 0) <=> ($b['departed_timestamp'] ?? 0);
+                    if ($timeCmp !== 0) {
+                        return $timeCmp;
+                    }
+                }
+
+                // 5. If both READY of the same type, sort by plate number alphabetically, then ID
+                $plateCmp = strcmp((string)($a['plate_number'] ?? ''), (string)($b['plate_number'] ?? ''));
+                if ($plateCmp !== 0) {
+                    return $plateCmp;
+                }
+
+                return ((int) $a['id']) <=> ((int) $b['id']);
             });
 
             $vehicles = $filteredVehicles;
@@ -309,18 +348,9 @@ class Queue extends BaseController
             $addedCount++;
             $addedPlates[] = $vehicle['plate_number'];
 
-            $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
-
-            // Fetch complete queue item for broadcast
-            $queueItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
-                ->withFullJoins()
-                ->where('queue.id', $queueId)
-                ->first();
-
-            $this->broadcastUpdate('queue_update', [
-                'action' => 'add',
-                'queue_item' => $queueItem
-            ]);
+            $opName = $vehicle['operator_name'] ?? $vehicle['owner_name'] ?? '';
+            $drName = $vehicle['driver_name'] ?? '';
+            $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. (Operator: ' . ($opName ?: 'N/A') . ', Driver: ' . ($drName ?: 'N/A') . '). Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
         }
 
         // Order the active queue by departure
@@ -329,6 +359,14 @@ class Queue extends BaseController
         }
 
         $db->transComplete();
+
+        if ($addedCount > 0) {
+            $this->broadcastUpdate('queue_update', [
+                'action' => 'add',
+                'count'  => $addedCount,
+                'plates' => $addedPlates,
+            ]);
+        }
 
         if ($addedCount > 0) {
             $successMsg = implode(', ', $addedPlates) . ($addedCount > 1 ? ' added to queue.' : ' added to queue.');
@@ -413,13 +451,14 @@ class Queue extends BaseController
         $db->transComplete();
 
 
-        $item = $this->queueModel->select('vehicles.plate_number, terminals.name as origin, routes.destination')
+        $item = $this->queueModel->select('vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, terminals.name as origin, routes.destination')
             ->withFullJoins()
             ->where('queue.id', $id)
             ->first();
         $label = $item ? $item['plate_number'] . ' (' . $item['destination'] . ')' : 'queue #' . $id;
+        $opDriver = $item ? ' (Operator: ' . ($item['operator_name'] ?: 'N/A') . ', Driver: ' . ($item['driver_name'] ?: 'N/A') . ')' : '';
         $actionLabel = $status === 'boarding' ? 'Start Boarding' : ($status === 'departed' ? 'Depart Vehicle' : ($status === 'canceled' ? 'Cancel Trip' : $status));
-        $this->logActivity($actionLabel, $actionLabel . ' for ' . $label . '.');
+        $this->logActivity($actionLabel, $actionLabel . ' for ' . $label . '.' . $opDriver);
 
         // Fetch updated queue item for broadcast
         $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
@@ -496,7 +535,7 @@ class Queue extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
         }
 
-        $driverName = trim((string) $this->request->getPost('driver_name'));
+        $driverName = trim((string) ($this->request->getPost('driver_name') ?? $this->request->getVar('driver_name') ?? ''));
         if ($driverName === '' || strlen($driverName) < 2 || strlen($driverName) > 100) {
             return $this->response->setJSON(['success' => false, 'message' => 'Driver name must be between 2 and 100 characters.']);
         }
@@ -505,16 +544,27 @@ class Queue extends BaseController
         if (!$vehicle) {
             return $this->response->setJSON(['success' => false, 'message' => 'Vehicle not found.']);
         }
+        $oldDriverName = $vehicle['driver_name'] ?? 'Unknown';
 
+        // Update driver in both vehicle record and active queue records
         $this->vehicleModel->update($vehicle['id'], ['driver_name' => $driverName]);
+        $this->queueModel->where('vehicle_id', $vehicle['id'])
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->set(['driver_name' => $driverName])
+            ->update();
+        $this->queueModel->update($id, ['driver_name' => $driverName]);
 
-        $this->logActivity('Update driver', 'Updated driver for ' . ($vehicle['plate_number'] ?? 'vehicle') . ' (' . ($vehicle['type'] ?? 'N/A') . ') to ' . $driverName . '.');
+        $this->logActivity('Updated Driver', 'Updated Driver: ' . $oldDriverName . ' for ' . ($vehicle['plate_number'] ?? 'vehicle') . ' (' . ($vehicle['type'] ?? 'N/A') . ') to ' . $driverName . '.');
         $this->broadcastUpdate('queue_update', [
             'action' => 'driver_change',
             'id' => (int) $id,
             'driver_name' => $driverName,
         ]);
 
-        return $this->response->setJSON(['success' => true, 'message' => 'Driver updated to ' . $driverName . '.']);
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Driver updated to ' . $driverName . '.',
+            'driver_name' => $driverName
+        ]);
     }
 }

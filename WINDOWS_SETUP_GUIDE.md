@@ -102,13 +102,13 @@ wsl -u root systemctl status php-fpm
 
 ### Problem 3: Database Not Importing
 
-Check if SQL dump exists:
+Check if SQL schema exists:
 
 ```powershell
-wsl ls -la /mnt/c/jeepneynvans/*.sql
+wsl ls -la /mnt/c/jeepneynvans/app/Database/postgres_schema.sql
 ```
 
-Should show `jeepneynvans.sql` or `jeepneynvans_clean.sql`. If missing, the database won't import.
+Should show `postgres_schema.sql`. If missing, the database won't import.
 
 ---
 
@@ -136,7 +136,7 @@ Write-Host ""
 Write-Host "[3] Services Status (in WSL):" -ForegroundColor Yellow
 wsl -u root systemctl status nginx 2>&1 | findstr "active"
 wsl -u root bash -lc "PHPVER=\$(ls /etc/php 2>/dev/null | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail -n1); [ -z \"\$PHPVER\" ] && PHPVER=\"8.2\"; systemctl status php\${PHPVER}-fpm" 2>&1 | findstr "active"
-wsl -u root systemctl status mysql 2>&1 | findstr "active" || wsl -u root systemctl status mariadb 2>&1 | findstr "active"
+wsl -u root systemctl status postgresql 2>&1 | findstr "active"
 Write-Host ""
 
 # Check localhost connectivity
@@ -151,7 +151,7 @@ Write-Host ""
 
 # Check ports
 Write-Host "[5] Listening Ports (Windows):" -ForegroundColor Yellow
-netstat -ano | findstr "LISTENING" | findstr ":80\|:443\|:3306\|:8081\|:8082"
+netstat -ano | findstr "LISTENING" | findstr ":80\|:443\|:5432\|:8081\|:8082"
 ```
 
 ---
@@ -162,7 +162,7 @@ netstat -ano | findstr "LISTENING" | findstr ":80\|:443\|:3306\|:8081\|:8082"
 |----------|----------|
 | `C:\jeepneynvans` | `/mnt/c/jeepneynvans` |
 | `C:\Users\Anfel\Downloads\jeepneynvans` | `/mnt/c/Users/Anfel/Downloads/jeepneynvans` |
-| `C:\xampp\htdocs\jeepneynvans` | `/mnt/c/xampp/htdocs/jeepneynvans` |
+| `C:\projects\jeepneynvans` | `/mnt/c/projects/jeepneynvans` |
 
 **To find your actual path in PowerShell:**
 
@@ -183,7 +183,7 @@ wsl wslpath "$projectPath"  # Shows the WSL equivalent
 | View Nginx errors | `wsl -u root tail -f /var/log/nginx/jeepney_local_error.log` |
 | View PHP-FPM errors | `wsl -u root tail -f /var/log/php-fpm.log` |
 | Restart everything | `wsl -u root service nginx restart` |
-| Check MariaDB | `wsl -u root mysql -u root` |
+| Check PostgreSQL | `wsl -u postgres psql -d jeepneynvans` |
 
 ---
 

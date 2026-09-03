@@ -1,14 +1,14 @@
 [Unit]
 Description=Jeepney nVans WebSocket Server
-After=network.target mariadb.service
-Wants=mariadb.service
+After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=simple
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/jeepneynvans
-ExecStart=/usr/bin/php8.2 spark ws:serve
+ExecStart=/usr/bin/php spark ws:serve
 Restart=on-failure
 RestartSec=5s
 StandardOutput=syslog

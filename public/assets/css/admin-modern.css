@@ -897,7 +897,6 @@ body.staff-theme .page-hero small,
 body.staff-theme .page-hero .stat-item {
     color: white !important;
 }
-
 body.staff-theme .page-hero h1 {
     color: white !important;
 }
@@ -906,24 +905,52 @@ body.staff-theme .page-hero .subtitle {
     color: rgba(255, 255, 255, 0.8) !important;
 }
 
+/* ==========================================================================
+   SUPERADMIN / ADMIN / STAFF STANDARDIZED STICKY FOOTER
+   ========================================================================== */
+html, body {
+    height: 100%;
+}
+
+body.admin-theme,
+body.staff-theme {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+body.admin-theme .main-content,
+body.staff-theme .main-content {
+    flex: 1 0 auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
 body.admin-theme footer,
 body.admin-theme .footer,
 body.staff-theme footer,
 body.staff-theme .footer {
-    background: rgba(255, 255, 255, 0.45) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: auto 0 0 0 !important;
+    padding: 16px 24px !important;
+    background: rgba(255, 255, 255, 0.65) !important;
     backdrop-filter: blur(12px) saturate(160%) !important;
     -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
-    border-top: 1px solid rgba(226, 232, 240, 0.7) !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03) !important;
-    padding: 16px 24px !important;
-    margin-top: 40px !important;
-    border-radius: 14px 14px 0 0 !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
+    border-radius: 0 !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02) !important;
     text-align: center !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     color: #475569 !important;
     font-weight: 500 !important;
-    font-size: 13px !important;
+    font-size: 13.5px !important;
     position: relative !important;
-    z-index: 5 !important;
+    z-index: 10 !important;
+    box-sizing: border-box !important;
 }
 
 body.admin-theme footer p,
@@ -931,6 +958,20 @@ body.admin-theme .footer p,
 body.staff-theme footer p,
 body.staff-theme .footer p {
     margin: 0 !important;
+    padding: 0 !important;
     color: inherit !important;
     font-size: inherit !important;
+    font-weight: inherit !important;
+    text-align: center !important;
+    width: 100% !important;
+}
+
+@media (max-width: 768px) {
+    body.admin-theme footer,
+    body.admin-theme .footer,
+    body.staff-theme footer,
+    body.staff-theme .footer {
+        padding: 14px 16px !important;
+        font-size: 12.5px !important;
+    }
 }

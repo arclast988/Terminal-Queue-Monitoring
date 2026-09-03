@@ -9,6 +9,10 @@ class History extends BaseController
 {
     public function index()
     {
+        if (!session()->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'))->with('error', 'Please log in to view departure history.');
+        }
+
         $queueModel = new QueueModel();
         $queueModel->purgeOldDepartures(60);
 
@@ -16,22 +20,15 @@ class History extends BaseController
         $search = $this->request->getGet('q');
         $destination = $this->request->getGet('destination');
 
-        // Announcements for the guest header marquee
-        $announcements = [];
-        try {
-            $announcements = $this->getActiveAnnouncements();
-        } catch (\Throwable $e) {
-        }
-
         // Fetch distinct destinations for filter pills
         $routeModel = new \App\Models\RouteModel();
         $destinations = $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll();
 
         $builder = $queueModel->select('
             queue.*, 
-            vehicles.plate_number, 
-            vehicles.driver_name, 
-            COALESCE(NULLIF(vehicles.operator_name, ""), vehicles.owner_name) as operator_name, 
+            COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number, 
+            COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name, 
+            COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name) as operator_name,
             vehicles.owner_name, 
             vehicles.type as vehicle_type, 
             routes.destination, 
@@ -46,10 +43,9 @@ class History extends BaseController
 
         if ($search) {
             $builder->groupStart()
-                    ->like('vehicles.plate_number', $search)
-                    ->orLike('vehicles.driver_name', $search)
-                    ->orLike('vehicles.operator_name', $search)
-                    ->orLike('vehicles.owner_name', $search)
+                    ->like('COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number)', $search)
+                    ->orLike('COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name)', $search)
+                    ->orLike('COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name)', $search)
                     ->orLike('routes.destination', $search)
                     ->orLike('terminals.name', $search)
                     ->groupEnd();
@@ -59,18 +55,14 @@ class History extends BaseController
 
         $data = [
             'title' => 'Departure History',
-            'body_class' => session()->get('isLoggedIn') ? '' : 'public-page',
+            'body_class' => '',
             'departures' => $departures,
             'pager' => $queueModel->pager,
             'search' => $search,
             'destination' => $destination,
             'destinations' => $destinations,
-            'announcements' => $announcements,
         ];
 
-        if (session()->get('isLoggedIn')) {
-            return view('shared/history', $data);
-        }
-        return view('public/history', $data);
+        return view('shared/history', $data);
     }
 }

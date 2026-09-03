@@ -37,7 +37,7 @@ class Announcements extends Controller
                 // Announcements table may not exist yet — return an empty list.
                 $items = [];
             }
-            cache()->save('rt_announcements', $items, 3);
+            cache()->save('rt_announcements', $items, 300);
         }
 
         return $this->response

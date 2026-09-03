@@ -60,7 +60,7 @@ class Fares extends BaseController
             $terminals      = $terminalModel->findAll();
 
             $db            = \Config\Database::connect();
-            $destsRaw      = $db->query('SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != "" ORDER BY destination ASC')->getResultArray();
+            $destsRaw      = $db->query("SELECT DISTINCT destination FROM routes WHERE destination IS NOT NULL AND destination != '' ORDER BY destination ASC")->getResultArray();
             $destinations  = array_column($destsRaw, 'destination');
             $all_locations = array_values(array_filter(array_map('strtoupper', array_unique($destinations))));
             sort($all_locations);
@@ -115,7 +115,8 @@ class Fares extends BaseController
             unset($vehicleType);
             $routesByType = [];
             foreach ($vehicleTypes as $vehicleType) {
-                $routesByType[$vehicleType['slug']] = $this->routesByVehicleType($vehicleType['slug'], $discounts);
+                $slug = $vehicleType['slug'];
+                $routesByType[$slug] = $this->routesByVehicleType($slug, $discounts);
             }
 
             $payload = [

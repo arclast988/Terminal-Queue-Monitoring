@@ -147,12 +147,9 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">
-        <?php
-            $queryUrl = !empty($_GET) ? '?' . http_build_query($_GET) : '';
-        ?>
-        <a href="<?= base_url('admin/logs/print' . $queryUrl) ?>" target="_blank" class="btn-modern btn-modern-primary" title="Print or preview log report">
+        <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#logReportFilterModal" title="Generate Activity Log Report">
             <i class="bi bi-file-earmark-text"></i> Generate Report
-        </a>
+        </button>
     </div>
 </div>
 
@@ -330,7 +327,12 @@
                                         <div class="log-user-sub">
                                             <?= esc($log['full_name'] ?? $log['username']) ?>
                                             <?php if (!empty($log['role'])): ?>
-                                                &bull; <span class="badge-role"><?= esc(ucwords(str_replace('_', ' ', $log['role']))) ?></span>
+                                                <?php 
+                                                    $displayRole = $log['role'];
+                                                    if ($displayRole === 'staff') $displayRole = 'Dispatcher';
+                                                    else $displayRole = ucwords(str_replace('_', ' ', $displayRole));
+                                                ?>
+                                                &bull; <span class="badge-role"><?= esc($displayRole) ?></span>
                                             <?php endif; ?>
                                         </div>
                                     <?php else: ?>
@@ -368,6 +370,8 @@
         <?php endif; ?>
     </div>
 </div>
+
+<?= view('admin/modals/log_report_filter', ['actions' => $actions, 'users' => $users]) ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

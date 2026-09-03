@@ -341,8 +341,9 @@
             if (selectEl.dataset.autocompleteInitialized === "true") return;
             selectEl.dataset.autocompleteInitialized = "true";
 
-            // Hide original select element
-            selectEl.style.display = 'none';
+            // Visually hide original select while keeping it validatable by HTML5 form checks
+            selectEl.style.cssText = 'position: absolute !important; opacity: 0 !important; pointer-events: none !important; width: 1px !important; height: 1px !important; margin: 0 !important; padding: 0 !important; border: 0 !important; z-index: -1 !important;';
+            selectEl.tabIndex = -1;
 
             // Container wrapper
             const wrapper = document.createElement('div');
@@ -363,7 +364,8 @@
             searchInput.style.display = 'block';
 
             let placeholderText = 'Search option...';
-            if (fieldName.includes('action')) placeholderText = 'Search action...';
+            if (fieldName.includes('action_type')) placeholderText = 'Search action type...';
+            else if (fieldName.includes('action')) placeholderText = 'Search action...';
             else if (fieldName.includes('user') || fieldName.includes('driver') || fieldName.includes('operator')) placeholderText = 'Search user...';
             else if (fieldName.includes('role')) placeholderText = 'Search role...';
             else if (fieldName.includes('route')) placeholderText = 'Search assigned route...';

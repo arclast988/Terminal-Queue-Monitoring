@@ -216,7 +216,14 @@
         if (_pollTimer) return;
         var interval = _config ? (_config.pollInterval || 3000) : 3000;
         _pollTimer = setInterval(function() {
-            if (!_paused) doRefresh();
+            if (!_paused) {
+                // When WebSocket is connected, updates are pushed instantly.
+                // Back off polling to save bandwidth; QueueWS maintains its own 30s safety check.
+                if (typeof QueueWS !== 'undefined' && QueueWS.isConnected && QueueWS.isConnected()) {
+                    return;
+                }
+                doRefresh();
+            }
         }, interval);
     }
 

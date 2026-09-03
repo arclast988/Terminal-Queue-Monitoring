@@ -26,7 +26,7 @@ $routes->get('schedules', 'Schedules::index');
 $routes->get('schedules/status', 'Schedules::status');
 $routes->get('fares', 'Fares::index');
 $routes->get('api/fares', 'Fares::apiData');
-$routes->get('history', 'History::index');
+$routes->get('history', 'History::index', ['filter' => 'auth:admin,staff']);
 $routes->post('contact/send', 'Contact::send');
 
 // Public API for real-time queue sync (no auth required - read-only)

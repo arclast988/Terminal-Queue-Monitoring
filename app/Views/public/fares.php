@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Route Fares - Palompon Transit</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +19,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
 
     <style>
         :root {
@@ -201,10 +205,10 @@
         /* --- Hero Section --- */
         .hero {
             position: relative;
-            padding: 40px 5% 55px;
+            padding: 35px 5% 25px;
             text-align: center;
-            overflow: hidden;
-            min-height: 245px;
+            overflow: visible !important;
+            min-height: auto;
         }
         .hero::after {
             display: none !important;
@@ -217,7 +221,7 @@
             font-size: 38px;
             color: #000000;
             font-weight: 800;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             position: relative;
             z-index: 2;
         }
@@ -226,7 +230,7 @@
             font-size: 16px;
             color: #000000;
             max-width: 700px;
-            margin: 0 auto 24px;
+            margin: 0 auto 20px;
             position: relative;
             z-index: 2;
         }
@@ -235,7 +239,7 @@
         .container {
             width: 90%;
             max-width: 1400px;
-            margin: -30px auto 40px !important;
+            margin: 25px auto 40px !important;
             position: relative;
             z-index: 20;
         }
@@ -387,6 +391,38 @@
         .fare-list {
             max-height: 600px;
             overflow-y: auto;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fare-empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 50px 25px;
+            min-height: 220px;
+            height: 100%;
+            flex: 1;
+            color: #64748b;
+            font-size: 15px;
+            font-weight: 500;
+            gap: 12px;
+            background: #fafbfc;
+        }
+
+        .fare-empty-state i {
+            font-size: 32px;
+            color: #94a3b8;
+            opacity: 0.6;
+        }
+
+        .fare-empty-state span {
+            color: #64748b;
+            font-size: 14.5px;
+            font-weight: 600;
         }
 
         .fare-item {
@@ -487,26 +523,6 @@
                 gap: 12px;
             }
 
-            .nav-menu.open {
-                right: 0;
-            }
-
-            .nav-menu a {
-                width: 100%;
-                padding: 12px 18px;
-                border-radius: 12px;
-                background: #f8fafc;
-                font-size: 15px;
-                font-weight: 600;
-            }
-
-            .nav-menu a.active {
-                background: #e3f2fd;
-                color: var(--primary);
-            }
-
-            .nav-menu a.login-btn { background: #1e3a8a; color: white !important; text-align: center; justify-content: center; margin-top: 10px; margin-left: 0 !important; }
-            .nav-menu a.login-btn:hover, .nav-menu a.login-btn:active { background: #172554 !important; transform: scale(0.98); }
             .mobile-toggle {
                 display: block;
                 z-index: 1004;
@@ -514,24 +530,90 @@
             }
 
             .hero {
-                padding: 60px 5%;
+                padding: 25px 5% 20px !important;
             }
 
             .hero h2 {
-                font-size: 32px;
+                font-size: 28px;
             }
 
             .hero p {
-                font-size: 15px;
+                font-size: 14px;
+                margin-bottom: 16px;
+            }
+
+            .container {
+                width: 92% !important;
+                margin: 20px auto 30px !important;
             }
 
             .fares-grid {
                 grid-template-columns: 1fr;
             }
 
-
+            .search-bar {
+                flex-direction: row;
+                border-radius: 50px;
+                padding: 6px 8px;
+                align-items: center;
+                gap: 0;
+            }
+            .search-bar input {
+                padding: 10px 14px;
+                font-size: 13.5px;
+                text-align: left;
+                min-width: 0;
+                flex: 1;
+                width: auto;
+            }
+            .search-bar button {
+                padding: 0 18px;
+                height: 42px;
+                border-radius: 50px;
+                font-size: 12.5px;
+                font-weight: 700;
+                white-space: nowrap;
+                flex-shrink: 0;
+                width: auto;
+            }
         }
 
+        @media (max-width: 420px) {
+            .hero {
+                padding: 18px 4% 14px !important;
+            }
+            .hero h2 {
+                font-size: 22px !important;
+            }
+            .hero p {
+                font-size: 12.5px !important;
+                margin-bottom: 10px !important;
+            }
+            .container {
+                width: 96% !important;
+                padding: 0 !important;
+            }
+            .search-container {
+                max-width: 100% !important;
+            }
+            .search-bar {
+                padding: 4px 6px;
+            }
+            .search-bar input {
+                padding: 7px 10px;
+                font-size: 12px;
+            }
+            .search-bar button {
+                padding: 0 12px;
+                height: 36px;
+                font-size: 11px;
+            }
+            .fare-card {
+                padding: 10px !important;
+                border-radius: 12px !important;
+                margin-bottom: 12px !important;
+            }
+        }
     </style>
 </head>
 
@@ -548,9 +630,9 @@
         <p>Check official fare rates for all destinations to ensure fair pricing.</p>
 
         <div class="search-container">
-            <form class="search-bar" onsubmit="return false;">
-                <input type="text" id="fareSearch" placeholder="Search by Route, Destination, or Origin..." autocomplete="off">
-                <button type="button" onclick="document.getElementById('fareSearch').focus();">SEARCH</button>
+            <form class="search-bar" onsubmit="applyFareSearch(); return false;">
+                <input type="text" id="fareSearch" placeholder="Search by Route, Destination, Origin, or Vehicle Type..." autocomplete="off">
+                <button type="submit">SEARCH</button>
             </form>
         </div>
     </section>
@@ -598,7 +680,10 @@
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p class="text-muted text-center py-5 px-5" style="padding-left: 30px;">No van fares listed.</p>
+                        <div class="fare-empty-state">
+                            <i class="fas fa-route"></i>
+                            <span>No van fares listed.</span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -642,7 +727,10 @@
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p class="text-muted text-center py-5 px-5" style="padding-left: 30px;">No jeepney fares listed.</p>
+                        <div class="fare-empty-state">
+                            <i class="fas fa-route"></i>
+                            <span>No jeepney fares listed.</span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -686,16 +774,28 @@
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>
-                        <p class="text-muted text-center py-5 px-5" style="padding-left: 30px;">No mini bus fares listed.</p>
+                        <div class="fare-empty-state">
+                            <i class="fas fa-route"></i>
+                            <span>No mini bus fares listed.</span>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>
             <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                 <?php if (in_array($vehicleType['slug'], ['van', 'jeepney', 'minibus'], true)) continue; ?>
                 <?php $typeRoutes = ($routesByType ?? [])[$vehicleType['slug']] ?? []; ?>
-                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>">
-                    <div class="card-header">
-                        <h3><img src="<?= base_url('images/' . vehicle_type_image($vehicleType['slug'])) ?>" alt="<?= esc($vehicleType['name']) ?>" style="width: 45px; height: auto; object-fit: contain;"> <?= esc($vehicleType['name']) ?> Routes</h3>
+                <?php 
+                    $vtColor = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
+                    $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                ?>
+                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" style="border-top: 3px solid <?= esc($vtColor) ?>;">
+                    <div class="card-header" style="border-top: 3px solid <?= esc($vtColor) ?>;">
+                        <h3>
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white me-2" style="width: 32px; height: 32px; background-color: <?= esc($vtColor) ?>; font-size: 15px;">
+                                <i class="fas <?= esc($vtIcon) ?>"></i>
+                            </span>
+                            <?= esc($vehicleType['name']) ?> Routes
+                        </h3>
                     </div>
                     <div class="fare-list">
                         <?php if (!empty($typeRoutes)): ?>
@@ -726,7 +826,10 @@
                                 </div>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <p class="text-muted text-center py-5 px-5">No <?= esc(strtolower($vehicleType['name'])) ?> fares listed.</p>
+                            <div class="fare-empty-state">
+                                <i class="fas fa-route"></i>
+                                <span>No <?= esc(strtolower($vehicleType['name'])) ?> fares listed.</span>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -748,7 +851,7 @@
             <h3 style="font-size: 22px; font-weight: 800; color: #000000; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
                 <i class="fas fa-percent" style="color: var(--primary);"></i> Passenger Discount Rates
             </h3>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">
+            <p style="color: #0f172a; font-size: 15px; font-weight: 600; margin-bottom: 24px; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);">
                 Show your valid ID to avail the discount on any route.
             </p>
             <div class="fares-grid">
@@ -784,15 +887,56 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <script>
+    function applyFareSearch() {
+        var input = document.getElementById('fareSearch');
+        var q = input ? input.value.toLowerCase().trim() : '';
+        var cards = document.querySelectorAll('#faresGrid .fare-card');
+
+        cards.forEach(function(card) {
+            var cardHeader = card.querySelector('.card-header h3');
+            var headerText = cardHeader ? cardHeader.textContent.toLowerCase() : '';
+            var items = card.querySelectorAll('.fare-item');
+            var emptyState = card.querySelector('.fare-empty-state');
+            var matchCount = 0;
+
+            // Check if search matches vehicle type (e.g. "van", "jeepney", "minibus", "bus")
+            var headerMatches = (q !== '' && headerText.indexOf(q) !== -1);
+
+            items.forEach(function(item) {
+                var itemText = item.textContent.toLowerCase();
+                if (q === '' || headerMatches || itemText.indexOf(q) !== -1) {
+                    item.style.display = '';
+                    matchCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (emptyState) {
+                if (q === '' || headerMatches) {
+                    emptyState.style.display = '';
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            // If user is searching, hide cards that have 0 matches; show all cards when query is cleared
+            if (q === '') {
+                card.style.display = '';
+            } else {
+                if (matchCount > 0 || (emptyState && headerMatches)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+        });
+    }
+
     // Live filter for fare search input
     document.addEventListener('input', function(e) {
         if (e.target && e.target.id === 'fareSearch') {
-            var q = e.target.value.toLowerCase().trim();
-            var items = document.querySelectorAll('.fare-item');
-            items.forEach(function(item) {
-                var text = item.textContent.toLowerCase();
-                item.style.display = (q === '' || text.indexOf(q) !== -1) ? '' : 'none';
-            });
+            applyFareSearch();
         }
     });
 
@@ -852,7 +996,11 @@
                 html += '</div>';
             });
         } else {
-            html += '<p class="text-muted text-center py-5 px-5">No fares listed.</p>';
+            var typeName = escapeHtml(label.replace(/\s*routes$/i, '').trim().toLowerCase());
+            html += '<div class="fare-empty-state">'
+                + '<i class="fas fa-route"></i>'
+                + '<span>No ' + typeName + ' fares listed.</span>'
+                + '</div>';
         }
 
         html += '</div></div>';
@@ -870,7 +1018,7 @@
         var html = '<div style="margin-bottom: 60px;">'
             + '<h3 style="font-size: 22px; font-weight: 800; color: #000000; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">'
             + '<i class="fas fa-percent" style="color: var(--primary);"></i> Passenger Discount Rates</h3>'
-            + '<p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Show your valid ID to avail the discount on any route.</p>'
+            + '<p style="color: #0f172a; font-size: 15px; font-weight: 600; margin-bottom: 24px; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);">Show your valid ID to avail the discount on any route.</p>'
             + '<div class="fares-grid">';
 
         discounts.forEach(function(disc) {
@@ -920,6 +1068,7 @@
                         routes
                     );
                 }).join('');
+                applyFareSearch();
             }
 
             // Rebuild discount section

@@ -41,7 +41,13 @@ class Contact extends BaseController
             ? '[PTTM Report Issue] ' . ($subject ?: 'Issue reported via website')
             : '[PTTM Contact Us] ' . ($subject ?: 'Message from website');
 
-        $body = "Name: {$name}\nEmail: {$email}\n\nMessage:\n{$message}";
+        if ($type === 'report') {
+            $issueType = $subject ?: 'General Issue';
+            $body = "Name: {$name}\nEmail: {$email}\nIssue Type: {$issueType}\n\nMessage:\n{$message}";
+        } else {
+            $topic = $subject ?: 'General Inquiry';
+            $body = "Name: {$name}\nEmail: {$email}\nSubject: {$topic}\n\nMessage:\n{$message}";
+        }
 
         // Use CodeIgniter Email library
         $emailSvc = $this->getConfiguredEmailService();

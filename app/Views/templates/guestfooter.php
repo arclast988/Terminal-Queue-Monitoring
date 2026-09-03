@@ -28,8 +28,16 @@
                 <h4>Contact</h4>
                 <ul>
                     <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> Palompon Terminal Center</li>
-                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> (053) 555-0123</li>
-                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= config('Email')->recipients ?></li>
+                    <li style="font-size: 14px; color: #cbd5e1;">
+                        <a href="tel:0535550123" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
+                            <i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> (053) 555-0123
+                        </a>
+                    </li>
+                    <li style="font-size: 14px; color: #cbd5e1;">
+                        <a href="mailto:<?= esc(config('Email')->recipients) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
+                            <i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= esc(config('Email')->recipients) ?>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -166,7 +174,7 @@
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Who do I contact for complaints or feedback? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the "Contact Us" or "Report Issue" widgets here on this page. Your message goes directly to our support team at <?= config('Email')->recipients ?>.</div>
+            <div class="faq-answer">Use the "Contact Us" or "Report Issue" widgets here on this page. Your message goes directly to our support team at <a href="mailto:<?= esc(config('Email')->recipients) ?>" style="color:#2563eb; font-weight:600;"><?= esc(config('Email')->recipients) ?></a>.</div>
         </div>
     </div>
 </div>
@@ -294,11 +302,12 @@ footer {
     max-width: 850px;
 }
 
-.support-modal h3 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.support-modal h3 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-right: 32px; word-break: break-word; }
 .support-modal .close-modal {
     position: absolute; top: 18px; right: 20px; font-size: 22px;
     cursor: pointer; color: #94a3b8; background: none; border: none; line-height: 1;
     transition: color .2s;
+    width: 32px; height: 32px; display: grid; place-items: center;
 }
 .support-modal .close-modal:hover { color: #e53e3e; }
 
@@ -308,6 +317,7 @@ footer {
     width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0;
     border-radius: 12px; font-size: 14px; font-family: inherit;
     outline: none; transition: border-color .2s;
+    box-sizing: border-box;
 }
 .support-modal input:focus, .support-modal textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(21,101,192,.1); }
 .support-modal textarea { resize: vertical; min-height: 110px; }
@@ -315,6 +325,7 @@ footer {
     width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--primary-dark));
     color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
     transition: opacity .2s;
+    box-sizing: border-box;
 }
 .support-modal .submit-btn:hover { opacity: .88; }
 
@@ -334,7 +345,40 @@ footer {
 .alert-success-banner { background: #d1fae5; color: #065f46; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .alert-error-banner   { background: #fee2e2; color: #991b1b; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
-@media (max-width: 530px) { .support-modal { padding: 25px 18px; border-radius: 18px; } }
+@media (max-width: 530px) {
+    .support-modal {
+        padding: 22px 16px;
+        border-radius: 18px;
+        width: 100%;
+        max-width: calc(100vw - 24px);
+    }
+    .support-modal h3 {
+        font-size: 17px;
+        margin-bottom: 16px;
+    }
+    .support-modal .close-modal {
+        top: 14px;
+        right: 14px;
+    }
+}
+@media (max-width: 420px) {
+    .support-modal {
+        padding: 16px 10px;
+        border-radius: 12px;
+        max-width: calc(100vw - 12px);
+    }
+    .support-modal h3 {
+        font-size: 15px;
+    }
+    .support-modal input, .support-modal textarea, .support-modal select {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    .support-modal .submit-btn {
+        padding: 11px;
+        font-size: 13.5px;
+    }
+}
 </style>
 
 <!-- ===== Footer JS ===== -->

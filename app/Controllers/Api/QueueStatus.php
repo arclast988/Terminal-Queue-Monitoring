@@ -25,8 +25,9 @@ class QueueStatus extends Controller
             $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, terminals.name as origin, routes.destination')
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
-                ->orderBy('queue.position', 'ASC')
                 ->orderBy('routes.destination', 'ASC')
+                ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+                ->orderBy('queue.position', 'ASC')
                 ->findAll();
 
             // Build a simple lookup by queue ID

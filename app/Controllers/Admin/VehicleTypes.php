@@ -22,8 +22,31 @@ class VehicleTypes extends BaseController
             return redirect()->to('/admin/vehicles')->with('error', 'That vehicle type already exists.');
         }
 
-        $types->insert(['name' => $name, 'slug' => $slug, 'is_active' => 1]);
-        $this->logActivity('Add vehicle type', 'Added vehicle type ' . $name . '.');
+        // Color handling
+        $color = trim((string) $this->request->getPost('color'));
+        if ($color === '' || ! preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+            // Pick an unused distinct color from the palette
+            $palette = ['#c62828', '#1565c0', '#2e7d32', '#ea580c', '#7c3aed', '#0891b2', '#e11d48', '#ca8a04', '#475569', '#059669', '#4f46e5', '#db2777'];
+            $usedColors = array_filter(array_column($types->findAll(), 'color'));
+            $available = array_values(array_diff($palette, $usedColors));
+            $color = ! empty($available) ? $available[0] : vehicle_type_color($slug);
+        }
+
+        // Icon handling
+        $icon = trim((string) $this->request->getPost('icon'));
+        if ($icon === '') {
+            $icon = vehicle_type_icon($slug);
+        }
+
+        $types->insert([
+            'name'      => $name,
+            'slug'      => $slug,
+            'color'     => $color,
+            'icon'      => $icon,
+            'is_active' => 1,
+        ]);
+
+        $this->logActivity('Add vehicle type', 'Added vehicle type ' . $name . ' (' . $color . ', ' . $icon . ').');
         $this->broadcastUpdate('vehicle_type_update', ['action' => 'create', 'slug' => $slug]);
 
         return redirect()->to('/admin/vehicles')->with('success', $name . ' was added. It is now available for vehicles and fares.');
@@ -142,9 +165,21 @@ class VehicleTypes extends BaseController
             $db->table('vehicles')->where('type', $oldSlug)->update(['type' => $newSlug]);
         }
 
+        $color = trim((string) $this->request->getPost('color'));
+        if ($color === '' || ! preg_match('/^#[0-9a-fA-F]{6}$/', $color)) {
+            $color = $type['color'] ?? vehicle_type_color($newSlug);
+        }
+
+        $icon = trim((string) $this->request->getPost('icon'));
+        if ($icon === '') {
+            $icon = $type['icon'] ?? vehicle_type_icon($newSlug);
+        }
+
         $types->update($id, [
-            'name' => $name,
-            'slug' => $newSlug,
+            'name'  => $name,
+            'slug'  => $newSlug,
+            'color' => $color,
+            'icon'  => $icon,
         ]);
 
         $db->transComplete();

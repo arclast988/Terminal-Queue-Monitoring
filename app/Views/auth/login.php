@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#D62828">
     <title>Sign in · Palompon Transit</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
+    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -546,8 +550,11 @@
             .page-foot { margin-top: var(--space-8); }
         }
 
-        @media (max-width: 380px) {
-            .options { flex-direction: column; align-items: flex-start; gap: 0; }
+        @media (max-width: 420px) {
+            .page { padding: 16px 10px 24px; }
+            .login-card { padding: 18px 14px; border-radius: var(--radius-md); }
+            .login-card h2 { font-size: 20px; }
+            .options { flex-direction: column; align-items: flex-start; gap: 6px; }
         }
     </style>
 </head>

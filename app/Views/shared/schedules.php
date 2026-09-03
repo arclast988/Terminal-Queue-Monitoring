@@ -151,6 +151,38 @@
         border-color: var(--primary-blue, #1565c0) !important;
         box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
     }
+
+    @media (max-width: 480px) {
+        .route-filter-wrapper {
+            padding: 12px 10px !important;
+            border-radius: 12px !important;
+            margin-bottom: 14px !important;
+        }
+        .route-filter-label {
+            font-size: 11px !important;
+            margin-bottom: 6px !important;
+        }
+        .route-filter-bar {
+            gap: 6px !important;
+            padding: 2px 2px 6px 2px !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+        .route-chip {
+            padding: 6px 12px !important;
+            font-size: 11.5px !important;
+            border-radius: 20px !important;
+            gap: 5px !important;
+            flex-shrink: 0 !important;
+        }
+        .chip-count {
+            font-size: 10px !important;
+            min-width: 18px !important;
+            height: 18px !important;
+            padding: 0 4px !important;
+        }
+    }
 </style>
 
 <div class="page-header-modern fade-in">
@@ -185,9 +217,9 @@
 <!-- Filter Section -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
-        <form method="get" action="<?= base_url('schedules') ?>" class="row g-3" id="sharedFilterForm">
-            <div class="col-md-4">
-                <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Vehicle Type</label>
+        <form method="get" action="<?= base_url('schedules') ?>" class="row g-2 g-md-3 align-items-end" id="sharedFilterForm">
+            <div class="col-12 col-md-4">
+                <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Vehicle Type</label>
                 <select name="type" id="sharedTypeSelect" class="form-select-modern">
                     <option value="">All Types</option>
                     <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
@@ -195,8 +227,8 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-5">
-                <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Destination</label>
+            <div class="col-12 col-md-5">
+                <label class="form-label-modern" style="color: #1e293b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Destination</label>
                 <select name="destination" id="sharedDestSelect" class="form-select-modern">
                     <option value="">All Destinations</option>
                     <?php foreach ($all_destinations as $dest): ?>
@@ -204,8 +236,8 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-md-3 d-flex align-items-end">
-                <button type="submit" class="btn-modern btn-modern-primary w-100">
+            <div class="col-12 col-md-3">
+                <button type="submit" class="btn-modern btn-modern-primary w-100" style="min-height: 42px;">
                     <i class="bi bi-funnel-fill"></i> Apply Filters
                 </button>
             </div>
@@ -235,20 +267,12 @@
     <div class="route-filter-bar" id="sharedRouteFilterBar">
         <button type="button" class="route-chip <?= empty($destination) ? 'active' : '' ?>" data-dest="all" onclick="filterSharedSchedules('all', this)">
             All Routes
-            <span class="chip-count" id="count-all-dest"><?= count($schedules) ?></span>
+            <span class="chip-count" id="count-all-dest"><?= (int)($total_active_count ?? count($schedules)) ?></span>
         </button>
-        <?php foreach ($all_destinations as $dest): ?>
-            <?php
-                $destCount = 0;
-                foreach ($schedules as $item) {
-                    if (strcasecmp($item['destination'] ?? '', $dest) === 0) {
-                        $destCount++;
-                    }
-                }
-            ?>
+        <?php foreach (($active_dest_counts ?? []) as $dest => $cnt): ?>
             <button type="button" class="route-chip <?= (strcasecmp($destination ?? '', $dest) === 0) ? 'active' : '' ?>" data-dest="<?= esc(strtolower($dest)) ?>" onclick="filterSharedSchedules('<?= esc(strtolower($dest)) ?>', this)">
                 <?= strtoupper(esc($dest)) ?>
-                <span class="chip-count"><?= $destCount ?></span>
+                <span class="chip-count"><?= (int)$cnt ?></span>
             </button>
         <?php endforeach; ?>
     </div>
@@ -274,7 +298,7 @@
                         <th>Driver</th>
                         <th>Type</th>
                         <th>Route</th>
-                        <th>Est. Departure</th>
+                        <th>Est. Departure (HH:MM)</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -318,13 +342,13 @@
                                     </div>
                                 </td>
                                 <td data-label="Route">
-                                    <div class="d-flex align-items-center gap-2" style="white-space: nowrap;">
+                                    <div class="d-flex align-items-center gap-1 flex-wrap justify-content-end text-end" style="word-break: break-word;">
                                         <strong><?= esc($s['origin']) ?></strong>
-                                        <i class="bi bi-arrow-right text-muted"></i>
+                                        <i class="bi bi-arrow-right text-muted" style="font-size: 11px;"></i>
                                         <strong><?= esc($s['destination']) ?></strong>
                                     </div>
                                 </td>
-                                <td data-label="Est. Departure">
+                                <td data-label="Est. Departure (HH:MM)">
                                     <?php if ($s['status'] === 'departed' && $s['departure_time']): ?>
                                         <span class="badge-modern badge-modern-info">
                                             <?= date('H:i', strtotime($s['departure_time'])) ?>

@@ -382,7 +382,7 @@ if (!empty($recent_departures)) {
     .departure-search-group {
         display: flex;
         align-items: center;
-        max-width: 380px;
+        max-width: 420px;
         min-width: 240px;
         width: 100%;
     }

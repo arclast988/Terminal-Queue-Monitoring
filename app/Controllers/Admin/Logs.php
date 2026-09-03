@@ -34,8 +34,8 @@ class Logs extends BaseController
         $stats = $db->table('audit_logs')
             ->select("
                 COUNT(*) as total,
-                SUM(CASE WHEN `timestamp` >= '{$todayStr} 00:00:00' THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN `timestamp` >= '{$weekStr} 00:00:00' THEN 1 ELSE 0 END) as this_week,
+                SUM(CASE WHEN timestamp >= '{$todayStr} 00:00:00' THEN 1 ELSE 0 END) as today,
+                SUM(CASE WHEN timestamp >= '{$weekStr} 00:00:00' THEN 1 ELSE 0 END) as this_week,
                 COUNT(DISTINCT user_id) as active_users
             ")
             ->get()
@@ -88,16 +88,22 @@ class Logs extends BaseController
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $actionFilter, $userFilter);
         $results = $builder->orderBy('audit_logs.timestamp', 'DESC')->findAll();
 
+        $selectedUser = null;
+        if (!empty($userFilter)) {
+            $selectedUser = (new UserModel())->find($userFilter);
+        }
+
         $data = [
-            'title'       => 'System Activity Logs Report',
-            'results'     => $results,
-            'search'      => $search,
-            'from_date'   => $fromDate,
-            'to_date'     => $toDate,
-            'action_type' => $actionFilter,
-            'user_id'     => $userFilter,
-            'generated_at'=> date('Y-m-d H:i:s'),
-            'is_print'    => true
+            'title'        => 'System Activity Logs Report',
+            'results'      => $results,
+            'search'       => $search,
+            'from_date'    => $fromDate,
+            'to_date'      => $toDate,
+            'action_type'  => $actionFilter,
+            'user_id'      => $userFilter,
+            'selected_user'=> $selectedUser,
+            'generated_at' => date('Y-m-d H:i:s'),
+            'is_print'     => true
         ];
 
         return view('admin/logs/print_logs', $data);

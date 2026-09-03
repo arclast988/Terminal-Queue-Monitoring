@@ -71,12 +71,24 @@ class WsServe extends BaseCommand
             if (time() - $lastPing >= 30) {
                 $lastPing = time();
                 $pingData = $this->encode(json_encode(['type' => 'ping', 'timestamp' => time()]));
+                $stalePingIds = [];
                 foreach ($wsClients as $wsId => $wsClient) {
                     if ($wsClient['handshaken']) {
-                        @fwrite($wsClient['socket'], $pingData);
+                        $res = @fwrite($wsClient['socket'], $pingData);
+                        if ($res === false) {
+                            $stalePingIds[] = $wsId;
+                        }
                     }
                 }
-                CLI::write("Sent heartybeat ping to " . count($wsClients) . " clients", 'dark_gray');
+                foreach ($stalePingIds as $wsId) {
+                    CLI::write("  - Removing stale Client $wsId (ping failed)", 'red');
+                    $staleSocket = $wsClients[$wsId]['socket'];
+                    unset($wsClients[$wsId]);
+                    $key = array_search($staleSocket, $masterClients);
+                    if ($key !== false) unset($masterClients[$key]);
+                    @fclose($staleSocket);
+                }
+                CLI::write("Sent heartbeat ping to " . count($wsClients) . " clients", 'dark_gray');
             }
 
             if ($numChanged > 0) {
