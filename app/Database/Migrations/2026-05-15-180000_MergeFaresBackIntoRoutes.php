@@ -58,7 +58,7 @@ class MergeFaresBackIntoRoutes extends Migration
             $this->forge->createTable('fares');
         }
 
-        if ($db->fieldExists('fare', 'routes')) {
+        if ($db->tableExists('fares') && $db->fieldExists('fare', 'routes')) {
             $db->query("
                 INSERT INTO fares (route_id, amount, created_at, updated_at)
                 SELECT id, fare, COALESCE(created_at, NOW()), NOW()

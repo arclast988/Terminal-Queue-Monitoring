@@ -34,7 +34,7 @@ class MoveRouteFareToFaresTable extends Migration
         $hasFareColumn = is_object($existsRow)
             && in_array(strtolower((string) $existsRow->exists), ['t', 'true', '1'], true);
 
-        if ($hasFareColumn) {
+        if ($db->tableExists('fares') && $hasFareColumn) {
             $db->query("
                 INSERT INTO fares (route_id, amount, created_at, updated_at)
                 SELECT id, fare, COALESCE(created_at, NOW()), NOW()
@@ -42,7 +42,9 @@ class MoveRouteFareToFaresTable extends Migration
                 ON CONFLICT (route_id) DO UPDATE SET amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at
             ");
 
-            $this->forge->dropColumn('routes', 'fare');
+            if ($db->fieldExists('fare', 'routes')) {
+                $this->forge->dropColumn('routes', 'fare');
+            }
         }
     }
 
