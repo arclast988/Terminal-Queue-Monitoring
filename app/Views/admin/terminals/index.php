@@ -67,7 +67,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                 <td data-label="Capacity"><span class="badge-modern badge-modern-primary"><?= $terminal['capacity'] ?> pax</span></td>
                                 <td data-label="Created At">
                                     <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
-                                        <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y', strtotime($terminal['created_at'])) ?>
+                                        <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= !empty($terminal['created_at']) ? date('M d, Y', strtotime($terminal['created_at'])) : 'N/A' ?>
                                     </div>
                                 </td>
                                 <?php if ($isAdmin): ?>

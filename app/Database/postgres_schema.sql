@@ -164,18 +164,6 @@ CREATE TABLE queue (
     departure_time TIMESTAMP NULL
 );
 
--- --------------------------------------------------------------------
--- 11. Vehicle Assignments Table
--- --------------------------------------------------------------------
-CREATE TABLE vehicle_assignments (
-    id SERIAL PRIMARY KEY,
-    vehicle_id INT NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
-    operator_user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    assigned_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    shift_start TIME NULL,
-    shift_end TIME NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
 -- --------------------------------------------------------------------
 -- 12. Announcements Table
@@ -226,6 +214,7 @@ CREATE INDEX idx_queue_route_status_pos ON queue (route_id, status, position);
 CREATE INDEX idx_queue_status_departure ON queue (status, departure_time);
 CREATE INDEX idx_queue_vehicle ON queue (vehicle_id);
 CREATE INDEX idx_vehicles_route_id ON vehicles (route_id);
+CREATE INDEX idx_vehicles_default_route_id ON vehicles (default_route_id);
 CREATE INDEX idx_vehicles_plate ON vehicles (plate_number);
 CREATE INDEX idx_routes_terminal ON routes (terminal_id);
 CREATE INDEX idx_audit_logs_user_ts ON audit_logs (user_id, timestamp);

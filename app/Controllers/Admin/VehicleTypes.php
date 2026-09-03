@@ -76,7 +76,7 @@ class VehicleTypes extends BaseController
         $vehicleModel   = new \App\Models\VehicleModel();
         $vehicleBuilder = $vehicleModel->where('type', $slug);
         if (!empty($routeIds)) {
-            $vehicleBuilder->orWhereIn('route_id', $routeIds);
+            $vehicleBuilder->orWhereIn('default_route_id', $routeIds);
         }
         $vehicles   = $vehicleBuilder->findAll();
         $vehicleIds = array_column($vehicles, 'id');

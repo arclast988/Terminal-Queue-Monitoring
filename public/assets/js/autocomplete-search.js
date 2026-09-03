@@ -351,6 +351,13 @@
             selectEl.parentNode.insertBefore(wrapper, selectEl);
             wrapper.appendChild(selectEl);
 
+            // If inside an input-group-modern flex container, inherit flex properties
+            if (wrapper.parentNode && wrapper.parentNode.classList.contains('input-group-modern')) {
+                wrapper.style.flex = '1 1 auto';
+                wrapper.style.minWidth = '0';
+                wrapper.style.width = '100%';
+            }
+
             const fieldName = (selectEl.name || selectEl.id || '').toLowerCase();
 
             // Create visible search input field

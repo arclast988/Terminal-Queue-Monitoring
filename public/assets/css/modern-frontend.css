@@ -735,12 +735,23 @@ textarea::placeholder {
 .input-group-modern .form-control-modern,
 .input-group-modern .select-modern,
 .input-group-modern .form-select-modern {
+    display: block;
     flex: 1 1 auto;
     width: 1%;
     min-width: 0;
     border-radius: var(--radius-md);
     min-height: 44px;
     box-sizing: border-box;
+}
+
+/* Ensure select elements inside input groups stretch properly across flex width and do not collapse */
+.input-group-modern select.select-modern,
+.input-group-modern select.form-select-modern,
+.input-group-modern select {
+    display: block;
+    flex: 1 1 auto;
+    width: 100% !important;
+    min-width: 0;
 }
 
 /* When preceded by an addon on the left */
@@ -759,6 +770,21 @@ textarea::placeholder {
 .input-group-modern > .form-select-modern:not(:last-child) {
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
+}
+
+/* Autocomplete wrapper inside input-group-modern must participate in flex layout */
+.input-group-modern > .autocomplete-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Autocomplete search input inherits left border-radius removal when preceded by addon */
+.input-group-modern > .input-group-text-modern + .autocomplete-wrapper .input-modern,
+.input-group-modern > .input-group-text-modern + .autocomplete-wrapper .form-control-modern,
+.input-group-modern > .input-group-text-modern + .autocomplete-wrapper input[type="text"] {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
 }
 
 .input-group-modern > .btn-modern,

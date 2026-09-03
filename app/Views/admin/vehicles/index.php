@@ -82,14 +82,14 @@
                     </select>
                 </div>
                 <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <label for="route_id" class="form-label-modern">Assigned Route</label>
+                    <label for="route_id" class="form-label-modern">Destination</label>
                     <select class="form-select-modern" id="route_id" name="route_id" required>
-                        <option value="">-- Select Route --</option>
+                        <option value="">-- Select Type First --</option>
                         <?php if (!empty($routes)): ?>
                             <?php foreach ($routes as $r): ?>
                                 <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
                                     <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
-                                    <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?> (<?= ucfirst(esc($r['vehicle_type'])) ?>)
+                                    <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -271,7 +271,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 </td>
                                 <td data-label="Registered">
                                     <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
-                                        <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= date('M d, Y', strtotime($vehicle['created_at'])) ?>
+                                        <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= !empty($vehicle['created_at']) ? date('M d, Y', strtotime($vehicle['created_at'])) : 'N/A' ?>
                                     </div>
                                 </td>
                                 <td data-label="Action">
@@ -699,14 +699,20 @@ if (!empty($vehicles) && is_array($vehicles)) {
             var selectedType = typeSelect.value;
             var options = routeSelect.querySelectorAll('option[data-type]');
             options.forEach(function (opt) {
-                if (!selectedType || opt.getAttribute('data-type') === selectedType) {
+                if (selectedType && opt.getAttribute('data-type') === selectedType) {
                     opt.style.display = '';
                     opt.disabled = false;
                 } else {
                     opt.style.display = 'none';
                     opt.disabled = true;
+                    if (opt.selected) opt.selected = false;
                 }
             });
+            // Update placeholder text based on whether a type is selected
+            var placeholder = routeSelect.querySelector('option[value=""]');
+            if (placeholder) {
+                placeholder.textContent = selectedType ? '-- Select Destination --' : '-- Select Type First --';
+            }
             routeSelect.dispatchEvent(new Event('change'));
         }
 

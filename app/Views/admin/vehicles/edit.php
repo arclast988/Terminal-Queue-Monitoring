@@ -93,19 +93,19 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="route_id" class="form-label-modern">Assigned Route <span class="text-danger">*</span></label>
+                    <label for="route_id" class="form-label-modern">Destination <span class="text-danger">*</span></label>
                     <select class="select-modern" id="route_id" name="route_id" required>
-                        <option value="">-- Select Route --</option>
+                        <option value="">-- Select Destination --</option>
                         <?php if (!empty($routes)): ?>
                             <?php foreach ($routes as $r): ?>
                                 <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
-                                    <?= (old('route_id') ?? $vehicle['route_id']) == $r['id'] ? 'selected' : '' ?>>
-                                    <?= strtoupper(esc($r['origin'])) ?> &rarr; <?= strtoupper(esc($r['destination'])) ?> (<?= ucfirst(esc($r['vehicle_type'])) ?>)
+                                    <?= (old('route_id') ?? $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
+                                    <?= strtoupper(esc($r['origin'])) ?> &rarr; <?= strtoupper(esc($r['destination'])) ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </select>
-                    <div class="form-text-modern">Route must match vehicle type</div>
+                    <div class="form-text-modern">Filtered by selected vehicle type</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="status" class="form-label-modern">Status <span class="text-danger">*</span></label>
@@ -133,7 +133,7 @@
     <div class="card-body-modern">
         <p class="text-muted mb-0">
             <strong>Vehicle ID:</strong> <?= esc($vehicle['id']) ?><br>
-            <strong>Registered:</strong> <?= strtoupper(date('M d, Y H:i', strtotime($vehicle['created_at']))) ?>
+            <strong>Registered:</strong> <?= !empty($vehicle['created_at']) ? strtoupper(date('M d, Y H:i', strtotime($vehicle['created_at']))) : 'N/A' ?>
         </p>
     </div>
 </div>
@@ -143,7 +143,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     var typeSelect = document.getElementById('type');
     var routeSelect = document.getElementById('route_id');
-    var currentRouteId = '<?= old('route_id') ?? $vehicle['route_id'] ?>';
+    var currentRouteId = '<?= old('route_id') ?? $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '' ?>';
 
     function filterRoutes() {
         var selectedType = typeSelect.value;

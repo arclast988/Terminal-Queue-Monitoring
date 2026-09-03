@@ -92,13 +92,14 @@
                                     <input type="text" class="input-modern" value="Super Admin" disabled>
                                     <input type="hidden" name="role" value="super_admin">
                                 <?php elseif ((int)$user['id'] === (int)session()->get('id')): ?>
-                                    <input type="text" class="input-modern" value="<?= $user['role'] === 'admin' ? 'Admin' : 'Dispatcher' ?>" disabled>
+                                    <input type="text" class="input-modern" value="<?= $user['role'] === 'super_admin' ? 'Super Admin' : ($user['role'] === 'admin' ? 'Admin' : 'Dispatcher') ?>" disabled>
                                     <input type="hidden" name="role" value="<?= esc($user['role']) ?>">
                                 <?php else: ?>
-                                    <select class="select-modern" id="role" name="role" required>
-                                        <option value="staff" <?= old('role', $user['role']) === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
+                                    <?php $selectedRole = old('role', in_array($user['role'], ['staff', 'operator'], true) ? 'staff' : $user['role']); ?>
+                                    <select class="select-modern" id="role" name="role" required style="flex: 1 1 auto; width: 100%; min-width: 0;">
+                                        <option value="staff" <?= $selectedRole === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
                                         <?php if (session()->get('role') === 'super_admin'): ?>
-                                            <option value="admin" <?= old('role', $user['role']) === 'admin' ? 'selected' : '' ?>>Admin</option>
+                                            <option value="admin" <?= $selectedRole === 'admin' ? 'selected' : '' ?>>Admin</option>
                                         <?php endif; ?>
                                     </select>
                                 <?php endif; ?>

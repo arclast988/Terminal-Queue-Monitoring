@@ -103,10 +103,10 @@ class Queue extends BaseController
         $freshVehicleModel = new VehicleModel();
         $vehicleBuilder = $freshVehicleModel
             ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
-            ->join('routes', 'routes.id = vehicles.route_id', 'left')
+            ->join('routes', 'routes.id = vehicles.default_route_id', 'left')
             ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
             ->where('vehicles.status', 'active')
-            ->where('vehicles.route_id IS NOT NULL');
+            ->where('vehicles.default_route_id IS NOT NULL');
 
         if (!empty($activeQueuedVehicleIds)) {
             $vehicleBuilder->whereNotIn('vehicles.id', $activeQueuedVehicleIds);
@@ -114,7 +114,7 @@ class Queue extends BaseController
 
         if ($assignedRouteIds !== null) {
             if (!empty($assignedRouteIds)) {
-                $vehicles = $vehicleBuilder->whereIn('vehicles.route_id', $assignedRouteIds)->findAll();
+                $vehicles = $vehicleBuilder->whereIn('vehicles.default_route_id', $assignedRouteIds)->findAll();
             } else {
                 $vehicles = [];
             }
@@ -276,7 +276,7 @@ class Queue extends BaseController
                 continue;
             }
 
-            $routeId = $vehicle['route_id'];
+            $routeId = $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? null;
             if (empty($routeId)) {
                 $errors[] = 'Vehicle ' . $vehicle['plate_number'] . ' has no assigned route.';
                 continue;

@@ -21,7 +21,7 @@ class Dashboard extends BaseController
         $userRouteModel = new UserRouteModel();
 
         // Count vehicles with no assigned route
-        $unassignedVehicles = $vehicleModel->where('route_id IS NULL')->countAllResults();
+        $unassignedVehicles = $vehicleModel->where('default_route_id IS NULL')->countAllResults();
 
         // Count staff users with no route assignments
         $unassignedStaff = $userModel->select('COUNT(DISTINCT users.id) as count')

@@ -103,10 +103,10 @@ If you have a newer SQL file:
 
 ```bash
 # Backup current database
-mysqldump -u jeepney_user -p12345678 jeepneynvans > ~/backup_$(date +%Y%m%d).sql
+PGPASSWORD=12345678 pg_dump -U jeepney_user -h 127.0.0.1 jeepneynvans > ~/backup_$(date +%Y%m%d).sql
 
 # Import new schema
-mysql -u jeepney_user -p12345678 jeepneynvans < /path/to/new_file.sql
+PGPASSWORD=12345678 psql -U jeepney_user -h 127.0.0.1 -d jeepneynvans -f /path/to/new_file.sql
 ```
 
 ---

@@ -57,9 +57,10 @@ abstract class BaseController extends Controller
         try {
             $logModel = new LogModel();
             $logModel->insert([
-                'user_id' => $userId,
-                'action'  => $action,
-                'details' => $details
+                'user_id'   => $userId,
+                'action'    => $action,
+                'details'   => $details,
+                'timestamp' => date('Y-m-d H:i:s')
             ]);
 
             // Opportunistically prune logs older than 60 days (throttled to run at most every 6 hours)

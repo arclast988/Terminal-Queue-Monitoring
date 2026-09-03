@@ -396,9 +396,9 @@
                     <tr>
                         <td class="log-id">#<?= $row['id'] ?></td>
                         <td class="log-timestamp">
-                            <div><?= date('M d, Y', strtotime($row['timestamp'])) ?></div>
+                            <div><?= !empty($row['timestamp']) ? date('M d, Y', strtotime($row['timestamp'])) : 'N/A' ?></div>
                             <div style="color: #64748b; font-size: 11.5px; font-weight: 500; font-family: monospace; margin-top: 2px;">
-                                <i class="far fa-clock"></i> <?= date('H:i:s', strtotime($row['timestamp'])) ?>
+                                <i class="far fa-clock"></i> <?= !empty($row['timestamp']) ? date('H:i:s', strtotime($row['timestamp'])) : '' ?>
                             </div>
                         </td>
                         <td>

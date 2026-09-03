@@ -24,10 +24,10 @@ class UserSeeder extends Seeder
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
-                'username' => 'operator',
-                'password_hash' => password_hash('operator123', PASSWORD_DEFAULT),
-                'role' => 'operator',
-                'full_name' => 'Operator User',
+                'username' => 'staff2',
+                'password_hash' => password_hash('staff123', PASSWORD_DEFAULT),
+                'role' => 'staff',
+                'full_name' => 'Dispatcher User',
                 'created_at' => date('Y-m-d H:i:s'),
             ]
         ];

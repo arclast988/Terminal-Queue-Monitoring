@@ -78,7 +78,7 @@
                             <label for="role" class="form-label-modern">Role</label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-shield-lock-fill"></i></span>
-                                <select class="select-modern" id="role" name="role" required>
+                                <select class="select-modern" id="role" name="role" required style="flex: 1 1 auto; width: 100%; min-width: 0;">
                                     <option value="staff" <?= old('role', 'staff') === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
                                     <?php if (session()->get('role') === 'super_admin'): ?>
                                         <option value="admin" <?= old('role') === 'admin' ? 'selected' : '' ?>>Admin</option>

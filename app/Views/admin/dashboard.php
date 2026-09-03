@@ -208,10 +208,10 @@
                         <tr>
                             <td data-label="Timestamp">
                                 <div style="white-space: nowrap; font-size: 13.5px; font-weight: 700; color: var(--text-main, #0f172a);">
-                                    <i class="bi bi-calendar3 text-muted me-1" style="font-size: 11px;"></i><?= date('M d, Y', strtotime($log['timestamp'])) ?>
+                                    <i class="bi bi-calendar3 text-muted me-1" style="font-size: 11px;"></i><?= !empty($log['timestamp']) ? date('M d, Y', strtotime($log['timestamp'])) : 'N/A' ?>
                                 </div>
                                 <div class="text-muted" style="font-size: 12px; font-weight: 600; font-family: monospace; margin-top: 2px;">
-                                    <i class="bi bi-clock text-muted me-1" style="font-size: 11px;"></i><?= date('H:i:s', strtotime($log['timestamp'])) ?>
+                                    <i class="bi bi-clock text-muted me-1" style="font-size: 11px;"></i><?= !empty($log['timestamp']) ? date('H:i:s', strtotime($log['timestamp'])) : '' ?>
                                 </div>
                             </td>
                             <td data-label="User">

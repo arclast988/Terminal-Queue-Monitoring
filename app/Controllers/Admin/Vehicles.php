@@ -25,7 +25,7 @@ class Vehicles extends BaseController
         // Join routes to get assigned route info
         $vehicles = $this->vehicleModel
             ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.vehicle_type as route_vehicle_type')
-            ->join('routes', 'routes.id = vehicles.route_id', 'left')
+            ->join('routes', 'routes.id = vehicles.default_route_id', 'left')
             ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
             ->orderBy('vehicles.created_at', 'DESC')
             ->findAll();
@@ -77,11 +77,12 @@ class Vehicles extends BaseController
         $this->vehicleModel->save([
             'plate_number'  => $this->request->getPost('plate_number'),
             'operator_name' => $this->request->getPost('operator_name'),
+            'owner_name'    => $this->request->getPost('operator_name'),
             'driver_name'   => $this->request->getPost('driver_name'),
             'type'          => $vehicleType,
             'capacity'      => $this->request->getPost('capacity'),
             'status'        => 'active',
-            'route_id'      => $routeId,
+            'default_route_id' => $routeId,
         ]);
 
         $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
@@ -151,15 +152,16 @@ class Vehicles extends BaseController
         $this->vehicleModel->update($id, [
             'plate_number'  => $this->request->getPost('plate_number'),
             'operator_name' => $this->request->getPost('operator_name'),
+            'owner_name'    => $this->request->getPost('operator_name'),
             'driver_name'   => $this->request->getPost('driver_name'),
             'type'          => $vehicleType,
             'capacity'      => $this->request->getPost('capacity'),
             'status'        => $this->request->getPost('status'),
-            'route_id'      => $routeId,
+            'default_route_id' => $routeId,
         ]);
 
         // Log route change details if route was reassigned
-        $oldRouteId = $vehicle['route_id'];
+        $oldRouteId = $vehicle['default_route_id'];
         if ((string) $oldRouteId !== (string) $routeId) {
             $oldRoute = $oldRouteId ? $this->routeModel->withOrigin()->find($oldRouteId) : null;
             $oldLabel = $oldRoute ? (strtoupper($oldRoute['origin']) . ' → ' . strtoupper($oldRoute['destination'])) : 'None';
