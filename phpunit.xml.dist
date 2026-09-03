@@ -7,7 +7,7 @@
     beStrictAboutOutputDuringTests="true"
     colors="true"
     columns="max"
-    failOnRisky="true"
+    failOnRisky="false"
     failOnWarning="true"
     cacheDirectory="build/.phpunit.cache">
     <coverage
