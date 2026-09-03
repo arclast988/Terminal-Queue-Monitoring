@@ -28,11 +28,11 @@ class DropTripStatusHistoryTable extends Migration
     {
         // Recreate the table if we need to roll back
         $this->forge->addField([
-            'id'                 => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'auto_increment' => true],
-            'queue_id'           => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true],
+            'id'                 => ['type' => 'INT', 'constraint' => 11, 'auto_increment' => true],
+            'queue_id'           => ['type' => 'INT', 'constraint' => 11],
             'status'             => ['type' => 'VARCHAR', 'constraint' => 50],
-            'timestamp'          => ['type' => 'DATETIME', 'null' => true],
-            'updated_by_user_id' => ['type' => 'INT', 'constraint' => 11, 'unsigned' => true, 'null' => true],
+            'timestamp'          => ['type' => 'TIMESTAMP', 'null' => true],
+            'updated_by_user_id' => ['type' => 'INT', 'constraint' => 11, 'null' => true],
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addForeignKey('queue_id', 'queue', 'id', 'CASCADE', 'CASCADE');

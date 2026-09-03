@@ -46,8 +46,29 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-composer-
 
-    - name: Copy Environment File
-      run: cp env .env
+    - name: Configure Environment
+      run: |
+        cp env .env
+        {
+          echo ""
+          echo "CI_ENVIRONMENT = testing"
+          echo ""
+          echo "database.default.hostname = 127.0.0.1"
+          echo "database.default.database = jeepneynvans_test"
+          echo "database.default.username = jeepney_user"
+          echo "database.default.password = jeepney_pass"
+          echo "database.default.DBDriver = Postgre"
+          echo "database.default.DBPrefix ="
+          echo "database.default.port = 5432"
+          echo ""
+          echo "database.tests.hostname = 127.0.0.1"
+          echo "database.tests.database = jeepneynvans_test"
+          echo "database.tests.username = jeepney_user"
+          echo "database.tests.password = jeepney_pass"
+          echo "database.tests.DBDriver = Postgre"
+          echo "database.tests.DBPrefix ="
+          echo "database.tests.port = 5432"
+        } >> .env
 
     - name: Install Dependencies
       run: composer install --prefer-dist --no-progress --no-interaction
@@ -57,24 +78,6 @@ jobs:
 
     - name: Run Database Migrations
       run: php spark migrate
-      env:
-        CI_ENVIRONMENT: testing
-        database.tests.hostname: 127.0.0.1
-        database.tests.database: jeepneynvans_test
-        database.tests.username: jeepney_user
-        database.tests.password: jeepney_pass
-        database.tests.DBDriver: Postgre
-        database.tests.port: 5432
-        database.tests.schema: public
 
     - name: Run Tests
       run: vendor/bin/phpunit
-      env:
-        CI_ENVIRONMENT: testing
-        database.tests.hostname: 127.0.0.1
-        database.tests.database: jeepneynvans_test
-        database.tests.username: jeepney_user
-        database.tests.password: jeepney_pass
-        database.tests.DBDriver: Postgre
-        database.tests.port: 5432
-        database.tests.schema: public
