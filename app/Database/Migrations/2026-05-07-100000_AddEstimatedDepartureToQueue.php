@@ -5,7 +5,7 @@ namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
 /**
- * Adds queue.estimated_departure (DATETIME, nullable).
+ * Adds queue.estimated_departure (TIMESTAMP, nullable).
  *
  * Background: this column is heavily used by the application
  * (Home, Schedules, Search, Staff\Queue, public views) but was
@@ -24,7 +24,7 @@ class AddEstimatedDepartureToQueue extends Migration
         if (! $this->columnExists('queue', 'estimated_departure')) {
             $this->forge->addColumn('queue', [
                 'estimated_departure' => [
-                    'type'  => 'DATETIME',
+                    'type'  => 'TIMESTAMP',
                     'null'  => true,
                     'after' => 'arrival_time',
                 ],

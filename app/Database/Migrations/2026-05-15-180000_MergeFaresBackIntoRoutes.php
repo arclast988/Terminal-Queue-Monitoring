@@ -10,24 +10,25 @@ class MergeFaresBackIntoRoutes extends Migration
     {
         $db = \Config\Database::connect();
 
-        if (!$db->fieldExists('fare', 'routes')) {
-            $this->forge->addColumn('routes', [
-                'fare' => [
-                    'type'       => 'DECIMAL',
-                    'constraint' => '10,2',
-                    'null'       => false,
-                    'default'    => 0,
-                ],
-            ]);
-        }
+        $existsRow = $db->query("SELECT EXISTS (
+            SELECT 1
+            FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = 'routes'
+              AND column_name = 'fare'
+        ) AS exists")->getRow();
+        $hasFareColumn = is_object($existsRow)
+            && in_array(strtolower((string) $existsRow->exists), ['t', 'true', '1'], true);
 
         if ($db->tableExists('fares')) {
-            $db->query('
-                UPDATE routes
-                SET fare = fares.amount
-                FROM fares
-                WHERE fares.route_id = routes.id
-            ');
+            if ($hasFareColumn) {
+                $db->query('
+                    UPDATE routes
+                    SET fare = fares.amount
+                    FROM fares
+                    WHERE fares.route_id = routes.id
+                ');
+            }
 
             try {
                 $this->forge->dropForeignKey('fares', 'fares_route_id_foreign');

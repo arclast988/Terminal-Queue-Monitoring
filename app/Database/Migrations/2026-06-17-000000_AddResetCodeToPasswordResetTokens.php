@@ -23,7 +23,7 @@ class AddResetCodeToPasswordResetTokens extends Migration
                 'after'      => 'reset_code',
             ],
             'verified' => [
-                'type'       => 'TINYINT',
+                'type'       => 'SMALLINT',
                 'constraint' => 1,
                 'default'    => 0,
                 'after'      => 'used',

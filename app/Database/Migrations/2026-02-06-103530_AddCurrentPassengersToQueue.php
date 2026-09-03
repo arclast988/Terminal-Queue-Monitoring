@@ -8,19 +8,23 @@ class AddCurrentPassengersToQueue extends Migration
 {
     public function up()
     {
-        $fields = [
-            'current_passengers' => [
-                'type'       => 'INT',
-                'constraint' => 5,
-                'default'    => 0,
-                'after'      => 'status'
-            ],
-        ];
-        $this->forge->addColumn('queue', $fields);
+        if (! $this->db->fieldExists('current_passengers', 'queue')) {
+            $fields = [
+                'current_passengers' => [
+                    'type'       => 'INT',
+                    'constraint' => 5,
+                    'default'    => 0,
+                    'after'      => 'status'
+                ],
+            ];
+            $this->forge->addColumn('queue', $fields);
+        }
     }
 
     public function down()
     {
-        $this->forge->dropColumn('queue', 'current_passengers');
+        if ($this->db->fieldExists('current_passengers', 'queue')) {
+            $this->forge->dropColumn('queue', 'current_passengers');
+        }
     }
 }

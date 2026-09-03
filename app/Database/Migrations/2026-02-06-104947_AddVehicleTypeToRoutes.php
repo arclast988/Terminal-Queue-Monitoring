@@ -8,19 +8,23 @@ class AddVehicleTypeToRoutes extends Migration
 {
     public function up()
     {
-        $fields = [
-            'vehicle_type' => [
-                'type'       => 'VARCHAR',
-                'constraint' => 50,
-                'default'    => 'van',
-                'after'      => 'fare'
-            ],
-        ];
-        $this->forge->addColumn('routes', $fields);
+        if (! $this->db->fieldExists('vehicle_type', 'routes')) {
+            $fields = [
+                'vehicle_type' => [
+                    'type'       => 'VARCHAR',
+                    'constraint' => 50,
+                    'default'    => 'van',
+                    'after'      => 'fare'
+                ],
+            ];
+            $this->forge->addColumn('routes', $fields);
+        }
     }
 
     public function down()
     {
-        $this->forge->dropColumn('routes', 'vehicle_type');
+        if ($this->db->fieldExists('vehicle_type', 'routes')) {
+            $this->forge->dropColumn('routes', 'vehicle_type');
+        }
     }
 }

@@ -12,7 +12,6 @@ class CreatePasswordResetTokensTable extends Migration
             'id' => [
                 'type' => 'INT',
                 'constraint' => 11,
-                'unsigned' => true,
                 'auto_increment' => true,
             ],
             'username' => [
@@ -26,16 +25,16 @@ class CreatePasswordResetTokensTable extends Migration
                 'null' => false,
             ],
             'expires_at' => [
-                'type' => 'DATETIME',
+                'type' => 'TIMESTAMP',
                 'null' => false,
             ],
             'used' => [
-                'type' => 'TINYINT',
+                'type' => 'SMALLINT',
                 'constraint' => 1,
                 'default' => 0,
             ],
             'created_at' => [
-                'type' => 'DATETIME',
+                'type' => 'TIMESTAMP',
                 'default' => null,
             ],
         ]);
