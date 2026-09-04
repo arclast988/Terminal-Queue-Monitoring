@@ -37,13 +37,14 @@
         <i class="bi bi-exclamation-circle-fill alert-modern-icon"></i>
         <div>
             <ul class="mb-0" style="padding-left: 20px;">
-                <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                    <li><?= esc($error) ?></li>
-                <?php endforeach; ?>
+            <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                <li><?= esc($error) ?></li>
+            <?php endforeach; ?>
             </ul>
         </div>
-    </div>
-<?php endif; ?>
+    <?php endif; ?>
+
+    <?= view('partials/flash_notices') ?>
 
 <!-- Add Vehicle Form -->
 <div class="modern-card shadow-modern fade-in">
@@ -1195,7 +1196,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                         <h5 class="modal-title fw-bold fs-6 mb-0" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
                         <button type="button" class="btn-close" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')" aria-label="Close"></button>
                     </div>
-                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" class="d-flex flex-column flex-grow-1 overflow-hidden">
+                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" class="d-flex flex-column flex-grow-1 overflow-hidden" data-no-change-guard>
                         <?= csrf_field() ?>
                         <div class="modal-body py-2 px-3">
                             <!-- Name -->

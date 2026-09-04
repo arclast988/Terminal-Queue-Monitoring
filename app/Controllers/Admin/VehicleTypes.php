@@ -211,6 +211,20 @@ class VehicleTypes extends BaseController
             $icon = $type['icon'] ?? vehicle_type_icon($newSlug);
         }
 
+        if ($this->inputsUnchanged([
+            'name'  => trim((string) ($type['name'] ?? '')),
+            'slug'  => $type['slug'] ?? '',
+            'color' => $type['color'] ?? '',
+            'icon'  => $type['icon'] ?? '',
+        ], [
+            'name'  => $name,
+            'slug'  => $newSlug,
+            'color' => $color,
+            'icon'  => $icon,
+        ])) {
+            return $this->noChangesResponse();
+        }
+
         $types->update($id, [
             'name'  => $name,
             'slug'  => $newSlug,

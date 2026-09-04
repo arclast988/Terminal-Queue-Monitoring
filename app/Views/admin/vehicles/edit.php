@@ -47,12 +47,14 @@
     </div>
 <?php endif; ?>
 
+<?= $this->include('partials/flash_notices') ?>
+
 <div class="card-modern fade-in">
     <div class="card-header-modern">
         <span><i class="bi bi-pencil-fill"></i> Update Vehicle Details</span>
     </div>
     <div class="card-body-modern">
-        <form action="<?= base_url('admin/vehicles/update/' . $vehicle['id']) ?>" method="post">
+        <form action="<?= base_url('admin/vehicles/update/' . $vehicle['id']) ?>" method="post" data-no-change-guard>
             <?= csrf_field() ?>
             
             <div class="row">

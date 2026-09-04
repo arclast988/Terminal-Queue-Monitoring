@@ -117,12 +117,19 @@ class Announcements extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        $newData = [
+            'terminal_id' => $this->request->getPost('terminal_id'),
+            'message'     => $this->request->getPost('message'),
+            'is_active'   => $this->request->getPost('is_active') ? 1 : 0,
+        ];
+
+        $current = $this->announcementModel->find($id);
+        if ($current && $this->inputsUnchanged($current, $newData)) {
+            return $this->noChangesResponse();
+        }
+
         try {
-            $this->announcementModel->update($id, [
-                'terminal_id' => $this->request->getPost('terminal_id'),
-                'message'     => $this->request->getPost('message'),
-                'is_active'   => $this->request->getPost('is_active') ? 1 : 0
-            ]);
+            $this->announcementModel->update($id, $newData);
         } catch (\Throwable $e) {
             return redirect()->to('/admin/announcements')->with('error', 'Announcements table not found. Run the SQL shown on the Announcements page first.');
         }

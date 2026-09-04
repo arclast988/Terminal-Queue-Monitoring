@@ -48,7 +48,9 @@
                     </div>
                 <?php endif ?>
 
-                <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" novalidate>
+                <?= $this->include('partials/flash_notices') ?>
+
+                <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" novalidate data-no-change-guard>
                     <?= csrf_field() ?>
 
                     <div class="row">

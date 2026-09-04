@@ -153,9 +153,42 @@ abstract class BaseController extends Controller
     }
 
     /**
-     * Get a pre-configured Email service instance.
+     * Compare submitted scalar fields against the stored record.
+     * Values are string-normalized; arrays are compared order-insensitively.
+     * Returns true when every key in $new matches $old (missing = '').
      */
-    protected function getConfiguredEmailService(): \CodeIgniter\Email\Email
+    protected function inputsUnchanged(array $old, array $new): bool
+    {
+        foreach ($new as $key => $value) {
+            if (is_array($value)) {
+                $oldValues = array_map('strval', (array) ($old[$key] ?? []));
+                $newValues = array_map('strval', $value);
+                sort($oldValues);
+                sort($newValues);
+                if ($oldValues !== $newValues) {
+                    return false;
+                }
+                continue;
+            }
+            if ((string) ($old[$key] ?? '') !== (string) $value) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Redirect back with an informational notice when an update form was
+     * submitted without any actual changes (no write, log, or broadcast).
+     */
+    protected function noChangesResponse()
+    {
+        return redirect()->back()->withInput()->with('info', 'No changes detected — nothing was updated.');
+    }
+
+    /**
+     * Get a pre-configured Email service instance.
+     */    protected function getConfiguredEmailService(): \CodeIgniter\Email\Email
     {
         $config = config('Email');
         $emailSvc = \Config\Services::email();

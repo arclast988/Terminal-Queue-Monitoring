@@ -46,12 +46,14 @@
                 </div>
             <?php endif; ?>
 
+            <?= $this->include('partials/flash_notices') ?>
+
             <div class="card-modern">
                 <div class="card-header-modern">
                     <i class="bi bi-chat-left-text me-2"></i> Announcement Details
                 </div>
                 <div class="card-body-modern">
-                    <form action="<?= base_url('admin/announcements/update/'.$announcement['id']) ?>" method="post">
+                    <form action="<?= base_url('admin/announcements/update/'.$announcement['id']) ?>" method="post" data-no-change-guard>
                         <?= csrf_field() ?>
 
                         <div class="mb-4">

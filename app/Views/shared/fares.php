@@ -149,6 +149,7 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
     <ul class="mb-0"><?php foreach (session()->getFlashdata('errors') as $e): ?><li><?= esc($e) ?></li><?php endforeach; ?></ul>
 </div>
 <?php endif; ?>
+<div class="mx-3 mt-2"><?= $this->include('partials/flash_notices') ?></div>
 
 <?php
 $fareTypes = array_map(static fn(array $type) => [
@@ -480,7 +481,7 @@ $isManager = $isAdmin;
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="editFareForm" method="post">
+        <form id="editFareForm" method="post" data-no-change-guard>
           <?= csrf_field() ?>
 
           <?php $onlyTerminalEdit = (is_array($terminals) && count($terminals) === 1); ?>
@@ -554,7 +555,7 @@ $isManager = $isAdmin;
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <form id="editDiscountForm" method="post">
+        <form id="editDiscountForm" method="post" data-no-change-guard>
           <?= csrf_field() ?>
           <div class="mb-3">
             <label class="form-label fw-semibold">Label / Name</label>

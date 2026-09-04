@@ -226,6 +226,26 @@ class Users extends BaseController
             $data['password_hash'] = password_hash($this->request->getPost('password'), PASSWORD_DEFAULT);
         }
 
+        $newRouteIds = ($role === 'staff') ? array_map('intval', $selectedRoutes) : [];
+        $oldRouteIdsNorm = array_map('intval', (array) $oldRouteIds);
+        sort($newRouteIds);
+        sort($oldRouteIdsNorm);
+
+        if (empty($data['password_hash'] ?? null)
+            && $this->inputsUnchanged([
+                'username'  => $oldUser['username'] ?? '',
+                'full_name' => $oldUser['full_name'] ?? '',
+                'role'      => $oldUser['role'] ?? '',
+            ], [
+                'username'  => $data['username'],
+                'full_name' => $data['full_name'],
+                'role'      => $data['role'],
+            ])
+            && $newRouteIds === $oldRouteIdsNorm
+        ) {
+            return $this->noChangesResponse();
+        }
+
         $model->update($id, $data);
 
         // Sync route assignments

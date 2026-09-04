@@ -82,11 +82,26 @@ class Terminals extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $this->terminalModel->update($id, [
-            'name' => $this->request->getPost('name'),
-            'location' => $this->request->getPost('location'),
-            'capacity' => $this->request->getPost('capacity')
-        ]);
+        $terminal = $this->terminalModel->find($id);
+        if (!$terminal) {
+            return redirect()->to('/admin/terminals')->with('error', 'Terminal not found.');
+        }
+
+        $newData = [
+            'name'     => trim((string) $this->request->getPost('name')),
+            'location' => trim((string) $this->request->getPost('location')),
+            'capacity' => $this->request->getPost('capacity'),
+        ];
+
+        if ($this->inputsUnchanged([
+            'name'     => trim((string) ($terminal['name'] ?? '')),
+            'location' => trim((string) ($terminal['location'] ?? '')),
+            'capacity' => $terminal['capacity'] ?? '',
+        ], $newData)) {
+            return $this->noChangesResponse();
+        }
+
+        $this->terminalModel->update($id, $newData);
 
         $this->logActivity('Update terminal', 'Updated terminal: ' . $this->request->getPost('name'));
         $this->broadcastUpdate('fare_update', ['action' => 'terminal_updated', 'id' => (int) $id]);

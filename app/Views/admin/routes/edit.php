@@ -41,12 +41,14 @@
                 </div>
             <?php endif; ?>
 
+            <?= $this->include('partials/flash_notices') ?>
+
             <div class="card-modern">
                 <div class="card-header-modern">
                     <i class="bi bi-map me-2"></i> Route Information
                 </div>
                 <div class="card-body-modern">
-                    <form action="<?= base_url('admin/routes/update_group/' . $route['id']) ?>" method="post">
+                    <form action="<?= base_url('admin/routes/update_group/' . $route['id']) ?>" method="post" data-no-change-guard>
                         <?= csrf_field() ?>
 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>

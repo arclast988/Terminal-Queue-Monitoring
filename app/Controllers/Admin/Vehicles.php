@@ -149,11 +149,31 @@ class Vehicles extends BaseController
             return redirect()->back()->withInput()->with('error', 'Driver and Operator must not be the same person.');
         }
 
+        if ($this->inputsUnchanged([
+            'plate_number'     => trim((string) ($vehicle['plate_number'] ?? '')),
+            'operator_name'    => trim((string) ($vehicle['operator_name'] ?? '')),
+            'driver_name'      => trim((string) ($vehicle['driver_name'] ?? '')),
+            'type'             => $vehicle['type'] ?? '',
+            'capacity'         => $vehicle['capacity'] ?? '',
+            'status'           => $vehicle['status'] ?? '',
+            'default_route_id' => $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '',
+        ], [
+            'plate_number'     => trim((string) $this->request->getPost('plate_number')),
+            'operator_name'    => $operatorName,
+            'driver_name'      => $driverName,
+            'type'             => $vehicleType,
+            'capacity'         => $this->request->getPost('capacity'),
+            'status'           => $this->request->getPost('status'),
+            'default_route_id' => $routeId,
+        ])) {
+            return $this->noChangesResponse();
+        }
+
         $this->vehicleModel->update($id, [
-            'plate_number'  => $this->request->getPost('plate_number'),
-            'operator_name' => $this->request->getPost('operator_name'),
-            'owner_name'    => $this->request->getPost('operator_name'),
-            'driver_name'   => $this->request->getPost('driver_name'),
+            'plate_number'  => trim((string) $this->request->getPost('plate_number')),
+            'operator_name' => $operatorName,
+            'owner_name'    => $operatorName,
+            'driver_name'   => $driverName,
             'type'          => $vehicleType,
             'capacity'      => $this->request->getPost('capacity'),
             'status'        => $this->request->getPost('status'),

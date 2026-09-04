@@ -321,6 +321,24 @@ class DepartureRules extends BaseController
         $oldRule     = $this->ruleModel->find($id);
         $label       = $this->request->getPost('label') ?: null;
 
+        if ($oldRule && $this->inputsUnchanged([
+            'terminal_id'  => $oldRule['terminal_id'] ?? '',
+            'route_id'     => $oldRule['route_id'] ?? '',
+            'time_from'    => $oldRule['time_from'] ?? '',
+            'time_to'      => $oldRule['time_to'] ?? '',
+            'wait_minutes' => $oldRule['wait_minutes'] ?? '',
+            'label'        => $oldRule['label'] ?? '',
+        ], [
+            'terminal_id'  => $terminalId,
+            'route_id'     => $routeId ?? '',
+            'time_from'    => $timeFrom,
+            'time_to'      => $timeTo,
+            'wait_minutes' => $waitMinutes,
+            'label'        => $label ?? '',
+        ])) {
+            return $this->noChangesResponse();
+        }
+
         $this->ruleModel->update($id, [
             'terminal_id'  => $terminalId,
             'route_id'     => $routeId,

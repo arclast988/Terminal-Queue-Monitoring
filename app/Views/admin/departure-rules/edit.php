@@ -53,12 +53,14 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                 </div>
             <?php endif; ?>
 
+            <?= $this->include('partials/flash_notices') ?>
+
             <div class="card-modern">
                 <div class="card-header-modern">
                     <i class="bi bi-gear me-2"></i> Rule Configuration
                 </div>
                 <div class="card-body-modern">
-                    <form action="<?= base_url($prefix . '/departure-rules/update/' . $rule['id']) ?>" method="post">
+                    <form action="<?= base_url($prefix . '/departure-rules/update/' . $rule['id']) ?>" method="post" data-no-change-guard>
                         <?= csrf_field() ?>
 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>

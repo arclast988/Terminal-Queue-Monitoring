@@ -392,6 +392,18 @@ class Routes extends BaseController
             $oldFare = (float) $existingRoute['fare'];
         }
 
+        if ($this->inputsUnchanged([
+            'destination'  => $existingRoute['destination'] ?? '',
+            'terminal_id'  => $existingRoute['terminal_id'] ?? '',
+            'vehicle_type' => $existingRoute['vehicle_type'] ?? '',
+        ], [
+            'destination'  => $destination,
+            'terminal_id'  => $terminalId,
+            'vehicle_type' => $vehicleType,
+        ]) && abs($oldFare - (float) $newFare) <= 0.00001) {
+            return $this->noChangesResponse();
+        }
+
         $collision = $this->routeModel->where('terminal_id', $terminalId)
                                       ->where('destination', $destination)
                                       ->where('vehicle_type', $vehicleType)
@@ -465,6 +477,38 @@ class Routes extends BaseController
 
         if (empty($destination) || strlen($destination) < 2) {
             return redirect()->back()->withInput()->with('error', 'Please provide a valid destination (at least 2 characters).');
+        }
+
+        // No-change guard: group rename or any per-type fare difference counts.
+        $selectedFaresPreview = $this->request->getPost('fares');
+        if (is_array($selectedFaresPreview)
+            && (string) $oldTerminalId === (string) $terminalId
+            && (string) $oldDestination === (string) $destination
+        ) {
+            $groupUnchanged = true;
+            foreach ($this->activeVehicleTypeSlugs() as $vType) {
+                $fareVal = $selectedFaresPreview[$vType] ?? null;
+                $hasFare = ($fareVal !== '' && $fareVal !== null && (float) $fareVal > 0);
+                $existing = $this->routeModel->where('terminal_id', $terminalId)
+                                             ->where('destination', $destination)
+                                             ->where('vehicle_type', $vType)
+                                             ->first();
+                if ($hasFare && !$existing) {
+                    $groupUnchanged = false;
+                    break;
+                }
+                if (!$hasFare && $existing) {
+                    $groupUnchanged = false;
+                    break;
+                }
+                if ($hasFare && $existing && abs($this->getRegularFare((int) $existing['id']) - (float) $fareVal) > 0.00001) {
+                    $groupUnchanged = false;
+                    break;
+                }
+            }
+            if ($groupUnchanged) {
+                return $this->noChangesResponse();
+            }
         }
 
         $db = \Config\Database::connect();
@@ -618,6 +662,18 @@ class Routes extends BaseController
             'label'            => $this->request->getPost('label'),
             'is_active'        => $this->request->getPost('is_active') ? 1 : 0,
         ];
+
+        if (abs((float) ($discount['discount_percent'] ?? 0) - (float) $updatedData['discount_percent']) <= 0.00001
+            && $this->inputsUnchanged([
+                'label'     => $discount['label'] ?? '',
+                'is_active' => $discount['is_active'] ?? '',
+            ], [
+                'label'     => $updatedData['label'],
+                'is_active' => $updatedData['is_active'],
+            ])
+        ) {
+            return $this->noChangesResponse();
+        }
 
         $this->discountModel->update($id, $updatedData);
         $this->recalculateFaresForDiscount(array_merge($discount, $updatedData));

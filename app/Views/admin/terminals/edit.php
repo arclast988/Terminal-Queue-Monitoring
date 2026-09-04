@@ -46,12 +46,14 @@
                 </div>
             <?php endif; ?>
 
+            <?= $this->include('partials/flash_notices') ?>
+
             <div class="card-modern">
                 <div class="card-header-modern">
                     <i class="bi bi-geo-alt me-2"></i> Terminal Information
                 </div>
                 <div class="card-body-modern">
-                    <form action="<?= base_url('admin/terminals/update/'.$terminal['id']) ?>" method="post">
+                    <form action="<?= base_url('admin/terminals/update/'.$terminal['id']) ?>" method="post" data-no-change-guard>
                         <?= csrf_field() ?>
                         
                         <div class="mb-4">
