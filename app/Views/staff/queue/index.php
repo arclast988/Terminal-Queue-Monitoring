@@ -990,13 +990,13 @@
                         <div class="p-3 rounded-3 border bg-body-tertiary">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="badge rounded-pill bg-primary px-3 py-2 fs-6 fw-bold shadow-sm" id="selectedBadge">
+                                    <span class="badge rounded-pill px-3 py-2 fs-6 fw-bold shadow-sm" id="selectedBadge" style="background:#15803d;color:#ffffff;">
                                         <i class="bi bi-check2-square me-1"></i> <span id="selectedCountNum">0</span> Selected
                                     </span>
-                                    <span class="text-muted small fw-medium" id="selectionHintText">Click any vehicle card to select</span>
+                                    <span class="small fw-bold" id="selectionHintText" style="color:#334155;">Click any vehicle card to select</span>
                                 </div>
-                                <div class="text-muted small">
-                                    <i class="bi bi-clock-history me-1 text-primary"></i>ETAs calculated automatically
+                                <div class="small fw-semibold" style="color:#475569;">
+                                    <i class="bi bi-clock-history me-1" style="color:#15803d;"></i>ETDs calculated automatically
                                 </div>
                             </div>
                         </div>
