@@ -698,7 +698,7 @@
         flex-direction: column !important;
     }
 
-    #addToQueueModal .modal-body > div {
+    #addToQueueModal .modal-body > div:not(.vehicle-select-list) {
         flex-shrink: 0 !important;
     }
 
