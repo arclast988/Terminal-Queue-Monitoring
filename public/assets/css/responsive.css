@@ -2075,11 +2075,18 @@ a[title*="delete" i]:hover .bi,
     font-size: 13px !important;
   }
 
-  /* Action buttons cell */
+  /* Action buttons cell: keep Edit + Delete on ONE row at the right,
+     never wrap Delete below or squeeze labels into vertical stacks. */
+  html body table.table-modern tbody tr td[data-label="Action"],
+  html body table.table-modern tbody tr td[data-label="Actions"] {
+    flex-wrap: nowrap !important;
+  }
+
   html body table.table-modern tbody tr td[data-label="Action"] > div,
   html body table.table-modern tbody tr td[data-label="Actions"] > div {
-    display: inline-flex !important;
-    align-items: center !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-end !important;
+    min-width: 0 !important;
     gap: 6px !important;
   }
 
@@ -2093,21 +2100,6 @@ a[title*="delete" i]:hover .bi,
     gap: 4px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
-  }
-
-  /* Action cell: let buttons wrap to a new line instead of squeezing
-     labels into vertical letter stacks on narrow cards. */
-  html body table.table-modern tbody tr td[data-label="Action"],
-  html body table.table-modern tbody tr td[data-label="Actions"] {
-    flex-wrap: wrap !important;
-    row-gap: 6px !important;
-  }
-
-  html body table.table-modern tbody tr td[data-label="Action"] > div,
-  html body table.table-modern tbody tr td[data-label="Actions"] > div {
-    flex-wrap: wrap !important;
-    justify-content: flex-end !important;
-    min-width: 0 !important;
   }
 
   /* Vehicle-type cell: keep image + badge on one centered line. */
