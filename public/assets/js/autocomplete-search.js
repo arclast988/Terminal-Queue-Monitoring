@@ -23,8 +23,26 @@
     }
 
     // Helper functions to manage active z-index stacking context for open dropdowns
+    function closeAllAutocompleteDropdowns(exceptWrapper) {
+        // Single-open invariant: only one autocomplete dropdown may be open
+        // at a time, otherwise panels overlap and labels bleed through.
+        document.querySelectorAll('.autocomplete-wrapper.is-open').forEach(function (w) {
+            if (w === exceptWrapper) return;
+            w.classList.remove('is-open');
+            w.style.zIndex = '';
+            var dd = w.querySelector('.autocomplete-dropdown');
+            if (dd) dd.style.display = 'none';
+            var parentContainer = w.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .row, .form-group, fieldset, .modern-card-body');
+            if (parentContainer) {
+                parentContainer.classList.remove('autocomplete-parent-active');
+                parentContainer.style.zIndex = '';
+            }
+        });
+    }
+
     function openDropdown(wrapper, dropdown) {
         if (!wrapper || !dropdown) return;
+        closeAllAutocompleteDropdowns(wrapper);
         wrapper.classList.add('is-open');
         wrapper.style.zIndex = '999999';
         dropdown.style.display = 'block';
@@ -578,14 +596,14 @@
             }
 
             searchInput.addEventListener('focus', () => {
-                searchInput.select();
+                // No select-all: the theme selection color looks like an
+                // error block on filled inputs. Just open the dropdown.
                 renderSelectDropdown('');
             });
 
             searchInput.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (dropdown.style.display === 'none' || !wrapper.classList.contains('is-open')) {
-                    searchInput.select();
                     renderSelectDropdown('');
                 }
             });

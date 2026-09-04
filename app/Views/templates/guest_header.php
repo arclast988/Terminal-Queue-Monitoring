@@ -695,15 +695,23 @@
     })();
     var _annScrollY = 0;
     function openAnnouncementModal() {
+        // Freeze the page exactly where the user is (toggling body overflow
+        // alone makes the browser jump to the top).
         _annScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+        document.body.style.position = 'fixed';
+        document.body.style.top = (-_annScrollY) + 'px';
+        document.body.style.left = '0';
+        document.body.style.right = '0';
         document.getElementById('annModalOverlay').classList.add('open');
-        document.body.style.overflow = 'hidden';
     }
     function closeAnnouncementModal(e) {
         if (e && e.target !== e.currentTarget) return;
         document.getElementById('annModalOverlay').classList.remove('open');
-        document.body.style.overflow = '';
-        // Stay where the user was instead of jumping to the top.
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        // Return to the exact spot instead of the top.
         window.scrollTo(0, _annScrollY);
     }
 </script>
