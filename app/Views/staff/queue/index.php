@@ -678,6 +678,33 @@
         box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25) !important;
         overflow: hidden;
         border: 1px solid var(--border, #cbd5e1) !important;
+        max-height: min(92vh, 840px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* Single-scrollbar modal: header/footer stay fixed, ONLY the vehicle
+       list scrolls. The body itself must never show a second scrollbar. */
+    #addToQueueModal .modal-header,
+    #addToQueueModal .modal-footer {
+        flex-shrink: 0 !important;
+    }
+
+    #addToQueueModal .modal-body {
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+        min-height: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    #addToQueueModal .modal-body > div {
+        flex-shrink: 0 !important;
+    }
+
+    #addToQueueModal .vehicle-select-list {
+        flex: 1 1 auto !important;
+        min-height: 90px !important;
     }
 
     #addToQueueModal .modal-header {
