@@ -843,6 +843,30 @@
         }
         #addToQueueModal .modal-header {
             padding: 12px 14px !important;
+            gap: 10px !important;
+        }
+        #addToQueueModal .modal-header > .d-flex {
+            min-width: 0 !important;
+            flex: 1 1 auto !important;
+            gap: 10px !important;
+        }
+        #addToQueueModal .modal-icon-badge {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+        }
+        #addToQueueModal .modal-title {
+            font-size: 1rem !important;
+            line-height: 1.25 !important;
+        }
+        #addToQueueModal .modal-header .text-muted.small {
+            font-size: 0.75rem !important;
+            line-height: 1.35 !important;
+            display: block !important;
+        }
+        #addToQueueModal .modal-header .btn-close {
+            align-self: flex-start !important;
+            flex-shrink: 0 !important;
         }
         #addToQueueModal .modal-body {
             padding: 12px 12px !important;
@@ -850,6 +874,19 @@
         }
         #addToQueueModal .modal-footer {
             padding: 10px 14px !important;
+        }
+        /* Toolbar: search on its own row, Select All + Clear as equal halves. */
+        #addToQueueModal .queue-toolbar-card .row > [class*="col-"] {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+        #addToQueueModal #selectAllVehiclesBtn,
+        #addToQueueModal #deselectAllVehiclesBtn {
+            flex: 1 1 0 !important;
+            justify-content: center !important;
+            white-space: nowrap !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
         }
         .vehicle-select-list {
             max-height: 48vh !important;
@@ -864,6 +901,31 @@
         .vehicle-select-item .badge-ready-status {
             font-size: 0.7rem !important;
             padding: 0.2rem 0.5rem !important;
+        }
+        /* Plate + type badge may wrap; status pill stays pinned right. */
+        .vehicle-select-item .d-flex.align-items-center.justify-content-between {
+            flex-wrap: wrap !important;
+            row-gap: 6px !important;
+        }
+        .vehicle-select-item .badge-departed-status,
+        .vehicle-select-item .badge-ready-status {
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+        }
+        /* Summary banner: tidy stacked rows. */
+        #addToQueueModal .p-3.rounded-3.border.bg-body-tertiary > .d-flex {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        /* Footer actions: equal full-width stacked buttons. */
+        #addToQueueModal .modal-footer {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        #addToQueueModal .modal-footer .btn {
+            width: 100% !important;
+            margin: 0 !important;
+            justify-content: center !important;
         }
     }
 </style>
