@@ -75,6 +75,18 @@
         window.alert('No changes detected — nothing was updated.');
     }
 
+    function showInlineNotice(form) {
+        var notice = document.createElement('div');
+        notice.className = 'nc-inline-notice alert alert-warning d-flex align-items-center gap-2 mt-1 mb-3';
+        notice.setAttribute('role', 'alert');
+        notice.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i>'
+            + '<div><strong>No changes detected</strong> — nothing was updated.</div>';
+        form.prepend(notice);
+        try {
+            notice.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        } catch (e) { /* ignore */ }
+    }
+
     function attach(form) {
         if (form.hasAttribute('data-nc-attached')) return;
         form.setAttribute('data-nc-attached', 'true');
@@ -86,7 +98,17 @@
             modal.addEventListener('shown.bs.modal', function () { takeSnapshot(form); });
         }
 
+        // Clear any inline notice as soon as the user starts editing again.
+        ['input', 'change'].forEach(function (evt) {
+            form.addEventListener(evt, function () {
+                var old = form.querySelector('.nc-inline-notice');
+                if (old) old.remove();
+            });
+        });
+
         form.addEventListener('submit', function (e) {
+            var old = form.querySelector('.nc-inline-notice');
+            if (old) old.remove();
             var before = form.getAttribute('data-nc-snapshot');
             var now = null;
             try {
@@ -95,7 +117,13 @@
             if (before !== null && before === now) {
                 e.preventDefault();
                 e.stopPropagation();
-                showPopup();
+                // Forms inside a modal get an inline banner: opening a second
+                // Bootstrap modal on top stacks backdrops and freezes the page.
+                if (form.closest('.modal')) {
+                    showInlineNotice(form);
+                } else {
+                    showPopup();
+                }
             }
         });
     }
