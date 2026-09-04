@@ -27,7 +27,7 @@ class QueueStatus extends Controller
         if (! is_array($items)) {
             $queueModel = new QueueModel();
 
-            $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, terminals.name as origin, routes.destination')
+            $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.driver_name, queue.estimated_departure, terminals.name as origin, routes.destination')
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('routes.destination', 'ASC')
@@ -45,6 +45,9 @@ class QueueStatus extends Controller
                     'current_passengers' => (int)$item['current_passengers'],
                     'capacity'           => (int)$item['capacity'],
                     'plate_number'       => $item['plate_number'],
+                    'vehicle_type'       => $item['vehicle_type'] ?? null,
+                    'driver_name'        => $item['driver_name'] ?? null,
+                    'estimated_departure'=> $item['estimated_departure'] ?? null,
                     'origin'             => $item['origin'],
                     'destination'        => $item['destination'],
                 ];
@@ -53,12 +56,28 @@ class QueueStatus extends Controller
             cache()->save('rt_queue_status', $items, 2);
         }
 
+        // Global sync token written by BaseController::broadcastUpdate() on every
+        // mutation (vehicle_created/updated/deleted, queue add/status, etc.).
+        // Polled clients compare this to detect changes that don't alter queue
+        // IDs — e.g. an admin editing plate/type/route/driver in the modal list.
+        $syncToken = '';
+        try {
+            $tokenFile = WRITEPATH . 'sync_token.txt';
+            if (is_file($tokenFile)) {
+                $syncToken = trim((string) @file_get_contents($tokenFile));
+            }
+        } catch (\Throwable $e) {
+            $syncToken = '';
+        }
+
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->setJSON([
                 'success' => true,
                 'queue'   => $items,
                 'vehicle_type_colors' => get_db_vehicle_types(),
+                'sync_token' => $syncToken,
+                'queue_hash' => md5(json_encode($items)),
                 'ts'      => time()
             ]);
     }

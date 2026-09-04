@@ -36,6 +36,9 @@
     var _pollTimer = null;
     var _lastIds = {};
     var _paused = false;
+    var _lastSyncToken = null;
+    var _lastStructuralHash = null;
+    var _hasPolled = false;
 
     // Tracks the last time a WS passenger_change was received for each ID
     // so that stale poll data does not overwrite a fresh WS update.
@@ -84,6 +87,156 @@
 
     /* ── Generic AJAX page-refresh ── */
 
+    function sanitizeHtml(html) {
+        if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
+            return DOMPurify.sanitize(html, { ADD_ATTR: ['onclick', 'style'] });
+        }
+        return html;
+    }
+
+    // Structural fingerprint of the queue IGNORING passenger counts, so that
+    // frequent +/- taps only patch numbers while admin edits to plate, type,
+    // route, driver, capacity, status, position or ETA trigger a full refresh.
+    function structuralHash(queue) {
+        if (!queue || !queue.length) return 'empty';
+        var parts = queue.map(function(item) {
+            return [
+                item.id,
+                item.position,
+                item.status,
+                item.plate_number,
+                item.capacity,
+                item.vehicle_type || '',
+                item.driver_name || '',
+                item.origin || '',
+                item.destination || '',
+                item.estimated_departure || ''
+            ].join('|');
+        });
+        parts.sort();
+        var joined = parts.join(';');
+        var hash = 0;
+        for (var i = 0; i < joined.length; i++) {
+            hash = ((hash << 5) - hash) + joined.charCodeAt(i);
+            hash |= 0;
+        }
+        return 'h' + hash + '_' + queue.length;
+    }
+
+    function refreshQueueCards(newDoc) {
+        // Staff queue uses card divs (#queue-list), not a <table>. Always try
+        // both the configured selector and the known card container so admin
+        // vehicle edits appear without a manual page reload.
+        var selectors = [];
+        if (_config && _config.tableSelector) selectors.push(_config.tableSelector);
+        if (selectors.indexOf('#queue-list') === -1) selectors.push('#queue-list');
+
+        selectors.forEach(function(sel) {
+            if (!sel || sel === 'table tbody') return; // legacy default: no table on card pages
+            try {
+                var newEl = newDoc.querySelector(sel);
+                var curEl = document.querySelector(sel);
+                if (newEl && curEl) {
+                    curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
+                }
+            } catch (e) { /* ignore bad selector */ }
+        });
+
+        // Legacy table pages (admin dashboard, history): keep original behaviour.
+        if (_config && _config.tableSelector === 'table tbody') {
+            try {
+                var newTbody = newDoc.querySelector('table tbody');
+                var curTbody = document.querySelector('table tbody');
+                if (newTbody && curTbody) {
+                    var cleanTableHtml = sanitizeHtml('<table>' + newTbody.innerHTML + '</table>');
+                    var tempTable = document.createElement('div');
+                    tempTable.innerHTML = cleanTableHtml;
+                    var cleanTbody = tempTable.querySelector('table');
+                    curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+                }
+            } catch (e) { /* ignore */ }
+        }
+    }
+
+    function refreshVehicleModalList(newDoc) {
+        // The "Add Vehicles to Queue" modal list (#vehicleListContainer) shows
+        // available (unqueued) vehicles. Admin edits to plate/type/route/driver
+        // must appear here live — this was the reported bug (needed refresh).
+        var curList = document.getElementById('vehicleListContainer');
+        var newList = newDoc.getElementById('vehicleListContainer');
+        var curModal = document.getElementById('addToQueueModal');
+
+        // Empty <-> non-empty transition: the list element only exists when
+        // vehicles are available, so replace the whole modal body + footer.
+        if (!curList || !newList) {
+            if (curModal) {
+                var newModal = newDoc.getElementById('addToQueueModal');
+                if (newModal) {
+                    var curBody = curModal.querySelector('.modal-body');
+                    var newBody = newModal.querySelector('.modal-body');
+                    if (curBody && newBody) {
+                        curBody.innerHTML = sanitizeHtml(newBody.innerHTML);
+                    }
+                    var curFoot = curModal.querySelector('.modal-footer');
+                    var newFoot = newModal.querySelector('.modal-footer');
+                    if (curFoot && newFoot) {
+                        curFoot.innerHTML = sanitizeHtml(newFoot.innerHTML);
+                    }
+                    try {
+                        document.dispatchEvent(new CustomEvent('vehicle-list-refreshed'));
+                    } catch (e) { /* ignore */ }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Preserve UX state across the refresh: checked boxes, search query.
+        var checked = {};
+        curList.querySelectorAll('.vehicle-checkbox:checked').forEach(function(cb) {
+            checked[cb.value] = true;
+        });
+        var searchInput = document.getElementById('vehicleModalSearch');
+        var searchVal = searchInput ? searchInput.value : '';
+
+        curList.innerHTML = sanitizeHtml(newList.innerHTML);
+
+        // Restore selection + selected styling for rows that still exist.
+        var restored = 0;
+        curList.querySelectorAll('.vehicle-checkbox').forEach(function(cb) {
+            if (checked[cb.value]) {
+                // Drop selections for vehicles that are no longer available
+                // is handled by the page via the refreshed event (prunes order).
+                cb.checked = true;
+                var card = cb.closest('.vehicle-select-item');
+                if (card) card.classList.add('is-selected');
+                restored++;
+            }
+        });
+
+        // Re-apply the search filter so the list doesn't suddenly unfilter.
+        if (searchVal) {
+            var q = searchVal.trim().toLowerCase();
+            curList.querySelectorAll('.vehicle-select-item').forEach(function(item) {
+                var searchData = (item.getAttribute('data-search') || '').toLowerCase();
+                if (!q || searchData.indexOf(q) !== -1) {
+                    item.classList.remove('d-none');
+                    item.style.setProperty('display', 'flex', 'important');
+                } else {
+                    item.classList.add('d-none');
+                    item.style.setProperty('display', 'none', 'important');
+                }
+            });
+        }
+
+        try {
+            document.dispatchEvent(new CustomEvent('vehicle-list-refreshed', {
+                detail: { restored: restored }
+            }));
+        } catch (e) { /* ignore */ }
+        return true;
+    }
+
     function ajaxRefresh() {
         if (!_config || !_config.refreshUrl) return;
 
@@ -96,19 +249,22 @@
             var parser = new DOMParser();
             var newDoc = parser.parseFromString(html, 'text/html');
 
-            // Replace table body
+            // Replace table body (legacy) AND card list (staff queue).
             if (_config.tableSelector) {
                 var newTbody = newDoc.querySelector(_config.tableSelector);
                 var curTbody = document.querySelector(_config.tableSelector);
-                if (newTbody && curTbody) {
+                if (newTbody && curTbody && _config.tableSelector !== '#queue-list') {
                     // Wrap the innerHTML in a <table> tag so DOMPurify doesn't strip table elements (tr/td)
-                    var cleanTableHtml = DOMPurify.sanitize('<table>' + newTbody.innerHTML + '</table>', { ADD_ATTR: ['onclick'] });
+                    var cleanTableHtml = sanitizeHtml('<table>' + newTbody.innerHTML + '</table>');
                     var tempTable = document.createElement('div');
                     tempTable.innerHTML = cleanTableHtml;
                     var cleanTbody = tempTable.querySelector('table');
                     curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
                 }
             }
+
+            refreshQueueCards(newDoc);
+            refreshVehicleModalList(newDoc);
 
             // Re-mount modals (depart confirmation, etc.)
             if (_config.modalSelector) {
@@ -155,13 +311,28 @@
             var needsRefresh = false;
             var currentIds = {};
 
+            // Structural change detection (admin vehicle edits): compare a
+            // fingerprint that ignores passenger counts. Passenger-only diffs
+            // are patched in place below and must NOT trigger a full refresh.
+            var currentStructural = structuralHash(json.queue);
+            var tokenChanged = (
+                json.sync_token !== undefined && json.sync_token !== '' &&
+                _lastSyncToken !== null && json.sync_token !== _lastSyncToken
+            );
+            var structuralChanged = (
+                _lastStructuralHash !== null && currentStructural !== _lastStructuralHash
+            );
+            if (_hasPolled && (tokenChanged || structuralChanged)) {
+                needsRefresh = true;
+            }
+
             json.queue.forEach(function(item) {
                 currentIds[item.id] = true;
 
                 var span = getCountSpan(item.id);
                 if (!span) {
                     // New item we don't have in DOM
-                    if (_lastIds[item.id] === undefined) {
+                    if (_hasPolled && _lastIds[item.id] === undefined) {
                         needsRefresh = true;
                     }
                     return;
@@ -180,14 +351,21 @@
             });
 
             // Detect removed items
-            for (var oldId in _lastIds) {
-                if (!currentIds[oldId]) {
-                    needsRefresh = true;
-                    break;
+            if (_hasPolled) {
+                for (var oldId in _lastIds) {
+                    if (!currentIds[oldId]) {
+                        needsRefresh = true;
+                        break;
+                    }
                 }
             }
 
             _lastIds = currentIds;
+            if (json.sync_token !== undefined && json.sync_token !== '') {
+                _lastSyncToken = json.sync_token;
+            }
+            _lastStructuralHash = currentStructural;
+            _hasPolled = true;
 
             // Prune stale WS cooldown entries
             var now = Date.now();
@@ -400,6 +578,9 @@
             document.removeEventListener('visibilitychange', onVisibilityChange);
             _config = null;
             _lastIds = {};
+            _lastSyncToken = null;
+            _lastStructuralHash = null;
+            _hasPolled = false;
         }
     };
 

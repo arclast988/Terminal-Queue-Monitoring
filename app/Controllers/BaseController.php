@@ -78,14 +78,22 @@ abstract class BaseController extends Controller
      */
     protected function broadcastUpdate(string $type, array $data = []): void
     {
+        $isPassengerChange = ($data['action'] ?? '') === 'passenger_change';
+        // Passenger taps fire very frequently: they are patched in-place via
+        // WS/passenger_change + poll counts, so they must NOT bump the global
+        // sync token (otherwise every tap would trigger a full list refresh).
+        // Structural changes (vehicle add/edit, queue add/status, etc.) bump
+        // the token so pollers can detect modal-list changes without WS.
         $now = microtime(true);
-        // Atomic sync-token write to avoid partial reads under concurrency.
-        $tokenFile = WRITEPATH . 'sync_token.txt';
-        $tmpFile   = $tokenFile . '.' . getmypid() . '.tmp';
-        if (@file_put_contents($tmpFile, (string) $now, LOCK_EX) !== false) {
-            @rename($tmpFile, $tokenFile);
-        } else {
-            @file_put_contents($tokenFile, (string) $now, LOCK_EX);
+        if (! $isPassengerChange) {
+            // Atomic sync-token write to avoid partial reads under concurrency.
+            $tokenFile = WRITEPATH . 'sync_token.txt';
+            $tmpFile   = $tokenFile . '.' . getmypid() . '.tmp';
+            if (@file_put_contents($tmpFile, (string) $now, LOCK_EX) !== false) {
+                @rename($tmpFile, $tokenFile);
+            } else {
+                @file_put_contents($tokenFile, (string) $now, LOCK_EX);
+            }
         }
 
         // Invalidate the short-lived public feed caches so this change is
@@ -95,7 +103,6 @@ abstract class BaseController extends Controller
         // actions (add/remove/status) invalidate all cached public feeds.
         try {
             $cache = cache();
-            $isPassengerChange = ($data['action'] ?? '') === 'passenger_change';
             $cache->delete('rt_queue_status');
             $cache->delete('rt_home_status');
 

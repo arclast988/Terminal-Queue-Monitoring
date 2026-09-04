@@ -1139,9 +1139,9 @@
 
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20260906') ?>"></script>
 <script src="<?= base_url('js/debounce-passengers.js') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js?v=20260905') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260906') ?>"></script>
 <script>
     // Initialize debounced passenger controls
     PassengerDebounce.init({
@@ -1287,12 +1287,19 @@
     }
 
     // Initialize real-time sync (polling + WebSocket)
+    // NOTE: this page uses card divs (#queue-list), NOT a <table> — the sync
+    // module now refreshes #queue-list + #vehicleListContainer automatically so
+    // admin vehicle edits appear instantly without a manual page reload.
     QueueSync.init({
         apiUrl:        '<?= base_url('api/queue-status') ?>',
         pollInterval:  3000,
         refreshUrl:    '<?= base_url('staff/queue') ?>',
-        tableSelector: 'table tbody',
-        modalSelector: '[id^="confirmDepartModal"]'
+        tableSelector: '#queue-list',
+        modalSelector: '[id^="confirmDepartModal"]',
+        extraRefresh: function() {
+            // New queue cards carry fresh countdown targets — repaint immediately.
+            updateCountdowns();
+        }
     });
 
     // Countdown timer updater
@@ -1353,13 +1360,25 @@
         var warningMsg = document.getElementById('departureWarningMessage');
         var submitBtn = document.getElementById('submitToQueueBtn');
 
-        var modalSearchInput = document.getElementById('vehicleModalSearch');
-        var vehicleItems = document.querySelectorAll('#vehicleListContainer .vehicle-select-item');
-        var checkboxes = document.querySelectorAll('.vehicle-checkbox');
         var selectAllBtn = document.getElementById('selectAllVehiclesBtn');
         var deselectAllBtn = document.getElementById('deselectAllVehiclesBtn');
         var selectedCountNum = document.getElementById('selectedCountNum');
         var selectedBadge = document.getElementById('selectedBadge');
+
+        // Live helpers — always query fresh DOM so realtime list refreshes
+        // (QueueSync replaces #vehicleListContainer innerHTML) keep working.
+        function getVehicleItems() {
+            return document.querySelectorAll('#vehicleListContainer .vehicle-select-item');
+        }
+        function getCheckboxes() {
+            return document.querySelectorAll('#vehicleListContainer .vehicle-checkbox');
+        }
+        function getModalSearchInput() {
+            return document.getElementById('vehicleModalSearch');
+        }
+        function getSubmitBtn() {
+            return document.getElementById('submitToQueueBtn');
+        }
 
         function cleanUpAllModals() {
             document.body.classList.remove('modal-open');
@@ -1382,20 +1401,22 @@
         }
 
         function updateSelectionCount() {
-            // Keep selectedOrder in sync with checked checkboxes
+            // Keep selectedOrder in sync with checked checkboxes (fresh DOM —
+            // realtime refresh may have removed vehicles that are now queued).
             selectedOrder = selectedOrder.filter(function(id) {
-                var cb = document.querySelector('.vehicle-checkbox[value="' + id + '"]');
+                var cb = document.querySelector('#vehicleListContainer .vehicle-checkbox[value="' + id + '"]');
                 return cb && cb.checked;
             });
 
             var checkedCount = selectedOrder.length;
+            var curSubmit = getSubmitBtn() || submitBtn;
             if (selectedCountNum) selectedCountNum.textContent = checkedCount;
-            if (submitBtn) {
-                submitBtn.disabled = (checkedCount === 0);
+            if (curSubmit) {
+                curSubmit.disabled = (checkedCount === 0);
                 if (checkedCount > 0) {
-                    submitBtn.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add ' + checkedCount + ' Vehicle' + (checkedCount > 1 ? 's' : '') + ' to Queue';
+                    curSubmit.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add ' + checkedCount + ' Vehicle' + (checkedCount > 1 ? 's' : '') + ' to Queue';
                 } else {
-                    submitBtn.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add Selected Vehicles to Queue';
+                    curSubmit.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add Selected Vehicles to Queue';
                 }
             }
             if (selectedBadge) {
@@ -1407,56 +1428,34 @@
             }
         }
 
-        // Entire Card Click Handler
-        vehicleItems.forEach(function(card) {
-            card.addEventListener('click', function(e) {
-                var cb = card.querySelector('.vehicle-checkbox');
-                if (!cb) return;
-
-                var vId = cb.value;
-
-                // If click was directly on checkbox input
-                if (e.target.classList.contains('vehicle-checkbox')) {
-                    if (cb.checked) {
-                        if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
-                    } else {
-                        selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
-                    }
-                    updateCardStyle(card);
-                    updateSelectionCount();
-                    return;
-                }
-
-                // Toggle checkbox when clicking anywhere on card
+        // Delegated handlers — survive realtime list replacement (QueueSync
+        // swaps #vehicleListContainer innerHTML when admin edits vehicles).
+        // Card click toggles its checkbox; checkbox change keeps order in sync.
+        function toggleVehicleCard(card, checkboxClicked) {
+            var container = document.getElementById('vehicleListContainer');
+            if (!container || !card || !container.contains(card)) return;
+            var cb = card.querySelector('.vehicle-checkbox');
+            if (!cb) return;
+            var vId = cb.value;
+            if (!checkboxClicked) {
                 cb.checked = !cb.checked;
-                if (cb.checked) {
-                    if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
-                } else {
-                    selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
-                }
-                updateCardStyle(card);
-                updateSelectionCount();
-            });
-        });
+            }
+            if (cb.checked) {
+                if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
+            } else {
+                selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
+            }
+            updateCardStyle(card);
+            updateSelectionCount();
+        }
 
-        checkboxes.forEach(function(cb) {
-            cb.addEventListener('change', function() {
-                var vId = this.value;
-                if (this.checked) {
-                    if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
-                } else {
-                    selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
-                }
-                var card = this.closest('.vehicle-select-item');
-                if (card) updateCardStyle(card);
-                updateSelectionCount();
-            });
-        });
-
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', function() {
+        document.addEventListener('click', function(e) {
+            // Select All / Clear live inside the modal toolbar (may be
+            // re-rendered on realtime refresh) — handle via delegation.
+            var selAll = e.target.closest('#selectAllVehiclesBtn');
+            if (selAll) {
                 selectedOrder = [];
-                vehicleItems.forEach(function(item) {
+                getVehicleItems().forEach(function(item) {
                     if (!item.classList.contains('d-none') && item.style.display !== 'none') {
                         var cb = item.querySelector('.vehicle-checkbox');
                         if (cb) {
@@ -1467,32 +1466,52 @@
                     }
                 });
                 updateSelectionCount();
-            });
-        }
-
-        if (deselectAllBtn) {
-            deselectAllBtn.addEventListener('click', function() {
+                return;
+            }
+            var clearBtn = e.target.closest('#deselectAllVehiclesBtn');
+            if (clearBtn) {
                 selectedOrder = [];
-                if (modalSearchInput) {
-                    modalSearchInput.value = '';
-                }
-                vehicleItems.forEach(function(item) {
+                var searchInput = getModalSearchInput();
+                if (searchInput) searchInput.value = '';
+                getVehicleItems().forEach(function(item) {
                     item.classList.remove('d-none');
                     item.style.setProperty('display', 'flex', 'important');
                 });
-                checkboxes.forEach(function(cb) {
+                getCheckboxes().forEach(function(cb) {
                     cb.checked = false;
                     var card = cb.closest('.vehicle-select-item');
                     if (card) updateCardStyle(card);
                 });
                 updateSelectionCount();
-            });
-        }
+                return;
+            }
 
-        if (modalSearchInput) {
-            modalSearchInput.addEventListener('input', function() {
-                var query = modalSearchInput.value.trim().toLowerCase();
-                vehicleItems.forEach(function(item) {
+            var card = e.target.closest ? e.target.closest('#vehicleListContainer .vehicle-select-item') : null;
+            if (!card) return;
+            var isCheckbox = e.target.classList && e.target.classList.contains('vehicle-checkbox');
+            toggleVehicleCard(card, isCheckbox);
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.classList && e.target.classList.contains('vehicle-checkbox')) {
+                var container = document.getElementById('vehicleListContainer');
+                if (!container || !container.contains(e.target)) return;
+                var vId = e.target.value;
+                if (e.target.checked) {
+                    if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
+                } else {
+                    selectedOrder = selectedOrder.filter(function(id) { return id !== vId; });
+                }
+                var card = e.target.closest('.vehicle-select-item');
+                if (card) updateCardStyle(card);
+                updateSelectionCount();
+            }
+        });
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.id === 'vehicleModalSearch') {
+                var query = (e.target.value || '').trim().toLowerCase();
+                getVehicleItems().forEach(function(item) {
                     var searchData = (item.getAttribute('data-search') || '').toLowerCase();
                     if (!query || searchData.indexOf(query) !== -1) {
                         item.classList.remove('d-none');
@@ -1502,8 +1521,17 @@
                         item.style.setProperty('display', 'none', 'important');
                     }
                 });
-            });
-        }
+            }
+        });
+
+        // After a realtime vehicle-list refresh: drop selections for vehicles
+        // that disappeared (queued elsewhere / deactivated by admin) and
+        // repaint the submit-button count. QueueSync already restored checked
+        // boxes + search filter before firing this event.
+        document.addEventListener('vehicle-list-refreshed', function() {
+            submitBtn = getSubmitBtn() || submitBtn;
+            updateSelectionCount();
+        });
 
         if (warningModalEl) {
             warningModalEl.addEventListener('hidden.bs.modal', function () {
@@ -1528,8 +1556,11 @@
                 }
 
                 e.preventDefault();
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Checking availability...';
+                var curSubmitBtn = getSubmitBtn() || submitBtn;
+                if (curSubmitBtn) {
+                    curSubmitBtn.disabled = true;
+                    curSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Checking availability...';
+                }
 
                 var checkPromises = selectedOrder.map(function(id) {
                     return fetch('<?= base_url('api/check-vehicle-availability') ?>/' + id).then(function(r) { return r.json(); });
@@ -1553,7 +1584,8 @@
                                 }
                             }, 100);
 
-                            submitBtn.disabled = false;
+                            submitBtn = getSubmitBtn() || submitBtn;
+                            if (submitBtn) submitBtn.disabled = false;
                             updateSelectionCount();
                         } else {
                             // Append vehicle_ids in the EXACT selected order
