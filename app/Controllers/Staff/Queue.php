@@ -256,7 +256,7 @@ class Queue extends BaseController
         $errors = [];
         $warnings = [];
 
-        $oneMinuteAgo = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        $thirtyMinutesAgo = date('Y-m-d H:i:s', strtotime('-30 minutes'));
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s');
 
@@ -306,17 +306,19 @@ class Queue extends BaseController
                 continue;
             }
 
-            // Check for recent departure (within 1 minute)
+            // Enforce the same 30-minute cooldown shown in the vehicle list.
             $recentDeparture = $this->queueModel->where('vehicle_id', $vehicleId)
                 ->where('status', 'departed')
-                ->where('departure_time >=', $oneMinuteAgo)
+                ->where('departure_time >=', $thirtyMinutesAgo)
                 ->orderBy('departure_time', 'DESC')
                 ->first();
 
             if ($recentDeparture) {
                 $departTime = strtotime($recentDeparture['departure_time']);
                 $secondsAgo = time() - $departTime;
-                $errors[] = $vehicle['plate_number'] . ' departed only ' . $secondsAgo . ' seconds ago. Please wait 1 minute before adding it back.';
+                $remainingSeconds = max(0, (30 * 60) - $secondsAgo);
+                $remainingMinutes = (int) ceil($remainingSeconds / 60);
+                $errors[] = $vehicle['plate_number'] . ' departed recently. Please wait about ' . $remainingMinutes . ' more minute(s) before adding it back.';
                 continue;
             }
 

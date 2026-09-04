@@ -591,7 +591,13 @@
         .route-info {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
+            min-width: 170px;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .status-badge {
@@ -1017,7 +1023,7 @@
                         <span class="filter-badge">All Types</span>
                     <?php endif; ?>
                     <?php if ($destination): ?><span class="filter-badge">Destination:
-                            <?= esc($destination) ?></span><?php endif; ?>
+                            <?= strtoupper(esc($destination)) ?></span><?php endif; ?>
                     <a href="<?= base_url('schedules') ?>" class="clear-btn"><i class="fas fa-times"></i> Clear Filters</a>
                 </div>
             <?php endif; ?>
@@ -1098,10 +1104,10 @@
                                 <td data-label="Route">
                                     <div class="route-info">
                                         <span
-                                            style="color: var(--text-muted); font-size: 13px;"><?= esc($schedule['origin']) ?></span>
+                                            style="color: var(--text-muted); font-size: 13px;"><?= strtoupper(esc($schedule['origin'])) ?></span>
                                         <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 12px;"></i>
                                         <span
-                                            style="font-weight: 700; color: var(--primary-dark);"><?= esc($schedule['destination']) ?></span>
+                                            style="font-weight: 700; color: var(--primary-dark);"><?= strtoupper(esc($schedule['destination'])) ?></span>
                                     </div>
                                 </td>
                                 <td data-label="Est. Departure">
@@ -1306,7 +1312,7 @@
                     '<td data-label="Operator"><div class="operator-cell"><i class="fas fa-building text-muted"></i>' + opDisplay + '</div></td>' +
                     '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
                     '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(typeSlug) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(typeSlug) + '" data-vtype="' + escHtml(typeSlug) + '" style="background: var(--vehicle-' + escHtml(typeSlug) + '-soft, ' + typeColor + '18) !important; color: var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important; border: 1.5px solid var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important;">' + escHtml(typeLabel) + '</span></div></td>' +
-                    '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +
+                    '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted)">' + escHtml(s.origin).toUpperCase() + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + escHtml(s.destination).toUpperCase() + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +
                 '</tr>';

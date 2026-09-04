@@ -533,8 +533,8 @@
                 <!-- Info grid -->
                 <div class="row g-0 px-3 pt-2 pb-1">
                     <div class="col-6 py-1">
-                        <div class="text-muted small">Route</div>
-                        <div class="fw-semibold small"><?= esc($item['origin']) ?> &rarr; <?= esc($item['destination']) ?></div>
+                        <div class="text-muted small text-uppercase">Route</div>
+                        <div class="fw-semibold small text-uppercase"><?= strtoupper(esc($item['origin'])) ?> &rarr; <?= strtoupper(esc($item['destination'])) ?></div>
                     </div>
                     <div class="col-6 py-1">
                         <div class="text-muted small">Arrived</div>
@@ -1182,10 +1182,24 @@
         if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
 
         fetch(updateUrl, { method: 'POST', headers: headers })
-        .then(function() {
-            window.location.reload();
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Status update failed');
+            }
+            return response.json();
         })
-        .catch(function() {
+        .then(function(data) {
+            if (!data.success) {
+                throw new Error(data.message || 'Status update failed');
+            }
+            if (window.QueueSync) {
+                window.QueueSync.refresh();
+            } else {
+                window.location.reload();
+            }
+        })
+        .catch(function(error) {
+            console.error('[Queue] Status update error:', error);
             window.location.reload();
         });
     }
@@ -1301,6 +1315,15 @@
             updateCountdowns();
         }
     });
+
+    // Re-check the 30-minute departed-vehicle cooldown without requiring a
+    // manual page refresh. The server recalculates vehicle availability on
+    // each staff queue HTML request.
+    setInterval(function() {
+        if (!document.hidden && window.QueueSync) {
+            window.QueueSync.refresh();
+        }
+    }, 30000);
 
     // Countdown timer updater
     function updateCountdowns() {

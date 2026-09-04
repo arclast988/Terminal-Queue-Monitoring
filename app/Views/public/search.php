@@ -844,9 +844,9 @@
                             </td>
                             <td data-label="Route">
                                 <div class="route-info">
-                                    <span style="color: var(--text-muted); font-size: 13px;"><?= esc($item['origin']) ?></span>
+                                    <span style="color: var(--text-muted); font-size: 13px;"><?= strtoupper(esc($item['origin'])) ?></span>
                                     <i class="fas fa-arrow-right" style="color: var(--primary); font-size: 12px;"></i>
-                                    <span style="font-weight: 700; color: var(--primary-dark);"><?= esc($item['destination']) ?></span>
+                                    <span style="font-weight: 700; color: var(--primary-dark);"><?= strtoupper(esc($item['destination'])) ?></span>
                                 </div>
                             </td>
                             <td data-label="Est. Departure">

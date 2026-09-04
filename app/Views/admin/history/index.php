@@ -181,7 +181,7 @@
                     <?php if (!empty($destinations)): ?>
                         <?php foreach ($destinations as $d): ?>
                             <option value="<?= esc($d['destination']) ?>" <?= ($destination ?? '') === $d['destination'] ? 'selected' : '' ?>>
-                                <?= esc($d['destination']) ?>
+                                <?= strtoupper(esc($d['destination'])) ?>
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -292,7 +292,7 @@
                                 <td data-label="Route">
                                     <div class="route-info">
                                         <i class="bi bi-geo-alt" style="color: var(--primary, #1565c0);"></i>
-                                        <span><?= esc($item['origin'] ?? '') ?> → <?= esc($item['destination'] ?? '') ?></span>
+                                        <span><?= strtoupper(esc($item['origin'] ?? '')) ?> → <?= strtoupper(esc($item['destination'] ?? '')) ?></span>
                                     </div>
                                 </td>
                                 <td data-label="Departure Time">

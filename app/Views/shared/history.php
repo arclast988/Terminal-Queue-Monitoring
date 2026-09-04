@@ -227,9 +227,9 @@
                                 </td>
                                 <td data-label="Route">
                                     <div class="d-flex align-items-center gap-2">
-                                        <small class="text-muted"><?= esc($item['origin']) ?></small>
+                                        <small class="text-muted"><?= strtoupper(esc($item['origin'])) ?></small>
                                         <i class="bi bi-arrow-right text-primary"></i>
-                                        <strong><?= esc($item['destination']) ?></strong>
+                                        <strong><?= strtoupper(esc($item['destination'])) ?></strong>
                                     </div>
                                 </td>
                                 <td data-label="Departure Time">

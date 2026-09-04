@@ -342,7 +342,7 @@ $isManager = $isAdmin;
                 </div>
                 <div class="modern-card-body py-4">
                     <?php if (!empty($disc['terminal_name'])): ?>
-                        <div class="text-muted mb-2" style="font-size: 13px;"><?= esc($disc['terminal_name']) ?></div>
+                        <div class="text-muted mb-2" style="font-size: 13px;"><?= strtoupper(esc($disc['terminal_name'])) ?></div>
                     <?php endif; ?>
                     <div class="fw-bold" style="font-size: 56px; line-height: 1;">
                         <?= number_format($disc['discount_percent'], 0) ?><span style="font-size: 28px;">%</span>

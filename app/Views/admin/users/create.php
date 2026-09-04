@@ -149,7 +149,7 @@
                                                value="<?= esc($val) ?>" id="route_<?= $routeIdSelector ?>"
                                                <?= $isChecked ? 'checked' : '' ?>>
                                         <label class="form-check-label" for="route_<?= $routeIdSelector ?>">
-                                            <span class="route-name"><?= esc($group['origin']) ?> &rarr; <?= esc($group['destination']) ?></span>
+                                            <span class="route-name"><?= strtoupper(esc($group['origin'])) ?> &rarr; <?= strtoupper(esc($group['destination'])) ?></span>
                                         </label>
                                     </div>
                                 <?php endforeach; ?>

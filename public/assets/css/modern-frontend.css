@@ -444,6 +444,24 @@ body > * {
     border-bottom: none;
 }
 
+.schedule-route-cell {
+    min-width: 170px;
+    text-align: center;
+}
+
+.schedule-route-display {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    max-width: 100%;
+    color: var(--slate-800);
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
 /* =================================================================
    MODERN BADGES
    ================================================================= */
@@ -1391,5 +1409,4 @@ ul.pagination li.active span,
     color: #94a3b8 !important;
     box-shadow: none !important;
 }
-
 

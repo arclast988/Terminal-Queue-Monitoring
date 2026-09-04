@@ -82,7 +82,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                                 <option value="">— No specific destination —</option>
                                 <?php foreach (($routes ?? []) as $r): ?>
                                 <option value="<?= $r['id'] ?>" <?= old('route_id', $selectedRouteId ?? '') == $r['id'] ? 'selected' : '' ?>>
-                                    <?= esc($r['destination']) ?>
+                                    <?= strtoupper(esc($r['destination'])) ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
@@ -419,4 +419,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-

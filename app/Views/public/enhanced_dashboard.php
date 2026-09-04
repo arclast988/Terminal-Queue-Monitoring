@@ -1784,9 +1784,9 @@
                                     <div class="queue-card-route-driver">
                                         <div class="route-pill-badge">
                                             <i class="fas fa-map-marker-alt text-danger"></i>
-                                            <span class="route-origin"><?= esc($item['origin']) ?></span>
+                                            <span class="route-origin"><?= strtoupper(esc($item['origin'])) ?></span>
                                             <i class="fas fa-arrow-right route-arrow"></i>
-                                            <span class="route-dest"><?= esc($item['destination']) ?></span>
+                                            <span class="route-dest"><?= strtoupper(esc($item['destination'])) ?></span>
                                         </div>
                                         <div class="driver-info-pill">
                                             <i class="fas fa-user-tie text-primary"></i>
@@ -1923,7 +1923,7 @@
                             ?>
                             <button type="button" class="rules-route-chip" data-route="<?= esc($scope, 'attr') ?>"
                                 style="padding: 5px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: #ffffff; color: #64748b; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;">
-                                <?= esc($chipLabel) ?>
+                                <?= strtoupper(esc($chipLabel)) ?>
                             </button>
                         <?php endforeach; ?>
                     </div>
@@ -2328,9 +2328,9 @@
                                     + '<div class="queue-card-route-driver">'
                                     + '<div class="route-pill-badge">'
                                     + '<i class="fas fa-map-marker-alt text-danger"></i>'
-                                    + '<span class="route-origin">' + item.origin + '</span>'
+                                    + '<span class="route-origin">' + (item.origin || '').toUpperCase() + '</span>'
                                     + '<i class="fas fa-arrow-right route-arrow"></i>'
-                                    + '<span class="route-dest">' + item.destination + '</span>'
+                                    + '<span class="route-dest">' + (item.destination || '').toUpperCase() + '</span>'
                                     + '</div>'
                                     + '<div class="driver-info-pill">'
                                     + '<i class="fas fa-user-tie text-primary"></i>'
@@ -2371,7 +2371,7 @@
                                 var html = '<button class="filter-chip' + (prevActive === 'all' ? ' active' : '') + '" data-filter="all" data-type="all">All Routes</button>';
                                 dests.forEach(function (d) {
                                     var isActive = prevActive === d.toLowerCase();
-                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d + '</button>';
+                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d.toUpperCase() + '</button>';
                                 });
                                 destGroup.innerHTML = html;
                                 initFilterChips();

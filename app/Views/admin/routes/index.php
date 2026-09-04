@@ -61,7 +61,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-4" style="background: var(--surface-sunken, #f8fafc); border-bottom: 1px solid var(--border, #e2e8f0);">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
-                        <span class="fw-bold fs-5" style="color: var(--text-main);"><?= esc($group['terminal_name']) ?> <i class="bi bi-arrow-right text-muted mx-1"></i> <?= esc($group['destination']) ?></span>
+                        <span class="fw-bold fs-5" style="color: var(--text-main);"><?= strtoupper(esc($group['terminal_name'])) ?> <i class="bi bi-arrow-right text-muted mx-1"></i> <?= strtoupper(esc($group['destination'])) ?></span>
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <?php if ($isAdmin): ?>

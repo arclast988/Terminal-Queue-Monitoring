@@ -435,9 +435,9 @@
                         </td>
                         <td><?= vehicle_type_badge($row['vehicle_type']) ?></td>
                         <td>
-                            <div style="color: #64748b; font-size: 11px; font-weight: 600;"><?= esc($row['origin'] ?? 'Palompon') ?></div>
+                            <div style="color: #64748b; font-size: 11px; font-weight: 600;"><?= strtoupper(esc($row['origin'] ?? 'Palompon')) ?></div>
                             <div style="color: #0f172a; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-arrow-right text-primary" style="font-size: 10px;"></i> <?= esc($row['destination'] ?? '—') ?>
+                                <i class="fas fa-arrow-right text-primary" style="font-size: 10px;"></i> <?= strtoupper(esc($row['destination'] ?? '—')) ?>
                             </div>
                         </td>
                         <td style="text-align: center;">

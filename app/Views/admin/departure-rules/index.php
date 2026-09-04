@@ -338,12 +338,12 @@
                             <tr class="rule-row" data-destination="<?= esc($destSlug) ?>" data-route-id="<?= esc($rule['route_id'] ?? '') ?>">
                                 <td data-label="Terminal">
                                     <span class="fw-bold" style="color: var(--text-main, #0f172a); font-size: 13.5px;">
-                                        <i class="bi bi-building me-1 text-muted"></i><?= esc($rule['terminal_name'] ?? '-') ?>
+                                        <i class="bi bi-building me-1 text-muted"></i><?= strtoupper(esc($rule['terminal_name'] ?? '-')) ?>
                                     </span>
                                 </td>
                                 <td data-label="Destination">
                                     <?php if (!empty($rule['route_destination']) && $rule['route_destination'] !== '-'): ?>
-                                        <span class="route-tag-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= esc($rule['route_destination']) ?></span>
+                                        <span class="route-tag-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= strtoupper(esc($rule['route_destination'])) ?></span>
                                     <?php else: ?>
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>

@@ -249,7 +249,7 @@
                     <?= vehicle_type_badge($vehicle_type) ?>
                 <?php endif; ?>
                 <?php if ($destination): ?>
-                    <span class="badge-modern badge-modern-info"><?= esc($destination) ?></span>
+                    <span class="badge-modern badge-modern-info"><?= strtoupper(esc($destination)) ?></span>
                 <?php endif; ?>
                 <a href="<?= base_url('schedules') ?>" class="btn-modern btn-modern-sm btn-modern-outline ms-2">
                     <i class="bi bi-x-circle"></i> Clear Filters
@@ -341,11 +341,11 @@
                                         <?= vehicle_type_badge($vType) ?>
                                     </div>
                                 </td>
-                                <td data-label="Route">
-                                    <div class="d-flex align-items-center gap-1 flex-wrap justify-content-end text-end" style="word-break: break-word;">
-                                        <strong><?= esc($s['origin']) ?></strong>
+                                <td data-label="Route" class="schedule-route-cell">
+                                    <div class="schedule-route-display" style="word-break: break-word;">
+                                        <strong><?= strtoupper(esc($s['origin'])) ?></strong>
                                         <i class="bi bi-arrow-right text-muted" style="font-size: 11px;"></i>
-                                        <strong><?= esc($s['destination']) ?></strong>
+                                        <strong><?= strtoupper(esc($s['destination'])) ?></strong>
                                     </div>
                                 </td>
                                 <td data-label="Est. Departure (HH:MM)">

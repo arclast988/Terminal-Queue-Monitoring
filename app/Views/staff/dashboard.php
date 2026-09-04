@@ -61,8 +61,8 @@
         <div class="modern-card shadow-modern fade-in h-100" style="border-left: 3px solid #15803d;">
             <div class="modern-card-body p-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-bold text-dark text-truncate" style="font-size: 14px;" title="<?= esc($rb['destination']) ?>">
-                        <?= esc($rb['destination']) ?>
+                    <span class="fw-bold text-dark text-truncate" style="font-size: 14px;" title="<?= strtoupper(esc($rb['destination'])) ?>">
+                        <?= strtoupper(esc($rb['destination'])) ?>
                     </span>
                     <span class="badge-modern badge-modern-success" style="font-size: 11px;">
                         <?= (int)$rb['queue_count'] ?> vehicles
@@ -252,11 +252,11 @@ if (!empty($recent_departures)) {
                                     <?= vehicle_type_badge($vType) ?>
                                 </div>
                             </td>
-                            <td data-label="Route">
-                                <div class="d-flex align-items-center gap-2">
-                                    <strong style="color: #334155; font-size: 13.5px;"><?= esc($dept['origin'] ?? 'Palompon') ?></strong>
+                            <td data-label="Route" class="schedule-route-cell">
+                                <div class="schedule-route-display">
+                                    <strong><?= strtoupper(esc($dept['origin'] ?? 'Palompon')) ?></strong>
                                     <i class="bi bi-arrow-right text-primary"></i>
-                                    <strong style="color: #0f172a; font-size: 13.5px;"><?= esc($dept['destination'] ?? '—') ?></strong>
+                                    <strong><?= strtoupper(esc($dept['destination'] ?? '—')) ?></strong>
                                 </div>
                             </td>
                             <td data-label="Departure Time">

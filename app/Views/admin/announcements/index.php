@@ -58,7 +58,7 @@
                         <?php foreach ($announcements as $a): ?>
                             <tr>
                                 <td data-label="ID"><strong>#<?= $a['id'] ?></strong></td>
-                                <td data-label="Terminal"><span class="badge-modern badge-modern-primary"><?= esc($a['terminal_name'] ?? '—') ?></span></td>
+                                <td data-label="Terminal"><span class="badge-modern badge-modern-primary"><?= strtoupper(esc($a['terminal_name'] ?? '—')) ?></span></td>
                                 <td data-label="Message"><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?></td>
                                 <td data-label="Status">
                                     <?php if ($a['is_active']): ?>

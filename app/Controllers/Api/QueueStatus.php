@@ -102,24 +102,25 @@ class QueueStatus extends Controller
             ]);
         }
 
-        // 2. Check for recent departure (within 1 minute)
-        $oneMinuteAgo = date('Y-m-d H:i:s', strtotime('-1 minute'));
+        // 2. Check for recent departure (within the 30-minute cooldown)
+        $thirtyMinutesAgo = date('Y-m-d H:i:s', strtotime('-30 minutes'));
         $recentDeparture = $queueModel->where('vehicle_id', $vehicleId)
             ->where('status', 'departed')
-            ->where('departure_time >=', $oneMinuteAgo)
+            ->where('departure_time >=', $thirtyMinutesAgo)
             ->orderBy('departure_time', 'DESC')
             ->first();
 
         if ($recentDeparture) {
             $departTime = strtotime($recentDeparture['departure_time']);
             $secondsAgo = time() - $departTime;
-            $waitRemaining = 60 - $secondsAgo;
+            $waitRemaining = max(0, (30 * 60) - $secondsAgo);
+            $waitMinutes = (int) ceil($waitRemaining / 60);
             
             return $this->response->setJSON([
                 'success'   => true,
                 'available' => false,
                 'reason'    => 'recently_departed',
-                'message'   => "This vehicle departed only {$secondsAgo} seconds ago. Please wait another {$waitRemaining} seconds.",
+                'message'   => "This vehicle departed recently. Please wait about {$waitMinutes} more minute(s).",
                 'departure_time' => $recentDeparture['departure_time']
             ]);
         }

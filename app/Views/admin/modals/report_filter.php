@@ -54,7 +54,7 @@
                             <?php if (!empty($destinations)): ?>
                                 <?php foreach ($destinations as $route): ?>
                                     <option value="<?= esc($route['destination']) ?>" data-vtype="<?= esc($route['vehicle_type']) ?>">
-                                        <?= esc($route['destination']) ?> (<?= ucfirst(esc($route['vehicle_type'])) ?>)
+                                        <?= strtoupper(esc($route['destination'])) ?> (<?= ucfirst(esc($route['vehicle_type'])) ?>)
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>

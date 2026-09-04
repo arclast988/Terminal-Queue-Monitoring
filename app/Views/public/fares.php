@@ -659,7 +659,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div class="dest-info">
                                         <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                                        <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                        <div class="f-origin">From: <?= strtoupper(esc($route['origin'])) ?></div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
@@ -706,7 +706,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div class="dest-info">
                                         <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                                        <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                        <div class="f-origin">From: <?= strtoupper(esc($route['origin'])) ?></div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
@@ -753,7 +753,7 @@
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div class="dest-info">
                                         <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                                        <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                        <div class="f-origin">From: <?= strtoupper(esc($route['origin'])) ?></div>
                                     </div>
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
@@ -810,7 +810,7 @@
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <div class="dest-info">
                                             <div class="f-dest"><?= strtoupper(esc($route['origin'])) ?> - <?= strtoupper(esc($route['destination'])) ?></div>
-                                            <div class="f-origin">From: <?= esc($route['origin']) ?></div>
+                                            <div class="f-origin">From: <?= strtoupper(esc($route['origin'])) ?></div>
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="price-tag">₱<?= number_format($route['fare'], 0) ?></div>
