@@ -77,25 +77,25 @@ body.admin-theme {
 body.admin-theme .main-content { background-color: transparent !important; }
 
 /* --------------------------------------------------------------------------
-   DISPATCHER (staff) — harbor blue on cool slate. Calm, focused, real-time.
+   DISPATCHER (staff) — emerald green on cool slate. Calm, focused, real-time.
    -------------------------------------------------------------------------- */
 body.staff-theme {
-  --primary: #1565C0;
-  --primary-dark: #0D47A1;
-  --primary-soft: #E7F0FB;
+  --primary: #15803d;
+  --primary-dark: #166534;
+  --primary-soft: #dcfce7;
   --on-primary: #ffffff;
-  --accent: #00ACC1;
+  --accent: #10b981;
 
-  /* Navigation: harbor blue bar, white text */
-  --nav-bg: #1565C0;
+  /* Navigation: emerald green bar, white text */
+  --nav-bg: #15803d;
   --nav-text: #ffffff;
   --nav-text-soft: rgba(255, 255, 255, .85);
   --nav-accent: #ffffff;
   --nav-divider: rgba(255, 255, 255, .3);
   --nav-chip-bg: rgba(255, 255, 255, .2);
   --nav-cta-bg: #ffffff;
-  --nav-cta-text: #1565C0;
-  --nav-drawer-bg: #11519A;
+  --nav-cta-text: #15803d;
+  --nav-drawer-bg: #166534;
 
   --bg-main: #f1f5f9;
   --surface: rgba(255, 255, 255, 0.82);

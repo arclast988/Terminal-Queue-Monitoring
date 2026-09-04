@@ -266,14 +266,14 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: var(--primary, #1565c0);
+        background: var(--primary, #15803d);
         z-index: 1;
         transition: opacity 0.25s ease;
     }
     .q-card:hover {
         transform: translateY(-4px);
         box-shadow: var(--shadow-lg, 0 16px 40px -12px rgba(16, 24, 40, 0.2)) !important;
-        border-color: var(--primary, #1565c0) !important;
+        border-color: var(--primary, #15803d) !important;
     }
     /* Header hover accent matching theme */
     .q-card-header {
@@ -282,7 +282,7 @@
         position: relative;
     }
     .q-card:hover .q-card-header {
-        background-color: var(--primary-soft, #e7f0fb) !important;
+        background-color: var(--primary-soft, #dcfce7) !important;
     }
     /* Better text contrast inside cards */
     .q-card .text-muted {
@@ -299,7 +299,7 @@
         background-color: var(--surface-sunken, #f1f3f6) !important;
     }
     .q-card .text-primary {
-        color: var(--primary, #1565c0) !important;
+        color: var(--primary, #15803d) !important;
     }
     /* Rotate / scale type image slightly on card hover */
     .q-card:hover .vehicle-type-icon img {
@@ -330,7 +330,7 @@
     .countdown-timer.cd-plenty { background: #e8f5e9; color: #2e7d32; }
     .countdown-timer.cd-soon { background: #fff3e0; color: #e65100; }
     .countdown-timer.cd-imminent { background: #ffebee; color: #c62828; animation: cdPulse 1s infinite; }
-    .countdown-timer.cd-passed { background: #e3f2fd; color: #1565c0; }
+    .countdown-timer.cd-passed { background: #dcfce7; color: #15803d; }
 
     @keyframes cdPulse {
         0%, 100% { opacity: 1; }
@@ -509,7 +509,7 @@
                         $itemCol = vehicle_type_color($vType);
                         $itemIco = vehicle_type_icon($vType);
                     ?>
-                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px;">
+                    <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px; background: <?= esc($itemCol) ?>18 !important; border: 1px solid <?= esc($itemCol) ?>44 !important; color: <?= esc($itemCol) ?> !important;">
                         <?php if (!empty($imgFile)): ?>
                             <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">
                         <?php else: ?>

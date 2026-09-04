@@ -593,16 +593,16 @@ body.admin-theme .autocomplete-badge {
   border: 1px solid #fca5a5 !important;
 }
 
-/* STAFF THEME (BLUE) */
+/* STAFF THEME (GREEN) */
 body.staff-theme .autocomplete-item i,
 body.staff-theme .autocomplete-item .autocomplete-item-text i {
-  color: #1565c0 !important;
-  -webkit-text-fill-color: #1565c0 !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
 }
 body.staff-theme .autocomplete-item:hover,
 body.staff-theme .autocomplete-item.active-item {
-  background-color: #e8effd !important;
-  color: #1565c0 !important;
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
 }
 body.staff-theme .autocomplete-item:hover span,
 body.staff-theme .autocomplete-item.active-item span,
@@ -610,14 +610,14 @@ body.staff-theme .autocomplete-item:hover .autocomplete-item-text,
 body.staff-theme .autocomplete-item.active-item .autocomplete-item-text,
 body.staff-theme .autocomplete-item:hover i,
 body.staff-theme .autocomplete-item.active-item i {
-  color: #1565c0 !important;
-  -webkit-text-fill-color: #1565c0 !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
 }
 body.staff-theme .autocomplete-badge {
-  background-color: #e8effd !important;
-  color: #1565c0 !important;
-  -webkit-text-fill-color: #1565c0 !important;
-  border: 1px solid #93c5fd !important;
+  background-color: #dcfce7 !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+  border: 1px solid #86efac !important;
 }
 
 /* GUEST THEME (ORANGE) */

@@ -117,9 +117,14 @@
                     _config.onMessage(message);
                 }
 
-                // Convenience: queue_update specific handler
-                if (message.type === 'queue_update' && _config && _config.onQueueUpdate) {
+                // Convenience: queue_update and vehicle_type_update specific handler
+                if ((message.type === 'queue_update' || message.type === 'vehicle_type_update') && _config && _config.onQueueUpdate) {
                     _config.onQueueUpdate(message);
+                }
+
+                // Convenience: vehicle_type_update specific handler
+                if (message.type === 'vehicle_type_update' && _config && _config.onVehicleTypeUpdate) {
+                    _config.onVehicleTypeUpdate(message);
                 }
 
                 // Convenience: fare_update specific handler

@@ -289,9 +289,16 @@
                 closeDropdown(wrapper, dropdown);
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.dispatchEvent(new Event('change', { bubbles: true }));
+                input.blur();
             }
 
             input.addEventListener('focus', () => renderDropdown(input.value));
+            input.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (dropdown.style.display === 'none' || !wrapper.classList.contains('is-open')) {
+                    renderDropdown(input.value);
+                }
+            });
             input.addEventListener('input', () => renderDropdown(input.value));
 
             input.addEventListener('keydown', (e) => {
@@ -536,11 +543,20 @@
                 closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));
                 selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                searchInput.blur();
             }
 
             searchInput.addEventListener('focus', () => {
                 searchInput.select();
                 renderSelectDropdown('');
+            });
+
+            searchInput.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (dropdown.style.display === 'none' || !wrapper.classList.contains('is-open')) {
+                    searchInput.select();
+                    renderSelectDropdown('');
+                }
             });
 
             searchInput.addEventListener('input', () => {

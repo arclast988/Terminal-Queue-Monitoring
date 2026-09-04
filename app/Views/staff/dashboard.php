@@ -23,13 +23,13 @@
 
 <div class="row g-4 mb-4">
     <div class="col-md-6">
-        <div class="stat-card-modern blue-accent fade-in">
-            <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
+        <div class="stat-card-modern success-accent fade-in">
+            <div class="stat-card-icon" style="background: #dcfce7; color: #15803d;">
                 <i class="bi bi-people"></i>
             </div>
             <div class="stat-card-value"><?= esc($active_queue_count) ?></div>
             <div class="stat-card-label">Active in Queue</div>
-            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link" style="color: #1565c0;">
+            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link" style="color: #15803d;">
                 Manage Queue <i class="bi bi-arrow-right"></i>
             </a>
         </div>
@@ -58,13 +58,13 @@
     </div>
     <?php foreach ($routeBreakdowns as $rb): ?>
     <div class="col-sm-6 col-lg-3">
-        <div class="modern-card shadow-modern fade-in h-100" style="border-left: 3px solid #1565c0;">
+        <div class="modern-card shadow-modern fade-in h-100" style="border-left: 3px solid #15803d;">
             <div class="modern-card-body p-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="fw-bold text-dark text-truncate" style="font-size: 14px;" title="<?= esc($rb['destination']) ?>">
                         <?= esc($rb['destination']) ?>
                     </span>
-                    <span class="badge-modern badge-modern-primary" style="font-size: 11px;">
+                    <span class="badge-modern badge-modern-success" style="font-size: 11px;">
                         <?= (int)$rb['queue_count'] ?> vehicles
                     </span>
                 </div>
@@ -83,7 +83,7 @@
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-header">
         <span class="modern-card-title">
-            <i class="bi bi-lightning-charge" style="color: #1565c0;"></i>
+            <i class="bi bi-lightning-charge" style="color: #15803d;"></i>
             Quick Actions
         </span>
     </div>
@@ -184,7 +184,7 @@ if (!empty($recent_departures)) {
 <!-- Quick Route Filter Bar (Pill Chips) placed UNDER search and type filters -->
 <div class="route-filter-wrapper fade-in mb-4">
     <div class="route-filter-label">
-        <i class="bi bi-geo-alt-fill" style="color: var(--primary, #1565c0);"></i> Route Destinations:
+        <i class="bi bi-geo-alt-fill" style="color: var(--primary, #15803d);"></i> Route Destinations:
     </div>
     <div class="route-filter-bar" id="staffDepRouteFilterBar">
         <button type="button" class="route-chip active" data-dest="all" onclick="setDepartureRouteFilter('all', this)">
@@ -347,16 +347,16 @@ if (!empty($recent_departures)) {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
     .route-chip:hover {
-        border-color: var(--primary, #1565c0);
-        color: var(--primary, #1565c0);
-        background: rgba(21, 101, 192, 0.04);
+        border-color: var(--primary, #15803d);
+        color: var(--primary, #15803d);
+        background: rgba(21, 128, 61, 0.06);
         transform: translateY(-1px);
     }
     .route-chip.active {
-        background: var(--primary, #1565c0) !important;
-        border-color: var(--primary, #1565c0) !important;
+        background: var(--primary, #15803d) !important;
+        border-color: var(--primary, #15803d) !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
+        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.28);
         transform: translateY(0);
     }
     .route-chip .chip-count {
@@ -412,8 +412,8 @@ if (!empty($recent_departures)) {
     }
     .departure-search-group:focus-within .input-group-text,
     .departure-search-group:focus-within .departure-search-input {
-        border-color: var(--primary, #1565c0);
-        box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
+        border-color: var(--primary, #15803d);
+        box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.14);
     }
     
     .filter-label-text {
@@ -450,10 +450,10 @@ if (!empty($recent_departures)) {
         transform: translateY(-1px);
     }
     .dep-filter-btn.active {
-        background: var(--primary, #1565c0) !important;
-        border-color: var(--primary, #1565c0) !important;
+        background: var(--primary, #15803d) !important;
+        border-color: var(--primary, #15803d) !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(21, 101, 192, 0.25);
+        box-shadow: 0 4px 10px rgba(21, 128, 61, 0.28);
     }
     .dep-filter-btn .dep-chip-count {
         display: inline-flex;

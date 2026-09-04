@@ -914,13 +914,9 @@
             top: 0;
             bottom: 0;
             width: 5px;
-            background: var(--card-stripe-color, #cbd5e1);
+            background: var(--card-stripe-color, #1565c0);
             transition: background 0.25s ease;
         }
-
-        .queue-card[data-vehicle-type="minibus"]::before { background: var(--card-stripe-color, #16a34a); }
-        .queue-card[data-vehicle-type="van"]::before { background: var(--card-stripe-color, #dc2626); }
-        .queue-card[data-vehicle-type="jeepney"]::before { background: var(--card-stripe-color, #2563eb); }
 
         .queue-card:hover {
             transform: translateY(-3px);
@@ -955,10 +951,6 @@
         .queue-card:hover .vehicle-thumb-box {
             transform: scale(1.04);
         }
-
-        .vehicle-thumb-box.vehicle-type-minibus { background: #f0fdf4; border-color: #bbf7d0; }
-        .vehicle-thumb-box.vehicle-type-van { background: #fef2f2; border-color: #fecaca; }
-        .vehicle-thumb-box.vehicle-type-jeepney { background: #eff6ff; border-color: #bfdbfe; }
 
         .vehicle-thumb-img {
             width: 100%;
@@ -1761,7 +1753,7 @@
                                 
                                 <!-- Left: Vehicle Identity Block -->
                                 <div class="queue-card-left">
-                                    <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12; border-color: <?= esc($vColor) ?>35;">
+                                    <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12 !important; border-color: <?= esc($vColor) ?>35 !important;">
                                         <?php if (!empty($imgFile)): ?>
                                             <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img">
                                         <?php else: ?>
@@ -2204,6 +2196,20 @@
             document.body.style.overflow = '';
         }
 
+        function getContrastTextColor(hex) {
+            if (!hex) return '#ffffff';
+            hex = hex.replace('#', '');
+            if (hex.length === 3) {
+                hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+            }
+            if (hex.length !== 6) return '#ffffff';
+            var r = parseInt(hex.substring(0, 2), 16);
+            var g = parseInt(hex.substring(2, 4), 16);
+            var b = parseInt(hex.substring(4, 6), 16);
+            var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 150) ? '#0f172a' : '#ffffff';
+        }
+
         // Fetch status for real-time sync
         function fetchStatus() {
             if (_fetchPending) {
@@ -2241,8 +2247,22 @@
                         }
                     }
 
+                    if (data.db_vehicle_types) {
+                        Object.keys(data.db_vehicle_types).forEach(function (k) {
+                            var vt = data.db_vehicle_types[k];
+                            if (vt && vt.color) {
+                                var color = vt.color;
+                                vehicleTypeMeta[k] = vehicleTypeMeta[k] || {};
+                                vehicleTypeMeta[k].color = color;
+                                vehicleTypeMeta[k].contrast = getContrastTextColor(color);
+                                if (vt.name) vehicleTypeMeta[k].label = vt.name;
+                                if (vt.icon) vehicleTypeMeta[k].icon = vt.icon;
+                            }
+                        });
+                    }
+
                     // Only rewrite Queue DOM if data actually changed
-                    var queueFP = makeFingerprint(data.active_queue);
+                    var queueFP = makeFingerprint([data.active_queue, data.db_vehicle_types]);
                     if (queueFP !== _lastQueueFingerprint) {
                         _lastQueueFingerprint = queueFP;
                         var queueList = document.getElementById('queueList');
@@ -2277,8 +2297,8 @@
                                 var isLight = (posContrast === '#0f172a');
                                 var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
                                 var badgeStyle = isLight 
-                                    ? 'background-color: #f1f5f9 !important; color: #0f172a !important; border: 1.5px solid #cbd5e1 !important; font-weight: 800;'
-                                    : 'background-color: ' + posColor + '18 !important; color: ' + posColor + ' !important; border: 1.5px solid ' + posColor + '44 !important; font-weight: 800;';
+                                    ? 'background: #f1f5f9 !important; background-color: #f1f5f9 !important; color: #0f172a !important; border: 1.5px solid #cbd5e1 !important; font-weight: 800;'
+                                    : 'background: ' + posColor + '18 !important; background-color: ' + posColor + '18 !important; color: ' + posColor + ' !important; border: 1.5px solid ' + posColor + '44 !important; font-weight: 800;';
 
                                 var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
                                 var opName = item.operator_name || item.driver_name || 'N/A';
@@ -2286,7 +2306,7 @@
                                 
                                 queueHtml += '<div class="queue-card queue-card-' + vType + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '">'
                                     + '<div class="queue-card-left">'
-                                    + '<div class="vehicle-thumb-box vehicle-type-' + vType + '" style="background:' + posColor + '12; border-color:' + posColor + '35;">'
+                                    + '<div class="vehicle-thumb-box vehicle-type-' + vType + '" style="background:' + posColor + '12 !important; border-color:' + posColor + '35 !important;">'
                                     + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img">'
                                     + '<span class="queue-badge-pill" style="background:' + posColor + '; color:' + posContrast + '; ' + pillBorder + '">#' + item.position + '</span>'
                                     + '</div>'

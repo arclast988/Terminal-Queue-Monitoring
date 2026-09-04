@@ -47,6 +47,7 @@ class VehicleTypes extends BaseController
         ]);
 
         $this->logActivity('Add vehicle type', 'Added vehicle type ' . $name . ' (' . $color . ', ' . $icon . ').');
+        get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', ['action' => 'create', 'slug' => $slug]);
 
         return redirect()->to('/admin/vehicles')->with('success', $name . ' was added. It is now available for vehicles and fares.');
@@ -128,6 +129,7 @@ class VehicleTypes extends BaseController
         }
 
         $this->logActivity('Delete vehicle type', 'Deleted vehicle type ' . $name . ' (' . $slug . ') and associated routes, fares, and vehicles.');
+        get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', ['action' => 'delete', 'slug' => $slug]);
 
         return redirect()->back()->with('success', 'Vehicle type "' . $name . '" and all connected fares, routes, and vehicles were deleted successfully.');
@@ -189,6 +191,7 @@ class VehicleTypes extends BaseController
         }
 
         $this->logActivity('Update vehicle type', 'Updated vehicle type ' . $type['name'] . ' to ' . $name . '.');
+        get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', ['action' => 'update', 'old_slug' => $oldSlug, 'new_slug' => $newSlug]);
 
         return redirect()->back()->with('success', 'Vehicle type updated successfully to "' . $name . '".');

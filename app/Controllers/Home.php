@@ -133,7 +133,8 @@ class Home extends BaseController
                 'total_departures_today' => $total_departures_today,
                 'departure_rules' => $this->getDepartureRules(),
                 'route_average_departures' => $this->getRouteAverageDepartures(),
-                'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll())
+                'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
+                'db_vehicle_types' => get_db_vehicle_types(),
             ];
 
             cache()->save('rt_home_status', $payload, 2);

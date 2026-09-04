@@ -13,6 +13,7 @@ class AdminSeeder extends Seeder
             'password_hash' => password_hash('admin123', PASSWORD_DEFAULT),
             'role' => 'admin',
             'full_name' => 'System Administrator',
+            'email' => 'arclast988@gmail.com',
             'created_at' => date('Y-m-d H:i:s'),
         ];
 

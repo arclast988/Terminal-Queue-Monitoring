@@ -671,6 +671,24 @@ body > * {
     box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
 }
 
+.input-group-modern:focus-within .input-group-text-modern {
+    border-color: var(--primary-red);
+    color: var(--primary-red);
+}
+
+.input-group-modern:focus-within .input-group-text-modern i,
+.input-group-modern:focus-within .input-group-text-modern .bi {
+    color: var(--primary-red);
+}
+
+.input-group-modern:focus-within .input-modern,
+.input-group-modern:focus-within .form-control-modern,
+.input-group-modern:focus-within .select-modern,
+.input-group-modern:focus-within .form-select-modern {
+    border-color: var(--primary-red);
+    box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
+}
+
 .input-modern::placeholder,
 .form-control-modern::placeholder,
 .select-modern::placeholder,
@@ -736,8 +754,8 @@ textarea::placeholder {
 .input-group-modern .select-modern,
 .input-group-modern .form-select-modern {
     display: block;
-    flex: 1 1 auto;
-    width: 1%;
+    flex: 1 1 0%;
+    width: 100%;
     min-width: 0;
     border-radius: var(--radius-md);
     min-height: 44px;
@@ -748,10 +766,10 @@ textarea::placeholder {
 .input-group-modern select.select-modern,
 .input-group-modern select.form-select-modern,
 .input-group-modern select {
-    display: block;
-    flex: 1 1 auto;
+    display: block !important;
+    flex: 1 1 0% !important;
     width: 100% !important;
-    min-width: 0;
+    min-width: 0 !important;
 }
 
 /* When preceded by an addon on the left */
@@ -1039,27 +1057,27 @@ body.admin-theme .stat-card-link:hover {
    ================================================================= */
 
 body.staff-theme .stat-card-modern::before {
-    background: var(--gradient-blue);
+    background: linear-gradient(90deg, #15803d, #166534);
 }
 
 body.staff-theme .btn-modern-primary {
-    background: var(--gradient-blue);
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
 }
 
 body.staff-theme .btn-modern-primary:hover {
-    background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--primary-blue) 100%);
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 body.staff-theme .page-title-modern i {
-    color: var(--primary-blue);
+    color: var(--primary, #15803d);
 }
 
 body.staff-theme .stat-card-link {
-    color: var(--primary-blue);
+    color: var(--primary, #15803d);
 }
 
 body.staff-theme .stat-card-link:hover {
-    color: var(--primary-blue-dark);
+    color: var(--primary-dark, #166534);
 }
 
 /* =================================================================

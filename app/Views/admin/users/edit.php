@@ -96,7 +96,7 @@
                                     <input type="hidden" name="role" value="<?= esc($user['role']) ?>">
                                 <?php else: ?>
                                     <?php $selectedRole = old('role', in_array($user['role'], ['staff', 'operator'], true) ? 'staff' : $user['role']); ?>
-                                    <select class="select-modern" id="role" name="role" required style="flex: 1 1 auto; width: 100%; min-width: 0;">
+                                    <select class="select-modern" id="role" name="role" required style="flex: 1 1 0%; width: 100%; min-width: 0;">
                                         <option value="staff" <?= $selectedRole === 'staff' ? 'selected' : '' ?>>Dispatcher</option>
                                         <?php if (session()->get('role') === 'super_admin'): ?>
                                             <option value="admin" <?= $selectedRole === 'admin' ? 'selected' : '' ?>>Admin</option>

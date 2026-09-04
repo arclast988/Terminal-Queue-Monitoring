@@ -668,10 +668,10 @@
                         <?= csrf_field() ?>
 
                         <div class="field">
-                            <label for="username">Username</label>
+                            <label for="username">Username or Email</label>
                             <div class="control">
                                 <input type="text" id="username" name="username"
-                                       placeholder="Enter your username"
+                                       placeholder="Enter your username or email"
                                        autocomplete="username"
                                        required autofocus>
                             </div>

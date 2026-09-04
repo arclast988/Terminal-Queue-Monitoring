@@ -22,10 +22,12 @@ class Auth extends BaseController
     {
         $session = session();
         $model = new UserModel();
-        $username = $this->request->getVar('username');
-        $password = $this->request->getVar('password');
+        $username = trim((string) $this->request->getVar('username'));
+        $password = (string) $this->request->getVar('password');
 
-        $user = $model->where('username', $username)->first();
+        $user = $model->where('username', $username)
+            ->orWhere('email', $username)
+            ->first();
 
         if ($user) {
             if ($this->isUserLocked($user)) {

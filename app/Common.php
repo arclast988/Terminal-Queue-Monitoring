@@ -24,19 +24,15 @@ if (! function_exists('vehicle_type_key')) {
 }
 
 if (! function_exists('get_db_vehicle_types')) {
-    function get_db_vehicle_types(): array
+    function get_db_vehicle_types(bool $forceRefresh = false): array
     {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
-        }
-
         $cache = function_exists('cache') ? cache() : null;
-        if ($cache) {
+        if ($forceRefresh && $cache) {
+            $cache->delete('db_vehicle_types');
+        } elseif ($cache) {
             $fromCache = $cache->get('db_vehicle_types');
             if (is_array($fromCache)) {
-                $cached = $fromCache;
-                return $cached;
+                return $fromCache;
             }
         }
 
@@ -119,7 +115,7 @@ if (! function_exists('vehicle_type_badge')) {
         $bgColor = $isLight ? '#f1f5f9' : ($color . '18');
         $borderColor = $isLight ? '#cbd5e1' : ($color . '44');
 
-        $style = 'background-color: ' . $bgColor . ' !important; color: ' . $textColor . ' !important; border: 1.5px solid ' . $borderColor . ' !important; font-weight: 800;';
+        $style = 'background: ' . $bgColor . ' !important; background-color: ' . $bgColor . ' !important; color: ' . $textColor . ' !important; border: 1.5px solid ' . $borderColor . ' !important; font-weight: 800;';
 
         return '<span class="' . esc($classes, 'attr') . '" style="' . esc($style, 'attr') . '">' . $iconHtml . esc(vehicle_type_label($typeKey)) . '</span>';
     }
