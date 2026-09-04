@@ -77,14 +77,30 @@
 
     function showInlineNotice(form) {
         var notice = document.createElement('div');
-        notice.className = 'nc-inline-notice alert alert-warning d-flex align-items-center gap-2 mt-1 mb-3';
+        notice.className = 'nc-inline-notice alert alert-warning alert-dismissible d-flex align-items-center gap-2 mt-1 mb-3';
         notice.setAttribute('role', 'alert');
         notice.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i>'
-            + '<div><strong>No changes detected</strong> — nothing was updated.</div>';
+            + '<div><strong>No changes detected</strong> — nothing was updated.</div>'
+            + '<button type="button" class="btn-close ms-auto" aria-label="Close"></button>';
+        var closeBtn = notice.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function () { removeInlineNotice(notice); });
+        }
         form.prepend(notice);
         try {
             notice.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         } catch (e) { /* ignore */ }
+        // Auto-fade after a few seconds so it never lingers.
+        notice._ncTimer = setTimeout(function () { removeInlineNotice(notice); }, 5000);
+    }
+
+    function removeInlineNotice(notice) {
+        if (!notice || notice._ncGone) return;
+        notice._ncGone = true;
+        if (notice._ncTimer) clearTimeout(notice._ncTimer);
+        notice.style.transition = 'opacity .35s ease';
+        notice.style.opacity = '0';
+        setTimeout(function () { if (notice.parentNode) notice.parentNode.removeChild(notice); }, 380);
     }
 
     function attach(form) {
@@ -102,13 +118,13 @@
         ['input', 'change'].forEach(function (evt) {
             form.addEventListener(evt, function () {
                 var old = form.querySelector('.nc-inline-notice');
-                if (old) old.remove();
+                if (old) removeInlineNotice(old);
             });
         });
 
         form.addEventListener('submit', function (e) {
             var old = form.querySelector('.nc-inline-notice');
-            if (old) old.remove();
+            if (old) removeInlineNotice(old);
             var before = form.getAttribute('data-nc-snapshot');
             var now = null;
             try {
