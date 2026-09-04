@@ -58,6 +58,7 @@ class QueueStatus extends Controller
             ->setJSON([
                 'success' => true,
                 'queue'   => $items,
+                'vehicle_type_colors' => get_db_vehicle_types(),
                 'ts'      => time()
             ]);
     }

@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
+    <?= vehicle_type_colors_css() ?>
     <style>
         :root {
             --primary: #1E40AF;
@@ -2257,6 +2258,11 @@
                                 vehicleTypeMeta[k].contrast = getContrastTextColor(color);
                                 if (vt.name) vehicleTypeMeta[k].label = vt.name;
                                 if (vt.icon) vehicleTypeMeta[k].icon = vt.icon;
+                                // Keep CSS-var icon boxes/chips in sync without reload.
+                                try {
+                                    document.documentElement.style.setProperty('--vehicle-' + k, color);
+                                    document.documentElement.style.setProperty('--vehicle-' + k + '-soft', color + '18');
+                                } catch (e) { /* ignore */ }
                             }
                         });
                     }

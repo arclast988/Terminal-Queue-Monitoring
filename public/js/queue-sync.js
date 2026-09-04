@@ -148,6 +148,10 @@
         .then(function(json) {
             if (!json.success || !json.queue) return;
 
+            if (json.vehicle_type_colors) {
+                applyVehicleTypeColors(json.vehicle_type_colors);
+            }
+
             var needsRefresh = false;
             var currentIds = {};
 
@@ -253,10 +257,37 @@
         }
     }
 
+    /* ── Live vehicle-type color theming ── */
+
+    // Apply a {slug: {color}} map to :root CSS vars so icon boxes, chips
+    // and filter buttons recolor instantly without a page reload.
+    function applyVehicleTypeColors(colors) {
+        if (!colors || typeof colors !== 'object') return;
+        var root = document.documentElement;
+        Object.keys(colors).forEach(function(slug) {
+            var entry = colors[slug];
+            var color = (entry && typeof entry === 'object') ? entry.color : entry;
+            if (typeof color !== 'string' || !/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(color)) return;
+            var key = String(slug).toLowerCase().replace(/[^a-z0-9_-]+/g, '_').replace(/^[_-]+|[_-]+$/g, '');
+            if (!key) return;
+            try {
+                root.style.setProperty('--vehicle-' + key, color);
+                root.style.setProperty('--vehicle-' + key + '-soft', color + '18');
+            } catch (e) { /* ignore */ }
+        });
+    }
+
     /* ── WebSocket message handler ── */
 
     function handleWSMessage(message) {
         var data = message.data || message;
+
+        // Live-recolor on vehicle-type changes (sent in broadcast payload).
+        if (data.colors) {
+            applyVehicleTypeColors(data.colors);
+        } else if (message.colors) {
+            applyVehicleTypeColors(message.colors);
+        }
 
         if (data.action === 'passenger_change') {
             var id = data.id;
@@ -267,12 +298,14 @@
                 updatePassengerUI(id, newCount, capacity);
                 // If element not found, do full refresh
                 if (!getCountSpan(id)) {
-                    doRefresh();
+                    ajaxRefresh();
                 }
             }
         } else {
-            // Status change, queue add/remove — do full refresh
-            doRefresh();
+            // Structural change (add/remove/status/vehicle-type/fare/
+            // announcement) — fetch full HTML so new rows AND new colors
+            // appear immediately. pollAPI() alone only patches counts.
+            ajaxRefresh();
         }
 
         // Reset the poll timer since we just got fresh data
@@ -324,6 +357,9 @@
 
                     QueueWS.init({
                         onQueueUpdate: wsHandler,
+                        onVehicleTypeUpdate: wsHandler,
+                        onFareUpdate: wsHandler,
+                        onAnnouncementUpdate: wsHandler,
                         onConnected: function() {
                             // Immediately fetch fresh data on WS connect
                             doRefresh();
@@ -347,6 +383,9 @@
         refresh: function() {
             doRefresh();
         },
+
+        /** Apply vehicle-type colors live (slug -> hex or {color}) */
+        applyVehicleTypeColors: applyVehicleTypeColors,
 
         /** Stop all polling and listeners */
         destroy: function() {

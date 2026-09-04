@@ -419,6 +419,7 @@
                         value: opt.value,
                         text: opt.text.trim(),
                         selected: opt.selected,
+                        color: opt.getAttribute('data-color') || '',
                         isPlaceholder: isPlaceholderOption(opt),
                         isDeparted: opt.getAttribute('data-departed') === 'true' || opt.text.toUpperCase().includes('DEPARTED')
                     }));
@@ -428,8 +429,15 @@
                 const currentSelected = Array.from(selectEl.options).find(o => o.value === selectEl.value);
                 if (currentSelected && !isPlaceholderOption(currentSelected)) {
                     searchInput.value = currentSelected.text.trim();
+                    // Tint the input with the option color (e.g. vehicle type)
+                    // so the field matches badges/cards system-wide.
+                    const optColor = currentSelected.getAttribute('data-color');
+                    searchInput.style.color = optColor || '';
+                    searchInput.style.borderColor = optColor || '';
                 } else {
                     searchInput.value = '';
+                    searchInput.style.color = '';
+                    searchInput.style.borderColor = '';
                 }
             }
 
@@ -519,7 +527,9 @@
                     const isAllOption = /^all\b/i.test(opt.text);
                     const itemBadge = isAllOption ? 'All' : categoryBadge;
                     const itemIcon = isAllOption ? 'bi bi-grid-fill' : iconClass;
-                    const itemColor = isAllOption ? '#64748b' : iconColor;
+                    // Per-option color (e.g. vehicle-type options carry their
+                    // type color) keeps dropdown icons consistent with badges.
+                    const itemColor = isAllOption ? '#64748b' : (opt.color || iconColor);
 
                     return `
                         <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"
@@ -553,8 +563,13 @@
                 const optObj = Array.from(selectEl.options).find(o => o.value === val);
                 if (optObj && isPlaceholderOption(optObj)) {
                     searchInput.value = '';
+                    searchInput.style.color = '';
+                    searchInput.style.borderColor = '';
                 } else {
                     searchInput.value = text;
+                    const optColor = optObj ? optObj.getAttribute('data-color') : '';
+                    searchInput.style.color = optColor || '';
+                    searchInput.style.borderColor = optColor || '';
                 }
                 closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));

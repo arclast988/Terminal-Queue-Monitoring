@@ -35,13 +35,13 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="stat-card-modern fade-in">
-            <div class="stat-card-icon" style="background: #F1F5F9; color: #475569;">
+        <div class="stat-card-modern success-accent fade-in">
+            <div class="stat-card-icon" style="background: #dcfce7; color: #15803d;">
                 <i class="bi bi-calendar-check"></i>
             </div>
             <div class="stat-card-value"><?= strtoupper(date('D, M j')) ?></div>
             <div class="stat-card-label">Today's Date</div>
-            <div class="stat-card-link" style="color: #64748b;">
+            <div class="stat-card-link" style="color: #15803d;">
                 Active Duty
             </div>
         </div>

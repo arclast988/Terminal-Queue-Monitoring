@@ -142,14 +142,14 @@
         box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25);
     }
     body.staff-theme .route-chip:hover {
-        border-color: var(--primary-blue, #1565c0);
-        color: var(--primary-blue, #1565c0);
-        background: rgba(21, 101, 192, 0.06);
+        border-color: var(--primary, #15803d);
+        color: var(--primary, #15803d);
+        background: var(--primary-soft, rgba(21, 128, 61, 0.06));
     }
     body.staff-theme .route-chip.active {
-        background: var(--primary-blue, #1565c0) !important;
-        border-color: var(--primary-blue, #1565c0) !important;
-        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
+        background: var(--primary, #15803d) !important;
+        border-color: var(--primary, #15803d) !important;
+        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25);
     }
 
     @media (max-width: 480px) {
@@ -195,8 +195,8 @@
 <!-- Modern Stat Cards block -->
 <div class="row mb-4">
     <div class="col-12 col-md-6 mb-4">
-        <div class="stat-card-modern blue-accent fade-in">
-            <div class="stat-card-icon" style="background: #DBEAFE; color: #1565c0;">
+        <div class="stat-card-modern fade-in">
+            <div class="stat-card-icon" style="background: var(--primary-soft, rgba(21, 101, 192, 0.08)); color: var(--primary, #1565c0);">
                 <i class="bi bi-bus-front"></i>
             </div>
             <div class="stat-card-value" id="statTodayDepartures"><?= count($schedules) ?></div>
@@ -205,7 +205,7 @@
     </div>
     <div class="col-12 col-md-6 mb-4">
         <div class="stat-card-modern fade-in">
-            <div class="stat-card-icon" style="background: #F1F5F9; color: #475569;">
+            <div class="stat-card-icon" style="background: var(--primary-soft, rgba(21, 101, 192, 0.08)); color: var(--primary, #1565c0);">
                 <i class="bi bi-calendar-check"></i>
             </div>
             <div class="stat-card-value"><?= strtoupper(date('D, M j, Y')) ?></div>

@@ -283,6 +283,43 @@ if (! function_exists('vehicle_type_bi_icon')) {
     }
 }
 
+if (! function_exists('vehicle_type_colors_css')) {
+    /**
+     * Emit a <style> block overriding --vehicle-{slug} CSS variables with
+     * the admin-customized DB colors. This keeps every CSS-var-based
+     * icon box, chip, and filter button in sync with vehicle_type_badge()
+     * (which uses inline DB colors) without editing each view.
+     */
+    function vehicle_type_colors_css(): string
+    {
+        $types = get_db_vehicle_types();
+        if (empty($types)) {
+            return '';
+        }
+
+        $rules = [];
+        foreach ($types as $key => $t) {
+            $slug = preg_replace('/[^a-z0-9_-]+/', '_', strtolower(trim((string) ($t['slug'] ?? $key))));
+            $slug = trim($slug, '_-');
+            if ($slug === '' || empty($t['color'])) {
+                continue;
+            }
+            $color = $t['color'];
+            // Basic hex sanity check; fall back to helper default otherwise.
+            if (! preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', (string) $color)) {
+                $color = vehicle_type_color($slug);
+            }
+            $rules[] = "--vehicle-{$slug}: {$color}; --vehicle-{$slug}-soft: {$color}18;";
+        }
+
+        if (empty($rules)) {
+            return '';
+        }
+
+        return '<style id="vehicle-type-colors">:root{' . implode('', $rules) . '}</style>';
+    }
+}
+
 if (! function_exists('contrast_text_color')) {
     function contrast_text_color(?string $hexColor): string
     {

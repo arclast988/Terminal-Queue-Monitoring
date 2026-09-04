@@ -79,7 +79,8 @@
                     <select class="select-modern" id="type" name="type" required>
                         <option value="">-- Select Type --</option>
                         <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                            <option value="<?= esc($vehicleType['slug']) ?>" <?= (old('type') ?? $vehicle['type']) === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                            <?php $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); ?>
+                            <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" <?= (old('type') ?? $vehicle['type']) === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                     <div class="form-text-modern">Accessible to Admin and Super Admin</div>
