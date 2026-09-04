@@ -149,7 +149,7 @@
     </div>
     <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="stat-card-modern fade-in">
-            <div class="stat-card-icon" style="background: #F1F5F9; color: #475569;">
+            <div class="stat-card-icon" style="background: #fdecea; color: #c62828;">
                 <i class="bi bi-calendar-range"></i>
             </div>
             <div class="stat-card-value"><?= number_format($stats['year'] ?? 0) ?></div>

@@ -38,7 +38,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--primary);
+        color: #B71C1C;
         font-weight: 800;
         flex-shrink: 0;
         cursor: pointer;
@@ -693,7 +693,9 @@
         }
         window.addEventListener('resize', syncPadding, { passive: true });
     })();
+    var _annScrollY = 0;
     function openAnnouncementModal() {
+        _annScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         document.getElementById('annModalOverlay').classList.add('open');
         document.body.style.overflow = 'hidden';
     }
@@ -701,6 +703,8 @@
         if (e && e.target !== e.currentTarget) return;
         document.getElementById('annModalOverlay').classList.remove('open');
         document.body.style.overflow = '';
+        // Stay where the user was instead of jumping to the top.
+        window.scrollTo(0, _annScrollY);
     }
 </script>
 

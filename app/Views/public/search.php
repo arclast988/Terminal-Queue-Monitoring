@@ -474,7 +474,6 @@
 
         .results-table tbody tr:hover {
             background: rgba(30, 64, 175, 0.03);
-            transform: translateX(4px);
         }
 
         @keyframes fadeInUp {

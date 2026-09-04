@@ -497,7 +497,6 @@
 
         .schedule-table tbody tr:hover {
             background: rgba(30, 64, 175, 0.03);
-            transform: translateX(4px);
         }
 
         @keyframes fadeInUp {
@@ -1299,12 +1298,14 @@
                     return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
                 }
                 var opDisplay = s.operator_name ? escHtml(s.operator_name) : (s.driver_name ? escHtml(s.driver_name) : '—');
-                html += '<tr data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml((s.vehicle_type || '').toLowerCase()) + '">' +
+                var typeSlug = String(s.vehicle_type || '').toLowerCase();
+                var typeColor = typeMeta.color || '#1565c0';
+                html += '<tr data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml(typeSlug) + '">' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
                     '<td data-label="Operator"><div class="operator-cell"><i class="fas fa-building text-muted"></i>' + opDisplay + '</div></td>' +
                     '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
-                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(s.vehicle_type) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(s.vehicle_type) + '">' + escHtml(typeLabel) + '</span></div></td>' +
+                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(typeSlug) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(typeSlug) + '" data-vtype="' + escHtml(typeSlug) + '" style="background: var(--vehicle-' + escHtml(typeSlug) + '-soft, ' + typeColor + '18) !important; color: var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important; border: 1.5px solid var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important;">' + escHtml(typeLabel) + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted);font-size:13px">' + s.origin + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + s.destination + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +

@@ -690,12 +690,12 @@
         width: 44px;
         height: 44px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
         color: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
         flex-shrink: 0;
     }
 
@@ -714,8 +714,8 @@
         transition: all 0.2s ease;
     }
     .search-input-modern:focus {
-        border-color: #2563eb !important;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+        border-color: #15803d !important;
+        box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15) !important;
     }
 
     /* Vehicle item card styling (Custom Flex - No Bootstrap d-flex to allow display toggling) */
@@ -741,16 +741,16 @@
         border-color: var(--border-strong, #cbd5e1) !important;
     }
     .vehicle-select-item.is-selected {
-        background: #f0f7ff !important;
-        border-color: #3b82f6 !important;
-        border-left: 5px solid #2563eb !important;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12) !important;
+        background: #f0fdf4 !important;
+        border-color: #16a34a !important;
+        border-left: 5px solid #15803d !important;
+        box-shadow: 0 2px 8px rgba(21, 128, 61, 0.12) !important;
     }
     .dark .vehicle-select-item.is-selected,
     [data-bs-theme="dark"] .vehicle-select-item.is-selected {
-        background: rgba(30, 58, 138, 0.3) !important;
-        border-color: #3b82f6 !important;
-        border-left-color: #60a5fa !important;
+        background: rgba(20, 83, 45, 0.3) !important;
+        border-color: #22c55e !important;
+        border-left-color: #4ade80 !important;
     }
 
     .plate-number-box {
@@ -762,9 +762,9 @@
     }
 
     .badge-departed-status {
-        background: #f1f5f9;
-        color: #475569;
-        border: 1px solid #cbd5e1;
+        background: #e2e8f0;
+        color: #334155;
+        border: 1px solid #94a3b8;
         font-size: 0.75rem;
         font-weight: 700;
         padding: 0.35rem 0.75rem;
@@ -801,19 +801,19 @@
     }
 
     .btn-submit-queue {
-        background: #2563eb;
-        border: 1px solid #2563eb;
+        background: #15803d;
+        border: 1px solid #15803d;
         color: #ffffff;
         font-weight: 700;
         border-radius: 10px;
         padding: 0.6rem 1.3rem;
-        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
         transition: all 0.15s ease;
     }
     .btn-submit-queue:hover:not(:disabled) {
-        background: #1d4ed8;
-        border-color: #1d4ed8;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        background: #166534;
+        border-color: #166534;
+        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.35);
         color: #ffffff;
     }
     .btn-submit-queue:disabled {
@@ -881,7 +881,7 @@
                         <div>
                             <div class="d-flex align-items-center gap-2">
                                 <h5 class="modal-title fw-bold mb-0">Add Vehicles to Queue</h5>
-                                <span class="badge rounded-pill bg-primary-subtle text-primary fw-bold" style="font-size: 0.7rem;">BATCH DISPATCH</span>
+                                <span class="badge rounded-pill fw-bold" style="font-size: 0.7rem; background: #dcfce7; color: #15803d;">BATCH DISPATCH</span>
                             </div>
                             <span class="text-muted small">Select one or more available vehicles to dispatch into the active queue</span>
                         </div>
@@ -911,7 +911,7 @@
                                     </div>
                                 </div>
                                 <div class="col-12 col-sm-auto d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
+                                    <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
                                         <i class="bi bi-check-all fs-6"></i> Select All
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3 d-flex align-items-center gap-1" id="deselectAllVehiclesBtn" style="border-radius: 8px;">
