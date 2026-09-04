@@ -76,17 +76,23 @@ html body .stat-card-modern:hover {
   transform: translateY(-3px);
 }
 
-html body .stat-card-modern::before,
-html body.admin-theme .stat-card-modern::before,
-html body.staff-theme .stat-card-modern::before {
+html body .stat-card-modern::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  background: linear-gradient(90deg, #fca5a5, #f87171);
   opacity: 1;
+}
+
+html body.admin-theme .stat-card-modern::before {
+  background: linear-gradient(90deg, #fca5a5, #f87171);
+}
+
+html body.staff-theme .stat-card-modern::before {
+  background: linear-gradient(90deg, #86efac, #4ade80);
 }
 
 /* Accent variants -> status tokens (consistent across themes) */
@@ -94,6 +100,10 @@ html body .stat-card-modern.red-accent::before     { background: linear-gradient
 html body .stat-card-modern.blue-accent::before    { background: var(--info); }
 html body .stat-card-modern.success-accent::before { background: var(--success); }
 html body .stat-card-modern.gold-accent::before    { background: var(--warning); }
+
+/* Dispatcher theme: keep success accents in the light-green family so paired
+   cards (queue + date) share one light line color. */
+html body.staff-theme .stat-card-modern.success-accent::before { background: linear-gradient(90deg, #86efac, #4ade80); }
 
 html body .stat-card-icon {
   width: 52px;
