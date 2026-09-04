@@ -112,6 +112,11 @@
         var modal = form.closest('.modal');
         if (modal) {
             modal.addEventListener('shown.bs.modal', function () { takeSnapshot(form); });
+            // Never show a stale notice: clear it whenever the modal closes.
+            modal.addEventListener('hidden.bs.modal', function () {
+                var old = form.querySelector('.nc-inline-notice');
+                if (old) removeInlineNotice(old);
+            });
         }
 
         // Clear any inline notice as soon as the user starts editing again.
