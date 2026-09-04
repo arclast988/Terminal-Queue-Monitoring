@@ -1584,6 +1584,8 @@ a[title*="delete" i]:hover .bi,
   html body table.table {
     display: table !important;
     width: 100% !important;
+    min-width: 1040px !important;
+    table-layout: auto !important;
   }
 
   html body table.table-modern thead,
@@ -1630,6 +1632,14 @@ a[title*="delete" i]:hover .bi,
     width: auto !important;
     max-width: none !important;
     text-align: left;
+  }
+
+  /* Keep filter placeholders out of the layout on desktop. */
+  html body table.table-modern tbody tr[style*="display:none"],
+  html body table.table-modern tbody tr[style*="display: none"],
+  html body table.table tbody tr[style*="display:none"],
+  html body table.table tbody tr[style*="display: none"] {
+    display: none !important;
   }
 
   html body table.table-modern tbody tr td::before,

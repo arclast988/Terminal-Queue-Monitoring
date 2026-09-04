@@ -137,6 +137,9 @@
                 var newEl = newDoc.querySelector(sel);
                 var curEl = document.querySelector(sel);
                 if (newEl && curEl) {
+                    // Table bodies must be sanitized in a table context below;
+                    // sanitizing their fragment directly strips tr/td elements.
+                    if (curEl.tagName === 'TABLE' || curEl.tagName === 'TBODY') return;
                     curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
                 }
             } catch (e) { /* ignore bad selector */ }

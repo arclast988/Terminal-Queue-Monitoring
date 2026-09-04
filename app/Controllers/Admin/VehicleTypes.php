@@ -72,15 +72,26 @@ class VehicleTypes extends BaseController
         $routes     = $routeModel->where('vehicle_type', $slug)->findAll();
         $routeIds   = array_column($routes, 'id');
 
-        // 2. Find all vehicles with this vehicle type or assigned to these routes
+        // 2. Find all vehicles with this vehicle type or assigned to these routes.
+        // Vehicles are registered assets and must not be deleted with a fare card.
         $vehicleModel   = new \App\Models\VehicleModel();
         $vehicleBuilder = $vehicleModel->groupStart()->where('type', $slug);
         if (!empty($routeIds)) {
-            $vehicleBuilder->orWhereIn('default_route_id', $routeIds);
+            $vehicleRouteColumn = $db->fieldExists('default_route_id', 'vehicles')
+                ? 'default_route_id'
+                : 'route_id';
+            $vehicleBuilder->orWhereIn($vehicleRouteColumn, $routeIds);
         }
         $vehicleBuilder->groupEnd();
         $vehicles   = $vehicleBuilder->findAll();
         $vehicleIds = array_column($vehicles, 'id');
+
+        if (! empty($vehicleIds)) {
+            return redirect()->back()->with(
+                'error',
+                'Cannot delete vehicle type "' . $name . '" while registered vehicles use it. Reassign or remove those vehicles first.'
+            );
+        }
 
         // Safety: refuse to hard-delete while active trips exist. This
         // prevents accidental loss of waiting/boarding queue state.
@@ -148,12 +159,8 @@ class VehicleTypes extends BaseController
             $routeModel->whereIn('id', $routeIds)->delete();
         }
 
-        // 8. Delete vehicles
-        if (!empty($vehicleIds)) {
-            $vehicleModel->whereIn('id', $vehicleIds)->delete();
-        }
-
-        // 9. Delete the vehicle type
+        // 8. Delete the vehicle type. Registered vehicles were checked above
+        // and are intentionally never deleted by this operation.
         $types->delete($id);
 
         $db->transComplete();
@@ -162,11 +169,11 @@ class VehicleTypes extends BaseController
             return redirect()->back()->with('error', 'Failed to delete vehicle type "' . $name . '".');
         }
 
-        $this->logActivity('Delete vehicle type', 'Deleted vehicle type ' . $name . ' (' . $slug . ') and associated routes, fares, and vehicles.');
+        $this->logActivity('Delete vehicle type', 'Deleted vehicle type ' . $name . ' (' . $slug . ') and associated routes and fares.');
         get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', ['action' => 'delete', 'slug' => $slug, 'colors' => get_db_vehicle_types()]);
 
-        return redirect()->back()->with('success', 'Vehicle type "' . $name . '" and all connected fares, routes, and vehicles were deleted successfully.');
+        return redirect()->back()->with('success', 'Vehicle type "' . $name . '" and its connected fares and routes were deleted successfully.');
     }
 
     public function update($id)

@@ -172,6 +172,28 @@ class Routes extends BaseController
         return $row ? (float) $row['amount'] : 0.00;
     }
 
+    /**
+     * Removing a route must only remove the assignment from registered vehicles.
+     * Do this explicitly so the behavior is safe even when an older database has
+     * an incorrect cascading foreign key.
+     */
+    private function unassignVehiclesFromRoutes(array $routeIds): void
+    {
+        $routeIds = array_values(array_filter(array_map('intval', $routeIds)));
+        if (empty($routeIds)) {
+            return;
+        }
+
+        $db = \Config\Database::connect();
+        $routeColumn = $db->fieldExists('default_route_id', 'vehicles')
+            ? 'default_route_id'
+            : 'route_id';
+
+        $db->table('vehicles')
+            ->whereIn($routeColumn, $routeIds)
+            ->update([$routeColumn => null]);
+    }
+
     private function recalculateFaresForDiscount(array $discount): void
     {
         if ($discount['type'] === 'regular') {
@@ -555,6 +577,7 @@ class Routes extends BaseController
                 } else {
                     if ($existing) {
                         try {
+                            $this->unassignVehiclesFromRoutes([(int) $existing['id']]);
                             $this->routeModel->delete($existing['id']);
                         } catch (\Throwable $e) {
                             // If delete fails due to dependencies (like queue entries), we just keep it
@@ -594,6 +617,7 @@ class Routes extends BaseController
 
         $deletedCount = 0;
         $failedCount = 0;
+        $this->unassignVehiclesFromRoutes(array_column($groupRoutes, 'id'));
         foreach ($groupRoutes as $r) {
             try {
                 if ($this->routeModel->delete($r['id'])) {
@@ -623,6 +647,7 @@ class Routes extends BaseController
         $route = $this->routeModel
             ->withOrigin()
             ->find($id);
+        $this->unassignVehiclesFromRoutes([(int) $id]);
         if ($this->routeModel->delete($id)) {
             if ($route) {
                 $this->logActivity('Delete route', $route['origin'] . ' → ' . $route['destination'] . '.');

@@ -230,7 +230,7 @@ $fareTypes = array_map(static fn(array $type) => [
             </span>
             <?php if ($isAdmin && !empty($ft['id'])): ?>
             <form action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline"
-                  onsubmit="return confirm('WARNING: Delete vehicle type &quot;<?= esc($ft['name']) ?>&quot;?\n\nThis will delete this fare card section, all routes listed inside it, and all connected vehicles!');">
+                  onsubmit="return confirm('Delete vehicle type &quot;<?= esc($ft['name']) ?>&quot; and its fare routes? Registered vehicles will be preserved, but vehicles using this type must be reassigned or removed first.');">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Vehicle Type & Card">
                     <i class="bi bi-trash"></i>
