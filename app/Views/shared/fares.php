@@ -180,7 +180,7 @@ $fareTypes = array_map(static fn(array $type) => [
     ?>
     <div class="col-12 col-md-4 mb-4">
         <div class="stat-card-modern fade-in" style="--card-accent: <?= esc($cardAccent) ?>;">
-            <div class="stat-card-icon" style="background-color: <?= esc($statIconBg) ?> !important; color: <?= esc($statIconColor) ?> !important; <?= $statIconBorder ?>">
+            <div class="stat-card-icon" style="background-color: var(--vehicle-<?= esc($ft['key']) ?>-soft, <?= esc($statIconBg) ?>) !important; color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($statIconColor) ?>) !important; <?= $statIconBorder ?>">
                 <i class="bi <?= esc($vtBiIcon) ?>"></i>
             </div>
             <div class="stat-card-value"><?= count(($routesByType ?? [])[$ft['key']] ?? []) ?></div>
@@ -219,13 +219,13 @@ $fareTypes = array_map(static fn(array $type) => [
     $iconBoxBorder = $isLightColor ? 'border: 1.5px solid #cbd5e1 !important;' : '';
 ?>
 <div class="col-lg-4 mb-4">
-    <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in" style="border-top: 3.5px solid <?= esc($cardTopBorder) ?> !important;">
+    <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in" style="--fare-accent: <?= esc($vtColor) ?>; border-top: 3.5px solid var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($cardTopBorder) ?>) !important;">
         <div class="modern-card-header d-flex justify-content-between align-items-center">
-            <span class="modern-card-title fare-section-title d-flex align-items-center gap-2" style="color: <?= esc($headerTitleColor) ?> !important;">
-                <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 28px; height: 28px; background-color: <?= esc($iconBoxBg) ?>; color: <?= esc($iconBoxColor) ?>; <?= $iconBoxBorder ?> font-size: 13px;">
+            <span class="modern-card-title fare-section-title d-flex align-items-center gap-2" style="color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($headerTitleColor) ?>) !important;">
+                <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 28px; height: 28px; background-color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($iconBoxBg) ?>); color: <?= esc($iconBoxColor) ?>; <?= $iconBoxBorder ?> font-size: 13px;">
                     <i class="fas <?= esc($vtIcon) ?>" style="color: <?= esc($iconBoxColor) ?> !important;"></i>
                 </span>
-                <span class="fw-bold" style="color: <?= esc($headerTitleColor) ?> !important;"><?= esc($ft['label']) ?></span>
+                <span class="fw-bold" style="color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($headerTitleColor) ?>) !important;"><?= esc($ft['label']) ?></span>
             </span>
             <?php if ($isAdmin && !empty($ft['id'])): ?>
             <form action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline"

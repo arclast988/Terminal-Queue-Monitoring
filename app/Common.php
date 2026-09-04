@@ -111,13 +111,23 @@ if (! function_exists('vehicle_type_badge')) {
         }
 
         $isLight = (contrast_text_color($color) === '#0f172a');
-        $textColor = $isLight ? '#0f172a' : $color;
-        $bgColor = $isLight ? '#f1f5f9' : ($color . '18');
-        $borderColor = $isLight ? '#cbd5e1' : ($color . '44');
+        // CSS-var-driven so admin color edits apply live (via the
+        // vehicle-type-colors style block + WS pushes) without a reload.
+        // Hex values remain as fallbacks for first paint / no-JS.
+        $var = '--vehicle-' . $typeKey;
+        if ($isLight) {
+            $bgColor = '#f1f5f9';
+            $textColor = '#0f172a';
+            $borderColor = '#cbd5e1';
+        } else {
+            $bgColor = 'var(' . $var . '-soft, ' . $color . '18)';
+            $textColor = 'var(' . $var . ', ' . $color . ')';
+            $borderColor = 'var(' . $var . ', ' . $color . ')';
+        }
 
         $style = 'background: ' . $bgColor . ' !important; background-color: ' . $bgColor . ' !important; color: ' . $textColor . ' !important; border: 1.5px solid ' . $borderColor . ' !important; font-weight: 800;';
 
-        return '<span class="' . esc($classes, 'attr') . '" style="' . esc($style, 'attr') . '">' . $iconHtml . esc(vehicle_type_label($typeKey)) . '</span>';
+        return '<span class="' . esc($classes, 'attr') . '" data-vtype="' . esc($typeKey, 'attr') . '" style="' . esc($style, 'attr') . '">' . $iconHtml . esc(vehicle_type_label($typeKey)) . '</span>';
     }
 }
 

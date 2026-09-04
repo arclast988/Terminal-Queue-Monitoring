@@ -410,8 +410,8 @@
 
 <?= $this->include('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260905') ?>"></script>
 <script>
     var currentSharedDestFilter = '<?= esc(strtolower($destination ?? 'all')) ?>';
 

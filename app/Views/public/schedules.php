@@ -1151,8 +1151,8 @@
     <?= $this->include('templates/guestfooter') ?>
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
-        <script src="<?= base_url('js/ws-client.js') ?>"></script>
-        <script src="<?= base_url('js/queue-sync.js') ?>"></script>
+        <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
+        <script src="<?= base_url('js/queue-sync.js?v=20260905') ?>"></script>
         <script>
         var currentType = '<?= esc($vehicle_type) ?>';
         var currentDest = '<?= esc($destination) ?>';
@@ -1271,7 +1271,16 @@
             }
 
             var vehicleTypeMeta = {};
-            (vehicleTypes || []).forEach(function(type) { vehicleTypeMeta[type.slug] = type; });
+            (vehicleTypes || []).forEach(function(type) {
+                vehicleTypeMeta[type.slug] = type;
+                // Keep CSS-var icon boxes/chips in sync without reload.
+                if (type.color && /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(type.color)) {
+                    try {
+                        document.documentElement.style.setProperty('--vehicle-' + type.slug, type.color);
+                        document.documentElement.style.setProperty('--vehicle-' + type.slug + '-soft', type.color + '18');
+                    } catch (e) { /* ignore */ }
+                }
+            });
             var statusClassMap = { 'scheduled': 'status-scheduled', 'waiting': 'status-waiting', 'boarding': 'status-boarding', 'departed': 'status-departed', 'canceled': 'status-canceled' };
             var html = '';
             schedules.forEach(function(s) {

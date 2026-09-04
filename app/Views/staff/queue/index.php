@@ -949,7 +949,7 @@
                                             $vCol = vehicle_type_color($vType);
                                             $vIco = vehicle_type_icon($vType);
                                         ?>
-                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(255,255,255,0.9);">
+                                        <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: <?= esc($vCol) ?>18; border: 1px solid <?= esc($vCol) ?>44;">
                                             <?php if (!empty($imgFile)): ?>
                                                 <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;">
                                             <?php else: ?>
@@ -1064,9 +1064,9 @@
 
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
 <script src="<?= base_url('js/debounce-passengers.js') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260905') ?>"></script>
 <script>
     // Initialize debounced passenger controls
     PassengerDebounce.init({

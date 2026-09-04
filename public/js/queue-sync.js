@@ -264,6 +264,7 @@
     function applyVehicleTypeColors(colors) {
         if (!colors || typeof colors !== 'object') return;
         var root = document.documentElement;
+        var applied = 0;
         Object.keys(colors).forEach(function(slug) {
             var entry = colors[slug];
             var color = (entry && typeof entry === 'object') ? entry.color : entry;
@@ -273,8 +274,14 @@
             try {
                 root.style.setProperty('--vehicle-' + key, color);
                 root.style.setProperty('--vehicle-' + key + '-soft', color + '18');
+                applied++;
             } catch (e) { /* ignore */ }
         });
+        if (applied > 0) {
+            try {
+                document.dispatchEvent(new CustomEvent('vt-colors-updated'));
+            } catch (e) { /* ignore */ }
+        }
     }
 
     /* ── WebSocket message handler ── */

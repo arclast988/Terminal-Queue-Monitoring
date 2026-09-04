@@ -351,15 +351,20 @@
             transform: scale(1.02);
         }
 
-        .fare-card.vehicle-type-jeepney .card-header { border-top: 3px solid #1565c0; }
-        .fare-card.vehicle-type-van     .card-header { border-top: 3px solid #c62828; }
-        .fare-card.vehicle-type-minibus .card-header { border-top: 3px solid #2e7d32; }
+        .fare-card.vehicle-type-jeepney .card-header { border-top: 3px solid var(--vehicle-jeepney, #1565c0); }
+        .fare-card.vehicle-type-van     .card-header { border-top: 3px solid var(--vehicle-van, #c62828); }
+        .fare-card.vehicle-type-minibus .card-header { border-top: 3px solid var(--vehicle-minibus, #2e7d32); }
+        .fare-card.vehicle-type-bus     .card-header { border-top: 3px solid var(--vehicle-bus, #ea580c); }
+        .fare-card .card-header { border-top: 3px solid var(--fare-accent, #c62828); }
         .fare-card.vehicle-type-jeepney .card-header h3 { color: #000000; }
         .fare-card.vehicle-type-van     .card-header h3 { color: #000000; }
         .fare-card.vehicle-type-minibus .card-header h3 { color: #000000; }
-        .fare-card.vehicle-type-jeepney:hover { border-color: #1565c0; }
-        .fare-card.vehicle-type-van:hover     { border-color: #c62828; }
-        .fare-card.vehicle-type-minibus:hover { border-color: #2e7d32; }
+        .fare-card.vehicle-type-bus     .card-header h3 { color: #000000; }
+        .fare-card.vehicle-type-jeepney:hover { border-color: var(--vehicle-jeepney, #1565c0); }
+        .fare-card.vehicle-type-van:hover     { border-color: var(--vehicle-van, #c62828); }
+        .fare-card.vehicle-type-minibus:hover { border-color: var(--vehicle-minibus, #2e7d32); }
+        .fare-card.vehicle-type-bus:hover     { border-color: var(--vehicle-bus, #ea580c); }
+        .fare-card:hover { border-color: var(--fare-accent, #c62828); }
 
         .type-badge {
             padding: 5px 12px;
@@ -789,10 +794,10 @@
                     $vtColor = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
                     $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
                 ?>
-                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" style="border-top: 3px solid <?= esc($vtColor) ?>;">
-                    <div class="card-header" style="border-top: 3px solid <?= esc($vtColor) ?>;">
+                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>; border-top: 3px solid var(--vehicle-<?= esc($vehicleType['slug']) ?>, <?= esc($vtColor) ?>);">
+                    <div class="card-header" style="border-top: 3px solid var(--vehicle-<?= esc($vehicleType['slug']) ?>, <?= esc($vtColor) ?>);">
                         <h3>
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white me-2" style="width: 32px; height: 32px; background-color: <?= esc($vtColor) ?>; font-size: 15px;">
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white me-2" style="width: 32px; height: 32px; background-color: var(--vehicle-<?= esc($vehicleType['slug']) ?>, <?= esc($vtColor) ?>); font-size: 15px;">
                                 <i class="fas <?= esc($vtIcon) ?>"></i>
                             </span>
                             <?= esc($vehicleType['name']) ?> Routes
@@ -959,10 +964,11 @@
         });
     }
 
-    function buildFareCard(type, label, badgeClass, imgSrc, routes) {
+    function buildFareCard(type, label, badgeClass, imgSrc, routes, color) {
         var typeClass = type ? ' vehicle-type-' + type : '';
-        var html = '<div class="fare-card' + typeClass + '">'
-            + '<div class="card-header">'
+        var accent = color || '#c62828';
+        var html = '<div class="fare-card' + typeClass + '" style="--fare-accent: ' + accent + '; border-top: 3px solid ' + accent + ';">'
+            + '<div class="card-header" style="border-top: 3px solid ' + accent + ';">'
             + '<h3><img src="' + imgSrc + '" alt="' + label + '" style="width: 45px; height: auto; object-fit: contain;"> ' + label + '</h3>'
             + '</div>'
             + '<div class="fare-list">';
@@ -1066,7 +1072,8 @@
                         escapeHtml(vehicleType.name) + ' Routes',
                         '',
                         baseImgUrl + (vehicleType.image || 'minibus.png'),
-                        routes
+                        routes,
+                        vehicleType.color || '#c62828'
                     );
                 }).join('');
                 applyFareSearch();
@@ -1087,6 +1094,12 @@
         .catch(function(err) { console.error('Fare fetch error:', err); })
         .finally(function() { _fareFetchPending = false; });
     }
+
+    // Auto-refresh fare rates + colors: initial load, every 10s, and
+    // immediately when vehicle-type colors change (live event).
+    fetchFareData();
+    setInterval(fetchFareData, 10000);
+    document.addEventListener('vt-colors-updated', function() { fetchFareData(); });
 
     </script>
 </body>

@@ -2009,8 +2009,8 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/ws-client.js') ?>"></script>
-    <script src="<?= base_url('js/queue-sync.js') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
+    <script src="<?= base_url('js/queue-sync.js?v=20260905') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;
