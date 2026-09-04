@@ -123,6 +123,39 @@
         return 'h' + hash + '_' + queue.length;
     }
 
+    function updateTableElement(curEl, newEl) {
+        if (!curEl || !newEl) return;
+
+        // If target is <table>, preserve <thead> and update tbody contents
+        if (curEl.tagName === 'TABLE') {
+            var curTbody = curEl.querySelector('tbody');
+            var newTbody = newEl.querySelector('tbody');
+            if (curTbody && newTbody) {
+                var cleanTableHtml = sanitizeHtml('<table><tbody>' + newTbody.innerHTML + '</tbody></table>');
+                var tempTable = document.createElement('div');
+                tempTable.innerHTML = cleanTableHtml;
+                var cleanTbody = tempTable.querySelector('tbody');
+                curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+            } else {
+                curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
+            }
+            return;
+        }
+
+        // If target is <tbody>, update its row contents
+        if (curEl.tagName === 'TBODY') {
+            var cleanTableHtml = sanitizeHtml('<table><tbody>' + newEl.innerHTML + '</tbody></table>');
+            var tempTable = document.createElement('div');
+            tempTable.innerHTML = cleanTableHtml;
+            var cleanTbody = tempTable.querySelector('tbody');
+            curEl.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+            return;
+        }
+
+        // Non-table elements (e.g. #queue-list card container)
+        curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
+    }
+
     function refreshQueueCards(newDoc) {
         // Staff queue uses card divs (#queue-list), not a <table>. Always try
         // both the configured selector and the known card container so admin
@@ -137,10 +170,7 @@
                 var newEl = newDoc.querySelector(sel);
                 var curEl = document.querySelector(sel);
                 if (newEl && curEl) {
-                    // Table bodies must be sanitized in a table context below;
-                    // sanitizing their fragment directly strips tr/td elements.
-                    if (curEl.tagName === 'TABLE' || curEl.tagName === 'TBODY') return;
-                    curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
+                    updateTableElement(curEl, newEl);
                 }
             } catch (e) { /* ignore bad selector */ }
         });
@@ -151,11 +181,7 @@
                 var newTbody = newDoc.querySelector('table tbody');
                 var curTbody = document.querySelector('table tbody');
                 if (newTbody && curTbody) {
-                    var cleanTableHtml = sanitizeHtml('<table>' + newTbody.innerHTML + '</table>');
-                    var tempTable = document.createElement('div');
-                    tempTable.innerHTML = cleanTableHtml;
-                    var cleanTbody = tempTable.querySelector('table');
-                    curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+                    updateTableElement(curTbody, newTbody);
                 }
             } catch (e) { /* ignore */ }
         }
@@ -257,12 +283,7 @@
                 var newTbody = newDoc.querySelector(_config.tableSelector);
                 var curTbody = document.querySelector(_config.tableSelector);
                 if (newTbody && curTbody && _config.tableSelector !== '#queue-list') {
-                    // Wrap the innerHTML in a <table> tag so DOMPurify doesn't strip table elements (tr/td)
-                    var cleanTableHtml = sanitizeHtml('<table>' + newTbody.innerHTML + '</table>');
-                    var tempTable = document.createElement('div');
-                    tempTable.innerHTML = cleanTableHtml;
-                    var cleanTbody = tempTable.querySelector('table');
-                    curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+                    updateTableElement(curTbody, newTbody);
                 }
             }
 
