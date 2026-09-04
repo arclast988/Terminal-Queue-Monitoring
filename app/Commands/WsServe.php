@@ -94,8 +94,18 @@ class WsServe extends BaseCommand
             if ($numChanged > 0) {
                 foreach ($read as $socket) {
                     if ($socket === $wsServer) {
+                        // Cap concurrent clients to prevent FD exhaustion.
+                        if (count($wsClients) >= 200) {
+                            $drop = stream_socket_accept($wsServer);
+                            if ($drop) {
+                                @fclose($drop);
+                            }
+                            CLI::write('Max clients reached (200), rejecting new connection', 'yellow');
+                            continue;
+                        }
                         $newClient = stream_socket_accept($wsServer);
                         if ($newClient) {
+                            stream_set_blocking($newClient, false);
                             CLI::write("New WS connection accepted", 'green');
                             $masterClients[] = $newClient;
                             $wsClients[(int)$newClient] = ['socket' => $newClient, 'handshaken' => false];
@@ -103,7 +113,23 @@ class WsServe extends BaseCommand
                     } elseif ($socket === $broadcastServer) {
                         $trigger = stream_socket_accept($broadcastServer);
                         if ($trigger) {
-                            $data = fread($trigger, 8192);
+                            stream_set_blocking($trigger, true);
+                            stream_set_timeout($trigger, 1);
+                            // Read full payload (may exceed 8KB): loop until EOF/timeout.
+                            $data = '';
+                            while (! feof($trigger)) {
+                                $chunk = fread($trigger, 8192);
+                                if ($chunk === false || $chunk === '') {
+                                    break;
+                                }
+                                $data .= $chunk;
+                                if (strlen($chunk) < 8192) {
+                                    break;
+                                }
+                                if (strlen($data) > 65536) {
+                                    break;
+                                }
+                            }
                             if ($data) {
                                 $payload = json_decode($data, true);
                                 $msgId = $payload['broadcast_id'] ?? uniqid();

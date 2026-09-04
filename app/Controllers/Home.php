@@ -74,6 +74,9 @@ class Home extends BaseController
 
     public function status()
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         helper('fare');
 
         // Cache the heavy joins/aggregation for a couple of seconds so that

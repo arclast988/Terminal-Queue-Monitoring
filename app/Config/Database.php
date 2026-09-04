@@ -165,7 +165,7 @@ class Database extends Config
         'database'    => 'jeepneynvans_test',
         'schema'      => 'public',
         'DBDriver'    => 'Postgre',
-        'DBPrefix'    => 'db_',  // Needed to ensure we're working correctly with prefixes live. DO NOT REMOVE FOR CI DEVS
+        'DBPrefix'    => '',
         'pConnect'    => false,
         'DBDebug'     => true,
         'charset'     => 'utf8',

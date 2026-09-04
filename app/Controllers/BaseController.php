@@ -79,8 +79,14 @@ abstract class BaseController extends Controller
     protected function broadcastUpdate(string $type, array $data = []): void
     {
         $now = microtime(true);
-        // Write sync token — the polling mechanism on all clients checks this
-        @file_put_contents(WRITEPATH . 'sync_token.txt', $now);
+        // Atomic sync-token write to avoid partial reads under concurrency.
+        $tokenFile = WRITEPATH . 'sync_token.txt';
+        $tmpFile   = $tokenFile . '.' . getmypid() . '.tmp';
+        if (@file_put_contents($tmpFile, (string) $now, LOCK_EX) !== false) {
+            @rename($tmpFile, $tokenFile);
+        } else {
+            @file_put_contents($tokenFile, (string) $now, LOCK_EX);
+        }
 
         // Invalidate the short-lived public feed caches so this change is
         // reflected on the very next poll instead of waiting out the TTL.
@@ -92,13 +98,17 @@ abstract class BaseController extends Controller
             $isPassengerChange = ($data['action'] ?? '') === 'passenger_change';
             $cache->delete('rt_queue_status');
             $cache->delete('rt_home_status');
-            $cache->deleteMatching('rt_sched_status_*');
 
             if (! $isPassengerChange) {
                 $cache->delete('rt_announcements');
                 $cache->delete('rt_fares_api');
                 $cache->delete('rt_fares_api_v2');
                 $cache->delete('db_vehicle_types');
+                try {
+                    $cache->deleteMatching('rt_sched_status_*');
+                } catch (\Throwable $e) {
+                    // FileHandler glob scan skipped — 2s TTL expires shortly.
+                }
             }
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement
@@ -115,15 +125,16 @@ abstract class BaseController extends Controller
 
         try {
             $broadcastPort = (int) env('websocket.broadcastPort', 8082);
+            // Short timeouts: broadcast is fire-and-forget, never block staff clicks.
             $fp = @stream_socket_client(
                 'tcp://127.0.0.1:' . $broadcastPort,
                 $errno,
                 $errstr,
-                0.2,
+                0.05,
                 STREAM_CLIENT_CONNECT
             );
             if ($fp) {
-                stream_set_timeout($fp, 0, 200000);
+                stream_set_timeout($fp, 0, 50000);
                 @fwrite($fp, $payload);
                 @fclose($fp);
             }

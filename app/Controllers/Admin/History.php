@@ -20,18 +20,19 @@ class History extends BaseController
         $destFilter = $this->request->getGet('destination');
         $typeFilter = $this->request->getGet('vehicle_type');
 
-        $todayStr = date('Y-m-d');
-        $monthStr = date('Y-m');
-        $yearStr  = date('Y');
+        $todayStart = date('Y-m-d 00:00:00');
+        $todayEnd   = date('Y-m-d 23:59:59');
+        $monthStart = date('Y-m-01 00:00:00');
+        $yearStart  = date('Y-01-01 00:00:00');
 
-        // --- Stats (single query with conditional aggregation within retention) ---
+        // --- Stats (single query with sargable range predicates) ---
         $db = \Config\Database::connect();
         $statsResult = $db->table('queue')
             ->select("
                 COUNT(*) as total,
-                SUM(CASE WHEN CAST(departure_time AS VARCHAR) LIKE '{$todayStr}%' THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN CAST(departure_time AS VARCHAR) LIKE '{$monthStr}%' THEN 1 ELSE 0 END) as month,
-                SUM(CASE WHEN CAST(departure_time AS VARCHAR) LIKE '{$yearStr}%' THEN 1 ELSE 0 END) as year
+                SUM(CASE WHEN departure_time >= '{$todayStart}' AND departure_time <= '{$todayEnd}' THEN 1 ELSE 0 END) as today,
+                SUM(CASE WHEN departure_time >= '{$monthStart}' THEN 1 ELSE 0 END) as month,
+                SUM(CASE WHEN departure_time >= '{$yearStart}' THEN 1 ELSE 0 END) as year
             ")
             ->where('status', 'departed')
             ->where('departure_time IS NOT NULL')
@@ -88,7 +89,8 @@ class History extends BaseController
         $typeFilter = $this->request->getGet('vehicle_type');
 
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $destFilter, $typeFilter);
-        $results = $builder->orderBy('queue.departure_time', 'DESC')->findAll();
+        // Cap print output to avoid OOM on large history tables.
+        $results = $builder->orderBy('queue.departure_time', 'DESC')->limit(5000)->findAll();
 
         $data = [
             'title'        => 'Departure History Report',

@@ -14,6 +14,11 @@ class QueueStatus extends Controller
 {
     public function index()
     {
+        // Read-only poll endpoint hit every few seconds: release session
+        // lock immediately so concurrent polls don't serialize.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         // Cache the computed queue for a couple of seconds so that many
         // simultaneous passenger polls collapse to a single DB query instead
         // of running this 3-table join per request. broadcastUpdate() clears
@@ -58,6 +63,9 @@ class QueueStatus extends Controller
     }
     public function checkAvailability($vehicleId)
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         $queueModel = new \App\Models\QueueModel();
 
         // 1. Check if already in active queue

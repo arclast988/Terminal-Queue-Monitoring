@@ -66,7 +66,6 @@ class VehicleTypes extends BaseController
         $name = $type['name'];
 
         $db = \Config\Database::connect();
-        $db->transStart();
 
         // 1. Find all routes with this vehicle type
         $routeModel = new \App\Models\RouteModel();
@@ -75,22 +74,57 @@ class VehicleTypes extends BaseController
 
         // 2. Find all vehicles with this vehicle type or assigned to these routes
         $vehicleModel   = new \App\Models\VehicleModel();
-        $vehicleBuilder = $vehicleModel->where('type', $slug);
+        $vehicleBuilder = $vehicleModel->groupStart()->where('type', $slug);
         if (!empty($routeIds)) {
             $vehicleBuilder->orWhereIn('default_route_id', $routeIds);
         }
+        $vehicleBuilder->groupEnd();
         $vehicles   = $vehicleBuilder->findAll();
         $vehicleIds = array_column($vehicles, 'id');
+
+        // Safety: refuse to hard-delete while active trips exist. This
+        // prevents accidental loss of waiting/boarding queue state.
+        if (! empty($routeIds) || ! empty($vehicleIds)) {
+            $activeCheck = $db->table('queue')->whereIn('status', ['waiting', 'boarding']);
+            $activeCheck->groupStart();
+            $hasCondition = false;
+            if (! empty($routeIds)) {
+                $activeCheck->whereIn('route_id', $routeIds);
+                $hasCondition = true;
+            }
+            if (! empty($vehicleIds)) {
+                if ($hasCondition) {
+                    $activeCheck->orWhereIn('vehicle_id', $vehicleIds);
+                } else {
+                    $activeCheck->whereIn('vehicle_id', $vehicleIds);
+                }
+            }
+            $activeCheck->groupEnd();
+            $activeCount = (int) $activeCheck->countAllResults();
+            if ($activeCount > 0) {
+                return redirect()->back()->with('error', 'Cannot delete vehicle type "' . $name . '" while ' . $activeCount . ' vehicle(s) are still waiting/boarding. Depart or cancel those trips first.');
+            }
+        }
+
+        $db->transStart();
 
         // 3. Delete queue records for affected routes and vehicles
         if (!empty($routeIds) || !empty($vehicleIds)) {
             $queueBuilder = $db->table('queue');
+            $queueBuilder->groupStart();
+            $hasQueueCondition = false;
             if (!empty($routeIds)) {
                 $queueBuilder->whereIn('route_id', $routeIds);
+                $hasQueueCondition = true;
             }
             if (!empty($vehicleIds)) {
-                $queueBuilder->orWhereIn('vehicle_id', $vehicleIds);
+                if ($hasQueueCondition) {
+                    $queueBuilder->orWhereIn('vehicle_id', $vehicleIds);
+                } else {
+                    $queueBuilder->whereIn('vehicle_id', $vehicleIds);
+                }
             }
+            $queueBuilder->groupEnd();
             $queueBuilder->delete();
         }
 

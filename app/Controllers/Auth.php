@@ -7,8 +7,8 @@ use App\Models\UserModel;
 
 class Auth extends BaseController
 {
-    private const MAX_ATTEMPTS = 20;
-    private const LOCKOUT_SECONDS = 30;
+    private const MAX_ATTEMPTS = 5;
+    private const LOCKOUT_SECONDS = 900;
 
     public function index()
     {
@@ -71,7 +71,7 @@ class Auth extends BaseController
                 return $this->redirectBasedOnRole();
             }
 
-            $attempts = $user['login_attempts'] + 1;
+            $attempts = (int) ($user['login_attempts'] ?? 0) + 1;
             $data = ['login_attempts' => $attempts];
             if ($attempts >= self::MAX_ATTEMPTS) {
                 $data['locked_until'] = date('Y-m-d H:i:s', time() + self::LOCKOUT_SECONDS);
@@ -79,7 +79,7 @@ class Auth extends BaseController
             $model->update($user['id'], $data);
 
             $msg = $attempts >= self::MAX_ATTEMPTS
-                ? "Account locked due to too many failed attempts. Try again in " . self::LOCKOUT_SECONDS . " seconds."
+                ? "Account locked due to too many failed attempts. Try again in 15 minutes."
                 : 'Invalid username or password.';
 
             $session->setFlashdata('error', $msg);
@@ -99,10 +99,10 @@ class Auth extends BaseController
 
     private function isUserLocked(array $user): bool
     {
-        if ($user['login_attempts'] < self::MAX_ATTEMPTS) {
+        if (((int) ($user['login_attempts'] ?? 0)) < self::MAX_ATTEMPTS) {
             return false;
         }
-        if ($user['locked_until'] === null) {
+        if (empty($user['locked_until'])) {
             return false;
         }
         return strtotime($user['locked_until']) > time();
@@ -114,6 +114,10 @@ class Auth extends BaseController
             return '0 seconds';
         }
         $remaining = max(0, strtotime($lockedUntil) - time());
+        if ($remaining >= 60) {
+            $mins = (int) ceil($remaining / 60);
+            return "{$mins} minute" . ($mins === 1 ? '' : 's');
+        }
         return "{$remaining} seconds";
     }
 
@@ -208,7 +212,8 @@ class Auth extends BaseController
         $user = $model->where('username', $username)->orWhere('email', $username)->first();
 
         if (!$user) {
-            $session->setFlashdata('error', 'Account not found. Please verify your username or email.');
+            // Generic message to prevent username/email enumeration.
+            $session->setFlashdata('error', 'If an account exists for that username or email, a verification code has been sent.');
             return redirect()->to('/forgot-password')->withInput();
         }
 

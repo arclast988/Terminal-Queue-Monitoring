@@ -63,6 +63,8 @@ class VehicleModel extends Model
         if (isset($data['data']['route_id']) && !isset($data['data']['default_route_id'])) {
             $data['data']['default_route_id'] = $data['data']['route_id'];
         }
+        // Strip virtual alias so only the real column is written.
+        unset($data['data']['route_id']);
         return $data;
     }
 }

@@ -86,7 +86,8 @@ class Logs extends BaseController
         $userFilter   = trim((string) $this->request->getGet('user_id'));
 
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $actionFilter, $userFilter);
-        $results = $builder->orderBy('audit_logs.timestamp', 'DESC')->findAll();
+        // Cap print output to avoid OOM on large log tables.
+        $results = $builder->orderBy('audit_logs.timestamp', 'DESC')->limit(5000)->findAll();
 
         $selectedUser = null;
         if (!empty($userFilter)) {

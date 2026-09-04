@@ -6,6 +6,22 @@
 (function () {
     'use strict';
 
+    var MAX_DROPDOWN_ITEMS = 50;
+    var INPUT_DEBOUNCE_MS = 150;
+
+    function debounce(fn, wait) {
+        var t = null;
+        return function () {
+            var args = arguments;
+            var ctx = this;
+            if (t) clearTimeout(t);
+            t = setTimeout(function () {
+                t = null;
+                fn.apply(ctx, args);
+            }, wait);
+        };
+    }
+
     // Helper functions to manage active z-index stacking context for open dropdowns
     function openDropdown(wrapper, dropdown) {
         if (!wrapper || !dropdown) return;
@@ -247,7 +263,7 @@
 
             function renderDropdown(query = '') {
                 const cleanQuery = query.trim().toUpperCase();
-                const filtered = suggestions.filter(loc => loc.toUpperCase().includes(cleanQuery));
+                const filtered = suggestions.filter(loc => loc.toUpperCase().includes(cleanQuery)).slice(0, MAX_DROPDOWN_ITEMS);
 
                 if (filtered.length === 0) {
                     closeDropdown(wrapper, dropdown);
@@ -299,7 +315,7 @@
                     renderDropdown(input.value);
                 }
             });
-            input.addEventListener('input', () => renderDropdown(input.value));
+            input.addEventListener('input', debounce(() => renderDropdown(input.value), INPUT_DEBOUNCE_MS));
 
             input.addEventListener('keydown', (e) => {
                 const items = dropdown.querySelectorAll('.autocomplete-item');
@@ -447,7 +463,7 @@
                 const opts = getAvailableOptions();
                 const cleanQuery = query.trim().toUpperCase();
                 const currentSelectedTextUpper = (searchInput.value || '').trim().toUpperCase();
-                const filtered = opts.filter(opt => opt.text.toUpperCase().includes(cleanQuery));
+                const filtered = opts.filter(opt => opt.text.toUpperCase().includes(cleanQuery)).slice(0, MAX_DROPDOWN_ITEMS);
 
                 if (filtered.length === 0) {
                     closeDropdown(wrapper, dropdown);
@@ -559,9 +575,9 @@
                 }
             });
 
-            searchInput.addEventListener('input', () => {
+            searchInput.addEventListener('input', debounce(() => {
                 renderSelectDropdown(searchInput.value);
-            });
+            }, INPUT_DEBOUNCE_MS));
 
             selectEl.addEventListener('change', () => {
                 updateInputValue();

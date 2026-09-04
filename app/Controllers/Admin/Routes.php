@@ -130,18 +130,32 @@ class Routes extends BaseController
     private function replaceRouteFares(int $routeId, int $terminalId, float $baseFare): void
     {
         $fareModel = new FareModel();
+        $db = \Config\Database::connect();
+        $db->transStart();
+
         $fareModel->where('route_id', $routeId)->delete();
 
+        $rows = [];
         foreach ($this->getDiscountsForFareCalculation($terminalId) as $discount) {
             $amount = ($discount['type'] === 'regular')
                 ? $baseFare
                 : round($baseFare * (1 - ((float) $discount['discount_percent'] / 100)), 2);
 
-            $fareModel->insert([
+            $rows[] = [
                 'route_id'         => $routeId,
                 'fare_discount_id' => $discount['id'],
                 'amount'           => $amount,
-            ]);
+            ];
+        }
+
+        if (! empty($rows)) {
+            $fareModel->insertBatch($rows);
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            log_message('error', 'Failed to replace fares for route {id}', ['id' => $routeId]);
         }
     }
 
@@ -453,6 +467,9 @@ class Routes extends BaseController
             return redirect()->back()->withInput()->with('error', 'Please provide a valid destination (at least 2 characters).');
         }
 
+        $db = \Config\Database::connect();
+        $db->transStart();
+
         // First, update the terminal_id and destination of all existing sibling routes to prevent desync
         $this->routeModel->where('terminal_id', $oldTerminalId)
                          ->where('destination', $oldDestination)
@@ -497,10 +514,17 @@ class Routes extends BaseController
                             $this->routeModel->delete($existing['id']);
                         } catch (\Throwable $e) {
                             // If delete fails due to dependencies (like queue entries), we just keep it
+                            log_message('warning', 'Failed to delete route variant during group update: {msg}', ['msg' => $e->getMessage()]);
                         }
                     }
                 }
             }
+        }
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return redirect()->back()->withInput()->with('error', 'Failed to update route group.');
         }
 
         $this->logActivity('Update route group', "$origin → $destination.");

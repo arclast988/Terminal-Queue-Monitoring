@@ -153,9 +153,12 @@ class QueueModel extends Model
      */
     public function withFullJoins(): self
     {
-        return $this->join('vehicles', 'vehicles.id = queue.vehicle_id')
-                    ->join('routes', 'routes.id = queue.route_id')
-                    ->join('terminals', 'terminals.id = routes.terminal_id');
+        // LEFT joins preserve queue/history rows when a vehicle, route or
+        // terminal was deleted (FKs use SET NULL / CASCADE). INNER joins
+        // would silently drop departed history.
+        return $this->join('vehicles', 'vehicles.id = queue.vehicle_id', 'left')
+                    ->join('routes', 'routes.id = queue.route_id', 'left')
+                    ->join('terminals', 'terminals.id = routes.terminal_id', 'left');
     }
 
     /**

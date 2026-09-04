@@ -162,19 +162,30 @@ class Schedules extends BaseController
      */
     public function status()
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         $vehicleType = $this->request->getGet('type');
         $destination = $this->request->getGet('destination');
-        $search      = trim((string) $this->request->getGet('q'));
+        $search      = substr(trim((string) $this->request->getGet('q')), 0, 32);
         $vehicleTypes = $this->activeVehicleTypes();
         if ($vehicleType && !in_array($vehicleType, array_column($vehicleTypes, 'slug'), true)) {
             $vehicleType = null;
+        }
+        if ($destination !== null) {
+            $destination = substr(trim((string) $destination), 0, 100);
+            if ($destination === '') {
+                $destination = null;
+            }
         }
 
         // Cache per filter-combination for a couple of seconds so repeated
         // public polls reuse one DB query. The sync token stays live below,
         // and broadcastUpdate() clears these keys so changes appear instantly.
-        $cacheKey = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? '') . '|' . $search);
-        $payload  = cache($cacheKey);
+        // Free-text search is NOT cached to prevent unbounded cache-key growth.
+        $useCache  = ($search === '');
+        $cacheKey  = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? ''));
+        $payload   = $useCache ? cache($cacheKey) : null;
         if (! is_array($payload)) {
             $queueModel = new QueueModel();
 
@@ -262,7 +273,9 @@ class Schedules extends BaseController
                 'vehicle_types'      => $vehicleTypes,
             ];
 
-            cache()->save($cacheKey, $payload, 2);
+            if ($useCache) {
+                cache()->save($cacheKey, $payload, 2);
+            }
         }
 
         $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';

@@ -122,14 +122,15 @@ class Queue extends BaseController
             $vehicles = $vehicleBuilder->findAll();
         }
 
-        // Fetch latest departed records for available vehicles to mark departed status & time
+        // Fetch latest departed record per available vehicle (single grouped
+        // query) to mark departed status & time without fetching full history.
         if (!empty($vehicles)) {
             $availableVehicleIds = array_column($vehicles, 'id');
             $departedRecords = $this->queueModel
-                ->select('vehicle_id, departure_time')
+                ->select('vehicle_id, MAX(departure_time) as departure_time')
                 ->whereIn('vehicle_id', $availableVehicleIds)
                 ->where('status', 'departed')
-                ->orderBy('departure_time', 'DESC')
+                ->groupBy('vehicle_id')
                 ->findAll();
 
             $departedMap = [];
@@ -401,6 +402,10 @@ class Queue extends BaseController
             return redirect()->back()->with('error', 'Invalid status.');
         }
 
+        if (! $this->queueModel->find($id)) {
+            return redirect()->back()->with('error', 'Queue item not found.');
+        }
+
         $data = ['status' => $status];
         if ($status == 'departed') {
             $data['departure_time'] = date('Y-m-d H:i:s');
@@ -498,28 +503,51 @@ class Queue extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Item not found']);
         }
 
+        if (! in_array($queueItem['status'] ?? '', ['waiting', 'boarding'], true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Passengers can only be updated for waiting or boarding trips.']);
+        }
+
         $vehicle = $this->vehicleModel->find($queueItem['vehicle_id']);
+        if (! $vehicle) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Vehicle not found']);
+        }
+
         $input = $this->request->getJSON(true);
-        $newCount = (int)($input['count'] ?? 0);
+        $rawCount = $input['count'] ?? 0;
+        if (! is_numeric($rawCount)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invalid passenger count.']);
+        }
+        $capacity = (int) ($vehicle['capacity'] ?? 14);
+        if ($capacity <= 0) {
+            $capacity = 14;
+        }
+        $newCount = (int) $rawCount;
 
         // Clamp to valid range
-        $newCount = max(0, min($newCount, (int)$vehicle['capacity']));
+        $newCount = max(0, min($newCount, $capacity));
 
+        $db = \Config\Database::connect();
+        $db->transStart();
         $this->queueModel->update($id, ['current_passengers' => $newCount]);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to update passengers.']);
+        }
 
         $this->broadcastUpdate('queue_update', [
             'action' => 'passenger_change',
             'id' => $id,
             'new_count' => $newCount,
-            'capacity' => (int)$vehicle['capacity'],
+            'capacity' => $capacity,
             'role' => 'staff'
         ]);
 
         return $this->response->setJSON([
             'success' => true,
             'new_count' => $newCount,
-            'capacity' => (int)$vehicle['capacity'],
-            'is_full' => $newCount >= (int)$vehicle['capacity']
+            'capacity' => $capacity,
+            'is_full' => $newCount >= $capacity
         ]);
     }
 
@@ -546,13 +574,20 @@ class Queue extends BaseController
         }
         $oldDriverName = $vehicle['driver_name'] ?? 'Unknown';
 
-        // Update driver in both vehicle record and active queue records
+        // Single transaction: update vehicle record + all active queue rows
+        // for this vehicle atomically to avoid interleaving with add()/status.
+        $db = \Config\Database::connect();
+        $db->transStart();
         $this->vehicleModel->update($vehicle['id'], ['driver_name' => $driverName]);
         $this->queueModel->where('vehicle_id', $vehicle['id'])
             ->whereIn('status', ['waiting', 'boarding'])
             ->set(['driver_name' => $driverName])
             ->update();
-        $this->queueModel->update($id, ['driver_name' => $driverName]);
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to update driver.']);
+        }
 
         $this->logActivity('Updated Driver', 'Updated Driver: ' . $oldDriverName . ' for ' . ($vehicle['plate_number'] ?? 'vehicle') . ' (' . ($vehicle['type'] ?? 'N/A') . ') to ' . $driverName . '.');
         $this->broadcastUpdate('queue_update', [
