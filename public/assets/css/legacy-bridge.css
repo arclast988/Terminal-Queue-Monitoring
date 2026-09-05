@@ -8,7 +8,7 @@
      .input-modern        -> .input              .modern-card      -> .card
 
    All colors come from tokens (design-system.css + themes.css), so every
-   page is automatically consistent: admin = red, dispatcher = blue,
+   page is automatically consistent: admin = red, dispatcher = green,
    guest = crimson. Selectors are prefixed with `html body` so they beat
    modern-frontend.css / admin-modern.css regardless of load order.
    Load this file LAST.

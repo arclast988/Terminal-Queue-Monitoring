@@ -1211,12 +1211,12 @@ body.staff-theme .logout-btn-custom,
 }
 
 body.staff-theme .radio-card-input:checked + .radio-card-content {
-    border-color: var(--primary-blue);
-    background: #e8effd;
+    border-color: var(--primary, #15803d);
+    background: var(--primary-soft, #dcfce7);
 }
 
 body.staff-theme .radio-card-input:checked + .radio-card-content .radio-card-label {
-    color: var(--primary-blue-dark);
+    color: var(--primary-dark, #166534);
 }
 
 /* Modern Form Checks (Checkboxes & Radios) */
@@ -1244,8 +1244,8 @@ body.staff-theme .radio-card-input:checked + .radio-card-content .radio-card-lab
 }
 
 body.staff-theme .form-check-input-modern:checked {
-    background-color: var(--primary-blue);
-    border-color: var(--primary-blue);
+    background-color: var(--primary, #15803d);
+    border-color: var(--primary, #15803d);
 }
 
 .form-check-label-modern {
