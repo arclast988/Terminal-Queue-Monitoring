@@ -1830,10 +1830,8 @@
 
                                 <!-- Right: Departure Time Ticket / Card -->
                                 <div class="queue-card-departure">
-                                    <div class="dep-status-tag <?= $item['status'] === 'boarding' ? 'status-boarding' : ($item['status'] === 'departed' ? 'status-departed' : 'status-waiting') ?>">
-                                        <?php if ($item['status'] == 'departed'): ?>
-                                            <i class="fas fa-check-circle me-1"></i> Departed
-                                        <?php elseif ($item['status'] == 'boarding'): ?>
+                                    <div class="dep-status-tag <?= $item['status'] === 'boarding' ? 'status-boarding' : 'status-waiting' ?>">
+                                        <?php if ($item['status'] == 'boarding'): ?>
                                             <i class="fas fa-clock me-1"></i> Boarding
                                         <?php else: ?>
                                             <i class="fas fa-hourglass-half me-1"></i> Waiting
@@ -1843,9 +1841,7 @@
                                     <div class="dep-time-group">
                                         <div class="dep-time-highlight">
                                             <?php
-                                            if ($item['status'] == 'departed' && $item['departure_time']):
-                                                echo date('h:i A', strtotime($item['departure_time']));
-                                            elseif ($item['estimated_departure']):
+                                            if ($item['estimated_departure']):
                                                 echo date('h:i A', strtotime($item['estimated_departure']));
                                             else:
                                                 echo 'Waiting';
@@ -2227,10 +2223,8 @@
                 .then(function (data) {
                     // Update stats (lightweight text-only, no flicker)
                     var countQueued = document.getElementById('count-queued');
-                    var countDepartures = document.getElementById('count-departures');
                     var countRoutes = document.getElementById('count-routes');
                     if (countQueued) countQueued.innerText = data.active_queue.length;
-                    if (countDepartures) countDepartures.innerText = data.total_departures_today;
                     if (countRoutes && data.routes) {
                         var uniqueDests = [];
                         data.routes.forEach(function(r) {
@@ -2281,10 +2275,7 @@
                                     ? '<span class="badge-full-tag">FULL</span>' : '';
                                 var statusClass = 'status-waiting';
                                 var statusIcon = '<i class="fas fa-hourglass-half me-1"></i> Waiting';
-                                if (item.status === 'departed') {
-                                    statusClass = 'status-departed';
-                                    statusIcon = '<i class="fas fa-check-circle me-1"></i> Departed';
-                                } else if (item.status === 'boarding') {
+                                if (item.status === 'boarding') {
                                     statusClass = 'status-boarding';
                                     statusIcon = '<i class="fas fa-clock me-1"></i> Boarding';
                                 }

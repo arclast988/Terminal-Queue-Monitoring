@@ -1111,12 +1111,7 @@
                                     </div>
                                 </td>
                                 <td data-label="Est. Departure">
-                                    <?php if ($schedule['status'] === 'departed' && $schedule['departure_time']): ?>
-                                        <span class="time-display departed">
-                                            <?= date('g:i A', strtotime($schedule['departure_time'])) ?>
-                                        </span>
-                                        <div style="font-size: 12.5px; color: var(--text-muted);">Departed</div>
-                                    <?php elseif ($schedule['is_full']): ?>
+                                    <?php if ($schedule['is_full']): ?>
                                         <span class="time-display full">
                                             FULL — Ready
                                         </span>

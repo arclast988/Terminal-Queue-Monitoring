@@ -850,20 +850,13 @@
                                 </div>
                             </td>
                             <td data-label="Est. Departure">
-                                <?php if ($item['status'] === 'departed' && !empty($item['departure_time'])): ?>
-                                    <span class="time-display departed">
-                                        <?= date('g:i A', strtotime($item['departure_time'])) ?>
-                                    </span>
-                                    <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">Departed</div>
-                                <?php else: ?>
-                                    <span class="time-display">
-                                        <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
-                                    </span>
-                                    <?php if (!empty($item['capacity'])): ?>
-                                    <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">
-                                        <?= $item['current_passengers'] ?? 0 ?>/<?= $item['capacity'] ?> passengers
-                                    </div>
-                                    <?php endif; ?>
+                                <span class="time-display">
+                                    <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
+                                </span>
+                                <?php if (!empty($item['capacity'])): ?>
+                                <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">
+                                    <?= $item['current_passengers'] ?? 0 ?>/<?= $item['capacity'] ?> passengers
+                                </div>
                                 <?php endif; ?>
                             </td>
                             <td data-label="Status">

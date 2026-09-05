@@ -61,7 +61,6 @@ class Schedules extends BaseController
                 queue.position,
                 queue.arrival_time,
                 queue.estimated_departure,
-                queue.departure_time,
                 vehicles.id as vehicle_id,
                 vehicles.plate_number,
                 vehicles.type as vehicle_type,
@@ -195,7 +194,6 @@ class Schedules extends BaseController
                     queue.current_passengers,
                     queue.position,
                     queue.estimated_departure,
-                    queue.departure_time,
                     vehicles.plate_number,
                     vehicles.type as vehicle_type,
                     vehicles.capacity,
@@ -236,8 +234,6 @@ class Schedules extends BaseController
                 $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
                 $s['estimated_departure_formatted'] = !empty($s['estimated_departure'])
                     ? date('g:i A', strtotime($s['estimated_departure'])) : null;
-                $s['departure_time_formatted'] = !empty($s['departure_time'])
-                    ? date('g:i A', strtotime($s['departure_time'])) : null;
             }
             unset($s);
 

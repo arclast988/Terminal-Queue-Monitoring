@@ -43,26 +43,6 @@ class Home extends BaseController
         $data = [
             'title' => 'Live Terminal Monitor',
             'active_queue' => $active_queue,
-            'recent_departures' => $queueModel->select('
-                queue.*, 
-                COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number, 
-                vehicles.capacity, 
-                queue.current_passengers, 
-                COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name, 
-                terminals.name as origin, 
-                routes.destination
-            ')
-                ->withFullJoins()
-                ->where('queue.status', 'departed')
-                ->where('queue.departure_time >=', date('Y-m-d 00:00:00'))
-                ->where('queue.departure_time <=', date('Y-m-d 23:59:59'))
-                ->orderBy('queue.departure_time', 'DESC')
-                ->limit(10)
-                ->findAll(),
-            'total_departures_today' => $queueModel->where('status', 'departed')
-                ->where('departure_time >=', date('Y-m-d 00:00:00'))
-                ->where('departure_time <=', date('Y-m-d 23:59:59'))
-                ->countAllResults(),
             'departure_rules' => $this->getDepartureRules(),
             'route_average_departures' => $this->getRouteAverageDepartures(),
             'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
@@ -103,37 +83,10 @@ class Home extends BaseController
             }
             unset($item);
 
-            $recent_departures = $queueModel->select('
-                queue.*, 
-                COALESCE(NULLIF(queue.plate_number, \'\'), vehicles.plate_number) as plate_number, 
-                COALESCE(NULLIF(queue.driver_name, \'\'), vehicles.driver_name) as driver_name, 
-                terminals.name as origin, 
-                routes.destination
-            ')
-                ->withFullJoins()
-                ->where('queue.status', 'departed')
-                ->where('queue.departure_time >=', date('Y-m-d 00:00:00'))
-                ->where('queue.departure_time <=', date('Y-m-d 23:59:59'))
-                ->orderBy('queue.departure_time', 'DESC')
-                ->limit(10)
-                ->findAll();
-
-            foreach ($recent_departures as &$dept) {
-                $dept['departure_time_formatted'] = date('h:i A', strtotime($dept['departure_time']));
-            }
-            unset($dept);
-
-            $total_departures_today = $queueModel->where('status', 'departed')
-                ->where('departure_time >=', date('Y-m-d 00:00:00'))
-                ->where('departure_time <=', date('Y-m-d 23:59:59'))
-                ->countAllResults();
-
             $routeModel = new \App\Models\RouteModel();
 
             $payload = [
                 'active_queue' => $active_queue,
-                'recent_departures' => $recent_departures,
-                'total_departures_today' => $total_departures_today,
                 'departure_rules' => $this->getDepartureRules(),
                 'route_average_departures' => $this->getRouteAverageDepartures(),
                 'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
