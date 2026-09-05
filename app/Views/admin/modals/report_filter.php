@@ -1,4 +1,23 @@
 <!-- Report Filter Modal (Reusable Partial) -->
+<style>
+    /* Keep vehicle-type autocomplete visible above the modal footer. */
+    #reportFilterModal .modal-dialog,
+    #reportFilterModal .modal-content,
+    #reportFilterModal form,
+    #reportFilterModal .modal-body,
+    #reportFilterModal .mb-3 {
+        overflow: visible !important;
+    }
+
+    #reportFilterModal .autocomplete-wrapper.is-open {
+        position: relative !important;
+        z-index: 3000 !important;
+    }
+
+    #reportFilterModal .autocomplete-dropdown {
+        z-index: 3001 !important;
+    }
+</style>
 <div class="modal fade" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
