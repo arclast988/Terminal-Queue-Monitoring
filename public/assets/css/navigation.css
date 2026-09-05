@@ -317,19 +317,30 @@ body.staff-theme .logo-text h1 {
   .nav-menu .dropdown { display: block; width: 100%; }
 
   .nav-menu .dropdown-content {
-    position: static !important;
+    position: absolute !important;
+    top: calc(100% + 6px);
+    left: 0;
     display: none !important;
-    box-shadow: none;
-    border: none;
-    background: rgba(0, 0, 0, .08);
-    border-radius: 8px;
-    padding: 5px 0;
-    margin-top: 5px;
-    min-width: auto;
-    width: 100%;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, .16);
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 10px;
+    padding: 6px 0;
+    margin-top: 0;
+    min-width: 220px;
+    width: max-content;
+    max-width: calc(100vw - 56px);
+    z-index: 2003 !important;
   }
 
   .nav-menu .dropdown.mobile-open .dropdown-content { display: block !important; }
+
+  .nav-menu .dropdown-content a {
+    width: auto;
+    min-height: 44px;
+    padding: 10px 16px !important;
+    color: #1e293b !important;
+  }
 
   .nav-menu .dropbtn .fa-caret-down { transition: transform .25s ease !important; }
   .nav-menu .dropdown.mobile-open .dropbtn .fa-caret-down { transform: rotate(180deg) !important; }
@@ -510,6 +521,23 @@ div:has(> .autocomplete-wrapper:hover) {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
+/* Keep autocomplete panels floating above modal footers instead of being clipped. */
+#logReportFilterModal .modal-content,
+#logReportFilterModal .modal-body,
+#logReportFilterModal .mb-3 {
+  overflow: visible !important;
+}
+
+#logReportFilterModal .autocomplete-wrapper.is-open {
+  position: relative !important;
+  z-index: 3000 !important;
+}
+
+#logReportFilterModal .modal-footer {
+  position: relative;
+  z-index: 1;
+}
+
 .autocomplete-item {
   color: #1e293b;
   border-bottom-color: #f1f5f9 !important;
@@ -654,6 +682,4 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
 .modal {
   z-index: 100020 !important;
 }
-
-
 
