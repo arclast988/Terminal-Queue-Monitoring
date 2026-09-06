@@ -867,10 +867,10 @@ html body .stats-grid button.stat-card,
     gap: 8px;
 }
 
-/* ---- Header info hides earlier (was 992px) so it doesn't wrap awkwardly ---- */
+/* ---- Header info: visible across responsive breakpoints without awkward wrap ---- */
 @media (max-width: 1199.98px) {
     .header-info {
-        display: none !important;
+        display: flex;
     }
 }
 

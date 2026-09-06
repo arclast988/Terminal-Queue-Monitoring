@@ -345,6 +345,21 @@
     }
 
     /* --- Responsive --- */
+    @media (max-width: 1200px) and (min-width: 769px) {
+        .guest-header .header-info {
+            padding-left: 14px;
+            display: flex !important;
+            height: 24px;
+        }
+        .header-clock-pill {
+            font-size: 13.5px;
+            gap: 5px;
+        }
+        .header-clock-pill i {
+            font-size: 13px;
+        }
+    }
+
     @media (max-width: 768px) {
         .advisory-bar {
             padding: 8px 5%;

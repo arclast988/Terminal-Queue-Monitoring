@@ -310,6 +310,7 @@
             box-shadow: var(--shadow-md);
             transition: var(--transition);
             border: 1px solid #edf2f7;
+            border-top: 4px solid var(--fare-accent, #c62828) !important;
             animation: fadeInUp 0.5s ease-out both;
             height: 100%;
             display: flex;
@@ -319,12 +320,13 @@
         .fare-card:hover {
             transform: translateY(-8px);
             box-shadow: var(--shadow-lg);
-            border-color: var(--primary);
+            border-color: var(--fare-accent, var(--primary));
         }
 
-        .fare-card.vehicle-type-van { animation-delay: 0.1s; }
-        .fare-card.vehicle-type-jeepney { animation-delay: 0.2s; }
-        .fare-card.vehicle-type-minibus { animation-delay: 0.3s; }
+        .fare-card.vehicle-type-van     { --fare-accent: var(--vehicle-van, #c62828); animation-delay: 0.1s; }
+        .fare-card.vehicle-type-jeepney { --fare-accent: var(--vehicle-jeepney, #1565c0); animation-delay: 0.2s; }
+        .fare-card.vehicle-type-minibus { --fare-accent: var(--vehicle-minibus, #2e7d32); animation-delay: 0.3s; }
+        .fare-card.vehicle-type-bus     { --fare-accent: var(--vehicle-bus, #ea580c); animation-delay: 0.4s; }
 
         .card-header {
             padding: 20px 25px;
@@ -339,7 +341,7 @@
         .card-header h3 {
             font-size: 20px;
             font-weight: 800;
-            color: #000000;
+            color: #0f172a;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -347,24 +349,16 @@
             transition: transform var(--transition);
         }
 
+        .card-header h3 img {
+            width: 45px;
+            height: 38px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
         .fare-card:hover .card-header h3 {
             transform: scale(1.02);
         }
-
-        .fare-card.vehicle-type-jeepney .card-header { border-top: 3px solid var(--vehicle-jeepney, #1565c0); }
-        .fare-card.vehicle-type-van     .card-header { border-top: 3px solid var(--vehicle-van, #c62828); }
-        .fare-card.vehicle-type-minibus .card-header { border-top: 3px solid var(--vehicle-minibus, #2e7d32); }
-        .fare-card.vehicle-type-bus     .card-header { border-top: 3px solid var(--vehicle-bus, #ea580c); }
-        .fare-card .card-header { border-top: 3px solid var(--fare-accent, #c62828); }
-        .fare-card.vehicle-type-jeepney .card-header h3 { color: #000000; }
-        .fare-card.vehicle-type-van     .card-header h3 { color: #000000; }
-        .fare-card.vehicle-type-minibus .card-header h3 { color: #000000; }
-        .fare-card.vehicle-type-bus     .card-header h3 { color: #000000; }
-        .fare-card.vehicle-type-jeepney:hover { border-color: var(--vehicle-jeepney, #1565c0); }
-        .fare-card.vehicle-type-van:hover     { border-color: var(--vehicle-van, #c62828); }
-        .fare-card.vehicle-type-minibus:hover { border-color: var(--vehicle-minibus, #2e7d32); }
-        .fare-card.vehicle-type-bus:hover     { border-color: var(--vehicle-bus, #ea580c); }
-        .fare-card:hover { border-color: var(--fare-accent, #c62828); }
 
         .type-badge {
             padding: 5px 12px;
@@ -741,10 +735,10 @@
                 </div>
             </div>
 
-            <!-- Mini Bus Routes -->
+            <!-- Minibus Routes -->
             <div class="fare-card vehicle-type-minibus">
                 <div class="card-header">
-                    <h3><img src="<?= base_url('images/minibus.png') ?>" alt="Minibus" style="width: 45px; height: auto; object-fit: contain;"> Mini Bus Routes</h3>
+                    <h3><img src="<?= base_url('images/minibus.png') ?>" alt="Minibus"> Minibus Routes</h3>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($minibus_routes)): ?>
@@ -782,7 +776,7 @@
                     <?php else: ?>
                         <div class="fare-empty-state">
                             <i class="fas fa-route"></i>
-                            <span>No mini bus fares listed.</span>
+                            <span>No minibus fares listed.</span>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -793,13 +787,18 @@
                 <?php 
                     $vtColor = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
                     $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                    $vtImg = vehicle_type_image($vehicleType['slug']);
                 ?>
-                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>; border-top: 3px solid var(--vehicle-<?= esc($vehicleType['slug']) ?>, <?= esc($vtColor) ?>);">
-                    <div class="card-header" style="border-top: 3px solid var(--vehicle-<?= esc($vehicleType['slug']) ?>, <?= esc($vtColor) ?>);">
+                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>;">
+                    <div class="card-header">
                         <h3>
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white me-2" style="width: 32px; height: 32px; background-color: var(--vehicle-<?= esc($vehicleType['slug']) ?>, <?= esc($vtColor) ?>); font-size: 15px;">
-                                <i class="fas <?= esc($vtIcon) ?>"></i>
-                            </span>
+                            <?php if (!empty($vtImg)): ?>
+                                <img src="<?= base_url('images/' . $vtImg) ?>" alt="<?= esc($vehicleType['name']) ?>">
+                            <?php else: ?>
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; font-size: 15px;">
+                                    <i class="fas <?= esc($vtIcon) ?>"></i>
+                                </span>
+                            <?php endif; ?>
                             <?= esc($vehicleType['name']) ?> Routes
                         </h3>
                     </div>
@@ -967,9 +966,9 @@
     function buildFareCard(type, label, badgeClass, imgSrc, routes, color) {
         var typeClass = type ? ' vehicle-type-' + type : '';
         var accent = color || '#c62828';
-        var html = '<div class="fare-card' + typeClass + '" style="--fare-accent: ' + accent + '; border-top: 3px solid ' + accent + ';">'
-            + '<div class="card-header" style="border-top: 3px solid ' + accent + ';">'
-            + '<h3><img src="' + imgSrc + '" alt="' + label + '" style="width: 45px; height: auto; object-fit: contain;"> ' + label + '</h3>'
+        var html = '<div class="fare-card' + typeClass + '" style="--fare-accent: ' + accent + ';">'
+            + '<div class="card-header">'
+            + '<h3><img src="' + imgSrc + '" alt="' + label + '"> ' + label + '</h3>'
             + '</div>'
             + '<div class="fare-list">';
 
