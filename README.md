@@ -1,6 +1,15 @@
 # Jeepney NVans — Palompon Transit Management System
 
-A CodeIgniter 4 web app for managing van/jeepney terminal queues, routes, vehicle dispatch, and admin audit logs.
+## System Documentation & User Manuals
+
+Official system manuals and usability guides are maintained in the [`docs/`](file:///c:/jeepneynvans/docs) directory:
+
+- 📘 [**Administrator & Super Admin User Manual**](file:///c:/jeepneynvans/docs/USER_MANUAL_ADMIN.md) — Comprehensive guide to fleet registration, route & fare matrix setup, departure headway rules, user permissions, announcements, and audit trails.
+- 📋 [**Dispatcher & Terminal Staff User Manual**](file:///c:/jeepneynvans/docs/USER_MANUAL_DISPATCHER.md) — Step-by-step terminal queue operations, FIFO entry, 30-minute departure cooldown enforcement, boarding progression, passenger counting, and 1-click Undo Cancel.
+- 🚏 [**Commuter & Passenger User Guide**](file:///c:/jeepneynvans/docs/USER_MANUAL_COMMUTER.md) — Commuter guide for live terminal monitoring, seat availability progress, 20% statutory discount rules, daily schedules, and departure search.
+- 🛡️ [**Error Recognition, Diagnosis & Recovery Guide (Nielsen Heuristic #9)**](file:///c:/jeepneynvans/docs/ERROR_RECOGNITION_DIAGNOSIS_RECOVERY_GUIDE.md) — Deep-dive usability manual detailing plain-language diagnostics, error prevention guardrails, 1-click Undo Cancel, cooldown timers, `no-change-guard.js`, and WebSocket/HTTP failover.
+
+Interactive, clickable versions of these manuals are also directly accessible inside the web application at `/admin/manual`, `/staff/manual`, and `/manual`.
 
 ## Setup (Ubuntu Server / Linux & Windows WSL — Nginx + PHP-FPM + PostgreSQL, no XAMPP)
 

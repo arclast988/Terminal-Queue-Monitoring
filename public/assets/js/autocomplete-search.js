@@ -32,7 +32,7 @@
             w.style.zIndex = '';
             var dd = w.querySelector('.autocomplete-dropdown');
             if (dd) dd.style.display = 'none';
-            var parentContainer = w.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .row, .form-group, fieldset, .modern-card-body');
+            var parentContainer = w.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
             if (parentContainer) {
                 parentContainer.classList.remove('autocomplete-parent-active');
                 parentContainer.style.zIndex = '';
@@ -44,14 +44,15 @@
         if (!wrapper || !dropdown) return;
         closeAllAutocompleteDropdowns(wrapper);
         wrapper.classList.add('is-open');
-        wrapper.style.zIndex = '999999';
+        var isInModal = Boolean(wrapper.closest('.modal'));
+        wrapper.style.zIndex = isInModal ? '1065' : '100';
         dropdown.style.display = 'block';
 
-        const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .row, .form-group, fieldset, .modern-card-body');
+        const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
         if (parentContainer) {
             parentContainer.classList.add('autocomplete-parent-active');
             parentContainer.style.position = 'relative';
-            parentContainer.style.zIndex = '99999';
+            parentContainer.style.zIndex = isInModal ? '1060' : '40';
         }
     }
 
@@ -61,12 +62,16 @@
         wrapper.style.zIndex = '';
         dropdown.style.display = 'none';
 
-        const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .row, .form-group, fieldset, .modern-card-body');
+        const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
         if (parentContainer) {
             parentContainer.classList.remove('autocomplete-parent-active');
             parentContainer.style.zIndex = '';
         }
     }
+
+    // Always close autocomplete dropdowns when modals open or forms submit
+    document.addEventListener('show.bs.modal', function () { closeAllAutocompleteDropdowns(); });
+    document.addEventListener('submit', function () { closeAllAutocompleteDropdowns(); });
 
     // Inject base dropdown CSS styles to ensure complete appearance on all pages
     if (!document.getElementById('autocomplete-search-base-styles')) {
@@ -75,15 +80,21 @@
         style.textContent = `
             .autocomplete-wrapper {
                 position: relative !important;
-                z-index: 10 !important;
+                z-index: 10;
                 overflow: visible !important;
             }
             .autocomplete-wrapper.is-open {
-                z-index: 999999 !important;
+                z-index: 100 !important;
+            }
+            .modal .autocomplete-wrapper.is-open {
+                z-index: 1065 !important;
             }
             .autocomplete-parent-active {
-                z-index: 99999 !important;
+                z-index: 40 !important;
                 position: relative !important;
+            }
+            .modal .autocomplete-parent-active {
+                z-index: 1060 !important;
             }
             .autocomplete-dropdown {
                 background: #ffffff;
@@ -91,8 +102,11 @@
                 box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
                 border-radius: 14px;
                 overflow-y: auto;
-                z-index: 9999999 !important;
+                z-index: 1000 !important;
                 padding: 6px;
+            }
+            .modal .autocomplete-dropdown {
+                z-index: 1070 !important;
             }
             .autocomplete-item {
                 color: #1e293b;

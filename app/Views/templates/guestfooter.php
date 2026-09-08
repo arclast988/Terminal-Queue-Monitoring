@@ -9,40 +9,53 @@
             <div class="f-links">
                 <h4>Quick Links</h4>
                 <ul>
+                    <li><a href="<?= base_url('guest') ?>">Terminal Monitor</a></li>
                     <li><a href="<?= base_url('schedules') ?>">Schedules</a></li>
                     <li><a href="<?= base_url('fares') ?>">Route Fares</a></li>
-                    <li><a href="<?= base_url('login') ?>">Staff Login</a></li>
-                    <li><a href="javascript:void(0)" onclick="openSupportModal('termsModal')">Terms of Service</a></li>
+                    <li><a href="<?= base_url('search') ?>">Trip Search</a></li>
+                    <li><a href="<?= base_url('manual') ?>">Commuter Guide</a></li>
+                    <?php if (session()->get('isLoggedIn')): ?>
+                        <?php
+                        $dashUrl = '/';
+                        if (in_array(session()->get('role'), ['super_admin', 'admin'], true)) $dashUrl = '/admin/dashboard';
+                        elseif (session()->get('role') === 'staff') $dashUrl = '/staff/dashboard';
+                        ?>
+                        <li><a href="<?= base_url($dashUrl) ?>"><i class="fas fa-th-large"></i> Dashboard</a></li>
+                    <?php else: ?>
+                        <li><a href="<?= base_url('login') ?>">Staff & Admin Login</a></li>
+                    <?php endif; ?>
                 </ul>
             </div>
             <div class="f-links">
                 <h4>Support</h4>
                 <ul>
-                    <li><a href="javascript:void(0)" onclick="openSupportModal('helpModal')">Help Center</a></li>
-                    <li><a href="javascript:void(0)" onclick="openSupportModal('reportModal')">Report Issue</a></li>
-                    <li><a href="javascript:void(0)" onclick="openSupportModal('contactModal')">Contact Us</a></li>
-                    <li><a href="javascript:void(0)" onclick="openSupportModal('faqModal')">FAQ</a></li>
+                    <li><a href="<?= base_url('manual') ?>"><i class="fas fa-book-open"></i> User Guide & Error Help</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('helpModal')">Help Center</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('reportModal')">Report Issue</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('contactModal')">Contact Us</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('faqModal')">FAQ</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('termsModal')">Terms of Service</a></li>
                 </ul>
             </div>
             <div class="f-links">
                 <h4>Contact</h4>
                 <ul>
-                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> Palompon Terminal Center</li>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538</li>
                     <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="tel:0535550123" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
-                            <i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> (053) 555-0123
+                        <a href="tel:0535558376" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
+                            <i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> (053) 555-8376 / 338-2022
                         </a>
                     </li>
                     <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="mailto:<?= esc(config('Email')->recipients) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
-                            <i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= esc(config('Email')->recipients) ?>
+                        <a href="mailto:<?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
+                            <i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>
                         </a>
                     </li>
                 </ul>
             </div>
         </div>
         <div class="f-copyright">
-            &copy; 2026 Palompon Transit Terminal. All rights reserved. | Government of Palompon, Leyte
+            &copy; <?= date('Y') ?> Palompon Transit Terminal Management System (PTTM). All rights reserved. | Municipality of Palompon, Leyte
         </div>
     </div>
 </footer>
@@ -54,22 +67,32 @@
     <div class="support-modal">
         <button class="close-modal" onclick="closeSupportModal('helpModal')">&times;</button>
         <h3><i class="fas fa-life-ring" style="color:#3b82f6;"></i> Help Center</h3>
-        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Browse common topics to get started quickly.</p>
+        <p style="font-size:14px;color:#64748b;margin-bottom:16px;">Browse common topics or view the full commuter user manual.</p>
+        
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="font-size: 13px; color: #1e40af; font-weight: 600;">
+                <i class="fas fa-book-open" style="margin-right: 6px;"></i> Complete Commuter & Passenger Guide
+            </div>
+            <a href="<?= base_url('manual') ?>" style="background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 700; text-decoration: none; white-space: nowrap;">
+                Open Guide →
+            </a>
+        </div>
+
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How do I track a vehicle? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the search bar on the main page to search by plate number, destination, or operator name. Results will show the vehicle's current queue position and estimated departure time.</div>
+            <div class="faq-answer">Use the search bar on the main page or visit the Trip Search page to search by plate number, destination, or vehicle type. Results show the vehicle's current queue position, remaining seats, and estimated departure time.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How often is queue data updated? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The Terminal Queue on the home page refreshes instantly via real-time synchronization. Schedules are updated as soon as staff record changes at the terminal.</div>
+            <div class="faq-answer">The Terminal Queue on the home page refreshes instantly via real-time WebSocket synchronization. If connection drops, it automatically falls back to background HTTP updates every 20 seconds.</div>
         </div>
         <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">How do I view route fares? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Click "Fares" in the navigation bar or the "Route Fares" link under Quick Links. Fares are organized by vehicle type.</div>
+            <button class="faq-question" onclick="toggleFaq(this)">How do I view route fares & discounts? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">Click "Fares" in the navigation bar. Official LTFRB fare tables and 20% statutory discounts for Students, Senior Citizens, and PWDs are calculated automatically.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Is there a mobile app available? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Currently, this is a web-based system only. The site is fully responsive and works on any mobile or tablet browser — simply visit the URL on your phone!</div>
+            <div class="faq-answer">No app store download is necessary! This website is fully mobile-responsive. Simply visit the URL in your mobile browser or tap "Add to Home Screen" for quick access.</div>
         </div>
     </div>
 </div>
@@ -102,7 +125,7 @@
                     <option>Incorrect schedule or departure time</option>
                     <option>Missing vehicle from queue</option>
                     <option>Website display / technical problem</option>
-                    <option>Incorrect fare information</option>
+                    <option>Incorrect fare information / overcharging</option>
                     <option>Other issue</option>
                 </select>
             </div>
@@ -126,7 +149,7 @@
         <?php if (session()->getFlashdata('contact_error')): ?>
         <div class="alert-error-banner"><i class="fas fa-times-circle"></i> <?= session()->getFlashdata('contact_error') ?></div>
         <?php endif; ?>
-        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message and we'll get back to you as soon as possible.</p>
+        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message and terminal administration will get back to you as soon as possible.</p>
         <form action="<?= base_url('contact/send') ?>" method="post">
             <?= csrf_field() ?>
             <input type="hidden" name="type" value="contact">
@@ -158,23 +181,23 @@
         <h3><i class="fas fa-question-circle" style="color:#eab308;"></i> Frequently Asked Questions</h3>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What are the terminal operating hours? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The Palompon Terminal typically operates from early morning until late evening. Individual vehicle schedules depend on operators and may vary. Check the Schedules page for up-to-date times.</div>
+            <div class="faq-answer">The Palompon Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Individual vehicle departure times depend on route demand and scheduled headway intervals. Check the Live Monitor or Schedules page for up-to-date departures.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Can I buy tickets through this website? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">No. This system is for real-time monitoring only. Tickets and fares are handled directly at the terminal or with the vehicle operator.</div>
+            <div class="faq-answer">No. This system provides real-time public monitoring only. Cash fares and tickets are handled directly at the terminal bays or with the vehicle conductor.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What vehicle types operate from this terminal? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Available vehicle types are managed by the terminal administrator. You can filter schedules and fares by vehicle type.</div>
+            <div class="faq-answer">PUJs (Jeepneys), UV Express Vans, and Modern Minibuses operate across certified routes including Ormoc, Tacloban, Isabel, Naval, and Kananga. You can filter the queue and fares by vehicle type.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How accurate are the estimated departure times? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Departure times are set by terminal staff when a vehicle checks in. They are estimates and may shift slightly depending on passenger loading. A vehicle may depart early if it fills up.</div>
+            <div class="faq-answer">Estimated Departure Times (ETD) are calculated automatically based on official headway rules set by terminal administration. A vehicle may depart early once all passenger seats are filled.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Who do I contact for complaints or feedback? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the "Contact Us" or "Report Issue" widgets here on this page. Your message goes directly to our support team at <a href="mailto:<?= esc(config('Email')->recipients) ?>" style="color:#2563eb; font-weight:600;"><?= esc(config('Email')->recipients) ?></a>.</div>
+            <div class="faq-answer">Use the "Contact Us" or "Report Issue" forms on this page. Your message goes directly to our support team at <a href="mailto:<?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>" style="color:#2563eb; font-weight:600;"><?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?></a>.</div>
         </div>
     </div>
 </div>
@@ -185,12 +208,12 @@
         <button class="close-modal" onclick="closeSupportModal('termsModal')">&times;</button>
         <h3><i class="fas fa-file-contract" style="color:#6366f1;"></i> Terms of Service</h3>
         <div style="font-size: 14px; color: #4b5563; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-            <p><strong>Last updated: February 2026</strong></p>
+            <p><strong>Last updated: September 2026</strong></p>
             <h4 style="color: #1f2937; margin: 15px 0 5px;">1. Acceptance of Terms</h4>
-            <p>By accessing and using the Palompon Transit Terminal Monitoring System ("PTTM System"), you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
+            <p>By accessing and using the Palompon Transit Terminal Management System ("PTTM System"), you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">2. Description of Service</h4>
-            <p>The PTTM System provides real-time information regarding vehicle queues, departure schedules, and route fares within the Palompon Terminal. This is a public information service operated by the Government of Palompon, Leyte.</p>
+            <p>The PTTM System provides real-time information regarding vehicle queues, departure schedules, and route fares within the Palompon Terminal. This is a public information service operated by the Municipality of Palompon, Leyte.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">3. Use of Information</h4>
             <ul>
@@ -283,6 +306,7 @@ footer {
     align-items: center;
     justify-content: center;
     padding: 16px;
+    overscroll-behavior: contain;
 }
 .support-modal-backdrop.active { display: flex; }
 
@@ -296,6 +320,7 @@ footer {
     padding: 35px 30px;
     position: relative;
     box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    overscroll-behavior: contain;
 }
 
 #termsModal .support-modal {
@@ -388,21 +413,50 @@ footer {
 <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
 <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
 <script>
+let savedSupportScrollY = 0;
+
 function openSupportModal(modalId){
     const modal = document.getElementById(modalId);
-    if(modal){ modal.classList.add('active'); document.body.style.overflow='hidden'; }
+    if(modal){
+        // Save current scroll position before opening
+        savedSupportScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+        modal.classList.add('active');
+        document.documentElement.style.overflow = 'hidden';
+    }
 }
+
 function closeSupportModal(modalId){
     const modal = document.getElementById(modalId);
-    if(modal){ modal.classList.remove('active');
-        if(!document.querySelector('.support-modal-backdrop.active')){ document.body.style.overflow=''; }
+    if(modal){
+        modal.classList.remove('active');
+        if(!document.querySelector('.support-modal-backdrop.active')){
+            document.documentElement.style.overflow = '';
+            document.body.style.overflow = '';
+            // Ensure scroll position remains exactly where user was
+            if (typeof savedSupportScrollY === 'number') {
+                window.scrollTo({
+                    top: savedSupportScrollY,
+                    behavior: 'instant'
+                });
+            }
+        }
     }
 }
-window.onclick = function(event){
-    if(event.target.classList.contains('support-modal-backdrop')){
+
+window.addEventListener('click', function(event){
+    if(event.target && event.target.classList && event.target.classList.contains('support-modal-backdrop')){
         closeSupportModal(event.target.id);
     }
-}
+});
+
+document.addEventListener('keydown', function(event){
+    if(event.key === 'Escape' || event.key === 'Esc'){
+        const activeModal = document.querySelector('.support-modal-backdrop.active');
+        if(activeModal){
+            closeSupportModal(activeModal.id);
+        }
+    }
+});
 
 function toggleFaq(btn){
     const answer = btn.nextElementSibling;

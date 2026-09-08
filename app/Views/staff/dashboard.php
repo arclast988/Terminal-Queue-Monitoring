@@ -1,10 +1,13 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
-<div class="page-header-modern fade-in">
-    <h1 class="page-title-modern">
+<div class="page-header-modern fade-in d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h1 class="page-title-modern mb-0">
         <i class="bi bi-speedometer2"></i>
         <?= esc($title) ?>
     </h1>
+    <a href="<?= base_url('staff/manual') ?>" class="btn-modern btn-modern-outline" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+        <i class="bi bi-book"></i> User Manual
+    </a>
 </div>
 
 <?php if (session()->getFlashdata('success')): ?>

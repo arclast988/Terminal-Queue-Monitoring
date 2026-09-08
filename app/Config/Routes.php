@@ -28,6 +28,8 @@ $routes->get('fares', 'Fares::index');
 $routes->get('api/fares', 'Fares::apiData');
 $routes->get('history', 'History::index', ['filter' => 'auth:admin,staff']);
 $routes->post('contact/send', 'Contact::send');
+$routes->get('manual', 'Manual::index');
+$routes->get('user-manual', 'Manual::index');
 
 // Public API for real-time queue sync (no auth required - read-only)
 $routes->get('api/queue-status', 'Api\QueueStatus::index');
@@ -112,6 +114,9 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('departure-rules/edit/(:num)', 'Admin\DepartureRules::edit/$1');
     $routes->post('departure-rules/update/(:num)', 'Admin\DepartureRules::update/$1');
     $routes->post('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
+
+    // User Manual & Error Recovery Guide
+    $routes->get('manual', 'Manual::admin');
 });
 
 $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
@@ -127,4 +132,7 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
 
     // Departure Rules (staff view-only access)
     $routes->get('departure-rules', 'Admin\DepartureRules::index');
+
+    // User Manual & Error Recovery Guide
+    $routes->get('manual', 'Manual::staff');
 });

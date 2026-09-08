@@ -66,16 +66,20 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
                         <div class="mb-4">
                             <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
-                            <select class="select-modern" id="terminal_id" name="terminal_id" required>
-                                <?php if (!$onlyTerminal): ?>
+                            <?php if ($onlyTerminal): ?>
+                                <?php $singleTerminal = reset($terminals); ?>
+                                <input type="text" class="input-modern" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--surface-sunken, #f8fafc); cursor: not-allowed;">
+                                <input type="hidden" name="terminal_id" id="terminal_id" value="<?= $singleTerminal['id'] ?>">
+                            <?php else: ?>
+                                <select class="select-modern" id="terminal_id" name="terminal_id" required>
                                     <option value="">— Select Terminal —</option>
-                                <?php endif; ?>
-                                <?php foreach ($terminals as $t): ?>
-                                    <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id', $rule['terminal_id'] ?? '') == $t['id']) ? 'selected' : '' ?>>
-                                        <?= esc($t['name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                                    <?php foreach ($terminals as $t): ?>
+                                        <option value="<?= $t['id'] ?>" <?= ($onlyTerminal || old('terminal_id', $rule['terminal_id'] ?? '') == $t['id']) ? 'selected' : '' ?>>
+                                            <?= esc($t['name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
                         </div>
 
                         <div class="mb-4">

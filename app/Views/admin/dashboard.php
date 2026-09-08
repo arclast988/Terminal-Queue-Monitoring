@@ -90,9 +90,14 @@
         <i class="bi bi-speedometer2"></i>
         Admin Dashboard
     </h1>
-    <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal">
-        <i class="bi bi-file-earmark-text"></i> Generate Report
-    </button>
+    <div class="d-flex gap-2 flex-wrap flex-column flex-sm-row">
+        <a href="<?= base_url('admin/manual') ?>" class="btn-modern btn-modern-outline" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i class="bi bi-book"></i> User Manual
+        </a>
+        <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
+            <i class="bi bi-file-earmark-text"></i> Generate Report
+        </button>
+    </div>
 </div>
 
 <?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
