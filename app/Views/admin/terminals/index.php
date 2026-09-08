@@ -72,14 +72,14 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                 </td>
                                 <?php if ($isAdmin): ?>
                                 <td data-label="Actions">
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2 justify-content-end">
                                         <a href="<?= base_url('admin/terminals/edit/'.$terminal['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
-                                            <i class="bi bi-pencil"></i> Edit
+                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
                                         <form action="<?= base_url('admin/terminals/delete/'.$terminal['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this terminal?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
-                                                <i class="bi bi-trash"></i> Delete
+                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
                                     </div>

@@ -204,13 +204,13 @@ body.admin-theme .main-content {
    TEXT CONTRAST FIXES - Ensure readability
    ================================================================= */
 
-/* Admin theme: ensure headings are readable on dark background */
-body.admin-theme h1,
-body.admin-theme h2,
-body.admin-theme h3,
-body.admin-theme .h1,
-body.admin-theme .h2,
-body.admin-theme .h3 {
+/* Admin theme: ensure headings are readable on light content while protecting dark manual headers */
+body.admin-theme h1:not(.manual-header h1):not(.manual-title),
+body.admin-theme h2:not(.manual-header h2),
+body.admin-theme h3:not(.manual-header h3):not(.manual-card h3),
+body.admin-theme .h1:not(.manual-header .h1),
+body.admin-theme .h2:not(.manual-header .h2),
+body.admin-theme .h3:not(.manual-header .h3) {
     color: #1e293b !important;
 }
 

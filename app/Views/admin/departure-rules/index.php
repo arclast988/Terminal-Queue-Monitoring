@@ -365,14 +365,14 @@
                                 </td>
                                 <?php if (session()->get('role') !== 'staff'): ?>
                                 <td data-label="Action">
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2 justify-content-end">
                                         <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
-                                            <i class="bi bi-pencil"></i> Edit
+                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
                                         <form action="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this rule?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
-                                                <i class="bi bi-trash"></i> Delete
+                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
                                     </div>

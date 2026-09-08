@@ -114,11 +114,11 @@ foreach ($users as $u) {
                                         $initials = strtoupper(substr($user['username'], 0, 2));
                                     }
                                     ?>
-                                    <div class="d-flex align-items-center">
+                                    <div class="d-flex align-items-center user-cell-content">
                                         <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' || $user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher' ?>">
                                             <?= esc($initials) ?>
                                         </div>
-                                        <div>
+                                        <div class="user-info-text" style="min-width: 0; flex: 1 1 auto;">
                                             <div class="fw-bold" style="font-size:14.5px; color: inherit;"><?= esc($user['full_name']) ?></div>
                                             <div>
                                                 <small style="font-size:12.5px; color: #64748b;">@<?= esc($user['username']) ?></small>
@@ -135,7 +135,7 @@ foreach ($users as $u) {
                                         </span>
                                     <?php endif; ?>
                                 </td>
-                                <td style="max-width: 350px;" data-label="Assigned Routes">
+                                <td data-label="Assigned Routes">
                                     <?php if ($user['role'] === 'super_admin' || $user['role'] === 'admin'): ?>
                                         <span class="badge-modern badge-modern-success">All Routes</span>
                                     <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
@@ -145,7 +145,7 @@ foreach ($users as $u) {
                                             foreach ($routeParts as $rp):
                                                 ?>
                                                 <span class="badge-modern badge-modern-primary"
-                                                    style="font-size:12.5px; font-weight:600; white-space: nowrap; padding: 3px 8px;"><?= esc($rp) ?></span>
+                                                    style="font-size:12.5px; font-weight:600; padding: 3px 8px;"><?= esc($rp) ?></span>
                                             <?php endforeach; ?>
                                         </div>
                                     <?php else: ?>

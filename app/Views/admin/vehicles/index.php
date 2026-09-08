@@ -284,17 +284,17 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                     </div>
                                 </td>
                                 <td data-label="Action">
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex gap-2 justify-content-end">
                                         <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
                                             class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
-                                            <i class="bi bi-pencil"></i> Edit
+                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
                                         <form action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post"
                                             class="d-inline"
                                             onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
                                             <?= csrf_field() ?>
                                             <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete vehicle">
-                                                <i class="bi bi-trash"></i> Delete
+                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
                                     </div>
