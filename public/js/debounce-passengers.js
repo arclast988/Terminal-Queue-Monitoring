@@ -117,7 +117,8 @@
 
         var headers = {
             'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Silent': 'true'
         };
         if (csrfToken) {
             headers['X-CSRF-TOKEN'] = csrfToken;

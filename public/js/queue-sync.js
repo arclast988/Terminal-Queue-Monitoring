@@ -271,7 +271,7 @@
 
         fetch(_config.refreshUrl, {
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
         })
         .then(function(r) { return r.text(); })
         .then(function(html) {
@@ -322,7 +322,7 @@
 
         fetch(_config.apiUrl, {
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
         })
         .then(function(r) { return r.json(); })
         .then(function(json) {

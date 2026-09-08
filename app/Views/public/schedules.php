@@ -1189,7 +1189,7 @@
             filterTableClientSide();
 
             // Fetch live update with new filter
-            fetchSchedulesStatus();
+            fetchSchedulesStatus(true);
         }
 
         function filterTableClientSide() {
@@ -1221,9 +1221,14 @@
             }
         }
 
-        function fetchSchedulesStatus() {
+        function fetchSchedulesStatus(isUserAction) {
             if (_fetchPending) return;
             _fetchPending = true;
+
+            var card = document.querySelector('.schedule-card');
+            if (isUserAction && card && window.GlobalLoader) {
+                GlobalLoader.showTableLoader(card, 'Loading schedules\u2026');
+            }
 
             var params = [];
             if (currentType) params.push('type=' + encodeURIComponent(currentType));
@@ -1248,6 +1253,9 @@
             })
             .finally(function() {
                 _fetchPending = false;
+                if (card && window.GlobalLoader) {
+                    GlobalLoader.hideTableLoader(card);
+                }
             });
         }
 

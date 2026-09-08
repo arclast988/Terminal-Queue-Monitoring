@@ -329,11 +329,14 @@ class Routes extends BaseController
         }
 
         $this->replaceRouteFares((int) $insertedId, (int) $terminalId, (float) $fare);
+        (new \App\Models\UserRouteModel())->autoAssignNewRouteToStaff((int)$insertedId, (int)$terminalId, $destination);
 
         $this->logActivity('Create route', "$origin → $destination ($vehicleType, ₱$fare).");
         $this->broadcastUpdate('fare_update', ['action' => 'route_created']);
 
-        return redirect()->to('/admin/routes')->with('success', 'New route and fare added successfully.');
+        $referer = (string) $this->request->getHeaderLine('Referer');
+        $target = (strpos($referer, 'fares') !== false) ? '/fares' : '/admin/routes';
+        return redirect()->to($target)->with('success', 'New route and fare added successfully.');
     }
 
     public function edit($id)

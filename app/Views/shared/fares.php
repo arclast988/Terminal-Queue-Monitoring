@@ -402,6 +402,13 @@ $isManager = $isAdmin;
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <?php if ((session()->getFlashdata('error') || session()->getFlashdata('errors')) && old('destination')): ?>
+        <div class="alert alert-danger py-2 px-3 small mb-3" style="border-radius: 8px;">
+          <i class="fas fa-exclamation-triangle me-1"></i>
+          <?= esc(session()->getFlashdata('error') ?? (is_array(session()->getFlashdata('errors')) ? implode(', ', session()->getFlashdata('errors')) : '')) ?>
+        </div>
+        <?php endif; ?>
+
         <form id="addFareForm" action="<?= base_url('admin/routes/store') ?>" method="post">
           <?= csrf_field() ?>
 
@@ -427,6 +434,7 @@ $isManager = $isAdmin;
             <input type="text" name="destination" id="add_destination" class="form-control autocomplete-location" 
                    placeholder="Type or search destination (e.g. ORMOC, TACLOBAN)..." required autocomplete="off"
                    data-suggestions="<?= esc(json_encode(array_values(array_filter($all_locations ?? [], fn($l) => strtoupper($l) !== 'PALOMPON')))) ?>">
+            <div id="add_dest_feedback" class="mt-1" style="display: none; color: #dc2626 !important; font-size: 13.5px; font-weight: 600;">This route already exists for JEEPNEY.</div>
           </div>
 
           <div class="mb-3">
@@ -454,11 +462,6 @@ $isManager = $isAdmin;
                 </div>
               <?php endforeach; ?>
             </div>
-          </div>
-
-          <!-- Validation Message Container -->
-          <div id="routeValidationMsg" class="alert alert-danger py-2 px-3 small d-none mb-3">
-             <i class="fas fa-exclamation-circle me-1"></i> This route already exists.
           </div>
 
           <div class="d-grid mt-2">
@@ -645,59 +648,243 @@ $isManager = $isAdmin;
 <?= $this->include('templates/footer') ?>
 
 <script>
-// Prevent same origin = destination in add fare modal
-document.getElementById('addFareForm')?.addEventListener('submit', function(e) {
-    const terminalId = document.getElementById('add_fare_terminal_id').value;
-    const dest = document.getElementById('add_destination').value;
-    const vehicleType = document.querySelector('#addFareForm input[name="vehicle_type"]:checked')?.value;
-
-    // Double-check existence before final submit
-    if (checkRouteExists(terminalId, dest, vehicleType)) {
-        e.preventDefault();
-        document.getElementById('routeValidationMsg').classList.remove('d-none');
-    }
-});
-
 // Real-time validation for existing routes, grouped by configured vehicle type.
 <?php
 $existingRoutes = [];
 foreach (($routesByType ?? []) as $type => $routes) {
     $existingRoutes[$type] = array_map(fn($route) => [
-        'terminal_id' => (string) $route['terminal_id'],
-        'destination' => strtoupper($route['destination']),
+        'id'          => (int) ($route['id'] ?? 0),
+        'terminal_id' => (string) ($route['terminal_id'] ?? ''),
+        'destination' => strtoupper(trim($route['destination'] ?? '')),
+        'fare'        => (float) ($route['fare'] ?? 0),
+        'vehicle_type'=> $type,
     ], $routes);
 }
 ?>
 const existingRoutes = <?= json_encode($existingRoutes) ?>;
 
-function checkRouteExists(terminalId, dest, type) {
-    if (!terminalId || !dest || !type) return false;
+function findExistingRoute(terminalId, dest, type) {
+    if (!dest || !type) return null;
+    const cleanDest = dest.trim().toUpperCase().replace(/\s+/g, ' ');
+    const cleanTerminal = terminalId ? String(terminalId).trim() : '';
     const routes = existingRoutes[type] || [];
-    return routes.some(r => r.terminal_id === String(terminalId) && r.destination === dest.toUpperCase());
+    return routes.find(r => {
+        const destMatch = r.destination.trim().toUpperCase().replace(/\s+/g, ' ') === cleanDest;
+        if (!destMatch) return false;
+        if (cleanTerminal) return String(r.terminal_id).trim() === cleanTerminal;
+        return true;
+    }) || null;
+}
+
+function checkRouteExists(terminalId, dest, type) {
+    return Boolean(findExistingRoute(terminalId, dest, type));
+}
+
+function validateAddFareForm() {
+    const form = document.getElementById('addFareForm');
+    if (!form) return true;
+
+    const terminalId = document.getElementById('add_fare_terminal_id')?.value || '';
+    const destInput = document.getElementById('add_destination');
+    const dest = destInput ? destInput.value.trim() : '';
+    const checkedRadio = form.querySelector('input[name="vehicle_type"]:checked');
+    const type = checkedRadio ? checkedRadio.value : '';
+    const destFeedback = document.getElementById('add_dest_feedback');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    if (!dest) {
+        if (destInput) {
+            destInput.classList.remove('is-invalid');
+            destInput.style.borderColor = '';
+        }
+        if (destFeedback) {
+            destFeedback.style.display = 'none';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50');
+        }
+        return true;
+    }
+
+    const matched = findExistingRoute(terminalId, dest, type);
+    if (matched) {
+        if (destInput) {
+            destInput.classList.add('is-invalid');
+            destInput.style.borderColor = '#dc2626';
+        }
+        if (destFeedback) {
+            destFeedback.style.display = 'block';
+            destFeedback.style.color = '#dc2626';
+            destFeedback.textContent = 'This route already exists for ' + type.toUpperCase() + '.';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50');
+        }
+        return false;
+    } else {
+        if (destInput) {
+            destInput.classList.remove('is-invalid');
+            destInput.style.borderColor = '';
+        }
+        if (destFeedback) {
+            destFeedback.style.display = 'none';
+        }
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50');
+        }
+        return true;
+    }
+}
+
+// Switch directly from Add modal to Edit modal with full data population
+function switchToEditFare(routeId) {
+    var addModalEl = document.getElementById('addFareModal');
+    if (addModalEl) {
+        var addModal = bootstrap.Modal.getInstance(addModalEl) || new bootstrap.Modal(addModalEl);
+        addModal.hide();
+    }
+
+    var foundRoute = null;
+    for (var vType in existingRoutes) {
+        var match = (existingRoutes[vType] || []).find(function(r) { return r.id == routeId; });
+        if (match) {
+            foundRoute = match;
+            break;
+        }
+    }
+
+    setTimeout(function() {
+        var editForm = document.getElementById('editFareForm');
+        if (editForm && routeId) {
+            editForm.action = '<?= base_url('admin/routes/update') ?>/' + routeId;
+        }
+        if (foundRoute) {
+            if (document.getElementById('edit_fare_destination')) {
+                document.getElementById('edit_fare_destination').value = foundRoute.destination || '';
+            }
+            if (document.getElementById('edit_fare_amount')) {
+                document.getElementById('edit_fare_amount').value = foundRoute.fare || '';
+            }
+            if (document.getElementById('edit_fare_terminal')) {
+                document.getElementById('edit_fare_terminal').value = foundRoute.terminal_id || '';
+            }
+            if (editForm) {
+                var radios = editForm.querySelectorAll('input[name="vehicle_type"]');
+                radios.forEach(function(r) { r.checked = (r.value === foundRoute.vehicle_type); });
+            }
+        } else {
+            var editBtn = document.querySelector('[data-bs-target="#editFareModal"][data-id="' + routeId + '"]');
+            if (editBtn) populateFareModal(editBtn);
+        }
+
+        var editModalEl = document.getElementById('editFareModal');
+        if (editModalEl) {
+            var editModal = bootstrap.Modal.getInstance(editModalEl) || new bootstrap.Modal(editModalEl);
+            editModal.show();
+        }
+    }, 200);
 }
 
 const addForm = document.getElementById('addFareForm');
 if (addForm) {
-    const inputs = addForm.querySelectorAll('select[name="terminal_id"], select[name="destination"], input[name="vehicle_type"]');
-    inputs.forEach(input => {
-        input.addEventListener('change', () => {
-            const terminalId = document.getElementById('add_fare_terminal_id').value;
-            const dest = document.getElementById('add_destination').value;
-            const type = document.querySelector('#addFareForm input[name="vehicle_type"]:checked')?.value;
-            const msgEl = document.getElementById('routeValidationMsg');
-            const submitBtn = addForm.querySelector('button[type="submit"]');
+    const destInput = document.getElementById('add_destination');
+    if (destInput) {
+        destInput.addEventListener('input', validateAddFareForm);
+        destInput.addEventListener('change', validateAddFareForm);
+    }
 
-            if (checkRouteExists(terminalId, dest, type)) {
-                msgEl.classList.remove('d-none');
-                msgEl.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> A <strong>${type.toUpperCase()}</strong> route already exists for this terminal and destination.`;
-                submitBtn.disabled = true;
-            } else {
-                msgEl.classList.add('d-none');
-                submitBtn.disabled = false;
+    const typeRadios = addForm.querySelectorAll('input[name="vehicle_type"]');
+    typeRadios.forEach(r => {
+        r.addEventListener('change', validateAddFareForm);
+    });
+
+    const terminalSelect = addForm.querySelector('select[name="terminal_id"]');
+    if (terminalSelect) {
+        terminalSelect.addEventListener('change', validateAddFareForm);
+    }
+
+    addForm.addEventListener('submit', function(e) {
+        if (!validateAddFareForm()) {
+            e.preventDefault();
+            e.stopPropagation();
+            const destFeedback = document.getElementById('add_dest_feedback');
+            if (destFeedback) {
+                destFeedback.classList.remove('gl-shake');
+                void destFeedback.offsetWidth;
+                destFeedback.classList.add('gl-shake');
             }
-        });
+            if (destInput) {
+                destInput.classList.remove('gl-shake');
+                void destInput.offsetWidth;
+                destInput.classList.add('gl-shake');
+            }
+            return false;
+        }
     });
 }
+
+// Modal lifecycle listeners
+var addFareModalEl = document.getElementById('addFareModal');
+if (addFareModalEl) {
+    addFareModalEl.addEventListener('shown.bs.modal', function() {
+        validateAddFareForm();
+    });
+    addFareModalEl.addEventListener('hidden.bs.modal', function() {
+        if (addForm) {
+            addForm.reset();
+            var radios = addForm.querySelectorAll('input[name="vehicle_type"]');
+            if (radios.length > 0) radios[0].checked = true;
+        }
+        var destInput = document.getElementById('add_destination');
+        if (destInput) {
+            destInput.classList.remove('is-invalid');
+            destInput.classList.remove('gl-shake');
+            destInput.style.borderColor = '';
+        }
+        var destFeedback = document.getElementById('add_dest_feedback');
+        if (destFeedback) {
+            destFeedback.style.display = 'none';
+            destFeedback.classList.remove('gl-shake');
+        }
+        var submitBtn = addForm?.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50');
+        }
+    });
+}
+
+<?php if ((session()->getFlashdata('error') || session()->getFlashdata('errors')) && old('destination')): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var modalEl = document.getElementById('addFareModal');
+    if (modalEl && window.bootstrap) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+        var destInput = document.getElementById('add_destination');
+        if (destInput) {
+            destInput.value = <?= json_encode(old('destination')) ?>;
+        }
+        var fareInput = document.querySelector('#addFareForm input[name="fare"]');
+        if (fareInput && <?= json_encode(old('fare')) ?>) {
+            fareInput.value = <?= json_encode(old('fare')) ?>;
+        }
+        var oldVehicleType = <?= json_encode(old('vehicle_type')) ?>;
+        if (oldVehicleType && addForm) {
+            var r = addForm.querySelector('input[name="vehicle_type"][value="' + oldVehicleType + '"]');
+            if (r) r.checked = true;
+        }
+        var oldTerminalId = <?= json_encode(old('terminal_id')) ?>;
+        if (oldTerminalId) {
+            var t = document.getElementById('add_fare_terminal_id');
+            if (t) t.value = oldTerminalId;
+        }
+        validateAddFareForm();
+    }
+});
+<?php endif; ?>
 
 // Populate edit fare modal synchronously on click/mousedown/show.bs.modal to avoid input flash
 function populateFareModal(btn) {

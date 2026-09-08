@@ -278,8 +278,14 @@
             wrapper.appendChild(dropdown);
 
             let activeIndex = -1;
+            let isSelecting = false;
 
             function renderDropdown(query = '') {
+                if (isSelecting) {
+                    closeDropdown(wrapper, dropdown);
+                    return;
+                }
+
                 const cleanQuery = query.trim().toUpperCase();
                 const filtered = suggestions.filter(loc => loc.toUpperCase().includes(cleanQuery)).slice(0, MAX_DROPDOWN_ITEMS);
 
@@ -307,10 +313,13 @@
                 activeIndex = -1;
 
                 dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
-                    item.addEventListener('mousedown', (e) => {
+                    const handlePick = (e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         selectItem(item.dataset.value);
-                    });
+                    };
+                    item.addEventListener('mousedown', handlePick);
+                    item.addEventListener('click', handlePick);
                     item.addEventListener('mouseenter', () => {
                         dropdown.querySelectorAll('.autocomplete-item').forEach(i => i.classList.remove('active-item'));
                         item.classList.add('active-item');
@@ -319,21 +328,41 @@
             }
 
             function selectItem(val) {
+                isSelecting = true;
                 input.value = val;
                 closeDropdown(wrapper, dropdown);
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.dispatchEvent(new Event('change', { bubbles: true }));
+                closeDropdown(wrapper, dropdown);
                 input.blur();
+                setTimeout(() => {
+                    isSelecting = false;
+                    closeDropdown(wrapper, dropdown);
+                }, INPUT_DEBOUNCE_MS + 100);
             }
 
-            input.addEventListener('focus', () => renderDropdown(input.value));
+            input.addEventListener('focus', () => {
+                if (isSelecting) return;
+                renderDropdown(input.value);
+            });
             input.addEventListener('click', (e) => {
                 e.stopPropagation();
+                if (isSelecting) return;
                 if (dropdown.style.display === 'none' || !wrapper.classList.contains('is-open')) {
                     renderDropdown(input.value);
                 }
             });
-            input.addEventListener('input', debounce(() => renderDropdown(input.value), INPUT_DEBOUNCE_MS));
+            input.addEventListener('input', debounce(() => {
+                if (isSelecting) return;
+                renderDropdown(input.value);
+            }, INPUT_DEBOUNCE_MS));
+            input.addEventListener('blur', () => {
+                setTimeout(() => {
+                    if (!isSelecting) {
+                        closeDropdown(wrapper, dropdown);
+                    }
+                }, 150);
+            });
 
             input.addEventListener('keydown', (e) => {
                 const items = dropdown.querySelectorAll('.autocomplete-item');
