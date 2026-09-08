@@ -56,6 +56,7 @@
         display: inline-block;
         padding-left: 100%;
         animation: gh-marquee 35s linear infinite;
+        animation-delay: var(--marquee-delay, 0s);
         font-weight: 800;
         font-size: 16px;
         letter-spacing: 0.5px;
@@ -490,13 +491,54 @@
 <div class="advisory-bar">
     <div class="advisory-icon" onclick="openAnnouncementModal()" title="View Announcements"><i class="fas fa-bullhorn"></i></div>
     <div class="advisory-text">
-        <div class="marquee">
+        <div class="marquee" id="guestMarquee">
             <?php if (!empty($announcements) && is_array($announcements)): ?>
                 <?= esc(implode(' | ', array_column($announcements, 'message'))) ?>
             <?php else: ?>
                 Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.
             <?php endif; ?>
         </div>
+        <script>
+            // Synchronously compute announcement marquee animation phase before paint
+            // so the announcement continues seamlessly when clicking between Home, Schedules, and Fares.
+            (function () {
+                try {
+                    var DURATION = 35;
+                    var KEY_BASE = 'pt_ann_base_time';
+                    var KEY_LAST = 'pt_ann_last_seen';
+                    var KEY_TEXT = 'pt_ann_text';
+
+                    var now = Date.now();
+                    var rawText = <?= json_encode(trim(!empty($announcements) && is_array($announcements) ? implode(' | ', array_column($announcements, 'message')) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.')) ?>;
+
+                    var storedText = sessionStorage.getItem(KEY_TEXT) || localStorage.getItem(KEY_TEXT);
+                    var lastSeen = parseFloat(sessionStorage.getItem(KEY_LAST) || localStorage.getItem(KEY_LAST));
+                    var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
+
+                    // If announcement text changed or inactive for more than 15 mins or fresh session: initialize base time
+                    if (!baseTime || isNaN(baseTime) || storedText !== rawText || !lastSeen || (now - lastSeen > 15 * 60 * 1000)) {
+                        baseTime = now;
+                        sessionStorage.setItem(KEY_BASE, baseTime.toString());
+                        localStorage.setItem(KEY_BASE, baseTime.toString());
+                        sessionStorage.setItem(KEY_TEXT, rawText);
+                        localStorage.setItem(KEY_TEXT, rawText);
+                    }
+
+                    sessionStorage.setItem(KEY_LAST, now.toString());
+                    localStorage.setItem(KEY_LAST, now.toString());
+
+                    var elapsed = ((now - baseTime) / 1000) % DURATION;
+                    if (elapsed < 0) elapsed = 0;
+                    var delayStr = '-' + elapsed.toFixed(3) + 's';
+
+                    var el = document.getElementById('guestMarquee');
+                    if (el) {
+                        el.style.animationDelay = delayStr;
+                    }
+                    document.documentElement.style.setProperty('--marquee-delay', delayStr);
+                } catch (e) {}
+            })();
+        </script>
     </div>
 </div>
 
@@ -656,6 +698,18 @@
                     if (text !== lastText) {
                         lastText = text;
                         bar.textContent = text;
+                        try {
+                            var nowReset = Date.now();
+                            sessionStorage.setItem('pt_ann_text', text);
+                            localStorage.setItem('pt_ann_text', text);
+                            sessionStorage.setItem('pt_ann_base_time', nowReset.toString());
+                            localStorage.setItem('pt_ann_base_time', nowReset.toString());
+                            bar.style.animation = 'none';
+                            bar.offsetHeight;
+                            bar.style.animation = '';
+                            bar.style.animationDelay = '0s';
+                            document.documentElement.style.setProperty('--marquee-delay', '0s');
+                        } catch (e) {}
                     }
                     // Also update modal list
                     var modalList = document.getElementById('annModalList');
@@ -729,5 +783,60 @@
         // Return to the exact spot instead of the top.
         window.scrollTo(0, _annScrollY);
     }
+    // Announcement pause-on-hover synchronization
+    (function () {
+        var bar = document.getElementById('guestMarquee') || document.querySelector('.advisory-bar .marquee');
+        if (!bar) return;
+
+        var KEY_BASE = 'pt_ann_base_time';
+        var hoverStart = 0;
+
+        function applyPausedDuration(duration) {
+            if (duration <= 0) return;
+            try {
+                var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
+                if (baseTime && !isNaN(baseTime)) {
+                    baseTime += duration;
+                    sessionStorage.setItem(KEY_BASE, baseTime.toString());
+                    localStorage.setItem(KEY_BASE, baseTime.toString());
+                }
+            } catch (e) {}
+        }
+
+        bar.addEventListener('mouseenter', function () {
+            hoverStart = Date.now();
+        });
+
+        bar.addEventListener('mouseleave', function () {
+            if (hoverStart) {
+                applyPausedDuration(Date.now() - hoverStart);
+                hoverStart = 0;
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (hoverStart) {
+                applyPausedDuration(Date.now() - hoverStart);
+                hoverStart = 0;
+            }
+        }, true);
+
+        // Handle browser bfcache restore
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) {
+                try {
+                    var DURATION = 35;
+                    var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
+                    if (baseTime && !isNaN(baseTime)) {
+                        var elapsed = ((Date.now() - baseTime) / 1000) % DURATION;
+                        if (elapsed < 0) elapsed = 0;
+                        var delayStr = '-' + elapsed.toFixed(3) + 's';
+                        bar.style.animationDelay = delayStr;
+                        document.documentElement.style.setProperty('--marquee-delay', delayStr);
+                    }
+                } catch (err) {}
+            }
+        });
+    })();
 </script>
 

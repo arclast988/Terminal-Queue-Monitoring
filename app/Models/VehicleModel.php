@@ -12,14 +12,73 @@ class VehicleModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['plate_number', 'driver_name', 'operator_name', 'owner_name', 'type', 'capacity', 'status', 'default_route_id', 'scheduled_departure_time'];
+    protected $allowedFields    = ['plate_number', 'driver_name', 'operator_name', 'owner_name', 'type', 'capacity', 'status', 'default_route_id', 'scheduled_departure_time', 'created_at'];
 
-    // Dates — vehicles table only has created_at, no updated_at
-    protected $useTimestamps = false;
+    // Dates — vehicles table has created_at
+    protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
+    protected $createdField  = 'created_at';
+    protected $updatedField  = '';
 
-    protected $afterFind    = ['mapRouteIdAliases'];
-    protected $beforeInsert = ['mapRouteIdOnWrite'];
-    protected $beforeUpdate = ['mapRouteIdOnWrite'];
+    protected $afterFind    = ['mapRouteIdAliases', 'uppercaseFieldsOnRead'];
+    protected $beforeInsert = ['mapRouteIdOnWrite', 'uppercaseFieldsOnWrite'];
+    protected $beforeUpdate = ['mapRouteIdOnWrite', 'uppercaseFieldsOnWrite'];
+
+    /**
+     * Automatically ensure plate_number, operator_name, and owner_name are uppercase on write.
+     */
+    protected function uppercaseFieldsOnWrite(array $data): array
+    {
+        if (isset($data['data']['plate_number'])) {
+            $data['data']['plate_number'] = strtoupper(trim((string)$data['data']['plate_number']));
+        }
+        if (isset($data['data']['operator_name'])) {
+            $data['data']['operator_name'] = strtoupper(trim((string)$data['data']['operator_name']));
+        }
+        if (isset($data['data']['owner_name'])) {
+            $data['data']['owner_name'] = strtoupper(trim((string)$data['data']['owner_name']));
+        }
+        return $data;
+    }
+
+    /**
+     * Ensure plate_number, operator_name, and owner_name are uppercase on read across all views and queries.
+     */
+    protected function uppercaseFieldsOnRead(array $data): array
+    {
+        if (empty($data['data'])) {
+            return $data;
+        }
+
+        if (!empty($data['singleton'])) {
+            if (isset($data['data']['plate_number'])) {
+                $data['data']['plate_number'] = strtoupper((string)$data['data']['plate_number']);
+            }
+            if (isset($data['data']['operator_name'])) {
+                $data['data']['operator_name'] = strtoupper((string)$data['data']['operator_name']);
+            }
+            if (isset($data['data']['owner_name'])) {
+                $data['data']['owner_name'] = strtoupper((string)$data['data']['owner_name']);
+            }
+            return $data;
+        }
+
+        foreach ($data['data'] as &$row) {
+            if (is_array($row)) {
+                if (isset($row['plate_number'])) {
+                    $row['plate_number'] = strtoupper((string)$row['plate_number']);
+                }
+                if (isset($row['operator_name'])) {
+                    $row['operator_name'] = strtoupper((string)$row['operator_name']);
+                }
+                if (isset($row['owner_name'])) {
+                    $row['owner_name'] = strtoupper((string)$row['owner_name']);
+                }
+            }
+        }
+
+        return $data;
+    }
 
     /**
      * Ensures both default_route_id and route_id are present on fetched records,

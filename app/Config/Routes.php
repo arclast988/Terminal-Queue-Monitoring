@@ -54,6 +54,7 @@ $routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {
 // Vehicle Register — Admin only (per DFD 2.1: only Admin inputs vehicle records)
 $routes->group('admin/vehicles', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('', 'Admin\Vehicles::index');
+    $routes->get('check-plate', 'Admin\Vehicles::checkPlate');
     $routes->get('edit/(:num)', 'Admin\Vehicles::edit/$1');
     $routes->post('store', 'Admin\Vehicles::store');
     $routes->post('update/(:num)', 'Admin\Vehicles::update/$1');
@@ -122,6 +123,7 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->post('queue/update/(:num)/(:segment)', 'Staff\Queue::updateStatus/$1/$2');
     $routes->post('queue/setPassengers/(:num)', 'Staff\Queue::setPassengers/$1');
     $routes->post('queue/updateDriver/(:num)', 'Staff\Queue::updateDriver/$1');
+    $routes->post('queue/undoCancel/(:num)', 'Staff\Queue::undoCancel/$1');
 
     // Departure Rules (staff view-only access)
     $routes->get('departure-rules', 'Admin\DepartureRules::index');

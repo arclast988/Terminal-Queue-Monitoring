@@ -1410,3 +1410,31 @@ ul.pagination li.active span,
     box-shadow: none !important;
 }
 
+/* =================================================================
+   GLOBAL OPERATOR NAME & PLATE NUMBER UPPERCASE ENFORCEMENT
+   Ensures plate numbers and operator names are consistently uppercase
+   across all roles (guest, dispatcher/staff, admin, superadmin).
+   ================================================================= */
+.plate-number,
+.plate-val,
+.plate-number-box,
+.plate-badge .plate-val,
+.operator-val,
+.operator-name,
+.vehicle-plate,
+[data-label="Plate"],
+[data-label="Plate Number"],
+[data-label="Operator"],
+[data-label="Operator Name"],
+td[data-label="Plate"] *,
+td[data-label="Plate Number"] *,
+td[data-label="Operator"] *,
+td[data-label="Operator Name"] *,
+#plate_number,
+#operator_name,
+input[name="plate_number"],
+input[name="operator_name"] {
+    text-transform: uppercase !important;
+}
+
+

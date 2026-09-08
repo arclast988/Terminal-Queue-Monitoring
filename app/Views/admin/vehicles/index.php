@@ -35,19 +35,20 @@
 <?php if (session()->getFlashdata('errors')): ?>
     <div class="alert-modern alert-modern-danger fade-in">
         <i class="bi bi-exclamation-circle-fill alert-modern-icon"></i>
-        <div>
+        <div style="flex: 1; min-width: 0;">
             <ul class="mb-0" style="padding-left: 20px;">
             <?php foreach (session()->getFlashdata('errors') as $error): ?>
                 <li><?= esc($error) ?></li>
             <?php endforeach; ?>
             </ul>
         </div>
-    <?php endif; ?>
+    </div>
+<?php endif; ?>
 
-    <?= view('partials/flash_notices') ?>
+<?= view('partials/flash_notices') ?>
 
 <!-- Add Vehicle Form -->
-<div class="modern-card shadow-modern fade-in">
+<div class="modern-card shadow-modern fade-in mb-4 register-vehicle-card" id="registerVehicleCard">
     <div class="modern-card-header">
         <span class="modern-card-title">
             <i class="bi bi-plus-circle" style="color: var(--primary-red);"></i>
@@ -55,23 +56,29 @@
         </span>
     </div>
     <div class="modern-card-body">
-        <form action="<?= base_url('admin/vehicles/store') ?>" method="post">
+        <form action="<?= base_url('admin/vehicles/store') ?>" method="post" id="registerVehicleForm">
             <?= csrf_field() ?>
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="operator_name" class="form-label-modern">Operator Name</label>
-                    <input type="text" class="form-control-modern" id="operator_name" name="operator_name"
-                        placeholder="E.G. LETRANSCO" value="<?= old('operator_name') ?>" required>
+                    <input type="text" class="form-control-modern text-uppercase" id="operator_name" name="operator_name"
+                        placeholder="E.G. LETRANSCO" value="<?= old('operator_name') ?>" style="text-transform: uppercase;"
+                        oninput="this.value = this.value.toUpperCase()" required>
                 </div>
                 <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="driver_name" class="form-label-modern">Driver Name</label>
                     <input type="text" class="form-control-modern" id="driver_name" name="driver_name"
                         placeholder="e.g. Pedro Santos" value="<?= old('driver_name') ?>" required>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+                <div class="col-12 col-sm-6 col-md-4 col-xl-2 plate-col-wrapper">
                     <label for="plate_number" class="form-label-modern">Plate Number</label>
-                    <input type="text" class="form-control-modern" id="plate_number" name="plate_number"
-                        placeholder="e.g. ABC-1234" value="<?= old('plate_number') ?>" required>
+                    <div class="position-relative">
+                        <input type="text" class="form-control-modern text-uppercase" id="plate_number" name="plate_number"
+                            placeholder="E.G. ABC-1234" value="<?= old('plate_number') ?>" style="text-transform: uppercase;"
+                            oninput="this.value = this.value.toUpperCase(); validatePlateRealtime(this.value);" required>
+                        <span id="plate-validation-icon" class="plate-validation-icon" style="display: none;"></span>
+                    </div>
+                    <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="type" class="form-label-modern">Type</label>
@@ -103,7 +110,7 @@
                         value="<?= old('capacity') ?>" min="1" required>
                 </div>
                 <div class="col-12 col-sm-6 col-md-2 col-xl-1">
-                    <button type="submit" class="btn-modern btn-modern-primary w-100" style="min-height: 44px;">
+                    <button type="submit" class="btn-modern btn-modern-primary w-100 px-2" style="min-height: 44px; white-space: nowrap;">
                         <i class="bi bi-plus-lg"></i> Add
                     </button>
                 </div>
@@ -687,6 +694,257 @@ if (!empty($vehicles) && is_array($vehicles)) {
             emptyRow.remove();
         }
     }
+</script>
+
+<!-- Real-time Plate Number Validation -->
+<style>
+    .register-vehicle-card,
+    .modern-card:has(.plate-col-wrapper) {
+        position: relative !important;
+        z-index: 10 !important;
+        overflow: visible !important;
+        margin-bottom: 2rem !important;
+    }
+    body.modal-open .register-vehicle-card,
+    body.modal-open .modern-card:has(.plate-col-wrapper) {
+        z-index: auto !important;
+    }
+    .plate-validation-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 16px;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+    .plate-col-wrapper {
+        position: relative;
+    }
+    .plate-validation-feedback {
+        position: absolute;
+        left: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+        top: 100%;
+        z-index: 20 !important;
+        font-size: 11.5px;
+        margin-top: 4px;
+        padding: 6px 12px;
+        line-height: 1.35;
+        min-width: 220px;
+        max-width: min(320px, calc(100vw - 40px));
+        width: max-content;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
+        pointer-events: none;
+    }
+    .plate-validation-feedback.feedback-error {
+        background: rgba(255, 245, 245, 0.94);
+        border-color: rgba(220, 53, 69, 0.25);
+        color: #dc3545;
+        box-shadow: 0 4px 14px rgba(220, 53, 69, 0.12);
+    }
+    .plate-validation-feedback.feedback-success {
+        background: rgba(240, 255, 244, 0.94);
+        border-color: rgba(25, 135, 84, 0.25);
+        color: #198754;
+        box-shadow: 0 4px 14px rgba(25, 135, 84, 0.12);
+    }
+    .plate-validation-feedback.feedback-checking {
+        background: rgba(248, 249, 250, 0.94);
+        border-color: rgba(108, 117, 125, 0.2);
+        color: #6c757d;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+    @media (max-width: 1199.98px) {
+        .plate-validation-feedback {
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            margin-top: 6px !important;
+            margin-bottom: 2px !important;
+            box-sizing: border-box !important;
+            pointer-events: auto !important;
+        }
+        .register-vehicle-card .row.align-items-end {
+            align-items: flex-start !important;
+        }
+    }
+    .form-control-modern.plate-valid {
+        border-color: #198754 !important;
+        box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.15) !important;
+    }
+    .form-control-modern.plate-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.15) !important;
+    }
+    .input-modern.plate-valid {
+        border-color: #198754 !important;
+        box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.15) !important;
+    }
+    .input-modern.plate-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.15) !important;
+    }
+    @keyframes spin-plate {
+        to { transform: translateY(-50%) rotate(360deg); }
+    }
+    .plate-validation-icon.spinning {
+        animation: spin-plate 0.8s linear infinite;
+    }
+</style>
+
+<script>
+(function() {
+    var plateCheckTimer = null;
+    var plateCheckXhr = null;
+    var plateIsValid = true; // assume valid until proven otherwise
+    var baseUrl = '<?= base_url('admin/vehicles/check-plate') ?>';
+    var excludeId = 0; // no exclude for new vehicles
+
+    window.validatePlateRealtime = function(value) {
+        var plate = value.trim().toUpperCase();
+        var input = document.getElementById('plate_number');
+        var icon = document.getElementById('plate-validation-icon');
+        var feedback = document.getElementById('plate-validation-feedback');
+
+        // Clear previous timer
+        if (plateCheckTimer) clearTimeout(plateCheckTimer);
+        if (plateCheckXhr) { plateCheckXhr.abort(); plateCheckXhr = null; }
+
+        // Reset states
+        input.classList.remove('plate-valid', 'plate-invalid');
+        icon.style.display = 'none';
+        icon.className = 'plate-validation-icon';
+
+        if (plate === '') {
+            feedback.style.display = 'none';
+            plateIsValid = true;
+            return;
+        }
+
+        // Immediate client-side length check
+        if (plate.length < 5) {
+            feedback.style.display = 'block';
+            feedback.className = 'plate-validation-feedback feedback-error';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Must be at least 5 characters';
+            input.classList.add('plate-invalid');
+            icon.style.display = 'inline-block';
+            icon.innerHTML = '<i class="bi bi-exclamation-circle" style="color: #dc3545;"></i>';
+            plateIsValid = false;
+            return;
+        }
+
+        if (plate.length > 20) {
+            feedback.style.display = 'block';
+            feedback.className = 'plate-validation-feedback feedback-error';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Cannot exceed 20 characters';
+            input.classList.add('plate-invalid');
+            icon.style.display = 'inline-block';
+            icon.innerHTML = '<i class="bi bi-exclamation-circle" style="color: #dc3545;"></i>';
+            plateIsValid = false;
+            return;
+        }
+
+        // Show checking state
+        feedback.style.display = 'block';
+        feedback.className = 'plate-validation-feedback feedback-checking';
+        feedback.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Checking availability...';
+        icon.style.display = 'inline-block';
+        icon.innerHTML = '<i class="bi bi-arrow-repeat" style="color: #6c757d;"></i>';
+        icon.classList.add('spinning');
+
+        // Debounce the AJAX call (400ms)
+        plateCheckTimer = setTimeout(function() {
+            var url = baseUrl + '?plate=' + encodeURIComponent(plate);
+            if (excludeId > 0) url += '&exclude_id=' + excludeId;
+
+            plateCheckXhr = new XMLHttpRequest();
+            plateCheckXhr.open('GET', url, true);
+            plateCheckXhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            plateCheckXhr.onreadystatechange = function() {
+                if (plateCheckXhr.readyState !== 4) return;
+                icon.classList.remove('spinning');
+
+                if (plateCheckXhr.status === 200) {
+                    try {
+                        var data = JSON.parse(plateCheckXhr.responseText);
+                        if (data.available) {
+                            // Available
+                            feedback.className = 'plate-validation-feedback feedback-success';
+                            feedback.innerHTML = '<i class="bi bi-check-circle me-1"></i>Plate number is available';
+                            input.classList.remove('plate-invalid');
+                            input.classList.add('plate-valid');
+                            icon.innerHTML = '<i class="bi bi-check-circle-fill" style="color: #198754;"></i>';
+                            plateIsValid = true;
+                        } else {
+                            // Duplicate or invalid
+                            feedback.className = 'plate-validation-feedback feedback-error';
+                            feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>' + (data.message || 'Plate number is not available');
+                            input.classList.remove('plate-valid');
+                            input.classList.add('plate-invalid');
+                            icon.innerHTML = '<i class="bi bi-x-circle-fill" style="color: #dc3545;"></i>';
+                            plateIsValid = false;
+                        }
+                    } catch(e) {
+                        feedback.style.display = 'none';
+                        plateIsValid = true; // fallback to server-side
+                    }
+                } else {
+                    // Network error - fall back to server-side validation
+                    feedback.style.display = 'none';
+                    input.classList.remove('plate-valid', 'plate-invalid');
+                    icon.style.display = 'none';
+                    plateIsValid = true;
+                }
+            };
+            plateCheckXhr.send();
+        }, 400);
+    };
+
+    // Prevent form submission if plate is invalid
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('registerVehicleForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!plateIsValid) {
+                    e.preventDefault();
+                    var feedback = document.getElementById('plate-validation-feedback');
+                    var input = document.getElementById('plate_number');
+                    if (feedback) {
+                        feedback.style.display = 'block';
+                        feedback.className = 'plate-validation-feedback feedback-error';
+                        if (input && input.value.trim().length < 5) {
+                            feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Plate number must be at least 5 characters';
+                        } else {
+                            feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Please fix the plate number before submitting';
+                        }
+                    }
+                    if (input) {
+                        input.focus();
+                        input.classList.add('plate-invalid');
+                    }
+                    return false;
+                }
+            });
+        }
+
+        // Trigger validation if there's already a value (e.g. from old() after failed submission)
+        var plateInput = document.getElementById('plate_number');
+        if (plateInput && plateInput.value.trim() !== '') {
+            validatePlateRealtime(plateInput.value);
+        }
+    });
+})();
 </script>
 
 

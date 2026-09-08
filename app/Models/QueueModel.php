@@ -17,6 +17,57 @@ class QueueModel extends Model
     // Dates
     protected $useTimestamps = false; // Manually handling arrival_time and departure_time
 
+    protected $afterFind    = ['uppercaseFieldsOnRead'];
+    protected $beforeInsert = ['uppercaseFieldsOnWrite'];
+    protected $beforeUpdate = ['uppercaseFieldsOnWrite'];
+
+    /**
+     * Automatically ensure plate_number and operator_name are uppercase on write.
+     */
+    protected function uppercaseFieldsOnWrite(array $data): array
+    {
+        if (isset($data['data']['plate_number'])) {
+            $data['data']['plate_number'] = strtoupper(trim((string)$data['data']['plate_number']));
+        }
+        if (isset($data['data']['operator_name'])) {
+            $data['data']['operator_name'] = strtoupper(trim((string)$data['data']['operator_name']));
+        }
+        return $data;
+    }
+
+    /**
+     * Ensure plate_number and operator_name are uppercase on read.
+     */
+    protected function uppercaseFieldsOnRead(array $data): array
+    {
+        if (empty($data['data'])) {
+            return $data;
+        }
+
+        if (!empty($data['singleton'])) {
+            if (isset($data['data']['plate_number'])) {
+                $data['data']['plate_number'] = strtoupper((string)$data['data']['plate_number']);
+            }
+            if (isset($data['data']['operator_name'])) {
+                $data['data']['operator_name'] = strtoupper((string)$data['data']['operator_name']);
+            }
+            return $data;
+        }
+
+        foreach ($data['data'] as &$row) {
+            if (is_array($row)) {
+                if (isset($row['plate_number'])) {
+                    $row['plate_number'] = strtoupper((string)$row['plate_number']);
+                }
+                if (isset($row['operator_name'])) {
+                    $row['operator_name'] = strtoupper((string)$row['operator_name']);
+                }
+            }
+        }
+
+        return $data;
+    }
+
     /**
      * Recalculate estimated departure times and positions for all active queue items.
      * Items are grouped per route. For each route:

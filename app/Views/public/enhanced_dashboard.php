@@ -88,16 +88,6 @@
             margin: 0;
         }
 
-
-
-
-
-        .nav-menu {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
-
         .nav-menu {
             display: flex;
             gap: 20px;
@@ -388,6 +378,17 @@
             color: inherit !important;
         }
 
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         .stat-card {
             background: white;
             padding: 18px 20px;
@@ -404,6 +405,19 @@
             box-sizing: border-box;
             align-self: stretch;
             margin: 0 !important;
+            animation: fadeInUp 0.5s ease-out both;
+        }
+
+        .stats-grid .stat-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .stats-grid .stat-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .stats-grid .stat-card:nth-child(3) {
+            animation-delay: 0.3s;
         }
 
         .stat-card:hover {
@@ -540,6 +554,92 @@
             background: #fee2e2;
             color: #ef4444;
             transform: scale(1.05);
+        }
+
+        /* --- Departure Rules Modal Route Filter --- */
+        .rules-filter-bar {
+            padding: 12px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .rules-filter-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .rules-filter-chips {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .rules-route-chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1.5px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .rules-route-chip:hover {
+            border-color: #D62828;
+            color: #D62828;
+            background: rgba(214, 40, 40, 0.06);
+            transform: translateY(-1px);
+        }
+
+        .rules-route-chip.active {
+            background: #000000 !important;
+            border-color: #000000 !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            transform: translateY(0);
+        }
+
+        .rules-route-chip .chip-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 19px;
+            height: 19px;
+            border-radius: 10px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 0 5px;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+
+        .rules-route-chip.active .chip-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
         }
 
         .route-average-body {
@@ -697,6 +797,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            animation: fadeInUp 0.5s ease-out both;
+            animation-delay: 0.15s;
         }
 
         .section-title {
@@ -764,6 +866,8 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 10px;
+            animation: fadeInUp 0.5s ease-out both;
+            animation-delay: 0.2s;
         }
 
         .filter-group {
@@ -835,6 +939,8 @@
             justify-content: center;
             width: 100%;
             box-sizing: border-box;
+            animation: fadeInUp 0.5s ease-out both;
+            animation-delay: 0.25s;
         }
 
         .empty-queue-card .empty-icon-wrapper {
@@ -906,6 +1012,8 @@
             transition: all 0.25s ease;
             position: relative;
             overflow: hidden;
+            animation: fadeInUp 0.5s ease-out both;
+            animation-delay: 0.25s;
         }
 
         .queue-card::before {
@@ -1609,6 +1717,7 @@
             }
 
             .route-average-header,
+            .rules-filter-bar,
             .route-average-body {
                 padding-left: 18px;
                 padding-right: 18px;
@@ -1622,6 +1731,16 @@
         }
 
         @media (max-width: 480px) {
+            .rules-filter-bar {
+                padding: 10px 14px;
+                gap: 8px;
+            }
+
+            .rules-route-chip {
+                padding: 5px 11px;
+                font-size: 12px;
+            }
+
             .queue-card {
                 padding: 12px;
                 gap: 12px;
@@ -2117,44 +2236,55 @@
             </div>
 
             <?php
-                // Extract unique specific route scopes from departure rules (exclude 'All Routes')
+                // Extract destination counts and general rule counts
                 $rulesList = $departure_rules ?? [];
-                $uniqueScopes = [];
+                $totalRulesCount = count($rulesList);
+                $destMap = [];
+                $generalCount = 0;
+
                 foreach ($rulesList as $r) {
-                    $s = trim($r['route_scope'] ?? '');
-                    if (!empty($s) && strtolower($s) !== 'all routes' && strtolower($s) !== 'all' && !in_array($s, $uniqueScopes)) {
-                        $uniqueScopes[] = $s;
+                    $dest = !empty($r['route_destination']) ? strtoupper(trim($r['route_destination'])) : null;
+                    if (empty($dest) && !empty($r['route_scope'])) {
+                        if (strpos($r['route_scope'], '→') !== false) {
+                            $parts = explode('→', $r['route_scope']);
+                            $dest = strtoupper(trim(end($parts)));
+                        } elseif (strpos($r['route_scope'], '->') !== false) {
+                            $parts = explode('->', $r['route_scope']);
+                            $dest = strtoupper(trim(end($parts)));
+                        }
+                    }
+
+                    if (!empty($dest) && strtolower($dest) !== 'all routes' && strtolower($dest) !== 'all') {
+                        $destMap[$dest] = ($destMap[$dest] ?? 0) + 1;
+                    } else {
+                        $generalCount++;
                     }
                 }
             ?>
 
             <!-- Route Filter Bar (only shown when specific route rules exist) -->
-            <?php if (!empty($uniqueScopes)): ?>
-            <div style="padding: 12px 24px 0; border-bottom: 1px solid #e2e8f0; background: #f8fafc; flex-shrink: 0;">
-                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 12px;">
-                    <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #64748b; white-space: nowrap;">
-                        <i class="fas fa-filter" style="margin-right: 4px;"></i>Route:
-                    </span>
-                    <div id="rulesRouteFilterGroup" style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <button type="button" class="rules-route-chip active" data-route="all"
-                            style="padding: 5px 14px; border-radius: 20px; border: 1.5px solid #2563eb; background: #2563eb; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;">
-                            All
+            <?php if (!empty($destMap)): ?>
+            <div class="rules-filter-bar">
+                <span class="rules-filter-label">
+                    <i class="fas fa-filter"></i> Route:
+                </span>
+                <div class="rules-filter-chips" id="rulesRouteFilterGroup">
+                    <button type="button" class="rules-route-chip active" data-route="all">
+                        <i class="fas fa-route"></i> All Routes
+                        <span class="chip-count"><?= $totalRulesCount ?></span>
+                    </button>
+                    <?php foreach ($destMap as $destName => $cnt): ?>
+                        <button type="button" class="rules-route-chip" data-route="<?= esc(strtolower($destName), 'attr') ?>">
+                            <i class="fas fa-map-marker-alt"></i> <?= esc($destName) ?>
+                            <span class="chip-count"><?= $cnt ?></span>
                         </button>
-                        <?php foreach ($uniqueScopes as $scope): ?>
-                            <?php
-                                // Extract just the destination for the chip label
-                                $chipLabel = $scope;
-                                if (strpos($scope, '→') !== false) {
-                                    $parts = explode('→', $scope);
-                                    $chipLabel = trim(end($parts));
-                                }
-                            ?>
-                            <button type="button" class="rules-route-chip" data-route="<?= esc($scope, 'attr') ?>"
-                                style="padding: 5px 14px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: #ffffff; color: #64748b; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; white-space: nowrap;">
-                                <?= strtoupper(esc($chipLabel)) ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php if ($generalCount > 0): ?>
+                        <button type="button" class="rules-route-chip" data-route="general">
+                            <i class="fas fa-sliders-h"></i> Terminal Default
+                            <span class="chip-count"><?= $generalCount ?></span>
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>
@@ -2163,7 +2293,20 @@
                 <div class="route-average-list" id="routeAverageList">
                     <?php if (!empty($rulesList)): ?>
                         <?php foreach ($rulesList as $rule): ?>
-                            <div class="route-average-item <?= !empty($rule['is_active_now']) ? 'is-active-rule' : '' ?>" data-rule-route="<?= esc($rule['route_scope'] ?? 'All Routes', 'attr') ?>">
+                            <?php
+                                $rDest = !empty($rule['route_destination']) ? strtoupper(trim($rule['route_destination'])) : null;
+                                if (empty($rDest) && !empty($rule['route_scope'])) {
+                                    if (strpos($rule['route_scope'], '→') !== false) {
+                                        $parts = explode('→', $rule['route_scope']);
+                                        $rDest = strtoupper(trim(end($parts)));
+                                    } elseif (strpos($rule['route_scope'], '->') !== false) {
+                                        $parts = explode('->', $rule['route_scope']);
+                                        $rDest = strtoupper(trim(end($parts)));
+                                    }
+                                }
+                                $destSlug = (!empty($rDest) && strtolower($rDest) !== 'all routes') ? strtolower($rDest) : 'general';
+                            ?>
+                            <div class="route-average-item <?= !empty($rule['is_active_now']) ? 'is-active-rule' : '' ?>" data-rule-dest="<?= esc($destSlug, 'attr') ?>" data-rule-route="<?= esc($rule['route_scope'] ?? 'All Routes', 'attr') ?>">
                                 <div style="min-width: 0; flex: 1;">
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <div class="route-average-route">
@@ -2185,9 +2328,12 @@
                     <?php else: ?>
                         <div class="route-average-empty">No departure rules configured.</div>
                     <?php endif; ?>
+                </div>
 
-                    <!-- No results message (hidden by default) -->
-                    <div class="route-average-empty" id="rulesNoResults" style="display: none;">No rules match the selected route.</div>
+                <!-- No results message (hidden by default) -->
+                <div class="route-average-empty" id="rulesNoResults" style="display: none; margin-top: 10px;">
+                    <i class="fas fa-search" style="font-size: 20px; display: block; margin-bottom: 6px; opacity: 0.5;"></i>
+                    No departure rules match the selected route.
                 </div>
             </div>
         </div>
@@ -2195,6 +2341,37 @@
 
     <script>
     // Departure Rules route filter
+    var activeRulesFilter = 'all';
+
+    function applyDepartureRulesFilter() {
+        var items = document.querySelectorAll('#routeAverageList .route-average-item');
+        var visible = 0;
+        items.forEach(function(item) {
+            var itemDest = item.getAttribute('data-rule-dest') || 'general';
+            var show = false;
+
+            if (activeRulesFilter === 'all') {
+                show = true;
+            } else if (activeRulesFilter === 'general') {
+                show = (itemDest === 'general');
+            } else {
+                show = (itemDest === activeRulesFilter);
+            }
+
+            if (show) {
+                item.style.display = '';
+                visible++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        var noRes = document.getElementById('rulesNoResults');
+        if (noRes) {
+            noRes.style.display = (visible === 0 && items.length > 0) ? '' : 'none';
+        }
+    }
+
     (function() {
         var filterGroup = document.getElementById('rulesRouteFilterGroup');
         if (!filterGroup) return;
@@ -2206,30 +2383,11 @@
             // Update active chip styles
             filterGroup.querySelectorAll('.rules-route-chip').forEach(function(c) {
                 c.classList.remove('active');
-                c.style.background = '#ffffff';
-                c.style.color = '#64748b';
-                c.style.borderColor = '#e2e8f0';
             });
             chip.classList.add('active');
-            chip.style.background = '#000000';
-            chip.style.color = '#fff';
-            chip.style.borderColor = '#000000';
 
-            // Filter items
-            var route = chip.dataset.route;
-            var items = document.querySelectorAll('#routeAverageList .route-average-item');
-            var visible = 0;
-            items.forEach(function(item) {
-                if (route === 'all' || item.dataset.ruleRoute === route || item.dataset.ruleRoute === 'All Routes') {
-                    item.style.display = '';
-                    visible++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            var noRes = document.getElementById('rulesNoResults');
-            if (noRes) noRes.style.display = (visible === 0) ? '' : 'none';
+            activeRulesFilter = chip.dataset.route || 'all';
+            applyDepartureRulesFilter();
         });
     })();
     </script>
@@ -2262,8 +2420,19 @@
                 } else if (activeFilterType === 'destination') {
                     show = (card.dataset.destination || '') === activeFilterValue;
                 }
-                card.style.display = show ? '' : 'none';
-                if (show) visible++;
+                if (show) {
+                    if (card.style.display === 'none') {
+                        card.style.display = '';
+                        card.style.animation = 'none';
+                        card.offsetHeight; /* trigger reflow */
+                        card.style.animation = '';
+                    } else {
+                        card.style.display = '';
+                    }
+                    visible++;
+                } else {
+                    card.style.display = 'none';
+                }
             });
             var noRes = document.getElementById('queueNoResults');
             if (noRes) noRes.style.display = (visible === 0 && cards.length > 0) ? '' : 'none';
@@ -2304,27 +2473,9 @@
             });
         });
 
-        // Add micro-interaction to queue cards on scroll
-        var observerOptions = { threshold: 0.1 };
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = "1";
-                    entry.target.style.transform = "translateY(0)";
-                }
-            });
-        }, observerOptions);
-
+        // ObserveItems stub kept for backwards compatibility with dynamic polling
         function observeItems() {
-            document.querySelectorAll('.queue-card, .stat-card').forEach(function (el) {
-                if (!el.dataset.observed) {
-                    el.dataset.observed = "true";
-                    el.style.opacity = "0";
-                    el.style.transform = "translateY(25px)";
-                    el.style.transition = "opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
-                    observer.observe(el);
-                }
-            });
+            // Handled via pure CSS @keyframes fadeInUp for immediate, smooth cascading entrance
         }
 
         // Vehicle Types Metadata (Colors, Icons, Images, Labels) for dynamic card rendering
@@ -2362,12 +2513,28 @@
                 empty.className = 'route-average-empty';
                 empty.textContent = 'No departure rules configured.';
                 list.appendChild(empty);
+                var noRes = document.getElementById('rulesNoResults');
+                if (noRes) noRes.style.display = 'none';
                 return;
             }
 
             rows.forEach(function (rule) {
                 var item = document.createElement('div');
                 item.className = 'route-average-item' + (rule.is_active_now ? ' is-active-rule' : '');
+
+                var dest = rule.route_destination;
+                if (!dest && rule.route_scope) {
+                    if (rule.route_scope.indexOf('→') !== -1) {
+                        var parts = rule.route_scope.split('→');
+                        dest = parts[parts.length - 1].trim();
+                    } else if (rule.route_scope.indexOf('->') !== -1) {
+                        var parts = rule.route_scope.split('->');
+                        dest = parts[parts.length - 1].trim();
+                    }
+                }
+                var destSlug = (dest && dest.toLowerCase() !== 'all routes') ? dest.toLowerCase() : 'general';
+                item.setAttribute('data-rule-dest', destSlug);
+                item.setAttribute('data-rule-route', rule.route_scope || 'All Routes');
 
                 var leftWrap = document.createElement('div');
                 leftWrap.style.minWidth = '0';
@@ -2407,6 +2574,38 @@
                 item.appendChild(rightWrap);
                 list.appendChild(item);
             });
+
+            // Sync chip counts if filter group exists
+            var filterGroup = document.getElementById('rulesRouteFilterGroup');
+            if (filterGroup && rows && rows.length > 0) {
+                var counts = { all: rows.length, general: 0 };
+                rows.forEach(function(r) {
+                    var d = r.route_destination;
+                    if (!d && r.route_scope) {
+                        if (r.route_scope.indexOf('→') !== -1) {
+                            var p = r.route_scope.split('→');
+                            d = p[p.length - 1].trim();
+                        } else if (r.route_scope.indexOf('->') !== -1) {
+                            var p = r.route_scope.split('->');
+                            d = p[p.length - 1].trim();
+                        }
+                    }
+                    var s = (d && d.toLowerCase() !== 'all routes') ? d.toLowerCase() : 'general';
+                    counts[s] = (counts[s] || 0) + 1;
+                });
+                filterGroup.querySelectorAll('.rules-route-chip').forEach(function(chip) {
+                    var routeKey = chip.dataset.route;
+                    var badge = chip.querySelector('.chip-count');
+                    if (badge && counts[routeKey] !== undefined) {
+                        badge.textContent = counts[routeKey];
+                    }
+                });
+            }
+
+            // Re-apply active filter to maintain user's view during real-time updates
+            if (typeof applyDepartureRulesFilter === 'function') {
+                applyDepartureRulesFilter();
+            }
         }
 
         function openRouteAverageModal() {

@@ -481,7 +481,14 @@ class Queue extends BaseController
         ]);
 
         if ($this->request->isAJAX()) {
-            return $this->response->setJSON(['success' => true, 'message' => 'Status updated']);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Status updated',
+                'status' => $status,
+                'id' => (int) $id,
+                'plate_number' => $updatedItem['plate_number'] ?? '',
+                'vehicle_type' => vehicle_type_label($updatedItem['vehicle_type'] ?? '')
+            ]);
         }
 
         $ref = $this->request->getVar('ref');
@@ -603,5 +610,83 @@ class Queue extends BaseController
             'message' => 'Driver updated to ' . $driverName . '.',
             'driver_name' => $driverName
         ]);
+    }
+
+    public function undoCancel($id)
+    {
+        // Server-side route authorization check
+        if (!$this->hasQueueAccess((int) $id)) {
+            $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to undo cancel on unassigned route queue #' . $id . '.');
+            return $this->response->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
+        }
+
+        $queueItem = $this->queueModel->find($id);
+        if (!$queueItem) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Queue item not found.']);
+        }
+
+        if ($queueItem['status'] !== 'canceled') {
+            return $this->response->setJSON(['success' => false, 'message' => 'This trip is not canceled.']);
+        }
+
+        $vehicleId = (int) $queueItem['vehicle_id'];
+
+        // Check if vehicle is already in active queue (waiting or boarding) in another record
+        $alreadyQueued = $this->queueModel->where('vehicle_id', $vehicleId)
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->first();
+
+        if ($alreadyQueued) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Vehicle ' . ($queueItem['plate_number'] ?? '') . ' is already active in the queue.'
+            ]);
+        }
+
+        // Restore to waiting
+        $db = \Config\Database::connect();
+        $db->transStart();
+
+        $this->queueModel->update($id, [
+            'status' => 'waiting',
+            'arrival_time' => !empty($queueItem['arrival_time']) ? $queueItem['arrival_time'] : date('Y-m-d H:i:s'),
+        ]);
+
+        // Recalculate queue positions and departure times
+        $this->queueModel->reorderByDeparture();
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to restore trip.']);
+        }
+
+        $plateNumber = $queueItem['plate_number'] ?? 'Vehicle';
+        $this->logActivity('Undo Cancel Trip', 'Restored trip for ' . $plateNumber . ' back to the active queue.');
+
+        // Broadcast update to all clients
+        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
+            ->withFullJoins()
+            ->where('queue.id', $id)
+            ->first();
+
+        $this->broadcastUpdate('queue_update', [
+            'action' => 'status_change',
+            'id' => (int) $id,
+            'status' => 'waiting',
+            'queue_item' => $updatedItem
+        ]);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Trip for ' . $plateNumber . ' has been restored to the queue.',
+                'id' => (int) $id,
+                'plate_number' => $plateNumber,
+                'queue_item' => $updatedItem
+            ]);
+        }
+
+        return redirect()->to(base_url('staff/queue'))->with('success', 'Trip for ' . $plateNumber . ' has been restored to the queue.');
     }
 }

@@ -2317,14 +2317,60 @@ a[title*="delete" i]:hover .bi,
     box-sizing: border-box !important;
   }
 
-  /* Form action buttons across all views */
+  /* Ensure input-group and input-group-modern stay inline, aligned, and properly rounded */
+  .input-group,
+  .input-group-modern {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .input-group > .input-group-text,
+  .input-group-modern > .input-group-text,
+  .input-group-modern > .input-group-text-modern {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+
+  .input-group > .form-control,
+  .input-group > .form-control-modern,
+  .input-group > .input-modern,
+  .input-group-modern > .form-control,
+  .input-group-modern > .form-control-modern,
+  .input-group-modern > .input-modern {
+    width: 1% !important;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+
+  .input-group > *:first-child,
+  .input-group-modern > *:first-child {
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+  }
+
+  .input-group > *:last-child,
+  .input-group-modern > *:last-child {
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+  }
+
+  /* Form action buttons across all views (scoped to bottom form-level containers) */
   .form-actions-modern,
   .user-form-actions,
   .card-body-modern > form > .d-flex.gap-2:last-child,
   .card-body > form > .d-flex.gap-2:last-child,
-  form .d-flex.justify-content-end.gap-2,
-  form .d-flex.gap-2.mt-4,
-  form .d-flex.gap-2.mt-5 {
+  form > .d-flex.justify-content-end.gap-2:last-child,
+  form > .d-flex.gap-2.mt-4,
+  form > .d-flex.gap-2.mt-5 {
     flex-direction: column !important;
     width: 100% !important;
     gap: 8px !important;
@@ -2339,15 +2385,24 @@ a[title*="delete" i]:hover .bi,
   .card-body-modern > form > .d-flex.gap-2:last-child .btn-modern,
   .card-body > form > .d-flex.gap-2:last-child .btn,
   .card-body > form > .d-flex.gap-2:last-child .btn-modern,
-  form .d-flex.justify-content-end.gap-2 .btn,
-  form .d-flex.gap-2.mt-4 .btn,
-  form .d-flex.gap-2.mt-5 .btn {
+  form > .d-flex.justify-content-end.gap-2:last-child .btn,
+  form > .d-flex.gap-2.mt-4 .btn,
+  form > .d-flex.gap-2.mt-5 .btn {
     width: 100% !important;
     min-height: 42px !important;
     justify-content: center !important;
     margin: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
+  }
+
+  /* Exclude toolbars, filter bars, and card headers from vertical stacking */
+  .queue-toolbar-card .d-flex,
+  .queue-toolbar-actions,
+  .card-header .d-flex,
+  .modern-card-header .d-flex {
+    flex-direction: row !important;
+    margin-top: 0 !important;
   }
 
   /* Route destination capsule bars */
@@ -2455,27 +2510,36 @@ a[title*="delete" i]:hover .bi,
 
   /* Modals */
   .modal-dialog {
-    margin: 0.35rem auto !important;
-    width: calc(100% - 0.7rem) !important;
-    max-width: calc(100% - 0.7rem) !important;
+    margin: 0.5rem auto !important;
+    width: calc(100% - 1rem) !important;
+    max-width: calc(100% - 1rem) !important;
+    max-height: calc(100dvh - 1rem) !important;
   }
   .modal-content {
-    border-radius: 12px !important;
+    border-radius: 14px !important;
+    max-height: calc(100dvh - 1rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
   }
   .modal-header {
-    padding: 10px 12px !important;
+    padding: 10px 14px !important;
+    flex-shrink: 0 !important;
   }
   .modal-body {
-    padding: 12px 10px !important;
+    padding: 12px 12px !important;
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    -webkit-overflow-scrolling: touch;
   }
   .modal-footer {
-    padding: 8px 12px !important;
-    flex-direction: column !important;
-    gap: 6px !important;
+    padding: 10px 14px !important;
+    flex-shrink: 0 !important;
+    gap: 8px !important;
   }
   .modal-footer .btn,
   .modal-footer .btn-modern {
-    width: 100% !important;
     margin: 0 !important;
     min-height: 40px !important;
   }

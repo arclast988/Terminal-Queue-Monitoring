@@ -249,6 +249,98 @@
         opacity: 0.8;
     }
 
+    /* Cancel Trip Modal */
+    #cancelTripModal.fade.show {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        z-index: 1060 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 100vh !important;
+        background: rgba(0, 0, 0, 0.4) !important;
+        pointer-events: none !important;
+    }
+
+    #cancelTripModal .modal-dialog {
+        position: relative !important;
+        margin: auto !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        pointer-events: auto !important;
+        max-width: 420px !important;
+        width: 90% !important;
+    }
+
+    #cancelTripModal .modal-content {
+        background-color: var(--surface, #ffffff) !important;
+        border: 1px solid var(--border, #e2e8f0) !important;
+        border-radius: 12px !important;
+        pointer-events: auto !important;
+    }
+
+    #cancelTripModal .modal-body {
+        background-color: var(--surface, #ffffff) !important;
+        color: var(--text-main, #1e293b) !important;
+        pointer-events: auto !important;
+    }
+
+    /* 10-Second Undo Banner */
+    .undo-banner {
+        position: relative;
+        background: #fffbeb !important;
+        border: 1.5px solid #fcd34d !important;
+        color: #92400e !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12) !important;
+        padding: 0.85rem 1.15rem !important;
+    }
+    .dark .undo-banner,
+    [data-bs-theme="dark"] .undo-banner {
+        background: rgba(120, 53, 15, 0.25) !important;
+        border-color: #b45309 !important;
+        color: #fde68a !important;
+    }
+    .undo-banner .btn-undo-action {
+        background: #f59e0b !important;
+        border: none !important;
+        color: #1c1917 !important;
+        font-size: 0.875rem;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
+        cursor: pointer;
+    }
+    .undo-banner .btn-undo-action:hover:not(:disabled) {
+        background: #d97706 !important;
+        color: #ffffff !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.4);
+    }
+    .undo-banner .btn-undo-action:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    .undo-progress-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3.5px;
+        width: 100%;
+        background: linear-gradient(90deg, #f59e0b, #b45309);
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
     /* Modern Queue Card Hover Effects & Transitions */
     .q-card {
         background: var(--surface, #ffffff);
@@ -490,6 +582,8 @@
     </div>
 <?php endif; ?>
 
+<div id="undoBannerContainer" class="mb-3" style="display:none;"></div>
+
 <div class="queue-list" id="queue-list">
     <?php if (!empty($queue) && is_array($queue)): ?>
         <?php foreach ($queue as $item): ?>
@@ -619,7 +713,11 @@
                             Depart
                         </button>
                     <?php endif; ?>
-                    <button onclick="if(confirm('Cancel this trip?')) updateStatus(<?= $item['id'] ?>, 'canceled', null, this)"
+                    <button type="button"
+                        data-action="open-cancel-modal"
+                        data-id="<?= $item['id'] ?>"
+                        data-plate="<?= esc($item['plate_number'], 'attr') ?>"
+                        data-type="<?= esc(vehicle_type_label($item['vehicle_type'] ?? ''), 'attr') ?>"
                         class="btn-modern btn-modern-outline btn-modern-danger flex-fill" style="white-space:nowrap;">
                         Cancel
                     </button>
@@ -670,6 +768,31 @@
         <?php endif; ?>
     <?php endforeach; ?>
 <?php endif; ?>
+
+<!-- Cancel Trip Confirmation Modal -->
+<div class="modal fade" id="cancelTripModal" tabindex="-1" aria-labelledby="cancelTripModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-2" style="font-size: 2.5rem; line-height: 1;">🛑</div>
+                <h5 class="fw-bold mb-2 text-dark" id="cancelTripModalLabel">
+                    🛑 Cancel Trip for <span id="cancelTripVehicleLabel"></span>?
+                </h5>
+                <p class="text-muted small mb-4" style="line-height: 1.5;">
+                    This will remove the vehicle from the active queue and notify waiting passengers.
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm flex-fill" data-bs-dismiss="modal" id="keepTripBtn">
+                        Keep Trip
+                    </button>
+                    <button type="button" class="btn-modern btn-modern-sm btn-modern-danger flex-fill" id="confirmCancelTripBtn">
+                        Yes, Cancel Trip
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
     /* Add to Queue Modal Visual Improvements */
@@ -739,6 +862,18 @@
         border-radius: 10px !important;
         font-size: 0.9rem;
         transition: all 0.2s ease;
+    }
+    .input-group > .search-input-modern {
+        border-left: 0 !important;
+        border-top-left-radius: 0 !important;
+        border-bottom-left-radius: 0 !important;
+    }
+    .input-group > .input-group-text {
+        border-right: 0 !important;
+        border-color: var(--border-strong, #cbd5e1) !important;
+        background-color: var(--surface, #ffffff) !important;
+        border-top-left-radius: 10px !important;
+        border-bottom-left-radius: 10px !important;
     }
     .search-input-modern:focus {
         border-color: #15803d !important;
@@ -914,6 +1049,17 @@
             white-space: nowrap !important;
             padding-left: 8px !important;
             padding-right: 8px !important;
+            min-height: 38px !important;
+        }
+        #addToQueueModal #selectAllVehiclesBtn {
+            background: #ecfdf5 !important;
+            border: 1px solid #86efac !important;
+            color: #15803d !important;
+        }
+        #addToQueueModal #deselectAllVehiclesBtn {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #64748b !important;
         }
         .vehicle-select-list {
             max-height: 48vh !important;
@@ -944,15 +1090,22 @@
             flex-direction: column !important;
             align-items: stretch !important;
         }
-        /* Footer actions: equal full-width stacked buttons. */
+        /* Footer actions: equal full-width stacked buttons, primary action first. */
         #addToQueueModal .modal-footer {
             flex-direction: column !important;
             align-items: stretch !important;
+            gap: 8px !important;
         }
         #addToQueueModal .modal-footer .btn {
             width: 100% !important;
             margin: 0 !important;
             justify-content: center !important;
+        }
+        #addToQueueModal .modal-footer #submitToQueueBtn {
+            order: 1 !important;
+        }
+        #addToQueueModal .modal-footer [data-bs-dismiss="modal"] {
+            order: 2 !important;
         }
     }
 </style>
@@ -1215,6 +1368,293 @@
             }
         }
     });
+
+    function escHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function(c){
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        });
+    }
+
+    // Cancel Trip Modal & 10-Second Undo Banner Logic
+    var cancelTripModalEl = document.getElementById('cancelTripModal');
+    var currentCancelQueueId = null;
+    var currentCancelPlate = '';
+    var currentCancelType = '';
+
+    function openCancelModal(id, plate, type) {
+        currentCancelQueueId = id;
+        currentCancelPlate = plate;
+        currentCancelType = type;
+
+        var fullLabel = (type ? type + ' ' : '') + plate;
+        var labelSpan = document.getElementById('cancelTripVehicleLabel');
+        if (labelSpan) labelSpan.textContent = fullLabel;
+
+        var titleEl = document.getElementById('cancelTripModalLabel');
+        if (titleEl) {
+            titleEl.innerHTML = '🛑 Cancel Trip for ' + escHtml(fullLabel) + '?';
+        }
+
+        var confirmBtn = document.getElementById('confirmCancelTripBtn');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = 'Yes, Cancel Trip';
+        }
+
+        if (cancelTripModalEl && typeof bootstrap !== 'undefined') {
+            var modal = bootstrap.Modal.getInstance(cancelTripModalEl) || bootstrap.Modal.getOrCreateInstance(cancelTripModalEl);
+            modal.show();
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-action="open-cancel-modal"]');
+        if (btn) {
+            var id = btn.getAttribute('data-id');
+            var plate = btn.getAttribute('data-plate') || '';
+            var type = btn.getAttribute('data-type') || '';
+            openCancelModal(id, plate, type);
+        }
+    });
+
+    var confirmCancelBtn = document.getElementById('confirmCancelTripBtn');
+    if (confirmCancelBtn) {
+        confirmCancelBtn.addEventListener('click', function() {
+            if (!currentCancelQueueId) return;
+
+            confirmCancelBtn.disabled = true;
+            confirmCancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Canceling...';
+
+            var queueId = currentCancelQueueId;
+            var plateNumber = currentCancelPlate;
+            var vehicleType = currentCancelType;
+
+            var modal = (typeof bootstrap !== 'undefined' && cancelTripModalEl)
+                ? (bootstrap.Modal.getInstance(cancelTripModalEl) || bootstrap.Modal.getOrCreateInstance(cancelTripModalEl))
+                : null;
+            if (modal) modal.hide();
+
+            var updateUrl = '<?= base_url('staff/queue/update') ?>/' + queueId + '/canceled';
+
+            var csrfToken = '';
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
+
+            var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+            if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+            fetch(updateUrl, { method: 'POST', headers: headers })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Trip cancellation failed');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (!data.success) {
+                    throw new Error(data.message || 'Trip cancellation failed');
+                }
+                if (window.QueueSync) {
+                    window.QueueSync.refresh();
+                }
+                showUndoBanner(queueId, plateNumber, vehicleType, 10000);
+            })
+            .catch(function(err) {
+                console.error('[Queue] Cancel error:', err);
+                alert(err.message || 'Failed to cancel trip.');
+                if (window.QueueSync) {
+                    window.QueueSync.refresh();
+                } else {
+                    window.location.reload();
+                }
+            });
+        });
+    }
+
+    var _undoTimer = null;
+    var _undoInterval = null;
+
+    function hideUndoBanner() {
+        if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+        if (_undoInterval) { clearInterval(_undoInterval); _undoInterval = null; }
+        try { sessionStorage.removeItem('pendingUndoTrip'); } catch(e) {}
+
+        var alertEl = document.getElementById('undoBannerAlert');
+        var bannerContainer = document.getElementById('undoBannerContainer');
+        if (alertEl) {
+            alertEl.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            alertEl.style.opacity = '0';
+            alertEl.style.transform = 'translateY(-8px)';
+            setTimeout(function() {
+                if (bannerContainer) bannerContainer.style.display = 'none';
+            }, 250);
+        } else if (bannerContainer) {
+            bannerContainer.style.display = 'none';
+        }
+    }
+
+    function showUndoBanner(queueId, plateNumber, vehicleType, durationMs) {
+        durationMs = durationMs || 10000;
+        var expiresAt = Date.now() + durationMs;
+
+        try {
+            sessionStorage.setItem('pendingUndoTrip', JSON.stringify({
+                queueId: queueId,
+                plateNumber: plateNumber,
+                vehicleType: vehicleType,
+                expiresAt: expiresAt
+            }));
+        } catch(e) {}
+
+        if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+        if (_undoInterval) { clearInterval(_undoInterval); _undoInterval = null; }
+
+        var bannerContainer = document.getElementById('undoBannerContainer');
+        if (!bannerContainer) return;
+
+        bannerContainer.innerHTML =
+            '<div class="undo-banner alert-modern alert-modern-warning fade-in d-flex align-items-center justify-content-between position-relative overflow-hidden" id="undoBannerAlert">' +
+                '<div class="d-flex align-items-center gap-2 flex-wrap min-w-0 py-1">' +
+                    '<span class="fs-5" style="line-height:1;">⚠️</span>' +
+                    '<span class="fw-semibold text-dark">' +
+                        'Trip for <strong>' + escHtml(plateNumber) + '</strong> was canceled.' +
+                    '</span>' +
+                    '<button type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1 rounded-pill ms-sm-2 shadow-sm btn-undo-action" id="undoTripBtn" data-id="' + queueId + '">' +
+                        '<i class="bi bi-arrow-counterclockwise me-1"></i>Click to Undo / Restore <span id="undoSecondsBadge" class="badge bg-dark bg-opacity-25 ms-1">10s</span>' +
+                    '</button>' +
+                '</div>' +
+                '<button type="button" class="btn-close btn-sm ms-2 flex-shrink-0" id="closeUndoBannerBtn" aria-label="Dismiss"></button>' +
+                '<div class="undo-progress-bar" id="undoProgressBar"></div>' +
+            '</div>';
+
+        bannerContainer.style.display = 'block';
+
+        var progressBar = document.getElementById('undoProgressBar');
+        var secondsBadge = document.getElementById('undoSecondsBadge');
+        var undoBtn = document.getElementById('undoTripBtn');
+        var closeBtn = document.getElementById('closeUndoBannerBtn');
+
+        var initialSec = Math.max(1, Math.ceil(durationMs / 1000));
+        if (secondsBadge) secondsBadge.textContent = initialSec + 's';
+
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            requestAnimationFrame(function() {
+                progressBar.style.transition = 'width ' + durationMs + 'ms linear';
+                progressBar.style.width = '0%';
+            });
+        }
+
+        _undoInterval = setInterval(function() {
+            var leftMs = expiresAt - Date.now();
+            var leftSec = Math.max(0, Math.ceil(leftMs / 1000));
+            if (secondsBadge) {
+                secondsBadge.textContent = leftSec + 's';
+            }
+            if (leftSec <= 0) {
+                clearInterval(_undoInterval);
+                _undoInterval = null;
+            }
+        }, 300);
+
+        _undoTimer = setTimeout(function() {
+            hideUndoBanner();
+        }, durationMs);
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                hideUndoBanner();
+            });
+        }
+
+        if (undoBtn) {
+            undoBtn.addEventListener('click', function() {
+                executeUndo(queueId, plateNumber);
+            });
+        }
+    }
+
+    function executeUndo(queueId, plateNumber) {
+        if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
+        if (_undoInterval) { clearInterval(_undoInterval); _undoInterval = null; }
+
+        var undoBtn = document.getElementById('undoTripBtn');
+        if (undoBtn) {
+            undoBtn.disabled = true;
+            undoBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Restoring...';
+        }
+
+        var csrfToken = '';
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
+
+        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+
+        fetch('<?= base_url('staff/queue/undoCancel') ?>/' + queueId, {
+            method: 'POST',
+            headers: headers
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            try { sessionStorage.removeItem('pendingUndoTrip'); } catch(e) {}
+
+            if (data.success) {
+                var bannerContainer = document.getElementById('undoBannerContainer');
+                if (bannerContainer) {
+                    bannerContainer.innerHTML =
+                        '<div class="alert-modern alert-modern-success fade-in d-flex align-items-center justify-content-between p-3" id="undoSuccessAlert">' +
+                            '<div class="d-flex align-items-center gap-2">' +
+                                '<i class="bi bi-check-circle-fill fs-5 text-success"></i>' +
+                                '<span>Trip for <strong>' + escHtml(plateNumber) + '</strong> was restored to the queue!</span>' +
+                            '</div>' +
+                            '<button type="button" class="btn-close btn-sm" onclick="this.closest(\'.alert-modern\').remove()"></button>' +
+                        '</div>';
+
+                    setTimeout(function() {
+                        var alertEl = document.getElementById('undoSuccessAlert');
+                        if (alertEl) {
+                            alertEl.style.transition = 'opacity 0.35s ease';
+                            alertEl.style.opacity = '0';
+                            setTimeout(function() {
+                                if (bannerContainer) bannerContainer.style.display = 'none';
+                            }, 350);
+                        }
+                    }, 3000);
+                }
+
+                if (window.QueueSync) {
+                    window.QueueSync.refresh();
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                alert(data.message || 'Failed to restore trip.');
+                hideUndoBanner();
+            }
+        })
+        .catch(function(err) {
+            console.error('[Queue] Undo error:', err);
+            alert('Network error while restoring trip.');
+            hideUndoBanner();
+        });
+    }
+
+    try {
+        var savedUndo = sessionStorage.getItem('pendingUndoTrip');
+        if (savedUndo) {
+            var parsed = JSON.parse(savedUndo);
+            var remaining = parsed.expiresAt - Date.now();
+            if (remaining > 500) {
+                showUndoBanner(parsed.queueId, parsed.plateNumber, parsed.vehicleType, remaining);
+            } else {
+                sessionStorage.removeItem('pendingUndoTrip');
+            }
+        }
+    } catch(e) {
+        try { sessionStorage.removeItem('pendingUndoTrip'); } catch(err) {}
+    }
 
     var changeDriverModalEl = document.getElementById('changeDriverModal');
     var changeDriverForm = document.getElementById('changeDriverForm');
