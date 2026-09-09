@@ -892,12 +892,18 @@
             border: 1.5px solid #e2e8f0;
             background: #f8fafc;
             color: var(--text-muted);
-            font-size: 13.5px;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             transition: var(--transition);
             font-family: inherit;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            user-select: none;
         }
 
         .filter-chip:hover {
@@ -911,6 +917,33 @@
             border-color: #000000;
             color: white;
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        .filter-chip .chip-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 10px;
+            background: #e2e8f0;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 0 6px;
+            line-height: 1;
+            transition: all 0.2s ease;
+            pointer-events: none;
+        }
+
+        .filter-chip.active .chip-count {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+
+        .filter-chip:hover:not(.active) .chip-count {
+            background: rgba(214, 40, 40, 0.12);
+            color: #D62828;
         }
 
         .no-results-message {
@@ -1546,6 +1579,16 @@
             .quick-filter-bar {
                 padding: 12px 15px;
             }
+            .filter-chip {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .filter-chip .chip-count {
+                font-size: 10px;
+                min-width: 18px;
+                height: 18px;
+                padding: 0 4px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -2045,10 +2088,17 @@
             $fareMap[$fkey] = $r['fare'];
         }
         $uniqueDestinations = [];
+        $destCounts = [];
         foreach (($active_queue ?? []) as $qi) {
             $d = $qi['destination'] ?? '';
-            if ($d && !in_array($d, $uniqueDestinations)) $uniqueDestinations[] = $d;
+            if ($d) {
+                if (!in_array($d, $uniqueDestinations)) {
+                    $uniqueDestinations[] = $d;
+                }
+                $destCounts[$d] = ($destCounts[$d] ?? 0) + 1;
+            }
         }
+        $totalQueueCount = count($active_queue ?? []);
         ?>
 
         <div class="main-layout">
@@ -2065,10 +2115,12 @@
                 <!-- Quick Filters -->
                 <div class="quick-filter-bar" id="quickFilterBar">
                     <div class="filter-group" id="filterDestGroup">
-                        <button class="filter-chip active" data-filter="all" data-type="all">All Routes</button>
+                        <button class="filter-chip active" data-filter="all" data-type="all">
+                            All Routes <span class="chip-count"><?= $totalQueueCount ?></span>
+                        </button>
                         <?php foreach ($uniqueDestinations as $dest): ?>
                         <button class="filter-chip" data-filter="<?= esc(strtolower($dest)) ?>" data-type="destination">
-                            <i class="fas fa-map-marker-alt" style="font-size:12px;"></i> <?= esc($dest) ?>
+                            <?= esc(strtoupper($dest)) ?> <span class="chip-count"><?= (int)($destCounts[$dest] ?? 0) ?></span>
                         </button>
                         <?php endforeach; ?>
                     </div>
@@ -2846,18 +2898,33 @@
                             var destGroup = document.getElementById('filterDestGroup');
                             if (destGroup) {
                                 var dests = [];
-                                data.active_queue.forEach(function (it) { if (it.destination && dests.indexOf(it.destination) === -1) dests.push(it.destination); });
+                                var destCounts = {};
+                                data.active_queue.forEach(function (it) {
+                                    if (it.destination) {
+                                        if (dests.indexOf(it.destination) === -1) dests.push(it.destination);
+                                        destCounts[it.destination] = (destCounts[it.destination] || 0) + 1;
+                                    }
+                                });
                                 var prevActive = activeFilterValue;
-                                var html = '<button class="filter-chip' + (prevActive === 'all' ? ' active' : '') + '" data-filter="all" data-type="all">All Routes</button>';
+                                var totalCount = data.active_queue.length;
+                                var html = '<button class="filter-chip' + (prevActive === 'all' ? ' active' : '') + '" data-filter="all" data-type="all">All Routes <span class="chip-count">' + totalCount + '</span></button>';
                                 dests.forEach(function (d) {
                                     var isActive = prevActive === d.toLowerCase();
-                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d.toUpperCase() + '</button>';
+                                    var count = destCounts[d] || 0;
+                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d.toUpperCase() + ' <span class="chip-count">' + count + '</span></button>';
                                 });
                                 destGroup.innerHTML = html;
                                 initFilterChips();
                             }
                         } else {
                             queueList.innerHTML = '<div class="empty-queue-card"><div class="empty-icon-wrapper"><i class="fas fa-bus-alt"></i></div><h3>No Vehicles Currently in Queue</h3><p>There are no active vehicles waiting or boarding right now. Please check back shortly for live updates.</p></div>';
+                            var destGroup = document.getElementById('filterDestGroup');
+                            if (destGroup) {
+                                destGroup.innerHTML = '<button class="filter-chip active" data-filter="all" data-type="all">All Routes <span class="chip-count">0</span></button>';
+                                activeFilterValue = 'all';
+                                activeFilterType = 'all';
+                                initFilterChips();
+                            }
                         }
                         applyQueueFilter();
                         observeItems();

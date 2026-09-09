@@ -156,6 +156,27 @@ class Announcements extends BaseController
         } catch (\Throwable $e) {
             return redirect()->to('/admin/announcements')->with('error', 'Announcements table not found. Run the SQL shown on the Announcements page first.');
         }
+
         return redirect()->to('/admin/announcements')->with('error', 'Failed to delete announcement.');
+    }
+
+    public function deleteAll()
+    {
+        try {
+            $count = $this->announcementModel->countAllResults();
+            if ($count === 0) {
+                return redirect()->to('/admin/announcements')->with('error', 'No announcements to delete.');
+            }
+
+            if ($this->announcementModel->where('id >', 0)->delete()) {
+                $this->logActivity('Delete all announcements', "Deleted all ({$count}) announcements");
+                $this->broadcastUpdate('announcement_update', ['action' => 'delete_all']);
+                return redirect()->to('/admin/announcements')->with('success', 'All announcements deleted successfully.');
+            }
+        } catch (\Throwable $e) {
+            return redirect()->to('/admin/announcements')->with('error', 'Announcements table not found or failed to delete.');
+        }
+
+        return redirect()->to('/admin/announcements')->with('error', 'Failed to delete all announcements.');
     }
 }

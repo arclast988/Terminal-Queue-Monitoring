@@ -27,9 +27,7 @@ class WslFileHandler extends FileHandler
         } catch (Throwable $e) {
             $result = false;
         } finally {
-            if ($oldHandler !== null) {
-                set_error_handler($oldHandler);
-            }
+            restore_error_handler();
         }
 
         return $result;

@@ -76,6 +76,8 @@ $routes->group('admin/announcements', ['filter' => 'auth:admin,staff'], function
     $routes->get('edit/(:num)', 'Admin\Announcements::edit/$1');
     $routes->post('update/(:num)', 'Admin\Announcements::update/$1');
     $routes->post('delete/(:num)', 'Admin\Announcements::delete/$1');
+    $routes->post('delete-all', 'Admin\Announcements::deleteAll');
+    $routes->post('deleteAll', 'Admin\Announcements::deleteAll');
 });
 
 // Protected Routes
