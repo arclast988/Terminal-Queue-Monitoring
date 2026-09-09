@@ -377,12 +377,14 @@ class Vehicles extends BaseController
     public function delete($id)
     {
         $vehicle = $this->vehicleModel->find($id);
+        if (!$vehicle) {
+            return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
+        }
+
         if ($this->vehicleModel->delete($id)) {
-            if ($vehicle) {
-                $this->logActivity('Delete vehicle', 'Deleted vehicle ' . $vehicle['plate_number'] . '.');
-            }
+            $this->logActivity('Delete vehicle', 'Deleted vehicle ' . $vehicle['plate_number'] . '.');
             $this->broadcastUpdate('queue_update', ['action' => 'vehicle_deleted', 'id' => (int) $id]);
-            return redirect()->to('/admin/vehicles')->with('success', 'Vehicle deleted successfully.');
+            return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" deleted successfully.');
         }
         return redirect()->to('/admin/vehicles')->with('error', 'Failed to delete vehicle.');
     }

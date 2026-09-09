@@ -289,11 +289,18 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                             class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
-                                        <form action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Are you sure you want to delete this vehicle?');">
+                                        <form id="delete-vehicle-form-<?= $vehicle['id'] ?>" action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete vehicle">
+                                            <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Delete vehicle"
+                                                onclick="showDeleteVehicleModal({
+                                                    formId: 'delete-vehicle-form-<?= $vehicle['id'] ?>',
+                                                    vehicleId: '<?= $vehicle['id'] ?>',
+                                                    plateNumber: '<?= esc(addslashes($vehicle['plate_number'])) ?>',
+                                                    typeLabel: '<?= esc(addslashes(vehicle_type_label($vehicle['type']))) ?>',
+                                                    driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
+                                                    operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
+                                                    route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
+                                                })">
                                                 <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
@@ -1644,6 +1651,291 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
         </div>
     </div>
 </div>
+
+<?php if (!empty($vehicles)): ?>
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Delete Vehicle Confirmation Modal                 -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="deleteVehicleConfirmModal" tabindex="-1" aria-labelledby="deleteVehicleConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-vehicle-modal-content">
+            <!-- Accent stripe -->
+            <div class="delete-vehicle-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <!-- Icon badge -->
+                <div class="delete-vehicle-icon-wrapper">
+                    <i class="fas fa-trash-can"></i>
+                </div>
+
+                <h4 class="delete-vehicle-modal-title" id="deleteVehicleConfirmLabel">Delete Vehicle?</h4>
+                <p class="delete-vehicle-modal-desc" id="deleteVehicleConfirmMessage">
+                    Are you sure you want to delete this vehicle? This action cannot be undone.
+                </p>
+
+                <!-- Vehicle preview chip -->
+                <div class="delete-vehicle-item-chip" id="deleteVehicleItemChip">
+                    <i class="bi bi-truck text-danger"></i>
+                    <span id="deleteVehiclePlateLabel" class="fw-bold" style="font-family: monospace; letter-spacing: 0.5px; font-size: 0.95rem;">PLATE</span>
+                    <span class="delete-vehicle-type-tag" id="deleteVehicleTypeTag">TYPE</span>
+                </div>
+
+                <!-- Subtitle for Driver & Route info -->
+                <div id="deleteVehicleSubInfo" class="mt-2 text-muted" style="font-size: 0.825rem;"></div>
+            </div>
+
+            <div class="modal-footer delete-vehicle-modal-footer">
+                <button type="button" class="btn delete-vehicle-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn delete-vehicle-btn-confirm" id="deleteVehicleConfirmBtn">
+                    <i class="fas fa-trash-alt me-1"></i> Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Delete Vehicle Confirmation Modal Styles ── */
+.delete-vehicle-modal-content {
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25), 0 10px 15px -5px rgba(15, 23, 42, 0.1) !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.delete-vehicle-stripe {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+}
+
+.delete-vehicle-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 4px auto 18px auto;
+    border-radius: 50%;
+    background: #fef2f2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 0 8px #fff1f2;
+    transition: transform 0.3s ease;
+}
+
+.delete-vehicle-modal-content:hover .delete-vehicle-icon-wrapper {
+    transform: scale(1.04);
+}
+
+.delete-vehicle-modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.delete-vehicle-modal-desc {
+    color: #64748b;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+
+.delete-vehicle-item-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    color: #334155;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.delete-vehicle-item-chip i {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.delete-vehicle-type-tag {
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.delete-vehicle-modal-footer {
+    border: 0 !important;
+    padding: 0 24px 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: stretch !important;
+    background: transparent !important;
+}
+
+.delete-vehicle-btn-cancel {
+    flex: 1 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.delete-vehicle-btn-cancel:hover,
+.delete-vehicle-btn-cancel:focus {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+.delete-vehicle-btn-confirm {
+    flex: 1 !important;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.delete-vehicle-btn-confirm:hover,
+.delete-vehicle-btn-confirm:focus {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+.delete-vehicle-btn-confirm.is-loading {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+}
+
+/* Ensure modal paints above fixed navbar */
+body.modal-open #deleteVehicleConfirmModal,
+#deleteVehicleConfirmModal {
+    z-index: 100050 !important;
+}
+
+@media (max-width: 480px) {
+    .delete-vehicle-modal-footer {
+        flex-direction: column-reverse !important;
+        gap: 8px !important;
+        padding: 0 16px 20px 16px !important;
+    }
+}
+</style>
+
+<script>
+(function() {
+    var _deleteVehicleFormId = null;
+
+    window.showDeleteVehicleModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('deleteVehicleConfirmModal');
+        if (!modalEl || !window.bootstrap) {
+            if (window.confirm('Are you sure you want to delete this vehicle?')) {
+                var form = document.getElementById(opts.formId);
+                if (form) form.submit();
+            }
+            return;
+        }
+
+        var plateEl = document.getElementById('deleteVehiclePlateLabel');
+        var typeTagEl = document.getElementById('deleteVehicleTypeTag');
+        var subInfoEl = document.getElementById('deleteVehicleSubInfo');
+
+        if (plateEl) {
+            plateEl.textContent = opts.plateNumber || 'Vehicle';
+        }
+
+        if (typeTagEl) {
+            if (opts.typeLabel) {
+                typeTagEl.textContent = opts.typeLabel;
+                typeTagEl.style.display = '';
+            } else {
+                typeTagEl.style.display = 'none';
+            }
+        }
+
+        if (subInfoEl) {
+            var parts = [];
+            if (opts.driverName && opts.driverName !== '—') {
+                parts.push('Driver: ' + opts.driverName);
+            }
+            if (opts.route) {
+                parts.push(opts.route);
+            }
+            subInfoEl.textContent = parts.join(' · ');
+            subInfoEl.style.display = parts.length > 0 ? '' : 'none';
+        }
+
+        var confirmBtn = document.getElementById('deleteVehicleConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.classList.remove('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+        }
+
+        _deleteVehicleFormId = opts.formId || null;
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var confirmBtn = document.getElementById('deleteVehicleConfirmBtn');
+        if (!confirmBtn) return;
+
+        confirmBtn.addEventListener('click', function() {
+            if (!_deleteVehicleFormId) return;
+
+            confirmBtn.classList.add('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+
+            var form = document.getElementById(_deleteVehicleFormId);
+            if (form) {
+                form.submit();
+            } else {
+                var modalEl = document.getElementById('deleteVehicleConfirmModal');
+                if (modalEl && window.bootstrap) {
+                    window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                }
+                confirmBtn.classList.remove('is-loading');
+                confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+            }
+        });
+    });
+})();
+</script>
+<?php endif; ?>
 
 <?= view('templates/footer') ?>
 

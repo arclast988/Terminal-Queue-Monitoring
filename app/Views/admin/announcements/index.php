@@ -96,9 +96,10 @@
                                         <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
-                                        <form action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
+                                        <form id="delete-announcement-form-<?= $a['id'] ?>" action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
+                                            <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Delete"
+                                                onclick="showDeleteAnnouncementModal({formId:'delete-announcement-form-<?= $a['id'] ?>',announcementId:'<?= $a['id'] ?>',message:'<?= esc(addslashes(strlen($a['message']) > 60 ? substr($a['message'], 0, 60) . '…' : $a['message'])) ?>',terminal:'<?= esc(addslashes($a['terminal_name'] ?? '—')) ?>'})">
                                                 <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
@@ -367,6 +368,119 @@ function confirmDeleteAll(event) {
     }
     return false;
 }
+</script>
+<?php endif; ?>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Delete Single Announcement Confirmation Modal    -->
+<!-- ══════════════════════════════════════════════════ -->
+<?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true) && !empty($announcements)): ?>
+<div class="modal fade" id="deleteAnnouncementModal" tabindex="-1" aria-labelledby="deleteAnnouncementLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-all-modal-content">
+            <!-- Accent stripe -->
+            <div class="delete-all-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <!-- Icon badge -->
+                <div class="delete-all-icon-wrapper">
+                    <i class="fas fa-trash-can"></i>
+                </div>
+
+                <h4 class="delete-all-modal-title" id="deleteAnnouncementLabel">Delete Announcement?</h4>
+                <p class="delete-all-modal-desc" id="deleteAnnouncementDesc">
+                    Are you sure you want to delete this announcement? This action cannot be undone.
+                </p>
+
+                <!-- Announcement preview chip -->
+                <div class="delete-all-count-chip" id="deleteAnnouncementChip">
+                    <i class="fas fa-bullhorn"></i>
+                    <span id="deleteAnnouncementPreview">Announcement</span>
+                </div>
+            </div>
+
+            <div class="modal-footer delete-all-modal-footer">
+                <button type="button" class="btn delete-all-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn delete-all-btn-confirm" id="deleteAnnouncementConfirmBtn" style="flex:1;">
+                    <i class="fas fa-trash-alt me-1"></i> Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Ensure modal paints above everything */
+body.modal-open #deleteAnnouncementModal,
+#deleteAnnouncementModal {
+    z-index: 100050 !important;
+}
+.del-ann-btn-loading {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+}
+</style>
+
+<script>
+(function() {
+    var _pendingFormId = null;
+
+    window.showDeleteAnnouncementModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('deleteAnnouncementModal');
+        if (!modalEl || !window.bootstrap) {
+            if (window.confirm('Delete this announcement?')) {
+                var form = document.getElementById(opts.formId);
+                if (form) form.submit();
+            }
+            return;
+        }
+
+        // Populate modal content
+        var desc = document.getElementById('deleteAnnouncementDesc');
+        desc.textContent = 'Are you sure you want to delete this announcement? This action cannot be undone.';
+
+        var preview = document.getElementById('deleteAnnouncementPreview');
+        var label = '#' + (opts.announcementId || '?');
+        if (opts.terminal) label += ' · ' + opts.terminal.toUpperCase();
+        if (opts.message) label += ' — "' + opts.message + '"';
+        preview.textContent = label;
+
+        // Reset confirm button
+        var confirmBtn = document.getElementById('deleteAnnouncementConfirmBtn');
+        confirmBtn.classList.remove('del-ann-btn-loading');
+        confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+
+        _pendingFormId = opts.formId || null;
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var confirmBtn = document.getElementById('deleteAnnouncementConfirmBtn');
+        if (!confirmBtn) return;
+
+        confirmBtn.addEventListener('click', function() {
+            if (!_pendingFormId) return;
+
+            confirmBtn.classList.add('del-ann-btn-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+
+            var form = document.getElementById(_pendingFormId);
+            if (form) {
+                form.submit();
+            } else {
+                var modalEl = document.getElementById('deleteAnnouncementModal');
+                if (modalEl && window.bootstrap) {
+                    window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                }
+                confirmBtn.classList.remove('del-ann-btn-loading');
+                confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+            }
+        });
+    });
+})();
 </script>
 <?php endif; ?>
 

@@ -311,7 +311,8 @@ class Users extends BaseController
 
         $model->delete($id);
         // user_routes cleaned up automatically by ON DELETE CASCADE
-        return redirect()->to('/admin/users')->with('success', 'User deleted successfully.');
+        $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
+        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" deleted successfully.');
     }
 
     private function parseRouteIds(): array

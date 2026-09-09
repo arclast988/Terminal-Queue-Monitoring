@@ -229,10 +229,10 @@ $fareTypes = array_map(static fn(array $type) => [
                 <span class="fw-bold" style="color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($headerTitleColor) ?>) !important;"><?= esc($ft['label']) ?></span>
             </span>
             <?php if ($isAdmin && !empty($ft['id'])): ?>
-            <form action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline"
-                  onsubmit="return confirm('Delete vehicle type &quot;<?= esc($ft['name']) ?>&quot; and its fare routes? Registered vehicles will be preserved, but vehicles using this type must be reassigned or removed first.');">
+            <form id="delete-vtype-form-<?= $ft['id'] ?>" action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Vehicle Type & Card">
+                <button type="button" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Vehicle Type & Card"
+                    onclick="showDeleteConfirmModal({formId:'delete-vtype-form-<?= $ft['id'] ?>',title:'Delete Vehicle Type?',message:'Delete vehicle type &quot;<?= esc($ft['name']) ?>&quot; and its fare routes? Registered vehicles will be preserved, but vehicles using this type must be reassigned or removed first.',itemLabel:'<?= esc($ft['name']) ?> Routes',itemIcon:'fas <?= esc($vtIcon) ?>'})">
                     <i class="bi bi-trash"></i>
                 </button>
             </form>
@@ -264,10 +264,10 @@ $fareTypes = array_map(static fn(array $type) => [
                                    data-terminal-id="<?= $route['terminal_id'] ?>">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline"
-                                      onsubmit="return confirm('Delete this fare (<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>)?');">
+                                <form id="delete-fare-form-<?= $route['id'] ?>" action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Fare">
+                                    <button type="button" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Fare"
+                                        onclick="showDeleteConfirmModal({formId:'delete-fare-form-<?= $route['id'] ?>',title:'Delete Fare Route?',message:'Are you sure you want to delete this fare route? This action cannot be undone.',itemLabel:'<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>',itemExtra:'₱<?= number_format($route['fare'], 0) ?>',itemIcon:'fas fa-route'})">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -360,10 +360,10 @@ $isManager = $isAdmin;
                         data-active="<?= $disc['is_active'] ?>">
                         <i class="bi bi-pencil"></i> Edit
                     </button>
-                    <form action="<?= base_url('admin/routes/discounts/delete/' . $disc['id']) ?>" method="post" class="d-inline"
-                          onsubmit="return confirm('Delete this discount (<?= esc($disc['label']) ?>)?');">
+                    <form id="delete-discount-form-<?= $disc['id'] ?>" action="<?= base_url('admin/routes/discounts/delete/' . $disc['id']) ?>" method="post" class="d-inline">
                         <?= csrf_field() ?>
-                        <button type="submit" class="btn-modern btn-modern-sm btn-action-delete">
+                        <button type="button" class="btn-modern btn-modern-sm btn-action-delete"
+                            onclick="showDeleteConfirmModal({formId:'delete-discount-form-<?= $disc['id'] ?>',title:'Delete Discount?',message:'Are you sure you want to delete this passenger discount? All affected fare calculations will be removed.',itemLabel:'<?= esc($disc['label']) ?>',itemExtra:'<?= number_format($disc['discount_percent'], 0) ?>% off',itemIcon:'bi bi-percent'})">
                             <i class="bi bi-trash"></i> Delete
                         </button>
                     </form>
@@ -643,6 +643,217 @@ $isManager = $isAdmin;
   </div>
 </div>
 
+<?php endif; ?>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Delete Confirmation Modal                        -->
+<!-- ══════════════════════════════════════════════════ -->
+<?php if ($isAdmin): ?>
+<div class="modal fade" id="deleteFareConfirmModal" tabindex="-1" aria-labelledby="deleteFareConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-fare-modal-content">
+            <!-- Accent stripe -->
+            <div class="delete-fare-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <!-- Icon badge -->
+                <div class="delete-fare-icon-wrapper">
+                    <i class="fas fa-trash-can"></i>
+                </div>
+
+                <h4 class="delete-fare-modal-title" id="deleteFareConfirmLabel">Delete Item?</h4>
+                <p class="delete-fare-modal-desc" id="deleteFareConfirmMessage">
+                    Are you sure you want to delete this item? This action cannot be undone.
+                </p>
+
+                <!-- Item Chip -->
+                <div class="delete-fare-item-chip" id="deleteFareItemChip">
+                    <i class="fas fa-route" id="deleteFareItemIcon"></i>
+                    <span id="deleteFareItemLabel">Item</span>
+                    <span class="delete-fare-item-extra" id="deleteFareItemExtra" style="display:none;"></span>
+                </div>
+            </div>
+
+            <div class="modal-footer delete-fare-modal-footer">
+                <button type="button" class="btn delete-fare-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn delete-fare-btn-confirm" id="deleteFareConfirmBtn">
+                    <i class="fas fa-trash-alt me-1"></i> Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Scoped Delete Fare Confirmation Modal Styles ── */
+.delete-fare-modal-content {
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25), 0 10px 15px -5px rgba(15, 23, 42, 0.1) !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.delete-fare-stripe {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+}
+
+.delete-fare-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 4px auto 18px auto;
+    border-radius: 50%;
+    background: #fef2f2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 0 8px #fff1f2;
+    transition: transform 0.3s ease;
+}
+
+.delete-fare-modal-content:hover .delete-fare-icon-wrapper {
+    transform: scale(1.04);
+}
+
+.delete-fare-modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.delete-fare-modal-desc {
+    color: #64748b;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+
+.delete-fare-item-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    color: #334155;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.delete-fare-item-chip i {
+    color: #64748b;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.delete-fare-item-extra {
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    flex-shrink: 0;
+}
+
+.delete-fare-modal-footer {
+    border: 0 !important;
+    padding: 0 24px 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: stretch !important;
+    background: transparent !important;
+}
+
+.delete-fare-btn-cancel {
+    flex: 1 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.delete-fare-btn-cancel:hover,
+.delete-fare-btn-cancel:focus {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+.delete-fare-btn-confirm {
+    flex: 1 !important;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.delete-fare-btn-confirm:hover,
+.delete-fare-btn-confirm:focus {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+.delete-fare-btn-confirm.is-loading {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+}
+
+/* Staff / dark theme overrides */
+body.staff-theme .delete-fare-modal-content {
+    background: var(--surface, #1e293b) !important;
+    color: var(--text-main, #f1f5f9) !important;
+}
+body.staff-theme .delete-fare-modal-title {
+    color: var(--text-main, #f1f5f9) !important;
+}
+body.staff-theme .delete-fare-modal-desc {
+    color: var(--text-muted, #94a3b8) !important;
+}
+body.staff-theme .delete-fare-item-chip {
+    background: var(--surface-sunken, #0f172a) !important;
+    border-color: var(--border, #334155) !important;
+    color: var(--text-main, #e2e8f0) !important;
+}
+body.staff-theme .delete-fare-btn-cancel {
+    background: var(--surface-sunken, #0f172a) !important;
+    color: var(--text-main, #e2e8f0) !important;
+    border-color: var(--border, #334155) !important;
+}
+</style>
 <?php endif; ?>
 
 <?= $this->include('templates/footer') ?>
@@ -1007,4 +1218,71 @@ if (addDiscLabel && addDiscType) {
             .replace(/\s+/g, '_');
     });
 }
+
+// ── Delete Confirmation Modal Logic ──
+var _deleteFormId = null;
+
+function showDeleteConfirmModal(opts) {
+    opts = opts || {};
+    var modalEl = document.getElementById('deleteFareConfirmModal');
+    if (!modalEl || !window.bootstrap) {
+        // Fallback if Bootstrap is unavailable
+        if (window.confirm(opts.message || 'Are you sure?')) {
+            var form = document.getElementById(opts.formId);
+            if (form) form.submit();
+        }
+        return;
+    }
+
+    document.getElementById('deleteFareConfirmLabel').textContent = opts.title || 'Delete Item?';
+    document.getElementById('deleteFareConfirmMessage').textContent = opts.message || 'Are you sure you want to delete this item? This action cannot be undone.';
+    document.getElementById('deleteFareItemLabel').textContent = opts.itemLabel || 'Item';
+
+    // Icon
+    var iconEl = document.getElementById('deleteFareItemIcon');
+    iconEl.className = (opts.itemIcon || 'fas fa-route');
+
+    // Extra badge (price, percentage, etc.)
+    var extraEl = document.getElementById('deleteFareItemExtra');
+    if (opts.itemExtra) {
+        extraEl.textContent = opts.itemExtra;
+        extraEl.style.display = '';
+    } else {
+        extraEl.style.display = 'none';
+    }
+
+    // Reset confirm button state
+    var confirmBtn = document.getElementById('deleteFareConfirmBtn');
+    confirmBtn.classList.remove('is-loading');
+    confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+
+    _deleteFormId = opts.formId || null;
+    window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var confirmBtn = document.getElementById('deleteFareConfirmBtn');
+    if (!confirmBtn) return;
+
+    confirmBtn.addEventListener('click', function () {
+        if (!_deleteFormId) return;
+
+        // Loading state
+        confirmBtn.classList.add('is-loading');
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+
+        var form = document.getElementById(_deleteFormId);
+        if (form) {
+            form.submit();
+        } else {
+            // Shouldn't happen, but recover gracefully
+            var modalEl = document.getElementById('deleteFareConfirmModal');
+            if (modalEl && window.bootstrap) {
+                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+            }
+            confirmBtn.classList.remove('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+        }
+    });
+});
 </script>

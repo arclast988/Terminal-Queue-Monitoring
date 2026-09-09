@@ -369,9 +369,17 @@
                                         <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
-                                        <form action="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this rule?');">
+                                        <form id="delete-rule-form-<?= $rule['id'] ?>" action="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
-                                            <button type="submit" class="btn-modern btn-modern-sm btn-action-delete" title="Delete">
+                                            <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Delete"
+                                                onclick="showDeleteRuleModal({
+                                                    formId: 'delete-rule-form-<?= $rule['id'] ?>',
+                                                    ruleId: '<?= $rule['id'] ?>',
+                                                    destination: '<?= esc(addslashes(!empty($rule['route_destination']) && $rule['route_destination'] !== '-' ? strtoupper($rule['route_destination']) : 'TERMINAL DEFAULT')) ?>',
+                                                    timeWindow: '<?= esc(addslashes(date('H:i', strtotime($rule['time_from'])) . ' - ' . date('H:i', strtotime($rule['time_to'])))) ?>',
+                                                    label: '<?= esc(addslashes(!empty($rule['label']) && $rule['label'] !== '-' ? $rule['label'] : '')) ?>',
+                                                    waitMinutes: '<?= (int)($rule['wait_minutes'] ?? 0) ?>'
+                                                })">
                                                 <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
@@ -535,5 +543,294 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<?php if (session()->get('role') !== 'staff' && !empty($rules)): ?>
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Delete Departure Rule Confirmation Modal          -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="deleteRuleConfirmModal" tabindex="-1" aria-labelledby="deleteRuleConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-rule-modal-content">
+            <!-- Accent stripe -->
+            <div class="delete-rule-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <!-- Icon badge -->
+                <div class="delete-rule-icon-wrapper">
+                    <i class="fas fa-trash-can"></i>
+                </div>
+
+                <h4 class="delete-rule-modal-title" id="deleteRuleConfirmLabel">Delete Departure Rule?</h4>
+                <p class="delete-rule-modal-desc" id="deleteRuleConfirmMessage">
+                    Are you sure you want to delete this departure rule? This action cannot be undone.
+                </p>
+
+                <!-- Rule preview chip -->
+                <div class="delete-rule-item-chip" id="deleteRuleItemChip">
+                    <i class="bi bi-clock-history text-danger"></i>
+                    <span id="deleteRuleTimeLabel" class="fw-bold">05:00 - 07:00</span>
+                    <span class="delete-rule-dest-tag" id="deleteRuleDestTag">ROUTE</span>
+                </div>
+
+                <!-- Subtitle for label and wait time -->
+                <div id="deleteRuleSubtitle" class="mt-2 text-muted" style="font-size: 0.825rem;"></div>
+            </div>
+
+            <div class="modal-footer delete-rule-modal-footer">
+                <button type="button" class="btn delete-rule-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn delete-rule-btn-confirm" id="deleteRuleConfirmBtn">
+                    <i class="fas fa-trash-alt me-1"></i> Yes, Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ── Delete Departure Rule Confirmation Modal Styles ── */
+.delete-rule-modal-content {
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25), 0 10px 15px -5px rgba(15, 23, 42, 0.1) !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.delete-rule-stripe {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+}
+
+.delete-rule-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 4px auto 18px auto;
+    border-radius: 50%;
+    background: #fef2f2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 0 8px #fff1f2;
+    transition: transform 0.3s ease;
+}
+
+.delete-rule-modal-content:hover .delete-rule-icon-wrapper {
+    transform: scale(1.04);
+}
+
+.delete-rule-modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.delete-rule-modal-desc {
+    color: #64748b;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+
+.delete-rule-item-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    color: #334155;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+
+.delete-rule-item-chip i {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.delete-rule-dest-tag {
+    background: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+.delete-rule-modal-footer {
+    border: 0 !important;
+    padding: 0 24px 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: stretch !important;
+    background: transparent !important;
+}
+
+.delete-rule-btn-cancel {
+    flex: 1 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.delete-rule-btn-cancel:hover,
+.delete-rule-btn-cancel:focus {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+
+.delete-rule-btn-confirm {
+    flex: 1 !important;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.delete-rule-btn-confirm:hover,
+.delete-rule-btn-confirm:focus {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+.delete-rule-btn-confirm.is-loading {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+}
+
+/* Ensure modal paints above fixed navbar */
+body.modal-open #deleteRuleConfirmModal,
+#deleteRuleConfirmModal {
+    z-index: 100050 !important;
+}
+
+@media (max-width: 480px) {
+    .delete-rule-modal-footer {
+        flex-direction: column-reverse !important;
+        gap: 8px !important;
+        padding: 0 16px 20px 16px !important;
+    }
+}
+</style>
+
+<script>
+(function() {
+    var _deleteRuleFormId = null;
+
+    window.showDeleteRuleModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('deleteRuleConfirmModal');
+        if (!modalEl || !window.bootstrap) {
+            if (window.confirm('Are you sure you want to delete this rule?')) {
+                var form = document.getElementById(opts.formId);
+                if (form) form.submit();
+            }
+            return;
+        }
+
+        var timeEl = document.getElementById('deleteRuleTimeLabel');
+        var destTagEl = document.getElementById('deleteRuleDestTag');
+        var subEl = document.getElementById('deleteRuleSubtitle');
+
+        if (timeEl) {
+            timeEl.textContent = opts.timeWindow || 'Rule Time';
+        }
+
+        if (destTagEl) {
+            if (opts.destination) {
+                destTagEl.textContent = opts.destination;
+                destTagEl.style.display = '';
+            } else {
+                destTagEl.style.display = 'none';
+            }
+        }
+
+        if (subEl) {
+            var parts = [];
+            if (opts.label) {
+                parts.push(opts.label);
+            }
+            if (opts.waitMinutes) {
+                var m = parseInt(opts.waitMinutes, 10);
+                var hrs = Math.floor(m / 60);
+                var rem = m % 60;
+                var waitStr = 'Wait Time: ' + (hrs > 0 ? hrs + 'h ' : '') + rem + ' min';
+                parts.push(waitStr);
+            }
+            subEl.textContent = parts.join(' · ');
+            subEl.style.display = parts.length > 0 ? '' : 'none';
+        }
+
+        var confirmBtn = document.getElementById('deleteRuleConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.classList.remove('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+        }
+
+        _deleteRuleFormId = opts.formId || null;
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var confirmBtn = document.getElementById('deleteRuleConfirmBtn');
+        if (!confirmBtn) return;
+
+        confirmBtn.addEventListener('click', function() {
+            if (!_deleteRuleFormId) return;
+
+            confirmBtn.classList.add('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+
+            var form = document.getElementById(_deleteRuleFormId);
+            if (form) {
+                form.submit();
+            } else {
+                var modalEl = document.getElementById('deleteRuleConfirmModal');
+                if (modalEl && window.bootstrap) {
+                    window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                }
+                confirmBtn.classList.remove('is-loading');
+                confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+            }
+        });
+    });
+})();
+</script>
+<?php endif; ?>
 
 <?= view('templates/footer') ?>

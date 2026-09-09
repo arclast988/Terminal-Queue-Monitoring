@@ -642,7 +642,8 @@ class Routes extends BaseController
             return redirect()->to('/admin/routes')->with('warning', "Deleted $deletedCount vehicle type(s), but $failedCount could not be deleted (likely in use by active queues or vehicles).");
         }
 
-        return redirect()->to('/admin/routes')->with('success', 'Route group deleted successfully.');
+        $originLabel = !empty($route['origin']) ? $route['origin'] : 'Terminal';
+        return redirect()->to('/admin/routes')->with('success', 'Route group "' . strtoupper($originLabel) . ' → ' . strtoupper($destination) . '" deleted successfully.');
     }
 
     public function delete($id)
@@ -652,11 +653,14 @@ class Routes extends BaseController
             ->find($id);
         $this->unassignVehiclesFromRoutes([(int) $id]);
         if ($this->routeModel->delete($id)) {
+            $routeDesc = '';
             if ($route) {
-                $this->logActivity('Delete route', $route['origin'] . ' → ' . $route['destination'] . '.');
+                $routeDesc = strtoupper($route['origin'] ?? '') . ' → ' . strtoupper($route['destination'] ?? '');
+                $this->logActivity('Delete route', $routeDesc . '.');
             }
             $this->broadcastUpdate('fare_update', ['action' => 'route_deleted', 'id' => (int) $id]);
-            return redirect()->back()->with('success', 'Route deleted successfully.');
+            $msg = $routeDesc ? "Fare route \"{$routeDesc}\" deleted successfully." : 'Fare route deleted successfully.';
+            return redirect()->back()->with('success', $msg);
         }
         return redirect()->back()->with('error', 'Failed to delete route.');
     }

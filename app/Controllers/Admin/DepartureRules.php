@@ -364,13 +364,17 @@ class DepartureRules extends BaseController
         }
 
         $rule = $this->ruleModel->find($id);
+        if (!$rule) {
+            return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Departure rule not found.');
+        }
+
         if ($this->ruleModel->delete($id)) {
-            if ($rule) {
-                $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
-            }
+            $ruleTime = date('H:i', strtotime($rule['time_from'])) . ' - ' . date('H:i', strtotime($rule['time_to']));
+            $ruleLabel = !empty($rule['label']) && $rule['label'] !== '-' ? ' (' . $rule['label'] . ')' : '';
+            $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
             (new \App\Models\QueueModel())->recalculateSchedule();
             $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
-            return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule deleted successfully.');
+            return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule "' . $ruleTime . $ruleLabel . '" deleted successfully.');
         }
         return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Failed to delete rule.');
     }

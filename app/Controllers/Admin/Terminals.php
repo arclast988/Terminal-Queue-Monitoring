@@ -112,12 +112,14 @@ class Terminals extends BaseController
     public function delete($id)
     {
         $terminal = $this->terminalModel->find($id);
+        if (!$terminal) {
+            return redirect()->to('/admin/terminals')->with('error', 'Terminal not found.');
+        }
+
         if ($this->terminalModel->delete($id)) {
-            if ($terminal) {
-                $this->logActivity('Delete terminal', 'Deleted terminal: ' . $terminal['name']);
-            }
+            $this->logActivity('Delete terminal', 'Deleted terminal: ' . $terminal['name']);
             $this->broadcastUpdate('fare_update', ['action' => 'terminal_deleted', 'id' => (int) $id]);
-            return redirect()->to('/admin/terminals')->with('success', 'Terminal deleted successfully.');
+            return redirect()->to('/admin/terminals')->with('success', 'Terminal "' . $terminal['name'] . '" deleted successfully.');
         }
         return redirect()->to('/admin/terminals')->with('error', 'Failed to delete terminal.');
     }
