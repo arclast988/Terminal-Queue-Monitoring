@@ -40,7 +40,7 @@ $isActive = static fn (string $path): string => url_is($path) ? 'active' : '';
         <span class="profile-name"><?= esc(session()->get('full_name') ?? session()->get('username')) ?></span>
         <span class="profile-role"><?= session()->get('role') === 'super_admin' ? 'Super Admin' : 'Admin' ?></span>
     </div>
-    <a href="<?= base_url('logout') ?>" class="logout-btn-custom">
+    <a href="<?= base_url('logout') ?>" class="logout-btn-custom" data-bs-toggle="modal" data-bs-target="#logoutModal" onclick="return confirmLogout(event);" role="button" aria-haspopup="dialog">
         <i class="fas fa-sign-out-alt"></i> Logout
     </a>
 </div>

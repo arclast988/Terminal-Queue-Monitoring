@@ -33,6 +33,10 @@ $homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard'
 
 <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
 
+<?php if (session()->get('isLoggedIn')): ?>
+    <?= view('partials/logout-modal') ?>
+<?php endif; ?>
+
 <script>
     function toggleAdminMobileMenu() {
         var menu    = document.querySelector('header .nav-menu');

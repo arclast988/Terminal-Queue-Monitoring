@@ -611,7 +611,8 @@
                 <i class="fas fa-th-large"></i> Dashboard
             </a>
             <a href="<?= base_url('logout') ?>"
-                style="color: #e53e3e; padding: 8px 15px; border-radius: 6px; transition: var(--transition); display: flex; align-items: center;">
+                data-bs-toggle="modal" data-bs-target="#logoutModal" onclick="return confirmLogout(event);" role="button" aria-haspopup="dialog"
+                style="color: #e53e3e; padding: 8px 15px; border-radius: 6px; transition: var(--transition); display: flex; align-items: center;" title="Log Out">
                 <i class="fas fa-sign-out-alt"></i>
             </a>
         <?php else: ?>
@@ -629,6 +630,10 @@
     <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
 </header>
 </div><!-- /.sticky-top-wrapper -->
+
+<?php if (session()->get('isLoggedIn')): ?>
+    <?= view('partials/logout-modal') ?>
+<?php endif; ?>
 
 <?php if (empty($skip_breadcrumb)): ?>
 <!-- Breadcrumbs -->
