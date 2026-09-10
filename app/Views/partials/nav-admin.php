@@ -34,6 +34,9 @@ $isActive = static fn (string $path): string => url_is($path) ? 'active' : '';
 <a href="<?= base_url('fares') ?>" class="<?= $isActive('fares*') ?>">
     <i class="fas fa-tags"></i> Fares
 </a>
+<a href="<?= base_url('admin/help') ?>" class="<?= $isActive('admin/help*') || $isActive('admin/manual*') ?>">
+    <i class="fas fa-circle-question"></i> Help Guide
+</a>
 
 <div class="admin-profile">
     <div class="profile-info">

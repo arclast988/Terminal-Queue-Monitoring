@@ -5,6 +5,8 @@
  */
 $role    = session()->get('isLoggedIn') ? session()->get('role') : null;
 $isAdmin = in_array($role, ['super_admin', 'admin'], true);
+$isStaff = ($role === 'staff');
+$isAuth  = ($isAdmin || $isStaff);
 $homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard' : '/');
 ?>
 <header id="site-header">
@@ -16,7 +18,36 @@ $homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard'
         </div>
     </a>
 
+    <!-- Header Actions (Right Side) -->
+    <div class="header-right-actions">
+        <?php if ($isAuth): ?>
+            <div class="header-user-badge">
+                <span class="user-badge-name"><?= esc(session()->get('full_name') ?? session()->get('username')) ?></span>
+                <span class="user-badge-role"><?= $isAdmin ? (session()->get('role') === 'super_admin' ? 'Super Admin' : 'Admin') : 'Dispatcher' ?></span>
+            </div>
+            <button class="nav-options-btn" id="mobileMenuToggle" type="button" aria-label="Toggle navigation options" title="Open navigation">
+                <i class="fas fa-bars" id="mobileMenuIcon"></i>
+            </button>
+        <?php else: ?>
+            <button class="mobile-toggle" id="mobileMenuToggle" type="button" aria-label="Toggle navigation">
+                <i class="fas fa-bars" id="mobileMenuIcon"></i>
+            </button>
+        <?php endif; ?>
+    </div>
+
     <nav class="nav-menu" aria-label="Primary navigation">
+        <?php if ($isAuth): ?>
+            <div class="drawer-header">
+                <div class="drawer-header-brand">
+                    <i class="fas fa-bars-staggered"></i>
+                    <span>Menu Options</span>
+                </div>
+                <button type="button" class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close navigation options">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        <?php endif; ?>
+
         <?php if ($isAdmin): ?>
             <?= view('partials/nav-admin') ?>
         <?php elseif ($role === 'staff'): ?>
@@ -25,10 +56,6 @@ $homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard'
             <?= view('partials/nav-guest') ?>
         <?php endif; ?>
     </nav>
-
-    <button class="mobile-toggle" id="mobileMenuToggle" type="button" aria-label="Toggle navigation">
-        <i class="fas fa-bars" id="mobileMenuIcon"></i>
-    </button>
 </header>
 
 <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
@@ -38,57 +65,100 @@ $homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard'
 <?php endif; ?>
 
 <script>
-    function toggleAdminMobileMenu() {
+    function openNavDrawer() {
         var menu    = document.querySelector('header .nav-menu');
         var overlay = document.getElementById('mobileNavOverlay');
         var icon    = document.getElementById('mobileMenuIcon');
-        var isOpen  = menu.classList.contains('mobile-open');
+        if (!menu) return;
 
-        if (isOpen) {
-            menu.classList.remove('mobile-open');
-            overlay.classList.remove('active');
-            icon.classList.replace('fa-times', 'fa-bars');
-            document.body.style.overflow = '';
+        menu.classList.add('mobile-open');
+        if (overlay) overlay.classList.add('active');
+        if (icon) {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+        }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeNavDrawer() {
+        var menu    = document.querySelector('header .nav-menu');
+        var overlay = document.getElementById('mobileNavOverlay');
+        var icon    = document.getElementById('mobileMenuIcon');
+        if (!menu) return;
+
+        menu.classList.remove('mobile-open');
+        if (overlay) overlay.classList.remove('active');
+        if (icon) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        }
+        document.body.style.overflow = '';
+    }
+
+    function toggleAdminMobileMenu() {
+        var menu = document.querySelector('header .nav-menu');
+        if (!menu) return;
+        if (menu.classList.contains('mobile-open')) {
+            closeNavDrawer();
         } else {
-            menu.classList.add('mobile-open');
-            overlay.classList.add('active');
-            icon.classList.replace('fa-bars', 'fa-times');
-            document.body.style.overflow = 'hidden';
+            openNavDrawer();
         }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        var toggle  = document.getElementById('mobileMenuToggle');
-        var overlay = document.getElementById('mobileNavOverlay');
-        if (toggle)  toggle.addEventListener('click', toggleAdminMobileMenu);
-        if (overlay) overlay.addEventListener('click', toggleAdminMobileMenu);
+        var toggle   = document.getElementById('mobileMenuToggle');
+        var overlay  = document.getElementById('mobileNavOverlay');
+        var closeBtn = document.getElementById('drawerCloseBtn');
 
-        // Mobile: dropdowns open on tap instead of hover
+        if (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleAdminMobileMenu();
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', function (e) {
+                e.preventDefault();
+                closeNavDrawer();
+            });
+        }
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                closeNavDrawer();
+            });
+        }
+
+        // Escape key closes menu drawer
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeNavDrawer();
+            }
+        });
+
+        // Dropdown accordion inside menu drawer
         document.querySelectorAll('.nav-menu .dropdown .dropbtn').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
-                if (window.innerWidth <= 1280) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    var dropdown = this.closest('.dropdown');
-                    if (dropdown) dropdown.classList.toggle('mobile-open');
-                }
+                e.preventDefault();
+                e.stopPropagation();
+                var dropdown = this.closest('.dropdown');
+                if (dropdown) dropdown.classList.toggle('mobile-open');
             });
         });
     });
 
-    // Reset drawer state when resized back to desktop
+    // Reset drawer state when guest resized back to desktop
     window.addEventListener('resize', function () {
-        if (window.innerWidth > 1280) {
-            var menu    = document.querySelector('header .nav-menu');
-            var overlay = document.getElementById('mobileNavOverlay');
-            var icon    = document.getElementById('mobileMenuIcon');
-            if (menu)    menu.classList.remove('mobile-open');
-            if (overlay) overlay.classList.remove('active');
-            if (icon)    icon.classList.replace('fa-times', 'fa-bars');
-            document.body.style.overflow = '';
+        var isGuest = !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme');
+        if (isGuest && window.innerWidth > 1280) {
+            closeNavDrawer();
             document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
                 d.classList.remove('mobile-open');
             });
         }
     });
 </script>
+

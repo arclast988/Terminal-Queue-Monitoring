@@ -147,6 +147,12 @@ class Vehicles extends BaseController
                     'greater_than' => 'Capacity must be at least 1 passenger.',
                 ],
             ],
+            'status'        => [
+                'rules'  => 'permit_empty|in_list[active,maintenance]',
+                'errors' => [
+                    'in_list' => 'Status must be either active or maintenance.',
+                ],
+            ],
             'route_id'      => [
                 'rules'  => 'required|integer',
                 'errors' => [
@@ -189,6 +195,11 @@ class Vehicles extends BaseController
             return redirect()->back()->withInput()->with('error', 'Driver and Operator must not be the same person.');
         }
 
+        $status = $this->request->getPost('status');
+        if (!in_array($status, ['active', 'maintenance'], true)) {
+            $status = 'active';
+        }
+
         $this->vehicleModel->save([
             'plate_number'  => $rawPlate,
             'operator_name' => $rawOperator,
@@ -196,7 +207,7 @@ class Vehicles extends BaseController
             'driver_name'   => $driverName,
             'type'          => $vehicleType,
             'capacity'      => $this->request->getPost('capacity'),
-            'status'        => 'active',
+            'status'        => $status,
             'default_route_id' => $routeId,
         ]);
 

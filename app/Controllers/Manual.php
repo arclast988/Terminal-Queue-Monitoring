@@ -48,4 +48,33 @@ class Manual extends BaseController
 
         return view('manual/staff', $data);
     }
+
+    /**
+     * Administrator & Super Administrator Simple Help Guide
+     * Accessible at /admin/help (Requires auth:admin)
+     */
+    public function adminHelp()
+    {
+        $data = [
+            'title' => 'Administrator Quick Help Guide',
+            'role'  => session()->get('role') ?? 'admin',
+        ];
+
+        return view('help/admin', $data);
+    }
+
+    /**
+     * Dispatcher (Staff) Simple Help Guide
+     * Accessible at /staff/help (Requires auth:staff)
+     */
+    public function staffHelp()
+    {
+        $data = [
+            'title' => 'Dispatcher Quick Help Guide',
+            'role'  => 'staff',
+        ];
+
+        return view('help/dispatcher', $data);
+    }
 }
+
