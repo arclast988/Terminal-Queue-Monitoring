@@ -194,9 +194,14 @@ body > * {
     border-bottom: 1px solid var(--slate-200);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    justify-content: flex-start;
+    gap: 12px;
     background: linear-gradient(to bottom, var(--slate-50), white);
+}
+
+.modern-card-header > :last-child:not(:first-child):is(.badge, .badge-modern, .btn, .btn-modern, [class*="badge"], [class*="btn"], .btn-action-edit, .btn-action-delete),
+.card-header-modern > :last-child:not(:first-child):is(.badge, .badge-modern, .btn, .btn-modern, [class*="badge"], [class*="btn"], .btn-action-edit, .btn-action-delete) {
+    margin-left: auto;
 }
 
 .modern-card-title,
@@ -204,7 +209,7 @@ body > * {
     font-size: 16px;
     font-weight: 700;
     color: var(--slate-800);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 10px;
 }
@@ -865,9 +870,16 @@ textarea::placeholder {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 32px 0;
+    padding: 16px 0 14px 0;
     border-bottom: 1px solid var(--slate-200);
-    margin-bottom: 32px;
+    margin-bottom: 16px;
+}
+
+.page-header-modern + .container-fluid,
+.page-header-modern + div.py-4,
+.page-header-modern + .row {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 .page-title-modern {
@@ -1003,8 +1015,9 @@ textarea::placeholder {
     .page-header-modern {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
-        padding: 24px 0;
+        gap: 12px;
+        padding: 12px 0 10px 0;
+        margin-bottom: 12px;
     }
     
     .page-title-modern {
@@ -1151,12 +1164,19 @@ body.staff-theme .logout-btn-custom,
     -webkit-text-fill-color: #fff !important;
 }
 
-/* Outline / neutral modern buttons should be dark on light */
-.btn-modern.btn-modern-outline,
-.btn-modern.btn-modern-outline i,
-.btn-modern.btn-modern-outline .bi {
+/* Outline / neutral modern buttons should be dark on light (excluding action edit/delete) */
+.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(.btn-edit-discount),
+.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(.btn-edit-discount) i,
+.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(.btn-edit-discount) .bi {
     color: var(--slate-800, #1e293b) !important;
     -webkit-text-fill-color: var(--slate-800, #1e293b) !important;
+}
+
+.btn-edit-discount,
+.btn-edit-discount i,
+.btn-edit-discount .bi {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Prevent the decorative ::after overlay from sitting above text */

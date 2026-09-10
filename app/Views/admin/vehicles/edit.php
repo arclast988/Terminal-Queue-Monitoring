@@ -51,7 +51,7 @@
 
 <div class="card-modern fade-in">
     <div class="card-header-modern">
-        <span><i class="bi bi-pencil-fill"></i> Update Vehicle Details</span>
+        <span class="card-title-modern"><i class="bi bi-pencil-fill me-2"></i> Update Vehicle Details</span>
     </div>
     <div class="card-body-modern">
         <form action="<?= base_url('admin/vehicles/update/' . $vehicle['id']) ?>" method="post" data-no-change-guard id="editVehicleForm">

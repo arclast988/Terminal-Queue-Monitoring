@@ -27,9 +27,8 @@
     </div>
 </div>
 
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
             <?php if (session()->getFlashdata('errors')): ?>
                 <div class="alert-modern alert-modern-danger mb-4">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -44,7 +43,7 @@
 
             <div class="card-modern">
                 <div class="card-header-modern">
-                    <i class="bi bi-map me-2"></i> Route Information
+                    <span class="card-title-modern"><i class="bi bi-map me-2"></i> Route Information</span>
                 </div>
                 <div class="card-body-modern">
                     <form action="<?= base_url('admin/routes/store') ?>" method="post">
@@ -124,6 +123,5 @@
             </div>
         </div>
     </div>
-</div>
 
 <?= $this->include('templates/footer') ?>

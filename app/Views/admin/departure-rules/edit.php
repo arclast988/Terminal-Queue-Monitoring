@@ -20,27 +20,22 @@ $defaultMins = old('wait_mins') ?? ($oldWaitMinutes % 60);
 $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, $defaultMins);
 ?>
 
-<div class="page-header-modern">
-    <div class="container-fluid">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="page-title-modern">
-                    <i class="bi bi-pencil-square"></i> Edit Departure Rule
-                </h1>
-                <p class="text-muted mb-0">Update departure schedule rule</p>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
-                    <i class="bi bi-arrow-left"></i> Back to List
-                </a>
-            </div>
-        </div>
+<div class="page-header-modern fade-in">
+    <div>
+        <h1 class="page-title-modern">
+            <i class="bi bi-pencil-square"></i> Edit Departure Rule
+        </h1>
+        <p class="text-muted mb-0">Update departure schedule rule</p>
+    </div>
+    <div class="mt-3 mt-md-0">
+        <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+            <i class="bi bi-arrow-left"></i> Back to List
+        </a>
     </div>
 </div>
 
-<div class="container-fluid py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
             <?php if (session()->getFlashdata('errors')): ?>
                 <div class="alert-modern alert-modern-danger mb-4">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -57,7 +52,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
             <div class="card-modern">
                 <div class="card-header-modern">
-                    <i class="bi bi-gear me-2"></i> Rule Configuration
+                    <span class="card-title-modern"><i class="bi bi-gear me-2"></i> Rule Configuration</span>
                 </div>
                 <div class="card-body-modern">
                     <form action="<?= base_url($prefix . '/departure-rules/update/' . $rule['id']) ?>" method="post" data-no-change-guard>
@@ -152,7 +147,6 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
             </div>
         </div>
     </div>
-</div>
 
 <?= view('templates/footer') ?>
 

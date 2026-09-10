@@ -35,9 +35,9 @@ html body .page-header-modern {
   justify-content: space-between;
   align-items: flex-end;
   gap: var(--space-4);
-  padding: var(--space-5) 0;
+  padding: 16px 0 14px 0;
   border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-6);
+  margin-bottom: 16px;
 }
 
 html body .page-title-modern {
@@ -180,6 +180,15 @@ html body .card-header-modern {
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+html body .modern-card-header > :last-child:not(:first-child):is(.badge, .badge-modern, .btn, .btn-modern, [class*="badge"], [class*="btn"]),
+html body .card-header-modern > :last-child:not(:first-child):is(.badge, .badge-modern, .btn, .btn-modern, [class*="badge"], [class*="btn"]) {
+  margin-left: auto;
 }
 
 html body .modern-card-title,
@@ -188,6 +197,9 @@ html body .card-title-modern {
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 html body .modern-card-body,
@@ -481,7 +493,8 @@ html body.staff-theme h1, html body.staff-theme h2 {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);
-    padding: var(--space-4) 0;
+    padding: 12px 0 10px 0;
+    margin-bottom: 12px;
   }
 
   html body .page-header-modern .btn-modern { width: 100%; }

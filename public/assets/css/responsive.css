@@ -1446,7 +1446,34 @@ body.staff-theme .logout-btn-custom {
 }
 
 
+/* Tighten vertical spacing around modern page headers & form containers system-wide */
+.page-header-modern {
+    padding: 16px 0 14px 0 !important;
+    margin-bottom: 16px !important;
+}
+
+.page-header-modern + .container-fluid,
+.page-header-modern + div.py-4,
+.page-header-modern + .row {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+@media (max-width: 768px) {
+    .page-header-modern {
+        padding: 12px 0 10px 0 !important;
+        margin-bottom: 12px !important;
+        gap: 12px !important;
+    }
+}
+
 @media (max-width: 480px) {
+    .page-header-modern {
+        padding: 10px 0 8px 0 !important;
+        margin-bottom: 10px !important;
+        gap: 10px !important;
+    }
+
     /* Page-header action buttons go full width on phones */
     .page-header-modern > div,
     .page-header-modern > a.btn-modern {
@@ -2384,7 +2411,7 @@ a[title*="delete" i]:hover .bi,
   body.admin-theme .main-content,
   body.staff-theme .main-content,
   body.layout-lock .main-content,
-  .container-fluid {
+  .main-content.container-fluid {
     padding-left: 10px !important;
     padding-right: 10px !important;
     padding-top: 72px !important;
@@ -2392,6 +2419,11 @@ a[title*="delete" i]:hover .bi,
     max-width: 100% !important;
     box-sizing: border-box !important;
     overflow-x: hidden !important;
+  }
+
+  /* Nested container-fluid elements must never inherit fixed header offset */
+  .main-content .container-fluid {
+    padding-top: 0 !important;
   }
 
   .container {
@@ -2442,7 +2474,12 @@ a[title*="delete" i]:hover .bi,
     gap: 8px !important;
     flex-wrap: wrap !important;
     align-items: center !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
+  }
+
+  .modern-card-header > :last-child:not(:first-child):is(.badge, .badge-modern, .btn, .btn-modern, [class*="badge"], [class*="btn"], .btn-action-edit, .btn-action-delete),
+  .card-header-modern > :last-child:not(:first-child):is(.badge, .badge-modern, .btn, .btn-modern, [class*="badge"], [class*="btn"], .btn-action-edit, .btn-action-delete) {
+    margin-left: auto !important;
   }
 
   .modern-card-title,
@@ -2450,6 +2487,8 @@ a[title*="delete" i]:hover .bi,
   .card-title-modern {
     font-size: 14px !important;
     gap: 6px !important;
+    display: inline-flex !important;
+    align-items: center !important;
   }
 
   .modern-card-body,

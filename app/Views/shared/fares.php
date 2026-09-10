@@ -351,14 +351,16 @@ $isManager = $isAdmin;
                 </div>
                 <?php if ($isManager): ?>
                 <div class="modern-card-footer d-flex justify-content-center gap-2">
-                    <button class="btn-modern btn-modern-sm btn-modern-outline btn-action-edit"
+                    <button type="button" class="btn-modern btn-modern-sm btn-action-edit btn-edit-discount"
                         data-bs-toggle="modal"
                         data-bs-target="#editDiscountModal"
                         data-id="<?= $disc['id'] ?>"
                         data-label="<?= esc($disc['label']) ?>"
                         data-percent="<?= $disc['discount_percent'] ?>"
-                        data-active="<?= $disc['is_active'] ?>">
-                        <i class="bi bi-pencil"></i> Edit
+                        data-active="<?= $disc['is_active'] ?>"
+                        title="Edit Discount"
+                        style="background: var(--primary-blue, #1565c0) !important; color: #ffffff !important; border-color: var(--primary-blue, #1565c0) !important;">
+                        <i class="bi bi-pencil" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;"></i> Edit
                     </button>
                     <form id="delete-discount-form-<?= $disc['id'] ?>" action="<?= base_url('admin/routes/discounts/delete/' . $disc['id']) ?>" method="post" class="d-inline">
                         <?= csrf_field() ?>

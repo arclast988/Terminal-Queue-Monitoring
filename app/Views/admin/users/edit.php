@@ -26,7 +26,7 @@
     <div class="col-12 col-xl-10">
         <div class="card-modern fade-in">
             <div class="card-header-modern">
-                <span><i class="bi bi-person-gear me-2"></i> User Details</span>
+                <span class="card-title-modern"><i class="bi bi-person-gear me-2"></i> User Details</span>
                 <span class="badge-modern badge-modern-primary">Editing Account</span>
             </div>
             <div class="card-body-modern">
