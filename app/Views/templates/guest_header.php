@@ -71,8 +71,10 @@
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 9999;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 99999;
         align-items: center;
         justify-content: center;
         padding: 20px;
@@ -81,97 +83,282 @@
         display: flex;
     }
     .ann-modal {
-        background: white;
-        border-radius: 16px;
-        max-width: 520px;
+        background: #ffffff;
+        border-radius: 20px;
+        max-width: 600px;
         width: 100%;
-        max-height: 70vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-        animation: annSlideUp 0.3s ease;
+        max-height: 82vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 25px 60px -15px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.06);
+        animation: annSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .ann-modal-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 18px 22px;
-        border-bottom: 1px solid #eee;
+        padding: 18px 24px;
         background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
-        border-radius: 16px 16px 0 0;
+        border-radius: 20px 20px 0 0;
         color: white;
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+    }
+    .ann-modal-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .ann-modal-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: #ffffff;
+        flex-shrink: 0;
     }
     .ann-modal-header h3 {
         margin: 0;
         font-size: 17px;
-        font-weight: 800;
+        font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         color: #ffffff;
+        letter-spacing: -0.2px;
     }
-    .ann-modal-header h3 i {
+    .ann-modal-header-badge {
+        font-size: 11px;
+        font-weight: 700;
+        background: rgba(255,255,255,0.22);
         color: #ffffff;
+        padding: 3px 8px;
+        border-radius: 9999px;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        flex-shrink: 0;
     }
     .ann-modal-close {
-        background: rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.18);
         border: none;
         color: white;
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 18px;
+        line-height: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.2s;
+        transition: background 0.15s ease, transform 0.15s ease;
     }
     .ann-modal-close:hover {
         background: rgba(255,255,255,0.35);
+        transform: scale(1.06);
     }
     .ann-modal-body {
-        padding: 16px 22px 22px;
+        padding: 20px 24px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1 1 auto;
+        background: #f8fafc;
+    }
+    .ann-modal-body::-webkit-scrollbar {
+        width: 6px;
+    }
+    .ann-modal-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .ann-modal-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+    }
+    .ann-modal-body::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
     .ann-modal-list {
         list-style: none;
         padding: 0;
         margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
     .ann-modal-list li {
-        padding: 14px 16px;
-        border-bottom: 1px solid #f1f5f9;
+        padding: 16px 18px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        font-size: 15.5px;
+        gap: 14px;
+        font-size: 14.5px;
         color: #1e293b;
         line-height: 1.65;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
-    .ann-modal-list li:last-child {
-        border-bottom: none;
+    .ann-modal-list li:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.06);
     }
-    .ann-bullet {
-        width: 8px;
-        height: 8px;
-        background: #B71C1C;
+    .ann-bullet-wrap {
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
+        background: #fee2e2;
+        color: #B71C1C;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
-        margin-top: 7px;
+        font-size: 12px;
+        margin-top: 1px;
+    }
+    .ann-modal-text {
+        flex: 1 1 auto;
+        min-width: 0;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        white-space: pre-line;
+    }
+    .ann-modal-text a {
+        color: #B71C1C;
+        font-weight: 600;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        word-break: break-all;
+    }
+    .ann-modal-text a:hover {
+        color: #7F0000;
     }
     .ann-modal-empty {
         text-align: center;
-        color: #94a3b8;
-        padding: 30px 0;
-        font-size: 14px;
+        color: #64748b;
+        padding: 40px 20px;
+        font-size: 14.5px;
+        background: #ffffff;
+        border: 1px dashed #cbd5e1;
+        border-radius: 14px;
     }
     .ann-modal-empty i {
-        font-size: 32px;
-        margin-bottom: 10px;
+        font-size: 34px;
+        margin-bottom: 12px;
         display: block;
         color: #cbd5e1;
     }
+    .ann-modal-footer {
+        padding: 12px 24px;
+        background: #ffffff;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .ann-modal-footer-status {
+        font-size: 12px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .ann-modal-footer-status i {
+        color: #10b981;
+        font-size: 8px;
+    }
+    .ann-modal-btn-close {
+        padding: 6px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: #ffffff;
+        color: #334155;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .ann-modal-btn-close:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        color: #0f172a;
+    }
+    @media (max-width: 640px) {
+        .ann-modal {
+            max-height: 86vh;
+            border-radius: 16px;
+            margin: 8px;
+            width: calc(100% - 16px);
+        }
+        .ann-modal-header {
+            padding: 12px 16px;
+            border-radius: 16px 16px 0 0;
+            gap: 8px;
+        }
+        .ann-modal-header-left {
+            gap: 10px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+        .ann-modal-header-icon {
+            width: 32px;
+            height: 32px;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+        .ann-modal-header h3 {
+            font-size: 15px;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .ann-modal-header-badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            letter-spacing: 0.3px;
+        }
+        .ann-modal-body {
+            padding: 12px 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .ann-modal-list {
+            gap: 10px;
+        }
+        .ann-modal-list li {
+            padding: 12px 12px;
+            gap: 10px;
+            font-size: 13.5px;
+            border-radius: 12px;
+        }
+        .ann-bullet-wrap {
+            width: 24px;
+            height: 24px;
+            font-size: 10.5px;
+            margin-top: 1px;
+        }
+        .ann-modal-footer {
+            padding: 10px 14px;
+        }
+        .ann-modal-footer-status {
+            font-size: 11px;
+        }
+        .ann-modal-btn-close {
+            padding: 5px 14px;
+            font-size: 12px;
+        }
+    }
     @keyframes annSlideUp {
-        from { transform: translateY(30px); opacity: 0; }
+        from { transform: translateY(20px); opacity: 0; }
         to   { transform: translateY(0); opacity: 1; }
     }
     @keyframes gh-marquee {
@@ -565,25 +752,54 @@
 <div class="ann-modal-overlay" id="annModalOverlay" onclick="closeAnnouncementModal(event)">
     <div class="ann-modal" onclick="event.stopPropagation()">
         <div class="ann-modal-header">
-            <h3><i class="fas fa-bullhorn"></i> Announcements</h3>
-            <button class="ann-modal-close" onclick="closeAnnouncementModal()">&times;</button>
+            <div class="ann-modal-header-left">
+                <div class="ann-modal-header-icon">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div>
+                    <h3>Announcements <span class="ann-modal-header-badge" id="annCountBadge"><?= !empty($announcements) && is_array($announcements) ? count($announcements) . ' Active' : 'Live' ?></span></h3>
+                </div>
+            </div>
+            <button type="button" class="ann-modal-close" onclick="closeAnnouncementModal()" aria-label="Close modal">&times;</button>
         </div>
         <div class="ann-modal-body">
             <ul class="ann-modal-list" id="annModalList">
                 <?php if (!empty($announcements) && is_array($announcements)): ?>
                     <?php foreach ($announcements as $ann): ?>
                         <li>
-                            <span class="ann-bullet"></span>
-                            <span><?= esc($ann['message']) ?></span>
+                            <div class="ann-bullet-wrap">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <div class="ann-modal-text"><?php
+                                $text = esc($ann['message'] ?? '');
+                                $text = preg_replace('~(\bhttps?://[^\s<]+?)\)([A-Za-z0-9])~i', '$1) $2', $text);
+                                echo preg_replace_callback(
+                                    '~https?://[^\s<]+~i',
+                                    static function ($matches) {
+                                        $url = $matches[0];
+                                        $trailing = '';
+                                        while ($url !== '' && preg_match('/[.,;!?:)]$/', $url)) {
+                                            $trailing = substr($url, -1) . $trailing;
+                                            $url = substr($url, 0, -1);
+                                        }
+                                        return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . $url . '</a>' . $trailing;
+                                    },
+                                    $text
+                                );
+                            ?></div>
                         </li>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <li class="ann-modal-empty">
-                        <i class="fas fa-info-circle"></i>
-                        No announcements at this time.
+                        <i class="fas fa-bell-slash"></i>
+                        No active announcements at this time.
                     </li>
                 <?php endif; ?>
             </ul>
+        </div>
+        <div class="ann-modal-footer">
+            <span class="ann-modal-footer-status"><i class="fas fa-circle"></i> Live terminal advisory sync</span>
+            <button type="button" class="ann-modal-btn-close" onclick="closeAnnouncementModal()">Close</button>
         </div>
     </div>
 </div>
@@ -742,14 +958,27 @@
                     }
                     // Also update modal list
                     var modalList = document.getElementById('annModalList');
+                    var countBadge = document.getElementById('annCountBadge');
                     if (modalList) {
                         if (msgs.length) {
+                            if (countBadge) countBadge.textContent = msgs.length + ' Active';
                             modalList.innerHTML = msgs.map(function(m) {
-                                var safe = m.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                return '<li><span class="ann-bullet"></span><span>' + safe + '</span></li>';
+                                var safe = String(m || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                safe = safe.replace(/(\bhttps?:\/\/[^\s<]+?)\)([A-Za-z0-9])/gi, '$1) $2');
+                                var withLinks = safe.replace(/https?:\/\/[^\s<]+/gi, function (fullMatch) {
+                                    var url = fullMatch;
+                                    var trailing = '';
+                                    while (url.length && /[.,;!?:)]$/.test(url)) {
+                                        trailing = url.slice(-1) + trailing;
+                                        url = url.slice(0, -1);
+                                    }
+                                    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>' + trailing;
+                                });
+                                return '<li><div class="ann-bullet-wrap"><i class="fas fa-bullhorn"></i></div><div class="ann-modal-text">' + withLinks + '</div></li>';
                             }).join('');
                         } else {
-                            modalList.innerHTML = '<li class="ann-modal-empty"><i class="fas fa-info-circle"></i>No announcements at this time.</li>';
+                            if (countBadge) countBadge.textContent = 'Live';
+                            modalList.innerHTML = '<li class="ann-modal-empty"><i class="fas fa-bell-slash"></i>No active announcements at this time.</li>';
                         }
                     }
                 })

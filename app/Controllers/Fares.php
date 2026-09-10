@@ -96,7 +96,14 @@ class Fares extends BaseController
         // Cache for a few seconds: the guest fares page polls every 3s, so this
         // keeps data fresh while collapsing load to one DB query per window.
         // Version the key because the response now also carries configured vehicle types.
+        $syncToken     = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $syncTokenTime = (float) $syncToken;
+
         $payload = cache('rt_fares_api_v2');
+        if (is_array($payload) && isset($payload['cached_at']) && $syncTokenTime > 0 && $payload['cached_at'] < $syncTokenTime) {
+            $payload = null;
+        }
+
         if (! is_array($payload)) {
             $discountModel = new FareDiscountModel();
             $discounts = $discountModel
@@ -123,19 +130,21 @@ class Fares extends BaseController
             }
 
             $payload = [
+                'success'        => true,
                 'van_routes'     => $this->routesByVehicleType('van', $discounts),
                 'jeepney_routes' => $this->routesByVehicleType('jeepney', $discounts),
                 'minibus_routes' => $this->routesByVehicleType('minibus', $discounts),
                 'vehicle_types'  => $vehicleTypes,
                 'routes_by_type' => $routesByType,
                 'discounts'      => $discounts,
+                'cached_at'      => microtime(true),
             ];
 
             cache()->save('rt_fares_api_v2', $payload, 3);
         }
 
         // Always read the sync token live so clients keep detecting changes.
-        $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $payload['sync_token'] = $syncToken;
 
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')

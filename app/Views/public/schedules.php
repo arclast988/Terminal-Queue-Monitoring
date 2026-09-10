@@ -529,6 +529,16 @@
             display: inline-block;
         }
 
+        @keyframes countPulse {
+            0% { transform: scale(1); color: inherit; }
+            50% { transform: scale(1.35); color: #2563eb; font-weight: 800; }
+            100% { transform: scale(1); color: inherit; }
+        }
+        .passenger-count-num.pulse-update {
+            display: inline-block;
+            animation: countPulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
         .plate-number {
             font-weight: 700;
             color: var(--text-main);
@@ -1068,7 +1078,7 @@
                     </thead>
                     <tbody id="scheduleTableBody">
                         <?php foreach ($schedules as $index => $schedule): ?>
-                            <tr data-destination="<?= esc(strtolower($schedule['destination'] ?? '')) ?>" data-type="<?= esc(strtolower($schedule['vehicle_type'] ?? '')) ?>">
+                            <tr data-queue-id="<?= (int)($schedule['queue_id'] ?? $schedule['id'] ?? 0) ?>" data-plate="<?= esc($schedule['plate_number']) ?>" data-destination="<?= esc(strtolower($schedule['destination'] ?? '')) ?>" data-type="<?= esc(strtolower($schedule['vehicle_type'] ?? '')) ?>">
                                 <td data-label="Queue #">
                                     <?php 
                                         $queueNum = !empty($schedule['position']) && (int)$schedule['position'] > 0 ? (int)$schedule['position'] : ($index + 1);
@@ -1111,24 +1121,24 @@
                                     </div>
                                 </td>
                                 <td data-label="Est. Departure">
-                                    <?php if ($schedule['is_full']): ?>
-                                        <span class="time-display full">
-                                            FULL — Ready
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="time-display">
+                                    <?php $qid = (int)($schedule['queue_id'] ?? $schedule['id'] ?? 0); ?>
+                                    <div class="sched-dep-cell" id="sched-dep-cell-<?= $qid ?>">
+                                        <span class="time-display" id="sched-dep-time-<?= $qid ?>" style="<?= $schedule['is_full'] ? 'display:none;' : '' ?>">
                                             <?= !empty($schedule['estimated_departure']) ? date('g:i A', strtotime($schedule['estimated_departure'])) : 'Waiting' ?>
                                         </span>
-                                        <div style="font-size: 12.5px; color: var(--text-muted);">
-                                            <?= $schedule['current_passengers'] ?>/<?= $schedule['capacity'] ?> passengers
+                                        <span class="time-display full" id="sched-dep-full-<?= $qid ?>" style="<?= $schedule['is_full'] ? '' : 'display:none;' ?>">
+                                            FULL — Ready
+                                        </span>
+                                        <div class="sched-passengers-text" id="sched-passengers-<?= $qid ?>" style="font-size: 12.5px; color: var(--text-muted); <?= $schedule['is_full'] ? 'display:none;' : '' ?>">
+                                            <span id="passenger-count-<?= $qid ?>" class="passenger-count-num"><?= $schedule['current_passengers'] ?></span>/<?= $schedule['capacity'] ?> passengers
                                         </div>
-                                    <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td data-label="Status">
                                     <?php
                                     $statusClass = ['scheduled' => 'status-scheduled', 'waiting' => 'status-waiting', 'boarding' => 'status-boarding', 'departed' => 'status-departed', 'canceled' => 'status-canceled'];
                                     ?>
-                                    <span class="status-badge <?= $statusClass[$schedule['status']] ?? 'status-departed' ?>">
+                                    <span class="status-badge <?= $statusClass[$schedule['status']] ?? 'status-departed' ?>" id="sched-status-<?= $qid ?>">
                                         <?= strtoupper($schedule['status']) ?>
                                     </span>
                                 </td>
@@ -1226,7 +1236,7 @@
             _fetchPending = true;
 
             var card = document.querySelector('.schedule-card');
-            if (isUserAction && card && window.GlobalLoader) {
+            if (isUserAction === true && card && window.GlobalLoader) {
                 GlobalLoader.showTableLoader(card, 'Loading schedules\u2026');
             }
 
@@ -1292,24 +1302,27 @@
             var statusClassMap = { 'scheduled': 'status-scheduled', 'waiting': 'status-waiting', 'boarding': 'status-boarding', 'departed': 'status-departed', 'canceled': 'status-canceled' };
             var html = '';
             schedules.forEach(function(s) {
+                var qid = s.queue_id || s.id;
                 var typeMeta = vehicleTypeMeta[s.vehicle_type] || {};
                 var imgFile = typeMeta.image || 'minibus.png';
                 var typeLabel = typeMeta.name || s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); });
                 var statusClass = statusClassMap[s.status] || 'status-waiting';
-                var dep = '';
-                if (s.is_full) {
-                    dep = '<span class="time-display full">FULL</span>';
-                } else {
-                    dep = '<span class="time-display">' + (s.estimated_departure_formatted || 'Waiting') + '</span><div style="font-size:12.5px;color:var(--text-muted)">' + s.current_passengers + '/' + s.capacity + ' passengers</div>';
-                }
                 function escHtml(v) {
                     if (v === null || v === undefined) return '';
                     return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
                 }
+                var isFull = !!s.is_full;
+                var etaText = s.estimated_departure_formatted || 'Waiting';
+                var dep = '<div class="sched-dep-cell" id="sched-dep-cell-' + qid + '">'
+                    + '<span class="time-display" id="sched-dep-time-' + qid + '" style="' + (isFull ? 'display:none;' : '') + '">' + escHtml(etaText) + '</span>'
+                    + '<span class="time-display full" id="sched-dep-full-' + qid + '" style="' + (isFull ? '' : 'display:none;') + '">FULL — Ready</span>'
+                    + '<div class="sched-passengers-text" id="sched-passengers-' + qid + '" style="font-size:12.5px;color:var(--text-muted);' + (isFull ? 'display:none;' : '') + '">'
+                    + '<span id="passenger-count-' + qid + '" class="passenger-count-num">' + s.current_passengers + '</span>/' + s.capacity + ' passengers</div>'
+                    + '</div>';
                 var opDisplay = s.operator_name ? escHtml(s.operator_name) : (s.driver_name ? escHtml(s.driver_name) : '—');
                 var typeSlug = String(s.vehicle_type || '').toLowerCase();
                 var typeColor = typeMeta.color || '#1565c0';
-                html += '<tr data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml(typeSlug) + '">' +
+                html += '<tr data-queue-id="' + qid + '" data-plate="' + escHtml(s.plate_number) + '" data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml(typeSlug) + '">' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
                     '<td data-label="Operator"><div class="operator-cell"><i class="fas fa-building text-muted"></i>' + opDisplay + '</div></td>' +
@@ -1317,10 +1330,40 @@
                     '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(typeSlug) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(typeSlug) + '" data-vtype="' + escHtml(typeSlug) + '" style="background: var(--vehicle-' + escHtml(typeSlug) + '-soft, ' + typeColor + '18) !important; color: var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important; border: 1.5px solid var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important;">' + escHtml(typeLabel) + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted)">' + escHtml(s.origin).toUpperCase() + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + escHtml(s.destination).toUpperCase() + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
-                    '<td data-label="Status"><span class="status-badge ' + statusClass + '">' + s.status.toUpperCase() + '</span></td>' +
+                    '<td data-label="Status"><span class="status-badge ' + statusClass + '" id="sched-status-' + qid + '">' + s.status.toUpperCase() + '</span></td>' +
                 '</tr>';
             });
             tbody.innerHTML = html;
+        }
+
+        // Targeted in-place passenger DOM update without full table re-render
+        function updateScheduleRowPassengers(queueId, newCount, capacity) {
+            if (!queueId) return;
+            var countSpan = document.getElementById('passenger-count-' + queueId);
+            var fullBadge = document.getElementById('sched-dep-full-' + queueId);
+            var timeSpan = document.getElementById('sched-dep-time-' + queueId);
+            var passDiv = document.getElementById('sched-passengers-' + queueId);
+
+            newCount = parseInt(newCount, 10);
+            capacity = parseInt(capacity, 10);
+            if (isNaN(newCount)) return;
+            var isFull = (!isNaN(capacity) && capacity > 0 && newCount >= capacity);
+
+            if (countSpan) {
+                countSpan.textContent = newCount;
+                countSpan.classList.remove('pulse-update');
+                void countSpan.offsetWidth; // trigger reflow
+                countSpan.classList.add('pulse-update');
+            }
+            if (fullBadge) {
+                fullBadge.style.display = isFull ? 'inline-block' : 'none';
+            }
+            if (timeSpan) {
+                timeSpan.style.display = isFull ? 'none' : 'inline-block';
+            }
+            if (passDiv) {
+                passDiv.style.display = isFull ? 'none' : 'block';
+            }
         }
 
         // Rebuild Destination filter options and route chips when route list changes
@@ -1377,12 +1420,34 @@
                 });
             }
 
+            function handleLiveQueueUpdate(message) {
+                var data = (message && message.data) ? message.data : message;
+                if (!data) return;
+
+                if (data.action === 'passenger_change') {
+                    var id = data.id;
+                    var newCount = data.new_count;
+                    var cap = data.capacity;
+                    if (id) {
+                        updateScheduleRowPassengers(id, newCount, cap);
+                    }
+                } else {
+                    fetchSchedulesStatus(false);
+                }
+            }
+
             QueueSync.init({
-                pollInterval:  3000,
-                customRefresh: fetchSchedulesStatus,
-                customWSHandler: fetchSchedulesStatus
+                pollInterval:   3000,
+                customRefresh:  function() { fetchSchedulesStatus(false); },
+                customWSHandler: handleLiveQueueUpdate
             });
-            fetchSchedulesStatus();
+
+            // Universal WebSocket document event listener
+            document.addEventListener('pttm:ws-queue_update', function(e) {
+                handleLiveQueueUpdate(e.detail);
+            });
+
+            fetchSchedulesStatus(false);
         });
     </script>
 </body>

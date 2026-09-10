@@ -525,8 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Real-time sync (polling + WebSocket)
     if (typeof QueueSync !== 'undefined') {
         QueueSync.init({
-            onlyWS:        true,
-            pollInterval:  30000,
+            pollInterval:  15000,
             refreshUrl:    window.location.href,
             tableSelector: '#historyTable tbody',
             extraRefresh:  function(newDoc) {
@@ -537,6 +536,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 var newPagerWrap = newDoc.getElementById('historyPaginationWrap');
                 var curPagerWrap = document.getElementById('historyPaginationWrap');
                 if (newPagerWrap && curPagerWrap) curPagerWrap.innerHTML = newPagerWrap.innerHTML;
+            }
+        });
+
+        // Immediately refresh history on actual trip departures or cancellations
+        document.addEventListener('pttm:ws-queue_update', function(e) {
+            var detail = e.detail || {};
+            var data = detail.data || detail;
+            if (data && (data.action === 'status_change' || data.action === 'cancel_trip' || data.status === 'departed')) {
+                if (window.QueueSync && window.QueueSync.refresh) {
+                    window.QueueSync.refresh();
+                }
             }
         });
     }

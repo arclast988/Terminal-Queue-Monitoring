@@ -182,14 +182,24 @@ class Schedules extends BaseController
         // public polls reuse one DB query. The sync token stays live below,
         // and broadcastUpdate() clears these keys so changes appear instantly.
         // Free-text search is NOT cached to prevent unbounded cache-key growth.
+        $syncToken     = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $syncTokenTime = (float) $syncToken;
+
         $useCache  = ($search === '');
         $cacheKey  = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? ''));
         $payload   = $useCache ? cache($cacheKey) : null;
+
+        // Air-tight guarantee: if a queue mutation happened after this payload was cached, discard stale cache immediately
+        if (is_array($payload) && isset($payload['cached_at']) && $syncTokenTime > 0 && $payload['cached_at'] < $syncTokenTime) {
+            $payload = null;
+        }
+
         if (! is_array($payload)) {
             $queueModel = new QueueModel();
 
             $builder = $queueModel->select('
                     queue.id as queue_id,
+                    queue.id,
                     queue.status,
                     queue.current_passengers,
                     queue.position,
@@ -228,6 +238,7 @@ class Schedules extends BaseController
                                  ->findAll();
 
             foreach ($schedules as &$s) {
+                $s['id'] = (int) $s['queue_id'];
                 if (empty($s['estimated_departure'])) {
                     $s['estimated_departure'] = null;
                 }
@@ -261,12 +272,15 @@ class Schedules extends BaseController
             $allDestinations = array_values(array_unique($allDestinations));
 
             $payload = [
+                'success'            => true,
+                'queue'              => $schedules,
                 'schedules'          => $schedules,
                 'count'              => count($schedules),
                 'destinations'       => $allDestinations,
                 'active_dest_counts' => $activeDestCounts,
                 'total_active_count' => $totalActiveCount,
                 'vehicle_types'      => $vehicleTypes,
+                'cached_at'          => microtime(true),
             ];
 
             if ($useCache) {
@@ -274,7 +288,7 @@ class Schedules extends BaseController
             }
         }
 
-        $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $payload['sync_token'] = $syncToken;
 
         return $this->response
             ->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

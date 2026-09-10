@@ -104,18 +104,22 @@ abstract class BaseController extends Controller
         try {
             $cache = cache();
             $cache->delete('rt_queue_status');
+            $cache->delete('rt_queue_status_pkg');
             $cache->delete('rt_home_status');
+            // Schedules display passenger counts, so passenger updates MUST invalidate schedules cache
+            $cache->delete('rt_sched_status_cbe5cfdf7c2118a9c3d78ef1d684f3afa089201352886449a06a6511cfef74a7');
+            try {
+                $cache->deleteMatching('rt_sched_status_*');
+            } catch (\Throwable $e) {
+                // FileHandler glob scan fallback
+            }
 
             if (! $isPassengerChange) {
                 $cache->delete('rt_announcements');
+                $cache->delete('rt_announcements_pkg');
                 $cache->delete('rt_fares_api');
                 $cache->delete('rt_fares_api_v2');
                 $cache->delete('db_vehicle_types');
-                try {
-                    $cache->deleteMatching('rt_sched_status_*');
-                } catch (\Throwable $e) {
-                    // FileHandler glob scan skipped — 2s TTL expires shortly.
-                }
             }
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement

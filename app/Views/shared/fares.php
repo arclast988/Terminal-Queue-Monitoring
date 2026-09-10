@@ -1285,6 +1285,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             confirmBtn.classList.remove('is-loading');
             confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+        }
+    });
+
     // Real-time fare and discount table synchronization
     function refreshSharedFares() {
         // Only refresh if user is not currently interacting with an open modal or input
@@ -1319,5 +1322,6 @@ document.addEventListener('DOMContentLoaded', function () {
         .catch(function() { /* silent fallback */ });
     }
     document.addEventListener('pttm:ws-fare_update', refreshSharedFares);
+    document.addEventListener('vt-colors-updated', refreshSharedFares);
 });
 </script>

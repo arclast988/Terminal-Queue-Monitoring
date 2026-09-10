@@ -1026,7 +1026,10 @@ body.staff-theme .footer p {
 
 body.modal-open .register-vehicle-card,
 body.modal-open .modern-card:has(.plate-col-wrapper),
-body.modal-open .card-modern:has(.plate-col-wrapper) {
+body.modal-open .card-modern:has(.plate-col-wrapper),
+body.swal2-shown .register-vehicle-card,
+body.swal2-shown .modern-card:has(.plate-col-wrapper),
+body.swal2-shown .card-modern:has(.plate-col-wrapper) {
     z-index: auto !important;
 }
 

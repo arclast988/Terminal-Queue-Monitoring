@@ -76,9 +76,13 @@
         var badge = getBadge(id);
 
         if (span) {
-            var text = count + ' / ' + capacity;
-            if (span.textContent.trim() !== text) {
-                span.textContent = text;
+            if (span.classList.contains('passenger-count-num')) {
+                span.textContent = count;
+            } else {
+                var text = count + ' / ' + capacity;
+                if (span.textContent.trim() !== text) {
+                    span.textContent = text;
+                }
             }
             span.classList.toggle('text-danger', count >= capacity);
         }
@@ -269,6 +273,10 @@
     }
 
     function ajaxRefresh() {
+        if (_config && typeof _config.customRefresh === 'function') {
+            _config.customRefresh();
+            return;
+        }
         if (!_config || !_config.refreshUrl) return;
 
         fetch(_config.refreshUrl, {

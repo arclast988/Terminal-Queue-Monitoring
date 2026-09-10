@@ -183,6 +183,15 @@
             padding: 0 4px !important;
         }
     }
+    @keyframes countPulse {
+        0% { transform: scale(1); color: inherit; }
+        50% { transform: scale(1.35); color: #2563eb; font-weight: 800; }
+        100% { transform: scale(1); color: inherit; }
+    }
+    .passenger-count-num.pulse-update {
+        display: inline-block;
+        animation: countPulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
 </style>
 
 <div class="page-header-modern fade-in">
@@ -305,7 +314,8 @@
                 <tbody id="sharedScheduleTableBody">
                     <?php if (!empty($schedules)): ?>
                         <?php foreach ($schedules as $index => $s): ?>
-                            <tr data-destination="<?= esc(strtolower($s['destination'] ?? '')) ?>" data-type="<?= esc(strtolower($s['vehicle_type'] ?? '')) ?>">
+                            <?php $qid = (int)($s['queue_id'] ?? $s['id'] ?? 0); ?>
+                            <tr data-queue-id="<?= $qid ?>" data-plate="<?= esc($s['plate_number']) ?>" data-destination="<?= esc(strtolower($s['destination'] ?? '')) ?>" data-type="<?= esc(strtolower($s['vehicle_type'] ?? '')) ?>">
                                 <td data-label="Queue #" class="cell-queue-num">
                                     <?php 
                                         $queueNum = !empty($s['position']) && (int)$s['position'] > 0 ? (int)$s['position'] : ($index + 1);
@@ -354,13 +364,18 @@
                                             <?= date('H:i', strtotime($s['departure_time'])) ?>
                                         </span>
                                         <small class="text-muted d-block mt-1">Departed</small>
-                                    <?php elseif ($s['is_full']): ?>
-                                        <span class="badge-modern badge-modern-success">FULL — Ready</span>
                                     <?php else: ?>
-                                        <span class="badge-modern badge-modern-primary">
-                                            <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'Waiting' ?>
-                                        </span>
-                                        <small class="text-muted d-block mt-1"><?= $s['current_passengers'] ?>/<?= $s['capacity'] ?> passengers</small>
+                                        <div class="sched-dep-cell" id="shared-dep-cell-<?= $qid ?>">
+                                            <span class="badge-modern badge-modern-success full-badge" id="full-badge-<?= $qid ?>" style="<?= $s['is_full'] ? '' : 'display:none;' ?>">
+                                                FULL — Ready
+                                            </span>
+                                            <span class="badge-modern badge-modern-primary" id="shared-dep-time-<?= $qid ?>" style="<?= $s['is_full'] ? 'display:none;' : '' ?>">
+                                                <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'Waiting' ?>
+                                            </span>
+                                            <small class="text-muted d-block mt-1" id="shared-passengers-text-<?= $qid ?>" style="<?= $s['is_full'] ? 'display:none;' : '' ?>">
+                                                <span id="passenger-count-<?= $qid ?>" class="passenger-count-num"><?= $s['current_passengers'] ?></span>/<?= $s['capacity'] ?> passengers
+                                            </small>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Status">
@@ -480,12 +495,52 @@
         }
     }
 
+    function updateSharedScheduleRowPassengers(queueId, newCount, capacity) {
+        if (!queueId) return;
+        var countSpan = document.getElementById('passenger-count-' + queueId);
+        var fullBadge = document.getElementById('full-badge-' + queueId);
+        var timeSpan = document.getElementById('shared-dep-time-' + queueId);
+        var passText = document.getElementById('shared-passengers-text-' + queueId);
+
+        newCount = parseInt(newCount, 10);
+        capacity = parseInt(capacity, 10);
+        if (isNaN(newCount)) return;
+        var isFull = (!isNaN(capacity) && capacity > 0 && newCount >= capacity);
+
+        if (countSpan) {
+            countSpan.textContent = newCount;
+            countSpan.classList.remove('pulse-update');
+            void countSpan.offsetWidth;
+            countSpan.classList.add('pulse-update');
+        }
+        if (fullBadge) {
+            fullBadge.style.display = isFull ? 'inline-block' : 'none';
+        }
+        if (timeSpan) {
+            timeSpan.style.display = isFull ? 'none' : 'inline-block';
+        }
+        if (passText) {
+            passText.style.display = isFull ? 'none' : 'block';
+        }
+    }
+
+    function handleSharedLiveQueueUpdate(message) {
+        var data = (message && message.data) ? message.data : message;
+        if (!data) return;
+        if (data.action === 'passenger_change') {
+            updateSharedScheduleRowPassengers(data.id, data.new_count, data.capacity);
+        } else if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    }
+
     // Initialize real-time sync (adaptive polling + WebSocket)
     QueueSync.init({
         apiUrl:        '<?= base_url('schedules/status') ?>',
         pollInterval:  4000,
         refreshUrl:    window.location.href,
         tableSelector: '#sharedScheduleTableBody',
+        customWSHandler: handleSharedLiveQueueUpdate,
         extraRefresh:  function(newDoc) {
             // Update stats
             var newStats = newDoc.querySelector('#statTodayDepartures');
@@ -495,5 +550,9 @@
             // Re-apply route filter
             applySharedFilter();
         }
+    });
+
+    document.addEventListener('pttm:ws-queue_update', function(e) {
+        handleSharedLiveQueueUpdate(e.detail);
     });
 </script>

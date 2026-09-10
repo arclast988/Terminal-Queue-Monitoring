@@ -19,12 +19,25 @@ class QueueStatus extends Controller
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
-        // Cache the computed queue for a couple of seconds so that many
-        // simultaneous passenger polls collapse to a single DB query instead
-        // of running this 3-table join per request. broadcastUpdate() clears
-        // this key, so staff actions still appear on the next poll instantly.
-        $items = cache('rt_queue_status');
-        if (! is_array($items)) {
+        // Read sync token first to ensure absolute freshness
+        $syncToken = '';
+        $syncTokenTime = 0.0;
+        try {
+            $tokenFile = WRITEPATH . 'sync_token.txt';
+            if (is_file($tokenFile)) {
+                $syncToken = trim((string) @file_get_contents($tokenFile));
+                $syncTokenTime = (float) $syncToken;
+            }
+        } catch (\Throwable $e) {
+            $syncToken = '';
+        }
+
+        $cached = cache('rt_queue_status_pkg');
+        if (is_array($cached) && isset($cached['cached_at']) && $syncTokenTime > 0 && $cached['cached_at'] < $syncTokenTime) {
+            $cached = null;
+        }
+
+        if (! is_array($cached)) {
             $queueModel = new QueueModel();
 
             $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.driver_name, queue.estimated_departure, terminals.name as origin, routes.destination')
@@ -53,21 +66,15 @@ class QueueStatus extends Controller
                 ];
             }
 
-            cache()->save('rt_queue_status', $items, 2);
-        }
+            $cached = [
+                'items'     => $items,
+                'cached_at' => microtime(true),
+            ];
 
-        // Global sync token written by BaseController::broadcastUpdate() on every
-        // mutation (vehicle_created/updated/deleted, queue add/status, etc.).
-        // Polled clients compare this to detect changes that don't alter queue
-        // IDs — e.g. an admin editing plate/type/route/driver in the modal list.
-        $syncToken = '';
-        try {
-            $tokenFile = WRITEPATH . 'sync_token.txt';
-            if (is_file($tokenFile)) {
-                $syncToken = trim((string) @file_get_contents($tokenFile));
-            }
-        } catch (\Throwable $e) {
-            $syncToken = '';
+            cache()->save('rt_queue_status_pkg', $cached, 2);
+            cache()->save('rt_queue_status', $items, 2);
+        } else {
+            $items = $cached['items'];
         }
 
         return $this->response

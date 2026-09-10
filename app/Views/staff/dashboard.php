@@ -568,4 +568,11 @@ if (!empty($recent_departures)) {
             filterDepartures();
         }
     });
+
+    // Real-time WebSocket listener for immediate dashboard departures refresh
+    document.addEventListener('pttm:ws-queue_update', function(e) {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
 </script>

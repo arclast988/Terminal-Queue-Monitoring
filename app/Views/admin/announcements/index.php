@@ -479,6 +479,32 @@ body.modal-open #deleteAnnouncementModal,
                 confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
             }
         });
+
+        // Real-time table synchronization on announcement broadcasts
+        function refreshAnnouncementsTable() {
+            if (document.querySelector('.modal.show')) return;
+            fetch(window.location.href, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
+            })
+            .then(function(r) { return r.ok ? r.text() : null; })
+            .then(function(html) {
+                if (!html || document.querySelector('.modal.show')) return;
+                var parser = new DOMParser();
+                var newDoc = parser.parseFromString(html, 'text/html');
+                var curTbody = document.querySelector('.table-modern tbody');
+                var newTbody = newDoc.querySelector('.table-modern tbody');
+                if (curTbody && newTbody) {
+                    curTbody.innerHTML = newTbody.innerHTML;
+                }
+                var curHeader = document.querySelector('.modern-card-header');
+                var newHeader = newDoc.querySelector('.modern-card-header');
+                if (curHeader && newHeader) {
+                    curHeader.innerHTML = newHeader.innerHTML;
+                }
+            })
+            .catch(function() {});
+        }
+        document.addEventListener('pttm:ws-announcement_update', refreshAnnouncementsTable);
     });
 })();
 </script>

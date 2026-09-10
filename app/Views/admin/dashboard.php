@@ -273,6 +273,18 @@
             });
         }
     });
+
+    // Real-time WebSocket listeners for immediate admin activity and stats refresh
+    document.addEventListener('pttm:ws-queue_update', function(e) {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-fare_update', function(e) {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
 </script>
 
 

@@ -64,7 +64,14 @@ class Home extends BaseController
         // The sync token is read live on every request (so clients still
         // detect changes), and broadcastUpdate() clears this key so a staff
         // action shows up on the next poll immediately.
+        $syncToken     = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $syncTokenTime = (float) $syncToken;
+
         $payload = cache('rt_home_status');
+        if (is_array($payload) && isset($payload['cached_at']) && $syncTokenTime > 0 && $payload['cached_at'] < $syncTokenTime) {
+            $payload = null;
+        }
+
         if (! is_array($payload)) {
             $queueModel = new QueueModel();
 
@@ -91,13 +98,14 @@ class Home extends BaseController
                 'route_average_departures' => $this->getRouteAverageDepartures(),
                 'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
                 'db_vehicle_types' => get_db_vehicle_types(),
+                'cached_at' => microtime(true),
             ];
 
             cache()->save('rt_home_status', $payload, 2);
         }
 
         // Always read the sync token live so clients keep detecting changes.
-        $payload['sync_token'] = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $payload['sync_token'] = $syncToken;
 
         return $this->response
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')

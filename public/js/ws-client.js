@@ -21,6 +21,10 @@
 (function(window) {
     'use strict';
 
+    if (window.QueueWS && window.QueueWS._isLoaded) {
+        return;
+    }
+
 
     var MIN_RETRY = 1000;
     var MAX_RETRY = 15000;
@@ -189,6 +193,7 @@
 
     // Public API
     window.QueueWS = {
+        _isLoaded: true,
         /**
          * Initialize the WebSocket connection.
          * Can be called multiple times — subsequent calls update the config

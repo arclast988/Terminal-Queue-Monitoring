@@ -21,8 +21,15 @@ class Announcements extends Controller
         // Cache briefly so many guests polling every 3s collapse to one DB query.
         // BaseController::broadcastUpdate() clears 'rt_announcements', so an admin
         // add/edit/delete shows up on the next poll (≤3s) instead of waiting the TTL.
-        $items = cache('rt_announcements');
-        if (! is_array($items)) {
+        $syncToken     = @file_get_contents(WRITEPATH . 'sync_token.txt') ?: '0';
+        $syncTokenTime = (float) $syncToken;
+
+        $cached = cache('rt_announcements_pkg');
+        if (is_array($cached) && isset($cached['cached_at']) && $syncTokenTime > 0 && $cached['cached_at'] < $syncTokenTime) {
+            $cached = null;
+        }
+
+        if (! is_array($cached)) {
             $items = [];
             try {
                 $rows = (new AnnouncementModel())
@@ -40,7 +47,14 @@ class Announcements extends Controller
                 // Announcements table may not exist yet — return an empty list.
                 $items = [];
             }
-            cache()->save('rt_announcements', $items, 300);
+            $cached = [
+                'items'     => $items,
+                'cached_at' => microtime(true),
+            ];
+            cache()->save('rt_announcements_pkg', $cached, 60);
+            cache()->save('rt_announcements', $items, 60);
+        } else {
+            $items = $cached['items'];
         }
 
         return $this->response
@@ -48,6 +62,7 @@ class Announcements extends Controller
             ->setJSON([
                 'success'       => true,
                 'announcements' => $items,
+                'sync_token'    => $syncToken,
                 'ts'            => time(),
             ]);
     }
