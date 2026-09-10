@@ -1095,10 +1095,11 @@
     }
 
     // Auto-refresh fare rates + colors: initial load, every 10s, and
-    // immediately when vehicle-type colors change (live event).
+    // immediately when vehicle-type colors change or a real-time fare update occurs.
     fetchFareData();
     setInterval(fetchFareData, 10000);
     document.addEventListener('vt-colors-updated', function() { fetchFareData(); });
+    document.addEventListener('pttm:ws-fare_update', function() { fetchFareData(); });
 
     </script>
 </body>

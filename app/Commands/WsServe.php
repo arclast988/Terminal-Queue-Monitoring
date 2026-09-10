@@ -101,13 +101,14 @@ class WsServe extends BaseCommand
             if ($numChanged > 0) {
                 foreach ($read as $socket) {
                     if ($socket === $wsServer) {
-                        // Cap concurrent clients to prevent FD exhaustion.
-                        if (count($wsClients) >= 200) {
+                        // Cap concurrent clients to prevent FD exhaustion (configurable, default 500).
+                        $maxClients = (int) env('websocket.maxClients', 500);
+                        if (count($wsClients) >= $maxClients) {
                             $drop = stream_socket_accept($wsServer);
                             if ($drop) {
                                 @fclose($drop);
                             }
-                            CLI::write('Max clients reached (200), rejecting new connection', 'yellow');
+                            CLI::write("Max clients reached ($maxClients), rejecting new connection", 'yellow');
                             continue;
                         }
                         $newClient = stream_socket_accept($wsServer);

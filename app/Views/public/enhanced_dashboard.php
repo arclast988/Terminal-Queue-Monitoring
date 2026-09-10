@@ -1042,11 +1042,26 @@
             border-radius: 20px;
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-            transition: all 0.25s ease;
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
             position: relative;
             overflow: hidden;
-            animation: fadeInUp 0.5s ease-out both;
-            animation-delay: 0.25s;
+        }
+
+        /* Smooth departure board transitions: cards only animate when entering or departing */
+        .queue-card.card-enter {
+            animation: cardEnter 0.35s ease-out both;
+        }
+        .queue-card.card-leave {
+            animation: cardLeave 0.3s ease-in both;
+            pointer-events: none;
+        }
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes cardLeave {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(-12px); }
         }
 
         .queue-card::before {
@@ -1353,7 +1368,7 @@
         .progress-bar {
             height: 100%;
             border-radius: 12px;
-            transition: width 0.4s ease;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
         }
 
         /* Right: Departure Ticket Container */
@@ -2202,7 +2217,7 @@
                                         <div class="passenger-status-block">
                                             <div class="passenger-count-row">
                                                 <i class="fas fa-users text-primary"></i>
-                                                <span><strong><?= $item['current_passengers'] ?></strong> / <?= $item['capacity'] ?> Onboard</span>
+                                                <span class="passenger-count-text"><strong><?= $item['current_passengers'] ?></strong> / <?= $item['capacity'] ?> Onboard</span>
                                                 <?php if ((int) $item['current_passengers'] >= (int) $item['capacity']): ?>
                                                     <span class="badge-full-tag">FULL</span>
                                                 <?php endif; ?>
@@ -2455,6 +2470,7 @@
         var baseUrl = '<?= base_url() ?>';
         var departureRules = <?= json_encode($departure_rules ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
         var fareMap = <?= json_encode($fareMap ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+        var vehicleTypeMeta = <?= json_encode(function_exists('get_db_vehicle_types') ? get_db_vehicle_types() : [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
         // --- Active filter state ---
         var activeFilterType = 'all';
@@ -2719,6 +2735,184 @@
             }, 1900);
         }
 
+        function buildQueueCardHtml(item, isEnter) {
+            var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
+            var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
+            var isFull = Number(item.current_passengers) >= Number(item.capacity);
+            var fullBadge = isFull ? '<span class="badge-full-tag">FULL</span>' : '';
+            var statusClass = (item.status === 'boarding') ? 'status-boarding' : 'status-waiting';
+            var statusIcon = (item.status === 'boarding') ? '<i class="fas fa-clock"></i> Boarding' : '<i class="fas fa-hourglass-half"></i> Waiting';
+
+            var vType = (item.vehicle_type || '').toLowerCase();
+            var vMeta = (vehicleTypeMeta && vehicleTypeMeta[vType]) ? vehicleTypeMeta[vType] : {
+                color: '#1565c0',
+                contrast: '#ffffff',
+                image: 'van.png',
+                icon: 'fa-bus',
+                label: vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van'
+            };
+            var posColor = vMeta.color || '#1565c0';
+            var posContrast = vMeta.contrast || '#ffffff';
+            var imgFile = vMeta.image || 'van.png';
+            var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
+            var isLight = (posContrast === '#0f172a');
+            var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
+            var badgeStyle = isLight 
+                ? 'background: #f1f5f9 !important; background-color: #f1f5f9 !important; color: #0f172a !important; border: 1.5px solid #cbd5e1 !important; font-weight: 800;'
+                : 'background: ' + posColor + '18 !important; background-color: ' + posColor + '18 !important; color: ' + posColor + ' !important; border: 1.5px solid ' + posColor + '44 !important; font-weight: 800;';
+
+            var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
+            var opName = item.operator_name || item.driver_name || 'N/A';
+            var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
+            var extraClass = isEnter ? ' card-enter' : '';
+
+            return '<div class="queue-card queue-card-' + vType + extraClass + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '" data-queue-id="' + item.id + '" data-plate="' + item.plate_number + '">'
+                + '<div class="queue-card-left">'
+                + '<div class="vehicle-thumb-box vehicle-type-' + vType + '" style="background:' + posColor + '12 !important; border-color:' + posColor + '35 !important;">'
+                + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img">'
+                + '<span class="queue-badge-pill" style="background:' + posColor + '; color:' + posContrast + '; ' + pillBorder + '">#' + item.position + '</span>'
+                + '</div>'
+                + '<span class="vehicle-type-chip vehicle-type-' + vType + '" style="' + badgeStyle + '">' + vTypeLabel + '</span>'
+                + '</div>'
+                + '<div class="queue-card-body">'
+                + '<div class="queue-card-header">'
+                + '<div class="operator-plate-wrap">'
+                + '<span class="operator-badge"><span class="text-muted fw-semibold">Operator:</span> <span class="operator-val">' + opName + '</span></span>'
+                + '<span class="plate-badge"><span class="text-muted fw-semibold">Plate Number:</span> <span class="plate-val">' + item.plate_number + '</span></span>'
+                + '</div>'
+                + '</div>'
+                + '<div class="queue-card-route-driver">'
+                + '<div class="route-pill-badge">'
+                + '<i class="fas fa-map-marker-alt text-danger"></i>'
+                + '<span class="route-origin">' + (item.origin || '').toUpperCase() + '</span>'
+                + '<i class="fas fa-arrow-right route-arrow"></i>'
+                + '<span class="route-dest">' + (item.destination || '').toUpperCase() + '</span>'
+                + '</div>'
+                + '<div class="driver-info-pill">'
+                + '<i class="fas fa-user-tie text-primary"></i>'
+                + '<span class="text-muted">Driver:</span> <strong>' + (item.driver_name || 'N/A') + '</strong>'
+                + '</div>'
+                + '</div>'
+                + '<div class="queue-card-bottom-row">'
+                + fareBadge
+                + '<div class="passenger-status-block">'
+                + '<div class="passenger-count-row">'
+                + '<i class="fas fa-users text-primary"></i>'
+                + '<span class="passenger-count-text"><strong>' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard</span>'
+                + fullBadge
+                + '</div>'
+                + '<div class="progress progress-modern">'
+                + '<div class="progress-bar" style="width:' + percent + '%; height: 100%; background:' + barColor + ';"></div>'
+                + '</div>'
+                + '<div class="passenger-pop-anchor" data-pop-id="' + item.id + '" data-pop-plate="' + item.plate_number + '"></div>'
+                + '</div>'
+                + '</div>'
+                + '</div>'
+                + '<div class="queue-card-departure">'
+                + '<div class="dep-status-box">'
+                + '<div class="dep-status-tag ' + statusClass + '">' + statusIcon + '</div>'
+                + '</div>'
+                + '<div class="dep-time-col">'
+                + '<div class="dep-header-label">EST. DEPARTURE</div>'
+                + '<div class="dep-time-group">'
+                + '<div class="dep-time-highlight">' + (item.estimated_departure_formatted || 'Waiting') + '</div>'
+                + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
+                + '</div>'
+                + '</div>'
+                + '</div>'
+                + '</div>';
+        }
+
+        function updateQueueCardInPlace(card, item, passengerDeltas) {
+            var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
+            var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
+            var isFull = Number(item.current_passengers) >= Number(item.capacity);
+
+            // 1. Update passenger count text without rebuilding container
+            var countText = card.querySelector('.passenger-count-text');
+            var newCountHtml = '<strong>' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard';
+            if (countText) {
+                if (countText.innerHTML !== newCountHtml) {
+                    countText.innerHTML = newCountHtml;
+                }
+            } else {
+                var countSpan = card.querySelector('.passenger-count-row span');
+                if (countSpan && countSpan.innerHTML !== newCountHtml) {
+                    countSpan.innerHTML = newCountHtml;
+                }
+            }
+
+            // 2. Update FULL tag
+            var fullBadge = card.querySelector('.badge-full-tag');
+            var countRowContainer = card.querySelector('.passenger-count-row');
+            if (isFull && !fullBadge && countRowContainer) {
+                var tag = document.createElement('span');
+                tag.className = 'badge-full-tag';
+                tag.textContent = 'FULL';
+                countRowContainer.appendChild(tag);
+            } else if (!isFull && fullBadge) {
+                fullBadge.remove();
+            }
+
+            // 3. Smoothly update progress bar width and color
+            var pBar = card.querySelector('.progress-modern .progress-bar, .progress-bar');
+            if (pBar) {
+                pBar.style.width = percent + '%';
+                pBar.style.background = barColor;
+            }
+
+            // 4. Update status tag (waiting vs boarding)
+            var statusClass = (item.status === 'boarding') ? 'status-boarding' : 'status-waiting';
+            var statusIcon = (item.status === 'boarding') ? '<i class="fas fa-clock"></i> Boarding' : '<i class="fas fa-hourglass-half"></i> Waiting';
+            var depTag = card.querySelector('.dep-status-tag');
+            if (depTag && !depTag.classList.contains(statusClass)) {
+                depTag.className = 'dep-status-tag ' + statusClass;
+                depTag.innerHTML = statusIcon;
+            }
+
+            // 5. Update estimated departure text
+            var depHighlight = card.querySelector('.dep-time-highlight');
+            var depText = item.estimated_departure_formatted || 'Waiting';
+            if (depHighlight && depHighlight.textContent !== depText) {
+                depHighlight.textContent = depText;
+            }
+
+            // 6. Update countdown timer
+            var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
+            var cdTimer = card.querySelector('.countdown-timer');
+            if (item.status === 'boarding' && estDepIso) {
+                if (!cdTimer) {
+                    cdTimer = document.createElement('div');
+                    cdTimer.className = 'countdown-timer';
+                    var depTimeGroup = card.querySelector('.dep-time-group');
+                    if (depTimeGroup) depTimeGroup.appendChild(cdTimer);
+                }
+                cdTimer.dataset.departure = estDepIso;
+            } else if (cdTimer && item.status !== 'boarding') {
+                cdTimer.remove();
+            }
+
+            // 7. Update position badge
+            var posPill = card.querySelector('.queue-badge-pill');
+            var expectedPos = '#' + item.position;
+            if (posPill && posPill.textContent !== expectedPos) {
+                posPill.textContent = expectedPos;
+            }
+
+            // 8. Update operator & driver if changed
+            var opVal = card.querySelector('.operator-val');
+            var expectedOp = item.operator_name || item.driver_name || 'N/A';
+            if (opVal && opVal.textContent !== expectedOp) opVal.textContent = expectedOp;
+
+            var driverVal = card.querySelector('.driver-info-pill strong');
+            var expectedDriver = item.driver_name || 'N/A';
+            if (driverVal && driverVal.textContent !== expectedDriver) driverVal.textContent = expectedDriver;
+
+            // 9. Update dataset attributes for filtering
+            card.dataset.destination = (item.destination || '').toLowerCase();
+            card.dataset.vehicleType = (item.vehicle_type || '').toLowerCase();
+        }
+
         // Fetch status for real-time sync
         function fetchStatus() {
             if (_fetchPending) {
@@ -2789,103 +2983,70 @@
                         });
                     }
 
-                    // Only rewrite Queue DOM if data actually changed
+                    // Only process Queue DOM if data exists
                     var queueFP = makeFingerprint([data.active_queue, data.db_vehicle_types]);
                     if (queueFP !== _lastQueueFingerprint) {
                         _lastQueueFingerprint = queueFP;
                         var queueList = document.getElementById('queueList');
-                        if (data.active_queue.length > 0) {
-                            var queueHtml = '';
-                            data.active_queue.forEach(function (item) {
-                                var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
-                                var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
-                                var fullBadge = Number(item.current_passengers) >= Number(item.capacity)
-                                    ? '<span class="badge-full-tag">FULL</span>' : '';
-                                var statusClass = 'status-waiting';
-                                var statusIcon = '<i class="fas fa-hourglass-half"></i> Waiting';
-                                if (item.status === 'boarding') {
-                                    statusClass = 'status-boarding';
-                                    statusIcon = '<i class="fas fa-clock"></i> Boarding';
+                        if (queueList) {
+                            if (!data.active_queue || data.active_queue.length === 0) {
+                                var emptyHtml = '<div class="empty-queue-card"><div class="empty-icon-wrapper"><i class="fas fa-bus-alt"></i></div><h3>No Vehicles Currently in Queue</h3><p>There are no active vehicles waiting or boarding right now. Please check back shortly for live updates.</p></div>';
+                                if (!queueList.querySelector('.empty-queue-card')) {
+                                    queueList.innerHTML = emptyHtml;
                                 }
-                                var vType = (item.vehicle_type || '').toLowerCase();
-                                var vMeta = (vehicleTypeMeta && vehicleTypeMeta[vType]) ? vehicleTypeMeta[vType] : {
-                                    color: '#1565c0',
-                                    contrast: '#ffffff',
-                                    image: 'van.png',
-                                    icon: 'fa-bus',
-                                    label: vType.charAt(0).toUpperCase() + vType.slice(1)
-                                };
-                                var posColor = vMeta.color;
-                                var posContrast = vMeta.contrast;
-                                var imgFile = vMeta.image || 'van.png';
-                                var vTypeLabel = vMeta.label;
-                                var isLight = (posContrast === '#0f172a');
-                                var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
-                                var badgeStyle = isLight 
-                                    ? 'background: #f1f5f9 !important; background-color: #f1f5f9 !important; color: #0f172a !important; border: 1.5px solid #cbd5e1 !important; font-weight: 800;'
-                                    : 'background: ' + posColor + '18 !important; background-color: ' + posColor + '18 !important; color: ' + posColor + ' !important; border: 1.5px solid ' + posColor + '44 !important; font-weight: 800;';
+                            } else {
+                                // Remove empty state card if present
+                                var emptyCard = queueList.querySelector('.empty-queue-card');
+                                if (emptyCard) emptyCard.remove();
 
-                                var fareBadge = getFareBadgeHtml(item.origin || '', item.destination || '', vType);
-                                var opName = item.operator_name || item.driver_name || 'N/A';
-                                var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
-                                
-                                queueHtml += '<div class="queue-card queue-card-' + vType + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '" data-queue-id="' + item.id + '" data-plate="' + item.plate_number + '">'
-                                    + '<div class="queue-card-left">'
-                                    + '<div class="vehicle-thumb-box vehicle-type-' + vType + '" style="background:' + posColor + '12 !important; border-color:' + posColor + '35 !important;">'
-                                    + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img">'
-                                    + '<span class="queue-badge-pill" style="background:' + posColor + '; color:' + posContrast + '; ' + pillBorder + '">#' + item.position + '</span>'
-                                    + '</div>'
-                                    + '<span class="vehicle-type-chip vehicle-type-' + vType + '" style="' + badgeStyle + '">' + vTypeLabel + '</span>'
-                                    + '</div>'
-                                    + '<div class="queue-card-body">'
-                                    + '<div class="queue-card-header">'
-                                    + '<div class="operator-plate-wrap">'
-                                    + '<span class="operator-badge"><span class="text-muted fw-semibold">Operator:</span> <span class="operator-val">' + opName + '</span></span>'
-                                    + '<span class="plate-badge"><span class="text-muted fw-semibold">Plate Number:</span> <span class="plate-val">' + item.plate_number + '</span></span>'
-                                    + '</div>'
-                                    + '</div>'
-                                    + '<div class="queue-card-route-driver">'
-                                    + '<div class="route-pill-badge">'
-                                    + '<i class="fas fa-map-marker-alt text-danger"></i>'
-                                    + '<span class="route-origin">' + (item.origin || '').toUpperCase() + '</span>'
-                                    + '<i class="fas fa-arrow-right route-arrow"></i>'
-                                    + '<span class="route-dest">' + (item.destination || '').toUpperCase() + '</span>'
-                                    + '</div>'
-                                    + '<div class="driver-info-pill">'
-                                    + '<i class="fas fa-user-tie text-primary"></i>'
-                                    + '<span class="text-muted">Driver:</span> <strong>' + (item.driver_name || 'N/A') + '</strong>'
-                                    + '</div>'
-                                    + '</div>'
-                                    + '<div class="queue-card-bottom-row">'
-                                    + fareBadge
-                                    + '<div class="passenger-status-block">'
-                                    + '<div class="passenger-count-row">'
-                                    + '<i class="fas fa-users text-primary"></i>'
-                                    + '<span><strong>' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard</span>'
-                                    + fullBadge
-                                    + '</div>'
-                                    + '<div class="progress progress-modern">'
-                                    + '<div class="progress-bar" style="width:' + percent + '%; height: 100%; background:' + barColor + ';"></div>'
-                                    + '</div>'
-                                    + '<div class="passenger-pop-anchor" data-pop-id="' + item.id + '" data-pop-plate="' + item.plate_number + '"></div>'
-                                    + '</div>'
-                                    + '</div>'
-                                    + '</div>'
-                                    + '<div class="queue-card-departure">'
-                                    + '<div class="dep-status-box">'
-                                    + '<div class="dep-status-tag ' + statusClass + '">' + statusIcon + '</div>'
-                                    + '</div>'
-                                    + '<div class="dep-time-col">'
-                                    + '<div class="dep-header-label">EST. DEPARTURE</div>'
-                                    + '<div class="dep-time-group">'
-                                    + '<div class="dep-time-highlight">' + (item.estimated_departure_formatted || 'Waiting') + '</div>'
-                                    + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
-                                    + '</div>'
-                                    + '</div>'
-                                    + '</div>'
-                                    + '</div>';
-                            });
-                            queueList.innerHTML = queueHtml;
+                                // Index existing DOM cards by ID or plate
+                                var existingCardMap = {};
+                                queueList.querySelectorAll('.queue-card').forEach(function(card) {
+                                    var key = card.getAttribute('data-queue-id') || card.getAttribute('data-plate');
+                                    if (key) existingCardMap[key] = card;
+                                });
+
+                                var activeKeys = {};
+                                data.active_queue.forEach(function(item) {
+                                    var key = item.id ? String(item.id) : (item.plate_number || '');
+                                    activeKeys[key] = true;
+
+                                    var existingCard = existingCardMap[key];
+                                    if (existingCard) {
+                                        // IN-PLACE TARGETED UPDATE: Never destroy card, smoothly update numbers & progress
+                                        updateQueueCardInPlace(existingCard, item, passengerDeltas);
+                                        // Re-appending moves/preserves order without re-rendering or losing state
+                                        queueList.appendChild(existingCard);
+                                    } else {
+                                        // Newly arriving vehicle: build element with smooth card-enter animation
+                                        var tempDiv = document.createElement('div');
+                                        tempDiv.innerHTML = buildQueueCardHtml(item, true);
+                                        var newCard = tempDiv.firstElementChild;
+                                        if (newCard) {
+                                            queueList.appendChild(newCard);
+                                            setTimeout(function() {
+                                                if (newCard) newCard.classList.remove('card-enter');
+                                            }, 400);
+                                        }
+                                    }
+                                });
+
+                                // Departed or canceled vehicles: smoothly animate removal
+                                Object.keys(existingCardMap).forEach(function(key) {
+                                    if (!activeKeys[key]) {
+                                        var cardToRemove = existingCardMap[key];
+                                        if (cardToRemove && !cardToRemove.classList.contains('card-leave')) {
+                                            cardToRemove.classList.add('card-leave');
+                                            setTimeout(function() {
+                                                if (cardToRemove && cardToRemove.parentNode) {
+                                                    cardToRemove.parentNode.removeChild(cardToRemove);
+                                                }
+                                            }, 320);
+                                        }
+                                    }
+                                });
+                            }
+
                             // Trigger ghost float animation for passenger updates
                             Object.keys(passengerDeltas).forEach(function(key) {
                                 var diff = passengerDeltas[key];
@@ -2894,9 +3055,10 @@
                                     triggerPassengerPop(anchor, diff);
                                 }
                             });
-                            // Rebuild destination filter chips from live data
+
+                            // Destination quick-filter chips: update counts without losing button state
                             var destGroup = document.getElementById('filterDestGroup');
-                            if (destGroup) {
+                            if (destGroup && data.active_queue) {
                                 var dests = [];
                                 var destCounts = {};
                                 data.active_queue.forEach(function (it) {
@@ -2913,21 +3075,15 @@
                                     var count = destCounts[d] || 0;
                                     html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d.toUpperCase() + ' <span class="chip-count">' + count + '</span></button>';
                                 });
-                                destGroup.innerHTML = html;
-                                initFilterChips();
+                                if (destGroup.innerHTML !== html) {
+                                    destGroup.innerHTML = html;
+                                    initFilterChips();
+                                }
                             }
-                        } else {
-                            queueList.innerHTML = '<div class="empty-queue-card"><div class="empty-icon-wrapper"><i class="fas fa-bus-alt"></i></div><h3>No Vehicles Currently in Queue</h3><p>There are no active vehicles waiting or boarding right now. Please check back shortly for live updates.</p></div>';
-                            var destGroup = document.getElementById('filterDestGroup');
-                            if (destGroup) {
-                                destGroup.innerHTML = '<button class="filter-chip active" data-filter="all" data-type="all">All Routes <span class="chip-count">0</span></button>';
-                                activeFilterValue = 'all';
-                                activeFilterType = 'all';
-                                initFilterChips();
-                            }
+
+                            applyQueueFilter();
+                            observeItems();
                         }
-                        applyQueueFilter();
-                        observeItems();
                     }
                 })
                 .catch(function (error) {

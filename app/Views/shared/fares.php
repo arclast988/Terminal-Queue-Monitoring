@@ -351,16 +351,15 @@ $isManager = $isAdmin;
                 </div>
                 <?php if ($isManager): ?>
                 <div class="modern-card-footer d-flex justify-content-center gap-2">
-                    <button type="button" class="btn-modern btn-modern-sm btn-action-edit btn-edit-discount"
+                    <button type="button" class="btn-modern btn-modern-sm btn-action-edit"
                         data-bs-toggle="modal"
                         data-bs-target="#editDiscountModal"
                         data-id="<?= $disc['id'] ?>"
                         data-label="<?= esc($disc['label']) ?>"
                         data-percent="<?= $disc['discount_percent'] ?>"
                         data-active="<?= $disc['is_active'] ?>"
-                        title="Edit Discount"
-                        style="background: var(--primary-blue, #1565c0) !important; color: #ffffff !important; border-color: var(--primary-blue, #1565c0) !important;">
-                        <i class="bi bi-pencil" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;"></i> Edit
+                        title="Edit Discount">
+                        <i class="bi bi-pencil"></i> Edit
                     </button>
                     <form id="delete-discount-form-<?= $disc['id'] ?>" action="<?= base_url('admin/routes/discounts/delete/' . $disc['id']) ?>" method="post" class="d-inline">
                         <?= csrf_field() ?>
@@ -1286,7 +1285,39 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             confirmBtn.classList.remove('is-loading');
             confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
-        }
-    });
+    // Real-time fare and discount table synchronization
+    function refreshSharedFares() {
+        // Only refresh if user is not currently interacting with an open modal or input
+        if (document.querySelector('.modal.show') || (document.activeElement && document.activeElement.tagName === 'INPUT')) return;
+        fetch(window.location.href, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
+        })
+        .then(function(r) { return r.ok ? r.text() : null; })
+        .then(function(html) {
+            if (!html || document.querySelector('.modal.show')) return;
+            var parser = new DOMParser();
+            var newDoc = parser.parseFromString(html, 'text/html');
+            // Update discount table/cards if present
+            var curDisc = document.querySelector('#discountSettingsCard') || document.querySelector('.discount-settings-card');
+            var newDisc = newDoc.querySelector('#discountSettingsCard') || newDoc.querySelector('.discount-settings-card');
+            if (curDisc && newDisc) {
+                curDisc.innerHTML = newDisc.innerHTML;
+            }
+            // Update route fare cards
+            var curCards = document.querySelectorAll('.fare-section-card');
+            var newCards = newDoc.querySelectorAll('.fare-section-card');
+            if (curCards.length && newCards.length) {
+                curCards.forEach(function(card, idx) {
+                    if (newCards[idx]) {
+                        var curList = card.querySelector('.fare-list');
+                        var newList = newCards[idx].querySelector('.fare-list');
+                        if (curList && newList) curList.innerHTML = newList.innerHTML;
+                    }
+                });
+            }
+        })
+        .catch(function() { /* silent fallback */ });
+    }
+    document.addEventListener('pttm:ws-fare_update', refreshSharedFares);
 });
 </script>

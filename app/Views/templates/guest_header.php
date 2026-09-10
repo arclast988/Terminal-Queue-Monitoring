@@ -55,7 +55,7 @@
     .marquee {
         display: inline-block;
         padding-left: 100%;
-        animation: gh-marquee 35s linear infinite;
+        animation: gh-marquee var(--marquee-duration, 35s) linear infinite;
         animation-delay: var(--marquee-delay, 0s);
         font-weight: 800;
         font-size: 16px;
@@ -515,13 +515,20 @@
             // so the announcement continues seamlessly when clicking between Home, Schedules, and Fares.
             (function () {
                 try {
-                    var DURATION = 35;
                     var KEY_BASE = 'pt_ann_base_time';
                     var KEY_LAST = 'pt_ann_last_seen';
                     var KEY_TEXT = 'pt_ann_text';
+                    var KEY_DUR  = 'pt_ann_duration';
 
                     var now = Date.now();
                     var rawText = <?= json_encode(trim(!empty($announcements) && is_array($announcements) ? implode(' | ', array_column($announcements, 'message')) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.')) ?>;
+
+                    // Content-aware duration: maintains a steady, comfortable ~60px/sec readable speed
+                    var totalDist = (window.innerWidth || 1200) + Math.max(600, rawText.length * 9.5);
+                    var DURATION = Math.max(35, Math.round(totalDist / 60));
+                    document.documentElement.style.setProperty('--marquee-duration', DURATION + 's');
+                    sessionStorage.setItem(KEY_DUR, DURATION.toString());
+                    localStorage.setItem(KEY_DUR, DURATION.toString());
 
                     var storedText = sessionStorage.getItem(KEY_TEXT) || localStorage.getItem(KEY_TEXT);
                     var lastSeen = parseFloat(sessionStorage.getItem(KEY_LAST) || localStorage.getItem(KEY_LAST));
@@ -717,10 +724,15 @@
                         bar.textContent = text;
                         try {
                             var nowReset = Date.now();
+                            var newDist = (window.innerWidth || 1200) + Math.max(600, text.length * 9.5);
+                            var newDur = Math.max(35, Math.round(newDist / 60));
                             sessionStorage.setItem('pt_ann_text', text);
                             localStorage.setItem('pt_ann_text', text);
                             sessionStorage.setItem('pt_ann_base_time', nowReset.toString());
                             localStorage.setItem('pt_ann_base_time', nowReset.toString());
+                            sessionStorage.setItem('pt_ann_duration', newDur.toString());
+                            localStorage.setItem('pt_ann_duration', newDur.toString());
+                            document.documentElement.style.setProperty('--marquee-duration', newDur + 's');
                             bar.style.animation = 'none';
                             bar.offsetHeight;
                             bar.style.animation = '';
@@ -743,8 +755,12 @@
                 })
                 .catch(function () { /* keep current text on error */ });
         }
-        // Check for announcement changes every 30 seconds
-        setInterval(refreshAnnouncements, 30000);
+        // Listen for real-time WebSocket announcement broadcasts (<100ms update)
+        document.addEventListener('pttm:ws-announcement_update', refreshAnnouncements);
+        document.addEventListener('announcement-updated', refreshAnnouncements);
+
+        // Periodic background fallback poll
+        setInterval(refreshAnnouncements, 20000);
     })();
 
     function toggleMenu() {
@@ -842,7 +858,8 @@
         window.addEventListener('pageshow', function (e) {
             if (e.persisted) {
                 try {
-                    var DURATION = 35;
+                    var DURATION = parseFloat(sessionStorage.getItem('pt_ann_duration') || localStorage.getItem('pt_ann_duration')) || 35;
+                    document.documentElement.style.setProperty('--marquee-duration', DURATION + 's');
                     var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
                     if (baseTime && !isNaN(baseTime)) {
                         var elapsed = ((Date.now() - baseTime) / 1000) % DURATION;

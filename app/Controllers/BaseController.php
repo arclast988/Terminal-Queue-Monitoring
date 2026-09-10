@@ -132,16 +132,27 @@ abstract class BaseController extends Controller
 
         try {
             $broadcastPort = (int) env('websocket.broadcastPort', 8082);
-            // Short timeouts: broadcast is fire-and-forget, never block staff clicks.
+            // Resilient loopback connect with 200ms timeout
             $fp = @stream_socket_client(
                 'tcp://127.0.0.1:' . $broadcastPort,
                 $errno,
                 $errstr,
-                0.05,
+                0.20,
                 STREAM_CLIENT_CONNECT
             );
+            if (! $fp) {
+                // Retry once on transient busy loopback
+                usleep(10000);
+                $fp = @stream_socket_client(
+                    'tcp://127.0.0.1:' . $broadcastPort,
+                    $errno,
+                    $errstr,
+                    0.20,
+                    STREAM_CLIENT_CONNECT
+                );
+            }
             if ($fp) {
-                stream_set_timeout($fp, 0, 50000);
+                stream_set_timeout($fp, 0, 100000);
                 @fwrite($fp, $payload);
                 @fclose($fp);
             }

@@ -480,10 +480,10 @@
         }
     }
 
-    // Initialize real-time sync (polling + WebSocket)
+    // Initialize real-time sync (adaptive polling + WebSocket)
     QueueSync.init({
-        onlyWS:        true,
-        pollInterval:  3000,
+        apiUrl:        '<?= base_url('schedules/status') ?>',
+        pollInterval:  4000,
         refreshUrl:    window.location.href,
         tableSelector: '#sharedScheduleTableBody',
         extraRefresh:  function(newDoc) {

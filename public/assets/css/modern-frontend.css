@@ -616,8 +616,11 @@ body > * {
     box-shadow: 0 4px 10px rgba(0, 102, 204, 0.25) !important;
 }
 .btn-action-edit:hover i,
-.btn-modern.btn-action-edit:hover i {
+.btn-action-edit:hover .bi,
+.btn-modern.btn-action-edit:hover i,
+.btn-modern.btn-action-edit:hover .bi {
     color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 .btn-action-delete,
@@ -1164,19 +1167,12 @@ body.staff-theme .logout-btn-custom,
     -webkit-text-fill-color: #fff !important;
 }
 
-/* Outline / neutral modern buttons should be dark on light (excluding action edit/delete) */
-.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(.btn-edit-discount),
-.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(.btn-edit-discount) i,
-.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(.btn-edit-discount) .bi {
-    color: var(--slate-800, #1e293b) !important;
-    -webkit-text-fill-color: var(--slate-800, #1e293b) !important;
-}
-
-.btn-edit-discount,
-.btn-edit-discount i,
-.btn-edit-discount .bi {
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+/* Outline / neutral modern buttons should be dark on light (excluding action edit/delete and hover states) */
+.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(:hover):not(:active),
+.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(:hover):not(:active) i,
+.btn-modern.btn-modern-outline:not(.btn-action-edit):not(.btn-action-delete):not(:hover):not(:active) .bi {
+    color: var(--slate-800, #1e293b);
+    -webkit-text-fill-color: var(--slate-800, #1e293b);
 }
 
 /* Prevent the decorative ::after overlay from sitting above text */

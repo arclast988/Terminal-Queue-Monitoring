@@ -1522,7 +1522,11 @@ a[title*="edit" i].btn-modern-outline {
 a.btn-modern[title*="edit" i]:hover,
 button.btn-modern[title*="edit" i]:hover,
 a.btn-action-edit:hover,
-button.btn-action-edit:hover {
+button.btn-action-edit:hover,
+a.btn-action-edit:active,
+button.btn-action-edit:active,
+a.btn-action-edit:focus,
+button.btn-action-edit:focus {
   background: linear-gradient(135deg, var(--primary-blue-light, #1976D2) 0%, var(--primary-blue, #1565c0) 100%) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;

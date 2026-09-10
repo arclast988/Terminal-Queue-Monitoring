@@ -44,6 +44,8 @@
     // so that stale poll data does not overwrite a fresh WS update.
     var _wsUpdatedAt = {};
     var WS_COOLDOWN_MS = 2000;
+    var _lastPollTimestamp = 0;
+    var WS_CONNECTED_HEARTBEAT_INTERVAL = 10000; // 10s background sync safety poll when WS connected
 
     /* ── Passenger UI helpers ── */
 
@@ -423,11 +425,16 @@
         var interval = _config ? (_config.pollInterval || 3000) : 3000;
         _pollTimer = setInterval(function() {
             if (!_paused) {
-                // When WebSocket is connected, updates are pushed instantly.
-                // Back off polling to save bandwidth; QueueWS maintains its own 30s safety check.
-                if (typeof QueueWS !== 'undefined' && QueueWS.isConnected && QueueWS.isConnected()) {
-                    return;
+                var isWSConnected = (typeof QueueWS !== 'undefined' && QueueWS.isConnected && QueueWS.isConnected());
+                var now = Date.now();
+                if (isWSConnected) {
+                    // WebSocket is active: keep a guaranteed 10s background safety poll
+                    // to prevent any dropped messages or half-open socket stalls
+                    if ((now - _lastPollTimestamp) < WS_CONNECTED_HEARTBEAT_INTERVAL) {
+                        return;
+                    }
                 }
+                _lastPollTimestamp = now;
                 doRefresh();
             }
         }, interval);
@@ -443,6 +450,7 @@
     // Reset the poll timer (called after a WS message to avoid
     // double-fetching — we just got fresh data via WS)
     function resetPollTimer() {
+        _lastPollTimestamp = Date.now();
         stopPolling();
         startPolling();
     }

@@ -117,6 +117,14 @@
                     _config.onMessage(message);
                 }
 
+                // Global document-level event dispatching for universal real-time reactivity
+                try {
+                    document.dispatchEvent(new CustomEvent('pttm:ws-message', { detail: message }));
+                    if (message.type) {
+                        document.dispatchEvent(new CustomEvent('pttm:ws-' + message.type, { detail: message }));
+                    }
+                } catch (e) { /* ignore event dispatch error */ }
+
                 // Convenience: queue_update and vehicle_type_update specific handler
                 if ((message.type === 'queue_update' || message.type === 'vehicle_type_update') && _config && _config.onQueueUpdate) {
                     _config.onQueueUpdate(message);
