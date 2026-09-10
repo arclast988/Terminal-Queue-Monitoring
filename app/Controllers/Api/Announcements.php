@@ -15,6 +15,9 @@ class Announcements extends Controller
 {
     public function index()
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         // Cache briefly so many guests polling every 3s collapse to one DB query.
         // BaseController::broadcastUpdate() clears 'rt_announcements', so an admin
         // add/edit/delete shows up on the next poll (≤3s) instead of waiting the TTL.

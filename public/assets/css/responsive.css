@@ -146,7 +146,8 @@ html, body {
    ================================================================= */
 @media (max-width: 768px) {
     /* Touch target for buttons */
-    .btn, button.btn {
+    .btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close), 
+    button.btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close) {
         min-height: 44px !important;
         padding: 0.5rem 1.25rem !important;
         display: inline-flex !important;
@@ -156,7 +157,7 @@ html, body {
     }
 
     /* Form input touch targets */
-    .form-control, 
+    .form-control:not([type="color"]):not(.vt-custom-color-input), 
     .form-select,
     select,
     input[type="text"],
@@ -383,13 +384,47 @@ html, body {
    8. PRINT SPECIFIC STYLES
    ================================================================= */
 @media print {
-    body {
+    html, html.layout-lock, body, body.layout-lock {
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        display: block !important;
+        position: static !important;
         background: white !important;
+        background-image: none !important;
         color: black !important;
+    }
+
+    /* Completely remove background photos, slideshows, watermarks and overlays across all printouts */
+    body::before,
+    body::after,
+    html::before,
+    html::after,
+    body.admin-theme::before,
+    body.admin-theme::after,
+    body.staff-theme::before,
+    body.staff-theme::after,
+    .global-progress-bar {
+        display: none !important;
+        content: none !important;
+        background: none !important;
+        background-image: none !important;
+        animation: none !important;
     }
     
     header#site-header,
+    header,
+    .guest-header,
+    .sticky-top-wrapper,
+    .advisory-bar,
+    .ann-modal-overlay,
+    .breadcrumb-section,
     .footer,
+    footer,
+    .footer-container,
+    .support-modal-backdrop,
     .btn,
     .btn-toolbar,
     .vehicle-register-form,
@@ -1076,8 +1111,8 @@ body.staff-theme .form-select:focus {
 @media (max-width: 768px) {
 
     /* Touch targets: minimum 44px for comfortable tapping */
-    .btn:not(.btn-sm):not(.btn-close),
-    .form-control,
+    .btn:not(.btn-sm):not(.btn-close):not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]),
+    .form-control:not([type="color"]):not(.vt-custom-color-input),
     .form-select,
     .page-link,
     .dropdown-menu .dropdown-item,
@@ -2912,4 +2947,79 @@ a[title*="delete" i]:hover .bi,
     padding: 14px 10px !important;
   }
 }
+
+/* ==========================================================================
+   GLOBAL CONFIRMATION MODALS MOBILE FULL-WIDTH BUTTONS (≤ 576px)
+   Matches Logout Modal & Standard Action Modals across all modules
+   ========================================================================== */
+@media (max-width: 575.98px) {
+  .delete-vehicle-modal-dialog,
+  [id^="delete"][id*="ConfirmModal"] .modal-dialog,
+  #deleteVehicleConfirmModal .modal-dialog,
+  #deleteVehicleTypeConfirmModal .modal-dialog,
+  #deleteRouteConfirmModal .modal-dialog,
+  #deleteUserConfirmModal .modal-dialog,
+  #deleteTerminalConfirmModal .modal-dialog,
+  #deleteRuleConfirmModal .modal-dialog,
+  #deleteFareConfirmModal .modal-dialog,
+  #deleteAllModal .modal-dialog,
+  #logoutModal .modal-dialog {
+    max-width: calc(100% - 1.5rem) !important;
+    margin: 1rem auto !important;
+  }
+
+  .delete-vehicle-modal-footer,
+  .delete-user-modal-footer,
+  .delete-route-modal-footer,
+  .delete-terminal-modal-footer,
+  .delete-rule-modal-footer,
+  .delete-fare-modal-footer,
+  .delete-all-modal-footer,
+  .logout-modal-footer {
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+    padding: 0 16px 20px 16px !important;
+  }
+
+  .delete-vehicle-modal-footer .btn,
+  .delete-user-modal-footer .btn,
+  .delete-route-modal-footer .btn,
+  .delete-terminal-modal-footer .btn,
+  .delete-rule-modal-footer .btn,
+  .delete-fare-modal-footer .btn,
+  .delete-all-modal-footer .btn,
+  .logout-modal-footer .btn,
+  .delete-vehicle-modal-footer form,
+  .delete-user-modal-footer form,
+  .delete-route-modal-footer form,
+  .delete-terminal-modal-footer form,
+  .delete-rule-modal-footer form,
+  .delete-fare-modal-footer form,
+  .delete-all-modal-footer form,
+  .delete-vehicle-btn-cancel,
+  .delete-vehicle-btn-confirm,
+  .delete-user-btn-cancel,
+  .delete-user-btn-confirm,
+  .delete-route-btn-cancel,
+  .delete-route-btn-confirm,
+  .delete-terminal-btn-cancel,
+  .delete-terminal-btn-confirm,
+  .delete-rule-btn-cancel,
+  .delete-rule-btn-confirm,
+  .delete-fare-btn-cancel,
+  .delete-fare-btn-confirm,
+  .logout-btn-cancel,
+  .logout-btn-confirm {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    min-height: 44px !important;
+    font-size: 0.95rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
 

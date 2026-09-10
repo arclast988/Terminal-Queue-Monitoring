@@ -296,12 +296,228 @@
             text-transform: uppercase;
         }
 
+        /* Responsive Styles for Mobile & Tablets */
+        .report-table-wrapper {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .mobile-scroll-hint {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        @media screen and (max-width: 860px) {
+            body {
+                padding: 18px 16px 24px;
+            }
+
+            .print-toolbar {
+                margin: -18px -16px 18px -16px;
+                padding: 10px 16px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .print-toolbar-title {
+                justify-content: center;
+                text-align: center;
+                font-size: 13.5px;
+            }
+
+            .print-toolbar-actions {
+                display: flex;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .btn-toolbar {
+                flex: 1;
+                justify-content: center;
+                padding: 9px 14px;
+                font-size: 12.5px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+                padding-bottom: 14px;
+                margin-bottom: 16px;
+            }
+
+            .terminal-info h1 {
+                font-size: 21px;
+            }
+
+            .report-meta {
+                text-align: left;
+                min-width: 0;
+                width: 100%;
+                background: #f8fafc;
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .report-meta h2 {
+                font-size: 16px;
+            }
+
+            .filter-summary {
+                padding: 12px 14px;
+                gap: 12px 16px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                margin-bottom: 16px;
+            }
+
+            .report-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                background: #ffffff;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 #f1f5f9;
+            }
+
+            .report-table-wrapper::-webkit-scrollbar {
+                height: 6px;
+            }
+            .report-table-wrapper::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+            .report-table-wrapper::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+
+            .mobile-scroll-hint {
+                display: flex;
+            }
+
+            table {
+                min-width: 720px;
+            }
+
+            th, td {
+                padding: 9px 10px;
+                font-size: 12px;
+            }
+
+            .signatory-section {
+                margin-top: 24px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+            }
+
+            .signatory-box {
+                width: 100%;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            .signatory-line {
+                margin-top: 26px;
+            }
+
+            .footer {
+                margin-top: 20px;
+                padding-top: 12px;
+                flex-direction: column;
+                text-align: center;
+                gap: 6px;
+                font-size: 11px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 14px 12px 20px;
+            }
+
+            .print-toolbar {
+                margin: -14px -12px 14px -12px;
+                padding: 9px 12px;
+            }
+
+            .terminal-info h1 {
+                font-size: 18px;
+            }
+
+            .terminal-info p {
+                font-size: 11.5px;
+            }
+
+            .filter-summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
         @media print {
             body {
                 padding: 10mm 12mm;
             }
-            .print-toolbar {
+            .print-toolbar,
+            .mobile-scroll-hint {
                 display: none !important;
+            }
+            .report-table-wrapper {
+                overflow: visible !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin-bottom: 0 !important;
+            }
+            table {
+                min-width: 0 !important;
+                width: 100% !important;
+            }
+            .header {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+            }
+            .report-meta {
+                text-align: right !important;
+                background: none !important;
+                border: none !important;
+                padding: 0 !important;
+                width: auto !important;
+            }
+            .filter-summary {
+                display: flex !important;
+                flex-direction: row !important;
+            }
+            .signatory-section {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+            }
+            .signatory-box {
+                width: 220px !important;
+                max-width: 220px !important;
+                margin: 0 !important;
+            }
+            .footer {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
             }
             .vehicle-type-chip,
             .status-badge,
@@ -393,67 +609,72 @@
     </div>
 
     <!-- Table Section -->
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 17%;">Date & Time</th>
-                <th style="width: 13%;">Plate Number</th>
-                <th style="width: 18%;">Operator</th>
-                <th style="width: 16%;">Driver</th>
-                <th style="width: 11%;">Type</th>
-                <th style="width: 15%;">Route</th>
-                <th style="width: 10%; text-align: center;">Passengers</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($results)): ?>
-                <?php foreach ($results as $row): ?>
+    <div class="report-table-wrapper">
+        <div class="mobile-scroll-hint">
+            <i class="fas fa-arrows-left-right"></i> Swipe horizontally to view full departure ledger
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 17%;">Date & Time</th>
+                    <th style="width: 13%;">Plate Number</th>
+                    <th style="width: 18%;">Operator</th>
+                    <th style="width: 16%;">Driver</th>
+                    <th style="width: 11%;">Type</th>
+                    <th style="width: 15%;">Route</th>
+                    <th style="width: 10%; text-align: center;">Passengers</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($results)): ?>
+                    <?php foreach ($results as $row): ?>
+                        <tr>
+                            <td style="white-space: nowrap;">
+                                <div style="font-weight: 700; color: #0f172a;"><?= date('M d, Y', strtotime($row['departure_time'])) ?></div>
+                                <div style="color: #64748b; font-size: 11.5px; font-weight: 500; font-family: monospace; margin-top: 2px;">
+                                    <i class="far fa-clock"></i> <?= date('H:i', strtotime($row['departure_time'])) ?>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="plate-number"><?= esc($row['plate_number']) ?></span>
+                            </td>
+                            <td>
+                                <?php
+                                    $opName = !empty($row['operator_name']) ? $row['operator_name'] : (!empty($row['owner_name']) ? $row['owner_name'] : '');
+                                ?>
+                                <div style="font-weight: 700; color: #0f172a; display: inline-flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-building text-muted" style="font-size: 11px;"></i>
+                                    <?= esc(!empty($opName) ? $opName : '—') ?>
+                                </div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; color: #334155; display: inline-flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-id-badge text-primary" style="font-size: 11px;"></i>
+                                    <?= esc($row['driver_name'] ?? '—') ?>
+                                </div>
+                            </td>
+                            <td><?= vehicle_type_badge($row['vehicle_type']) ?></td>
+                            <td>
+                                <div style="color: #64748b; font-size: 11px; font-weight: 600;"><?= strtoupper(esc($row['origin'] ?? 'Palompon')) ?></div>
+                                <div style="color: #0f172a; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fas fa-arrow-right text-primary" style="font-size: 10px;"></i> <?= strtoupper(esc($row['destination'] ?? '—')) ?>
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <span class="passenger-badge"><?= (int) ($row['current_passengers'] ?? 0) ?></span>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
                     <tr>
-                        <td style="white-space: nowrap;">
-                            <div style="font-weight: 700; color: #0f172a;"><?= date('M d, Y', strtotime($row['departure_time'])) ?></div>
-                            <div style="color: #64748b; font-size: 11.5px; font-weight: 500; font-family: monospace; margin-top: 2px;">
-                                <i class="far fa-clock"></i> <?= date('H:i', strtotime($row['departure_time'])) ?>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="plate-number"><?= esc($row['plate_number']) ?></span>
-                        </td>
-                        <td>
-                            <?php
-                                $opName = !empty($row['operator_name']) ? $row['operator_name'] : (!empty($row['owner_name']) ? $row['owner_name'] : '');
-                            ?>
-                            <div style="font-weight: 700; color: #0f172a; display: inline-flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-building text-muted" style="font-size: 11px;"></i>
-                                <?= esc(!empty($opName) ? $opName : '—') ?>
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 600; color: #334155; display: inline-flex; align-items: center; gap: 5px;">
-                                <i class="fas fa-id-badge text-primary" style="font-size: 11px;"></i>
-                                <?= esc($row['driver_name'] ?? '—') ?>
-                            </div>
-                        </td>
-                        <td><?= vehicle_type_badge($row['vehicle_type']) ?></td>
-                        <td>
-                            <div style="color: #64748b; font-size: 11px; font-weight: 600;"><?= strtoupper(esc($row['origin'] ?? 'Palompon')) ?></div>
-                            <div style="color: #0f172a; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 4px;">
-                                <i class="fas fa-arrow-right text-primary" style="font-size: 10px;"></i> <?= strtoupper(esc($row['destination'] ?? '—')) ?>
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <span class="passenger-badge"><?= (int) ($row['current_passengers'] ?? 0) ?></span>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8; font-weight: 600;">
+                            No departure records match the specified filters.
                         </td>
                     </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 40px; color: #94a3b8; font-weight: 600;">
-                        No departure records match the specified filters.
-                    </td>
-                </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 
     <!-- Signatory Section -->
     <div class="signatory-section">

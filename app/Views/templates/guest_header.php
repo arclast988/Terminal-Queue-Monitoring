@@ -484,6 +484,18 @@
             font-size: 11px !important;
         }
     }
+
+    /* Print Styles */
+    @media print {
+        .sticky-top-wrapper,
+        .advisory-bar,
+        .ann-modal-overlay,
+        .guest-header,
+        .breadcrumb-section,
+        .mobile-nav-overlay {
+            display: none !important;
+        }
+    }
 </style>
 
 <div class="sticky-top-wrapper">

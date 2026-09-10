@@ -5,22 +5,28 @@
  * Gives instant visual feedback on user-initiated AJAX requests, internal
  * navigations, and valid form submissions.
  *
- * Key Features:
- *   • Guaranteed Minimum Visibility (~250ms): Fast localhost responses are always visible.
- *   • Self-Injected Styles: Works on 100% of pages even without external CSS.
- *   • Universal In-Button Spinners: Any form submit automatically shows a button spinner.
- *   • Table / Container Loader API: Built-in helper for in-table spinners.
+ * Adaptive / Debounced Loader Pattern:
+ *   • Fast / Responsive System (< 250ms): The loader is NEVER shown. Zero visual
+ *     flicker, zero layout jumping, giving a blazing-fast feel.
+ *   • Slow Operations (> 250ms): The top progress bar and button spinners smoothly
+ *     fade in to reassure the user that work is in progress.
+ *   • Guaranteed Minimum Visibility (~250ms): If the loader was displayed because
+ *     an operation took > 250ms, it remains visible for at least 250ms to ensure
+ *     a clean, professional completion animation rather than an abrupt blink.
  *   • Smart Silent Polling Filter: Ignores background polls (/api/queue-status, /status, etc.).
  *   • Never blocks clicks or input interactions (pointer-events: none).
  *
  * API:
- *   GlobalLoader.start()
+ *   GlobalLoader.start([immediate])
  *   GlobalLoader.done()
  *   GlobalLoader.set(percent)
  *   GlobalLoader.isRunning()
- *   GlobalLoader.showTableLoader(container, label)
+ *   GlobalLoader.isVisible()
+ *   GlobalLoader.setDelay(ms)
+ *   GlobalLoader.getDelay()
+ *   GlobalLoader.showTableLoader(container, label, [immediate])
  *   GlobalLoader.hideTableLoader(container)
- *   GlobalLoader.showButtonSpinner(btn, label)
+ *   GlobalLoader.showButtonSpinner(btn, label, [immediate])
  *   GlobalLoader.hideButtonSpinner(btn)
  */
 (function (window, document) {
@@ -33,15 +39,24 @@
     var startTime = 0;
     var trickleTimer = null;
     var safetyTimer = null;
+    var showTimer = null;
     var isRunning = false;
+    var isVisible = false;
     var barEl = null;
     var innerEl = null;
     var glowEl = null;
+
+    // Adaptive Delay Thresholds (in milliseconds)
+    var SHOW_DELAY = 250;      // Threshold before showing top progress bar
+    var MIN_VISIBLE = 250;     // Minimum display time if the bar became visible
+    var BUTTON_DELAY = 200;    // Threshold before showing button spinner
+    var TABLE_DELAY = 200;     // Threshold before showing table loader overlay
 
     // Background polling endpoints that must NEVER trigger the progress bar
     var SILENT_PATTERNS = [
         /\/api\/queue-status/i,
         /\/status(\?|$)/i,
+        /\/schedules\/status/i,
         /\/api\/fares/i,
         /\/api\/announcements/i,
         /\/api\/check-vehicle-availability/i,
@@ -147,22 +162,15 @@
         }
     }
 
-    /** Start loader */
-    function start() {
-        ensureElements();
-        if (safetyTimer) clearTimeout(safetyTimer);
-
-        if (!isRunning) {
-            isRunning = true;
-            startTime = Date.now();
-            if (barEl) {
-                barEl.classList.remove('is-done');
-                barEl.classList.add('is-active');
-            }
-            setProgress(20 + Math.random() * 15); // Instant visual jump to ~20-35%
+    /** Visually render the active progress bar (called only after threshold delay) */
+    function renderStart() {
+        isVisible = true;
+        if (barEl) {
+            barEl.classList.remove('is-done');
+            barEl.classList.add('is-active');
         }
+        setProgress(20 + Math.random() * 15); // Jump to ~20-35%
 
-        // Trickle forward smoothly
         if (trickleTimer) clearInterval(trickleTimer);
         trickleTimer = setInterval(function () {
             if (progress < 85) {
@@ -171,6 +179,38 @@
                 setProgress(progress + step);
             }
         }, 180);
+    }
+
+    /**
+     * Start loader with adaptive threshold debouncing.
+     * If the action completes within SHOW_DELAY (< 250ms), the loader is NEVER shown.
+     * If the action takes >= SHOW_DELAY, it smoothly reveals the progress bar.
+     * @param {boolean} [immediate=false] Optional flag to bypass debounce (e.g. for heavy long exports)
+     */
+    function start(immediate) {
+        ensureElements();
+        if (safetyTimer) clearTimeout(safetyTimer);
+
+        if (!isRunning) {
+            isRunning = true;
+            isVisible = false;
+            startTime = Date.now();
+
+            if (showTimer) {
+                clearTimeout(showTimer);
+                showTimer = null;
+            }
+
+            if (immediate || SHOW_DELAY <= 0) {
+                renderStart();
+            } else {
+                showTimer = setTimeout(function () {
+                    if (isRunning && !isVisible) {
+                        renderStart();
+                    }
+                }, SHOW_DELAY);
+            }
+        }
 
         // Safety watchdog: automatically complete after 12s if request hangs
         safetyTimer = setTimeout(function () {
@@ -180,23 +220,47 @@
         }, 12000);
     }
 
-    /** Complete loader with a guaranteed minimum display window for localhost visibility */
+    /**
+     * Complete loader operation.
+     * - If completed in < SHOW_DELAY: cancels timer immediately. No UI flicker whatsoever.
+     * - If displayed: ensures a brief minimum duration (MIN_VISIBLE) so the completion feels smooth.
+     */
     function done() {
         if (!isRunning) return;
 
-        if (trickleTimer) {
-            clearInterval(trickleTimer);
-            trickleTimer = null;
+        if (showTimer) {
+            clearTimeout(showTimer);
+            showTimer = null;
         }
         if (safetyTimer) {
             clearTimeout(safetyTimer);
             safetyTimer = null;
         }
 
-        // Ensure at least 260ms elapsed visibility so human eye clearly perceives the bar
-        var elapsed = Date.now() - startTime;
-        var minVisibleMs = 260;
-        var remainingDelay = (elapsed < minVisibleMs) ? (minVisibleMs - elapsed) : 0;
+        // Fast response: request completed before SHOW_DELAY threshold!
+        if (!isVisible) {
+            isRunning = false;
+            activeRequests = 0;
+            if (trickleTimer) {
+                clearInterval(trickleTimer);
+                trickleTimer = null;
+            }
+            setProgress(0);
+            var fastLoadingBtns = document.querySelectorAll('.gl-btn-loading');
+            for (var f = 0; f < fastLoadingBtns.length; f++) {
+                hideButtonSpinner(fastLoadingBtns[f]);
+            }
+            return;
+        }
+
+        // Slow response: bar was actually visible to user.
+        if (trickleTimer) {
+            clearInterval(trickleTimer);
+            trickleTimer = null;
+        }
+
+        var visibleElapsed = Date.now() - (startTime + SHOW_DELAY);
+        var remainingDelay = (visibleElapsed < MIN_VISIBLE) ? (MIN_VISIBLE - visibleElapsed) : 0;
 
         setTimeout(function () {
             setProgress(100);
@@ -211,7 +275,12 @@
                         setProgress(0);
                     }
                     isRunning = false;
+                    isVisible = false;
                     activeRequests = 0;
+                    var slowLoadingBtns = document.querySelectorAll('.gl-btn-loading');
+                    for (var s = 0; s < slowLoadingBtns.length; s++) {
+                        hideButtonSpinner(slowLoadingBtns[s]);
+                    }
                 }, 280);
             }, 160);
         }, remainingDelay);
@@ -219,7 +288,29 @@
 
     function forceDone() {
         activeRequests = 0;
-        done();
+        if (showTimer) {
+            clearTimeout(showTimer);
+            showTimer = null;
+        }
+        if (trickleTimer) {
+            clearInterval(trickleTimer);
+            trickleTimer = null;
+        }
+        if (safetyTimer) {
+            clearTimeout(safetyTimer);
+            safetyTimer = null;
+        }
+        if (barEl) {
+            barEl.classList.remove('is-active', 'is-done');
+        }
+        setProgress(0);
+        isRunning = false;
+        isVisible = false;
+
+        var allLoadingBtns = document.querySelectorAll('.gl-btn-loading');
+        for (var a = 0; a < allLoadingBtns.length; a++) {
+            hideButtonSpinner(allLoadingBtns[a]);
+        }
     }
 
     /** Helper to check if a URL or Request should be ignored */
@@ -247,8 +338,11 @@
                         }
                     }
                 } else if (typeof headers === 'object') {
-                    if (headers['X-Silent'] === 'true' || headers['x-silent'] === 'true' || headers['X-Silent'] === true) {
-                        return true;
+                    for (var key in headers) {
+                        if (headers.hasOwnProperty(key) && String(key).toLowerCase() === 'x-silent') {
+                            var ov = String(headers[key]).toLowerCase();
+                            if (ov === 'true' || ov === '1') return true;
+                        }
                     }
                 }
             } catch (e) { /* ignore header inspection error */ }
@@ -398,25 +492,48 @@
         return 'Processing\u2026';
     }
 
-    /** Button Spinner Helpers */
-    function showButtonSpinner(btn, customLabel) {
+    /**
+     * Button Spinner Helpers with Adaptive Delay
+     * If the action completes within BUTTON_DELAY (200ms), the button text/layout never flickers.
+     */
+    function showButtonSpinner(btn, customLabel, immediate) {
         if (!btn || btn.classList.contains('gl-btn-loading')) return;
-        btn.classList.add('gl-btn-loading');
-        btn.setAttribute('data-gl-orig-html', btn.innerHTML);
 
-        var hasVisibleText = Boolean((btn.innerText || btn.textContent || btn.value || '').trim());
-        var isIconOnly = !hasVisibleText && !customLabel && !btn.getAttribute('data-loading-text');
+        if (btn._gl_btn_timer) {
+            clearTimeout(btn._gl_btn_timer);
+            btn._gl_btn_timer = null;
+        }
 
-        if (isIconOnly) {
-            btn.innerHTML = '<span class="gl-btn-spinner" style="margin-right:0;" aria-hidden="true"></span>';
+        function applySpinner() {
+            if (!btn || btn.classList.contains('gl-btn-loading')) return;
+            btn.classList.add('gl-btn-loading');
+            btn.setAttribute('data-gl-orig-html', btn.innerHTML);
+
+            var hasVisibleText = Boolean((btn.innerText || btn.textContent || btn.value || '').trim());
+            var isIconOnly = !hasVisibleText && !customLabel && !btn.getAttribute('data-loading-text');
+
+            if (isIconOnly) {
+                btn.innerHTML = '<span class="gl-btn-spinner" style="margin-right:0;" aria-hidden="true"></span>';
+            } else {
+                var label = getButtonLoadingLabel(btn, customLabel);
+                btn.innerHTML = '<span class="gl-btn-spinner" aria-hidden="true"></span> ' + label;
+            }
+        }
+
+        if (immediate || BUTTON_DELAY <= 0) {
+            applySpinner();
         } else {
-            var label = getButtonLoadingLabel(btn, customLabel);
-            btn.innerHTML = '<span class="gl-btn-spinner" aria-hidden="true"></span> ' + label;
+            btn._gl_btn_timer = setTimeout(applySpinner, BUTTON_DELAY);
         }
     }
 
     function hideButtonSpinner(btn) {
-        if (!btn || !btn.classList.contains('gl-btn-loading')) return;
+        if (!btn) return;
+        if (btn._gl_btn_timer) {
+            clearTimeout(btn._gl_btn_timer);
+            btn._gl_btn_timer = null;
+        }
+        if (!btn.classList.contains('gl-btn-loading')) return;
         var orig = btn.getAttribute('data-gl-orig-html');
         if (orig !== null) {
             btn.innerHTML = orig;
@@ -425,47 +542,67 @@
         btn.classList.remove('gl-btn-loading');
     }
 
-    /** Table / Card Overlay Loader Helpers */
-    function showTableLoader(container, labelText) {
+    /** Table / Card Overlay Loader Helpers with Adaptive Delay */
+    function showTableLoader(container, labelText, immediate) {
         if (!container) return;
         var el = (typeof container === 'string') ? document.querySelector(container) : container;
         if (!el) return;
 
-        // Ensure relative positioning
-        var curPos = window.getComputedStyle(el).position;
-        if (!curPos || curPos === 'static') {
-            el.style.position = 'relative';
+        if (el._gl_table_timer) {
+            clearTimeout(el._gl_table_timer);
+            el._gl_table_timer = null;
         }
 
-        var defaultText = 'Loading\u2026';
-        if (el.id && (el.id.indexOf('schedule') !== -1 || el.classList.contains('schedule-card'))) {
-            defaultText = 'Loading schedules\u2026';
-        } else if (el.id && el.id.indexOf('fare') !== -1) {
-            defaultText = 'Loading fares\u2026';
-        } else if (el.id && el.id.indexOf('queue') !== -1) {
-            defaultText = 'Updating queue\u2026';
+        function applyOverlay() {
+            if (!el) return;
+            // Ensure relative positioning
+            var curPos = window.getComputedStyle(el).position;
+            if (!curPos || curPos === 'static') {
+                el.style.position = 'relative';
+            }
+
+            var defaultText = 'Loading\u2026';
+            if (el.id && (el.id.indexOf('schedule') !== -1 || el.classList.contains('schedule-card'))) {
+                defaultText = 'Loading schedules\u2026';
+            } else if (el.id && el.id.indexOf('fare') !== -1) {
+                defaultText = 'Loading fares\u2026';
+            } else if (el.id && el.id.indexOf('queue') !== -1) {
+                defaultText = 'Updating queue\u2026';
+            }
+
+            var text = labelText || defaultText;
+
+            var overlay = el.querySelector('.table-loader-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'table-loader-overlay';
+                overlay.innerHTML = '<div class="table-loader-spinner" aria-hidden="true"></div><div class="table-loader-text">' + text + '</div>';
+                el.appendChild(overlay);
+            } else {
+                var textEl = overlay.querySelector('.table-loader-text');
+                if (textEl) textEl.textContent = text;
+            }
+            overlay.style.opacity = '1';
+            overlay.style.display = 'flex';
         }
 
-        var text = labelText || defaultText;
-
-        var overlay = el.querySelector('.table-loader-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'table-loader-overlay';
-            overlay.innerHTML = '<div class="table-loader-spinner" aria-hidden="true"></div><div class="table-loader-text">' + text + '</div>';
-            el.appendChild(overlay);
+        if (immediate || TABLE_DELAY <= 0) {
+            applyOverlay();
         } else {
-            var textEl = overlay.querySelector('.table-loader-text');
-            if (textEl) textEl.textContent = text;
+            el._gl_table_timer = setTimeout(applyOverlay, TABLE_DELAY);
         }
-        overlay.style.opacity = '1';
-        overlay.style.display = 'flex';
     }
 
     function hideTableLoader(container) {
         if (!container) return;
         var el = (typeof container === 'string') ? document.querySelector(container) : container;
         if (!el) return;
+
+        if (el._gl_table_timer) {
+            clearTimeout(el._gl_table_timer);
+            el._gl_table_timer = null;
+        }
+
         var overlay = el.querySelector('.table-loader-overlay');
         if (overlay) {
             overlay.style.opacity = '0';
@@ -488,7 +625,7 @@
                 return;
             }
 
-            var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+            var submitBtn = e.submitter || form.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
 
             // Wait a micro-tick to let custom scripts (e.g. no-change-guard, modal validations) preventDefault
             setTimeout(function () {
@@ -513,7 +650,7 @@
             if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
             var rawHref = a.getAttribute('href') || '';
-            if (!rawHref || rawHref.charAt(0) === '#' || rawHref.indexOf('javascript:') === 0 || rawHref.indexOf('mailto:') === 0 || rawHref.indexOf('tel:') === 0) {
+            if (!rawHref || rawHref.charAt(0) === '#' || rawHref.indexOf('javascript:') === 0 || rawHref.indexOf('mailto:') === 0 || rawHref.indexOf('tel:') === 0 || rawHref.indexOf('blob:') === 0 || rawHref.indexOf('data:') === 0) {
                 return;
             }
 
@@ -536,6 +673,11 @@
                 }, 20);
             } catch (err) { /* ignore */ }
         }, false);
+
+        // Handle BFCache restore (Back/Forward navigation restores DOM from memory)
+        window.addEventListener('pageshow', function () {
+            forceDone();
+        });
     }
 
     // Initialize hooks immediately
@@ -546,14 +688,8 @@
         ensureElements();
         setupInteractions();
         try {
-            if (sessionStorage.getItem('gl_navigating') === '1') {
-                sessionStorage.removeItem('gl_navigating');
-                start();
-                setProgress(70);
-                setTimeout(function () {
-                    done();
-                }, 90);
-            }
+            // Clean up navigation flag cleanly without replaying a fake progress bar
+            sessionStorage.removeItem('gl_navigating');
         } catch (err) {}
     }
 
@@ -569,6 +705,15 @@
         done: done,
         set: setProgress,
         isRunning: function () { return isRunning; },
+        isVisible: function () { return isVisible; },
+        setDelay: function (ms) {
+            if (typeof ms === 'number' && ms >= 0) {
+                SHOW_DELAY = ms;
+                BUTTON_DELAY = Math.min(ms, 200);
+                TABLE_DELAY = Math.min(ms, 200);
+            }
+        },
+        getDelay: function () { return SHOW_DELAY; },
         addSilentPattern: function (pattern) {
             if (pattern) SILENT_PATTERNS.push(pattern);
         },

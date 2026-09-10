@@ -107,6 +107,27 @@
         transform: translateY(-1px);
     }
 
+    .manual-header .btn-print-outline {
+        background: rgba(255, 255, 255, 0.18);
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        padding: 9px 14px;
+        border-radius: 9px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .manual-header .btn-print-outline:hover {
+        background: rgba(255, 255, 255, 0.28);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+
     /* Mobile Quick Topic Selector (< 520px) */
     .manual-mobile-select-wrap {
         display: none;
@@ -150,19 +171,14 @@
     /* Nav Pills */
     .manual-nav-pills {
         display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding-bottom: 8px;
+        flex-wrap: wrap;
+        gap: 8px 10px;
+        align-items: center;
+        padding-bottom: 12px;
         margin-bottom: 24px;
         border-bottom: 2px solid #e2e8f0;
         width: 100%;
         box-sizing: border-box;
-    }
-
-    .manual-nav-pills::-webkit-scrollbar {
-        display: none;
     }
 
     .manual-pill-btn {
@@ -179,7 +195,6 @@
         gap: 8px;
         transition: all 0.2s ease;
         white-space: nowrap;
-        flex-shrink: 0;
         user-select: none;
     }
 
@@ -193,6 +208,32 @@
         border-color: #059669;
         color: #ffffff;
         box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+
+    @media (max-width: 640px) {
+        .manual-nav-pills {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 transparent;
+        }
+        .manual-nav-pills::-webkit-scrollbar {
+            display: block;
+            height: 4px;
+        }
+        .manual-nav-pills::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .manual-nav-pills::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .manual-pill-btn {
+            flex-shrink: 0;
+        }
     }
 
     /* Tab Content & Cards */
@@ -430,8 +471,194 @@
         html body .manual-header .manual-title {
             font-size: 17px;
         }
+    }
+
+    /* =================================================================
+       OFFICIAL PRINT HANDBOOK STYLES
+       ================================================================= */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm 12mm 15mm;
+        }
+
+        html, html.layout-lock, body, body.layout-lock {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+            display: block !important;
+            position: static !important;
+            background: #ffffff !important;
+            background-image: none !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Outfit', sans-serif !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Completely remove background photos, slideshows, watermarks and overlays */
+        body::before,
+        body::after,
+        html::before,
+        html::after,
+        body.admin-theme::before,
+        body.admin-theme::after,
+        body.staff-theme::before,
+        body.staff-theme::after,
+        .global-progress-bar {
+            display: none !important;
+            content: none !important;
+            background: none !important;
+            background-image: none !important;
+            animation: none !important;
+        }
+
+        /* Hide site chrome, interactive buttons, tabs, mobile selectors */
+        header#site-header,
+        header,
+        nav,
+        .navbar,
+        .mobile-toggle,
+        .mobile-nav-overlay,
+        footer,
+        .footer,
+        .manual-header-actions,
+        .manual-nav-pills,
+        .manual-mobile-select-wrap,
+        .btn,
+        .btn-back,
+        .btn-print,
+        .btn-print-outline {
+            display: none !important;
+        }
+
+        .main-content,
+        .manual-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: static !important;
+            float: none !important;
+        }
+
+        /* Clean Official Header Banner */
+        .manual-header {
+            background: none !important;
+            color: #0f172a !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border-bottom: 2.5pt solid #059669 !important;
+            padding: 0 0 12pt 0 !important;
+            margin: 0 0 16pt 0 !important;
+            display: block !important;
+        }
+
+        html body.staff-theme .manual-header h1,
+        html body.staff-theme .manual-header .manual-title,
+        html body .manual-header h1,
+        html body .manual-header .manual-title {
+            color: #059669 !important;
+            font-size: 19pt !important;
+            font-weight: 800 !important;
+            margin: 0 0 4pt 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8pt !important;
+        }
+
+        .manual-header h1 i,
+        .manual-header .manual-title i {
+            color: #059669 !important;
+        }
+
+        html body.staff-theme .manual-header p,
+        html body.staff-theme .manual-header .manual-subtitle,
+        html body .manual-header p,
+        html body .manual-header .manual-subtitle {
+            color: #475569 !important;
+            font-size: 10pt !important;
+            line-height: 1.4 !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+        }
+
+        /* Print ALL Chapters by default as a complete manual */
+        .tab-content {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            margin-bottom: 18pt !important;
+            page-break-inside: auto !important;
+        }
+
+        /* If user chose "Print This Topic", only print active section */
+        body.print-current-only .tab-content:not(.active) {
+            display: none !important;
+        }
+        body.print-current-only .tab-content.active {
+            display: block !important;
+        }
+
+        /* Section Cards */
         .manual-card {
-            padding: 14px 10px;
+            background: #ffffff !important;
+            border: 1pt solid #cbd5e1 !important;
+            border-radius: 6pt !important;
+            box-shadow: none !important;
+            padding: 12pt 14pt !important;
+            margin-bottom: 14pt !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .manual-card h3 {
+            color: #0f172a !important;
+            font-size: 13pt !important;
+            font-weight: 800 !important;
+            border-bottom: 1pt solid #e2e8f0 !important;
+            padding-bottom: 6pt !important;
+            margin-top: 0 !important;
+            margin-bottom: 10pt !important;
+        }
+
+        .manual-card h3 i {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Callouts, Steps, Code */
+        .callout-box,
+        .rule-callout,
+        .error-callout,
+        .success-callout,
+        .step-item {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            border-radius: 4pt !important;
+            margin-bottom: 8pt !important;
+            padding: 8pt 10pt !important;
+            font-size: 9.5pt !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .step-number {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        pre, code {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border: 1pt solid #e2e8f0 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            white-space: pre-wrap !important;
         }
     }
 </style>
@@ -452,9 +679,15 @@
             <a href="<?= base_url('staff/dashboard') ?>" class="btn-back">
                 <i class="fas fa-arrow-left"></i> Staff Dashboard
             </a>
-            <a href="<?= base_url('staff/queue') ?>" class="btn-action-primary">
+            <a href="<?= base_url('staff/queue') ?>" class="btn-back">
                 <i class="fas fa-list-ol"></i> Go to Queue
             </a>
+            <button onclick="printManual('all')" class="btn-action-primary" title="Print the complete official manual">
+                <i class="fas fa-print"></i> Print Manual
+            </button>
+            <button onclick="printManual('current')" class="btn-print-outline" title="Print only the currently selected topic">
+                <i class="fas fa-file-lines"></i> Print This Topic
+            </button>
         </div>
     </div>
 
@@ -721,7 +954,7 @@
             </p>
 
             <div class="rule-callout error">
-                <h5 style="margin:0 0 6px; font-weight:800;"><i class="fas fa-magic"></i> Instant Recovery with Undo Cancel (Nielsen's Heuristic #9):</h5>
+                <h5 style="margin:0 0 6px; font-weight:800;"><i class="fas fa-magic"></i> Instant Recovery with Undo Cancel:</h5>
                 <p style="margin:0;">1. Immediately upon cancellation, a high-visibility amber toast notification appears on your screen.</p>
                 <p style="margin:4px 0 0;">2. Click the <strong>[Undo Cancel]</strong> button on the toast notice.</p>
                 <p style="margin:4px 0 0;">3. The vehicle is immediately restored to its exact prior position in the queue with atomic database safety.</p>
@@ -832,6 +1065,19 @@ function switchManualTab(tabId, btn) {
         target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
+
+function printManual(mode) {
+    if (mode === 'current') {
+        document.body.classList.add('print-current-only');
+    } else {
+        document.body.classList.remove('print-current-only');
+    }
+    window.print();
+}
+
+window.addEventListener('afterprint', function() {
+    document.body.classList.remove('print-current-only');
+});
 </script>
 
 <?= $this->include('templates/footer') ?>

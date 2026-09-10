@@ -88,6 +88,9 @@ class Fares extends BaseController
 
     public function apiData()
     {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         helper('fare');
 
         // Cache for a few seconds: the guest fares page polls every 3s, so this

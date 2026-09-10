@@ -65,7 +65,14 @@ class WsServe extends BaseCommand
             $except = null;
 
             // Wait up to 200ms for activity (keeps broadcast latency under ~200ms)
-            $numChanged = stream_select($read, $write, $except, 0, 200000);
+            // Suppress EINTR warning on interrupted system call and continue loop.
+            $numChanged = @stream_select($read, $write, $except, 0, 200000);
+            if ($numChanged === false) {
+                // Protect against 100% CPU busy-wait spinlock if a descriptor error or signal occurs
+                usleep(20000);
+                $masterClients = array_values(array_filter($masterClients, 'is_resource'));
+                continue;
+            }
 
             // Heartbeat check every 30 seconds
             if (time() - $lastPing >= 30) {

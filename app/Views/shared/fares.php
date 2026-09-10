@@ -853,6 +853,8 @@ body.staff-theme .delete-fare-btn-cancel {
     color: var(--text-main, #e2e8f0) !important;
     border-color: var(--border, #334155) !important;
 }
+
+
 </style>
 <?php endif; ?>
 

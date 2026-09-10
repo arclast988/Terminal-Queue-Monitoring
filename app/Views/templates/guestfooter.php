@@ -13,7 +13,6 @@
                     <li><a href="<?= base_url('schedules') ?>">Schedules</a></li>
                     <li><a href="<?= base_url('fares') ?>">Route Fares</a></li>
                     <li><a href="<?= base_url('search') ?>">Trip Search</a></li>
-                    <li><a href="<?= base_url('manual') ?>">Commuter Guide</a></li>
                     <?php if (session()->get('isLoggedIn')): ?>
                         <?php
                         $dashUrl = '/';
@@ -404,10 +403,18 @@ footer {
         font-size: 13.5px;
     }
 }
+
+@media print {
+    footer,
+    .footer-container,
+    .support-modal-backdrop {
+        display: none !important;
+    }
+}
 </style>
 
 <!-- ===== Footer JS ===== -->
-<script src="<?= base_url('assets/js/global-loader.js?v=20260908') ?>"></script>
+<script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20260906') ?>"></script>
 <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>

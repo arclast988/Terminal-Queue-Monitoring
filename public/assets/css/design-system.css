@@ -86,6 +86,16 @@ body::after {
   animation: palomponBgSlideshow 30s infinite ease-in-out;
 }
 
+@media print {
+  body::after,
+  body::before {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    background-image: none !important;
+  }
+}
+
 @keyframes palomponBgSlideshow {
   0%, 17% {
     background-image: url('/images/bg/bg1_townhall.jpg');

@@ -1143,7 +1143,10 @@ if (!empty($vehicles) && is_array($vehicles)) {
 
     function selectAddVtColor(color, btn) {
         document.getElementById('add_vt_color').value = color;
-        document.getElementById('add_vt_color_input').value = color;
+        var colorInput = document.getElementById('add_vt_color_input');
+        if (colorInput && colorInput.value !== color) {
+            colorInput.value = color;
+        }
         var contrastColor = getContrastTextColor(color);
 
         var badge = document.getElementById('add_vt_color_badge');
@@ -1159,6 +1162,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
             var ic = el.querySelector('i');
             if (ic) ic.classList.add('d-none');
         });
+        var customBadge = document.getElementById('add_vt_custom_label');
         if (btn) {
             btn.classList.add('active');
             var ic = btn.querySelector('i');
@@ -1166,6 +1170,9 @@ if (!empty($vehicles) && is_array($vehicles)) {
                 ic.classList.remove('d-none');
                 ic.style.color = contrastColor;
             }
+            if (customBadge) customBadge.classList.remove('active');
+        } else {
+            if (customBadge) customBadge.classList.add('active');
         }
 
         // Selected icon button follows the newly assigned color
@@ -1224,7 +1231,10 @@ if (!empty($vehicles) && is_array($vehicles)) {
 
     function selectEditVtColor(id, color, btn) {
         document.getElementById('edit_vt_color_' + id).value = color;
-        document.getElementById('edit_vt_color_input_' + id).value = color;
+        var colorInput = document.getElementById('edit_vt_color_input_' + id);
+        if (colorInput && colorInput.value !== color) {
+            colorInput.value = color;
+        }
         var contrastColor = getContrastTextColor(color);
 
         var badge = document.getElementById('edit_vt_color_badge_' + id);
@@ -1240,6 +1250,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
             var ic = el.querySelector('i');
             if (ic) ic.classList.add('d-none');
         });
+        var customBadge = document.getElementById('edit_vt_custom_label_' + id);
         if (btn) {
             btn.classList.add('active');
             var ic = btn.querySelector('i');
@@ -1247,6 +1258,9 @@ if (!empty($vehicles) && is_array($vehicles)) {
                 ic.classList.remove('d-none');
                 ic.style.color = contrastColor;
             }
+            if (customBadge) customBadge.classList.remove('active');
+        } else {
+            if (customBadge) customBadge.classList.add('active');
         }
 
         // Selected icon button follows the newly assigned color
@@ -1422,10 +1436,18 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                     <button type="button" class="btn btn-sm btn-action-edit" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" onclick="openEditVehicleTypeModal(<?= $vt['id'] ?>)" title="Edit Vehicle Type">
                                         <i class="bi bi-pencil me-1"></i>Edit
                                     </button>
-                                    <form action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline m-0 p-0"
-                                          onsubmit="return confirm('WARNING: Are you sure you want to delete vehicle type &quot;<?= esc($vt['name']) ?>&quot;?\n\nThis will ALSO DELETE all cards in Route Fares, connected routes, and vehicles of this type!');">
+                                    <form id="delete-vehicle-type-form-<?= $vt['id'] ?>" action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline m-0 p-0">
                                         <?= csrf_field() ?>
-                                        <button type="submit" class="btn btn-sm btn-action-delete" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" title="Delete Vehicle Type">
+                                        <button type="button" class="btn btn-sm btn-action-delete" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" title="Delete Vehicle Type"
+                                            onclick="showDeleteVehicleTypeModal({
+                                                formId: 'delete-vehicle-type-form-<?= $vt['id'] ?>',
+                                                id: '<?= $vt['id'] ?>',
+                                                name: '<?= esc(addslashes($vt['name'])) ?>',
+                                                slug: '<?= esc(addslashes($vt['slug'])) ?>',
+                                                color: '<?= esc(addslashes($vtColor)) ?>',
+                                                icon: '<?= esc(addslashes($vtIcon)) ?>',
+                                                vehicleCount: <?= (int)($typeCounts[$vt['slug']] ?? 0) ?>
+                                            })">
                                             <i class="bi bi-trash me-1"></i>Delete
                                         </button>
                                     </form>
@@ -1480,21 +1502,24 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                         <?= esc($curColor) ?>
                                     </span>
                                 </label>
-                                <div class="d-flex flex-wrap gap-2 align-items-center mb-1">
+                                <div class="vt-palette-wrap">
                                     <?php foreach ($colorPalette as $c): ?>
                                         <?php $cContrast = contrast_text_color($c); ?>
                                         <button type="button" 
-                                                class="btn p-0 rounded-circle border-0 position-relative edit-color-swatch-<?= $vt['id'] ?> <?= (strtolower($c) === strtolower($curColor)) ? 'active' : '' ?>" 
-                                                style="width: 26px; height: 26px; background-color: <?= $c ?>; transition: transform 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                                                class="rounded-circle border-0 position-relative edit-color-swatch-<?= $vt['id'] ?> vt-color-swatch <?= (strtolower($c) === strtolower($curColor)) ? 'active' : '' ?>" 
+                                                style="background-color: <?= $c ?>;" 
                                                 data-color="<?= $c ?>"
                                                 onclick="selectEditVtColor(<?= $vt['id'] ?>, '<?= $c ?>', this)">
-                                            <i class="bi bi-check fw-bold <?= (strtolower($c) === strtolower($curColor)) ? '' : 'd-none' ?>" style="font-size: 16px; line-height: 26px; color: <?= $cContrast ?>;"></i>
+                                            <i class="bi bi-check fw-bold <?= (strtolower($c) === strtolower($curColor)) ? '' : 'd-none' ?>" style="color: <?= $cContrast ?>;"></i>
                                         </button>
                                     <?php endforeach; ?>
-                                    <div class="d-inline-flex align-items-center gap-1 ms-1">
-                                        <input type="color" id="edit_vt_color_input_<?= $vt['id'] ?>" class="form-control form-control-color p-0 border-0" value="<?= esc($curColor) ?>" title="Custom Color Picker" style="width: 28px; height: 28px; cursor: pointer; border-radius: 50%;" onchange="selectEditVtColor(<?= $vt['id'] ?>, this.value, null)">
-                                        <small class="text-muted" style="font-size: 11px;">Custom</small>
-                                    </div>
+                                    <?php $isCurColorInPalette = in_array(strtolower($curColor), array_map('strtolower', $colorPalette), true); ?>
+                                    <label for="edit_vt_color_input_<?= $vt['id'] ?>" id="edit_vt_custom_label_<?= $vt['id'] ?>" class="vt-custom-color-badge <?= !$isCurColorInPalette ? 'active' : '' ?>" title="Custom Color Picker">
+                                        <span class="vt-custom-color-preview">
+                                            <input type="color" id="edit_vt_color_input_<?= $vt['id'] ?>" class="vt-custom-color-input" value="<?= esc($curColor) ?>" oninput="selectEditVtColor(<?= $vt['id'] ?>, this.value, null)" onchange="selectEditVtColor(<?= $vt['id'] ?>, this.value, null)">
+                                        </span>
+                                        <span class="vt-custom-color-text">Custom</span>
+                                    </label>
                                 </div>
                                 <input type="hidden" id="edit_vt_color_<?= $vt['id'] ?>" name="color" value="<?= esc($curColor) ?>">
                             </div>
@@ -1578,25 +1603,27 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <?= esc($suggestedColor) ?>
                             </span>
                         </label>
-                        <div class="d-flex flex-wrap gap-2 align-items-center mb-1" id="add_vt_palette">
+                        <div class="vt-palette-wrap" id="add_vt_palette">
                             <?php foreach ($colorPalette as $c): ?>
                                 <?php 
                                     $isUsed = in_array(strtolower($c), array_map('strtolower', $usedColors), true); 
                                     $cContrast = contrast_text_color($c);
                                 ?>
                                 <button type="button" 
-                                        class="btn p-0 rounded-circle border-0 position-relative add-color-swatch <?= ($c === $suggestedColor) ? 'active' : '' ?>" 
-                                        style="width: 26px; height: 26px; background-color: <?= $c ?>; transition: transform 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                                        class="rounded-circle border-0 position-relative add-color-swatch vt-color-swatch <?= ($c === $suggestedColor) ? 'active' : '' ?>" 
+                                        style="background-color: <?= $c ?>;" 
                                         data-color="<?= $c ?>"
                                         onclick="selectAddVtColor('<?= $c ?>', this)"
                                         title="<?= $isUsed ? 'Already in use by another type' : 'Available distinct color' ?>">
-                                    <i class="bi bi-check fw-bold <?= ($c === $suggestedColor) ? '' : 'd-none' ?>" style="font-size: 16px; line-height: 26px; color: <?= $cContrast ?>;"></i>
+                                    <i class="bi bi-check fw-bold <?= ($c === $suggestedColor) ? '' : 'd-none' ?>" style="color: <?= $cContrast ?>;"></i>
                                 </button>
                             <?php endforeach; ?>
-                            <div class="d-inline-flex align-items-center gap-1 ms-1">
-                                <input type="color" id="add_vt_color_input" class="form-control form-control-color p-0 border-0" value="<?= esc($suggestedColor) ?>" title="Custom Color Picker" style="width: 28px; height: 28px; cursor: pointer; border-radius: 50%;" onchange="selectAddVtColor(this.value, null)">
-                                <small class="text-muted" style="font-size: 11px;">Custom</small>
-                            </div>
+                            <label for="add_vt_color_input" id="add_vt_custom_label" class="vt-custom-color-badge" title="Custom Color Picker">
+                                <span class="vt-custom-color-preview">
+                                    <input type="color" id="add_vt_color_input" class="vt-custom-color-input" value="<?= esc($suggestedColor) ?>" oninput="selectAddVtColor(this.value, null)" onchange="selectAddVtColor(this.value, null)">
+                                </span>
+                                <span class="vt-custom-color-text">Custom</span>
+                            </label>
                         </div>
                         <input type="hidden" id="add_vt_color" name="color" value="<?= esc($suggestedColor) ?>">
                     </div>
@@ -1652,7 +1679,6 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
     </div>
 </div>
 
-<?php if (!empty($vehicles)): ?>
 <!-- ══════════════════════════════════════════════════ -->
 <!--  Delete Vehicle Confirmation Modal                 -->
 <!-- ══════════════════════════════════════════════════ -->
@@ -1696,8 +1722,57 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Delete Vehicle Type Confirmation Modal            -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="deleteVehicleTypeConfirmModal" tabindex="-1" aria-labelledby="deleteVehicleTypeConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-vehicle-modal-content">
+            <!-- Accent stripe -->
+            <div class="delete-vehicle-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <!-- Icon badge -->
+                <div class="delete-vehicle-icon-wrapper">
+                    <i class="fas fa-trash-can"></i>
+                </div>
+
+                <h4 class="delete-vehicle-modal-title" id="deleteVehicleTypeConfirmLabel">Delete Vehicle Type?</h4>
+                <p class="delete-vehicle-modal-desc" id="deleteVehicleTypeConfirmMessage">
+                    Are you sure you want to delete this vehicle type? All connected fares, routes, and departure rules will also be removed. This action cannot be undone.
+                </p>
+
+                <!-- Vehicle type preview chip -->
+                <div class="delete-vehicle-item-chip" id="deleteVehicleTypeItemChip">
+                    <div id="deleteVehicleTypeIconBox" class="rounded-2 d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 26px; height: 26px; background-color: #475569; color: #ffffff;">
+                        <i id="deleteVehicleTypeIcon" class="fas fa-bus-simple" style="font-size: 13px;"></i>
+                    </div>
+                    <span id="deleteVehicleTypeName" class="fw-bold" style="font-size: 0.95rem;">Type</span>
+                    <span class="badge rounded-pill flex-shrink-0" id="deleteVehicleTypeBadge" style="font-size: 11px;">#475569</span>
+                    <span class="text-muted small flex-shrink-0" id="deleteVehicleTypeCount">• 0 vehicle(s)</span>
+                </div>
+
+                <!-- Caution note if vehicles exist under this type -->
+                <div id="deleteVehicleTypeWarningNote" class="mt-2 text-danger small fw-semibold" style="font-size: 0.825rem; display: none;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    <span>This vehicle type has registered vehicles.</span>
+                </div>
+            </div>
+
+            <div class="modal-footer delete-vehicle-modal-footer">
+                <button type="button" class="btn delete-vehicle-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn delete-vehicle-btn-confirm" id="deleteVehicleTypeConfirmBtn">
+                    <i class="fas fa-trash-alt me-1"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-/* ── Delete Vehicle Confirmation Modal Styles ── */
+/* ── Delete Vehicle & Vehicle Type Confirmation Modal Styles ── */
 .delete-vehicle-modal-content {
     border: 0 !important;
     border-radius: 18px !important;
@@ -1847,12 +1922,170 @@ body.modal-open #deleteVehicleConfirmModal,
     z-index: 100050 !important;
 }
 
-@media (max-width: 480px) {
-    .delete-vehicle-modal-footer {
-        flex-direction: column-reverse !important;
-        gap: 8px !important;
-        padding: 0 16px 20px 16px !important;
-    }
+/* Ensure Delete Vehicle Type Confirmation Modal floats cleanly above Manage Vehicle Types Modal */
+body.modal-open #deleteVehicleTypeConfirmModal,
+#deleteVehicleTypeConfirmModal {
+    z-index: 100070 !important;
+}
+
+
+/* ── Vehicle Type Color Swatches & Custom Color Picker ── */
+.vt-palette-wrap {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 3px 0 !important;
+    width: 100% !important;
+}
+
+.vt-color-swatch,
+.add-color-swatch,
+[class*="edit-color-swatch-"] {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    max-width: 28px !important;
+    min-height: 28px !important;
+    max-height: 28px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    flex: 0 0 28px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    outline: none !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    position: relative !important;
+}
+
+.vt-color-swatch:hover,
+.add-color-swatch:hover,
+[class*="edit-color-swatch-"]:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+    z-index: 2 !important;
+}
+
+.vt-color-swatch.active,
+.add-color-swatch.active,
+[class*="edit-color-swatch-"].active {
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0f172a !important;
+    transform: scale(1.1) !important;
+    z-index: 3 !important;
+}
+
+.vt-color-swatch i,
+.add-color-swatch i,
+[class*="edit-color-swatch-"] i {
+    pointer-events: none !important;
+    font-size: 16px !important;
+    line-height: 28px !important;
+}
+
+/* Custom Color Badge Pill */
+.vt-custom-color-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-left: 2px !important;
+    padding: 2px 8px 2px 2px !important;
+    border-radius: 9999px !important;
+    background: #f8fafc !important;
+    border: 1.5px solid #e2e8f0 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    box-sizing: border-box !important;
+    height: 32px !important;
+    flex-shrink: 0 !important;
+}
+
+.vt-custom-color-badge:hover {
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+}
+
+.vt-custom-color-badge.active {
+    border-color: #0f172a !important;
+    background: #e2e8f0 !important;
+    box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.12) !important;
+}
+
+.vt-custom-color-preview {
+    position: relative !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    pointer-events: auto !important;
+}
+
+.vt-custom-color-badge.active .vt-custom-color-preview {
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px #0f172a !important;
+}
+
+.vt-custom-color-input {
+    position: absolute !important;
+    top: -50% !important;
+    left: -50% !important;
+    width: 200% !important;
+    height: 200% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    cursor: pointer !important;
+    background: none !important;
+    opacity: 1 !important;
+    box-sizing: border-box !important;
+}
+
+.vt-custom-color-input::-webkit-color-swatch-wrapper {
+    padding: 0 !important;
+    border: none !important;
+}
+
+.vt-custom-color-input::-webkit-color-swatch {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+.vt-custom-color-input::-moz-color-swatch {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+.vt-custom-color-text {
+    font-size: 11.5px !important;
+    font-weight: 600 !important;
+    color: #475569 !important;
+    line-height: 1 !important;
+    letter-spacing: 0.01em !important;
+}
+
+.vt-custom-color-badge.active .vt-custom-color-text {
+    color: #0f172a !important;
+    font-weight: 700 !important;
 }
 </style>
 
@@ -1934,8 +2167,148 @@ body.modal-open #deleteVehicleConfirmModal,
         });
     });
 })();
+
+(function() {
+    var _deleteVehicleTypeFormId = null;
+
+    function getLocalContrastColor(hexColor) {
+        if (!hexColor) return '#ffffff';
+        var hex = hexColor.replace('#', '').trim();
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        if (hex.length < 6) return '#ffffff';
+        var r = parseInt(hex.substr(0, 2), 16) || 0;
+        var g = parseInt(hex.substr(2, 2), 16) || 0;
+        var b = parseInt(hex.substr(4, 2), 16) || 0;
+        var brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return (brightness > 155) ? '#0f172a' : '#ffffff';
+    }
+
+    window.showDeleteVehicleTypeModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('deleteVehicleTypeConfirmModal');
+        if (!modalEl || !window.bootstrap) {
+            if (window.confirm('Are you sure you want to delete vehicle type "' + (opts.name || '') + '"?\n\nAll connected fares, routes, and departure rules will also be removed. Note: Any registered vehicles using this type must be reassigned or removed first.')) {
+                var form = document.getElementById(opts.formId);
+                if (form) form.submit();
+            }
+            return;
+        }
+
+        var nameEl = document.getElementById('deleteVehicleTypeName');
+        var badgeEl = document.getElementById('deleteVehicleTypeBadge');
+        var iconBoxEl = document.getElementById('deleteVehicleTypeIconBox');
+        var iconEl = document.getElementById('deleteVehicleTypeIcon');
+        var countEl = document.getElementById('deleteVehicleTypeCount');
+        var warnEl = document.getElementById('deleteVehicleTypeWarningNote');
+
+        if (nameEl) nameEl.textContent = opts.name || 'Vehicle Type';
+
+        var color = opts.color || '#475569';
+        var contrast = (typeof getContrastTextColor === 'function') ? getContrastTextColor(color) : getLocalContrastColor(color);
+        var isLight = (contrast === '#0f172a');
+
+        if (badgeEl) {
+            badgeEl.textContent = color;
+            badgeEl.style.backgroundColor = isLight ? '#f1f5f9' : (color + '22');
+            badgeEl.style.color = isLight ? '#0f172a' : color;
+            badgeEl.style.border = '1px solid ' + (isLight ? '#cbd5e1' : (color + '55'));
+        }
+
+        if (iconBoxEl) {
+            iconBoxEl.style.backgroundColor = color;
+            iconBoxEl.style.color = contrast;
+            iconBoxEl.style.border = isLight ? '1.5px solid #cbd5e1' : 'none';
+        }
+
+        if (iconEl) {
+            var rawIcon = opts.icon || 'fa-bus-simple';
+            var iconClass = rawIcon.trim();
+            if (!iconClass.startsWith('fa-') && !iconClass.startsWith('fas ') && !iconClass.startsWith('bi-')) {
+                iconClass = 'fa-' + iconClass;
+            }
+            if (!iconClass.startsWith('fa') && !iconClass.startsWith('bi')) {
+                iconClass = 'fas ' + iconClass;
+            }
+            iconEl.className = iconClass.indexOf(' ') !== -1 ? iconClass : ('fas ' + iconClass);
+            iconEl.style.setProperty('color', contrast, 'important');
+        }
+
+        var vCount = parseInt(opts.vehicleCount, 10) || 0;
+        if (countEl) {
+            countEl.textContent = '• ' + vCount + ' vehicle(s)';
+        }
+
+        if (warnEl) {
+            if (vCount > 0) {
+                warnEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> This vehicle type has ' + vCount + ' registered vehicle(s). Reassign or remove them first before deleting.';
+                warnEl.style.display = '';
+            } else {
+                warnEl.style.display = 'none';
+            }
+        }
+
+        var confirmBtn = document.getElementById('deleteVehicleTypeConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.classList.remove('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Delete';
+            confirmBtn.disabled = (vCount > 0);
+            if (vCount > 0) {
+                confirmBtn.setAttribute('title', 'Cannot delete while registered vehicles are assigned to this type');
+            } else {
+                confirmBtn.removeAttribute('title');
+            }
+        }
+
+        _deleteVehicleTypeFormId = opts.formId || null;
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var modalEl = document.getElementById('deleteVehicleTypeConfirmModal');
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function() {
+                setTimeout(function() {
+                    var backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 1) {
+                        backdrops[backdrops.length - 1].style.zIndex = '100065';
+                    }
+                }, 10);
+            });
+
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                var manageModal = document.getElementById('manageVehicleTypesModal');
+                if (manageModal && manageModal.classList.contains('show')) {
+                    document.body.classList.add('modal-open');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+        }
+
+        var confirmBtn = document.getElementById('deleteVehicleTypeConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (!_deleteVehicleTypeFormId) return;
+
+                confirmBtn.classList.add('is-loading');
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+
+                var form = document.getElementById(_deleteVehicleTypeFormId);
+                if (form) {
+                    form.submit();
+                } else {
+                    if (modalEl && window.bootstrap) {
+                        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                    }
+                    confirmBtn.classList.remove('is-loading');
+                    confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Delete';
+                }
+            });
+        }
+    });
+})();
 </script>
-<?php endif; ?>
 
 <?= view('templates/footer') ?>
 

@@ -117,6 +117,18 @@
             transform: translateY(-1px);
         }
 
+        .btn-hero-outline {
+            background: rgba(255, 255, 255, 0.16) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            box-shadow: none !important;
+        }
+
+        .btn-hero-outline:hover {
+            background: rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
+        }
+
         /* Mobile Topic Dropdown Selector (< 520px) */
         .manual-mobile-select-wrap {
             display: none;
@@ -160,19 +172,14 @@
         /* Nav Pills */
         .guide-nav-pills {
             display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-            padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px 10px;
+            align-items: center;
+            padding-bottom: 12px;
             margin-bottom: 24px;
             border-bottom: 2px solid #e2e8f0;
             width: 100%;
             box-sizing: border-box;
-        }
-
-        .guide-nav-pills::-webkit-scrollbar {
-            display: none;
         }
 
         .guide-pill-btn {
@@ -189,7 +196,6 @@
             gap: 8px;
             transition: all 0.2s ease;
             white-space: nowrap;
-            flex-shrink: 0;
             user-select: none;
         }
 
@@ -203,6 +209,32 @@
             border-color: #B71C1C;
             color: #ffffff;
             box-shadow: 0 4px 12px rgba(183, 28, 28, 0.25);
+        }
+
+        @media (max-width: 640px) {
+            .guide-nav-pills {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding-bottom: 10px;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 transparent;
+            }
+            .guide-nav-pills::-webkit-scrollbar {
+                display: block;
+                height: 4px;
+            }
+            .guide-nav-pills::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+            .guide-nav-pills::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+            .guide-pill-btn {
+                flex-shrink: 0;
+            }
         }
 
         /* Content Cards */
@@ -513,6 +545,196 @@
                 padding: 14px 10px;
             }
         }
+
+    /* =================================================================
+       OFFICIAL PRINT HANDBOOK STYLES
+       ================================================================= */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm 12mm 15mm;
+        }
+
+        html, html.layout-lock, body, body.layout-lock {
+            height: auto !important;
+            min-height: auto !important;
+            overflow: visible !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+            display: block !important;
+            position: static !important;
+            background: #ffffff !important;
+            background-image: none !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Outfit', sans-serif !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Completely remove background photos, slideshows, watermarks and overlays */
+        body::before,
+        body::after,
+        html::before,
+        html::after,
+        body.admin-theme::before,
+        body.admin-theme::after,
+        body.staff-theme::before,
+        body.staff-theme::after,
+        .global-progress-bar {
+            display: none !important;
+            content: none !important;
+            background: none !important;
+            background-image: none !important;
+            animation: none !important;
+        }
+
+        /* Hide site chrome, interactive buttons, tabs, mobile selectors, announcements, breadcrumbs */
+        header#site-header,
+        header,
+        .guest-header,
+        .sticky-top-wrapper,
+        .advisory-bar,
+        .ann-modal-overlay,
+        .breadcrumb-section,
+        nav,
+        .navbar,
+        .mobile-toggle,
+        .mobile-nav-overlay,
+        footer,
+        .footer,
+        .footer-container,
+        .support-modal-backdrop,
+        .guide-hero-actions,
+        .guide-nav-pills,
+        .manual-mobile-select-wrap,
+        .btn,
+        .btn-back,
+        .btn-print,
+        .btn-print-outline {
+            display: none !important;
+        }
+
+        .main-content,
+        .guide-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            position: static !important;
+            float: none !important;
+        }
+
+        /* Clean Official Header Banner */
+        .guide-hero {
+            background: none !important;
+            color: #0f172a !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border-bottom: 2.5pt solid #b71c1c !important;
+            padding: 0 0 12pt 0 !important;
+            margin: 0 0 16pt 0 !important;
+            display: block !important;
+        }
+
+        html body .guide-hero h1,
+        html body .guide-hero .hero-title {
+            color: #b71c1c !important;
+            font-size: 19pt !important;
+            font-weight: 800 !important;
+            margin: 0 0 4pt 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8pt !important;
+        }
+
+        .guide-hero h1 i,
+        .guide-hero .hero-title i {
+            color: #b71c1c !important;
+        }
+
+        html body .guide-hero p,
+        html body .guide-hero .hero-subtitle {
+            color: #475569 !important;
+            font-size: 10pt !important;
+            line-height: 1.4 !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+        }
+
+        /* Print ALL Chapters by default as a complete manual */
+        .tab-content {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            margin-bottom: 18pt !important;
+            page-break-inside: auto !important;
+        }
+
+        /* If user chose "Print This Topic", only print active section */
+        body.print-current-only .tab-content:not(.active) {
+            display: none !important;
+        }
+        body.print-current-only .tab-content.active {
+            display: block !important;
+        }
+
+        /* Section Cards */
+        .guide-card {
+            background: #ffffff !important;
+            border: 1pt solid #cbd5e1 !important;
+            border-radius: 6pt !important;
+            box-shadow: none !important;
+            padding: 12pt 14pt !important;
+            margin-bottom: 14pt !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        .guide-card h3 {
+            color: #0f172a !important;
+            font-size: 13pt !important;
+            font-weight: 800 !important;
+            border-bottom: 1pt solid #e2e8f0 !important;
+            padding-bottom: 6pt !important;
+            margin-top: 0 !important;
+            margin-bottom: 10pt !important;
+        }
+
+        .guide-card h3 i {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Callouts, Steps, Tables */
+        .callout-box,
+        .step-item,
+        .guide-card table {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            border-radius: 4pt !important;
+            margin-bottom: 8pt !important;
+            padding: 8pt 10pt !important;
+            font-size: 9.5pt !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .step-number {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        pre, code {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border: 1pt solid #e2e8f0 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            white-space: pre-wrap !important;
+        }
+    }
     </style>
 </head>
 <body>
@@ -538,6 +760,12 @@
                 <a href="<?= base_url('guest') ?>" class="btn-hero-action">
                     <i class="fas fa-tv"></i> Live Terminal Monitor
                 </a>
+                <button onclick="printGuide('all')" class="btn-hero-action" style="cursor:pointer;" title="Print complete commuter guide">
+                    <i class="fas fa-print"></i> Print Guide
+                </button>
+                <button onclick="printGuide('current')" class="btn-hero-action btn-hero-outline" style="cursor:pointer;" title="Print only the currently selected topic">
+                    <i class="fas fa-file-lines"></i> Print This Topic
+                </button>
             </div>
         </div>
 
@@ -842,7 +1070,7 @@
             <div class="guide-card">
                 <h3><i class="fas fa-life-ring" style="color:#ef4444;"></i> Help Recognizing & Recovering from Common Travel Issues</h3>
                 <p style="color:#475569; font-size:13.5px; margin-bottom: 20px;">
-                    How PTTM helps commuters diagnose and resolve common travel situations based on Nielsen's Usability Heuristics:
+                    How PTTM helps commuters diagnose and resolve common travel situations with built-in error recovery:
                 </p>
 
                 <div class="callout-box error">
@@ -947,6 +1175,19 @@
             target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
+
+    function printGuide(mode) {
+        if (mode === 'current') {
+            document.body.classList.add('print-current-only');
+        } else {
+            document.body.classList.remove('print-current-only');
+        }
+        window.print();
+    }
+
+    window.addEventListener('afterprint', function() {
+        document.body.classList.remove('print-current-only');
+    });
     </script>
 </body>
 </html>

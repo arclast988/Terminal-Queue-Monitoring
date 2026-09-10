@@ -26,6 +26,18 @@ body.staff-theme::after {
     animation: palomponBgSlideshow 30s infinite ease-in-out;
 }
 
+@media print {
+    body.admin-theme::after,
+    body.staff-theme::after,
+    body.admin-theme::before,
+    body.staff-theme::before {
+        display: none !important;
+        content: none !important;
+        background: none !important;
+        background-image: none !important;
+    }
+}
+
 
 /* =================================================================
    CRITICAL: DISABLE ALL ANIMATIONS, TRANSITIONS, AND REPAINTS

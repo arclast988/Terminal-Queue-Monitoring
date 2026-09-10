@@ -447,13 +447,7 @@ body.modal-open #deleteRouteConfirmModal,
     z-index: 100050 !important;
 }
 
-@media (max-width: 480px) {
-    .delete-route-modal-footer {
-        flex-direction: column-reverse !important;
-        gap: 8px !important;
-        padding: 0 16px 20px 16px !important;
-    }
-}
+
 </style>
 
 <script>
