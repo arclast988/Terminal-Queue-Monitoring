@@ -5,8 +5,6 @@
  */
 $role    = session()->get('isLoggedIn') ? session()->get('role') : null;
 $isAdmin = in_array($role, ['super_admin', 'admin'], true);
-$isStaff = ($role === 'staff');
-$isAuth  = ($isAdmin || $isStaff);
 $homeUrl = $isAdmin ? 'admin/dashboard' : ($role === 'staff' ? 'staff/dashboard' : '/');
 $isActive = static fn (string $path): string => url_is($path) ? 'active' : '';
 
@@ -44,36 +42,7 @@ SVG;
         </a>
     </div>
 
-    <!-- Header Actions (Right Side) -->
-    <div class="header-right-actions">
-        <?php if ($isAuth): ?>
-            <div class="header-user-badge">
-                <span class="user-badge-name"><?= esc(session()->get('full_name') ?? session()->get('username')) ?></span>
-                <span class="user-badge-role"><?= $isAdmin ? (session()->get('role') === 'super_admin' ? 'Super Admin' : 'Admin') : 'Dispatcher' ?></span>
-            </div>
-            <button class="nav-options-btn" id="mobileMenuToggle" type="button" aria-label="Toggle navigation options" title="Open navigation">
-                <i class="fas fa-bars" id="mobileMenuIcon"></i>
-            </button>
-        <?php else: ?>
-            <button class="mobile-toggle" id="mobileMenuToggle" type="button" aria-label="Toggle navigation">
-                <i class="fas fa-bars" id="mobileMenuIcon"></i>
-            </button>
-        <?php endif; ?>
-    </div>
-
     <nav class="nav-menu" aria-label="Primary navigation">
-        <?php if ($isAuth): ?>
-            <div class="drawer-header">
-                <div class="drawer-header-brand">
-                    <i class="fas fa-bars-staggered"></i>
-                    <span>Menu Options</span>
-                </div>
-                <button type="button" class="drawer-close-btn" id="navDrawerCloseBtn" aria-label="Close navigation options">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        <?php endif; ?>
-
         <?php if ($isAdmin): ?>
             <?= view('partials/nav-admin') ?>
         <?php elseif ($role === 'staff'): ?>
@@ -304,55 +273,15 @@ SVG;
         }
     }
 
-    function openNavDrawer() {
-        var menu    = document.querySelector('header .nav-menu');
-        var overlay = document.getElementById('mobileNavOverlay');
-        var icon    = document.getElementById('mobileMenuIcon');
-        if (!menu) return;
-
-        menu.classList.add('mobile-open');
-        if (overlay) overlay.classList.add('active');
-        if (icon) {
-            icon.classList.remove('fa-bars');
-            icon.classList.add('fa-times');
-        }
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeNavDrawer() {
-        var menu    = document.querySelector('header .nav-menu');
-        var overlay = document.getElementById('mobileNavOverlay');
-        var icon    = document.getElementById('mobileMenuIcon');
-        if (!menu) return;
-
-        menu.classList.remove('mobile-open');
-        if (overlay) overlay.classList.remove('active');
-        if (icon) {
-            icon.classList.remove('fa-times');
-            icon.classList.add('fa-bars');
-        }
-        document.body.style.overflow = '';
-    }
-
+    // Backward-compatibility alias
     function toggleAdminMobileMenu() {
-        var menu = document.querySelector('header .nav-menu');
-        if (!menu) {
-            toggleSidebarDrawer();
-            return;
-        }
-        if (menu.classList.contains('mobile-open')) {
-            closeNavDrawer();
-        } else {
-            openNavDrawer();
-        }
+        toggleSidebarDrawer();
     }
 
     document.addEventListener('DOMContentLoaded', function () {
         var hamburgerBtn   = document.getElementById('siteNavHamburgerBtn');
         var drawerCloseBtn = document.getElementById('drawerCloseBtn');
-        var navCloseBtn    = document.getElementById('navDrawerCloseBtn');
-        var sidebarOverlay = document.getElementById('sidebarDrawerOverlay');
-        var navOverlay     = document.getElementById('mobileNavOverlay');
+        var overlay        = document.getElementById('sidebarDrawerOverlay');
         var mobileToggle   = document.getElementById('mobileMenuToggle');
 
         if (hamburgerBtn) {
@@ -371,25 +300,10 @@ SVG;
             });
         }
 
-        if (navCloseBtn) {
-            navCloseBtn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                closeNavDrawer();
-            });
-        }
-
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', function (e) {
+        if (overlay) {
+            overlay.addEventListener('click', function (e) {
                 e.preventDefault();
                 closeSidebarDrawer();
-            });
-        }
-
-        if (navOverlay) {
-            navOverlay.addEventListener('click', function (e) {
-                e.preventDefault();
-                closeNavDrawer();
             });
         }
 
@@ -397,14 +311,13 @@ SVG;
             mobileToggle.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                toggleAdminMobileMenu();
+                toggleSidebarDrawer();
             });
         }
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeSidebarDrawer();
-                closeNavDrawer();
             }
         });
 
@@ -415,13 +328,16 @@ SVG;
             });
         });
 
-        // Dropdown accordion inside menu drawer
+
+        // Mobile: dropdowns open on tap instead of hover
         document.querySelectorAll('.nav-menu .dropdown .dropbtn').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var dropdown = this.closest('.dropdown');
-                if (dropdown) dropdown.classList.toggle('mobile-open');
+                if (window.innerWidth <= 1280) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var dropdown = this.closest('.dropdown');
+                    if (dropdown) dropdown.classList.toggle('mobile-open');
+                }
             });
         });
 
@@ -672,18 +588,14 @@ SVG;
         }
     });
 
-    // Reset drawer states when resized to desktop
+
+    // Clean up dropdowns and close drawer on resize to desktop
     window.addEventListener('resize', function () {
         if (window.innerWidth > 1024) {
             closeSidebarDrawer();
-        }
-        var isGuest = !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme');
-        if (isGuest && window.innerWidth > 1280) {
-            closeNavDrawer();
         }
         document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
             d.classList.remove('mobile-open');
         });
     });
 </script>
-
