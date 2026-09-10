@@ -55,6 +55,7 @@
     .marquee {
         display: inline-block;
         padding-left: 100%;
+        white-space: pre !important;
         animation: gh-marquee var(--marquee-duration, 35s) linear infinite;
         animation-delay: var(--marquee-delay, 0s);
         font-weight: 800;
@@ -692,7 +693,7 @@
     <div class="advisory-text">
         <div class="marquee" id="guestMarquee">
             <?php if (!empty($announcements) && is_array($announcements)): ?>
-                <?= esc(implode(' | ', array_column($announcements, 'message'))) ?>
+                <?= esc(implode('     |     ', array_column($announcements, 'message'))) ?>
             <?php else: ?>
                 Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.
             <?php endif; ?>
@@ -708,7 +709,7 @@
                     var KEY_DUR  = 'pt_ann_duration';
 
                     var now = Date.now();
-                    var rawText = <?= json_encode(trim(!empty($announcements) && is_array($announcements) ? implode(' | ', array_column($announcements, 'message')) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.')) ?>;
+                    var rawText = <?= json_encode(trim(!empty($announcements) && is_array($announcements) ? implode('     |     ', array_column($announcements, 'message')) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.')) ?>;
 
                     // Content-aware duration: maintains a steady, comfortable ~60px/sec readable speed
                     var totalDist = (window.innerWidth || 1200) + Math.max(600, rawText.length * 9.5);
@@ -934,7 +935,7 @@
                 .then(function (d) {
                     if (!d || !d.success || !Array.isArray(d.announcements)) return;
                     var msgs = d.announcements.map(function (a) { return a.message; }).filter(Boolean);
-                    var text = msgs.length ? msgs.join(' | ') : FALLBACK;
+                    var text = msgs.length ? msgs.join('     |     ') : FALLBACK;
                     if (text !== lastText) {
                         lastText = text;
                         bar.textContent = text;

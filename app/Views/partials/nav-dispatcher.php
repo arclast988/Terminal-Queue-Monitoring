@@ -21,12 +21,6 @@ $isActive = static fn (string $path): string => url_is($path) ? 'active' : '';
     <i class="fas fa-tags"></i> Fares
 </a>
 
-<div class="admin-profile">
-    <div class="profile-info">
-        <span class="profile-name"><?= esc(session()->get('full_name') ?? session()->get('username')) ?></span>
-        <span class="profile-role">Dispatcher</span>
-    </div>
-    <a href="<?= base_url('logout') ?>" class="logout-btn-custom" data-bs-toggle="modal" data-bs-target="#logoutModal" onclick="return confirmLogout(event);" role="button" aria-haspopup="dialog">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
-</div>
+<?= view('partials/nav-profile') ?>
+
+

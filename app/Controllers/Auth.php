@@ -61,6 +61,7 @@ class Auth extends BaseController
                     'username' => $user['username'],
                     'role' => $user['role'],
                     'full_name' => $user['full_name'],
+                    'profile_image' => $user['profile_image'] ?? null,
                     'isLoggedIn' => TRUE
                 ];
                 $session->set($ses_data);
@@ -574,6 +575,292 @@ class Auth extends BaseController
 
         $session->setFlashdata('success', 'Password reset successful. You can now log in.');
         return redirect()->to('/login');
+    }
+
+    public function changePassword()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        // Only dispatchers use this self-service email OTP change password flow; Admins manage passwords in User Management
+        if ($session->get('role') !== 'staff') {
+            return redirect()->to('/admin/users');
+        }
+
+        $userId = $session->get('id');
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            $session->setFlashdata('error', 'User account not found.');
+            return redirect()->to('/login');
+        }
+
+        $email = $user['email'] ?? '';
+        if (empty($email) && filter_var($user['username'], FILTER_VALIDATE_EMAIL)) {
+            $email = $user['username'];
+        }
+
+        return view('auth/change_password', [
+            'title'        => 'Change Password',
+            'user'         => $user,
+            'email'        => $email,
+            'masked_email' => !empty($email) ? $this->maskEmail($email) : 'No email registered',
+            'has_email'    => !empty($email),
+        ]);
+    }
+
+    public function sendChangePasswordCode()
+    {
+        $session = session();
+        $isAjax = $this->request->isAJAX();
+
+        if (!$session->get('isLoggedIn')) {
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized'])->setStatusCode(401);
+            }
+            return redirect()->to('/login');
+        }
+
+        if ($session->get('role') !== 'staff') {
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Change password is only available for dispatchers. Admins can update passwords in User Management.'])->setStatusCode(403);
+            }
+            return redirect()->to('/admin/users');
+        }
+
+        $userId = $session->get('id');
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'User account not found.']);
+            }
+            $session->setFlashdata('error', 'User account not found.');
+            return redirect()->to('/change-password');
+        }
+
+        $email = $user['email'] ?? '';
+        if (empty($email) && filter_var($user['username'], FILTER_VALIDATE_EMAIL)) {
+            $email = $user['username'];
+        }
+
+        if (empty($email)) {
+            $msg = 'No email address is associated with your account. Please contact your system administrator.';
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $msg]);
+            }
+            $session->setFlashdata('error', $msg);
+            return redirect()->to('/change-password');
+        }
+
+        $db = \Config\Database::connect();
+
+        // Rate limiting: check if a token was created for this username within the last 60 seconds
+        $recentToken = $db->table('password_reset_tokens')
+            ->where('username', $user['username'])
+            ->where('used', 0)
+            ->where('created_at >', date('Y-m-d H:i:s', strtotime('-60 seconds')))
+            ->get()
+            ->getRow();
+
+        if ($recentToken) {
+            $msg = 'A verification code was already requested recently. Please check your email or wait 60 seconds.';
+            if ($isAjax) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $msg]);
+            }
+            $session->setFlashdata('error', $msg);
+            return redirect()->to('/change-password');
+        }
+
+        // Generate 6-digit code and token
+        $resetCode = sprintf('%06d', random_int(0, 999999));
+        $token = bin2hex(random_bytes(32));
+        $expiresAt = date('Y-m-d H:i:s', strtotime('+10 minutes'));
+
+        // Invalidate old unused tokens for this username
+        $db->table('password_reset_tokens')
+            ->where('username', $user['username'])
+            ->update(['used' => 1]);
+
+        $db->table('password_reset_tokens')->insert([
+            'user_id'       => $user['id'],
+            'username'      => $user['username'],
+            'token'         => $token,
+            'reset_code'    => $resetCode,
+            'email'         => $email,
+            'expires_at'    => $expiresAt,
+            'used'          => 0,
+            'verified'      => 0,
+            'code_attempts' => 0,
+            'created_at'    => date('Y-m-d H:i:s'),
+        ]);
+
+        $cache = \Config\Services::cache();
+        $cache->save('otp_resend_cp_' . $user['id'], true, 60);
+
+        // Load Email Service
+        $emailSvc = $this->getConfiguredEmailService();
+        $emailSvc->setTo($email);
+        $emailSvc->setSubject('[Palompon Transit] Password Change Verification Code');
+        $emailSvc->setMessage($this->buildChangePasswordEmailHtml($user['full_name'] ?: $user['username'], $resetCode));
+
+        $devMsg = '';
+        if (!$emailSvc->send()) {
+            log_message('error', 'Failed to send OTP verification email for password change: ' . $emailSvc->printDebugger(['headers']));
+            if (ENVIRONMENT === 'development') {
+                $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
+            } else {
+                $msg = 'Failed to send verification email. Please check server SMTP configuration.';
+                if ($isAjax) {
+                    return $this->response->setJSON(['status' => 'error', 'message' => $msg]);
+                }
+                $session->setFlashdata('error', $msg);
+                return redirect()->to('/change-password');
+            }
+        }
+
+        $successMsg = 'Verification code sent to ' . $this->maskEmail($email) . '.' . $devMsg;
+        if ($isAjax) {
+            return $this->response->setJSON([
+                'status'   => 'success',
+                'message'  => $successMsg,
+                'cooldown' => 60,
+            ]);
+        }
+
+        $session->setFlashdata('success', $successMsg);
+        return redirect()->to('/change-password');
+    }
+
+    public function updateChangedPassword()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        $userId = $session->get('id');
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
+
+        if (!$user) {
+            $session->setFlashdata('error', 'User account not found.');
+            return redirect()->to('/login');
+        }
+
+        $currentPassword = (string) $this->request->getPost('current_password');
+        $verificationCode = trim((string) $this->request->getPost('verification_code'));
+        $newPassword = (string) $this->request->getPost('new_password');
+        $confirmPassword = (string) $this->request->getPost('confirm_password');
+
+        // 1. Verify current password
+        if (empty($currentPassword) || !password_verify($currentPassword, $user['password_hash'])) {
+            $session->setFlashdata('error', 'Your current password is incorrect.');
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        // 2. Validate new password length and confirmation
+        if (strlen($newPassword) < 8) {
+            $session->setFlashdata('error', 'New password must be at least 8 characters in length.');
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            $session->setFlashdata('error', 'New password and confirm password do not match.');
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        if ($currentPassword === $newPassword) {
+            $session->setFlashdata('error', 'New password must be different from your current password.');
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        // 3. Verify OTP Code
+        if (empty($verificationCode) || strlen($verificationCode) !== 6 || !ctype_digit($verificationCode)) {
+            $session->setFlashdata('error', 'Please enter a valid 6-digit verification code.');
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        $db = \Config\Database::connect();
+        $record = $db->table('password_reset_tokens')
+            ->where('username', $user['username'])
+            ->where('used', 0)
+            ->where('expires_at >', date('Y-m-d H:i:s'))
+            ->orderBy('id', 'DESC')
+            ->get()
+            ->getRow();
+
+        if (!$record) {
+            $session->setFlashdata('error', 'Verification code has expired or was not requested. Please click "Get Code" to request a new code.');
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        if ($record->code_attempts >= 5) {
+            $db->table('password_reset_tokens')->where('id', $record->id)->update(['used' => 1]);
+            $session->setFlashdata('error', 'Too many failed verification attempts. Please request a new code.');
+            return redirect()->to('/change-password');
+        }
+
+        if ($record->reset_code !== $verificationCode) {
+            $newAttempts = $record->code_attempts + 1;
+            $db->table('password_reset_tokens')->where('id', $record->id)->update(['code_attempts' => $newAttempts]);
+
+            if ($newAttempts >= 5) {
+                $db->table('password_reset_tokens')->where('id', $record->id)->update(['used' => 1]);
+                $session->setFlashdata('error', 'Too many failed verification attempts. Please request a new code.');
+                return redirect()->to('/change-password');
+            }
+
+            $remaining = 5 - $newAttempts;
+            $session->setFlashdata('error', "Invalid verification code. Please check your email. ({$remaining} attempt" . ($remaining === 1 ? '' : 's') . " remaining)");
+            return redirect()->to('/change-password')->withInput();
+        }
+
+        // 4. Update password
+        $userModel->update($user['id'], [
+            'password_hash'  => password_hash($newPassword, PASSWORD_DEFAULT),
+            'login_attempts' => 0,
+            'locked_until'   => null,
+        ]);
+
+        $db->table('password_reset_tokens')->where('id', $record->id)->update([
+            'used'     => 1,
+            'verified' => 1,
+        ]);
+
+        $this->logActivity('Password Changed', 'Password changed with code authentication for ' . $user['username']);
+
+        $session->setFlashdata('success', 'Your password has been changed successfully.');
+        return $this->redirectBasedOnRole();
+    }
+
+    private function buildChangePasswordEmailHtml(string $displayName, string $code): string
+    {
+        return '
+        <div style="font-family: \'Google Sans\', Roboto, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px; border: 1px solid #e0e0e0; border-radius: 12px; background: #ffffff;">
+            <div style="text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 26px; font-weight: bold; color: #047857; letter-spacing: 0.5px;">Palompon Transit</span>
+            </div>
+            <div style="padding: 10px 0;">
+                <h2 style="font-size: 20px; color: #202124; margin-bottom: 16px; font-weight: 600;">Password Change Verification</h2>
+                <p style="font-size: 14px; color: #5f6368; line-height: 1.5; margin-bottom: 20px;">
+                    Hello <strong>' . esc($displayName) . '</strong>,
+                </p>
+                <p style="font-size: 14px; color: #5f6368; line-height: 1.5; margin-bottom: 24px;">
+                    A request was made to change the password on your Palompon Transit account. Please enter the verification code below to authorize this change:
+                </p>
+                <div style="background: #f0fdf4; padding: 16px 24px; border-radius: 8px; font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #047857; margin-bottom: 24px; border: 1px dashed #86efac;">
+                    ' . $code . '
+                </div>
+                <p style="font-size: 12px; color: #70757a; line-height: 1.5; margin-bottom: 0;">
+                    This code is valid for 10 minutes. If you did not make this request, please review your account immediately or notify the administrator.
+                </p>
+            </div>
+        </div>';
     }
 
     public function logout()

@@ -114,6 +114,102 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
     color: var(--text-main, #1e293b);
 }
 
+/* ── Fare Search Capsule & Alignment ── */
+.fare-search-group {
+    display: flex !important;
+    align-items: center !important;
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 24px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    width: 100% !important;
+    max-width: 420px !important;
+    padding: 0 14px !important;
+    gap: 10px !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+.fare-search-group:focus-within {
+    border-color: var(--primary, #15803d) !important;
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.12) !important;
+}
+body.admin-theme .fare-search-group:focus-within {
+    border-color: var(--primary, #b71c1c) !important;
+    box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.12) !important;
+}
+.fare-search-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #64748b !important;
+    font-size: 14px !important;
+    flex-shrink: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+    pointer-events: none !important;
+}
+.fare-search-input {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 13.5px !important;
+    font-family: inherit !important;
+    color: #1e293b !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-sizing: border-box !important;
+}
+.fare-search-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: transparent !important;
+}
+.fare-search-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+}
+.fare-search-clear {
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    transition: color 0.15s ease !important;
+}
+.fare-search-clear:hover {
+    color: #475569 !important;
+}
+.fare-search-info {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--text-muted, #64748b) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+@media (max-width: 768px) {
+    .fare-search-group {
+        max-width: 100% !important;
+    }
+}
+
 </style>
 
 <div class="page-header-modern fade-in">
@@ -192,15 +288,22 @@ $fareTypes = array_map(static fn(array $type) => [
 </div>
 
 <!-- Search & Filter Bar -->
-<div class="modern-card shadow-modern fade-in mx-3 mb-4">
-    <div class="modern-card-body py-3">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="fare-search-group" style="display:flex; align-items:center; max-width:420px; width:100%;">
-                <span class="input-group-text" style="height:38px; border:1.5px solid #cbd5e1; border-right:none; border-radius:20px 0 0 20px; background:#fff; color:#64748b; padding:0 12px;"><i class="bi bi-search"></i></span>
-                <input type="text" id="fareSearch" class="form-control" placeholder="Search destination, route, discount..." onkeyup="filterFares()" style="height:38px; border:1.5px solid #cbd5e1; border-left:none; border-radius:0 20px 20px 0; outline:none; font-size:13.5px; box-shadow:none;">
-            </div>
-            <div style="font-size: 13px; font-weight: 600; color: var(--text-muted, #64748b);">
-                <i class="bi bi-info-circle me-1"></i> Showing fares across all configured vehicle types
+<div class="row px-3 mb-4">
+    <div class="col-12">
+        <div class="modern-card shadow-modern fade-in fare-filter-card mb-0">
+            <div class="modern-card-body py-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="fare-search-group">
+                        <i class="bi bi-search fare-search-icon"></i>
+                        <input type="text" id="fareSearch" class="fare-search-input" placeholder="Search destination, route, discount..." onkeyup="filterFares()" oninput="filterFares()" autocomplete="off">
+                        <button type="button" class="fare-search-clear" id="clearFareSearch" onclick="clearFareSearch()" style="display:none;" title="Clear search" aria-label="Clear search">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>
+                    </div>
+                    <div class="fare-search-info">
+                        <i class="bi bi-info-circle me-1"></i> Showing fares across all configured vehicle types
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1164,8 +1267,14 @@ if (editDiscountModal) {
 
 // Fare search filter
 function filterFares() {
-    const query = document.getElementById('fareSearch')?.value.toLowerCase().trim() ?? '';
+    const input = document.getElementById('fareSearch');
+    const query = input?.value.toLowerCase().trim() ?? '';
     const cards = document.querySelectorAll('#fareCardsGrid .fare-section-card');
+
+    const clearBtn = document.getElementById('clearFareSearch');
+    if (clearBtn) {
+        clearBtn.style.display = query ? 'inline-flex' : 'none';
+    }
 
     cards.forEach(card => {
         const titleEl = card.querySelector('.fare-section-title');
@@ -1207,6 +1316,19 @@ function filterFares() {
             }
         }
     });
+}
+
+function clearFareSearch() {
+    const input = document.getElementById('fareSearch');
+    if (input) {
+        input.value = '';
+        filterFares();
+        input.focus();
+    }
+    const clearBtn = document.getElementById('clearFareSearch');
+    if (clearBtn) {
+        clearBtn.style.display = 'none';
+    }
 }
 
 // Auto-generate type key from discount label

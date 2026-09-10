@@ -300,13 +300,19 @@
             max-width: 100%;
         }
 
-        /* Reserve space for fixed header so content is not hidden underneath */
+        :root {
+            --site-header-height: 80px;
+        }
+
+        /* Reserve space for fixed header with comfortable, elegant breathing room */
         .main-content {
             flex: 1 0 auto !important;
             width: 100% !important;
             max-width: 100% !important;
-            padding: 20px 24px 40px 24px !important;
-            padding-top: 80px !important;
+            padding-top: calc(var(--site-header-height, 80px) + 10px) !important;
+            padding-right: 24px !important;
+            padding-bottom: 30px !important;
+            padding-left: 24px !important;
             background-color: transparent !important;
             box-sizing: border-box !important;
         }
@@ -359,7 +365,7 @@
         /* Schedules/Fares: same header as dashboard, but content area full-width (no padding) */
         body.public-page .main-content {
             padding: 0 !important;
-            padding-top: 72px !important;
+            padding-top: calc(var(--site-header-height, 80px) + 10px) !important;
         }
 
         /* Force header to stay fixed - cannot be overridden by page styles */
@@ -397,14 +403,20 @@
 
         /* Mobile responsive main content padding */
         @media (max-width: 768px) {
+            :root {
+                --site-header-height: 72px;
+            }
+
             body.layout-lock header#site-header {
                 padding-left: 16px !important;
                 padding-right: 16px !important;
             }
 
             .main-content {
-                padding: 15px 16px 30px 16px !important;
-                padding-top: 76px !important;
+                padding-top: calc(var(--site-header-height, 72px) + 12px) !important;
+                padding-right: 16px !important;
+                padding-bottom: 24px !important;
+                padding-left: 16px !important;
             }
 
             footer,
@@ -428,15 +440,21 @@
             }
         }
 
-        @media (max-width: 420px) {
+        @media (max-width: 480px) {
+            :root {
+                --site-header-height: 52px;
+            }
+
             body.layout-lock header#site-header {
                 padding-left: 10px !important;
                 padding-right: 10px !important;
             }
 
             .main-content {
-                padding: 10px 10px 24px 10px !important;
-                padding-top: 72px !important;
+                padding-top: calc(var(--site-header-height, 52px) + 12px) !important;
+                padding-right: 10px !important;
+                padding-bottom: 20px !important;
+                padding-left: 10px !important;
             }
 
             .row {
@@ -504,4 +522,24 @@
 <body
     class="layout-lock <?= (in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : '')) ?><?= esc($body_class ?? '') ?>">
     <?php include __DIR__ . '/navbar.php'; ?>
+    <script>
+        (function() {
+            function syncHeaderHeight() {
+                var hdr = document.getElementById('site-header');
+                if (hdr && hdr.offsetHeight > 0) {
+                    document.documentElement.style.setProperty('--site-header-height', hdr.offsetHeight + 'px');
+                }
+            }
+            syncHeaderHeight();
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', syncHeaderHeight);
+            }
+            window.addEventListener('load', syncHeaderHeight);
+            if (window.ResizeObserver) {
+                var el = document.getElementById('site-header');
+                if (el) new ResizeObserver(syncHeaderHeight).observe(el);
+            }
+            window.addEventListener('resize', syncHeaderHeight, { passive: true });
+        })();
+    </script>
     <div class="main-content container-fluid">

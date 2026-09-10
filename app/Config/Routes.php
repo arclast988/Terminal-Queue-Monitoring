@@ -31,6 +31,15 @@ $routes->post('contact/send', 'Contact::send');
 $routes->get('manual', 'Manual::index');
 $routes->get('user-manual', 'Manual::index');
 
+// User Profile Avatar Upload & Removal (Admin and Staff)
+$routes->post('profile/upload-avatar', 'Profile::uploadAvatar', ['filter' => 'auth:admin,staff']);
+$routes->post('profile/remove-avatar', 'Profile::removeAvatar', ['filter' => 'auth:admin,staff']);
+
+// Change Password with Code Authentication (Dispatcher only)
+$routes->get('change-password', 'Auth::changePassword', ['filter' => 'auth:staff']);
+$routes->post('change-password/send-code', 'Auth::sendChangePasswordCode', ['filter' => 'auth:staff']);
+$routes->post('change-password/update', 'Auth::updateChangedPassword', ['filter' => 'auth:staff']);
+
 // Public API for real-time queue sync (no auth required - read-only)
 $routes->get('api/queue-status', 'Api\QueueStatus::index');
 $routes->get('api/check-vehicle-availability/(:num)', 'Api\QueueStatus::checkAvailability/$1');

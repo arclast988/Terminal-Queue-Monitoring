@@ -9,8 +9,9 @@
         .page-header-modern {
             flex-direction: column;
             align-items: flex-start;
-            gap: 16px;
-            padding: 20px 0;
+            gap: 8px;
+            padding: 8px 0 6px 0;
+            margin-bottom: 8px;
         }
         
         .page-title-modern {
@@ -91,9 +92,6 @@
         Admin Dashboard
     </h1>
     <div class="d-flex gap-2 flex-wrap flex-column flex-sm-row">
-        <a href="<?= base_url('admin/manual') ?>" class="btn-modern btn-modern-outline" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-            <i class="bi bi-book"></i> User Manual
-        </a>
         <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#reportFilterModal" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;">
             <i class="bi bi-file-earmark-text"></i> Generate Report
         </button>
