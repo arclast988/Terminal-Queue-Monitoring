@@ -2169,8 +2169,8 @@ a[title*="delete" i]:hover .bi,
 
   html body table.table-modern tbody tr td .badge-modern-super-admin,
   html body table.table-modern tbody tr td .badge-modern-super-admin * {
-    background: #7c3aed !important;
-    background-color: #7c3aed !important;
+    background: #B71C1C !important;
+    background-color: #B71C1C !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     font-weight: 700 !important;

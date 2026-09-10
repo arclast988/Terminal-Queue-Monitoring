@@ -1478,4 +1478,48 @@ input[name="operator_name"] {
     justify-content: center;
 }
 
+/* Unified Role Badges (Image 4 Design Standard) */
+.profile-role-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .5px !important;
+    padding: 3.5px 9px !important;
+    border-radius: 6px !important;
+    line-height: 1.25 !important;
+    box-sizing: border-box !important;
+    width: fit-content !important;
+    vertical-align: middle !important;
+}
+
+.profile-role-pill i {
+    font-size: 10.5px !important;
+    line-height: 1 !important;
+}
+
+.profile-role-pill.pill-super_admin {
+    background: #B71C1C !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: none !important;
+}
+
+.profile-role-pill.pill-admin {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: none !important;
+}
+
+.profile-role-pill.pill-staff {
+    background: #15803d !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border: none !important;
+}
+
+
 

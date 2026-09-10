@@ -343,7 +343,7 @@ html body .badge-modern {
   letter-spacing: .04em;
 }
 
-html body .badge-modern-super-admin { background: #7c3aed !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+html body .badge-modern-super-admin { background: #B71C1C !important; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 html body .badge-modern-success { background: #dcfce7 !important; color: #166534 !important; -webkit-text-fill-color: #166534 !important; }
 html body .badge-modern-warning { background: #fef3c7 !important; color: #92400e !important; -webkit-text-fill-color: #92400e !important; }
 html body .badge-modern-danger  { background: #ffe4e6 !important; color: #9f1239 !important; -webkit-text-fill-color: #9f1239 !important; }

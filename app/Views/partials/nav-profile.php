@@ -76,10 +76,10 @@ SVG;
                     <strong class="profile-user-fullname"><?= esc($fullName) ?></strong>
                     <span class="profile-online-badge"><span class="online-dot"></span> Online</span>
                 </div>
-                <div class="profile-user-handle">@<?= esc($username) ?></div>
+                <div class="profile-user-handle"><?= str_starts_with($username, '@') ? esc($username) : (str_contains($username, '@') ? esc($username) : '@' . esc($username)) ?></div>
                 <div class="profile-role-badge-row">
                     <span class="profile-role-pill pill-<?= esc($sessionRole) ?>">
-                        <i class="fas fa-shield-alt"></i> <?= esc($roleLabel) ?>
+                        <i class="<?= in_array($sessionRole, ['super_admin', 'admin'], true) ? 'fas fa-shield-alt' : 'fas fa-user-gear' ?>"></i> <?= esc($roleLabel) ?>
                     </span>
                 </div>
             </div>

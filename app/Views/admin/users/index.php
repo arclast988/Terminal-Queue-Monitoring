@@ -115,29 +115,46 @@ foreach ($users as $u) {
                                     }
                                     ?>
                                     <div class="d-flex align-items-center user-cell-content">
-                                        <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' || $user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher' ?>">
-                                            <?= esc($initials) ?>
+                                        <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' ? 'avatar-super-admin' : ($user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher') ?>">
+                                            <?php if (!empty($user['profile_image'])): ?>
+                                                <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                            <?php else: ?>
+                                                <?= esc($initials) ?>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="user-info-text" style="min-width: 0; flex: 1 1 auto;">
-                                            <div class="fw-bold" style="font-size:14.5px; color: inherit;"><?= esc($user['full_name']) ?></div>
+                                            <div class="fw-bold d-flex align-items-center flex-wrap gap-1" style="font-size:14.5px; color: inherit;">
+                                                <span><?= esc($user['full_name']) ?></span>
+                                                <?php if ((int) $user['id'] === (int) session()->get('id')): ?>
+                                                    <span class="badge" style="background: #e2e8f0; color: #334155; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; vertical-align: middle;">You</span>
+                                                <?php endif; ?>
+                                            </div>
                                             <div>
-                                                <small style="font-size:12.5px; color: #64748b;">@<?= esc($user['username']) ?></small>
+                                                <small style="font-size:12.5px; color: #64748b;">
+                                                    <i class="bi bi-envelope me-1"></i><?= esc($user['username']) ?>
+                                                </small>
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td data-label="Role">
                                     <?php if ($user['role'] === 'super_admin'): ?>
-                                        <span class="badge-modern badge-modern-super-admin">Super Admin</span>
+                                        <span class="profile-role-pill pill-super_admin">
+                                            <i class="fas fa-shield-alt"></i> Super Admin
+                                        </span>
+                                    <?php elseif ($user['role'] === 'admin'): ?>
+                                        <span class="profile-role-pill pill-admin">
+                                            <i class="fas fa-shield-alt"></i> Admin
+                                        </span>
                                     <?php else: ?>
-                                        <span class="badge-modern badge-modern-<?= $user['role'] === 'admin' ? 'danger' : 'info' ?>">
-                                            <?= $user['role'] === 'staff' ? 'Dispatcher' : 'Admin' ?>
+                                        <span class="profile-role-pill pill-staff">
+                                            <i class="fas fa-user-gear"></i> Dispatcher
                                         </span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Assigned Routes">
                                     <?php if ($user['role'] === 'super_admin' || $user['role'] === 'admin'): ?>
-                                        <span class="badge-modern badge-modern-success">All Routes</span>
+                                        <span class="text-muted" style="color: #94a3b8; font-size: 16px; font-weight: 500;">&mdash;</span>
                                     <?php elseif (!empty($user['assigned_routes_label']) && $user['assigned_routes_label'] !== 'None'): ?>
                                         <div class="badge-scroll-wrap" style="display: flex; gap: 4px; padding-bottom: 4px;" title="<?= esc($user['assigned_routes_label']) ?>">
                                             <?php
@@ -287,6 +304,11 @@ foreach ($users as $u) {
         color: #fff;
         flex-shrink: 0;
         letter-spacing: 0.5px;
+        overflow: hidden;
+    }
+    .avatar-super-admin {
+        background: #B71C1C;
+        border: 2px solid rgba(183, 28, 28, 0.2);
     }
     .avatar-admin {
         background: #dc2626;

@@ -204,7 +204,9 @@ SVG;
                 </div>
                 <div class="drawer-user-meta">
                     <span class="drawer-user-name"><?= esc($fullName) ?></span>
-                    <span class="drawer-user-role"><?= esc($roleLabel) ?></span>
+                    <span class="profile-role-pill pill-<?= esc($sessionRole) ?>">
+                        <i class="<?= in_array($sessionRole, ['super_admin', 'admin'], true) ? 'fas fa-shield-alt' : 'fas fa-user-gear' ?>"></i> <?= esc($roleLabel) ?>
+                    </span>
                 </div>
             </div>
             <a href="<?= base_url('logout') ?>" class="drawer-logout-btn" data-bs-toggle="modal" data-bs-target="#logoutModal" onclick="return confirmLogout(event);" role="button" aria-haspopup="dialog">

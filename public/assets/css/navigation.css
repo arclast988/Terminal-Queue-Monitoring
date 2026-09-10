@@ -1089,28 +1089,8 @@ body.staff-theme .drawer-nav-item.active i {
   text-overflow: ellipsis;
 }
 
-.drawer-user-role {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: #e2e8f0;
-  color: #475569;
-  width: fit-content;
+.drawer-user-meta .profile-role-pill {
   margin-top: 3px;
-}
-
-body.admin-theme .drawer-user-role {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-body.staff-theme .drawer-user-role {
-  background: #dcfce7;
-  color: #166534;
 }
 
 .drawer-logout-btn {

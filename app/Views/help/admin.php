@@ -140,16 +140,18 @@
     .role-badge {
         display: inline-flex;
         align-items: center;
-        padding: 2px 8px;
+        gap: 5px;
+        padding: 3.5px 9px;
         border-radius: 6px;
         font-size: 11px;
         font-weight: 800;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        color: #ffffff !important;
     }
-    .role-super { background: #fee2e2; color: #991b1b; }
-    .role-admin { background: #dbeafe; color: #1e40af; }
-    .role-staff { background: #dcfce7; color: #166534; }
+    .role-super { background: #B71C1C !important; color: #ffffff !important; }
+    .role-admin { background: #dc2626 !important; color: #ffffff !important; }
+    .role-staff { background: #15803d !important; color: #ffffff !important; }
 
     .help-tip {
         background: #fff5f5;
@@ -200,15 +202,15 @@
                 <div class="accordion-body">
                     <p>The Palompon Transit Terminal Management System utilizes role-based access control with distinct authority levels:</p>
                     <div class="step-box">
-                        <span class="role-badge role-super">Super Admin</span><br>
+                        <span class="profile-role-pill pill-super_admin"><i class="fas fa-shield-alt"></i> Super Admin</span><br>
                         Has unrestricted master access to all system modules, including creating Administrator accounts, editing core terminal configurations, inspecting complete security audit logs, and running database maintenance.
                     </div>
                     <div class="step-box">
-                        <span class="role-badge role-admin">Admin</span><br>
+                        <span class="profile-role-pill pill-admin"><i class="fas fa-shield-alt"></i> Admin</span><br>
                         Manages day-to-day operations: registering vehicles, managing terminal settings, configuring routes and fares, setting departure waiting time rules, and publishing public announcements.
                     </div>
                     <div class="step-box">
-                        <span class="role-badge role-staff">Dispatcher</span><br>
+                        <span class="profile-role-pill pill-staff"><i class="fas fa-user-gear"></i> Dispatcher</span><br>
                         Handles floor operations: adding arriving vehicles to the queue, managing passenger load, and dispatching trips on schedule.
                     </div>
                     <div class="help-tip">
