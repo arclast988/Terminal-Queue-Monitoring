@@ -82,32 +82,54 @@
                 </div>
                 <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="type" class="form-label-modern">Type</label>
-                    <select class="form-select-modern" id="type" name="type" required>
-                        <option value="">-- Select Type --</option>
-                        <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                            <?php $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); ?>
-                            <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" <?= old('type') === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="position-relative">
+                        <select class="form-select-modern pe-5" id="type" name="type" required>
+                            <option value="">-- Select Type --</option>
+                            <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                                <?php $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); ?>
+                                <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" <?= old('type') === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <span class="dropdown-chevron-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-4 col-xl-2">
                     <label for="route_id" class="form-label-modern">Destination</label>
-                    <select class="form-select-modern" id="route_id" name="route_id" required>
-                        <option value="">-- Select Type First --</option>
-                        <?php if (!empty($routes)): ?>
-                            <?php foreach ($routes as $r): ?>
-                                <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
-                                    <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
-                                    <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
+                    <div class="position-relative">
+                        <select class="form-select-modern pe-5" id="route_id" name="route_id" required>
+                            <option value="">-- Select Type First --</option>
+                            <?php if (!empty($routes)): ?>
+                                <?php foreach ($routes as $r): ?>
+                                    <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
+                                        <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
+                                        <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                        <span class="dropdown-chevron-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-2 col-xl-1">
                     <label for="capacity" class="form-label-modern">Capacity</label>
                     <input type="number" class="form-control-modern" id="capacity" name="capacity" placeholder="16"
                         value="<?= old('capacity') ?>" min="1" required>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <label for="status" class="form-label-modern">Status</label>
+                    <div class="position-relative">
+                        <select class="form-select-modern pe-5" id="status" name="status" required>
+                            <option value="active" <?= old('status') === 'active' || old('status') === null ? 'selected' : '' ?>>Active</option>
+                            <option value="maintenance" <?= old('status') === 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
+                        </select>
+                        <span class="dropdown-chevron-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                 </div>
                 <div class="col-12 col-sm-6 col-md-2 col-xl-1">
                     <button type="submit" class="btn-modern btn-modern-primary w-100 px-2" style="min-height: 44px; white-space: nowrap;">
@@ -324,6 +346,20 @@ if (!empty($vehicles) && is_array($vehicles)) {
 </div>
 
 <style>
+    .dropdown-chevron-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #475569;
+        font-size: 12px;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .vehicle-register-form .vehicle-add-btn {
         min-height: 42px;
         display: inline-flex !important;

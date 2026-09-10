@@ -11,6 +11,32 @@
     font-size: 14px !important;
 }
 
+/* Ensure dropdowns have a visible chevron arrow */
+select.select-modern,
+select.form-select-modern,
+select.form-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: none !important;
+    padding-right: 40px !important;
+    cursor: pointer !important;
+}
+
+.dropdown-chevron-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #475569;
+    font-size: 13px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 </style>
 
 <div class="page-header-modern fade-in">
@@ -82,13 +108,18 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="type" class="form-label-modern">Vehicle Type <span class="text-danger">*</span></label>
-                    <select class="select-modern" id="type" name="type" required>
-                        <option value="">-- Select Type --</option>
-                        <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                            <?php $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); ?>
-                            <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" <?= (old('type') ?? $vehicle['type']) === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <div class="position-relative">
+                        <select class="form-select select-modern pe-5" id="type" name="type" required>
+                            <option value="">-- Select Type --</option>
+                            <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                                <?php $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); ?>
+                                <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" <?= (old('type') ?? $vehicle['type']) === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <span class="dropdown-chevron-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                     <div class="form-text-modern">Accessible to Admin and Super Admin</div>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -101,25 +132,35 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="route_id" class="form-label-modern">Destination <span class="text-danger">*</span></label>
-                    <select class="select-modern" id="route_id" name="route_id" required>
-                        <option value="">-- Select Destination --</option>
-                        <?php if (!empty($routes)): ?>
-                            <?php foreach ($routes as $r): ?>
-                                <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
-                                    <?= (old('route_id') ?? $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
-                                    <?= strtoupper(esc($r['origin'])) ?> &rarr; <?= strtoupper(esc($r['destination'])) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </select>
+                    <div class="position-relative">
+                        <select class="form-select select-modern pe-5" id="route_id" name="route_id" required>
+                            <option value="">-- Select Destination --</option>
+                            <?php if (!empty($routes)): ?>
+                                <?php foreach ($routes as $r): ?>
+                                    <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
+                                        <?= (old('route_id') ?? $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
+                                        <?= strtoupper(esc($r['origin'])) ?> &rarr; <?= strtoupper(esc($r['destination'])) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                        <span class="dropdown-chevron-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                     <div class="form-text-modern">Filtered by selected vehicle type</div>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="status" class="form-label-modern">Status <span class="text-danger">*</span></label>
-                    <select class="select-modern" id="status" name="status" required>
-                        <option value="active" <?= (old('status') ?? $vehicle['status']) == 'active' ? 'selected' : '' ?>>Active</option>
-                        <option value="maintenance" <?= (old('status') ?? $vehicle['status']) == 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
-                    </select>
+                    <div class="position-relative">
+                        <select class="form-select select-modern pe-5" id="status" name="status" required>
+                            <option value="active" <?= (old('status') ?? $vehicle['status']) == 'active' ? 'selected' : '' ?>>Active</option>
+                            <option value="maintenance" <?= (old('status') ?? $vehicle['status']) == 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
+                        </select>
+                        <span class="dropdown-chevron-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                     <div class="form-text-modern">Accessible to Admin and Super Admin</div>
                 </div>
             </div>

@@ -668,6 +668,9 @@
                 setTimeout(function () {
                     if (!e.defaultPrevented) {
                         try { sessionStorage.setItem('gl_navigating', '1'); } catch (err) {}
+                        // Reset any stale loader state from a previous navigation or rapid click
+                        // before starting a new one so pointer-events are never left stuck.
+                        forceDone();
                         start();
                     }
                 }, 20);
@@ -676,6 +679,15 @@
 
         // Handle BFCache restore (Back/Forward navigation restores DOM from memory)
         window.addEventListener('pageshow', function () {
+            forceDone();
+        });
+
+        // Clean loader state when the browser is actually leaving the page,
+        // preventing pointer-events from being stuck on the incoming page.
+        window.addEventListener('pagehide', function () {
+            forceDone();
+        });
+        window.addEventListener('beforeunload', function () {
             forceDone();
         });
     }

@@ -30,6 +30,9 @@ $isRecordsActive    = $isActive('admin/history*') || $isActive('admin/logs*');
 <a href="<?= base_url('fares') ?>" class="<?= $isActive('fares*') ?>">
     <i class="fas fa-tags"></i> Fares
 </a>
+<a href="<?= base_url('admin/help') ?>" class="<?= $isActive('admin/help*') || $isActive('admin/manual*') ?>">
+    <i class="fas fa-circle-question"></i> Help Guide
+</a>
 
 <div class="dropdown">
     <button class="dropbtn <?= $isRecordsActive ? 'active' : '' ?>" type="button">

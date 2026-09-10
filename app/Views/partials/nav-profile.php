@@ -107,13 +107,13 @@ SVG;
         <div class="profile-dropdown-divider"></div>
         <?php endif; ?>
 
-        <!-- Help & Resources -->
+        <!-- Help Guide -->
         <div class="profile-dropdown-section">
-            <div class="profile-section-label">Help & Docs</div>
-            <a href="<?= base_url($isAdmin ? 'admin/manual' : 'staff/manual') ?>" class="profile-dropdown-item" role="menuitem">
-                <i class="fas fa-book-open"></i>
-                <span class="item-text">User Manual & Guide</span>
-                <span class="profile-badge-chip chip-green">Docs</span>
+            <div class="profile-section-label">Help & Support</div>
+            <a href="<?= base_url($isAdmin ? 'admin/help' : 'staff/help') ?>" class="profile-dropdown-item" role="menuitem">
+                <i class="fas fa-circle-question"></i>
+                <span class="item-text">Help Guide</span>
+                <span class="profile-badge-chip chip-green">Guide</span>
             </a>
         </div>
 

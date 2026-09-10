@@ -35,12 +35,12 @@ final class ProfileDropdownTest extends CIUnitTestCase
         // Admin should NOT have Change Password in dropdown (dispatcher-only)
         $this->assertStringContainsString('Activity Logs', $html);
         $this->assertStringContainsString('Departure History', $html);
-        $this->assertStringContainsString('User Manual & Guide', $html);
+        $this->assertStringContainsString('Help Guide', $html);
 
         // Check badges
         $this->assertStringContainsString('Audit', $html);
         $this->assertStringContainsString('Records', $html);
-        $this->assertStringContainsString('Docs', $html);
+        $this->assertStringContainsString('Guide', $html);
 
         // Check Logout trigger inside dropdown
         $this->assertStringContainsString('item-logout', $html);
@@ -101,7 +101,7 @@ final class ProfileDropdownTest extends CIUnitTestCase
         $this->assertStringContainsString('Queue Management', $html);
         $this->assertStringContainsString('Change Password', $html);
         $this->assertStringContainsString('change-password', $html);
-        $this->assertStringContainsString('User Manual & Guide', $html);
+        $this->assertStringContainsString('Help Guide', $html);
         $this->assertStringContainsString('Sign out', $html);
         $this->assertStringContainsString('confirmLogout(event)', $html);
 

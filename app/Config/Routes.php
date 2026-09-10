@@ -126,8 +126,9 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('departure-rules/update/(:num)', 'Admin\DepartureRules::update/$1');
     $routes->post('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
 
-    // User Manual & Error Recovery Guide
+    // User Manual & Help Guide
     $routes->get('manual', 'Manual::admin');
+    $routes->get('help', 'Manual::adminHelp');
 });
 
 $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
@@ -144,6 +145,8 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     // Departure Rules (staff view-only access)
     $routes->get('departure-rules', 'Admin\DepartureRules::index');
 
-    // User Manual & Error Recovery Guide
+    // User Manual & Help Guide
     $routes->get('manual', 'Manual::staff');
+    $routes->get('help', 'Manual::staffHelp');
 });
+
