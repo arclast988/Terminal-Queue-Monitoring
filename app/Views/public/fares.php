@@ -291,7 +291,15 @@
 
         .search-bar button:hover {
             background: #8B0000;
-            transform: scale(1.03);
+        }
+
+        #guest-fare-clear-btn {
+            right: 120px !important;
+        }
+        @media (max-width: 768px) {
+            #guest-fare-clear-btn {
+                right: 95px !important;
+            }
         }
 
         /* --- Fares Grid --- */
@@ -630,8 +638,11 @@
         <p>Check official fare rates for all destinations to ensure fair pricing.</p>
 
         <div class="search-container">
-            <form class="search-bar" onsubmit="applyFareSearch(); return false;">
-                <input type="text" id="fareSearch" placeholder="Search by Route, Destination, Origin, or Vehicle Type..." autocomplete="off">
+            <form class="search-bar" onsubmit="applyFareSearch(); return false;" style="position: relative;">
+                <input type="text" id="fareSearch" placeholder="Search by Route, Destination, Origin, or Vehicle Type..." autocomplete="off" oninput="toggleGuestFareClear(this.value)">
+                <button type="button" class="guest-clear-search-btn" id="guest-fare-clear-btn" onclick="clearGuestFareSearch()" style="display: none !important;" title="Clear search">
+                    <i class="fas fa-times-circle"></i>
+                </button>
                 <button type="submit">SEARCH</button>
             </form>
         </div>
@@ -938,9 +949,30 @@
         });
     }
 
+    function toggleGuestFareClear(val) {
+        var btn = document.getElementById('guest-fare-clear-btn');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+    function clearGuestFareSearch() {
+        var input = document.getElementById('fareSearch');
+        if (input) {
+            input.value = '';
+            toggleGuestFareClear('');
+            applyFareSearch();
+            input.focus();
+        }
+    }
+
     // Live filter for fare search input
     document.addEventListener('input', function(e) {
         if (e.target && e.target.id === 'fareSearch') {
+            toggleGuestFareClear(e.target.value);
             applyFareSearch();
         }
     });

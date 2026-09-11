@@ -273,7 +273,6 @@
 
         .search-bar button:hover {
             background: #8B0000;
-            transform: scale(1.03);
         }
 
         /* --- Stats Grid --- */
@@ -2063,8 +2062,11 @@
         <p>Monitor arrivals, departures, and current queue positions seamlessly from your device.</p>
 
         <div class="search-container">
-            <form action="<?= base_url('search') ?>" method="get" class="search-bar">
-                <input type="text" name="q" placeholder="Search by Plate Number, Destination, or Driver..." required>
+            <form action="<?= base_url('search') ?>" method="get" class="search-bar" style="position: relative;">
+                <input type="text" name="q" id="guest-hero-search-input" placeholder="Search by Plate Number, Destination, or Driver..." required autocomplete="off" oninput="toggleGuestHeroClear(this.value)">
+                <button type="button" class="guest-clear-search-btn" id="guest-hero-clear-btn" onclick="clearGuestHeroSearch()" style="display: none !important;" title="Clear search">
+                    <i class="fas fa-times-circle"></i>
+                </button>
                 <button type="submit">TRACK STATUS</button>
             </form>
         </div>
@@ -3187,6 +3189,25 @@
         }
         setInterval(updateCountdowns, 1000);
         updateCountdowns();
+
+        function toggleGuestHeroClear(val) {
+            var btn = document.getElementById('guest-hero-clear-btn');
+            if (btn) {
+                if (val && val.trim().length > 0) {
+                    btn.style.setProperty('display', 'inline-flex', 'important');
+                } else {
+                    btn.style.setProperty('display', 'none', 'important');
+                }
+            }
+        }
+        function clearGuestHeroSearch() {
+            var input = document.getElementById('guest-hero-search-input');
+            if (input) {
+                input.value = '';
+                toggleGuestHeroClear('');
+                input.focus();
+            }
+        }
     </script>
 </body>
 

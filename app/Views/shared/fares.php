@@ -118,6 +118,7 @@ body.staff-theme .card .fare-section-title.vehicle-type-minibus { color: #2e7d32
 .fare-search-group {
     display: flex !important;
     align-items: center !important;
+    position: relative !important;
     background: #ffffff !important;
     border: 1.5px solid #cbd5e1 !important;
     border-radius: 24px !important;
@@ -164,7 +165,7 @@ body.admin-theme .fare-search-group:focus-within {
     font-size: 13.5px !important;
     font-family: inherit !important;
     color: #1e293b !important;
-    padding: 0 !important;
+    padding: 0 28px 0 0 !important;
     margin: 0 !important;
     border-radius: 0 !important;
     box-sizing: border-box !important;
@@ -180,6 +181,10 @@ body.admin-theme .fare-search-group:focus-within {
     opacity: 1 !important;
 }
 .fare-search-clear {
+    position: absolute !important;
+    right: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
     background: none !important;
     border: none !important;
     padding: 0 !important;
@@ -187,14 +192,20 @@ body.admin-theme .fare-search-group:focus-within {
     color: #94a3b8 !important;
     cursor: pointer !important;
     font-size: 16px !important;
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center !important;
     justify-content: center !important;
     flex-shrink: 0 !important;
     transition: color 0.15s ease !important;
+    z-index: 5 !important;
 }
 .fare-search-clear:hover {
     color: #475569 !important;
+}
+.fare-search-clear[style*="display: none"],
+.fare-search-clear[style*="display:none"],
+.fare-search-clear.d-none {
+    display: none !important;
 }
 .fare-search-info {
     font-size: 13px !important;
@@ -208,6 +219,165 @@ body.admin-theme .fare-search-group:focus-within {
     .fare-search-group {
         max-width: 100% !important;
     }
+}
+
+/* ── Compact Route Fare Inline Alert (Matches Plate Error Style) ── */
+.route-fare-inline-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    margin-top: 6px;
+    box-sizing: border-box;
+    animation: fadeIn 0.2s ease-in-out;
+}
+.route-fare-inline-alert i {
+    font-size: 13.5px;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+.route-fare-inline-alert.route-fare-inline-alert-warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+.route-fare-inline-alert.route-fare-inline-alert-warning i {
+    color: #d97706;
+}
+.route-fare-inline-alert.route-fare-inline-alert-success {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+    color: #166534;
+}
+.route-fare-inline-alert.route-fare-inline-alert-success i {
+    color: #16a34a;
+}
+.route-fare-inline-link {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    margin-left: 5px;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.route-fare-inline-link:hover {
+    color: #7f1d1d;
+}
+
+/* ── Vehicle Type Multi-Select Chips in Add Fare Modal ── */
+.vt-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.vt-select-chip {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 0;
+}
+.vt-select-chip input[type="checkbox"],
+.vt-select-chip input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+.vt-chip-body {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 13px;
+    border: 1.5px solid var(--border, #cbd5e1);
+    border-radius: 20px;
+    background: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main, #334155);
+    transition: all 0.2s ease;
+}
+.vt-select-chip:hover .vt-chip-body {
+    border-color: #94a3b8;
+    background: #f8fafc;
+}
+.vt-select-chip input[type="checkbox"]:checked + .vt-chip-body,
+.vt-select-chip input[type="radio"]:checked + .vt-chip-body {
+    background: #ffffff;
+    border-color: var(--vt-color, #1565c0);
+    color: var(--vt-color, #1565c0);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--vt-color, #1565c0) 18%, transparent);
+}
+.vt-chip-check {
+    font-size: 13px;
+    font-weight: 800;
+    display: none;
+}
+.vt-select-chip input[type="checkbox"]:checked + .vt-chip-body .vt-chip-check,
+.vt-select-chip input[type="radio"]:checked + .vt-chip-body .vt-chip-check {
+    display: inline-block;
+}
+
+/* ── Fare action edit button focus & hover styling ── */
+.fare-action-btn.btn-action-edit {
+    background: #eff6ff !important;
+    border: 1.5px solid #bfdbfe !important;
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+}
+.fare-action-btn.btn-action-edit i,
+.fare-action-btn.btn-action-edit .bi {
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+}
+.fare-action-btn.btn-action-edit:hover,
+.fare-action-btn.btn-action-edit:active {
+    background: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+.fare-action-btn.btn-action-edit:hover i,
+.fare-action-btn.btn-action-edit:hover .bi,
+.fare-action-btn.btn-action-edit:active i,
+.fare-action-btn.btn-action-edit:active .bi {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+.fare-action-btn.btn-action-edit:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.25) !important;
+}
+.fare-action-btn.btn-action-edit:focus:not(:hover) {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+}
+.fare-action-btn.btn-action-edit:focus:not(:hover) i,
+.fare-action-btn.btn-action-edit:focus:not(:hover) .bi {
+    color: #1d4ed8 !important;
+    -webkit-text-fill-color: #1d4ed8 !important;
+}
+
+/* ── Ensure modals always sit properly above backdrop and body has no stacking traps ── */
+body.modal-open > .main-content,
+body:has(.modal.show) > .main-content {
+    position: static !important;
+    z-index: auto !important;
+}
+.modal.show {
+    z-index: 1055 !important;
+}
+.modal-backdrop {
+    z-index: 1040 !important;
 }
 
 </style>
@@ -296,7 +466,7 @@ $fareTypes = array_map(static fn(array $type) => [
                     <div class="fare-search-group">
                         <i class="bi bi-search fare-search-icon"></i>
                         <input type="text" id="fareSearch" class="fare-search-input" placeholder="Search destination, route, discount..." onkeyup="filterFares()" oninput="filterFares()" autocomplete="off">
-                        <button type="button" class="fare-search-clear" id="clearFareSearch" onclick="clearFareSearch()" style="display:none;" title="Clear search" aria-label="Clear search">
+                        <button type="button" class="fare-search-clear" id="clearFareSearch" onclick="clearFareSearch()" style="display: none !important;" title="Clear search" aria-label="Clear search">
                             <i class="bi bi-x-circle-fill"></i>
                         </button>
                     </div>
@@ -308,6 +478,20 @@ $fareTypes = array_map(static fn(array $type) => [
         </div>
     </div>
 </div>
+
+<?php if ($isAdmin && !empty($unassignedRoutes)): ?>
+<div class="row px-3 mb-3">
+    <div class="col-12">
+        <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-3 fade-in" style="background: #fef3c7; border: 1px solid #fde68a; font-size: 13.5px; color: #92400e;">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 15px; color: #d97706;"></i>
+            <span>
+                <strong><?= count($unassignedRoutes) ?></strong> route<?= count($unassignedRoutes) > 1 ? 's are' : ' is' ?> currently awaiting fare assignment.
+                <a href="#" onclick="event.preventDefault(); var m = document.getElementById('addFareModal'); if(m){var bsM = bootstrap.Modal.getOrCreateInstance(m); bsM.show();}" style="color: #92400e; font-weight: 600; text-decoration: underline;">Click Add Fare</a> to set <?= count($unassignedRoutes) > 1 ? 'their' : 'its' ?> fare<?= count($unassignedRoutes) > 1 ? 's' : '' ?>.
+            </span>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <div class="row px-3 mt-2" id="fareCardsGrid">
 
@@ -331,15 +515,6 @@ $fareTypes = array_map(static fn(array $type) => [
                 </span>
                 <span class="fw-bold" style="color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($headerTitleColor) ?>) !important;"><?= esc($ft['label']) ?></span>
             </span>
-            <?php if ($isAdmin && !empty($ft['id'])): ?>
-            <form id="delete-vtype-form-<?= $ft['id'] ?>" action="<?= base_url('admin/vehicle-types/delete/' . $ft['id']) ?>" method="post" class="d-inline">
-                <?= csrf_field() ?>
-                <button type="button" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Vehicle Type & Card"
-                    onclick="showDeleteConfirmModal({formId:'delete-vtype-form-<?= $ft['id'] ?>',title:'Delete Vehicle Type?',message:'Delete vehicle type &quot;<?= esc($ft['name']) ?>&quot; and its fare routes? Registered vehicles will be preserved, but vehicles using this type must be reassigned or removed first.',itemLabel:'<?= esc($ft['name']) ?> Routes',itemIcon:'fas <?= esc($vtIcon) ?>'})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </form>
-            <?php endif; ?>
         </div>
         <div class="modern-card-body p-0">
             <div class="list-group list-group-flush fare-list">
@@ -367,10 +542,10 @@ $fareTypes = array_map(static fn(array $type) => [
                                    data-terminal-id="<?= $route['terminal_id'] ?>">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form id="delete-fare-form-<?= $route['id'] ?>" action="<?= base_url('admin/routes/delete/' . $route['id']) ?>" method="post" class="d-inline">
+                                <form id="delete-fare-form-<?= $route['id'] ?>" action="<?= base_url('admin/routes/delete-fare/' . $route['id']) ?>" method="post" class="d-inline">
                                     <?= csrf_field() ?>
                                     <button type="button" class="btn-modern btn-modern-sm btn-action-delete fare-action-btn" title="Delete Fare"
-                                        onclick="showDeleteConfirmModal({formId:'delete-fare-form-<?= $route['id'] ?>',title:'Delete Fare Route?',message:'Are you sure you want to delete this fare route? This action cannot be undone.',itemLabel:'<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>',itemExtra:'₱<?= number_format($route['fare'], 0) ?>',itemIcon:'fas fa-route'})">
+                                        onclick="showDeleteConfirmModal({formId:'delete-fare-form-<?= $route['id'] ?>',title:'Remove Fare?',message:'Are you sure you want to remove the fare for this route? The route itself will remain saved in the system and will return to the Add Fare section.',itemLabel:'<?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?>',itemExtra:'₱<?= number_format($route['fare'], 0) ?>',itemIcon:'fas fa-route'})">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -533,12 +708,25 @@ $isManager = $isAdmin;
             <?php endif; ?>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Destination</label>
-            <input type="text" name="destination" id="add_destination" class="form-control autocomplete-location" 
-                   placeholder="Type or search destination (e.g. ORMOC, TACLOBAN)..." required autocomplete="off"
-                   data-suggestions="<?= esc(json_encode(array_values(array_filter($all_locations ?? [], fn($l) => strtoupper($l) !== 'PALOMPON')))) ?>">
-            <div id="add_dest_feedback" class="mt-1" style="display: none; color: #dc2626 !important; font-size: 13.5px; font-weight: 600;">This route already exists for JEEPNEY.</div>
+          <!-- Destination Route Card (Relocated with updated label and options) -->
+          <div class="mb-3 p-2.5 border rounded-3" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important;">
+            <label class="form-label fw-semibold mb-1 d-flex align-items-center justify-content-between" style="font-size: 13px; color: var(--primary, #1565c0);">
+              <span><i class="bi bi-geo-alt-fill me-1"></i>Destination Route:</span>
+              <span class="badge bg-light text-muted border px-2 py-0.5" style="font-size: 11px; font-weight: 500;">Existing Routes Only</span>
+            </label>
+            <select name="destination" id="add_destination" class="form-select form-select-sm" required>
+              <option value="">— Select an existing route destination —</option>
+              <?php foreach (($availableDestinations ?? []) as $destGroup): ?>
+                <option value="<?= esc($destGroup['destination']) ?>"
+                        data-terminal="<?= $destGroup['terminal_id'] ?>"
+                        data-origin="<?= esc($destGroup['origin']) ?>"
+                        data-destination="<?= esc($destGroup['destination']) ?>">
+                  <?= esc($destGroup['label']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <!-- Compact inline warning / feedback container below destination select -->
+            <div id="add_fare_route_feedback" style="display: none;"></div>
           </div>
 
           <div class="mb-3">
@@ -550,20 +738,25 @@ $isManager = $isAdmin;
           </div>
 
           <div class="mb-4">
-            <label class="form-label fw-semibold mb-2">Vehicle Type</label>
-            <div class="d-flex gap-4 flex-wrap">
+            <label class="form-label fw-semibold mb-2 d-flex align-items-center justify-content-between">
+              <span>Vehicle Type</span>
+              <span class="text-muted" style="font-size: 11px; font-weight: normal;">Select one or more</span>
+            </label>
+            <div class="vt-chip-group">
               <?php foreach (($vehicleTypes ?? []) as $index => $vehicleType): ?>
                 <?php
-                    $vtCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
-                    $vtIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                    $vtSlug = $vehicleType['slug'];
+                    $vtCol  = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vtSlug);
+                    $vtIco  = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
                 ?>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="vehicle_type" id="add_<?= esc($vehicleType['slug']) ?>" value="<?= esc($vehicleType['slug']) ?>" <?= $index === 0 ? 'checked' : '' ?>>
-                  <label class="form-check-label d-inline-flex align-items-center gap-1" for="add_<?= esc($vehicleType['slug']) ?>">
-                    <i class="fas <?= esc($vtIco) ?>" style="color: <?= esc($vtCol) ?>;"></i> 
-                    <span><?= esc($vehicleType['name']) ?></span>
-                  </label>
-                </div>
+                <label class="vt-select-chip" style="--vt-color: <?= esc($vtCol) ?>;">
+                  <input type="checkbox" name="vehicle_types[]" id="add_vt_<?= esc($vtSlug) ?>" value="<?= esc($vtSlug) ?>" class="vt-chip-checkbox" <?= $index === 0 ? 'checked' : '' ?>>
+                  <span class="vt-chip-body">
+                    <i class="fas <?= esc($vtIco) ?> vt-chip-icon" style="color: <?= esc($vtCol) ?>;"></i>
+                    <span class="vt-chip-name"><?= esc($vehicleType['name']) ?></span>
+                    <i class="bi bi-check-lg vt-chip-check"></i>
+                  </span>
+                </label>
               <?php endforeach; ?>
             </div>
           </div>
@@ -625,19 +818,21 @@ $isManager = $isAdmin;
 
           <div class="mb-4">
             <label class="form-label fw-semibold mb-2">Vehicle Type</label>
-            <div class="d-flex gap-4 flex-wrap">
+            <div class="vt-chip-group">
               <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                 <?php
-                    $vtCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
-                    $vtIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                    $vtSlug = $vehicleType['slug'];
+                    $vtCol  = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vtSlug);
+                    $vtIco  = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
                 ?>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="vehicle_type" id="edit_<?= esc($vehicleType['slug']) ?>" value="<?= esc($vehicleType['slug']) ?>">
-                  <label class="form-check-label d-inline-flex align-items-center gap-1" for="edit_<?= esc($vehicleType['slug']) ?>">
-                    <i class="fas <?= esc($vtIco) ?>" style="color: <?= esc($vtCol) ?>;"></i> 
-                    <span><?= esc($vehicleType['name']) ?></span>
-                  </label>
-                </div>
+                <label class="vt-select-chip" style="--vt-color: <?= esc($vtCol) ?>;">
+                  <input type="radio" name="vehicle_type" id="edit_vt_<?= esc($vtSlug) ?>" value="<?= esc($vtSlug) ?>" class="vt-chip-radio">
+                  <span class="vt-chip-body">
+                    <i class="fas <?= esc($vtIco) ?> vt-chip-icon" style="color: <?= esc($vtCol) ?>;"></i>
+                    <span class="vt-chip-name"><?= esc($vehicleType['name']) ?></span>
+                    <i class="bi bi-check-lg vt-chip-check"></i>
+                  </span>
+                </label>
               <?php endforeach; ?>
             </div>
           </div>
@@ -979,6 +1174,17 @@ foreach (($routesByType ?? []) as $type => $routes) {
 }
 ?>
 const existingRoutes = <?= json_encode($existingRoutes) ?>;
+const adminRouteData = <?= json_encode($allActiveRoutes ?? []) ?>;
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 function findExistingRoute(terminalId, dest, type) {
     if (!dest || !type) return null;
@@ -1001,22 +1207,22 @@ function validateAddFareForm() {
     const form = document.getElementById('addFareForm');
     if (!form) return true;
 
-    const terminalId = document.getElementById('add_fare_terminal_id')?.value || '';
-    const destInput = document.getElementById('add_destination');
-    const dest = destInput ? destInput.value.trim() : '';
-    const checkedRadio = form.querySelector('input[name="vehicle_type"]:checked');
-    const type = checkedRadio ? checkedRadio.value : '';
-    const destFeedback = document.getElementById('add_dest_feedback');
+    const terminalSelect = document.getElementById('add_fare_terminal_id');
+    const terminalId = terminalSelect ? String(terminalSelect.value).trim() : '';
+    const destSelect = document.getElementById('add_destination');
+    const dest = destSelect ? String(destSelect.value).trim().toUpperCase() : '';
+    const checkedBoxes = Array.from(form.querySelectorAll('input[name="vehicle_types[]"]:checked'));
+    const selectedTypes = checkedBoxes.map(cb => cb.value);
+    const feedbackEl = document.getElementById('add_fare_route_feedback');
     const submitBtn = form.querySelector('button[type="submit"]');
 
+    if (!feedbackEl) return true;
+
+    // No destination selected yet
     if (!dest) {
-        if (destInput) {
-            destInput.classList.remove('is-invalid');
-            destInput.style.borderColor = '';
-        }
-        if (destFeedback) {
-            destFeedback.style.display = 'none';
-        }
+        feedbackEl.style.display = 'none';
+        feedbackEl.innerHTML = '';
+        if (destSelect) destSelect.classList.remove('is-invalid');
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('opacity-50');
@@ -1024,56 +1230,147 @@ function validateAddFareForm() {
         return true;
     }
 
-    const matched = findExistingRoute(terminalId, dest, type);
-    if (matched) {
-        if (destInput) {
-            destInput.classList.add('is-invalid');
-            destInput.style.borderColor = '#dc2626';
-        }
-        if (destFeedback) {
-            destFeedback.style.display = 'block';
-            destFeedback.style.color = '#dc2626';
-            destFeedback.textContent = 'This route already exists for ' + type.toUpperCase() + '.';
-        }
+    // Check if at least one vehicle type is selected
+    if (selectedTypes.length === 0) {
+        feedbackEl.style.display = 'block';
+        feedbackEl.innerHTML = `
+            <div class="route-fare-inline-alert">
+                <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+                <div>Please select at least one vehicle type.</div>
+            </div>
+        `;
         if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('opacity-50');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
         }
         return false;
-    } else {
-        if (destInput) {
-            destInput.classList.remove('is-invalid');
-            destInput.style.borderColor = '';
+    }
+
+    // Filter matching active routes by destination and terminal
+    const matchingDestRoutes = adminRouteData.filter(r => {
+        const destMatch = String(r.destination).trim().toUpperCase() === dest;
+        if (!destMatch) return false;
+        if (terminalId && String(r.terminal_id).trim() !== terminalId) return false;
+        return true;
+    });
+
+    if (matchingDestRoutes.length === 0) {
+        feedbackEl.style.display = 'block';
+        feedbackEl.innerHTML = `
+            <div class="route-fare-inline-alert">
+                <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+                <div>Destination <strong>${escapeHtml(dest)}</strong> was not found in registered routes.</div>
+            </div>
+        `;
+        if (destSelect) destSelect.classList.add('is-invalid');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
         }
-        if (destFeedback) {
-            destFeedback.style.display = 'none';
+        return false;
+    }
+
+    if (destSelect) destSelect.classList.remove('is-invalid');
+
+    const originName = matchingDestRoutes[0].origin || 'Terminal';
+    const displayRouteName = `${originName} → ${dest}`;
+
+    const registeredTypes = matchingDestRoutes.map(r => r.vehicle_type);
+    const notRegistered = selectedTypes.filter(t => !registeredTypes.includes(t));
+    const withFare = matchingDestRoutes.filter(r => selectedTypes.includes(r.vehicle_type) && r.has_fare);
+    const readyToSet = matchingDestRoutes.filter(r => selectedTypes.includes(r.vehicle_type) && !r.has_fare);
+
+    // 1. If any selected vehicle type is NOT registered for this destination
+    if (notRegistered.length > 0) {
+        const notRegNames = notRegistered.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ');
+        const availNames = registeredTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ');
+        feedbackEl.style.display = 'block';
+        feedbackEl.innerHTML = `
+            <div class="route-fare-inline-alert">
+                <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+                <div><strong>${escapeHtml(displayRouteName)}</strong> is not registered for <strong>${escapeHtml(notRegNames)}</strong> (Registered: ${escapeHtml(availNames || 'None')}).</div>
+            </div>
+        `;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
         }
+        return false;
+    }
+
+    // 2. If ALL selected vehicle types already have active fares
+    if (withFare.length === selectedTypes.length) {
+        const withFareNames = withFare.map(r => r.vehicle_type.charAt(0).toUpperCase() + r.vehicle_type.slice(1)).join(', ');
+        const firstEditId = withFare[0].id;
+        feedbackEl.style.display = 'block';
+        feedbackEl.innerHTML = `
+            <div class="route-fare-inline-alert">
+                <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+                <div><strong>${escapeHtml(displayRouteName)}</strong> in <strong>${escapeHtml(withFareNames)}</strong> already has a fare. Select another vehicle type or <a href="#" onclick="switchToEditFare(${firstEditId}); return false;" class="route-fare-inline-link">Edit Fare</a></div>
+            </div>
+        `;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50');
+        }
+        return false;
+    }
+
+    // 3. If SOME have active fares and SOME are ready to set
+    if (withFare.length > 0 && readyToSet.length > 0) {
+        const withFareNames = withFare.map(r => r.vehicle_type.charAt(0).toUpperCase() + r.vehicle_type.slice(1)).join(', ');
+        const readyNames = readyToSet.map(r => r.vehicle_type.charAt(0).toUpperCase() + r.vehicle_type.slice(1)).join(', ');
+        feedbackEl.style.display = 'block';
+        feedbackEl.innerHTML = `
+            <div class="route-fare-inline-alert route-fare-inline-alert-warning">
+                <i class="bi bi-exclamation-triangle flex-shrink-0"></i>
+                <div><strong>${escapeHtml(withFareNames)}</strong> already has a fare. Fare will apply to <strong>${escapeHtml(readyNames)}</strong>.</div>
+            </div>
+        `;
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('opacity-50');
         }
         return true;
     }
+
+    // 4. All selected vehicle types are registered and ready to set fare!
+    const readyNames = readyToSet.map(r => r.vehicle_type.charAt(0).toUpperCase() + r.vehicle_type.slice(1)).join(', ');
+    feedbackEl.style.display = 'block';
+    feedbackEl.innerHTML = `
+        <div class="route-fare-inline-alert route-fare-inline-alert-success">
+            <i class="bi bi-check-circle flex-shrink-0"></i>
+            <div>Ready to set fare for <strong>${escapeHtml(displayRouteName)}</strong> (${escapeHtml(readyNames)}).</div>
+        </div>
+    `;
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50');
+    }
+    return true;
 }
 
-// Switch directly from Add modal to Edit modal with full data population
+// Switch directly from Add modal to Edit modal with clean backdrop management
 function switchToEditFare(routeId) {
     var addModalEl = document.getElementById('addFareModal');
-    if (addModalEl) {
-        var addModal = bootstrap.Modal.getInstance(addModalEl) || new bootstrap.Modal(addModalEl);
-        addModal.hide();
-    }
+    var editModalEl = document.getElementById('editFareModal');
+    if (!editModalEl) return;
 
-    var foundRoute = null;
-    for (var vType in existingRoutes) {
-        var match = (existingRoutes[vType] || []).find(function(r) { return r.id == routeId; });
-        if (match) {
-            foundRoute = match;
-            break;
+    function openEditModal() {
+        var foundRoute = null;
+        if (typeof adminRouteData !== 'undefined' && Array.isArray(adminRouteData)) {
+            foundRoute = adminRouteData.find(function(r) { return r.id == routeId; });
         }
-    }
+        if (!foundRoute) {
+            for (var vType in existingRoutes) {
+                var match = (existingRoutes[vType] || []).find(function(r) { return r.id == routeId; });
+                if (match) {
+                    foundRoute = match;
+                    break;
+                }
+            }
+        }
 
-    setTimeout(function() {
         var editForm = document.getElementById('editFareForm');
         if (editForm && routeId) {
             editForm.action = '<?= base_url('admin/routes/update') ?>/' + routeId;
@@ -1097,74 +1394,122 @@ function switchToEditFare(routeId) {
             if (editBtn) populateFareModal(editBtn);
         }
 
-        var editModalEl = document.getElementById('editFareModal');
-        if (editModalEl) {
-            var editModal = bootstrap.Modal.getInstance(editModalEl) || new bootstrap.Modal(editModalEl);
-            editModal.show();
-        }
-    }, 200);
+        // Clean up any stale or stacked backdrops from previous modal
+        document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+        document.body.classList.add('modal-open');
+
+        var editModal = bootstrap.Modal.getOrCreateInstance(editModalEl);
+        editModal.show();
+    }
+
+    if (addModalEl && (addModalEl.classList.contains('show') || addModalEl.style.display === 'block')) {
+        var addModal = bootstrap.Modal.getInstance(addModalEl) || bootstrap.Modal.getOrCreateInstance(addModalEl);
+        
+        var hasTriggered = false;
+        var onHidden = function() {
+            if (hasTriggered) return;
+            hasTriggered = true;
+            addModalEl.removeEventListener('hidden.bs.modal', onHidden);
+            setTimeout(openEditModal, 60);
+        };
+
+        addModalEl.addEventListener('hidden.bs.modal', onHidden, { once: true });
+        addModal.hide();
+
+        // Safety fallback in case hidden.bs.modal doesn't fire
+        setTimeout(function() {
+            if (!hasTriggered) {
+                onHidden();
+            }
+        }, 350);
+    } else {
+        openEditModal();
+    }
 }
 
 const addForm = document.getElementById('addFareForm');
 if (addForm) {
-    const destInput = document.getElementById('add_destination');
-    if (destInput) {
-        destInput.addEventListener('input', validateAddFareForm);
-        destInput.addEventListener('change', validateAddFareForm);
+    const destSelect = document.getElementById('add_destination');
+    if (destSelect) {
+        destSelect.addEventListener('change', validateAddFareForm);
+        destSelect.addEventListener('input', validateAddFareForm);
     }
 
-    const typeRadios = addForm.querySelectorAll('input[name="vehicle_type"]');
-    typeRadios.forEach(r => {
-        r.addEventListener('change', validateAddFareForm);
+    const typeBoxes = addForm.querySelectorAll('input[name="vehicle_types[]"]');
+    typeBoxes.forEach(cb => {
+        cb.addEventListener('change', validateAddFareForm);
     });
 
     const terminalSelect = addForm.querySelector('select[name="terminal_id"]');
     if (terminalSelect) {
-        terminalSelect.addEventListener('change', validateAddFareForm);
+        terminalSelect.addEventListener('change', function() {
+            filterAddDestinationOptions();
+            validateAddFareForm();
+        });
     }
 
     addForm.addEventListener('submit', function(e) {
         if (!validateAddFareForm()) {
             e.preventDefault();
             e.stopPropagation();
-            const destFeedback = document.getElementById('add_dest_feedback');
-            if (destFeedback) {
-                destFeedback.classList.remove('gl-shake');
-                void destFeedback.offsetWidth;
-                destFeedback.classList.add('gl-shake');
-            }
-            if (destInput) {
-                destInput.classList.remove('gl-shake');
-                void destInput.offsetWidth;
-                destInput.classList.add('gl-shake');
+            const feedback = document.getElementById('add_fare_route_feedback');
+            if (feedback) {
+                feedback.classList.remove('gl-shake');
+                void feedback.offsetWidth;
+                feedback.classList.add('gl-shake');
             }
             return false;
         }
     });
 }
 
+function filterAddDestinationOptions() {
+    const terminalSelect = document.getElementById('add_fare_terminal_id');
+    const terminalId = terminalSelect ? String(terminalSelect.value).trim() : '';
+    const destSelect = document.getElementById('add_destination');
+    if (!destSelect) return;
+
+    Array.from(destSelect.options).forEach(opt => {
+        if (!opt.value) return;
+        const optTerminal = opt.getAttribute('data-terminal');
+        if (!terminalId || !optTerminal || optTerminal === terminalId) {
+            opt.style.display = '';
+            opt.disabled = false;
+        } else {
+            opt.style.display = 'none';
+            opt.disabled = true;
+        }
+    });
+
+    const curOpt = destSelect.options[destSelect.selectedIndex];
+    if (curOpt && curOpt.value && terminalId && curOpt.getAttribute('data-terminal') !== terminalId) {
+        destSelect.value = '';
+        destSelect.dispatchEvent(new Event('change'));
+    }
+}
+
 // Modal lifecycle listeners
 var addFareModalEl = document.getElementById('addFareModal');
 if (addFareModalEl) {
     addFareModalEl.addEventListener('shown.bs.modal', function() {
+        filterAddDestinationOptions();
         validateAddFareForm();
     });
     addFareModalEl.addEventListener('hidden.bs.modal', function() {
         if (addForm) {
             addForm.reset();
-            var radios = addForm.querySelectorAll('input[name="vehicle_type"]');
-            if (radios.length > 0) radios[0].checked = true;
+            var cbs = addForm.querySelectorAll('input[name="vehicle_types[]"]');
+            cbs.forEach(function(cb, idx) { cb.checked = (idx === 0); });
         }
-        var destInput = document.getElementById('add_destination');
-        if (destInput) {
-            destInput.classList.remove('is-invalid');
-            destInput.classList.remove('gl-shake');
-            destInput.style.borderColor = '';
+        var destSelect = document.getElementById('add_destination');
+        if (destSelect) {
+            destSelect.classList.remove('is-invalid');
         }
-        var destFeedback = document.getElementById('add_dest_feedback');
-        if (destFeedback) {
-            destFeedback.style.display = 'none';
-            destFeedback.classList.remove('gl-shake');
+        var feedback = document.getElementById('add_fare_route_feedback');
+        if (feedback) {
+            feedback.style.display = 'none';
+            feedback.innerHTML = '';
+            feedback.classList.remove('gl-shake');
         }
         var submitBtn = addForm?.querySelector('button[type="submit"]');
         if (submitBtn) {
@@ -1173,6 +1518,58 @@ if (addFareModalEl) {
         }
     });
 }
+
+// Auto-open Add Fare modal when redirected with query params (e.g. from Manage Routes "Set Fare")
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('action') === 'add') {
+        const targetDest = (urlParams.get('destination') || '').trim();
+        const targetType = (urlParams.get('vehicle_type') || '').trim();
+        const targetTerm = (urlParams.get('terminal_id') || '').trim();
+
+        const addModalEl = document.getElementById('addFareModal');
+        if (addModalEl && window.bootstrap) {
+            const bsModal = bootstrap.Modal.getOrCreateInstance(addModalEl);
+
+            if (targetTerm) {
+                const termInput = document.getElementById('add_fare_terminal_id');
+                if (termInput) {
+                    termInput.value = targetTerm;
+                    filterAddDestinationOptions();
+                }
+            }
+            if (targetDest) {
+                const destSelect = document.getElementById('add_destination');
+                if (destSelect) {
+                    for (let i = 0; i < destSelect.options.length; i++) {
+                        if (destSelect.options[i].value.toUpperCase() === targetDest.toUpperCase()) {
+                            destSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (targetType) {
+                const cbs = addModalEl.querySelectorAll('input[name="vehicle_types[]"]');
+                cbs.forEach(cb => {
+                    cb.checked = (cb.value.toLowerCase() === targetType.toLowerCase());
+                });
+            }
+
+            bsModal.show();
+
+            setTimeout(() => {
+                validateAddFareForm();
+                const fareInput = addModalEl.querySelector('input[name="fare"]');
+                if (fareInput) fareInput.focus();
+            }, 300);
+
+            if (window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    }
+});
 
 <?php if ((session()->getFlashdata('error') || session()->getFlashdata('errors')) && old('destination')): ?>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1183,21 +1580,25 @@ document.addEventListener('DOMContentLoaded', function() {
         var destInput = document.getElementById('add_destination');
         if (destInput) {
             destInput.value = <?= json_encode(old('destination')) ?>;
+            destInput.dispatchEvent(new Event('change'));
         }
         var fareInput = document.querySelector('#addFareForm input[name="fare"]');
         if (fareInput && <?= json_encode(old('fare')) ?>) {
             fareInput.value = <?= json_encode(old('fare')) ?>;
         }
-        var oldVehicleType = <?= json_encode(old('vehicle_type')) ?>;
-        if (oldVehicleType && addForm) {
-            var r = addForm.querySelector('input[name="vehicle_type"][value="' + oldVehicleType + '"]');
-            if (r) r.checked = true;
+        var oldVehicleTypes = <?= json_encode(old('vehicle_types') ?? (old('vehicle_type') ? [old('vehicle_type')] : null)) ?>;
+        if (Array.isArray(oldVehicleTypes) && addForm) {
+            var cbs = addForm.querySelectorAll('input[name="vehicle_types[]"]');
+            cbs.forEach(function(cb) {
+                cb.checked = oldVehicleTypes.includes(cb.value);
+            });
         }
         var oldTerminalId = <?= json_encode(old('terminal_id')) ?>;
         if (oldTerminalId) {
             var t = document.getElementById('add_fare_terminal_id');
             if (t) t.value = oldTerminalId;
         }
+        filterAddDestinationOptions();
         validateAddFareForm();
     }
 });
@@ -1240,9 +1641,15 @@ function populateDiscountModal(btn) {
 // Pre-fill on click/mousedown
 document.addEventListener('click', function(e) {
     var editFareBtn = e.target.closest('[data-bs-target="#editFareModal"]');
-    if (editFareBtn) populateFareModal(editFareBtn);
+    if (editFareBtn) {
+        populateFareModal(editFareBtn);
+        if (typeof editFareBtn.blur === 'function') editFareBtn.blur();
+    }
     var editDiscBtn = e.target.closest('[data-bs-target="#editDiscountModal"]');
-    if (editDiscBtn) populateDiscountModal(editDiscBtn);
+    if (editDiscBtn) {
+        populateDiscountModal(editDiscBtn);
+        if (typeof editDiscBtn.blur === 'function') editDiscBtn.blur();
+    }
 });
 document.addEventListener('mousedown', function(e) {
     var editFareBtn = e.target.closest('[data-bs-target="#editFareModal"]');
@@ -1254,7 +1661,27 @@ document.addEventListener('mousedown', function(e) {
 var editFareModal = document.getElementById('editFareModal');
 if (editFareModal) {
     editFareModal.addEventListener('show.bs.modal', function(event) {
-        populateFareModal(event.relatedTarget);
+        if (event && event.relatedTarget) {
+            populateFareModal(event.relatedTarget);
+        }
+    });
+    editFareModal.addEventListener('shown.bs.modal', function() {
+        document.body.classList.add('modal-open');
+        var backdrops = document.querySelectorAll('.modal-backdrop');
+        if (backdrops.length > 1) {
+            for (var i = 0; i < backdrops.length - 1; i++) {
+                backdrops[i].remove();
+            }
+        }
+    });
+    editFareModal.addEventListener('hidden.bs.modal', function() {
+        var anyOpen = document.querySelectorAll('.modal.show').length > 0;
+        if (!anyOpen) {
+            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.removeProperty('overflow');
+        }
     });
 }
 
@@ -1266,15 +1693,23 @@ if (editDiscountModal) {
 }
 
 // Fare search filter
+function toggleFareClearBtn(query) {
+    const clearBtn = document.getElementById('clearFareSearch');
+    if (clearBtn) {
+        if (query && query.trim().length > 0) {
+            clearBtn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+            clearBtn.style.setProperty('display', 'none', 'important');
+        }
+    }
+}
+
 function filterFares() {
     const input = document.getElementById('fareSearch');
     const query = input?.value.toLowerCase().trim() ?? '';
     const cards = document.querySelectorAll('#fareCardsGrid .fare-section-card');
 
-    const clearBtn = document.getElementById('clearFareSearch');
-    if (clearBtn) {
-        clearBtn.style.display = query ? 'inline-flex' : 'none';
-    }
+    toggleFareClearBtn(query);
 
     cards.forEach(card => {
         const titleEl = card.querySelector('.fare-section-title');
@@ -1322,14 +1757,17 @@ function clearFareSearch() {
     const input = document.getElementById('fareSearch');
     if (input) {
         input.value = '';
+        toggleFareClearBtn('');
         filterFares();
         input.focus();
     }
-    const clearBtn = document.getElementById('clearFareSearch');
-    if (clearBtn) {
-        clearBtn.style.display = 'none';
-    }
 }
+
+// Initial state verification on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('fareSearch');
+    toggleFareClearBtn(input ? input.value : '');
+});
 
 // Auto-generate type key from discount label
 var addDiscLabel = document.getElementById('add_disc_label');
@@ -1443,6 +1881,8 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(function() { /* silent fallback */ });
     }
+
+
     document.addEventListener('pttm:ws-fare_update', refreshSharedFares);
     document.addEventListener('vt-colors-updated', refreshSharedFares);
 });

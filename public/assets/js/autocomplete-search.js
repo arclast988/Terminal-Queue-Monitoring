@@ -138,7 +138,36 @@
                 border: 1px solid #e2e8f0;
             }
 
-
+            /* Autocomplete & Filter Clear (x) Button - Clean, Instant, No Animations */
+            .autocomplete-clear-btn {
+                position: absolute !important;
+                right: 12px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: #94a3b8 !important;
+                cursor: pointer !important;
+                display: none;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 15 !important;
+                line-height: 1 !important;
+                outline: none !important;
+                box-shadow: none !important;
+                transition: color 0.15s ease !important;
+            }
+            .autocomplete-clear-btn:hover {
+                color: #475569 !important;
+            }
+            .autocomplete-clear-btn svg {
+                width: 15px !important;
+                height: 15px !important;
+                display: block !important;
+                pointer-events: none !important;
+            }
 
             /* Explicit Light Theme Styling (Base Container) */
             .autocomplete-dropdown {
@@ -273,6 +302,44 @@
                 wrapper.appendChild(input);
             }
 
+            input.style.paddingRight = '32px';
+
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'autocomplete-clear-btn';
+            clearBtn.title = 'Clear input';
+            clearBtn.setAttribute('aria-label', 'Clear input');
+            clearBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>';
+
+            function toggleClearBtn() {
+                if (input.value && input.value.trim() !== '') {
+                    clearBtn.style.display = 'inline-flex';
+                } else {
+                    clearBtn.style.display = 'none';
+                }
+            }
+
+            toggleClearBtn();
+
+            clearBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                input.value = '';
+                toggleClearBtn();
+                closeDropdown(wrapper, dropdown);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.dispatchEvent(new Event('change', { bubbles: true }));
+                input.focus();
+            });
+
+            input.addEventListener('input', toggleClearBtn);
+            wrapper.appendChild(clearBtn);
+
             const dropdown = document.createElement('div');
             dropdown.className = 'autocomplete-dropdown shadow-lg rounded-3 border';
             dropdown.style.cssText = `
@@ -344,6 +411,7 @@
             function selectItem(val) {
                 isSelecting = true;
                 input.value = val;
+                toggleClearBtn();
                 closeDropdown(wrapper, dropdown);
                 input.dispatchEvent(new Event('input', { bubbles: true }));
                 input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -466,6 +534,41 @@
             else if (fieldName.includes('destination')) placeholderText = 'Search destination...';
             searchInput.placeholder = placeholderText;
             searchInput.autocomplete = 'off';
+            searchInput.style.paddingRight = '32px';
+
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'autocomplete-clear-btn';
+            clearBtn.title = 'Clear selection';
+            clearBtn.setAttribute('aria-label', 'Clear selection');
+            clearBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>';
+
+            function toggleClearBtn() {
+                if (searchInput.value && searchInput.value.trim() !== '') {
+                    clearBtn.style.display = 'inline-flex';
+                } else {
+                    clearBtn.style.display = 'none';
+                }
+            }
+
+            clearBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                selectEl.value = '';
+                searchInput.value = '';
+                searchInput.style.color = '';
+                searchInput.style.borderColor = '';
+                toggleClearBtn();
+                closeDropdown(wrapper, dropdown);
+                selectEl.dispatchEvent(new Event('input', { bubbles: true }));
+                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            });
 
             function isPlaceholderOption(option) {
                 if (!option) return true;
@@ -500,10 +603,12 @@
                     searchInput.style.color = '';
                     searchInput.style.borderColor = '';
                 }
+                toggleClearBtn();
             }
 
             updateInputValue();
             wrapper.appendChild(searchInput);
+            wrapper.appendChild(clearBtn);
 
             // Floating dropdown panel
             const dropdown = document.createElement('div');
@@ -632,6 +737,7 @@
                     searchInput.style.color = optColor || '';
                     searchInput.style.borderColor = optColor || '';
                 }
+                toggleClearBtn();
                 closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));
                 selectEl.dispatchEvent(new Event('change', { bubbles: true }));
@@ -649,6 +755,10 @@
                 if (dropdown.style.display === 'none' || !wrapper.classList.contains('is-open')) {
                     renderSelectDropdown('');
                 }
+            });
+
+            searchInput.addEventListener('input', () => {
+                toggleClearBtn();
             });
 
             searchInput.addEventListener('input', debounce(() => {
@@ -698,6 +808,54 @@
                     updateInputValue();
                 }
             });
+        });
+
+        // --- 3. Ensure any standalone search/filter input has a working clear button ---
+        const searchInputs = document.querySelectorAll('input[type="search"], input[id*="search"], input[id*="Search"], input[name="q"], input.search-input, input.search-input-modern');
+        searchInputs.forEach(inputEl => {
+            if (inputEl.closest('.autocomplete-wrapper')) return;
+            const parent = inputEl.parentElement;
+            if (!parent) return;
+            const existingBtn = parent.querySelector('.btn-clear-search, .guest-clear-search-btn, .fare-search-clear, .autocomplete-clear-btn');
+            if (existingBtn) return;
+
+            const computedPos = window.getComputedStyle(parent).position;
+            if (computedPos === 'static') {
+                parent.style.position = 'relative';
+            }
+
+            inputEl.style.paddingRight = '32px';
+
+            const clearBtn = document.createElement('button');
+            clearBtn.type = 'button';
+            clearBtn.className = 'autocomplete-clear-btn';
+            clearBtn.title = 'Clear search';
+            clearBtn.setAttribute('aria-label', 'Clear search');
+            clearBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>';
+
+            function updateBtn() {
+                clearBtn.style.display = (inputEl.value && inputEl.value.trim() !== '') ? 'inline-flex' : 'none';
+            }
+            updateBtn();
+
+            clearBtn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                inputEl.value = '';
+                updateBtn();
+                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                inputEl.focus();
+            });
+
+            inputEl.addEventListener('input', updateBtn);
+            inputEl.addEventListener('change', updateBtn);
+            parent.appendChild(clearBtn);
         });
     }
 

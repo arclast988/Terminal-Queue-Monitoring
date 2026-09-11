@@ -11,14 +11,77 @@
     font-size: 14px !important;
 }
 
+/* ── Vehicle Type Checkbox Cards ── */
+.vt-check-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1.5px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    background: var(--surface-sunken, #f8fafc);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    min-height: 52px;
+}
+.vt-check-card:hover {
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.vt-check-card.checked {
+    background: #fff;
+    border-color: var(--vt-color, #1565c0);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--vt-color, #1565c0) 15%, transparent);
+}
+.vt-check-card .form-check-input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.vt-check-card .form-check-input:checked {
+    background-color: var(--vt-color, #1565c0);
+    border-color: var(--vt-color, #1565c0);
+}
+.vt-check-card .vt-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.vt-check-card .vt-label {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-main, #1e293b);
+}
+@media (max-width: 575.98px) {
+    .vt-check-card {
+        padding: 12px 14px;
+        gap: 10px;
+        min-height: 48px;
+    }
+    .vt-check-card .vt-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+    }
+    .vt-check-card .vt-label {
+        font-size: 14px;
+    }
+}
 </style>
 
 <div class="page-header-modern fade-in">
     <div>
         <h1 class="page-title-modern">
-            <i class="bi bi-plus-circle"></i> Add New Route / Fare
+            <i class="bi bi-plus-circle"></i> Add New Route
         </h1>
-        <p class="text-muted mb-0">Create a new route and set initial fare details</p>
+        <p class="text-muted mb-0">Define a new route and assign vehicle types</p>
     </div>
     <div class="mt-3 mt-md-0">
         <a href="<?= base_url('admin/routes') ?>" class="btn-modern btn-modern-outline">
@@ -83,28 +146,25 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label-modern d-block">Vehicle Types & Fares (PHP)</label>
-                            <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Enter fares for all vehicle types serving this route. Leave blank for types that do not serve this route:</div>
+                            <label class="form-label-modern d-block">Vehicle Types <span class="text-danger">*</span></label>
+                            <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Select which vehicle types operate on this route. Fares can be assigned later in <strong>Fare Management</strong>.</div>
                             <div class="row g-3">
                                 <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                                     <?php
                                         $vtSlug = $vehicleType['slug'];
                                         $vtCol  = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vtSlug);
                                         $vtIco  = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
-                                        $val    = old('fares.' . $vtSlug, ($vtSlug === 'van' ? old('fare') : ''));
+                                        $isChecked = (is_array(old('vehicle_types')) && in_array($vtSlug, old('vehicle_types')));
                                     ?>
                                     <div class="col-12 col-sm-6 col-md-4">
-                                        <div class="p-3 border rounded-3 h-100" style="background: var(--surface-sunken, #f8fafc); border-color: var(--border, #e2e8f0) !important; border-top: 3.5px solid <?= esc($vtCol) ?> !important;">
-                                            <div class="fw-bold mb-2 d-flex align-items-center gap-2" style="color: <?= esc($vtCol) ?>; font-size: 15px;">
+                                        <label class="vt-check-card <?= $isChecked ? 'checked' : '' ?>" style="--vt-color: <?= esc($vtCol) ?>; border-top: 3px solid <?= esc($vtCol) ?>;">
+                                            <input type="checkbox" name="vehicle_types[]" value="<?= esc($vtSlug) ?>"
+                                                   class="form-check-input mt-0 vt-checkbox" <?= $isChecked ? 'checked' : '' ?>>
+                                            <span class="vt-icon" style="background: <?= esc($vtCol) ?>18; color: <?= esc($vtCol) ?>;">
                                                 <i class="fas <?= esc($vtIco) ?>"></i>
-                                                <span style="color: var(--text-main);"><?= esc($vehicleType['name']) ?></span>
-                                            </div>
-                                            <div class="input-group-modern">
-                                                <span class="input-group-text-modern">₱</span>
-                                                <input type="number" step="0.01" min="1" class="input-modern" name="fares[<?= esc($vtSlug) ?>]"
-                                                       value="<?= esc($val) ?>" placeholder="0.00">
-                                            </div>
-                                        </div>
+                                            </span>
+                                            <span class="vt-label"><?= esc($vehicleType['name']) ?></span>
+                                        </label>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -119,9 +179,22 @@
                             </a>
                         </div>
                     </form>
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.querySelectorAll('.vt-checkbox').forEach(function(cb) {
+                            cb.addEventListener('change', function() {
+                                var card = this.closest('.vt-check-card');
+                                if (card) {
+                                    card.classList.toggle('checked', this.checked);
+                                }
+                            });
+                        });
+                    });
+                    </script>
                 </div>
             </div>
         </div>
     </div>
 
 <?= $this->include('templates/footer') ?>
+

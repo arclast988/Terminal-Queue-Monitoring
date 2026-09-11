@@ -12,7 +12,7 @@ class RouteModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['destination', 'terminal_id', 'vehicle_type'];
+    protected $allowedFields    = ['destination', 'terminal_id', 'vehicle_type', 'status'];
 
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
@@ -27,5 +27,43 @@ class RouteModel extends Model
     {
         return $this->select('routes.*, terminals.name as origin')
                     ->join('terminals', 'terminals.id = routes.terminal_id');
+    }
+
+    /**
+     * Scope: Only active routes that have an active regular fare > 0.
+     * Usage: $routeModel->withActiveFare()->findAll()
+     */
+    public function withActiveFare(): self
+    {
+        $db = \Config\Database::connect();
+        $subquery = $db->table('fares')
+            ->select('fares.route_id')
+            ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
+            ->where('fare_discounts.type', 'regular')
+            ->where('fares.amount >', 0);
+
+        return $this->select('routes.*, terminals.name as origin')
+                    ->join('terminals', 'terminals.id = routes.terminal_id')
+                    ->where('routes.status', 'active')
+                    ->whereIn('routes.id', $subquery);
+    }
+
+    /**
+     * Scope: Active routes that do not have an active regular fare assigned.
+     * Usage: $routeModel->withoutFare()->findAll()
+     */
+    public function withoutFare(): self
+    {
+        $db = \Config\Database::connect();
+        $subquery = $db->table('fares')
+            ->select('fares.route_id')
+            ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
+            ->where('fare_discounts.type', 'regular')
+            ->where('fares.amount >', 0);
+
+        return $this->select('routes.*, terminals.name as origin')
+                    ->join('terminals', 'terminals.id = routes.terminal_id')
+                    ->where('routes.status', 'active')
+                    ->whereNotIn('routes.id', $subquery);
     }
 }

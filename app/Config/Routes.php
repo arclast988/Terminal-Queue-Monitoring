@@ -59,7 +59,10 @@ $routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('update/(:num)', 'Admin\Routes::update/$1');
     $routes->post('update_group/(:num)', 'Admin\Routes::updateGroup/$1');
     $routes->post('delete/(:num)', 'Admin\Routes::delete/$1');
+    $routes->post('delete-fare/(:num)', 'Admin\Routes::deleteFare/$1');
     $routes->post('delete_group/(:num)', 'Admin\Routes::deleteGroup/$1');
+    $routes->post('deactivate_group/(:num)', 'Admin\Routes::deactivateGroup/$1');
+    $routes->post('activate_group/(:num)', 'Admin\Routes::activateGroup/$1');
 });
 
 // Vehicle Register — Admin only (per DFD 2.1: only Admin inputs vehicle records)
@@ -70,6 +73,8 @@ $routes->group('admin/vehicles', ['filter' => 'auth:admin'], function ($routes) 
     $routes->post('store', 'Admin\Vehicles::store');
     $routes->post('update/(:num)', 'Admin\Vehicles::update/$1');
     $routes->post('delete/(:num)', 'Admin\Vehicles::delete/$1');
+    $routes->post('deactivate/(:num)', 'Admin\Vehicles::deactivate/$1');
+    $routes->post('activate/(:num)', 'Admin\Vehicles::activate/$1');
 });
 
 // Vehicle type configuration — Admin and Super Admin
@@ -99,7 +104,11 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('users/store', 'Admin\Users::store');
     $routes->get('users/edit/(:num)', 'Admin\Users::edit/$1');
     $routes->post('users/update/(:num)', 'Admin\Users::update/$1');
+    $routes->post('users/deactivate/(:num)', 'Admin\Users::deactivate/$1');
+    $routes->post('users/activate/(:num)', 'Admin\Users::activate/$1');
     $routes->post('users/delete/(:num)', 'Admin\Users::delete/$1');
+    $routes->post('users/upload-avatar/(:num)', 'Admin\Users::uploadAvatar/$1');
+    $routes->post('users/remove-avatar/(:num)', 'Admin\Users::removeAvatar/$1');
 
     // Terminals
     $routes->get('terminals', 'Admin\Terminals::index');

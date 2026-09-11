@@ -164,7 +164,12 @@
         <form method="get" action="<?= base_url('admin/history') ?>" id="historyFilterForm" class="row g-3 align-items-end">
             <div class="col-12 col-lg-3 col-md-6">
                 <label class="form-label-modern"><i class="bi bi-search me-1"></i> Keyword Search</label>
-                <input type="text" class="input-modern" name="q" placeholder="Plate, Driver, or Destination..." value="<?= esc($search ?? '') ?>">
+                <div class="position-relative">
+                    <input type="text" class="input-modern pe-4" id="admin-history-q" name="q" placeholder="Plate, Driver, or Destination..." value="<?= esc($search ?? '') ?>" oninput="toggleAdminHistoryClear(this.value)">
+                    <button type="button" class="btn-clear-search" id="clear-admin-history-search" onclick="clearAdminHistorySearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?> right: 10px;" title="Clear search">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                </div>
             </div>
             <div class="col-12 col-lg-2 col-md-3">
                 <label class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> From Date</label>
@@ -516,6 +521,36 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchFilteredHistory(targetUrl, true);
         });
     }
+
+    function toggleAdminHistoryClear(val) {
+        var btn = document.getElementById('clear-admin-history-search');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+    window.toggleAdminHistoryClear = toggleAdminHistoryClear;
+
+    window.clearAdminHistorySearch = function() {
+        var input = document.getElementById('admin-history-q');
+        if (input) {
+            input.value = '';
+            toggleAdminHistoryClear('');
+            input.focus();
+            var form = document.getElementById('historyFilterForm');
+            if (form) {
+                var submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.click();
+                else form.submit();
+            }
+        }
+    };
+
+    var histSearchInput = document.getElementById('admin-history-q');
+    if (histSearchInput) toggleAdminHistoryClear(histSearchInput.value);
 
     // Handle browser back and forward navigation
     window.addEventListener('popstate', function(e) {

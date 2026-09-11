@@ -3,6 +3,44 @@
 <!-- Modern Frontend Styles -->
 <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
+<style>
+.table-modern th.actions-col,
+.table-modern td.actions-col {
+    text-align: right !important;
+    white-space: nowrap;
+}
+.announcement-actions-wrap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    vertical-align: middle;
+}
+.announcement-actions-wrap form {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    vertical-align: middle !important;
+}
+.announcement-actions-wrap .btn-modern {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    vertical-align: middle !important;
+    height: 32px !important;
+    padding: 4px 12px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+}
+@media (max-width: 768px) {
+    .announcement-actions-wrap {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+
 <div class="page-header-modern fade-in">
     <h1 class="page-title-modern">
         <i class="bi bi-megaphone"></i>
@@ -60,7 +98,7 @@
                         <th>Status</th>
                         <th>Created</th>
                         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
-                        <th>Actions</th>
+                        <th class="actions-col" style="width: 170px;">Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -91,8 +129,8 @@
                                     <?php endif; ?>
                                 </td>
                                 <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
-                                <td data-label="Actions">
-                                    <div class="d-flex gap-2 justify-content-end">
+                                <td data-label="Actions" class="actions-col">
+                                    <div class="announcement-actions-wrap">
                                         <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>

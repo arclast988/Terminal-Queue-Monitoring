@@ -15,53 +15,75 @@
  * --text-muted, --shadow-sm, --transition) defined.
  */
 ?>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
     /* --- Advisory Bar --- */
     .advisory-bar {
         background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
-        color: white;
-        padding: 10px 5%;
+        color: #ffffff;
+        padding: 0 20px;
+        min-height: 42px;
+        height: 42px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 15px;
-        font-size: 14px;
-        text-align: center;
+        gap: 12px;
         position: relative;
-        z-index: 1;
+        z-index: 10;
+        box-sizing: border-box;
     }
     .advisory-icon {
         width: 28px;
         height: 28px;
-        background: white;
+        min-width: 28px;
+        background: #ffffff;
         border-radius: 50%;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         color: #B71C1C;
-        font-weight: 800;
+        font-size: 13px;
+        font-weight: 900;
         flex-shrink: 0;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.25);
     }
     .advisory-icon:hover {
-        transform: scale(1.15);
         box-shadow: 0 0 0 3px rgba(255,255,255,0.35);
     }
     .advisory-text {
         overflow: hidden;
         white-space: nowrap;
+        display: flex;
+        align-items: center;
+        flex: 1 1 auto;
+        min-width: 0;
+        height: 100%;
+        margin: 0;
+        padding: 0;
     }
     .marquee {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        height: 100%;
+        line-height: 42px !important;
         padding-left: 100%;
-        white-space: pre !important;
+        white-space: nowrap !important;
         animation: gh-marquee var(--marquee-duration, 35s) linear infinite;
         animation-delay: var(--marquee-delay, 0s);
-        font-weight: 800;
-        font-size: 16px;
-        letter-spacing: 0.5px;
-        text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 16px !important;
+        letter-spacing: 0.35px;
+        color: #ffffff !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        margin: 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
     .marquee:hover {
         animation-play-state: paused;
@@ -164,7 +186,6 @@
     }
     .ann-modal-close:hover {
         background: rgba(255,255,255,0.35);
-        transform: scale(1.06);
     }
     .ann-modal-body {
         padding: 20px 24px;
@@ -404,7 +425,7 @@
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .guest-header .logo-section:hover .logo {
-        transform: scale(1.05);
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     }
     .guest-header .logo-text h1 {
         font-size: 20px;
@@ -480,7 +501,6 @@
         gap: 8px;
     }
     .guest-header .nav-menu a.login-btn:hover {
-        transform: translateY(-1px);
         background: #8B0000 !important;
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
@@ -551,8 +571,22 @@
 
     @media (max-width: 768px) {
         .advisory-bar {
-            padding: 8px 5%;
-            font-size: 12.5px;
+            padding: 0 14px;
+            min-height: 38px;
+            height: 38px;
+            gap: 10px;
+        }
+        .advisory-icon {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            font-size: 11px;
+        }
+        .marquee {
+            font-size: 14px !important;
+            line-height: 38px !important;
+            font-weight: 800 !important;
+            white-space: nowrap !important;
         }
         .guest-header {
             padding: 10px 4%;
@@ -636,8 +670,22 @@
 
     @media (max-width: 420px) {
         .advisory-bar {
-            padding: 6px 3%;
-            font-size: 11px;
+            padding: 0 10px;
+            min-height: 36px;
+            height: 36px;
+            gap: 8px;
+        }
+        .advisory-icon {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            font-size: 10px;
+        }
+        .marquee {
+            font-size: 13px !important;
+            line-height: 36px !important;
+            font-weight: 800 !important;
+            white-space: nowrap !important;
         }
         .guest-header {
             padding: 8px 3% !important;
@@ -691,13 +739,7 @@
 <div class="advisory-bar">
     <div class="advisory-icon" onclick="openAnnouncementModal()" title="View Announcements"><i class="fas fa-bullhorn"></i></div>
     <div class="advisory-text">
-        <div class="marquee" id="guestMarquee">
-            <?php if (!empty($announcements) && is_array($announcements)): ?>
-                <?= esc(implode('     |     ', array_column($announcements, 'message'))) ?>
-            <?php else: ?>
-                Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.
-            <?php endif; ?>
-        </div>
+        <div class="marquee" id="guestMarquee"><?php if (!empty($announcements) && is_array($announcements)): ?><?= esc(preg_replace('/\s+/', ' ', implode('     |     ', array_column($announcements, 'message')))) ?><?php else: ?>Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.<?php endif; ?></div>
         <script>
             // Synchronously compute announcement marquee animation phase before paint
             // so the announcement continues seamlessly when clicking between Home, Schedules, and Fares.
@@ -934,7 +976,7 @@
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.success || !Array.isArray(d.announcements)) return;
-                    var msgs = d.announcements.map(function (a) { return a.message; }).filter(Boolean);
+                    var msgs = d.announcements.map(function (a) { return String(a.message || '').replace(/\s+/g, ' ').trim(); }).filter(Boolean);
                     var text = msgs.length ? msgs.join('     |     ') : FALLBACK;
                     if (text !== lastText) {
                         lastText = text;

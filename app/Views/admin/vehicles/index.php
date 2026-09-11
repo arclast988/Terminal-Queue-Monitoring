@@ -119,18 +119,7 @@
                     <input type="number" class="form-control-modern" id="capacity" name="capacity" placeholder="16"
                         value="<?= old('capacity') ?>" min="1" required>
                 </div>
-                <div class="col-12 col-sm-6 col-md-3 col-xl-2">
-                    <label for="status" class="form-label-modern">Status</label>
-                    <div class="position-relative">
-                        <select class="form-select-modern pe-5" id="status" name="status" required>
-                            <option value="active" <?= old('status') === 'active' || old('status') === null ? 'selected' : '' ?>>Active</option>
-                            <option value="maintenance" <?= old('status') === 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
-                        </select>
-                        <span class="dropdown-chevron-icon">
-                            <i class="fas fa-chevron-down"></i>
-                        </span>
-                    </div>
-                </div>
+                <input type="hidden" name="status" value="active">
                 <div class="col-12 col-sm-6 col-md-2 col-xl-1">
                     <button type="submit" class="btn-modern btn-modern-primary w-100 px-2" style="min-height: 44px; white-space: nowrap;">
                         <i class="bi bi-plus-lg"></i> Add
@@ -147,17 +136,24 @@ $totalVehicles = is_array($vehicles) ? count($vehicles) : 0;
 $typeCounts = array_fill_keys(array_column($vehicleTypes ?? [], 'slug'), 0);
 $countActive = 0;
 $countMaintenance = 0;
+$countArchived = 0;
 if (!empty($vehicles) && is_array($vehicles)) {
     foreach ($vehicles as $v) {
+        if ($v['status'] === 'archived') {
+            $countArchived++;
+            continue;
+        }
         if (array_key_exists($v['type'], $typeCounts)) {
             $typeCounts[$v['type']]++;
         }
-        if ($v['status'] === 'active')
+        if ($v['status'] === 'active') {
             $countActive++;
-        else
+        } else {
             $countMaintenance++;
+        }
     }
 }
+$countInService = $countActive + $countMaintenance;
 ?>
 
 <!-- Vehicle Filter & Summary Bar -->
@@ -165,9 +161,12 @@ if (!empty($vehicles) && is_array($vehicles)) {
     <div class="modern-card-body">
         <!-- Filter Buttons Row -->
         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <div class="vehicle-search-group me-3">
+            <div class="vehicle-search-group me-3 position-relative">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate, operator, or driver..." onkeyup="filterVehicles(currentFilter)">
+                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate, operator, or driver..." onkeyup="filterVehicles(currentFilter)" oninput="toggleVehicleClearBtn(this.value)" autocomplete="off">
+                <button type="button" class="btn-clear-search" id="clear-vehicle-search" onclick="clearVehicleSearch()" style="display: none !important;" title="Clear search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
             
             <span class="filter-label-text">
@@ -176,7 +175,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
             
             <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterVehicles('all')">
                 <i class="bi bi-grid-3x3-gap-fill"></i> All
-                <span class="vf-count"><?= $totalVehicles ?></span>
+                <span class="vf-count"><?= $countInService ?></span>
             </button>
             
             <span class="vf-divider"></span>
@@ -187,7 +186,7 @@ if (!empty($vehicles) && is_array($vehicles)) {
                 $tabCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
                 $tabIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
             ?>
-            <button type="button" class="vf-btn" id="filter-btn-<?= esc($vehicleType['slug']) ?>" onclick="filterVehicles('<?= esc($vehicleType['slug']) ?>')">
+            <button type="button" class="vf-btn vf-<?= esc($vehicleType['slug']) ?>" id="filter-btn-<?= esc($vehicleType['slug']) ?>" onclick="filterVehicles('<?= esc($vehicleType['slug']) ?>')">
                 <?php if (!empty($tabImg)): ?>
                     <img src="<?= base_url('images/' . $tabImg) ?>" alt="" style="height:18px; width:auto;">
                 <?php else: ?>
@@ -210,8 +209,15 @@ if (!empty($vehicles) && is_array($vehicles)) {
                 <i class="bi bi-wrench-adjustable"></i> Maintenance
                 <span class="vf-count"><?= $countMaintenance ?></span>
             </button>
+
+            <span class="vf-divider"></span>
+
+            <button type="button" class="vf-btn vf-archive" id="filter-btn-archived" onclick="filterVehicles('archived')">
+                <i class="bi bi-archive-fill"></i> Archived
+                <span class="vf-count"><?= $countArchived ?></span>
+            </button>
         </div>
-        <div id="filter-label" style="font-size:13px; color:var(--slate-500);">Showing all <strong><?= $totalVehicles ?></strong> vehicles</div>
+        <div id="filter-label" style="font-size:13px; color:var(--slate-500);">Showing all <strong><?= $countInService ?></strong> in-service vehicles</div>
     </div>
 </div>
 
@@ -294,10 +300,12 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 </td>
                                 <td data-label="Capacity"><strong><?= $vehicle['capacity'] ?></strong></td>
                                 <td data-label="Status">
-                                    <?php if ($vehicle['status'] == 'active'): ?>
+                                    <?php if ($vehicle['status'] === 'active'): ?>
                                         <span class="badge-modern badge-modern-success">Active</span>
-                                    <?php else: ?>
+                                    <?php elseif ($vehicle['status'] === 'maintenance'): ?>
                                         <span class="badge-modern badge-modern-danger">Maintenance</span>
+                                    <?php else: ?>
+                                        <span class="badge-modern badge-modern-secondary" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1;"><i class="bi bi-archive me-1"></i>Archived</span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Registered">
@@ -307,25 +315,57 @@ if (!empty($vehicles) && is_array($vehicles)) {
                                 </td>
                                 <td data-label="Action">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
-                                            class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
-                                            <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
-                                        </a>
-                                        <form id="delete-vehicle-form-<?= $vehicle['id'] ?>" action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post" class="d-inline">
-                                            <?= csrf_field() ?>
-                                            <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Delete vehicle"
-                                                onclick="showDeleteVehicleModal({
-                                                    formId: 'delete-vehicle-form-<?= $vehicle['id'] ?>',
+                                        <?php if (($vehicle['status'] ?? 'active') === 'archived'): ?>
+                                            <button type="button" class="btn-modern btn-modern-sm btn-action-activate" title="Activate vehicle"
+                                                onclick="showActivateVehicleModal({
                                                     vehicleId: '<?= $vehicle['id'] ?>',
                                                     plateNumber: '<?= esc(addslashes($vehicle['plate_number'])) ?>',
                                                     typeLabel: '<?= esc(addslashes(vehicle_type_label($vehicle['type']))) ?>',
+                                                    typeColor: '<?= esc(addslashes(vehicle_type_color($vehicle['type']))) ?>',
                                                     driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
                                                     operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
                                                     route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
                                                 })">
-                                                <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
+                                                <i class="bi bi-check-circle"></i> <span class="action-label">Activate</span>
                                             </button>
-                                        </form>
+                                            <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
+                                                class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
+                                                <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
+                                            </a>
+                                            <form id="delete-vehicle-form-<?= $vehicle['id'] ?>" action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post" class="d-inline">
+                                                <?= csrf_field() ?>
+                                                <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Permanently delete vehicle"
+                                                    onclick="showDeleteVehicleModal({
+                                                        formId: 'delete-vehicle-form-<?= $vehicle['id'] ?>',
+                                                        vehicleId: '<?= $vehicle['id'] ?>',
+                                                        plateNumber: '<?= esc(addslashes($vehicle['plate_number'])) ?>',
+                                                        typeLabel: '<?= esc(addslashes(vehicle_type_label($vehicle['type']))) ?>',
+                                                        typeColor: '<?= esc(addslashes(vehicle_type_color($vehicle['type']))) ?>',
+                                                        driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
+                                                        operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
+                                                        route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
+                                                    })">
+                                                    <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
+                                                class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
+                                                <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
+                                            </a>
+                                            <button type="button" class="btn-modern btn-modern-sm btn-action-deactivate" title="Deactivate vehicle"
+                                                onclick="showDeactivateVehicleModal({
+                                                    vehicleId: '<?= $vehicle['id'] ?>',
+                                                    plateNumber: '<?= esc(addslashes($vehicle['plate_number'])) ?>',
+                                                    typeLabel: '<?= esc(addslashes(vehicle_type_label($vehicle['type']))) ?>',
+                                                    typeColor: '<?= esc(addslashes(vehicle_type_color($vehicle['type']))) ?>',
+                                                    driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
+                                                    operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
+                                                    route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
+                                                })">
+                                                <i class="bi bi-pause-circle"></i> <span class="action-label">Deactivate</span>
+                                            </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -564,6 +604,22 @@ if (!empty($vehicles) && is_array($vehicles)) {
     }
 
     /* Active states per type */
+    <?php foreach (($vehicleTypes ?? []) as $vt): ?>
+    <?php $vtCol = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($vt['slug']); ?>
+    .vf-btn.vf-<?= esc($vt['slug']) ?>.active {
+        background: <?= esc($vtCol) ?> !important;
+        border-color: <?= esc($vtCol) ?> !important;
+        color: #fff !important;
+    }
+    .vf-btn.vf-<?= esc($vt['slug']) ?>.active .vf-count {
+        background: rgba(255, 255, 255, 0.25) !important;
+        color: #fff !important;
+    }
+    .vf-btn.vf-<?= esc($vt['slug']) ?>.active:hover {
+        box-shadow: 0 4px 12px <?= esc($vtCol) ?>44 !important;
+    }
+    <?php endforeach; ?>
+
     .vf-btn.vf-jeepney.active {
         background: var(--vehicle-jeepney, #1565c0) !important;
         border-color: var(--vehicle-jeepney, #1565c0) !important;
@@ -619,10 +675,27 @@ if (!empty($vehicles) && is_array($vehicles)) {
             font-size: 13px;
         }
 
-        .vehicle-action-label {
-            display: none;
+        .vehicle-action-label,
+        .action-label {
+            display: inline !important;
         }
-    }
+
+        .btn-group-modern {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 4px !important;
+            align-items: center !important;
+        }
+
+        .btn-group-modern .btn-modern {
+            padding: 4px 8px !important;
+            font-size: 11.5px !important;
+            border-radius: 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            white-space: nowrap !important;
+        }
 
     @media (max-width: 768px) {
         .vehicle-search-group {
@@ -660,12 +733,33 @@ if (!empty($vehicles) && is_array($vehicles)) {
     let currentFilter = 'all';
     const vehicleTypeLabels = <?= json_encode($vehicleTypeLabels, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
+    function toggleVehicleClearBtn(val) {
+        const btn = document.getElementById('clear-vehicle-search');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+
+    function clearVehicleSearch() {
+        const input = document.getElementById('vehicle-search');
+        if (input) {
+            input.value = '';
+            toggleVehicleClearBtn('');
+            input.focus();
+            filterVehicles(currentFilter);
+        }
+    }
+
     function filterVehicles(filter) {
         currentFilter = filter;
         const rows = document.querySelectorAll('#vehicles-table tbody tr[data-type]');
         const filterLabel = document.getElementById('filter-label');
         const typeFilters = Object.keys(vehicleTypeLabels);
-        const statusFilters = ['active', 'maintenance'];
+        const statusFilters = ['active', 'maintenance', 'archived'];
 
         // Update active button styling
         document.querySelectorAll('.vf-btn').forEach(btn => btn.classList.remove('active'));
@@ -674,22 +768,30 @@ if (!empty($vehicles) && is_array($vehicles)) {
 
         // Filter label map
         const labelMap = Object.assign({
-            'all': 'all',
+            'all': 'in-service',
             'active': 'Active',
-            'maintenance': 'Maintenance'
+            'maintenance': 'Maintenance',
+            'archived': 'Archived'
         }, vehicleTypeLabels);
 
-        const searchQuery = document.getElementById('vehicle-search') ? document.getElementById('vehicle-search').value.toLowerCase() : '';
+        const searchInput = document.getElementById('vehicle-search');
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        toggleVehicleClearBtn(searchQuery);
 
         let visibleCount = 0;
         rows.forEach(row => {
             let show = false;
+            const status = row.getAttribute('data-status') || 'active';
+            const isArchived = (status === 'archived');
+
             if (filter === 'all') {
-                show = true;
+                show = !isArchived;
+            } else if (filter === 'archived') {
+                show = isArchived;
+            } else if (filter === 'active' || filter === 'maintenance') {
+                show = (status === filter);
             } else if (typeFilters.includes(filter)) {
-                show = row.getAttribute('data-type') === filter;
-            } else if (statusFilters.includes(filter)) {
-                show = row.getAttribute('data-status') === filter;
+                show = !isArchived && (row.getAttribute('data-type') === filter);
             }
 
             if (show && searchQuery) {
@@ -711,15 +813,18 @@ if (!empty($vehicles) && is_array($vehicles)) {
         let num = 1;
         rows.forEach(row => {
             if (!row.classList.contains('vehicle-row-hidden')) {
-                row.querySelector('.row-number').textContent = num++;
+                const numEl = row.querySelector('.row-number strong') || row.querySelector('.row-number');
+                if (numEl) numEl.textContent = num++;
             }
         });
 
         // Update filter label text
         if (filter === 'all') {
-            filterLabel.innerHTML = 'Showing all <strong>' + visibleCount + '</strong> vehicles';
+            filterLabel.innerHTML = 'Showing all <strong>' + visibleCount + '</strong> in-service vehicles';
+        } else if (filter === 'archived') {
+            filterLabel.innerHTML = 'Showing <strong>' + visibleCount + '</strong> archived vehicle' + (visibleCount !== 1 ? 's' : '');
         } else {
-            filterLabel.innerHTML = 'Showing <strong>' + visibleCount + '</strong> ' + labelMap[filter] + ' vehicle' + (visibleCount !== 1 ? 's' : '');
+            filterLabel.innerHTML = 'Showing <strong>' + visibleCount + '</strong> ' + (labelMap[filter] || filter) + ' vehicle' + (visibleCount !== 1 ? 's' : '');
         }
 
         // Handle empty state
@@ -1716,7 +1821,97 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 </div>
 
 <!-- ══════════════════════════════════════════════════ -->
-<!--  Delete Vehicle Confirmation Modal                 -->
+<!--  Deactivate Vehicle Confirmation Modal             -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="deactivateVehicleConfirmModal" tabindex="-1" aria-labelledby="deactivateVehicleConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-vehicle-modal-content">
+            <!-- Amber accent stripe -->
+            <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);"></div>
+
+            <form id="deactivateVehicleForm" method="post" action="">
+                <?= csrf_field() ?>
+                <div class="modal-body text-center p-4">
+                    <!-- Icon badge -->
+                    <div style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 8px #fffbeb;">
+                        <i class="bi bi-pause-circle-fill"></i>
+                    </div>
+
+                    <h4 class="delete-vehicle-modal-title" id="deactivateVehicleConfirmLabel">Deactivate Vehicle?</h4>
+                    <p class="delete-vehicle-modal-desc">
+                        Are you sure you want to deactivate this vehicle? It will be removed from active queue operations and moved to the archive.
+                    </p>
+
+                    <!-- Vehicle preview chip -->
+                    <div class="delete-vehicle-item-chip">
+                        <i class="bi bi-truck" id="deactivateVehicleIcon"></i>
+                        <span id="deactivateVehiclePlateLabel" class="fw-bold" style="font-family: monospace; letter-spacing: 0.5px; font-size: 0.95rem;">PLATE</span>
+                        <span class="delete-vehicle-type-tag" id="deactivateVehicleTypeTag">TYPE</span>
+                    </div>
+
+                    <div id="deactivateVehicleSubInfo" class="mt-2 text-muted" style="font-size: 0.825rem;"></div>
+                </div>
+
+                <div class="modal-footer delete-vehicle-modal-footer">
+                    <button type="button" class="btn delete-vehicle-btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn" style="flex: 1; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; font-weight: 600; padding: 10px 18px; border-radius: 10px; border: none; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
+                        <i class="bi bi-pause-circle me-1"></i> Yes, Deactivate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Activate Vehicle Confirmation Modal               -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="activateVehicleConfirmModal" tabindex="-1" aria-labelledby="activateVehicleConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content delete-vehicle-modal-content">
+            <!-- Green accent stripe -->
+            <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #10b981 0%, #059669 100%);"></div>
+
+            <form id="activateVehicleForm" method="post" action="">
+                <?= csrf_field() ?>
+                <div class="modal-body text-center p-4">
+                    <!-- Icon badge -->
+                    <div style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 8px #f0fdf4;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+
+                    <h4 class="delete-vehicle-modal-title" id="activateVehicleConfirmLabel">Activate Vehicle?</h4>
+                    <p class="delete-vehicle-modal-desc">
+                        Are you sure you want to reactivate this vehicle? It will be restored from the archive and become eligible for terminal queue assignments.
+                    </p>
+
+                    <!-- Vehicle preview chip -->
+                    <div class="delete-vehicle-item-chip">
+                        <i class="bi bi-truck" id="activateVehicleIcon"></i>
+                        <span id="activateVehiclePlateLabel" class="fw-bold" style="font-family: monospace; letter-spacing: 0.5px; font-size: 0.95rem;">PLATE</span>
+                        <span class="delete-vehicle-type-tag" id="activateVehicleTypeTag">TYPE</span>
+                    </div>
+
+                    <div id="activateVehicleSubInfo" class="mt-2 text-muted" style="font-size: 0.825rem;"></div>
+                </div>
+
+                <div class="modal-footer delete-vehicle-modal-footer">
+                    <button type="button" class="btn delete-vehicle-btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; font-weight: 600; padding: 10px 18px; border-radius: 10px; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                        <i class="bi bi-check-circle me-1"></i> Yes, Activate
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Delete Vehicle Confirmation Modal (Archive Only)   -->
 <!-- ══════════════════════════════════════════════════ -->
 <div class="modal fade" id="deleteVehicleConfirmModal" tabindex="-1" aria-labelledby="deleteVehicleConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
@@ -1730,14 +1925,14 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                     <i class="fas fa-trash-can"></i>
                 </div>
 
-                <h4 class="delete-vehicle-modal-title" id="deleteVehicleConfirmLabel">Delete Vehicle?</h4>
+                <h4 class="delete-vehicle-modal-title" id="deleteVehicleConfirmLabel">Permanently Delete Vehicle?</h4>
                 <p class="delete-vehicle-modal-desc" id="deleteVehicleConfirmMessage">
-                    Are you sure you want to delete this vehicle? This action cannot be undone.
+                    Are you sure you want to permanently delete this vehicle from the archive? This action cannot be undone.
                 </p>
 
                 <!-- Vehicle preview chip -->
                 <div class="delete-vehicle-item-chip" id="deleteVehicleItemChip">
-                    <i class="bi bi-truck text-danger"></i>
+                    <i class="bi bi-truck" id="deleteVehicleIcon"></i>
                     <span id="deleteVehiclePlateLabel" class="fw-bold" style="font-family: monospace; letter-spacing: 0.5px; font-size: 0.95rem;">PLATE</span>
                     <span class="delete-vehicle-type-tag" id="deleteVehicleTypeTag">TYPE</span>
                 </div>
@@ -2129,6 +2324,82 @@ body.modal-open #deleteVehicleTypeConfirmModal,
 (function() {
     var _deleteVehicleFormId = null;
 
+    window.showDeactivateVehicleModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('deactivateVehicleConfirmModal');
+        var form = document.getElementById('deactivateVehicleForm');
+        if (form) {
+            form.action = '<?= base_url('admin/vehicles/deactivate') ?>/' + opts.vehicleId;
+        }
+        var plateEl = document.getElementById('deactivateVehiclePlateLabel');
+        var typeTagEl = document.getElementById('deactivateVehicleTypeTag');
+        var iconEl = document.getElementById('deactivateVehicleIcon');
+        var subInfoEl = document.getElementById('deactivateVehicleSubInfo');
+        var color = opts.typeColor || '#f59e0b';
+
+        if (plateEl) plateEl.textContent = opts.plateNumber || 'Vehicle';
+        if (iconEl) iconEl.style.color = color;
+        if (typeTagEl) {
+            if (opts.typeLabel) {
+                typeTagEl.textContent = opts.typeLabel;
+                typeTagEl.style.backgroundColor = color + '20';
+                typeTagEl.style.color = color;
+                typeTagEl.style.border = '1px solid ' + color + '45';
+                typeTagEl.style.display = '';
+            } else {
+                typeTagEl.style.display = 'none';
+            }
+        }
+        if (subInfoEl) {
+            var parts = [];
+            if (opts.driverName && opts.driverName !== '—') parts.push('Driver: ' + opts.driverName);
+            if (opts.route) parts.push(opts.route);
+            subInfoEl.textContent = parts.join(' · ');
+            subInfoEl.style.display = parts.length > 0 ? '' : 'none';
+        }
+        if (modalEl && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    };
+
+    window.showActivateVehicleModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('activateVehicleConfirmModal');
+        var form = document.getElementById('activateVehicleForm');
+        if (form) {
+            form.action = '<?= base_url('admin/vehicles/activate') ?>/' + opts.vehicleId;
+        }
+        var plateEl = document.getElementById('activateVehiclePlateLabel');
+        var typeTagEl = document.getElementById('activateVehicleTypeTag');
+        var iconEl = document.getElementById('activateVehicleIcon');
+        var subInfoEl = document.getElementById('activateVehicleSubInfo');
+        var color = opts.typeColor || '#10b981';
+
+        if (plateEl) plateEl.textContent = opts.plateNumber || 'Vehicle';
+        if (iconEl) iconEl.style.color = color;
+        if (typeTagEl) {
+            if (opts.typeLabel) {
+                typeTagEl.textContent = opts.typeLabel;
+                typeTagEl.style.backgroundColor = color + '20';
+                typeTagEl.style.color = color;
+                typeTagEl.style.border = '1px solid ' + color + '45';
+                typeTagEl.style.display = '';
+            } else {
+                typeTagEl.style.display = 'none';
+            }
+        }
+        if (subInfoEl) {
+            var parts = [];
+            if (opts.driverName && opts.driverName !== '—') parts.push('Driver: ' + opts.driverName);
+            if (opts.route) parts.push(opts.route);
+            subInfoEl.textContent = parts.join(' · ');
+            subInfoEl.style.display = parts.length > 0 ? '' : 'none';
+        }
+        if (modalEl && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    };
+
     window.showDeleteVehicleModal = function(opts) {
         opts = opts || {};
         var modalEl = document.getElementById('deleteVehicleConfirmModal');
@@ -2142,15 +2413,22 @@ body.modal-open #deleteVehicleTypeConfirmModal,
 
         var plateEl = document.getElementById('deleteVehiclePlateLabel');
         var typeTagEl = document.getElementById('deleteVehicleTypeTag');
+        var iconEl = document.getElementById('deleteVehicleIcon');
         var subInfoEl = document.getElementById('deleteVehicleSubInfo');
+        var color = opts.typeColor || '#dc2626';
 
         if (plateEl) {
             plateEl.textContent = opts.plateNumber || 'Vehicle';
         }
-
+        if (iconEl) {
+            iconEl.style.color = color;
+        }
         if (typeTagEl) {
             if (opts.typeLabel) {
                 typeTagEl.textContent = opts.typeLabel;
+                typeTagEl.style.backgroundColor = color + '20';
+                typeTagEl.style.color = color;
+                typeTagEl.style.border = '1px solid ' + color + '45';
                 typeTagEl.style.display = '';
             } else {
                 typeTagEl.style.display = 'none';

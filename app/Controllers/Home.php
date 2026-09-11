@@ -45,7 +45,7 @@ class Home extends BaseController
             'active_queue' => $active_queue,
             'departure_rules' => $this->getDepartureRules(),
             'route_average_departures' => $this->getRouteAverageDepartures(),
-            'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
+            'routes' => enrich_routes_with_discounts($routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll()),
             'announcements' => $announcements
         ];
 
@@ -96,7 +96,7 @@ class Home extends BaseController
                 'active_queue' => $active_queue,
                 'departure_rules' => $this->getDepartureRules(),
                 'route_average_departures' => $this->getRouteAverageDepartures(),
-                'routes' => enrich_routes_with_discounts($routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll()),
+                'routes' => enrich_routes_with_discounts($routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll()),
                 'db_vehicle_types' => get_db_vehicle_types(),
                 'cached_at' => microtime(true),
             ];

@@ -206,7 +206,12 @@
         <form method="get" action="<?= base_url('admin/logs') ?>" id="logsFilterForm" class="row g-3 align-items-end">
             <div class="col-12 col-lg-3 col-md-6">
                 <label class="form-label-modern"><i class="bi bi-search me-1"></i> Keyword Search</label>
-                <input type="text" class="input-modern" name="q" placeholder="Actions, details, user..." value="<?= esc($search ?? '') ?>">
+                <div class="position-relative">
+                    <input type="text" class="input-modern pe-4" id="admin-logs-q" name="q" placeholder="Actions, details, user..." value="<?= esc($search ?? '') ?>" oninput="toggleAdminLogsClear(this.value)">
+                    <button type="button" class="btn-clear-search" id="clear-admin-logs-search" onclick="clearAdminLogsSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?> right: 10px;" title="Clear search">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                </div>
             </div>
             <div class="col-12 col-lg-2 col-md-3">
                 <label class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> From Date</label>
@@ -556,6 +561,35 @@ document.addEventListener('DOMContentLoaded', function() {
             fetchFilteredLogs(targetUrl, true);
         });
     }
+
+    function toggleAdminLogsClear(val) {
+        var btn = document.getElementById('clear-admin-logs-search');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+    window.toggleAdminLogsClear = toggleAdminLogsClear;
+
+    window.clearAdminLogsSearch = function() {
+        var input = document.getElementById('admin-logs-q');
+        if (input) {
+            input.value = '';
+            toggleAdminLogsClear('');
+            input.focus();
+            if (form) {
+                var submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.click();
+                else form.submit();
+            }
+        }
+    };
+
+    var logsSearchInput = document.getElementById('admin-logs-q');
+    if (logsSearchInput) toggleAdminLogsClear(logsSearchInput.value);
 
     // Handle browser back and forward navigation
     window.addEventListener('popstate', function(e) {

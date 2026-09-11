@@ -28,51 +28,75 @@
 <?php endif; ?>
 
 <?php
-// Compute summary counts
-$totalUsers = count($users);
-$countAdmin = 0;
-$countDispatcher = 0;
-foreach ($users as $u) {
-    if ($u['role'] === 'super_admin' || $u['role'] === 'admin') {
-        $countAdmin++;
-    } else {
-        $countDispatcher++;
+// Compute summary counts or fallback
+$totalActiveUsers = $countActive ?? 0;
+$countAdmin = $countAdmin ?? 0;
+$countDispatcher = $countDispatcher ?? 0;
+$countArchived = $countArchived ?? 0;
+if (!isset($countActive)) {
+    $totalActiveUsers = 0;
+    $countAdmin = 0;
+    $countDispatcher = 0;
+    $countArchived = 0;
+    foreach ($users as $u) {
+        if (($u['status'] ?? 'active') === 'archived') {
+            $countArchived++;
+        } else {
+            $totalActiveUsers++;
+            if ($u['role'] === 'super_admin' || $u['role'] === 'admin') {
+                $countAdmin++;
+            } else {
+                $countDispatcher++;
+            }
+        }
     }
 }
 ?>
 
 <!-- User Search & Filter Bar -->
 <div class="modern-card shadow-modern fade-in mb-4">
-    <div class="modern-card-body">
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <div class="user-search-group me-3">
+    <div class="modern-card-body p-3 p-md-4">
+        <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
+            <div class="user-search-group position-relative">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)">
+                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)" oninput="toggleUserClearBtn(this.value)" autocomplete="off">
+                <button type="button" class="btn-clear-search" id="clear-user-search" onclick="clearUserSearch()" style="display: none !important;" title="Clear search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
             
-            <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
-                <i class="bi bi-funnel me-1"></i>Filter:
-            </span>
-            
-            <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterUsers('all')">
-                <i class="bi bi-grid-3x3-gap-fill"></i> All
-                <span class="vf-count"><?= $totalUsers ?></span>
-            </button>
-            
-            <span class="vf-divider" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
-            
-            <button type="button" class="vf-btn vf-van" id="filter-btn-admin" onclick="filterUsers('admin')">
-                <i class="bi bi-shield-lock"></i> Admins
-                <span class="vf-count"><?= $countAdmin ?></span>
-            </button>
-            
-            <button type="button" class="vf-btn vf-jeepney" id="filter-btn-dispatcher" onclick="filterUsers('dispatcher')">
-                <i class="bi bi-person-fill-gear"></i> Dispatchers
-                <span class="vf-count"><?= $countDispatcher ?></span>
-            </button>
+            <div class="user-filter-bar d-flex flex-wrap align-items-center gap-2">
+                <span class="user-filter-heading d-none d-sm-inline-flex align-items-center" style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
+                    <i class="bi bi-funnel me-1" style="font-size: 14px;"></i>Filter:
+                </span>
+                
+                <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterUsers('all')">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> All
+                    <span class="vf-count"><?= $totalActiveUsers ?></span>
+                </button>
+                
+                <span class="vf-divider d-none d-md-inline-block" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
+                
+                <button type="button" class="vf-btn vf-van" id="filter-btn-admin" onclick="filterUsers('admin')">
+                    <i class="bi bi-shield-lock"></i> Admins
+                    <span class="vf-count"><?= $countAdmin ?></span>
+                </button>
+                
+                <button type="button" class="vf-btn vf-dispatcher" id="filter-btn-dispatcher" onclick="filterUsers('dispatcher')">
+                    <i class="bi bi-person-fill-gear"></i> Dispatchers
+                    <span class="vf-count"><?= $countDispatcher ?></span>
+                </button>
+
+                <span class="vf-divider d-none d-md-inline-block" style="width:1px; height:24px; background:#dee2e6; margin:0 4px;"></span>
+
+                <button type="button" class="vf-btn vf-archive" id="filter-btn-archived" onclick="filterUsers('archived')">
+                    <i class="bi bi-archive-fill"></i> Archived
+                    <span class="vf-count"><?= $countArchived ?></span>
+                </button>
+            </div>
         </div>
         
-        <div id="filter-label" style="font-size:13px; color:#64748b;">Showing all <strong><?= $totalUsers ?></strong> users</div>
+        <div id="filter-label" class="mt-2 pt-1" style="font-size:13px; color:#64748b;">Showing all <strong><?= $totalActiveUsers ?></strong> active users</div>
     </div>
 </div>
 
@@ -98,7 +122,7 @@ foreach ($users as $u) {
                 <tbody>
                     <?php if (!empty($users)): ?>
                         <?php foreach ($users as $i => $user): ?>
-                            <tr data-role="<?= esc($user['role']) ?>">
+                            <tr data-role="<?= esc($user['role']) ?>" data-status="<?= esc($user['status'] ?? 'active') ?>" class="<?= ($user['status'] ?? 'active') === 'archived' ? 'user-row-archived' : '' ?>">
                                 <td class="row-number" data-label="#"><?= $i + 1 ?></td>
                                 <td data-label="User">
                                     <?php
@@ -113,13 +137,42 @@ foreach ($users as $u) {
                                     if (empty($initials)) {
                                         $initials = strtoupper(substr($user['username'], 0, 2));
                                     }
+                                    $currentUserId = (int) session()->get('id');
+                                    $currentUserRole = session()->get('role');
+                                    $canChangeAvatar = false;
+                                    if ($user['role'] === 'super_admin') {
+                                        $canChangeAvatar = ($currentUserId === (int) $user['id']);
+                                    } elseif ($user['role'] === 'admin') {
+                                        $canChangeAvatar = ($currentUserRole === 'super_admin' || $currentUserId === (int) $user['id']);
+                                    } else {
+                                        $canChangeAvatar = ($currentUserRole === 'super_admin' || $currentUserRole === 'admin');
+                                    }
                                     ?>
                                     <div class="d-flex align-items-center user-cell-content">
-                                        <div class="avatar-circle me-3 <?= $user['role'] === 'super_admin' ? 'avatar-super-admin' : ($user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher') ?>">
-                                            <?php if (!empty($user['profile_image'])): ?>
-                                                <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                                            <?php else: ?>
-                                                <?= esc($initials) ?>
+                                        <div class="avatar-wrapper me-3 <?= $canChangeAvatar ? 'avatar-editable' : '' ?>" id="avatar-wrapper-<?= $user['id'] ?>"
+                                            <?php if ($canChangeAvatar): ?>
+                                                role="button"
+                                                tabindex="0"
+                                                title="Click to change profile picture"
+                                                onclick="openAvatarModal(<?= $user['id'] ?>, '<?= esc(addslashes($user['full_name'] ?: $user['username']), 'js') ?>', '<?= !empty($user['profile_image']) ? base_url(esc($user['profile_image'])) : '' ?>', '<?= esc($initials, 'js') ?>', '<?= esc($user['role'], 'js') ?>')"
+                                                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"
+                                            <?php endif; ?>>
+                                            <div class="avatar-circle <?= $user['role'] === 'super_admin' ? 'avatar-super-admin' : ($user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher') ?>" id="avatar-circle-<?= $user['id'] ?>">
+                                                <?php if (!empty($user['profile_image'])): ?>
+                                                    <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                                <?php else: ?>
+                                                    <span><?= esc($initials) ?></span>
+                                                <?php endif; ?>
+                                                <?php if ($canChangeAvatar): ?>
+                                                    <div class="avatar-hover-overlay">
+                                                        <i class="bi bi-camera-fill"></i>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <?php if ($canChangeAvatar): ?>
+                                                <span class="avatar-edit-badge" title="Change photo">
+                                                    <i class="bi bi-camera-fill"></i>
+                                                </span>
                                             <?php endif; ?>
                                         </div>
                                         <div class="user-info-text" style="min-width: 0; flex: 1 1 auto;">
@@ -138,19 +191,26 @@ foreach ($users as $u) {
                                     </div>
                                 </td>
                                 <td data-label="Role">
-                                    <?php if ($user['role'] === 'super_admin'): ?>
-                                        <span class="profile-role-pill pill-super_admin">
-                                            <i class="fas fa-shield-alt"></i> Super Admin
-                                        </span>
-                                    <?php elseif ($user['role'] === 'admin'): ?>
-                                        <span class="profile-role-pill pill-admin">
-                                            <i class="fas fa-shield-alt"></i> Admin
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="profile-role-pill pill-staff">
-                                            <i class="fas fa-user-gear"></i> Dispatcher
-                                        </span>
-                                    <?php endif; ?>
+                                    <div class="d-flex align-items-center flex-wrap gap-1">
+                                        <?php if ($user['role'] === 'super_admin'): ?>
+                                            <span class="profile-role-pill pill-super_admin">
+                                                <i class="fas fa-shield-alt"></i> Super Admin
+                                            </span>
+                                        <?php elseif ($user['role'] === 'admin'): ?>
+                                            <span class="profile-role-pill pill-admin">
+                                                <i class="fas fa-shield-alt"></i> Admin
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="profile-role-pill pill-staff">
+                                                <i class="fas fa-user-gear"></i> Dispatcher
+                                            </span>
+                                        <?php endif; ?>
+                                        <?php if (($user['status'] ?? 'active') === 'archived'): ?>
+                                            <span class="badge-status-archived" title="This account is deactivated">
+                                                <i class="bi bi-archive-fill me-1"></i>Archived
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td data-label="Assigned Routes">
                                     <?php if ($user['role'] === 'super_admin' || $user['role'] === 'admin'): ?>
@@ -175,38 +235,94 @@ foreach ($users as $u) {
                                     $currentUserRole = session()->get('role');
                                     $targetUserId = (int) $user['id'];
                                     $targetUserRole = $user['role'];
+                                    $isArchived = ($user['status'] ?? 'active') === 'archived';
 
                                     $canEdit = ($targetUserId === $currentUserId) || 
                                                ($currentUserRole === 'super_admin') || 
                                                ($currentUserRole === 'admin' && $targetUserRole === 'staff');
 
-                                    $canDelete = ($targetUserId !== $currentUserId) && 
+                                    // Deactivate: only if currently active, not self, not super_admin
+                                    $canDeactivate = !$isArchived && 
+                                                     ($targetUserId !== $currentUserId) && 
+                                                     ($targetUserRole !== 'super_admin') && 
+                                                     (($currentUserRole === 'super_admin') || 
+                                                      ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
+
+                                    // Activate: only if currently archived
+                                    $canActivate = $isArchived && 
+                                                   (($currentUserRole === 'super_admin') || 
+                                                    ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
+
+                                    // Delete: permanent delete only allowed for archived users, not self, not super_admin
+                                    $canDelete = $isArchived && 
+                                                 ($targetUserId !== $currentUserId) && 
                                                  ($targetUserRole !== 'super_admin') && 
                                                  (($currentUserRole === 'super_admin') || 
                                                   ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
                                     ?>
                                     <div class="btn-group-modern" role="group">
-                                        <?php if ($canEdit): ?>
-                                            <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
-                                                class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
-                                                <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
-                                            </a>
-                                        <?php endif; ?>
-                                        <?php if ($canDelete): ?>
-                                            <form id="delete-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post"
-                                                class="d-inline">
-                                                <?= csrf_field() ?>
-                                                <button type="button" class="btn-modern btn-action-delete btn-modern-sm" title="Delete"
-                                                    onclick="showDeleteUserModal({
-                                                        formId: 'delete-user-form-<?= $user['id'] ?>',
-                                                        userId: '<?= $user['id'] ?>',
-                                                        name: '<?= esc(addslashes($user['full_name'] ?? $user['username'])) ?>',
-                                                        username: '<?= esc(addslashes($user['username'] ?? '')) ?>',
-                                                        role: '<?= esc(addslashes($user['role'] === 'super_admin' ? 'Super Admin' : ($user['role'] === 'admin' ? 'Admin' : 'Dispatcher'))) ?>'
-                                                    })">
-                                                    <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
-                                                </button>
-                                            </form>
+                                        <?php if ($isArchived): ?>
+                                            <?php if ($canActivate): ?>
+                                                <form id="activate-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/activate/' . $user['id']) ?>" method="post" class="d-inline">
+                                                    <?= csrf_field() ?>
+                                                    <button type="button" class="btn-modern btn-action-activate btn-modern-sm" title="Activate"
+                                                        onclick="showActivateUserModal({
+                                                            formId: 'activate-user-form-<?= $user['id'] ?>',
+                                                            userId: '<?= $user['id'] ?>',
+                                                            name: '<?= esc(addslashes($user['full_name'] ?? $user['username'])) ?>',
+                                                            username: '<?= esc(addslashes($user['username'] ?? '')) ?>',
+                                                            role: '<?= esc(addslashes($user['role'] === 'super_admin' ? 'Super Admin' : ($user['role'] === 'admin' ? 'Admin' : 'Dispatcher'))) ?>',
+                                                            rawRole: '<?= esc($user['role']) ?>'
+                                                        })">
+                                                        <i class="bi bi-person-check-fill"></i> <span class="user-action-label">Activate</span>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                            <?php if ($canEdit): ?>
+                                                <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
+                                                    class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
+                                                    <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($canDelete): ?>
+                                                <form id="delete-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post" class="d-inline">
+                                                    <?= csrf_field() ?>
+                                                    <button type="button" class="btn-modern btn-action-delete btn-modern-sm" title="Delete Permanently"
+                                                        onclick="showDeleteUserModal({
+                                                            formId: 'delete-user-form-<?= $user['id'] ?>',
+                                                            userId: '<?= $user['id'] ?>',
+                                                            name: '<?= esc(addslashes($user['full_name'] ?? $user['username'])) ?>',
+                                                            username: '<?= esc(addslashes($user['username'] ?? '')) ?>',
+                                                            role: '<?= esc(addslashes($user['role'] === 'super_admin' ? 'Super Admin' : ($user['role'] === 'admin' ? 'Admin' : 'Dispatcher'))) ?>',
+                                                            rawRole: '<?= esc($user['role']) ?>'
+                                                        })">
+                                                        <i class="bi bi-trash"></i> <span class="user-action-label">Delete</span>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        <?php else: ?>
+                                            <?php if ($canEdit): ?>
+                                                <a href="<?= base_url('admin/users/edit/' . $user['id']) ?>"
+                                                    class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
+                                                    <i class="bi bi-pencil"></i> <span class="user-action-label">Edit</span>
+                                                </a>
+                                            <?php endif; ?>
+                                            <?php if ($canDeactivate): ?>
+                                                <form id="deactivate-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/deactivate/' . $user['id']) ?>" method="post" class="d-inline">
+                                                    <?= csrf_field() ?>
+                                                    <button type="button" class="btn-modern btn-action-deactivate btn-modern-sm" title="Deactivate"
+                                                        onclick="showDeactivateUserModal({
+                                                            formId: 'deactivate-user-form-<?= $user['id'] ?>',
+                                                            userId: '<?= $user['id'] ?>',
+                                                            name: '<?= esc(addslashes($user['full_name'] ?? $user['username'])) ?>',
+                                                            username: '<?= esc(addslashes($user['username'] ?? '')) ?>',
+                                                            role: '<?= esc(addslashes($user['role'] === 'super_admin' ? 'Super Admin' : ($user['role'] === 'admin' ? 'Admin' : 'Dispatcher'))) ?>',
+                                                            rawRole: '<?= esc($user['role']) ?>'
+                                                        })">
+                                                        <i class="bi bi-person-slash"></i> <span class="user-action-label">Deactivate</span>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 </td>
@@ -247,7 +363,7 @@ foreach ($users as $u) {
     }
 
     .user-search-group .input-group-text {
-        height: 38px !important;
+        height: 40px !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
@@ -258,12 +374,12 @@ foreach ($users as $u) {
         border-bottom-left-radius: 9999px !important;
         background-color: var(--card-bg, #fff) !important;
         color: #64748b !important;
-        font-size: 14px !important;
+        font-size: 15px !important;
         transition: border-color 0.2s ease;
     }
 
     .user-search-group .user-search-input {
-        height: 38px !important;
+        height: 40px !important;
         border: 2px solid #cbd5e1 !important;
         border-left: none !important;
         border-top-right-radius: 9999px !important;
@@ -291,32 +407,87 @@ foreach ($users as $u) {
         }
     }
 
-    /* Avatar Circles styling */
+    /* Avatar Circles & Interactive Upload */
+    .avatar-wrapper {
+        position: relative;
+        display: inline-block;
+        flex-shrink: 0;
+        line-height: 1;
+    }
     .avatar-circle {
-        width: 36px;
-        height: 36px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 15px;
         color: #fff;
         flex-shrink: 0;
         letter-spacing: 0.5px;
         overflow: hidden;
+        position: relative;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .avatar-super-admin {
         background: #B71C1C;
-        border: 2px solid rgba(183, 28, 28, 0.2);
+        border: 2.5px solid rgba(183, 28, 28, 0.3);
     }
     .avatar-admin {
         background: #dc2626;
-        border: 2px solid rgba(220, 38, 38, 0.15);
+        border: 2.5px solid rgba(220, 38, 38, 0.25);
     }
     .avatar-dispatcher {
-        background: #0ea5e9;
-        border: 2px solid rgba(14, 165, 233, 0.15);
+        background: #15803d;
+        border: 2.5px solid rgba(21, 128, 61, 0.3);
+    }
+
+    .avatar-editable {
+        cursor: pointer;
+    }
+    .avatar-editable:hover .avatar-circle {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    }
+    .avatar-hover-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 16px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        border-radius: 50%;
+    }
+    .avatar-editable:hover .avatar-hover-overlay {
+        opacity: 1;
+    }
+    .avatar-edit-badge {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #0f172a;
+        color: #fff;
+        border: 1.5px solid #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        pointer-events: none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease;
+    }
+    .avatar-editable:hover .avatar-edit-badge {
+        transform: scale(1.15);
+        background: var(--primary-red, #b71c1c);
     }
 
     .vf-count {
@@ -341,6 +512,27 @@ foreach ($users as $u) {
         display: none !important;
     }
 
+    .page-title-modern i {
+        font-size: 26px !important;
+        vertical-align: -2px;
+    }
+
+    .modern-card-title i {
+        font-size: 20px !important;
+        vertical-align: -2px;
+    }
+
+    .btn-group-modern .btn-modern i,
+    .btn-group-modern .btn-modern .bi {
+        font-size: 14.5px !important;
+        vertical-align: -1px;
+    }
+
+    .profile-role-pill i {
+        font-size: 13.5px !important;
+        vertical-align: -1px;
+    }
+
     @media (max-width: 991.98px) {
         #users-table {
             font-size: 13px;
@@ -348,7 +540,7 @@ foreach ($users as $u) {
 
         #users-table thead th,
         #users-table tbody td {
-            padding: 0.65rem 0.5rem !important;
+            padding: 0.7rem 0.55rem !important;
         }
 
         #users-table th:first-child,
@@ -359,32 +551,91 @@ foreach ($users as $u) {
 
         .btn-group-modern {
             display: flex !important;
-            gap: 0.35rem;
+            flex-wrap: wrap !important;
+            gap: 5px !important;
+            align-items: center !important;
         }
 
         .btn-group-modern .btn-modern {
-            width: 34px !important;
-            height: 34px;
-            padding: 0 !important;
+            width: auto !important;
+            height: auto !important;
+            padding: 5px 10px !important;
             border-radius: 6px !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
+            gap: 5px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            min-height: 34px !important;
         }
 
         .user-action-label {
-            display: none;
+            display: inline !important;
         }
     }
 
     @media (max-width: 575.98px) {
+        .avatar-circle {
+            width: 42px !important;
+            height: 42px !important;
+            font-size: 15px !important;
+        }
+
+        .user-filter-bar {
+            width: 100% !important;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+
+        .vf-btn {
+            flex: 1 1 calc(50% - 5px);
+            justify-content: center;
+            padding: 8px 10px !important;
+            font-size: 12.5px !important;
+            min-height: 38px !important;
+        }
+
+        .btn-group-modern .btn-modern {
+            padding: 6px 10px !important;
+            font-size: 11.5px !important;
+            gap: 4px !important;
+            min-height: 34px !important;
+        }
+
+        .user-search-group .input-group-text {
+            height: 42px !important;
+            font-size: 15px !important;
+        }
+        .user-search-group .user-search-input {
+            height: 42px !important;
+        }
+
         .vf-divider {
             display: none !important;
         }
 
+        .profile-role-pill {
+            font-size: 11px !important;
+        }
+        .profile-role-pill i {
+            font-size: 12px !important;
+        }
+    }
+
+    @media (max-width: 380px) {
         .vf-btn {
-            flex: 1 1 calc(50% - 0.5rem);
-            justify-content: center;
+            flex: 1 1 100%;
+            min-height: 36px !important;
+        }
+
+        .btn-group-modern .btn-modern {
+            padding: 5px 8px !important;
+            font-size: 11px !important;
+            gap: 3px !important;
+            min-height: 34px !important;
         }
     }
 
@@ -392,10 +643,10 @@ foreach ($users as $u) {
     .vf-btn {
         display: inline-flex !important;
         align-items: center !important;
-        gap: 6px !important;
-        padding: 6px 14px !important;
+        gap: 7px !important;
+        padding: 8px 16px !important;
         border-radius: 20px !important;
-        font-size: 13px !important;
+        font-size: 13.5px !important;
         font-weight: 500 !important;
         font-family: 'Outfit', sans-serif !important;
         cursor: pointer !important;
@@ -404,7 +655,12 @@ foreach ($users as $u) {
         color: #475569 !important;
         white-space: nowrap !important;
         line-height: 1.4 !important;
+        min-height: 38px !important;
         transition: border-color .15s ease, background .15s ease, color .15s ease;
+    }
+    .vf-btn i,
+    .vf-btn .bi {
+        font-size: 15px !important;
     }
     .vf-btn:hover {
         border-color: #94a3b8 !important;
@@ -421,15 +677,64 @@ foreach ($users as $u) {
         border-color: #c62828 !important;
         color: #fff !important;
     }
-    .vf-btn.vf-jeepney.active {
-        background: #1565c0 !important;
-        border-color: #1565c0 !important;
+    .vf-btn.vf-dispatcher.active {
+        background: #15803d !important;
+        border-color: #15803d !important;
         color: #fff !important;
+    }
+    .vf-btn.vf-dispatcher:hover:not(.active) {
+        border-color: #86efac !important;
+        background: #f0fdf4 !important;
+        color: #15803d !important;
+    }
+    .vf-btn.vf-archive.active {
+        background: #475569 !important;
+        border-color: #475569 !important;
+        color: #fff !important;
+    }
+
+    .badge-status-archived {
+        display: inline-flex;
+        align-items: center;
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #cbd5e1;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .user-row-archived {
+        background-color: rgba(248, 250, 252, 0.6);
     }
 </style>
 
 <script>
     let currentFilter = 'all';
+
+    function toggleUserClearBtn(val) {
+        const btn = document.getElementById('clear-user-search');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+
+    function clearUserSearch() {
+        const input = document.getElementById('user-search');
+        if (input) {
+            input.value = '';
+            toggleUserClearBtn('');
+            input.focus();
+            filterUsers(currentFilter);
+        }
+    }
 
     function filterUsers(filter) {
         currentFilter = filter;
@@ -443,23 +748,30 @@ foreach ($users as $u) {
 
         // Filter label map
         const labelMap = {
-            'all': 'all',
+            'all': 'active',
             'admin': 'Admin',
-            'dispatcher': 'Dispatcher'
+            'dispatcher': 'Dispatcher',
+            'archived': 'Archived'
         };
 
-        const searchQuery = document.getElementById('user-search') ? document.getElementById('user-search').value.toLowerCase() : '';
+        const searchInput = document.getElementById('user-search');
+        const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        toggleUserClearBtn(searchQuery);
 
         let visibleCount = 0;
         rows.forEach(row => {
             let show = false;
             const role = row.getAttribute('data-role');
+            const status = row.getAttribute('data-status') || 'active';
+
             if (filter === 'all') {
-                show = true;
+                show = (status !== 'archived');
             } else if (filter === 'admin') {
-                show = role === 'super_admin' || role === 'admin';
+                show = (status !== 'archived') && (role === 'super_admin' || role === 'admin');
             } else if (filter === 'dispatcher') {
-                show = role === 'staff';
+                show = (status !== 'archived') && (role === 'staff');
+            } else if (filter === 'archived') {
+                show = (status === 'archived');
             }
 
             if (show && searchQuery) {
@@ -488,7 +800,9 @@ foreach ($users as $u) {
 
         // Update filter label text
         if (filter === 'all') {
-            filterLabel.innerHTML = 'Showing all <strong>' + visibleCount + '</strong> users';
+            filterLabel.innerHTML = 'Showing all <strong>' + visibleCount + '</strong> active users';
+        } else if (filter === 'archived') {
+            filterLabel.innerHTML = 'Showing <strong>' + visibleCount + '</strong> archived user' + (visibleCount !== 1 ? 's' : '');
         } else {
             filterLabel.innerHTML = 'Showing <strong>' + visibleCount + '</strong> ' + labelMap[filter] + ' user' + (visibleCount !== 1 ? 's' : '');
         }
@@ -508,9 +822,143 @@ foreach ($users as $u) {
             emptyRow.remove();
         }
     }
+
+    // Initialize filter on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', function() {
+        filterUsers('all');
+    });
 </script>
 
 <?php if (!empty($users)): ?>
+<!-- ══════════════════════════════════════════════════ -->
+<!--  User Avatar Management Modal                      -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="userAvatarModal" tabindex="-1" aria-labelledby="userAvatarModalLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 18px; overflow: hidden; border: none; box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25);">
+            <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #b71c1c 0%, #dc2626 50%, #ef4444 100%);"></div>
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="modal-title fw-bold" id="userAvatarModalLabel" style="font-size: 1.2rem; color: #0f172a;">
+                    <i class="bi bi-camera me-2 text-danger"></i>Change Profile Photo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center px-4 py-3">
+                <div class="d-flex flex-column align-items-center mb-3">
+                    <div id="modalAvatarPreviewCircle" style="width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #fff; background: #dc2626; box-shadow: 0 4px 14px rgba(0,0,0,0.12); overflow: hidden; margin-bottom: 12px; position: relative;">
+                    </div>
+                    <h6 class="fw-bold mb-0" id="modalAvatarUserName" style="font-size: 15px; color: #1e293b;">User Name</h6>
+                    <span class="badge mt-1" id="modalAvatarUserRole" style="font-size: 11px; padding: 3px 8px;">Role</span>
+                </div>
+
+                <div id="modalAvatarAlert" class="alert py-2 px-3 d-none mb-3" style="font-size: 13px;"></div>
+
+                <form id="userAvatarForm" enctype="multipart/form-data">
+                    <input type="hidden" id="modalAvatarUserId" value="">
+                    
+                    <div class="mb-3 text-start">
+                        <label for="modalAvatarInput" class="form-label fw-semibold" style="font-size: 13px; color: #475569;">
+                            Select New Image <small class="text-muted">(JPG, PNG, WEBP, GIF, Max 4MB)</small>
+                        </label>
+                        <input class="form-control form-control-sm" type="file" id="modalAvatarInput" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" style="border-radius: 8px;">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
+                <button type="button" class="btn btn-outline-danger btn-sm" id="modalRemoveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 14px; display: none;">
+                    <i class="bi bi-trash me-1"></i> Remove Photo
+                </button>
+                <div class="ms-auto d-flex gap-2">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 7px 14px;">
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" id="modalSaveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 16px; background: linear-gradient(135deg, #b71c1c 0%, #dc2626 100%); border: none;">
+                        <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Deactivate User Confirmation Modal                -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="deactivateUserConfirmModal" tabindex="-1" aria-labelledby="deactivateUserConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content deactivate-user-modal-content">
+            <div class="deactivate-user-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <div class="deactivate-user-icon-wrapper">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+
+                <h4 class="deactivate-user-modal-title" id="deactivateUserConfirmLabel">Deactivate User?</h4>
+                <p class="deactivate-user-modal-desc" id="deactivateUserConfirmMessage">
+                    Are you sure you want to deactivate this user account? Deactivated users will be moved to the archive and will no longer be able to log in.
+                </p>
+
+                <div class="deactivate-user-item-chip" id="deactivateUserItemChip">
+                    <i class="bi bi-person-fill text-warning"></i>
+                    <span id="deactivateUserNameLabel" class="fw-bold">User Name</span>
+                    <span class="deactivate-user-role-tag" id="deactivateUserRoleTag">ROLE</span>
+                </div>
+
+                <div id="deactivateUserUsernameSubtitle" class="mt-2 text-muted" style="font-size: 0.825rem; word-break: break-all;"></div>
+            </div>
+
+            <div class="modal-footer deactivate-user-modal-footer">
+                <button type="button" class="btn deactivate-user-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn deactivate-user-btn-confirm" id="deactivateUserConfirmBtn">
+                    <i class="fas fa-user-slash me-1"></i> Yes, Deactivate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  Activate User Confirmation Modal                  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="activateUserConfirmModal" tabindex="-1" aria-labelledby="activateUserConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
+        <div class="modal-content activate-user-modal-content">
+            <div class="activate-user-stripe"></div>
+
+            <div class="modal-body text-center p-4">
+                <div class="activate-user-icon-wrapper">
+                    <i class="fas fa-user-check"></i>
+                </div>
+
+                <h4 class="activate-user-modal-title" id="activateUserConfirmLabel">Reactivate User?</h4>
+                <p class="activate-user-modal-desc" id="activateUserConfirmMessage">
+                    Are you sure you want to reactivate this user account? The user will be restored to active status and will regain full login access.
+                </p>
+
+                <div class="activate-user-item-chip" id="activateUserItemChip">
+                    <i class="bi bi-person-check-fill text-success"></i>
+                    <span id="activateUserNameLabel" class="fw-bold">User Name</span>
+                    <span class="activate-user-role-tag" id="activateUserRoleTag">ROLE</span>
+                </div>
+
+                <div id="activateUserUsernameSubtitle" class="mt-2 text-muted" style="font-size: 0.825rem; word-break: break-all;"></div>
+            </div>
+
+            <div class="modal-footer activate-user-modal-footer">
+                <button type="button" class="btn activate-user-btn-cancel" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn activate-user-btn-confirm" id="activateUserConfirmBtn">
+                    <i class="fas fa-user-check me-1"></i> Yes, Reactivate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════ -->
 <!--  Delete User Confirmation Modal                    -->
 <!-- ══════════════════════════════════════════════════ -->
@@ -526,9 +974,9 @@ foreach ($users as $u) {
                     <i class="fas fa-trash-can"></i>
                 </div>
 
-                <h4 class="delete-user-modal-title" id="deleteUserConfirmLabel">Delete User?</h4>
+                <h4 class="delete-user-modal-title" id="deleteUserConfirmLabel">Permanently Delete User?</h4>
                 <p class="delete-user-modal-desc" id="deleteUserConfirmMessage">
-                    Are you sure you want to delete this user account? This action cannot be undone.
+                    Are you sure you want to permanently delete this user account from the system? This record and associated assignments will be irreversibly removed.
                 </p>
 
                 <!-- User preview chip -->
@@ -547,7 +995,7 @@ foreach ($users as $u) {
                     <i class="fas fa-times me-1"></i> Cancel
                 </button>
                 <button type="button" class="btn delete-user-btn-confirm" id="deleteUserConfirmBtn">
-                    <i class="fas fa-trash-alt me-1"></i> Yes, Delete
+                    <i class="fas fa-trash-alt me-1"></i> Yes, Permanently Delete
                 </button>
             </div>
         </div>
@@ -555,6 +1003,254 @@ foreach ($users as $u) {
 </div>
 
 <style>
+/* ── Deactivate User Confirmation Modal Styles ── */
+.deactivate-user-modal-content {
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25), 0 10px 15px -5px rgba(15, 23, 42, 0.1) !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.deactivate-user-stripe {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+}
+.deactivate-user-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 4px auto 18px auto;
+    border-radius: 50%;
+    background: #fffbeb;
+    color: #d97706;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 0 8px #fef3c7;
+    transition: transform 0.3s ease;
+}
+.deactivate-user-modal-content:hover .deactivate-user-icon-wrapper {
+    transform: scale(1.04);
+}
+.deactivate-user-modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+.deactivate-user-modal-desc {
+    color: #64748b;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+.deactivate-user-item-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    color: #92400e;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+.deactivate-user-role-tag {
+    background: #fef3c7;
+    color: #b45309;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.deactivate-user-modal-footer {
+    border: 0 !important;
+    padding: 0 24px 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: stretch !important;
+    background: transparent !important;
+}
+.deactivate-user-btn-cancel {
+    flex: 1 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.deactivate-user-btn-cancel:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+.deactivate-user-btn-confirm {
+    flex: 1 !important;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.deactivate-user-btn-confirm:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.38) !important;
+    transform: translateY(-1px);
+}
+.deactivate-user-btn-confirm.is-loading {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+}
+
+/* ── Activate User Confirmation Modal Styles ── */
+.activate-user-modal-content {
+    border: 0 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25), 0 10px 15px -5px rgba(15, 23, 42, 0.1) !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    position: relative !important;
+    font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.activate-user-stripe {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 50%, #047857 100%);
+}
+.activate-user-icon-wrapper {
+    width: 68px;
+    height: 68px;
+    margin: 4px auto 18px auto;
+    border-radius: 50%;
+    background: #ecfdf5;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 0 0 8px #d1fae5;
+    transition: transform 0.3s ease;
+}
+.activate-user-modal-content:hover .activate-user-icon-wrapper {
+    transform: scale(1.04);
+}
+.activate-user-modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+.activate-user-modal-desc {
+    color: #64748b;
+    font-size: 0.925rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}
+.activate-user-item-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 7px 14px;
+    border-radius: 9999px;
+    font-size: 0.825rem;
+    color: #065f46;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+}
+.activate-user-role-tag {
+    background: #d1fae5;
+    color: #047857;
+    font-size: 0.725rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+.activate-user-modal-footer {
+    border: 0 !important;
+    padding: 0 24px 24px 24px !important;
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: stretch !important;
+    background: transparent !important;
+}
+.activate-user-btn-cancel {
+    flex: 1 !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.activate-user-btn-cancel:hover {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+}
+.activate-user-btn-confirm {
+    flex: 1 !important;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    border: 0 !important;
+    padding: 10px 18px !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28) !important;
+    transition: all 0.2s ease !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.activate-user-btn-confirm:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.38) !important;
+    transform: translateY(-1px);
+}
+.activate-user-btn-confirm.is-loading {
+    pointer-events: none !important;
+    opacity: 0.75 !important;
+}
+
 /* ── Delete User Confirmation Modal Styles ── */
 .delete-user-modal-content {
     border: 0 !important;
@@ -700,23 +1396,281 @@ foreach ($users as $u) {
 }
 
 /* Ensure modal paints above fixed navbar */
+body.modal-open #userAvatarModal,
+#userAvatarModal,
+body.modal-open #deactivateUserConfirmModal,
+#deactivateUserConfirmModal,
+body.modal-open #activateUserConfirmModal,
+#activateUserConfirmModal,
 body.modal-open #deleteUserConfirmModal,
 #deleteUserConfirmModal {
     z-index: 100050 !important;
 }
-
-
 </style>
 
 <script>
 (function() {
     var _deleteUserFormId = null;
+    var _deactivateUserFormId = null;
+    var _activateUserFormId = null;
+    var _avatarModalUser = null;
 
+    // ── Avatar Management Modal ──
+    window.openAvatarModal = function(userId, userName, currentImgUrl, initials, role) {
+        _avatarModalUser = {
+            id: userId,
+            name: userName,
+            imgUrl: currentImgUrl,
+            initials: initials,
+            role: role
+        };
+
+        var modalEl = document.getElementById('userAvatarModal');
+        if (!modalEl || !window.bootstrap) return;
+
+        var userIdInput = document.getElementById('modalAvatarUserId');
+        if (userIdInput) userIdInput.value = userId;
+
+        var nameEl = document.getElementById('modalAvatarUserName');
+        if (nameEl) nameEl.textContent = userName;
+
+        var roleBadge = document.getElementById('modalAvatarUserRole');
+        if (roleBadge) {
+            if (role === 'super_admin') {
+                roleBadge.textContent = 'Super Admin';
+                roleBadge.className = 'badge profile-role-pill pill-super_admin';
+            } else if (role === 'admin') {
+                roleBadge.textContent = 'Admin';
+                roleBadge.className = 'badge profile-role-pill pill-admin';
+            } else {
+                roleBadge.textContent = 'Dispatcher';
+                roleBadge.className = 'badge profile-role-pill pill-staff';
+            }
+        }
+
+        updateModalAvatarPreview(currentImgUrl, initials, role);
+
+        var fileInput = document.getElementById('modalAvatarInput');
+        if (fileInput) fileInput.value = '';
+
+        var alertEl = document.getElementById('modalAvatarAlert');
+        if (alertEl) {
+            alertEl.className = 'alert py-2 px-3 d-none mb-3';
+            alertEl.textContent = '';
+        }
+
+        var removeBtn = document.getElementById('modalRemoveAvatarBtn');
+        if (removeBtn) {
+            removeBtn.style.display = (currentImgUrl && currentImgUrl.length > 0) ? 'inline-flex' : 'none';
+        }
+
+        var saveBtn = document.getElementById('modalSaveAvatarBtn');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo';
+        }
+
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    function updateModalAvatarPreview(imgUrl, initials, role) {
+        var previewEl = document.getElementById('modalAvatarPreviewCircle');
+        if (!previewEl) return;
+
+        var bgColor = role === 'super_admin' ? '#B71C1C' : (role === 'admin' ? '#dc2626' : '#15803d');
+        previewEl.style.background = bgColor;
+
+        if (imgUrl && imgUrl.length > 0) {
+            previewEl.innerHTML = '<img src="' + imgUrl + '" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">';
+        } else {
+            previewEl.innerHTML = '<span>' + (initials || 'U') + '</span>';
+        }
+    }
+
+    function showAvatarAlert(msg, type) {
+        var alertEl = document.getElementById('modalAvatarAlert');
+        if (!alertEl) return;
+        alertEl.className = 'alert alert-' + type + ' py-2 px-3 mb-3';
+        alertEl.textContent = msg;
+    }
+
+    // ── Deactivate User Modal ──
+    window.showDeactivateUserModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('deactivateUserConfirmModal');
+        if (!modalEl || !window.bootstrap) {
+            if (window.confirm('Deactivate user ' + (opts.username || '') + '?')) {
+                var form = document.getElementById(opts.formId);
+                if (form) form.submit();
+            }
+            return;
+        }
+
+        var nameEl = document.getElementById('deactivateUserNameLabel');
+        var roleTagEl = document.getElementById('deactivateUserRoleTag');
+        var subEl = document.getElementById('deactivateUserUsernameSubtitle');
+        var chipEl = document.getElementById('deactivateUserItemChip');
+        var iconEl = chipEl ? chipEl.querySelector('i') : null;
+
+        if (nameEl) nameEl.textContent = opts.name || opts.username || 'User';
+        if (roleTagEl) {
+            if (opts.role) {
+                roleTagEl.textContent = opts.role;
+                roleTagEl.style.display = '';
+            } else {
+                roleTagEl.style.display = 'none';
+            }
+        }
+        if (subEl) {
+            if (opts.username) {
+                subEl.textContent = '@' + opts.username;
+                subEl.style.display = '';
+            } else {
+                subEl.style.display = 'none';
+            }
+        }
+
+        // Dynamic Role-colored chip styling
+        var rawRole = opts.rawRole || '';
+        if (rawRole === 'staff') {
+            if (chipEl) {
+                chipEl.style.background = '#f0fdf4';
+                chipEl.style.borderColor = '#bbf7d0';
+                chipEl.style.color = '#166534';
+            }
+            if (roleTagEl) {
+                roleTagEl.style.background = '#dcfce7';
+                roleTagEl.style.color = '#15803d';
+            }
+            if (iconEl) {
+                iconEl.className = 'bi bi-person-fill';
+                iconEl.style.color = '#15803d';
+            }
+        } else if (rawRole === 'super_admin' || rawRole === 'admin') {
+            var rColor = (rawRole === 'super_admin') ? '#b71c1c' : '#dc2626';
+            if (chipEl) {
+                chipEl.style.background = '#fef2f2';
+                chipEl.style.borderColor = '#fecaca';
+                chipEl.style.color = '#991b1b';
+            }
+            if (roleTagEl) {
+                roleTagEl.style.background = '#fee2e2';
+                roleTagEl.style.color = rColor;
+            }
+            if (iconEl) {
+                iconEl.className = 'bi bi-person-fill';
+                iconEl.style.color = rColor;
+            }
+        } else {
+            if (chipEl) {
+                chipEl.style.background = '#fffbeb';
+                chipEl.style.borderColor = '#fde68a';
+                chipEl.style.color = '#92400e';
+            }
+            if (roleTagEl) {
+                roleTagEl.style.background = '#fef3c7';
+                roleTagEl.style.color = '#b45309';
+            }
+            if (iconEl) {
+                iconEl.className = 'bi bi-person-fill text-warning';
+                iconEl.style.color = '';
+            }
+        }
+
+        var confirmBtn = document.getElementById('deactivateUserConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.classList.remove('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-user-slash me-1"></i> Yes, Deactivate';
+        }
+
+        _deactivateUserFormId = opts.formId || null;
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    // ── Activate User Modal ──
+    window.showActivateUserModal = function(opts) {
+        opts = opts || {};
+        var modalEl = document.getElementById('activateUserConfirmModal');
+        if (!modalEl || !window.bootstrap) {
+            if (window.confirm('Reactivate user ' + (opts.username || '') + '?')) {
+                var form = document.getElementById(opts.formId);
+                if (form) form.submit();
+            }
+            return;
+        }
+
+        var nameEl = document.getElementById('activateUserNameLabel');
+        var roleTagEl = document.getElementById('activateUserRoleTag');
+        var subEl = document.getElementById('activateUserUsernameSubtitle');
+        var chipEl = document.getElementById('activateUserItemChip');
+        var iconEl = chipEl ? chipEl.querySelector('i') : null;
+
+        if (nameEl) nameEl.textContent = opts.name || opts.username || 'User';
+        if (roleTagEl) {
+            if (opts.role) {
+                roleTagEl.textContent = opts.role;
+                roleTagEl.style.display = '';
+            } else {
+                roleTagEl.style.display = 'none';
+            }
+        }
+        if (subEl) {
+            if (opts.username) {
+                subEl.textContent = '@' + opts.username;
+                subEl.style.display = '';
+            } else {
+                subEl.style.display = 'none';
+            }
+        }
+
+        var rawRole = opts.rawRole || '';
+        if (rawRole === 'staff') {
+            if (chipEl) {
+                chipEl.style.background = '#f0fdf4';
+                chipEl.style.borderColor = '#bbf7d0';
+                chipEl.style.color = '#166534';
+            }
+            if (roleTagEl) {
+                roleTagEl.style.background = '#dcfce7';
+                roleTagEl.style.color = '#15803d';
+            }
+            if (iconEl) {
+                iconEl.className = 'bi bi-person-check-fill';
+                iconEl.style.color = '#15803d';
+            }
+        } else if (rawRole === 'super_admin' || rawRole === 'admin') {
+            var rColor = (rawRole === 'super_admin') ? '#b71c1c' : '#dc2626';
+            if (chipEl) {
+                chipEl.style.background = '#fef2f2';
+                chipEl.style.borderColor = '#fecaca';
+                chipEl.style.color = '#991b1b';
+            }
+            if (roleTagEl) {
+                roleTagEl.style.background = '#fee2e2';
+                roleTagEl.style.color = rColor;
+            }
+            if (iconEl) {
+                iconEl.className = 'bi bi-person-check-fill';
+                iconEl.style.color = rColor;
+            }
+        }
+
+        var confirmBtn = document.getElementById('activateUserConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.classList.remove('is-loading');
+            confirmBtn.innerHTML = '<i class="fas fa-user-check me-1"></i> Yes, Reactivate';
+        }
+
+        _activateUserFormId = opts.formId || null;
+        window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    };
+
+    // ── Delete User Modal ──
     window.showDeleteUserModal = function(opts) {
         opts = opts || {};
         var modalEl = document.getElementById('deleteUserConfirmModal');
         if (!modalEl || !window.bootstrap) {
-            if (window.confirm('Delete user ' + (opts.username || '') + '?')) {
+            if (window.confirm('Permanently delete user ' + (opts.username || '') + '?')) {
                 var form = document.getElementById(opts.formId);
                 if (form) form.submit();
             }
@@ -752,7 +1706,7 @@ body.modal-open #deleteUserConfirmModal,
         var confirmBtn = document.getElementById('deleteUserConfirmBtn');
         if (confirmBtn) {
             confirmBtn.classList.remove('is-loading');
-            confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
+            confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Permanently Delete';
         }
 
         _deleteUserFormId = opts.formId || null;
@@ -760,27 +1714,202 @@ body.modal-open #deleteUserConfirmModal,
     };
 
     document.addEventListener('DOMContentLoaded', function() {
-        var confirmBtn = document.getElementById('deleteUserConfirmBtn');
-        if (!confirmBtn) return;
-
-        confirmBtn.addEventListener('click', function() {
-            if (!_deleteUserFormId) return;
-
-            confirmBtn.classList.add('is-loading');
-            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
-
-            var form = document.getElementById(_deleteUserFormId);
-            if (form) {
-                form.submit();
-            } else {
-                var modalEl = document.getElementById('deleteUserConfirmModal');
-                if (modalEl && window.bootstrap) {
-                    window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+        // Avatar file change preview
+        var fileInput = document.getElementById('modalAvatarInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                var file = this.files[0];
+                if (file) {
+                    if (file.size > 4 * 1024 * 1024) {
+                        showAvatarAlert('File exceeds 4MB maximum allowed size.', 'danger');
+                        this.value = '';
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        updateModalAvatarPreview(e.target.result, _avatarModalUser ? _avatarModalUser.initials : '', _avatarModalUser ? _avatarModalUser.role : '');
+                    };
+                    reader.readAsDataURL(file);
                 }
-                confirmBtn.classList.remove('is-loading');
-                confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Delete';
-            }
-        });
+            });
+        }
+
+        // Avatar Save button
+        var saveAvatarBtn = document.getElementById('modalSaveAvatarBtn');
+        if (saveAvatarBtn) {
+            saveAvatarBtn.addEventListener('click', function() {
+                var fInput = document.getElementById('modalAvatarInput');
+                if (!fInput || !fInput.files || fInput.files.length === 0) {
+                    showAvatarAlert('Please choose an image file first.', 'warning');
+                    return;
+                }
+
+                var userId = document.getElementById('modalAvatarUserId').value;
+                var formData = new FormData();
+                formData.append('avatar', fInput.files[0]);
+
+                saveAvatarBtn.disabled = true;
+                saveAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+
+                fetch('<?= base_url('admin/users/upload-avatar') ?>/' + userId, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    saveAvatarBtn.disabled = false;
+                    saveAvatarBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo';
+                    if (data.success) {
+                        var rowCircle = document.getElementById('avatar-circle-' + userId);
+                        if (rowCircle) {
+                            var img = rowCircle.querySelector('img');
+                            if (img) {
+                                img.src = data.image_url;
+                            } else {
+                                rowCircle.innerHTML = '<img src="' + data.image_url + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                            }
+                        }
+                        if (_avatarModalUser) _avatarModalUser.imgUrl = data.image_url;
+                        var rBtn = document.getElementById('modalRemoveAvatarBtn');
+                        if (rBtn) rBtn.style.display = 'inline-flex';
+
+                        if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
+                            var hImgs = document.querySelectorAll('.header-avatar-circle img, .nav-profile-avatar img');
+                            hImgs.forEach(function(el) { el.src = data.image_url; });
+                        }
+
+                        showAvatarAlert(data.message || 'Avatar updated successfully!', 'success');
+                        setTimeout(function() {
+                            var modalEl = document.getElementById('userAvatarModal');
+                            if (modalEl && window.bootstrap) {
+                                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                            }
+                        }, 1000);
+                    } else {
+                        showAvatarAlert(data.message || 'Failed to update avatar.', 'danger');
+                    }
+                })
+                .catch(function() {
+                    saveAvatarBtn.disabled = false;
+                    saveAvatarBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo';
+                    showAvatarAlert('An error occurred during upload. Please try again.', 'danger');
+                });
+            });
+        }
+
+        // Avatar Remove button
+        var removeAvatarBtn = document.getElementById('modalRemoveAvatarBtn');
+        if (removeAvatarBtn) {
+            removeAvatarBtn.addEventListener('click', function() {
+                if (!confirm('Are you sure you want to remove this profile photo and revert to initials?')) return;
+                var userId = document.getElementById('modalAvatarUserId').value;
+
+                removeAvatarBtn.disabled = true;
+                removeAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Removing...';
+
+                fetch('<?= base_url('admin/users/remove-avatar') ?>/' + userId, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    removeAvatarBtn.disabled = false;
+                    removeAvatarBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Remove Photo';
+                    if (data.success) {
+                        var rowCircle = document.getElementById('avatar-circle-' + userId);
+                        if (rowCircle) {
+                            rowCircle.innerHTML = '<span>' + (_avatarModalUser ? _avatarModalUser.initials : 'U') + '</span>';
+                        }
+                        if (_avatarModalUser) _avatarModalUser.imgUrl = '';
+                        updateModalAvatarPreview('', _avatarModalUser ? _avatarModalUser.initials : '', _avatarModalUser ? _avatarModalUser.role : '');
+                        removeAvatarBtn.style.display = 'none';
+
+                        showAvatarAlert(data.message || 'Photo removed.', 'success');
+                        setTimeout(function() {
+                            var modalEl = document.getElementById('userAvatarModal');
+                            if (modalEl && window.bootstrap) {
+                                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                            }
+                        }, 1000);
+                    } else {
+                        showAvatarAlert(data.message || 'Failed to remove photo.', 'danger');
+                    }
+                })
+                .catch(function() {
+                    removeAvatarBtn.disabled = false;
+                    removeAvatarBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Remove Photo';
+                    showAvatarAlert('An error occurred. Please try again.', 'danger');
+                });
+            });
+        }
+
+        // Deactivate submit handler
+        var deactConfirmBtn = document.getElementById('deactivateUserConfirmBtn');
+        if (deactConfirmBtn) {
+            deactConfirmBtn.addEventListener('click', function() {
+                if (!_deactivateUserFormId) return;
+                deactConfirmBtn.classList.add('is-loading');
+                deactConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deactivating...';
+                var form = document.getElementById(_deactivateUserFormId);
+                if (form) {
+                    form.submit();
+                } else {
+                    var modalEl = document.getElementById('deactivateUserConfirmModal');
+                    if (modalEl && window.bootstrap) {
+                        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                    }
+                    deactConfirmBtn.classList.remove('is-loading');
+                }
+            });
+        }
+
+        // Activate submit handler
+        var actConfirmBtn = document.getElementById('activateUserConfirmBtn');
+        if (actConfirmBtn) {
+            actConfirmBtn.addEventListener('click', function() {
+                if (!_activateUserFormId) return;
+                actConfirmBtn.classList.add('is-loading');
+                actConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Reactivating...';
+                var form = document.getElementById(_activateUserFormId);
+                if (form) {
+                    form.submit();
+                } else {
+                    var modalEl = document.getElementById('activateUserConfirmModal');
+                    if (modalEl && window.bootstrap) {
+                        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                    }
+                    actConfirmBtn.classList.remove('is-loading');
+                }
+            });
+        }
+
+        // Delete submit handler
+        var confirmBtn = document.getElementById('deleteUserConfirmBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                if (!_deleteUserFormId) return;
+
+                confirmBtn.classList.add('is-loading');
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Deleting...';
+
+                var form = document.getElementById(_deleteUserFormId);
+                if (form) {
+                    form.submit();
+                } else {
+                    var modalEl = document.getElementById('deleteUserConfirmModal');
+                    if (modalEl && window.bootstrap) {
+                        window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                    }
+                    confirmBtn.classList.remove('is-loading');
+                    confirmBtn.innerHTML = '<i class="fas fa-trash-alt me-1"></i> Yes, Permanently Delete';
+                }
+            });
+        }
     });
 })();
 </script>

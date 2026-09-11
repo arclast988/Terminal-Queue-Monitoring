@@ -53,6 +53,56 @@
                 <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" novalidate data-no-change-guard>
                     <?= csrf_field() ?>
 
+                    <?php
+                    $currentUserId = (int) session()->get('id');
+                    $currentUserRole = session()->get('role');
+                    $isTargetSuperAdmin = ($user['role'] === 'super_admin');
+                    $canManageThisAvatar = false;
+                    if ($isTargetSuperAdmin) {
+                        $canManageThisAvatar = ($currentUserId === (int) $user['id']);
+                    } elseif ($user['role'] === 'admin') {
+                        $canManageThisAvatar = ($currentUserRole === 'super_admin' || $currentUserId === (int) $user['id']);
+                    } else {
+                        $canManageThisAvatar = ($currentUserRole === 'super_admin' || $currentUserRole === 'admin');
+                    }
+
+                    $nameParts = preg_split('/\s+/', trim($user['full_name'] ?? ''));
+                    $initials = '';
+                    if (!empty($nameParts[0])) $initials .= strtoupper(substr($nameParts[0], 0, 1));
+                    if (count($nameParts) >= 2 && !empty($nameParts[count($nameParts) - 1])) $initials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
+                    if (empty($initials)) $initials = strtoupper(substr($user['username'], 0, 2));
+                    $avatarBg = $user['role'] === 'super_admin' ? '#B71C1C' : ($user['role'] === 'admin' ? '#dc2626' : '#15803d');
+                    ?>
+
+                    <!-- Profile Photo Section -->
+                    <div class="p-3 mb-4 rounded-3 d-flex flex-wrap align-items-center gap-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <div id="editUserAvatarPreview" style="width: 60px; height: 60px; border-radius: 50%; background: <?= $avatarBg ?>; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <?php if (!empty($user['profile_image'])): ?>
+                                <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                            <?php else: ?>
+                                <span><?= esc($initials) ?></span>
+                            <?php endif; ?>
+                        </div>
+                        <div style="flex: 1 1 auto; min-width: 200px;">
+                            <div class="fw-bold" style="font-size: 14px; color: #1e293b;">Profile Picture</div>
+                            <?php if ($isTargetSuperAdmin && !$canManageThisAvatar): ?>
+                                <div class="small text-muted"><i class="bi bi-shield-lock-fill text-danger me-1"></i> Only the Super Admin can change their own profile picture.</div>
+                            <?php else: ?>
+                                <div class="small text-muted mb-2">JPG, PNG, WEBP, or GIF image (max 4MB).</div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <input type="file" id="editAvatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none;">
+                                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" onclick="document.getElementById('editAvatarFileInput').click();" id="btnEditUploadPhoto">
+                                        <i class="bi bi-camera-fill"></i> Upload New Photo
+                                    </button>
+                                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm text-danger" id="btnEditRemovePhoto" onclick="removeEditUserAvatar();" style="<?= empty($user['profile_image']) ? 'display: none;' : '' ?>">
+                                        <i class="bi bi-trash"></i> Remove Photo
+                                    </button>
+                                    <span id="editAvatarFeedback" class="small fw-semibold ms-2"></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
                     <div class="row">
                         <div class="col-12 col-lg-6 mb-3">
                             <label for="username" class="form-label-modern">Username <span class="text-muted small">(Gmail account)</span></label>
@@ -119,9 +169,12 @@
                         </div>
 
                         <div class="d-flex gap-2 mb-2 flex-column flex-sm-row route-filter">
-                            <div class="input-group-modern input-group-sm flex-grow-1">
+                            <div class="input-group-modern input-group-sm flex-grow-1 position-relative">
                                 <span class="input-group-text-modern"><i class="bi bi-search"></i></span>
-                                <input type="text" id="routeSearch" class="input-modern" placeholder="Search routes...">
+                                <input type="text" id="routeSearch" class="input-modern pe-4" placeholder="Search routes...">
+                                <button type="button" class="btn-clear-search" id="clearRouteSearch" onclick="clearRouteSearchPicker()" style="display: none !important; right: 8px;" title="Clear search">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
                             </div>
                             <div class="form-check route-select-all">
                                 <input class="form-check-input" type="checkbox" id="selectAllRoutes">
@@ -255,9 +308,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function toggleRouteSearchClear(val) {
+        var btn = document.getElementById('clearRouteSearch');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+    window.clearRouteSearchPicker = function() {
+        if (routeSearch) {
+            routeSearch.value = '';
+            toggleRouteSearchClear('');
+            routeSearch.dispatchEvent(new Event('input'));
+            routeSearch.focus();
+        }
+    };
+
     if (routeSearch) {
+        toggleRouteSearchClear(routeSearch.value);
         routeSearch.addEventListener('input', function() {
             var query = this.value.trim().toLowerCase();
+            toggleRouteSearchClear(this.value);
             routeItems.forEach(function(item) {
                 var label = item.getAttribute('data-label') || '';
                 item.classList.toggle('d-none', label.indexOf(query) === -1);
@@ -281,7 +355,111 @@ document.addEventListener('DOMContentLoaded', function() {
         checkbox.addEventListener('change', updateSelectAllState);
     });
 
-    if (roleSelect) roleSelect.addEventListener('change', toggleRouteSection);
+    // Profile Photo Upload & Remove Handlers
+    var editAvatarInput = document.getElementById('editAvatarFileInput');
+    if (editAvatarInput) {
+        editAvatarInput.addEventListener('change', function() {
+            var file = this.files[0];
+            if (!file) return;
+            if (file.size > 4 * 1024 * 1024) {
+                alert('File exceeds 4MB maximum allowed size.');
+                this.value = '';
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('avatar', file);
+
+            var feedback = document.getElementById('editAvatarFeedback');
+            var uploadBtn = document.getElementById('btnEditUploadPhoto');
+            if (feedback) {
+                feedback.className = 'small text-primary ms-2';
+                feedback.textContent = 'Uploading...';
+            }
+            if (uploadBtn) uploadBtn.disabled = true;
+
+            fetch('<?= base_url('admin/users/upload-avatar/' . $user['id']) ?>', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (uploadBtn) uploadBtn.disabled = false;
+                if (data.success) {
+                    var preview = document.getElementById('editUserAvatarPreview');
+                    if (preview) {
+                        preview.innerHTML = '<img src="' + data.image_url + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">';
+                    }
+                    if (feedback) {
+                        feedback.className = 'small text-success ms-2';
+                        feedback.textContent = 'Photo updated successfully!';
+                        setTimeout(function() { feedback.textContent = ''; }, 3000);
+                    }
+                    var removeBtn = document.getElementById('btnEditRemovePhoto');
+                    if (removeBtn) {
+                        removeBtn.style.display = 'inline-flex';
+                    }
+                } else {
+                    if (feedback) {
+                        feedback.className = 'small text-danger ms-2';
+                        feedback.textContent = data.message || 'Upload failed.';
+                    }
+                }
+            })
+            .catch(function() {
+                if (uploadBtn) uploadBtn.disabled = false;
+                if (feedback) {
+                    feedback.className = 'small text-danger ms-2';
+                    feedback.textContent = 'Upload error.';
+                }
+            });
+        });
+    }
+
+    window.removeEditUserAvatar = function() {
+        if (!confirm('Are you sure you want to remove this profile picture?')) return;
+        var feedback = document.getElementById('editAvatarFeedback');
+        var removeBtn = document.getElementById('btnEditRemovePhoto');
+        if (feedback) {
+            feedback.className = 'small text-primary ms-2';
+            feedback.textContent = 'Removing...';
+        }
+        if (removeBtn) removeBtn.disabled = true;
+
+        fetch('<?= base_url('admin/users/remove-avatar/' . $user['id']) ?>', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (removeBtn) removeBtn.disabled = false;
+            if (data.success) {
+                var preview = document.getElementById('editUserAvatarPreview');
+                if (preview) {
+                    preview.innerHTML = '<span><?= esc($initials) ?></span>';
+                }
+                if (removeBtn) removeBtn.style.display = 'none';
+                if (feedback) {
+                    feedback.className = 'small text-success ms-2';
+                    feedback.textContent = 'Photo removed.';
+                    setTimeout(function() { feedback.textContent = ''; }, 3000);
+                }
+            } else {
+                if (feedback) {
+                    feedback.className = 'small text-danger ms-2';
+                    feedback.textContent = data.message || 'Removal failed.';
+                }
+            }
+        })
+        .catch(function() {
+            if (removeBtn) removeBtn.disabled = false;
+            if (feedback) {
+                feedback.className = 'small text-danger ms-2';
+                feedback.textContent = 'Error removing photo.';
+            }
+        });
+    };
 
     toggleRouteSection();
     updateSelectAllState();

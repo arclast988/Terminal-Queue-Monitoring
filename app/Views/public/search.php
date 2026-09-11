@@ -264,7 +264,15 @@
 
         .search-bar button:hover {
             background: #8B0000;
-            transform: scale(1.03);
+        }
+
+        #guest-results-clear-btn {
+            right: 120px !important;
+        }
+        @media (max-width: 768px) {
+            #guest-results-clear-btn {
+                right: 95px !important;
+            }
         }
 
         .filter-badge {
@@ -761,7 +769,7 @@
         <p>Find and track your vehicle information below.</p>
 
         <div class="search-container">
-            <form method="get" action="<?= base_url('search') ?>" class="search-bar">
+            <form method="get" action="<?= base_url('search') ?>" class="search-bar" style="position: relative;">
                 <input
                     type="text"
                     name="q"
@@ -769,7 +777,12 @@
                     value="<?= esc($search) ?>"
                     autocomplete="off"
                     autofocus
+                    id="guest-results-search-input"
+                    oninput="toggleGuestResultsClear(this.value)"
                 >
+                <button type="button" class="guest-clear-search-btn" id="guest-results-clear-btn" onclick="clearGuestResultsSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search">
+                    <i class="fas fa-times-circle"></i>
+                </button>
                 <button type="submit">SEARCH</button>
             </form>
         </div>
@@ -894,5 +907,25 @@
     <!-- Footer -->
     <?= $this->include('templates/guestfooter') ?>
 
+    <script>
+        function toggleGuestResultsClear(val) {
+            var btn = document.getElementById('guest-results-clear-btn');
+            if (btn) {
+                if (val && val.trim().length > 0) {
+                    btn.style.setProperty('display', 'inline-flex', 'important');
+                } else {
+                    btn.style.setProperty('display', 'none', 'important');
+                }
+            }
+        }
+        function clearGuestResultsSearch() {
+            var input = document.getElementById('guest-results-search-input');
+            if (input) {
+                input.value = '';
+                toggleGuestResultsClear('');
+                input.focus();
+            }
+        }
+    </script>
 </body>
 </html>

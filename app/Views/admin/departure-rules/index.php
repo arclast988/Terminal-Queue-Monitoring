@@ -159,8 +159,6 @@
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     border-color: var(--primary-blue, #1565c0) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(21, 101, 192, 0.25) !important;
 }
 .btn-action-edit:hover i {
     color: #ffffff !important;
@@ -191,8 +189,6 @@
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     border-color: var(--danger-dark, #dc2626) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25) !important;
 }
 .btn-action-delete:hover i {
     color: #ffffff !important;

@@ -282,7 +282,15 @@
 
         .search-bar button:hover {
             background: #8B0000;
-            transform: scale(1.03);
+        }
+
+        #guest-schedule-clear-btn {
+            right: 120px !important;
+        }
+        @media (max-width: 768px) {
+            #guest-schedule-clear-btn {
+                right: 95px !important;
+            }
         }
 
         /* --- Main Content --- */
@@ -991,10 +999,13 @@
         <p>View departure times, vehicle status, and route information for all available vehicle types.</p>
 
         <div class="search-container">
-            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar" id="scheduleSearchForm">
+            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar" id="scheduleSearchForm" style="position: relative;">
                 <?php if (!empty($vehicle_type)): ?><input type="hidden" name="type" value="<?= esc($vehicle_type) ?>"><?php endif; ?>
                 <?php if (!empty($destination)): ?><input type="hidden" name="destination" value="<?= esc($destination) ?>"><?php endif; ?>
-                <input type="text" name="q" id="scheduleSearchInput" placeholder="Search by Route, Destination, or Plate Number..." value="<?= esc($search ?? '') ?>" autocomplete="off">
+                <input type="text" name="q" id="scheduleSearchInput" placeholder="Search by Route, Destination, or Plate Number..." value="<?= esc($search ?? '') ?>" autocomplete="off" oninput="toggleGuestScheduleClear(this.value)">
+                <button type="button" class="guest-clear-search-btn" id="guest-schedule-clear-btn" onclick="clearGuestScheduleSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search">
+                    <i class="fas fa-times-circle"></i>
+                </button>
                 <button type="submit">SEARCH</button>
             </form>
         </div>
@@ -1412,9 +1423,40 @@
 
         // Initialize real-time sync & search input listeners
         document.addEventListener('DOMContentLoaded', function() {
+            function toggleGuestScheduleClear(val) {
+                var btn = document.getElementById('guest-schedule-clear-btn');
+                if (btn) {
+                    if (val && val.trim().length > 0) {
+                        btn.style.setProperty('display', 'inline-flex', 'important');
+                    } else {
+                        btn.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            }
+            window.toggleGuestScheduleClear = toggleGuestScheduleClear;
+
+            function clearGuestScheduleSearch() {
+                var input = document.getElementById('scheduleSearchInput');
+                if (input) {
+                    input.value = '';
+                    toggleGuestScheduleClear('');
+                    currentSearch = '';
+                    filterTableClientSide();
+                    input.focus();
+                    if (window.location.search.includes('q=')) {
+                        var url = new URL(window.location.href);
+                        url.searchParams.delete('q');
+                        window.history.replaceState({}, '', url.toString());
+                    }
+                }
+            }
+            window.clearGuestScheduleSearch = clearGuestScheduleSearch;
+
             var searchInput = document.getElementById('scheduleSearchInput');
             if (searchInput) {
+                toggleGuestScheduleClear(searchInput.value);
                 searchInput.addEventListener('input', function() {
+                    toggleGuestScheduleClear(this.value);
                     currentSearch = this.value.trim();
                     filterTableClientSide();
                 });

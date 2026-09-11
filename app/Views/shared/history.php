@@ -117,11 +117,14 @@
             <?php if (!empty($destination) && $destination !== 'all'): ?>
                 <input type="hidden" name="destination" value="<?= esc($destination) ?>">
             <?php endif; ?>
-            <div style="display: flex; align-items: center; max-width: 440px; width: 100%;">
+            <div style="display: flex; align-items: center; max-width: 440px; width: 100%; position: relative;">
                 <span class="input-group-text" style="height: 40px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-right: none; border-radius: 20px 0 0 20px; color: #64748b; padding: 0 14px;">
                     <i class="bi bi-search"></i>
                 </span>
-                <input type="text" class="form-control" name="q" placeholder="Search plate number, destination, driver, or operator..." value="<?= esc($search ?? '') ?>" style="height: 40px; border: 1.5px solid #cbd5e1; border-left: none; border-radius: 0 20px 20px 0; outline: none; font-size: 13.5px; box-shadow: none;">
+                <input type="text" class="form-control" id="history-search-input" name="q" placeholder="Search plate number, destination, driver, or operator..." value="<?= esc($search ?? '') ?>" style="height: 40px; border: 1.5px solid #cbd5e1; border-left: none; border-radius: 0 20px 20px 0; outline: none; font-size: 13.5px; box-shadow: none; padding-right: 36px;" oninput="toggleHistorySearchClear(this.value)">
+                <button type="button" class="btn-clear-search" id="clear-history-search" onclick="clearHistorySearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?> right: 12px;" title="Clear search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
             <button type="submit" class="btn-modern btn-modern-primary" style="height: 40px;">
                 <i class="bi bi-search"></i> Search
@@ -263,5 +266,35 @@
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+function toggleHistorySearchClear(val) {
+    var btn = document.getElementById('clear-history-search');
+    if (btn) {
+        if (val && val.trim().length > 0) {
+            btn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+            btn.style.setProperty('display', 'none', 'important');
+        }
+    }
+}
+function clearHistorySearch() {
+    var input = document.getElementById('history-search-input');
+    if (input) {
+        input.value = '';
+        toggleHistorySearchClear('');
+        input.focus();
+        if (window.location.search.includes('q=')) {
+            var url = new URL(window.location.href);
+            url.searchParams.delete('q');
+            window.location.href = url.toString();
+        }
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('history-search-input');
+    if (input) toggleHistorySearchClear(input.value);
+});
+</script>
 
 <?= $this->include('templates/footer') ?>

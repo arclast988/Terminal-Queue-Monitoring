@@ -30,6 +30,11 @@ class Auth extends BaseController
             ->first();
 
         if ($user) {
+            if (($user['status'] ?? 'active') === 'archived') {
+                $session->setFlashdata('error', 'This account has been deactivated. Please contact the administrator.');
+                return redirect()->to('/login');
+            }
+
             if ($this->isUserLocked($user)) {
                 $remaining = $this->getLockoutRemaining($user['locked_until']);
                 $session->setFlashdata('error', "Account locked. Try again in {$remaining}.");
@@ -212,7 +217,7 @@ class Auth extends BaseController
         $model = new UserModel();
         $user = $model->where('username', $username)->orWhere('email', $username)->first();
 
-        if (!$user) {
+        if (!$user || ($user['status'] ?? 'active') === 'archived') {
             // Generic message to prevent username/email enumeration.
             $session->setFlashdata('error', 'If an account exists for that username or email, a verification code has been sent.');
             return redirect()->to('/forgot-password')->withInput();

@@ -1145,11 +1145,14 @@
                         <div class="queue-toolbar-card mb-3">
                             <div class="row g-2 align-items-center">
                                 <div class="col-12 col-sm">
-                                    <div class="input-group input-group-sm">
+                                    <div class="input-group input-group-sm position-relative">
                                         <span class="input-group-text bg-body border-end-0 text-muted ps-3">
                                             <i class="bi bi-search"></i>
                                         </span>
-                                        <input type="text" id="vehicleModalSearch" class="form-control search-input-modern border-start-0 ps-0" placeholder="Search plate number, type, route, driver..." autocomplete="off">
+                                        <input type="text" id="vehicleModalSearch" class="form-control search-input-modern border-start-0 ps-0 pe-4" placeholder="Search plate number, type, route, driver..." autocomplete="off">
+                                        <button type="button" class="btn-clear-search" id="clearVehicleModalSearch" onclick="clearVehicleModalSearch()" style="display: none !important; right: 8px;" title="Clear search">
+                                            <i class="bi bi-x-circle-fill"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-12 col-sm-auto d-flex justify-content-end gap-2">
@@ -1971,9 +1974,30 @@
             }
         });
 
+        function toggleVehicleModalClear(val) {
+            var btn = document.getElementById('clearVehicleModalSearch');
+            if (btn) {
+                if (val && val.trim().length > 0) {
+                    btn.style.setProperty('display', 'inline-flex', 'important');
+                } else {
+                    btn.style.setProperty('display', 'none', 'important');
+                }
+            }
+        }
+        window.clearVehicleModalSearch = function() {
+            var input = document.getElementById('vehicleModalSearch');
+            if (input) {
+                input.value = '';
+                toggleVehicleModalClear('');
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                input.focus();
+            }
+        };
+
         document.addEventListener('input', function(e) {
             if (e.target && e.target.id === 'vehicleModalSearch') {
                 var query = (e.target.value || '').trim().toLowerCase();
+                toggleVehicleModalClear(e.target.value);
                 getVehicleItems().forEach(function(item) {
                     var searchData = (item.getAttribute('data-search') || '').toLowerCase();
                     if (!query || searchData.indexOf(query) !== -1) {

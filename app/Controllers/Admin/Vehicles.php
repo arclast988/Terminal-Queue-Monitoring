@@ -33,7 +33,7 @@ class Vehicles extends BaseController
         $data = [
             'title' => 'Vehicle Register',
             'vehicles' => $vehicles,
-            'routes' => $this->routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $this->routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll(),
             'vehicleTypes' => $this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(),
         ];
 
@@ -148,9 +148,9 @@ class Vehicles extends BaseController
                 ],
             ],
             'status'        => [
-                'rules'  => 'permit_empty|in_list[active,maintenance]',
+                'rules'  => 'permit_empty|in_list[active,maintenance,archived]',
                 'errors' => [
-                    'in_list' => 'Status must be either active or maintenance.',
+                    'in_list' => 'Status must be active, maintenance, or archived.',
                 ],
             ],
             'route_id'      => [
@@ -177,7 +177,10 @@ class Vehicles extends BaseController
         }
 
         $routeId = $this->request->getPost('route_id');
-        $route = $this->routeModel->withOrigin()->find($routeId);
+        $route = $this->routeModel->withActiveFare()->find($routeId);
+        if (!$route) {
+            return redirect()->back()->withInput()->with('error', 'The selected route does not have an assigned fare. Please assign a fare in the Add Fare section before registering vehicles to it.');
+        }
 
         // Validate vehicle type matches route type
         $vehicleType = $this->request->getPost('type');
@@ -228,7 +231,7 @@ class Vehicles extends BaseController
         $data = [
             'title' => 'Edit Vehicle',
             'vehicle' => $vehicle,
-            'routes' => $this->routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $this->routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll(),
             'vehicleTypes' => $this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(),
         ];
 
@@ -289,10 +292,10 @@ class Vehicles extends BaseController
                 ],
             ],
             'status'        => [
-                'rules'  => 'required|in_list[active,maintenance]',
+                'rules'  => 'required|in_list[active,maintenance,archived]',
                 'errors' => [
                     'required' => 'Please select a vehicle status.',
-                    'in_list'  => 'Vehicle status must be either active or maintenance.',
+                    'in_list'  => 'Vehicle status must be active, maintenance, or archived.',
                 ],
             ],
             'route_id'      => [
@@ -320,7 +323,10 @@ class Vehicles extends BaseController
         }
 
         $routeId = $this->request->getPost('route_id');
-        $route = $this->routeModel->withOrigin()->find($routeId);
+        $route = $this->routeModel->withActiveFare()->find($routeId);
+        if (!$route) {
+            return redirect()->back()->withInput()->with('error', 'The selected route does not have an assigned fare. Please assign a fare in the Add Fare section before assigning vehicles to it.');
+        }
         $vehicleType = $this->request->getPost('type');
 
         if (!$this->vehicleTypeModel->where('slug', $vehicleType)->where('is_active', 1)->first()) {
@@ -393,10 +399,38 @@ class Vehicles extends BaseController
         }
 
         if ($this->vehicleModel->delete($id)) {
-            $this->logActivity('Delete vehicle', 'Deleted vehicle ' . $vehicle['plate_number'] . '.');
+            $this->logActivity('Delete vehicle', 'Permanently deleted vehicle ' . $vehicle['plate_number'] . '.');
             $this->broadcastUpdate('queue_update', ['action' => 'vehicle_deleted', 'id' => (int) $id]);
-            return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" deleted successfully.');
+            return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" permanently deleted.');
         }
         return redirect()->to('/admin/vehicles')->with('error', 'Failed to delete vehicle.');
+    }
+
+    public function deactivate($id)
+    {
+        $vehicle = $this->vehicleModel->find($id);
+        if (!$vehicle) {
+            return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
+        }
+
+        $this->vehicleModel->update($id, ['status' => 'archived']);
+        $this->logActivity('Deactivate vehicle', 'Deactivated vehicle ' . $vehicle['plate_number'] . '.');
+        $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
+
+        return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" deactivated and moved to archive.');
+    }
+
+    public function activate($id)
+    {
+        $vehicle = $this->vehicleModel->find($id);
+        if (!$vehicle) {
+            return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
+        }
+
+        $this->vehicleModel->update($id, ['status' => 'active']);
+        $this->logActivity('Activate vehicle', 'Activated vehicle ' . $vehicle['plate_number'] . '.');
+        $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
+
+        return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" activated successfully.');
     }
 }

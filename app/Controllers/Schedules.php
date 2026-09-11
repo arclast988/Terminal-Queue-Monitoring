@@ -122,9 +122,10 @@ class Schedules extends BaseController
             $totalActiveCount += $cnt;
         }
 
-        // Destination options from admin-managed routes (so admin can add/edit/delete and they appear here)
-        $allDestinations = $routeModel->select('destination')
-            ->orderBy('destination', 'ASC')
+        // Destination options from admin-managed routes with active fares
+        $allDestinations = $routeModel->withActiveFare()
+            ->select('routes.destination')
+            ->orderBy('routes.destination', 'ASC')
             ->findColumn('destination') ?: [];
         $allDestinations = array_values(array_unique($allDestinations));
 
@@ -267,8 +268,8 @@ class Schedules extends BaseController
 
             // Destination filter options, so the guest dropdown can refresh live
             // when an admin adds/removes a route (rides this same 3s poll).
-            $allDestinations = (new RouteModel())
-                ->select('destination')->orderBy('destination', 'ASC')->findColumn('destination') ?: [];
+            $allDestinations = (new RouteModel())->withActiveFare()
+                ->select('routes.destination')->orderBy('routes.destination', 'ASC')->findColumn('destination') ?: [];
             $allDestinations = array_values(array_unique($allDestinations));
 
             $payload = [

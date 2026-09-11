@@ -738,9 +738,10 @@ body.staff-theme .table .btn-group > form {
         max-width: none !important;
     }
     
+    /* Management action buttons preserve desktop-style text labels on mobile */
     .action-label,
     .user-action-label {
-        display: none !important;
+        display: inline !important;
     }
     
     .table .btn-group {

@@ -38,6 +38,7 @@ class DepartureRules extends BaseController
     {
         $routes = $this->routeModel
             ->select('MIN(routes.id) as id, routes.destination, routes.terminal_id')
+            ->where('routes.status', 'active')
             ->groupBy('routes.destination, routes.terminal_id')
             ->orderBy('routes.destination', 'ASC')
             ->findAll();

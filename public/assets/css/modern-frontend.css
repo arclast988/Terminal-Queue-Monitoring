@@ -612,8 +612,6 @@ body > * {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     border-color: #0066cc !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 102, 204, 0.25) !important;
 }
 .btn-action-edit:hover i,
 .btn-action-edit:hover .bi,
@@ -650,8 +648,6 @@ body > * {
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
     border-color: #dc2626 !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25) !important;
 }
 .btn-action-delete:hover i,
 .btn-modern.btn-action-delete:hover i {
@@ -1520,6 +1516,259 @@ input[name="operator_name"] {
     -webkit-text-fill-color: #ffffff !important;
     border: none !important;
 }
+
+/* Hide native WebKit search cancel buttons to prevent duplicate / unstyled clear buttons */
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    display: none;
+}
+
+/* Universal Capsule Search Bar (x) Clear Button */
+.btn-clear-search,
+.fare-search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: inline-flex;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
+    z-index: 5;
+    transition: color 0.15s ease !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+.btn-clear-search:hover,
+.fare-search-clear:hover {
+    color: #475569 !important;
+}
+
+/* Guest Search Clear Button (preserves existing guest layout) */
+.guest-clear-search-btn {
+    position: absolute;
+    right: 120px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    cursor: pointer !important;
+    padding: 6px !important;
+    display: inline-flex;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 18px !important;
+    z-index: 5;
+    transition: color 0.15s ease !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+/* For home hero search where button is wider ("TRACK STATUS") */
+#guest-hero-clear-btn {
+    right: 165px !important;
+}
+.guest-clear-search-btn:hover {
+    color: #475569 !important;
+}
+@media (max-width: 768px) {
+    .guest-clear-search-btn {
+        right: 95px;
+        font-size: 16px !important;
+    }
+    #guest-hero-clear-btn {
+        right: 135px !important;
+    }
+}
+
+/* Strictly enforce hidden state when search inputs are empty */
+.btn-clear-search[style*="display: none"],
+.btn-clear-search[style*="display:none"],
+.btn-clear-search.d-none,
+.fare-search-clear[style*="display: none"],
+.fare-search-clear[style*="display:none"],
+.fare-search-clear.d-none,
+.guest-clear-search-btn[style*="display: none"],
+.guest-clear-search-btn[style*="display:none"],
+.guest-clear-search-btn.d-none {
+    display: none !important;
+}
+
+/* Universal Table Action Buttons (Lifecycle: Edit, Deactivate, Activate, Delete) */
+.btn-action-edit,
+.btn-modern.btn-action-edit {
+    background: #ffffff !important;
+    color: #1565c0 !important;
+    -webkit-text-fill-color: #1565c0 !important;
+    border: 1.5px solid #1565c0 !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.btn-action-edit i,
+.btn-action-edit .bi,
+.btn-modern.btn-action-edit i,
+.btn-modern.btn-action-edit .bi {
+    color: #1565c0 !important;
+    -webkit-text-fill-color: #1565c0 !important;
+}
+.btn-action-edit:hover,
+.btn-modern.btn-action-edit:hover {
+    background: #1565c0 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #1565c0 !important;
+}
+.btn-action-edit:hover i,
+.btn-action-edit:hover .bi,
+.btn-modern.btn-action-edit:hover i,
+.btn-modern.btn-action-edit:hover .bi {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+.btn-action-deactivate,
+.btn-modern.btn-action-deactivate {
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    -webkit-text-fill-color: #d97706 !important;
+    border: 1.5px solid transparent !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+}
+.btn-action-deactivate i,
+.btn-action-deactivate .bi,
+.btn-action-deactivate span,
+.btn-modern.btn-action-deactivate i,
+.btn-modern.btn-action-deactivate .bi,
+.btn-modern.btn-action-deactivate span {
+    color: #d97706 !important;
+    -webkit-text-fill-color: #d97706 !important;
+}
+.btn-action-deactivate:hover,
+.btn-modern.btn-action-deactivate:hover {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #f59e0b !important;
+}
+.btn-action-deactivate:hover i,
+.btn-action-deactivate:hover .bi,
+.btn-action-deactivate:hover span,
+.btn-modern.btn-action-deactivate:hover i,
+.btn-modern.btn-action-deactivate:hover .bi,
+.btn-modern.btn-action-deactivate:hover span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+.btn-action-activate,
+.btn-modern.btn-action-activate {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    -webkit-text-fill-color: #15803d !important;
+    border: 1.5px solid transparent !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+}
+.btn-action-activate i,
+.btn-action-activate .bi,
+.btn-action-activate span,
+.btn-modern.btn-action-activate i,
+.btn-modern.btn-action-activate .bi,
+.btn-modern.btn-action-activate span {
+    color: #15803d !important;
+    -webkit-text-fill-color: #15803d !important;
+}
+.btn-action-activate:hover,
+.btn-modern.btn-action-activate:hover {
+    background: #16a34a !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #16a34a !important;
+}
+.btn-action-activate:hover i,
+.btn-action-activate:hover .bi,
+.btn-action-activate:hover span,
+.btn-modern.btn-action-activate:hover i,
+.btn-modern.btn-action-activate:hover .bi,
+.btn-modern.btn-action-activate:hover span {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+.btn-action-delete,
+.btn-modern.btn-action-delete {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626 !important;
+    border: 1.5px solid transparent !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
+    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.btn-action-delete i,
+.btn-action-delete .bi,
+.btn-modern.btn-action-delete i,
+.btn-modern.btn-action-delete .bi {
+    color: #dc2626 !important;
+    -webkit-text-fill-color: #dc2626 !important;
+}
+.btn-action-delete:hover,
+.btn-modern.btn-action-delete:hover {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    border-color: #dc2626 !important;
+}
+.btn-action-delete:hover i,
+.btn-action-delete:hover .bi,
+.btn-modern.btn-action-delete:hover i,
+.btn-modern.btn-action-delete:hover .bi {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
 
 
 

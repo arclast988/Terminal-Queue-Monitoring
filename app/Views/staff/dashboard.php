@@ -134,9 +134,12 @@ if (!empty($recent_departures)) {
     <div class="modern-card-body py-3">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
             <!-- Search Input Capsule -->
-            <div class="departure-search-group">
+            <div class="departure-search-group position-relative">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="departure-search-input" id="departure-search" placeholder="Search plate, operator, driver..." onkeyup="filterDepartures()">
+                <input type="text" class="departure-search-input" id="departure-search" placeholder="Search plate, operator, driver..." onkeyup="filterDepartures()" oninput="toggleDepartureClearBtn(this.value)" autocomplete="off">
+                <button type="button" class="btn-clear-search" id="clear-departure-search" onclick="clearDepartureSearch()" style="display: none !important;" title="Clear search">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
             </div>
 
             <!-- Vehicle Type Filter Chips -->
@@ -399,7 +402,7 @@ if (!empty($recent_departures)) {
     .departure-search-input {
         height: 36px;
         width: 100%;
-        padding: 6px 14px 6px 8px;
+        padding: 6px 36px 6px 8px;
         font-size: 13.5px;
         font-family: inherit;
         border: 1.5px solid #cbd5e1;
@@ -514,9 +517,31 @@ if (!empty($recent_departures)) {
         filterDepartures();
     }
 
+    function toggleDepartureClearBtn(val) {
+        const btn = document.getElementById('clear-departure-search');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+
+    function clearDepartureSearch() {
+        const input = document.getElementById('departure-search');
+        if (input) {
+            input.value = '';
+            toggleDepartureClearBtn('');
+            input.focus();
+            filterDepartures();
+        }
+    }
+
     function filterDepartures() {
         const searchInput = document.getElementById('departure-search');
         const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        toggleDepartureClearBtn(query);
         const rows = document.querySelectorAll('#departures-table-body tr:not(#no-departures-match)');
         let visibleCount = 0;
 

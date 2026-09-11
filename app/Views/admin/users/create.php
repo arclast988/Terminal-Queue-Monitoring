@@ -98,9 +98,12 @@
                         </div>
 
                         <div class="d-flex gap-2 mb-2 flex-column flex-sm-row route-filter">
-                            <div class="input-group-modern input-group-sm flex-grow-1">
+                            <div class="input-group-modern input-group-sm flex-grow-1 position-relative">
                                 <span class="input-group-text-modern"><i class="bi bi-search"></i></span>
-                                <input type="text" id="routeSearch" class="input-modern" placeholder="Search routes...">
+                                <input type="text" id="routeSearch" class="input-modern pe-4" placeholder="Search routes...">
+                                <button type="button" class="btn-clear-search" id="clearRouteSearch" onclick="clearRouteSearchPicker()" style="display: none !important; right: 8px;" title="Clear search">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
                             </div>
                             <div class="form-check route-select-all">
                                 <input class="form-check-input" type="checkbox" id="selectAllRoutes">
@@ -246,9 +249,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function toggleRouteSearchClear(val) {
+        var btn = document.getElementById('clearRouteSearch');
+        if (btn) {
+            if (val && val.trim().length > 0) {
+                btn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                btn.style.setProperty('display', 'none', 'important');
+            }
+        }
+    }
+    window.clearRouteSearchPicker = function() {
+        if (routeSearch) {
+            routeSearch.value = '';
+            toggleRouteSearchClear('');
+            routeSearch.dispatchEvent(new Event('input'));
+            routeSearch.focus();
+        }
+    };
+
     if (routeSearch) {
+        toggleRouteSearchClear(routeSearch.value);
         routeSearch.addEventListener('input', function() {
             var query = this.value.trim().toLowerCase();
+            toggleRouteSearchClear(this.value);
             routeItems.forEach(function(item) {
                 var label = item.getAttribute('data-label') || '';
                 item.classList.toggle('d-none', label.indexOf(query) === -1);

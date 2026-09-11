@@ -27,6 +27,7 @@ CREATE TABLE users (
     username VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL DEFAULT 'staff',
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(150) NULL UNIQUE,
     failed_login_attempts INT DEFAULT 0,
@@ -71,6 +72,7 @@ CREATE TABLE routes (
     destination VARCHAR(100) NOT NULL,
     fare NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     vehicle_type VARCHAR(50) NOT NULL DEFAULT 'van',
+    status VARCHAR(20) NOT NULL DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -217,6 +219,7 @@ CREATE INDEX idx_vehicles_route_id ON vehicles (route_id);
 CREATE INDEX idx_vehicles_default_route_id ON vehicles (default_route_id);
 CREATE INDEX idx_vehicles_plate ON vehicles (plate_number);
 CREATE INDEX idx_routes_terminal ON routes (terminal_id);
+CREATE INDEX IF NOT EXISTS idx_routes_status ON routes (status);
 CREATE INDEX idx_audit_logs_user_ts ON audit_logs (user_id, timestamp);
 CREATE INDEX idx_announcements_active_sort ON announcements (is_active, sort_order);
 

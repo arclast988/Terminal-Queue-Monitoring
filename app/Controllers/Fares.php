@@ -14,9 +14,9 @@ class Fares extends BaseController
     {
         $routeModel = new RouteModel();
         $rows = $routeModel
-            ->withOrigin()
-            ->where('vehicle_type', $vehicleType)
-            ->orderBy('destination', 'ASC')
+            ->withActiveFare()
+            ->where('routes.vehicle_type', $vehicleType)
+            ->orderBy('routes.destination', 'ASC')
             ->findAll();
 
         return enrich_routes_with_discounts($rows, $discounts);
@@ -54,6 +54,9 @@ class Fares extends BaseController
 
         $terminals = [];
         $all_locations = [];
+        $unassignedRoutes = [];
+        $availableDestinations = [];
+        $allActiveRoutes = [];
 
         if (session()->get('isLoggedIn') && in_array(session()->get('role'), ['super_admin', 'admin'], true)) {
             $terminalModel  = new TerminalModel();
@@ -64,20 +67,82 @@ class Fares extends BaseController
             $destinations  = array_column($destsRaw, 'destination');
             $all_locations = array_values(array_filter(array_map('strtoupper', array_unique($destinations))));
             sort($all_locations);
+
+            $unassignedRoutes = (new RouteModel())->withoutFare()->findAll();
+
+            // Fetch all active routes with terminal origin
+            $rawActiveRoutes = (new RouteModel())
+                ->withOrigin()
+                ->where('routes.status', 'active')
+                ->orderBy('routes.destination', 'ASC')
+                ->findAll();
+
+            // Fetch regular fares map
+            $fareModel = new \App\Models\FareModel();
+            $regularFares = $fareModel
+                ->select('fares.route_id, fares.amount, fares.id as fare_id')
+                ->join('fare_discounts', 'fare_discounts.id = fares.fare_discount_id')
+                ->where('fare_discounts.type', 'regular')
+                ->findAll();
+
+            $fareMap = [];
+            foreach ($regularFares as $rf) {
+                $fareMap[(int)$rf['route_id']] = [
+                    'amount'  => (float)$rf['amount'],
+                    'fare_id' => (int)$rf['fare_id'],
+                ];
+            }
+
+            $destGroups = [];
+            foreach ($rawActiveRoutes as $r) {
+                $rId = (int)$r['id'];
+                $termId = (int)$r['terminal_id'];
+                $dest = strtoupper(trim($r['destination']));
+                $origin = strtoupper(trim($r['origin'] ?? ''));
+                $vType = $r['vehicle_type'];
+                $hasFare = isset($fareMap[$rId]) && $fareMap[$rId]['amount'] > 0;
+                $fareAmount = $hasFare ? $fareMap[$rId]['amount'] : 0.00;
+                $fareId = $hasFare ? $fareMap[$rId]['fare_id'] : null;
+
+                $allActiveRoutes[] = [
+                    'id'           => $rId,
+                    'terminal_id'  => $termId,
+                    'origin'       => $origin,
+                    'destination'  => $dest,
+                    'vehicle_type' => $vType,
+                    'has_fare'     => $hasFare,
+                    'fare'         => $fareAmount,
+                    'fare_id'      => $fareId,
+                ];
+
+                $groupKey = $termId . '::' . $dest;
+                if (!isset($destGroups[$groupKey])) {
+                    $destGroups[$groupKey] = [
+                        'terminal_id'   => $termId,
+                        'origin'        => $origin,
+                        'destination'   => $dest,
+                        'label'         => (!empty($origin) ? $origin . ' → ' : '') . $dest,
+                    ];
+                }
+            }
+            $availableDestinations = array_values($destGroups);
         }
 
         $data = [
-            'title'         => 'Route Fares',
-            'body_class'    => session()->get('isLoggedIn') ? '' : 'public-page',
-            'van_routes'    => $van_routes,
-            'jeepney_routes'=> $jeepney_routes,
-            'minibus_routes'=> $minibus_routes,
-            'vehicleTypes'  => $vehicleTypes,
-            'routesByType'  => $routesByType,
-            'announcements' => $announcements,
-            'terminals'     => $terminals,
-            'discounts'     => $discounts,
-            'all_locations' => $all_locations,
+            'title'                 => 'Route Fares',
+            'body_class'            => session()->get('isLoggedIn') ? '' : 'public-page',
+            'van_routes'            => $van_routes,
+            'jeepney_routes'        => $jeepney_routes,
+            'minibus_routes'        => $minibus_routes,
+            'vehicleTypes'          => $vehicleTypes,
+            'routesByType'          => $routesByType,
+            'announcements'         => $announcements,
+            'terminals'             => $terminals,
+            'discounts'             => $discounts,
+            'all_locations'         => $all_locations,
+            'unassignedRoutes'      => $unassignedRoutes,
+            'availableDestinations' => $availableDestinations,
+            'allActiveRoutes'       => $allActiveRoutes,
         ];
 
         if (session()->get('isLoggedIn')) {

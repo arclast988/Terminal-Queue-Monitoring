@@ -494,7 +494,8 @@
         }
 
         /* Remove stacking context on .main-content when modal is open */
-        body.modal-open > .main-content {
+        body.modal-open > .main-content,
+        body:has(.modal.show) > .main-content {
             position: static !important;
             z-index: auto !important;
             transform: none !important;
@@ -502,7 +503,9 @@
         }
 
         /* All modals (whether in body or nested in .main-content) sit above backdrop */
-        body.modal-open .modal {
+        body.modal-open .modal,
+        body:has(.modal.show) .modal,
+        .modal.show {
             position: fixed !important;
             z-index: 1055 !important;
         }

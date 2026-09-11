@@ -16,8 +16,27 @@ class Users extends BaseController
 
         $users = $model->findAll();
 
-        // Attach assigned routes label to each user
+        $countActive = 0;
+        $countAdmin = 0;
+        $countDispatcher = 0;
+        $countArchived = 0;
+
+        // Attach assigned routes label and calculate counts
         foreach ($users as &$user) {
+            $status = $user['status'] ?? 'active';
+            $user['status'] = $status;
+
+            if ($status === 'archived') {
+                $countArchived++;
+            } else {
+                $countActive++;
+                if ($user['role'] === 'super_admin' || $user['role'] === 'admin') {
+                    $countAdmin++;
+                } else {
+                    $countDispatcher++;
+                }
+            }
+
             if ($user['role'] === 'super_admin' || $user['role'] === 'admin') {
                 $user['assigned_routes_label'] = 'All Routes';
             } else {
@@ -27,6 +46,11 @@ class Users extends BaseController
         }
 
         $data['users'] = $users;
+        $data['countActive'] = $countActive;
+        $data['countAdmin'] = $countAdmin;
+        $data['countDispatcher'] = $countDispatcher;
+        $data['countArchived'] = $countArchived;
+
         return view('admin/users/index', $data);
     }
 
@@ -34,7 +58,7 @@ class Users extends BaseController
     {
         $routeModel = new RouteModel();
         $data = [
-            'routes' => $routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->withOrigin()->where('routes.status', 'active')->orderBy('destination', 'ASC')->findAll(),
         ];
         return view('admin/users/create', $data);
     }
@@ -140,7 +164,7 @@ class Users extends BaseController
 
         $data = [
             'user' => $user,
-            'routes' => $routeModel->withOrigin()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routeModel->withOrigin()->where('routes.status', 'active')->orderBy('destination', 'ASC')->findAll(),
             'assignedRouteIds' => $userRouteModel->getRouteIdsForUser($id),
         ];
 
@@ -284,6 +308,62 @@ class Users extends BaseController
         return redirect()->to('/admin/users')->with('success', 'User updated successfully.');
     }
 
+    public function deactivate($id)
+    {
+        $currentRole = session()->get('role');
+        $model = new UserModel();
+
+        $targetUser = $model->find($id);
+        if (!$targetUser) {
+            return redirect()->to('/admin/users')->with('error', 'User not found.');
+        }
+
+        // Prevent admin from deactivating their own account
+        if ((int)$id === (int)session()->get('id')) {
+            return redirect()->to('/admin/users')->with('error', 'You cannot deactivate your own account.');
+        }
+
+        // Prevent deactivating super_admin
+        if ($targetUser['role'] === 'super_admin') {
+            return redirect()->to('/admin/users')->with('error', 'The super admin account cannot be deactivated.');
+        }
+
+        // Regular admin cannot deactivate other admin accounts
+        if ($currentRole !== 'super_admin' && $targetUser['role'] === 'admin') {
+            return redirect()->to('/admin/users')->with('error', 'You cannot deactivate other admin accounts.');
+        }
+
+        $model->update($id, ['status' => 'archived']);
+
+        $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
+        $this->logActivity('Deactivate user', 'Deactivated user "' . $displayName . '" (' . $targetUser['username'] . ') and moved to archive');
+
+        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" has been deactivated and moved to archive.');
+    }
+
+    public function activate($id)
+    {
+        $currentRole = session()->get('role');
+        $model = new UserModel();
+
+        $targetUser = $model->find($id);
+        if (!$targetUser) {
+            return redirect()->to('/admin/users')->with('error', 'User not found.');
+        }
+
+        // Regular admin cannot activate other admin accounts unless super_admin
+        if ($currentRole !== 'super_admin' && $targetUser['role'] === 'admin') {
+            return redirect()->to('/admin/users')->with('error', 'You cannot activate other admin accounts.');
+        }
+
+        $model->update($id, ['status' => 'active']);
+
+        $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
+        $this->logActivity('Activate user', 'Reactivated user "' . $displayName . '" (' . $targetUser['username'] . ')');
+
+        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" has been reactivated successfully.');
+    }
+
     public function delete($id)
     {
         $currentRole = session()->get('role');
@@ -312,7 +392,193 @@ class Users extends BaseController
         $model->delete($id);
         // user_routes cleaned up automatically by ON DELETE CASCADE
         $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
-        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" deleted successfully.');
+        $this->logActivity('Delete user', 'Permanently deleted user "' . $displayName . '" (' . $targetUser['username'] . ')');
+        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" permanently deleted successfully.');
+    }
+
+    public function uploadAvatar($id)
+    {
+        $currentRole = session()->get('role');
+        $currentUserId = (int)session()->get('id');
+        $userModel = new UserModel();
+
+        $targetUser = $userModel->find($id);
+        if (!$targetUser) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success'    => false,
+                'message'    => 'User not found.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Super Admin avatar protection: ONLY the super admin themselves can change their own avatar
+        if ($targetUser['role'] === 'super_admin' && $currentUserId !== (int)$id) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success'    => false,
+                'message'    => 'Only the Super Admin can change their own profile picture.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Regular admin cannot change other admin avatars (only super_admin or the admin themselves)
+        if ($currentRole !== 'super_admin' && $targetUser['role'] === 'admin' && $currentUserId !== (int)$id) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success'    => false,
+                'message'    => 'You do not have permission to change this admin\'s profile picture.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $avatarFile = $this->request->getFile('avatar');
+        if (!$avatarFile || !$avatarFile->isValid() || $avatarFile->hasMoved()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Please select a valid image file to upload.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Validate file size (max 4MB)
+        $maxSizeBytes = 4 * 1024 * 1024;
+        if ($avatarFile->getSize() > $maxSizeBytes) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'The image exceeds the 4MB maximum allowed size.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Validate MIME type
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
+        $mime = $avatarFile->getMimeType();
+        if (!in_array(strtolower($mime), $allowedMimes, true)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Invalid file type. Only JPG, PNG, WEBP, and GIF images are allowed.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Validate that the file is genuinely an image via getimagesize
+        $imageInfo = @getimagesize($avatarFile->getTempName());
+        if ($imageInfo === false) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Uploaded file is not a valid image.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+        if (!is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+
+        // Delete old custom avatar if it exists
+        if (!empty($targetUser['profile_image'])) {
+            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetUser['profile_image']);
+            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                @unlink($oldPath);
+            }
+        }
+
+        // Generate safe random filename
+        $ext = $avatarFile->guessExtension() ?: 'jpg';
+        $newFilename = 'avatar_' . $id . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+        if (!$avatarFile->move($uploadDir, $newFilename)) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success'    => false,
+                'message'    => 'Failed to save uploaded image.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $relPath = 'uploads/avatars/' . $newFilename;
+        $userModel->update($id, ['profile_image' => $relPath]);
+
+        if ($currentUserId === (int)$id) {
+            session()->set('profile_image', $relPath);
+        }
+
+        $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
+        $this->logActivity('Update user avatar', 'Updated profile picture for "' . $displayName . '" (' . $targetUser['username'] . ')');
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'message'    => 'Profile image updated successfully.',
+            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'csrf_token' => csrf_token(),
+            'csrf_hash'  => csrf_hash(),
+        ]);
+    }
+
+    public function removeAvatar($id)
+    {
+        $currentRole = session()->get('role');
+        $currentUserId = (int)session()->get('id');
+        $userModel = new UserModel();
+
+        $targetUser = $userModel->find($id);
+        if (!$targetUser) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success'    => false,
+                'message'    => 'User not found.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Super Admin avatar protection: ONLY the super admin themselves can change their own avatar
+        if ($targetUser['role'] === 'super_admin' && $currentUserId !== (int)$id) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success'    => false,
+                'message'    => 'Only the Super Admin can remove their own profile picture.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Regular admin cannot remove other admin avatars
+        if ($currentRole !== 'super_admin' && $targetUser['role'] === 'admin' && $currentUserId !== (int)$id) {
+            return $this->response->setStatusCode(403)->setJSON([
+                'success'    => false,
+                'message'    => 'You do not have permission to remove this admin\'s profile picture.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        if (!empty($targetUser['profile_image'])) {
+            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetUser['profile_image']);
+            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                @unlink($oldPath);
+            }
+
+            $userModel->update($id, ['profile_image' => null]);
+            if ($currentUserId === (int)$id) {
+                session()->remove('profile_image');
+            }
+
+            $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
+            $this->logActivity('Remove user avatar', 'Removed profile picture for "' . $displayName . '" (' . $targetUser['username'] . ')');
+        }
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'message'    => 'Profile picture removed successfully.',
+            'csrf_token' => csrf_token(),
+            'csrf_hash'  => csrf_hash(),
+        ]);
     }
 
     private function parseRouteIds(): array

@@ -66,9 +66,9 @@ html, body {
     .table-responsive-card table.table tbody tr {
         display: block !important;
         border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-        margin-bottom: 1.25rem !important;
-        padding: 0.5rem 0.75rem !important;
+        border-radius: 14px !important;
+        margin-bottom: 14px !important;
+        padding: 14px 16px !important;
         background-color: white !important;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
     }
@@ -953,8 +953,17 @@ html body .stats-grid button.stat-card,
         font-size: 12px !important;
     }
     .advisory-bar {
-        font-size: 12.5px !important;
-        padding: 8px 5% !important;
+        padding: 0 10px !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .advisory-bar .marquee {
+        font-size: 13px !important;
+        line-height: 36px !important;
+        font-weight: 800 !important;
+        white-space: nowrap !important;
     }
     .container {
         width: 94% !important;
@@ -1629,6 +1638,119 @@ button.btn-action-delete:hover {
   -webkit-text-fill-color: #fff !important;
 }
 
+/* Deactivate (yellowish orange / amber) */
+button.btn-modern[title*="deactivate" i],
+input[type="submit"].btn-modern[title*="deactivate" i],
+a.btn-action-deactivate,
+button.btn-action-deactivate,
+a[title*="deactivate" i].btn-modern-outline,
+.btn-action-deactivate,
+.btn-modern.btn-action-deactivate {
+  background: #fef3c7 !important;
+  border-color: transparent !important;
+  color: #d97706 !important;
+  -webkit-text-fill-color: #d97706 !important;
+}
+
+.btn-modern[title*="deactivate" i] i,
+.btn-modern[title*="deactivate" i] .bi,
+.btn-modern[title*="deactivate" i] span,
+.btn-action-deactivate i,
+.btn-action-deactivate .bi,
+.btn-action-deactivate span,
+.btn-modern.btn-action-deactivate i,
+.btn-modern.btn-action-deactivate .bi,
+.btn-modern.btn-action-deactivate span {
+  color: #d97706 !important;
+  -webkit-text-fill-color: #d97706 !important;
+}
+
+button.btn-modern[title*="deactivate" i]:hover,
+input[type="submit"].btn-modern[title*="deactivate" i]:hover,
+a.btn-action-deactivate:hover,
+button.btn-action-deactivate:hover,
+a.btn-action-deactivate:active,
+button.btn-action-deactivate:active,
+a.btn-action-deactivate:focus,
+button.btn-action-deactivate:focus,
+.btn-action-deactivate:hover,
+.btn-modern.btn-action-deactivate:hover {
+  background: #f59e0b !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-color: #f59e0b !important;
+}
+
+/* Activate (green) - strictly exclude deactivate buttons */
+button.btn-modern[title*="activate" i]:not([title*="deactivate" i]),
+input[type="submit"].btn-modern[title*="activate" i]:not([title*="deactivate" i]),
+a[title*="activate" i]:not([title*="deactivate" i]).btn-modern-outline,
+a.btn-action-activate,
+button.btn-action-activate,
+.btn-action-activate,
+.btn-modern.btn-action-activate {
+  background: #dcfce7 !important;
+  border-color: transparent !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+.btn-modern[title*="activate" i]:not([title*="deactivate" i]) i,
+.btn-modern[title*="activate" i]:not([title*="deactivate" i]) .bi,
+.btn-modern[title*="activate" i]:not([title*="deactivate" i]) span,
+.btn-action-activate i,
+.btn-action-activate .bi,
+.btn-action-activate span,
+.btn-modern.btn-action-activate i,
+.btn-modern.btn-action-activate .bi,
+.btn-modern.btn-action-activate span {
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+
+button.btn-modern[title*="activate" i]:not([title*="deactivate" i]):hover,
+input[type="submit"].btn-modern[title*="activate" i]:not([title*="deactivate" i]):hover,
+a.btn-action-activate:hover,
+button.btn-action-activate:hover,
+a.btn-action-activate:active,
+button.btn-action-activate:active,
+a.btn-action-activate:focus,
+button.btn-action-activate:focus,
+.btn-action-activate:hover,
+.btn-modern.btn-action-activate:hover {
+  background: #16a34a !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-color: #16a34a !important;
+}
+
+/* Force Deactivate / Activate Button Icons & Text to turn White on Hover */
+button.btn-modern[title*="deactivate" i]:hover i,
+button.btn-modern[title*="deactivate" i]:hover .bi,
+button.btn-modern[title*="deactivate" i]:hover span,
+.btn-action-deactivate:hover i,
+.btn-action-deactivate:hover .bi,
+.btn-action-deactivate:hover .fa,
+.btn-action-deactivate:hover span,
+.btn-modern.btn-action-deactivate:hover i,
+.btn-modern.btn-action-deactivate:hover .bi,
+.btn-modern.btn-action-deactivate:hover .fa,
+.btn-modern.btn-action-deactivate:hover span,
+button.btn-modern[title*="activate" i]:not([title*="deactivate" i]):hover i,
+button.btn-modern[title*="activate" i]:not([title*="deactivate" i]):hover .bi,
+button.btn-modern[title*="activate" i]:not([title*="deactivate" i]):hover span,
+.btn-action-activate:hover i,
+.btn-action-activate:hover .bi,
+.btn-action-activate:hover .fa,
+.btn-action-activate:hover span,
+.btn-modern.btn-action-activate:hover i,
+.btn-modern.btn-action-activate:hover .bi,
+.btn-modern.btn-action-activate:hover .fa,
+.btn-modern.btn-action-activate:hover span {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
 /* Additional class-based helpers (used in some views) */
 .btn-modern.btn-modern-outline-primary {
   border-color: var(--primary-blue, #1565c0) !important;
@@ -1665,10 +1787,15 @@ button.btn-modern[title*="edit" i]:hover .bi,
 a[title*="edit" i]:hover .bi,
 button[title*="edit" i]:hover .bi,
 .btn-modern[title*="edit" i]:hover .bi,
-.btn-modern[title*="edit" i]:hover .fa,
 .btn-action-edit:hover i,
 .btn-action-edit:hover .bi,
 .btn-action-edit:hover .fa,
+.btn-action-edit:focus i,
+.btn-action-edit:focus .bi,
+.btn-action-edit:focus .fa,
+.btn-action-edit:active i,
+.btn-action-edit:active .bi,
+.btn-action-edit:active .fa,
 .btn-modern-outline-primary:hover i,
 .btn-modern-outline-primary:hover .bi,
 .btn-modern-outline-primary:hover .fa {
@@ -2731,12 +2858,16 @@ a[title*="delete" i]:hover .bi,
     color: #94a3b8 !important;
     cursor: pointer !important;
     font-size: 16px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0 !important;
     border-radius: 0 !important;
     transition: color 0.15s ease !important;
+  }
+
+  .fare-search-clear[style*="display: none"],
+  .fare-search-clear[style*="display:none"] {
+    display: none !important;
   }
 
   .fare-search-clear:hover {
@@ -3228,6 +3359,36 @@ a[title*="delete" i]:hover .bi,
     justify-content: center !important;
     margin: 0 !important;
     box-sizing: border-box !important;
+  }
+}
+
+/* ── Ultra-compact mobile screen optimizations (down to 320px) ── */
+@media (max-width: 380px) {
+  .btn-group-modern {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+  .btn-group-modern .btn-modern {
+    padding: 3px 6px !important;
+    font-size: 11px !important;
+    gap: 3px !important;
+    white-space: nowrap !important;
+  }
+  .avatar-circle {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 14px !important;
+  }
+  .vf-btn {
+    padding: 4px 10px !important;
+    font-size: 11.5px !important;
+  }
+  .vf-count {
+    min-width: 18px !important;
+    height: 18px !important;
+    font-size: 11px !important;
+    padding: 0 4px !important;
   }
 }
 
