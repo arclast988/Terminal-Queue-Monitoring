@@ -546,13 +546,21 @@ class Users extends BaseController
             session()->set('profile_image', $relPath);
         }
 
+        $imageUrl = base_url($relPath) . '?v=' . time();
+
+        $this->broadcastUpdate('user_avatar_updated', [
+            'user_id'   => (int)$id,
+            'image_url' => $imageUrl,
+            'action'    => 'upload',
+        ]);
+
         $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
         $this->logActivity('Update user avatar', 'Updated profile picture for "' . $displayName . '" (' . $targetUser['username'] . ')');
 
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'Profile image updated successfully.',
-            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'image_url'  => $imageUrl,
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -605,6 +613,12 @@ class Users extends BaseController
             if ($currentUserId === (int)$id) {
                 session()->remove('profile_image');
             }
+
+            $this->broadcastUpdate('user_avatar_updated', [
+                'user_id'   => (int)$id,
+                'image_url' => null,
+                'action'    => 'remove',
+            ]);
 
             $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
             $this->logActivity('Remove user avatar', 'Removed profile picture for "' . $displayName . '" (' . $targetUser['username'] . ')');

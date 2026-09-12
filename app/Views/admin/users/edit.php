@@ -410,18 +410,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         preview.innerHTML = '<img src="' + data.image_url + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">';
                     }
                     if (parseInt(<?= (int)$user['id'] ?>, 10) === <?= (int)(session()->get('id') ?? 0) ?>) {
-                        var imgHtml = '<img src="' + data.image_url + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
-                        var tAvatar = document.getElementById('navProfileTriggerAvatar');
-                        if (tAvatar) tAvatar.innerHTML = imgHtml;
-                        var hAvatar = document.getElementById('navProfileHeaderAvatar');
-                        if (hAvatar) hAvatar.innerHTML = imgHtml;
-                        var dAvatar = document.querySelector('.drawer-user-avatar');
-                        if (dAvatar) dAvatar.innerHTML = imgHtml;
+                        if (typeof window.updateAvatarDom === 'function') {
+                            window.updateAvatarDom(data.image_url);
+                        } else {
+                            var imgHtml = '<img src="' + data.image_url + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
+                            var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                            if (tAvatar) tAvatar.innerHTML = imgHtml;
+                            var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                            if (hAvatar) hAvatar.innerHTML = imgHtml;
+                            var dAvatar = document.querySelector('.drawer-user-avatar');
+                            if (dAvatar) dAvatar.innerHTML = imgHtml;
+                        }
                     }
                     if (feedback) {
                         feedback.className = 'small text-success ms-2';
                         feedback.textContent = 'Photo updated successfully!';
                         setTimeout(function() { feedback.textContent = ''; }, 3000);
+                    }
+                    if (typeof window.notifyAvatarSync === 'function') {
+                        window.notifyAvatarSync(<?= (int)$user['id'] ?>, data.image_url);
                     }
                     var removeBtn = document.getElementById('btnEditRemovePhoto');
                     if (removeBtn) {
@@ -448,66 +455,85 @@ document.addEventListener('DOMContentLoaded', function() {
     var DEFAULT_AVATAR_SVG = '<?= str_replace(["\r", "\n"], '', $defaultAvatarSvg) ?>';
 
     window.removeEditUserAvatar = function() {
-        if (!confirm('Are you sure you want to remove this profile picture?')) return;
-        var feedback = document.getElementById('editAvatarFeedback');
-        var removeBtn = document.getElementById('btnEditRemovePhoto');
-        if (feedback) {
-            feedback.className = 'small text-primary ms-2';
-            feedback.textContent = 'Removing...';
-        }
-        if (removeBtn) removeBtn.disabled = true;
-        var csrfToken = getEditUserCsrfToken();
-        var formData = new FormData();
-        if (csrfToken) formData.append('csrf_test_name', csrfToken);
-
-        fetch('<?= base_url('admin/users/remove-avatar/' . $user['id']) ?>', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
+        function executeEditAvatarRemoval() {
+            var feedback = document.getElementById('editAvatarFeedback');
+            var removeBtn = document.getElementById('btnEditRemovePhoto');
+            if (feedback) {
+                feedback.className = 'small text-primary ms-2';
+                feedback.textContent = 'Removing...';
             }
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            updateEditUserCsrfToken(data);
-            if (removeBtn) removeBtn.disabled = false;
-            if (data.success) {
-                var preview = document.getElementById('editUserAvatarPreview');
-                if (preview) {
-                    preview.innerHTML = DEFAULT_AVATAR_SVG;
+            if (removeBtn) removeBtn.disabled = true;
+            var csrfToken = getEditUserCsrfToken();
+            var formData = new FormData();
+            if (csrfToken) formData.append('csrf_test_name', csrfToken);
+
+            fetch('<?= base_url('admin/users/remove-avatar/' . $user['id']) ?>', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
                 }
-                if (parseInt(<?= (int)$user['id'] ?>, 10) === <?= (int)(session()->get('id') ?? 0) ?>) {
-                    var tAvatar = document.getElementById('navProfileTriggerAvatar');
-                    if (tAvatar) tAvatar.innerHTML = DEFAULT_AVATAR_SVG;
-                    var hAvatar = document.getElementById('navProfileHeaderAvatar');
-                    if (hAvatar) hAvatar.innerHTML = DEFAULT_AVATAR_SVG;
-                    var dAvatar = document.querySelector('.drawer-user-avatar');
-                    if (dAvatar) dAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                updateEditUserCsrfToken(data);
+                if (removeBtn) removeBtn.disabled = false;
+                if (data.success) {
+                    var preview = document.getElementById('editUserAvatarPreview');
+                    if (preview) {
+                        preview.innerHTML = DEFAULT_AVATAR_SVG;
+                    }
+                    if (parseInt(<?= (int)$user['id'] ?>, 10) === <?= (int)(session()->get('id') ?? 0) ?>) {
+                        if (typeof window.updateAvatarDom === 'function') {
+                            window.updateAvatarDom(null);
+                        } else {
+                            var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                            if (tAvatar) tAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                            var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                            if (hAvatar) hAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                            var dAvatar = document.querySelector('.drawer-user-avatar');
+                            if (dAvatar) dAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                        }
+                    }
+                    if (removeBtn) {
+                        removeBtn.classList.add('d-none');
+                        removeBtn.style.setProperty('display', 'none', 'important');
+                    }
+                    if (typeof window.notifyAvatarSync === 'function') {
+                        window.notifyAvatarSync(<?= (int)$user['id'] ?>, null);
+                    }
+                    if (feedback) {
+                        feedback.className = 'small text-success ms-2';
+                        feedback.textContent = 'Photo removed.';
+                        setTimeout(function() { feedback.textContent = ''; }, 3000);
+                    }
+                } else {
+                    if (feedback) {
+                        feedback.className = 'small text-danger ms-2';
+                        feedback.textContent = data.message || 'Removal failed.';
+                    }
                 }
-                if (removeBtn) {
-                    removeBtn.classList.add('d-none');
-                    removeBtn.style.setProperty('display', 'none', 'important');
-                }
-                if (feedback) {
-                    feedback.className = 'small text-success ms-2';
-                    feedback.textContent = 'Photo removed.';
-                    setTimeout(function() { feedback.textContent = ''; }, 3000);
-                }
-            } else {
+            })
+            .catch(function() {
+                if (removeBtn) removeBtn.disabled = false;
                 if (feedback) {
                     feedback.className = 'small text-danger ms-2';
-                    feedback.textContent = data.message || 'Removal failed.';
+                    feedback.textContent = 'Error removing photo.';
                 }
-            }
-        })
-        .catch(function() {
-            if (removeBtn) removeBtn.disabled = false;
-            if (feedback) {
-                feedback.className = 'small text-danger ms-2';
-                feedback.textContent = 'Error removing photo.';
-            }
-        });
+            });
+        }
+
+        if (typeof window.confirmAction === 'function') {
+            window.confirmAction({
+                title: 'Remove Profile Photo?',
+                message: 'Are you sure you want to remove this profile picture and revert to the default avatar?',
+                confirmText: 'Remove Photo',
+                onConfirm: executeEditAvatarRemoval
+            });
+        } else if (confirm('Are you sure you want to remove this profile picture?')) {
+            executeEditAvatarRemoval();
+        }
     };
 
     toggleRouteSection();

@@ -262,5 +262,28 @@ final class ProfileDropdownTest extends CIUnitTestCase
         $this->assertStringContainsString('change-password/update', $html);
         $this->assertStringContainsString('change-password/send-code', $html);
     }
+
+    public function testAvatarDomSyncScriptExposed(): void
+    {
+        $session = service('session');
+        $session->set([
+            'isLoggedIn' => true,
+            'role'       => 'super_admin',
+            'full_name'  => 'System Administrator',
+            'username'   => 'admin',
+            'id'         => 1,
+        ]);
+
+        $html = view('partials/header');
+
+        $this->assertStringContainsString('window.updateAvatarDom = updateAvatarDom;', $html);
+        $this->assertStringContainsString('avatar-wrapper-', $html);
+        $this->assertStringContainsString('data-img-url', $html);
+        $this->assertStringContainsString('modalRemoveAvatarBtn', $html);
+        $this->assertStringContainsString('window.syncUserAvatar = syncUserAvatar;', $html);
+        $this->assertStringContainsString('window.notifyAvatarSync', $html);
+        $this->assertStringContainsString('pttm:ws-user_avatar_updated', $html);
+        $this->assertStringContainsString('pttm_avatar_sync', $html);
+    }
 }
 

@@ -14,7 +14,20 @@ $roleLabel   = match($sessionRole) {
 $fullName = session()->get('full_name') ?: (session()->get('username') ?: 'Administrator');
 $username = session()->get('username') ?: 'admin';
 $isAdmin  = in_array($sessionRole, ['super_admin', 'admin'], true);
-$profileImage = session()->get('profile_image');
+
+$currentNavUserId = session()->get('id');
+$profileImage     = session()->get('profile_image');
+if ($currentNavUserId) {
+    try {
+        $dbNavUser = (new \App\Models\UserModel())->select('profile_image')->find($currentNavUserId);
+        if ($dbNavUser && array_key_exists('profile_image', $dbNavUser)) {
+            $profileImage = $dbNavUser['profile_image'];
+            session()->set('profile_image', $profileImage);
+        }
+    } catch (\Throwable $e) {
+        // Fallback to session value
+    }
+}
 $hasCustomImage = !empty($profileImage);
 
 // Modern executive user avatar silhouette

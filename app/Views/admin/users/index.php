@@ -157,6 +157,11 @@ if (!isset($countActive)) {
                                     ?>
                                     <div class="d-flex align-items-center user-cell-content">
                                         <div class="avatar-wrapper me-3 <?= $canChangeAvatar ? 'avatar-editable' : '' ?>" id="avatar-wrapper-<?= $user['id'] ?>"
+                                            data-user-id="<?= $user['id'] ?>"
+                                            data-img-url="<?= !empty($user['profile_image']) ? base_url(esc($user['profile_image'])) : '' ?>"
+                                            data-user-name="<?= esc(addslashes($user['full_name'] ?: $user['username']), 'js') ?>"
+                                            data-initials="<?= esc($initials, 'js') ?>"
+                                            data-role="<?= esc($user['role'], 'js') ?>"
                                             <?php if ($canChangeAvatar): ?>
                                                 role="button"
                                                 tabindex="0"
@@ -839,6 +844,38 @@ if (!isset($countActive)) {
 </div>
 
 <!-- ══════════════════════════════════════════════════ -->
+<!--  Remove Avatar Confirmation Modal (Warning Style)  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="removeAvatarConfirmModal" tabindex="-1" aria-labelledby="removeAvatarConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.18); overflow: hidden; background: #ffffff;">
+            <div class="modal-body text-center" style="padding: 32px 24px 22px;">
+                <!-- Icon badge: soft pink/peach rounded square with warning triangle -->
+                <div style="width: 60px; height: 60px; border-radius: 16px; background-color: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+                    <i class="fas fa-triangle-exclamation" style="font-size: 26px; color: #1e293b;"></i>
+                </div>
+
+                <h4 id="removeAvatarConfirmLabel" style="font-weight: 700; font-size: 1.35rem; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.01em;">
+                    Remove Profile Photo?
+                </h4>
+                <p id="removeAvatarConfirmMessage" style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0 auto; max-width: 290px;">
+                    Are you sure you want to revert your profile picture to the default avatar?
+                </p>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; gap: 12px; justify-content: center; background: #ffffff;">
+                <button type="button" class="btn" id="removeAvatarCancelBtn" data-bs-dismiss="modal" style="flex: 1; height: 42px; background: #ffffff; border: 1px solid #e2e8f0; color: #334155; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease;">
+                    Cancel
+                </button>
+                <button type="button" class="btn" id="removeAvatarConfirmBtn" style="flex: 1; height: 42px; background: #e03131; border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(224, 49, 49, 0.25);">
+                    Remove Photo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
 <!--  Deactivate User Confirmation Modal                -->
 <!-- ══════════════════════════════════════════════════ -->
 <div class="modal fade" id="deactivateUserConfirmModal" tabindex="-1" aria-labelledby="deactivateUserConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
@@ -1363,6 +1400,14 @@ body.modal-open #deleteUserConfirmModal,
 #deleteUserConfirmModal {
     z-index: 100050 !important;
 }
+
+/* Remove avatar confirmation layered directly over userAvatarModal */
+#removeAvatarConfirmModal {
+    z-index: 100065 !important;
+}
+#removeAvatarConfirmModal .modal-dialog {
+    z-index: 100070 !important;
+}
 </style>
 
 <script>
@@ -1371,10 +1416,39 @@ body.modal-open #deleteUserConfirmModal,
     var _deactivateUserFormId = null;
     var _activateUserFormId = null;
     var _avatarModalUser = null;
+    var _reopenAvatarModalOnCancel = false;
     var DEFAULT_AVATAR_SVG = '<?= str_replace(["\r", "\n"], '', $defaultAvatarSvg) ?>';
 
     // ── Avatar Management Modal ──
     window.openAvatarModal = function(userId, userName, currentImgUrl, initials, role) {
+        var wrapper = document.getElementById('avatar-wrapper-' + userId);
+        if (wrapper) {
+            if (wrapper.getAttribute('data-img-url') !== null && wrapper.getAttribute('data-img-url') !== '') {
+                currentImgUrl = wrapper.getAttribute('data-img-url');
+            } else if (wrapper.getAttribute('data-img-url') === '') {
+                currentImgUrl = '';
+            }
+            if (!userName && wrapper.getAttribute('data-user-name')) {
+                userName = wrapper.getAttribute('data-user-name');
+            }
+            if (!role && wrapper.getAttribute('data-role')) {
+                role = wrapper.getAttribute('data-role');
+            }
+            if (!initials && wrapper.getAttribute('data-initials')) {
+                initials = wrapper.getAttribute('data-initials');
+            }
+        }
+
+        var currentUserId = <?= (int)session()->get('id') ?>;
+        if (parseInt(userId, 10) === currentUserId) {
+            var tImg = document.querySelector('#navProfileTriggerAvatar img');
+            if (tImg && tImg.src) {
+                currentImgUrl = tImg.src;
+            } else if (!tImg && wrapper && wrapper.getAttribute('data-img-url') === '') {
+                currentImgUrl = '';
+            }
+        }
+
         _avatarModalUser = {
             id: userId,
             name: userName,
@@ -1382,6 +1456,7 @@ body.modal-open #deleteUserConfirmModal,
             initials: initials,
             role: role
         };
+        window._avatarModalUser = _avatarModalUser;
 
         var modalEl = document.getElementById('userAvatarModal');
         if (!modalEl || !window.bootstrap) return;
@@ -1437,7 +1512,7 @@ body.modal-open #deleteUserConfirmModal,
         window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
     };
 
-    function updateModalAvatarPreview(imgUrl, initials, role) {
+    window.updateModalAvatarPreview = function(imgUrl, initials, role) {
         var previewEl = document.getElementById('modalAvatarPreviewCircle');
         if (!previewEl) return;
 
@@ -1450,6 +1525,9 @@ body.modal-open #deleteUserConfirmModal,
         } else {
             previewEl.innerHTML = DEFAULT_AVATAR_SVG;
         }
+    };
+    function updateModalAvatarPreview(imgUrl, initials, role) {
+        window.updateModalAvatarPreview(imgUrl, initials, role);
     }
 
     function showAvatarAlert(msg, type) {
@@ -1743,39 +1821,50 @@ body.modal-open #deleteUserConfirmModal,
                     saveAvatarBtn.disabled = false;
                     saveAvatarBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo';
                     if (data.success) {
+                        var newImgUrl = data.image_url;
                         var rowCircle = document.getElementById('avatar-circle-' + userId);
                         if (rowCircle) {
-                            var img = rowCircle.querySelector('img');
-                            if (img) {
-                                img.src = data.image_url;
-                            } else {
-                                rowCircle.innerHTML = '<img src="' + data.image_url + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
-                            }
+                            rowCircle.innerHTML = '<img src="' + newImgUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
                         }
-                        if (_avatarModalUser) _avatarModalUser.imgUrl = data.image_url;
+                        var wrapper = document.getElementById('avatar-wrapper-' + userId);
+                        if (wrapper) {
+                            wrapper.setAttribute('data-img-url', newImgUrl);
+                        }
+                        if (_avatarModalUser) _avatarModalUser.imgUrl = newImgUrl;
+                        updateModalAvatarPreview(newImgUrl, _avatarModalUser ? _avatarModalUser.initials : '', _avatarModalUser ? _avatarModalUser.role : '');
+
                         var rBtn = document.getElementById('modalRemoveAvatarBtn');
                         if (rBtn) {
                             rBtn.classList.remove('d-none');
                             rBtn.style.setProperty('display', 'inline-flex', 'important');
                         }
 
+                        var fInputClear = document.getElementById('modalAvatarInput');
+                        if (fInputClear) fInputClear.value = '';
+
                         if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
-                            var imgHtml = '<img src="' + data.image_url + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
-                            var tAvatar = document.getElementById('navProfileTriggerAvatar');
-                            if (tAvatar) tAvatar.innerHTML = imgHtml;
-                            var hAvatar = document.getElementById('navProfileHeaderAvatar');
-                            if (hAvatar) hAvatar.innerHTML = imgHtml;
-                            var dAvatar = document.querySelector('.drawer-user-avatar');
-                            if (dAvatar) dAvatar.innerHTML = imgHtml;
+                            if (typeof window.updateAvatarDom === 'function') {
+                                window.updateAvatarDom(newImgUrl);
+                            } else {
+                                var imgHtml = '<img src="' + newImgUrl + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
+                                var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                                if (tAvatar) tAvatar.innerHTML = imgHtml;
+                                var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                                if (hAvatar) hAvatar.innerHTML = imgHtml;
+                                var dAvatar = document.querySelector('.drawer-user-avatar');
+                                if (dAvatar) dAvatar.innerHTML = imgHtml;
+                            }
                         }
 
-                        showAvatarAlert(data.message || 'Avatar updated successfully!', 'success');
-                        setTimeout(function() {
-                            var modalEl = document.getElementById('userAvatarModal');
-                            if (modalEl && window.bootstrap) {
-                                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                            }
-                        }, 1000);
+                        if (typeof window.notifyAvatarSync === 'function') {
+                            window.notifyAvatarSync(userId, newImgUrl);
+                        }
+
+                        // Close modal immediately without delay
+                        var modalEl = document.getElementById('userAvatarModal');
+                        if (modalEl && window.bootstrap) {
+                            window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                        }
                     } else {
                         showAvatarAlert(data.message || 'Failed to update avatar.', 'danger');
                     }
@@ -1788,43 +1877,117 @@ body.modal-open #deleteUserConfirmModal,
             });
         }
 
-        // Avatar Remove button
+        // Avatar Remove button -> opens in-system confirmation modal
         var removeAvatarBtn = document.getElementById('modalRemoveAvatarBtn');
+        var removeConfirmModalEl = document.getElementById('removeAvatarConfirmModal');
+
         if (removeAvatarBtn) {
             removeAvatarBtn.addEventListener('click', function() {
-                if (!confirm('Are you sure you want to remove this profile photo and revert to the default avatar?')) return;
-                var userId = document.getElementById('modalAvatarUserId').value;
-                var csrfToken = getAdminUsersCsrfToken();
-                var formData = new FormData();
-                if (csrfToken) formData.append('csrf_test_name', csrfToken);
-
-                removeAvatarBtn.disabled = true;
-                removeAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Removing...';
-
-                fetch('<?= base_url('admin/users/remove-avatar') ?>/' + userId, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': csrfToken
+                if (!removeConfirmModalEl || !window.bootstrap) {
+                    if (window.confirm('Are you sure you want to revert your profile picture to the default avatar?')) {
+                        executeAvatarRemoval();
                     }
-                })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    updateAdminUsersCsrfToken(data);
-                    removeAvatarBtn.disabled = false;
-                    removeAvatarBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Remove Photo';
-                    if (data.success) {
-                        var rowCircle = document.getElementById('avatar-circle-' + userId);
-                        if (rowCircle) {
-                            rowCircle.innerHTML = DEFAULT_AVATAR_SVG;
-                        }
-                        if (_avatarModalUser) _avatarModalUser.imgUrl = '';
-                        updateModalAvatarPreview('', '', _avatarModalUser ? _avatarModalUser.role : '');
-                        removeAvatarBtn.classList.add('d-none');
-                        removeAvatarBtn.style.setProperty('display', 'none', 'important');
+                    return;
+                }
 
-                        if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
+                var confirmBtn = document.getElementById('removeAvatarConfirmBtn');
+                if (confirmBtn) {
+                    confirmBtn.classList.remove('is-loading');
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Remove Photo';
+                }
+
+                // Show confirmation modal on top of userAvatarModal (DO NOT hide userAvatarModal)
+                window.bootstrap.Modal.getOrCreateInstance(removeConfirmModalEl).show();
+            });
+        }
+
+        // Multi-modal backdrop layering and body scroll retention
+        if (removeConfirmModalEl) {
+            removeConfirmModalEl.addEventListener('show.bs.modal', function() {
+                setTimeout(function() {
+                    var backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 1) {
+                        backdrops[backdrops.length - 1].style.zIndex = '100060';
+                    }
+                }, 10);
+            });
+
+            removeConfirmModalEl.addEventListener('hidden.bs.modal', function() {
+                var avatarModalEl = document.getElementById('userAvatarModal');
+                if (avatarModalEl && avatarModalEl.classList.contains('show')) {
+                    document.body.classList.add('modal-open');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+        }
+
+        function executeAvatarRemoval() {
+            var userId = document.getElementById('modalAvatarUserId').value;
+            var csrfToken = getAdminUsersCsrfToken();
+            var formData = new FormData();
+            if (csrfToken) formData.append('csrf_test_name', csrfToken);
+
+            var confirmBtn = document.getElementById('removeAvatarConfirmBtn');
+            if (confirmBtn) {
+                confirmBtn.classList.add('is-loading');
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Removing...';
+            }
+
+            fetch('<?= base_url('admin/users/remove-avatar') ?>/' + userId, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                updateAdminUsersCsrfToken(data);
+                if (confirmBtn) {
+                    confirmBtn.classList.remove('is-loading');
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Remove Photo';
+                }
+
+                // Close confirmation modal
+                if (removeConfirmModalEl && window.bootstrap) {
+                    window.bootstrap.Modal.getOrCreateInstance(removeConfirmModalEl).hide();
+                }
+
+                if (data.success) {
+                    // Close the main modal as well
+                    var avatarModalEl = document.getElementById('userAvatarModal');
+                    if (avatarModalEl && window.bootstrap) {
+                        window.bootstrap.Modal.getOrCreateInstance(avatarModalEl).hide();
+                    }
+
+                    var rowCircle = document.getElementById('avatar-circle-' + userId);
+                    if (rowCircle) {
+                        rowCircle.innerHTML = DEFAULT_AVATAR_SVG;
+                    }
+                    var wrapper = document.getElementById('avatar-wrapper-' + userId);
+                    if (wrapper) {
+                        wrapper.setAttribute('data-img-url', '');
+                    }
+                    if (_avatarModalUser) _avatarModalUser.imgUrl = '';
+                    updateModalAvatarPreview('', '', _avatarModalUser ? _avatarModalUser.role : '');
+
+                    var rBtn = document.getElementById('modalRemoveAvatarBtn');
+                    if (rBtn) {
+                        rBtn.classList.add('d-none');
+                        rBtn.style.setProperty('display', 'none', 'important');
+                    }
+
+                    var fInputClear = document.getElementById('modalAvatarInput');
+                    if (fInputClear) fInputClear.value = '';
+
+                    if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
+                        if (typeof window.updateAvatarDom === 'function') {
+                            window.updateAvatarDom(null);
+                        } else {
                             var tAvatar = document.getElementById('navProfileTriggerAvatar');
                             if (tAvatar) tAvatar.innerHTML = DEFAULT_AVATAR_SVG;
                             var hAvatar = document.getElementById('navProfileHeaderAvatar');
@@ -1832,23 +1995,32 @@ body.modal-open #deleteUserConfirmModal,
                             var dAvatar = document.querySelector('.drawer-user-avatar');
                             if (dAvatar) dAvatar.innerHTML = DEFAULT_AVATAR_SVG;
                         }
-
-                        showAvatarAlert(data.message || 'Photo removed.', 'success');
-                        setTimeout(function() {
-                            var modalEl = document.getElementById('userAvatarModal');
-                            if (modalEl && window.bootstrap) {
-                                window.bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                            }
-                        }, 1000);
-                    } else {
-                        showAvatarAlert(data.message || 'Failed to remove photo.', 'danger');
                     }
-                })
-                .catch(function() {
-                    removeAvatarBtn.disabled = false;
-                    removeAvatarBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Remove Photo';
-                    showAvatarAlert('An error occurred. Please try again.', 'danger');
-                });
+
+                    if (typeof window.notifyAvatarSync === 'function') {
+                        window.notifyAvatarSync(userId, null);
+                    }
+                } else {
+                    showAvatarAlert(data.message || 'Failed to remove photo.', 'danger');
+                }
+            })
+            .catch(function() {
+                if (confirmBtn) {
+                    confirmBtn.classList.remove('is-loading');
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = 'Remove Photo';
+                }
+                if (removeConfirmModalEl && window.bootstrap) {
+                    window.bootstrap.Modal.getOrCreateInstance(removeConfirmModalEl).hide();
+                }
+                showAvatarAlert('An error occurred. Please try again.', 'danger');
+            });
+        }
+
+        var removeConfirmBtn = document.getElementById('removeAvatarConfirmBtn');
+        if (removeConfirmBtn) {
+            removeConfirmBtn.addEventListener('click', function() {
+                executeAvatarRemoval();
             });
         }
 

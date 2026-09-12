@@ -100,12 +100,20 @@ class Profile extends BaseController
         $userModel->update($userId, ['profile_image' => $relPath]);
         session()->set('profile_image', $relPath);
 
+        $imageUrl = base_url($relPath) . '?v=' . time();
+
+        $this->broadcastUpdate('user_avatar_updated', [
+            'user_id'   => (int)$userId,
+            'image_url' => $imageUrl,
+            'action'    => 'upload',
+        ]);
+
         $this->logActivity('Profile', 'Updated profile picture');
 
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'Profile image updated successfully.',
-            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'image_url'  => $imageUrl,
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -136,6 +144,12 @@ class Profile extends BaseController
 
             $userModel->update($userId, ['profile_image' => null]);
             session()->remove('profile_image');
+
+            $this->broadcastUpdate('user_avatar_updated', [
+                'user_id'   => (int)$userId,
+                'image_url' => null,
+                'action'    => 'remove',
+            ]);
 
             $this->logActivity('Profile', 'Removed custom profile picture');
         }

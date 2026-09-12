@@ -32,6 +32,27 @@
     </div>
 </div>
 
+<!-- System Warning / Alert Modal (Replaces browser alert() so "localhost says" never appears) -->
+<div class="modal fade" id="systemAlertModal" tabindex="-1" aria-hidden="true" aria-labelledby="systemAlertTitle" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.18); overflow: hidden; background: #ffffff;">
+            <div class="modal-body text-center" style="padding: 32px 24px 22px;">
+                <!-- Icon badge: soft pink/peach rounded square with warning triangle (Picture 1 style) -->
+                <div style="width: 60px; height: 60px; border-radius: 16px; background-color: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+                    <i class="fas fa-triangle-exclamation" style="font-size: 26px; color: #1e293b;"></i>
+                </div>
+                <h4 id="systemAlertTitle" style="font-weight: 700; font-size: 1.3rem; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.01em;">Notice</h4>
+                <p id="systemAlertMessage" style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0 auto; max-width: 290px;"></p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; justify-content: center; background: #ffffff;">
+                <button type="button" class="btn" id="systemAlertOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: #15803d; border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     (function () {
         var pending = null;
@@ -57,6 +78,52 @@
             pending = options;
             window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
         };
+
+        window.showSystemAlert = function (options) {
+            if (typeof options === 'string') {
+                options = { message: options };
+            }
+            options = options || {};
+            var modalEl = document.getElementById('systemAlertModal');
+            if (!modalEl || !window.bootstrap) {
+                if (typeof window.originalAlert === 'function') {
+                    window.originalAlert(options.message || '');
+                }
+                return;
+            }
+
+            var titleEl = document.getElementById('systemAlertTitle');
+            var msgEl = document.getElementById('systemAlertMessage');
+            var okBtn = document.getElementById('systemAlertOkBtn');
+            if (titleEl) titleEl.textContent = options.title || 'Notice';
+            if (msgEl) msgEl.textContent = options.message || '';
+            if (okBtn && options.confirmText) okBtn.textContent = options.confirmText;
+
+            var modal = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+
+            setTimeout(function() {
+                if (okBtn) okBtn.focus();
+            }, 120);
+        };
+
+        // Intercept native alert() so "localhost says" never appears in the application
+        if (typeof window.originalAlert === 'undefined') {
+            window.originalAlert = window.alert;
+            window.alert = function (message) {
+                var customWarning = document.getElementById('systemWarningModal');
+                if (customWarning && typeof window.showSystemWarning === 'function') {
+                    window.showSystemWarning(String(message), 'Notice');
+                    return;
+                }
+                var modalEl = document.getElementById('systemAlertModal');
+                if (modalEl && window.bootstrap) {
+                    window.showSystemAlert({ message: String(message) });
+                } else if (typeof window.originalAlert === 'function') {
+                    window.originalAlert(message);
+                }
+            };
+        }
 
         function runPending(options) {
             if (!options) return;

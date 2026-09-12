@@ -129,5 +129,23 @@ final class UserAvatarAndRoleThemeTest extends CIUnitTestCase
 
         // Dispatcher avatar background is emerald green (#15803d)
         $this->assertStringContainsString('background: #15803d;', $content);
+
+        // Zero native alert(...) calls in executable JavaScript
+        $codeWithoutComments = preg_replace('#//.*#', '', $content);
+        $this->assertDoesNotMatchRegularExpression('/\balert\s*\(/', $codeWithoutComments);
+
+        // System warning modal elements exist
+        $this->assertStringContainsString('id="systemWarningModal"', $content);
+        $this->assertStringContainsString('id="systemWarningOkBtn"', $content);
+        $this->assertStringContainsString('showSystemWarning', $content);
+    }
+
+    public function testSupportModalsIncludesSystemAlert(): void
+    {
+        $content = file_get_contents(APPPATH . 'Views/partials/support-modals.php');
+
+        $this->assertStringContainsString('id="systemAlertModal"', $content);
+        $this->assertStringContainsString('id="systemAlertOkBtn"', $content);
+        $this->assertStringContainsString('showSystemAlert', $content);
     }
 }

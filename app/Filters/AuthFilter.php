@@ -13,6 +13,20 @@ class AuthFilter implements FilterInterface
         if (!session()->get('isLoggedIn')) {
             return redirect()->to('/login');
         }
+
+        // Keep profile_image synchronized with the database
+        $userId = session()->get('id');
+        if ($userId) {
+            try {
+                $userModel = new \App\Models\UserModel();
+                $dbUser = $userModel->select('profile_image')->find($userId);
+                if ($dbUser && array_key_exists('profile_image', $dbUser)) {
+                    session()->set('profile_image', $dbUser['profile_image']);
+                }
+            } catch (\Throwable $e) {
+                // Non-blocking fallback
+            }
+        }
         
         // Optional: Role-based checking if arguments provided
         if ($arguments) {

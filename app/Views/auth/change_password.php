@@ -275,6 +275,34 @@ SVG;
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════ -->
+<!--  System Warning Alert Modal (No "localhost says")  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="systemWarningModal" tabindex="-1" aria-labelledby="systemWarningLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.18); overflow: hidden; background: #ffffff;">
+            <div class="modal-body text-center" style="padding: 32px 24px 22px;">
+                <!-- Icon badge: soft pink/peach rounded square with warning triangle (Picture 1 style) -->
+                <div style="width: 60px; height: 60px; border-radius: 16px; background-color: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+                    <i class="fas fa-triangle-exclamation" style="font-size: 26px; color: #1e293b;"></i>
+                </div>
+
+                <h4 id="systemWarningLabel" style="font-weight: 700; font-size: 1.3rem; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.01em;">
+                    Notice
+                </h4>
+                <p id="systemWarningMessage" style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0 auto; max-width: 290px;">
+                </p>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; justify-content: center; background: #ffffff;">
+                <button type="button" class="btn" id="systemWarningOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: #15803d; border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .change-password-page .modern-card {
     background: rgba(255, 255, 255, 0.92) !important;
@@ -400,6 +428,15 @@ SVG;
     color: #991b1b !important;
     border: 1px solid #fecaca !important;
 }
+#systemWarningOkBtn:hover {
+    background: #166534 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(21, 128, 61, 0.35) !important;
+}
+#systemWarningOkBtn:active {
+    transform: translateY(0);
+}
 </style>
 
 <script>
@@ -423,6 +460,49 @@ function togglePasswordVisibility(inputId, btn) {
     }
 }
 
+// System Warning Modal Helper (In-System warning dialog matching Picture 1 style, zero "localhost says")
+var systemWarningModalEl = null;
+var systemWarningModalInstance = null;
+var pendingWarningFocusEl = null;
+
+function showSystemWarning(message, title, focusEl) {
+    if (!systemWarningModalEl) {
+        systemWarningModalEl = document.getElementById('systemWarningModal');
+    }
+    if (!systemWarningModalEl) {
+        console.warn('System warning:', message);
+        return;
+    }
+
+    var titleEl = document.getElementById('systemWarningLabel');
+    var msgEl = document.getElementById('systemWarningMessage');
+
+    if (titleEl) titleEl.textContent = title || 'Notice';
+    if (msgEl) msgEl.textContent = message || '';
+
+    pendingWarningFocusEl = focusEl || null;
+
+    if (window.bootstrap && window.bootstrap.Modal) {
+        if (!systemWarningModalInstance) {
+            systemWarningModalInstance = window.bootstrap.Modal.getOrCreateInstance(systemWarningModalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+        }
+        systemWarningModalInstance.show();
+
+        setTimeout(function() {
+            var okBtn = document.getElementById('systemWarningOkBtn');
+            if (okBtn) okBtn.focus();
+        }, 120);
+    }
+}
+
+// Global safety intercept on this page: native browser dialogs route to showSystemWarning
+window.alert = function(msg) {
+    showSystemWarning(msg, 'Notice');
+};
+
 // Live Validation: Length & Password Match
 document.addEventListener('DOMContentLoaded', function() {
     var newPwInput = document.getElementById('new_password');
@@ -433,6 +513,30 @@ document.addEventListener('DOMContentLoaded', function() {
     var btnSendOtpText = document.getElementById('btnSendOtpText');
     var otpStatusBox = document.getElementById('otpStatusBox');
     var cpForm = document.getElementById('changePasswordForm');
+
+    // Attach listener to restore focus to invalid input field after warning modal is dismissed
+    systemWarningModalEl = document.getElementById('systemWarningModal');
+    if (systemWarningModalEl) {
+        systemWarningModalEl.addEventListener('hidden.bs.modal', function() {
+            if (pendingWarningFocusEl) {
+                try {
+                    pendingWarningFocusEl.focus();
+                    pendingWarningFocusEl.classList.add('is-invalid');
+                    setTimeout(function() {
+                        pendingWarningFocusEl.classList.remove('is-invalid');
+                    }, 2500);
+                } catch (e) {}
+                pendingWarningFocusEl = null;
+            }
+        });
+    }
+
+    <?php if (session()->getFlashdata('error')): ?>
+    // Display server-side error in the system warning dialog for seamless unified UX
+    setTimeout(function() {
+        showSystemWarning(<?= json_encode((string) session()->getFlashdata('error')) ?>, 'Notice');
+    }, 200);
+    <?php endif; ?>
 
     function checkRequirements() {
         var val = newPwInput ? newPwInput.value : '';
@@ -534,6 +638,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     otpStatusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' + (data.message || 'Could not send verification code.');
                     btnSendOtp.disabled = false;
                     btnSendOtpText.textContent = originalText;
+                    showSystemWarning(data.message || 'Could not send verification code.', 'Notice');
                 }
             })
             .catch(function(err) {
@@ -542,11 +647,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 otpStatusBox.innerHTML = '<i class="bi bi-exclamation-circle-fill me-1"></i> Connection error. Please check your network and try again.';
                 btnSendOtp.disabled = false;
                 btnSendOtpText.textContent = originalText;
+                showSystemWarning('Connection error. Please check your network and try again.', 'Notice');
             });
         });
     }
 
-    // Client-side Form Submit Validation
+    // Client-side Form Submit Validation (All warnings from system modal, zero localhost alert)
     if (cpForm) {
         cpForm.addEventListener('submit', function(e) {
             var p1 = newPwInput ? newPwInput.value : '';
@@ -556,29 +662,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!cur) {
                 e.preventDefault();
-                alert('Please enter your current password.');
-                document.getElementById('current_password').focus();
+                showSystemWarning('Please enter your current password.', 'Notice', document.getElementById('current_password'));
                 return false;
             }
 
             if (!code || code.length !== 6) {
                 e.preventDefault();
-                alert('Please enter the complete 6-digit verification code.');
-                document.getElementById('verification_code').focus();
+                showSystemWarning('Please enter the complete 6-digit verification code.', 'Notice', document.getElementById('verification_code'));
                 return false;
             }
 
             if (p1.length < 8) {
                 e.preventDefault();
-                alert('New password must be at least 8 characters long.');
-                newPwInput.focus();
+                showSystemWarning('New password must be at least 8 characters long.', 'Notice', newPwInput);
                 return false;
             }
 
             if (p1 !== p2) {
                 e.preventDefault();
-                alert('New password and confirm password do not match.');
-                confirmPwInput.focus();
+                showSystemWarning('New password and confirm password do not match.', 'Notice', confirmPwInput);
+                return false;
+            }
+
+            if (cur && p1 && cur === p1) {
+                e.preventDefault();
+                showSystemWarning('New password must be different from your current password.', 'Notice', newPwInput);
                 return false;
             }
         });

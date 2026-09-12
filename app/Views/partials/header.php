@@ -17,7 +17,20 @@ $roleLabel   = match($sessionRole) {
 };
 $fullName = session()->get('full_name') ?: (session()->get('username') ?: 'Administrator');
 $username = session()->get('username') ?: 'admin';
-$profileImage = session()->get('profile_image');
+
+$currentHeaderUserId = session()->get('id');
+$profileImage        = session()->get('profile_image');
+if ($currentHeaderUserId) {
+    try {
+        $dbHeaderUser = (new \App\Models\UserModel())->select('profile_image')->find($currentHeaderUserId);
+        if ($dbHeaderUser && array_key_exists('profile_image', $dbHeaderUser)) {
+            $profileImage = $dbHeaderUser['profile_image'];
+            session()->set('profile_image', $profileImage);
+        }
+    } catch (\Throwable $e) {
+        // Fallback to session value
+    }
+}
 $hasCustomImage = !empty($profileImage);
 
 // Modern executive user avatar silhouette
@@ -389,9 +402,193 @@ SVG;
         var triggerAvatar     = document.getElementById('navProfileTriggerAvatar');
         var headerAvatar      = document.getElementById('navProfileHeaderAvatar');
 
-        if (headerAvatarClick && fileInput) {
-            var defaultIdenticonHtml = '<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" /><path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" /></svg>';
+        var currentLoggedInUserId = <?= (int)(session()->get('id') ?? 0) ?>;
+        var defaultIdenticonHtml = '<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" /><path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" /></svg>';
 
+        function updateAvatarDom(imageUrl) {
+            var triggerAvatar = document.getElementById('navProfileTriggerAvatar');
+            var headerAvatar  = document.getElementById('navProfileHeaderAvatar');
+            var miniMenuDeleteBtn = document.getElementById('miniMenuDeleteBtn');
+            var miniMenuEditText  = document.getElementById('miniMenuEditText');
+            var drawerAvatar = document.querySelector('.drawer-user-avatar');
+
+            if (imageUrl) {
+                var imgHtml = '<img src="' + imageUrl + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
+                if (triggerAvatar) triggerAvatar.innerHTML = imgHtml;
+                if (headerAvatar) headerAvatar.innerHTML = imgHtml;
+                if (miniMenuDeleteBtn) {
+                    miniMenuDeleteBtn.classList.remove('d-none');
+                    miniMenuDeleteBtn.style.display = '';
+                }
+                if (miniMenuEditText) miniMenuEditText.textContent = 'Edit Photo';
+                if (drawerAvatar) drawerAvatar.innerHTML = imgHtml;
+            } else {
+                if (triggerAvatar) triggerAvatar.innerHTML = defaultIdenticonHtml;
+                if (headerAvatar) headerAvatar.innerHTML = defaultIdenticonHtml;
+                if (miniMenuDeleteBtn) {
+                    miniMenuDeleteBtn.classList.add('d-none');
+                    miniMenuDeleteBtn.style.setProperty('display', 'none', 'important');
+                }
+                if (miniMenuEditText) miniMenuEditText.textContent = 'Upload Photo';
+                if (drawerAvatar) drawerAvatar.innerHTML = defaultIdenticonHtml;
+            }
+
+            // Also update table row if present on admin/users page for current logged-in user
+            if (currentLoggedInUserId) {
+                var myTableCircle = document.getElementById('avatar-circle-' + currentLoggedInUserId);
+                if (myTableCircle) {
+                    if (imageUrl) {
+                        myTableCircle.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                    } else {
+                        myTableCircle.innerHTML = defaultIdenticonHtml;
+                    }
+                }
+                var myTableWrapper = document.getElementById('avatar-wrapper-' + currentLoggedInUserId);
+                if (myTableWrapper) {
+                    myTableWrapper.setAttribute('data-img-url', imageUrl || '');
+                }
+            }
+        }
+        window.updateAvatarDom = updateAvatarDom;
+
+        function syncUserAvatar(userId, imageUrl) {
+            userId = parseInt(userId, 10);
+            if (!userId) return;
+
+            // 1. If this avatar belongs to current logged-in user, update navbar, header, drawer
+            if (currentLoggedInUserId && userId === currentLoggedInUserId) {
+                updateAvatarDom(imageUrl);
+            }
+
+            // 2. Update table row elements on admin/users list
+            var tableCircle = document.getElementById('avatar-circle-' + userId);
+            if (tableCircle) {
+                if (imageUrl) {
+                    tableCircle.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                } else {
+                    tableCircle.innerHTML = defaultIdenticonHtml;
+                }
+            }
+            var tableWrapper = document.getElementById('avatar-wrapper-' + userId);
+            if (tableWrapper) {
+                tableWrapper.setAttribute('data-img-url', imageUrl || '');
+            }
+
+            // 3. Update admin edit user page preview if currently viewing this user
+            var editPreview = document.getElementById('editUserAvatarPreview');
+            if (editPreview) {
+                var editUserIdInput = document.getElementById('editUserId') || document.querySelector('input[name="user_id"]');
+                if (!editUserIdInput || parseInt(editUserIdInput.value, 10) === userId) {
+                    if (imageUrl) {
+                        editPreview.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">';
+                    } else {
+                        editPreview.innerHTML = defaultIdenticonHtml;
+                    }
+                }
+            }
+            var editRemoveBtn = document.getElementById('btnEditRemovePhoto');
+            if (editRemoveBtn) {
+                if (imageUrl) {
+                    editRemoveBtn.classList.remove('d-none');
+                    editRemoveBtn.style.setProperty('display', 'inline-flex', 'important');
+                } else {
+                    editRemoveBtn.classList.add('d-none');
+                    editRemoveBtn.style.setProperty('display', 'none', 'important');
+                }
+            }
+
+            // 4. Update modal avatar preview if open for this user
+            if (window._avatarModalUser && parseInt(window._avatarModalUser.id, 10) === userId) {
+                window._avatarModalUser.imgUrl = imageUrl || '';
+                if (typeof window.updateModalAvatarPreview === 'function') {
+                    window.updateModalAvatarPreview(imageUrl || '', window._avatarModalUser.initials, window._avatarModalUser.role);
+                }
+                var modalRemoveBtn = document.getElementById('modalRemoveAvatarBtn');
+                if (modalRemoveBtn) {
+                    if (imageUrl) {
+                        modalRemoveBtn.classList.remove('d-none');
+                        modalRemoveBtn.style.setProperty('display', 'inline-flex', 'important');
+                    } else {
+                        modalRemoveBtn.classList.add('d-none');
+                        modalRemoveBtn.style.setProperty('display', 'none', 'important');
+                    }
+                }
+            }
+        }
+        window.syncUserAvatar = syncUserAvatar;
+
+        // Cross-tab real-time sync via BroadcastChannel
+        var _avatarBroadcastChannel = null;
+        try {
+            if (typeof window.BroadcastChannel === 'function') {
+                _avatarBroadcastChannel = new BroadcastChannel('pttm_avatar_sync');
+                _avatarBroadcastChannel.onmessage = function (ev) {
+                    if (ev && ev.data && ev.data.user_id) {
+                        syncUserAvatar(ev.data.user_id, ev.data.image_url);
+                    }
+                };
+            }
+        } catch (e) {}
+
+        window.notifyAvatarSync = function (userId, imageUrl) {
+            // 1. Broadcast to BroadcastChannel
+            if (_avatarBroadcastChannel) {
+                try {
+                    _avatarBroadcastChannel.postMessage({ user_id: userId, image_url: imageUrl });
+                } catch (e) {}
+            }
+            // 2. Broadcast to localStorage for all other tabs/windows in same browser profile
+            try {
+                localStorage.setItem('pttm_avatar_sync', JSON.stringify({
+                    user_id: userId,
+                    image_url: imageUrl,
+                    time: Date.now()
+                }));
+            } catch (e) {}
+            // 3. Sync current page DOM immediately
+            syncUserAvatar(userId, imageUrl);
+        };
+
+        // Listen for cross-tab updates via localStorage
+        window.addEventListener('storage', function (ev) {
+            if (ev.key === 'pttm_avatar_sync' && ev.newValue) {
+                try {
+                    var parsed = JSON.parse(ev.newValue);
+                    if (parsed && parsed.user_id) {
+                        syncUserAvatar(parsed.user_id, parsed.image_url);
+                    }
+                } catch (e) {}
+            }
+        });
+
+        // WebSocket real-time synchronization
+        document.addEventListener('pttm:ws-user_avatar_updated', function (e) {
+            var payload = (e.detail && e.detail.data) ? e.detail.data : e.detail;
+            if (payload && payload.user_id) {
+                syncUserAvatar(payload.user_id, payload.image_url);
+            }
+        });
+        document.addEventListener('pttm:ws-message', function (e) {
+            var msg = e.detail;
+            if (msg && msg.type === 'user_avatar_updated' && msg.data && msg.data.user_id) {
+                syncUserAvatar(msg.data.user_id, msg.data.image_url);
+            }
+        });
+
+        // Focus listener: when returning to tab, re-check storage sync
+        window.addEventListener('focus', function () {
+            try {
+                var s = localStorage.getItem('pttm_avatar_sync');
+                if (s) {
+                    var p = JSON.parse(s);
+                    if (p && p.user_id && (Date.now() - (p.time || 0) < 60000)) {
+                        syncUserAvatar(p.user_id, p.image_url);
+                    }
+                }
+            } catch (e) {}
+        });
+
+        if (headerAvatarClick && fileInput) {
             function getCsrfToken() {
                 var meta = document.querySelector('meta[name="csrf-token"]');
                 return meta ? meta.getAttribute('content') : '';
@@ -412,46 +609,6 @@ SVG;
                     setTimeout(function () {
                         statusDiv.style.display = 'none';
                     }, duration);
-                }
-            }
-
-            function updateAvatarDom(imageUrl) {
-                var currentUserId = <?= (int)(session()->get('id') ?? 0) ?>;
-                if (imageUrl) {
-                    var imgHtml = '<img src="' + imageUrl + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
-                    if (triggerAvatar) triggerAvatar.innerHTML = imgHtml;
-                    if (headerAvatar) headerAvatar.innerHTML = imgHtml;
-                    if (miniMenuDeleteBtn) miniMenuDeleteBtn.classList.remove('d-none');
-                    if (miniMenuEditText) miniMenuEditText.textContent = 'Edit Photo';
-
-                    var drawerAvatar = document.querySelector('.drawer-user-avatar');
-                    if (drawerAvatar) drawerAvatar.innerHTML = imgHtml;
-
-                    var tableCircle = document.getElementById('avatar-circle-' + currentUserId);
-                    if (tableCircle) {
-                        tableCircle.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
-                    }
-                    var editPreview = document.getElementById('editUserAvatarPreview');
-                    if (editPreview) {
-                        editPreview.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">';
-                    }
-                } else {
-                    if (triggerAvatar) triggerAvatar.innerHTML = defaultIdenticonHtml;
-                    if (headerAvatar) headerAvatar.innerHTML = defaultIdenticonHtml;
-                    if (miniMenuDeleteBtn) miniMenuDeleteBtn.classList.add('d-none');
-                    if (miniMenuEditText) miniMenuEditText.textContent = 'Upload Photo';
-
-                    var drawerAvatar = document.querySelector('.drawer-user-avatar');
-                    if (drawerAvatar) drawerAvatar.innerHTML = defaultIdenticonHtml;
-
-                    var tableCircle = document.getElementById('avatar-circle-' + currentUserId);
-                    if (tableCircle) {
-                        tableCircle.innerHTML = defaultIdenticonHtml;
-                    }
-                    var editPreview = document.getElementById('editUserAvatarPreview');
-                    if (editPreview) {
-                        editPreview.innerHTML = defaultIdenticonHtml;
-                    }
                 }
             }
 
@@ -507,8 +664,16 @@ SVG;
                     e.preventDefault();
                     e.stopPropagation();
                     closeAvatarMiniMenu();
-                    fileInput.value = '';
-                    fileInput.click();
+                    if (typeof window.openAvatarModal === 'function') {
+                        var curId = <?= (int)(session()->get('id') ?? 0) ?>;
+                        var curName = <?= json_encode(session()->get('full_name') ?: (session()->get('username') ?: 'Administrator')) ?>;
+                        var curRole = <?= json_encode(session()->get('role') ?: 'admin') ?>;
+                        var curImg = triggerAvatar && triggerAvatar.querySelector('img') ? triggerAvatar.querySelector('img').src : '';
+                        window.openAvatarModal(curId, curName, curImg, '', curRole);
+                    } else {
+                        fileInput.value = '';
+                        fileInput.click();
+                    }
                 });
             }
 
@@ -519,47 +684,61 @@ SVG;
                     e.stopPropagation();
                     closeAvatarMiniMenu();
 
-                    if (!confirm('Revert profile picture to default logo?')) return;
+                    function executeMiniMenuRemove() {
+                        showAvatarStatus('Reverting to default logo...', 'loading');
+                        var csrfToken = getCsrfToken();
+                        var formData = new FormData();
+                        if (csrfToken) {
+                            formData.append('csrf_test_name', csrfToken);
+                        }
 
-                    showAvatarStatus('Reverting to default logo...', 'loading');
-                    var csrfToken = getCsrfToken();
-                    var formData = new FormData();
-                    if (csrfToken) {
-                        formData.append('csrf_test_name', csrfToken);
-                    }
+                        var headers = {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        };
+                        if (csrfToken) {
+                            headers['X-CSRF-TOKEN'] = csrfToken;
+                        }
 
-                    var headers = {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    };
-                    if (csrfToken) {
-                        headers['X-CSRF-TOKEN'] = csrfToken;
-                    }
-
-                    fetch('<?= base_url('profile/remove-avatar') ?>', {
-                        method: 'POST',
-                        headers: headers,
-                        body: formData
-                    })
-                    .then(function (res) {
-                        return res.json().then(function (data) {
-                            return { status: res.status, data: data };
+                        fetch('<?= base_url('profile/remove-avatar') ?>', {
+                            method: 'POST',
+                            headers: headers,
+                            body: formData
+                        })
+                        .then(function (res) {
+                            return res.json().then(function (data) {
+                                return { status: res.status, data: data };
+                            });
+                        })
+                        .then(function (result) {
+                            if (result.data && result.data.csrf_hash) {
+                                setCsrfToken(result.data.csrf_token, result.data.csrf_hash);
+                            }
+                            if (result.data && result.data.success) {
+                                updateAvatarDom(null);
+                                if (typeof window.notifyAvatarSync === 'function') {
+                                    window.notifyAvatarSync(currentUserId, null);
+                                }
+                                showAvatarStatus('Reverted to default logo.', 'success', 3000);
+                            } else {
+                                var err = (result.data && result.data.message) ? result.data.message : 'Failed to reset photo.';
+                                showAvatarStatus(err, 'error', 4000);
+                            }
+                        })
+                        .catch(function () {
+                            showAvatarStatus('Network error while resetting photo.', 'error', 4000);
                         });
-                    })
-                    .then(function (result) {
-                        if (result.data && result.data.csrf_hash) {
-                            setCsrfToken(result.data.csrf_token, result.data.csrf_hash);
-                        }
-                        if (result.data && result.data.success) {
-                            updateAvatarDom(null);
-                            showAvatarStatus('Reverted to default logo.', 'success', 3000);
-                        } else {
-                            var err = (result.data && result.data.message) ? result.data.message : 'Failed to reset photo.';
-                            showAvatarStatus(err, 'error', 4000);
-                        }
-                    })
-                    .catch(function () {
-                        showAvatarStatus('Network error while resetting photo.', 'error', 4000);
-                    });
+                    }
+
+                    if (typeof window.confirmAction === 'function') {
+                        window.confirmAction({
+                            title: 'Remove Profile Photo?',
+                            message: 'Are you sure you want to revert your profile picture to the default avatar?',
+                            confirmText: 'Remove Photo',
+                            onConfirm: executeMiniMenuRemove
+                        });
+                    } else if (confirm('Are you sure you want to revert your profile picture to the default avatar?')) {
+                        executeMiniMenuRemove();
+                    }
                 });
             }
 
@@ -611,6 +790,9 @@ SVG;
                     }
                     if (result.data && result.data.success) {
                         updateAvatarDom(result.data.image_url);
+                        if (typeof window.notifyAvatarSync === 'function') {
+                            window.notifyAvatarSync(currentUserId, result.data.image_url);
+                        }
                         showAvatarStatus('Photo updated successfully!', 'success', 3000);
                     } else {
                         var err = (result.data && result.data.message) ? result.data.message : 'Upload failed.';
@@ -633,5 +815,14 @@ SVG;
         document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
             d.classList.remove('mobile-open');
         });
+    });
+
+    // Ensure QueueWS WebSocket is connected for global real-time notifications
+    window.addEventListener('load', function () {
+        if (window.QueueWS && !window.QueueWS.isConnected()) {
+            try {
+                window.QueueWS.init({ pollingInterval: 20000 });
+            } catch (e) {}
+        }
     });
 </script>

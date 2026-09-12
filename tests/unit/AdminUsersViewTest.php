@@ -184,7 +184,12 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $this->assertStringContainsString('id="deactivateUserConfirmModal"', $html);
         $this->assertStringContainsString('id="activateUserConfirmModal"', $html);
         $this->assertStringContainsString('id="deleteUserConfirmModal"', $html);
-        $this->assertStringContainsString('Permanently Delete User?', $html);
+        $this->assertStringContainsString('id="removeAvatarConfirmModal"', $html);
+        $this->assertStringContainsString('Remove Profile Photo?', $html);
+        $this->assertStringContainsString('Are you sure you want to revert your profile picture to the default avatar?', $html);
+        $this->assertStringContainsString('fa-triangle-exclamation', $html);
+        $this->assertStringContainsString('id="removeAvatarConfirmBtn"', $html);
+        $this->assertStringNotContainsString('id="removeAvatarItemChip"', $html);
     }
 
     public function testGuestHeaderAnnouncementBarEnlarged(): void
@@ -404,6 +409,51 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $this->assertStringContainsString('Alice Dispatcher', $html);
         $this->assertStringContainsString('profile-identicon-svg', $html);
         $this->assertStringContainsString('admin/users/update/4', $html);
+    }
+
+    public function testAvatarDynamicSyncAttributesAndScript(): void
+    {
+        $session = service('session');
+        $session->set([
+            'isLoggedIn' => true,
+            'id'         => 1,
+            'role'       => 'super_admin',
+            'full_name'  => 'System Administrator',
+            'username'   => 'admin',
+        ]);
+
+        $users = [
+            [
+                'id'            => 1,
+                'full_name'     => 'System Administrator',
+                'username'      => 'admin',
+                'role'          => 'super_admin',
+                'status'        => 'active',
+                'profile_image' => 'uploads/avatars/avatar_admin.png',
+            ],
+            [
+                'id'            => 2,
+                'full_name'     => 'Dispatcher User',
+                'username'      => 'dispatcher',
+                'role'          => 'staff',
+                'status'        => 'active',
+                'profile_image' => null,
+            ],
+        ];
+
+        $html = view('admin/users/index', [
+            'users' => $users,
+        ]);
+
+        // Check data attributes on avatar-wrapper
+        $this->assertStringContainsString('data-user-id="1"', $html);
+        $this->assertStringContainsString('data-img-url="http://localhost/uploads/avatars/avatar_admin.png"', $html);
+        $this->assertStringContainsString('data-user-id="2"', $html);
+        $this->assertStringContainsString('data-img-url=""', $html);
+
+        // Check synchronization functions
+        $this->assertStringContainsString('window.updateModalAvatarPreview', $html);
+        $this->assertStringContainsString('window.updateAvatarDom', $html);
     }
 }
 
