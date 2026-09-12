@@ -38,8 +38,38 @@
                     </div>
                 <?php endif ?>
 
-                <form action="<?= base_url('admin/users/store') ?>" method="post" novalidate>
+<?php
+$defaultAvatarSvg = <<<SVG
+<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" />
+    <path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" />
+</svg>
+SVG;
+?>
+
+                <form action="<?= base_url('admin/users/store') ?>" method="post" enctype="multipart/form-data" novalidate>
                     <?= csrf_field() ?>
+
+                    <!-- Profile Photo Section -->
+                    <div class="p-3 mb-4 rounded-3 d-flex flex-wrap align-items-center gap-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+                        <div id="createUserAvatarPreview" style="width: 60px; height: 60px; border-radius: 50%; background: #F1F5F9; border: 2px solid #15803d; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <?= $defaultAvatarSvg ?>
+                        </div>
+                        <div style="flex: 1 1 auto; min-width: 200px;">
+                            <div class="fw-bold" style="font-size: 14px; color: #1e293b;">Profile Picture <span class="text-muted fw-normal small">(Optional)</span></div>
+                            <div class="small text-muted mb-2">JPG, PNG, WEBP, or GIF image (max 4MB).</div>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <input type="file" id="createAvatarFileInput" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none;">
+                                <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" onclick="document.getElementById('createAvatarFileInput').click();" id="btnCreateUploadPhoto">
+                                    <i class="bi bi-camera-fill"></i> Upload Photo
+                                </button>
+                                <button type="button" class="btn-modern btn-modern-outline btn-modern-sm text-danger d-none" id="btnCreateRemovePhoto" onclick="removeCreateUserAvatar();" style="display: none !important;">
+                                    <i class="bi bi-trash"></i> Remove Photo
+                                </button>
+                                <span id="createAvatarFeedback" class="small fw-semibold ms-2"></span>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row">
                         <div class="col-12 col-lg-6 mb-3">
@@ -55,12 +85,12 @@
                             <label for="password" class="form-label-modern">Password</label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-lock-fill"></i></span>
-                                <input type="password" class="input-modern" id="password" name="password" required placeholder="Choose a strong password">
+                                <input type="password" class="input-modern" id="password" name="password" required minlength="8" placeholder="Choose a strong password">
                                 <button type="button" class="btn-modern btn-modern-outline password-toggle" id="togglePassword" title="Show or hide password" aria-label="Show or hide password">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
-                            <div class="form-text-modern">Minimum 6 characters required; 8 or more is recommended.</div>
+                            <div class="form-text-modern">Minimum 8 characters required.</div>
                         </div>
                     </div>
 
@@ -296,10 +326,88 @@ document.addEventListener('DOMContentLoaded', function() {
         checkbox.addEventListener('change', updateSelectAllState);
     });
 
-    if (roleSelect) roleSelect.addEventListener('change', toggleRouteSection);
+    var DEFAULT_AVATAR_SVG = '<?= str_replace(["\r", "\n"], '', $defaultAvatarSvg) ?>';
+    var avatarInput = document.getElementById('createAvatarFileInput');
+    var avatarPreview = document.getElementById('createUserAvatarPreview');
+    var removeAvatarBtn = document.getElementById('btnCreateRemovePhoto');
+    var feedbackEl = document.getElementById('createAvatarFeedback');
+
+    function updatePreviewBorder() {
+        if (!avatarPreview || !roleSelect) return;
+        avatarPreview.style.border = (roleSelect.value === 'admin') ? '2px solid #dc2626' : '2px solid #15803d';
+    }
+
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function() {
+            var file = this.files && this.files[0];
+            if (!file) return;
+
+            if (file.size > 4 * 1024 * 1024) {
+                if (feedbackEl) {
+                    feedbackEl.className = 'small text-danger ms-2';
+                    feedbackEl.textContent = 'Image exceeds 4MB maximum allowed size.';
+                }
+                this.value = '';
+                return;
+            }
+
+            var allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (allowedTypes.indexOf(file.type) === -1) {
+                if (feedbackEl) {
+                    feedbackEl.className = 'small text-danger ms-2';
+                    feedbackEl.textContent = 'Please select a valid image (JPG, PNG, WEBP, GIF).';
+                }
+                this.value = '';
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (avatarPreview) {
+                    avatarPreview.innerHTML = '<img src="' + e.target.result + '" alt="Avatar Preview" style="width: 100%; height: 100%; object-fit: cover;">';
+                }
+                if (removeAvatarBtn) {
+                    removeAvatarBtn.classList.remove('d-none');
+                    removeAvatarBtn.style.setProperty('display', 'inline-flex', 'important');
+                }
+                if (feedbackEl) {
+                    feedbackEl.className = 'small text-success ms-2';
+                    feedbackEl.textContent = 'Photo selected';
+                    setTimeout(function() {
+                        if (feedbackEl.textContent === 'Photo selected') feedbackEl.textContent = '';
+                    }, 3000);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    window.removeCreateUserAvatar = function() {
+        if (avatarInput) avatarInput.value = '';
+        if (avatarPreview) avatarPreview.innerHTML = DEFAULT_AVATAR_SVG;
+        if (removeAvatarBtn) {
+            removeAvatarBtn.classList.add('d-none');
+            removeAvatarBtn.style.setProperty('display', 'none', 'important');
+        }
+        if (feedbackEl) {
+            feedbackEl.className = 'small text-muted ms-2';
+            feedbackEl.textContent = 'Photo removed';
+            setTimeout(function() {
+                if (feedbackEl.textContent === 'Photo removed') feedbackEl.textContent = '';
+            }, 2000);
+        }
+    };
+
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            toggleRouteSection();
+            updatePreviewBorder();
+        });
+    }
 
     toggleRouteSection();
     updateSelectAllState();
+    updatePreviewBorder();
 });
 </script>
 

@@ -20,9 +20,26 @@ class History extends BaseController
         $search = $this->request->getGet('q');
         $destination = $this->request->getGet('destination');
 
+        // Get assigned route IDs for staff dispatchers (admins see all)
+        $assignedRouteIds = null;
+        if (session()->get('role') === 'staff') {
+            $userRouteModel = new \App\Models\UserRouteModel();
+            $assignedRouteIds = $userRouteModel->getRouteIdsForUser((int) session()->get('id'));
+        }
+
         // Fetch distinct destinations for filter pills
         $routeModel = new \App\Models\RouteModel();
-        $destinations = $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll();
+        if ($assignedRouteIds !== null) {
+            $destQuery = $routeModel->select('destination')->distinct();
+            if (!empty($assignedRouteIds)) {
+                $destQuery->whereIn('id', $assignedRouteIds);
+            } else {
+                $destQuery->where('id', 0);
+            }
+            $destinations = $destQuery->orderBy('destination', 'ASC')->findAll();
+        } else {
+            $destinations = $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll();
+        }
 
         $builder = $queueModel->select('
             queue.*, 
@@ -36,6 +53,15 @@ class History extends BaseController
         ')
         ->withFullJoins()
         ->where('queue.status', 'departed');
+
+        // Scope records for staff
+        if ($assignedRouteIds !== null) {
+            if (!empty($assignedRouteIds)) {
+                $builder->whereIn('queue.route_id', $assignedRouteIds);
+            } else {
+                $builder->where('queue.route_id', 0);
+            }
+        }
 
         if ($destination && $destination !== 'all') {
             $builder->where('routes.destination', $destination);

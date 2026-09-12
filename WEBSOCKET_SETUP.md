@@ -7,11 +7,13 @@ The Palompon Transit Management System now has **real-time WebSocket support** f
 
 ### 1. **WebSocket Server**
 - Location: `app/Commands/WsServe.php`
-- Runs on port 8081 (client connections)
-- Runs on port 8082 (broadcast trigger from your app)
-- Full RFC 6455 WebSocket protocol support
-- Auto-reconnection with exponential backoff
-- Heartbeat pings every 30 seconds
+- Runs on port 8081 (client connections; loopback `127.0.0.1` in production)
+- Runs on port 8082 (broadcast trigger from application loopback)
+- Full RFC 6455 WebSocket protocol support with client payload unmasking
+- Clean socket descriptor cleanup on Opcode 0x8 (Close Frame) to eliminate leaks
+- Binary control Ping/Pong frames every 30 seconds to maintain reverse proxy keepalives
+- Cross-Site WebSocket Hijacking (CSWSH) Origin verification
+- Auto-reconnection with exponential backoff on clients
 
 ### 2. **Broadcasting System**
 - Method: `broadcastUpdate()` in `BaseController.php`
@@ -150,24 +152,36 @@ Open browser DevTools (F12) on Staff Queue page:
 
 ---
 
-## Production Notes
+## Production Architecture & Deployment
 
-Currently the WebSocket server is designed for **local development** (broadcast port 8082 only accepts localhost connections for security).
-
-For production deployment, you would need to:
-1. Run WebSocket server on separate machine/port
-2. Update broadcast address in `BaseController.php`
-3. Add authentication to WebSocket connections
-4. Use SSL/TLS (WSS) instead of plain WS
-
-For now, this works great for development and small deployments!
+In production on Ubuntu Server:
+1. **Nginx Reverse Proxy (`/ws`)**:
+   - Web browsers connect over standard HTTP/HTTPS ports (`ws://your-domain/ws` or `wss://your-domain/ws`).
+   - Nginx handles TLS termination and proxies traffic to loopback `127.0.0.1:8081` with HTTP/1.1 upgrade headers.
+2. **Firewall Protection**:
+   - Port 8081 is closed to the outside internet in UFW. Only standard web ports (80/443) and SSH (22) remain open.
+   - The WebSocket server binds to `127.0.0.1` (`env('websocket.bindAddress', '127.0.0.1')`).
+3. **Systemd Daemon with Auto-Restart**:
+   - Managed by `jeepney-websocket.service` in `/etc/systemd/system/`.
+   - Configured with `Restart=always` and `RestartSec=5s` for automatic recovery.
+4. **Origin Validation (CSWSH)**:
+   - Untrusted third-party sites cannot establish WebSocket connections or spoof requests. Allowed origins are configured via `websocket.allowedOrigins` in `.env`.
 
 ---
 
-## Support
+## Support & Diagnostics
 
-If something isn't working:
-1. Check that the services are running (Nginx on port 80, WS on 8081)
-2. Verify ports 80, 8081, 8082 are not blocked
-3. Check browser console (F12) for errors
-4. Check CodeIgniter logs in `writable/logs/` and the WS log at `writable/logs/ws.log`
+If real-time updates are not reflecting:
+1. Check that Nginx and the WebSocket daemon are running:
+   ```bash
+   sudo systemctl status nginx jeepney-websocket
+   ```
+2. Verify local listening ports:
+   ```bash
+   ss -tulpn | grep -E ':8081|:8082'
+   ```
+3. Check browser console (F12) for connection status (`[WS] Connected`).
+4. Check CodeIgniter logs in `writable/logs/` and WebSocket server logs in systemd:
+   ```bash
+   sudo journalctl -u jeepney-websocket -n 50 -f
+   ```

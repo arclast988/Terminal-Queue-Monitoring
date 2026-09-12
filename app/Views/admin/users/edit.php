@@ -66,21 +66,22 @@
                         $canManageThisAvatar = ($currentUserRole === 'super_admin' || $currentUserRole === 'admin');
                     }
 
-                    $nameParts = preg_split('/\s+/', trim($user['full_name'] ?? ''));
-                    $initials = '';
-                    if (!empty($nameParts[0])) $initials .= strtoupper(substr($nameParts[0], 0, 1));
-                    if (count($nameParts) >= 2 && !empty($nameParts[count($nameParts) - 1])) $initials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
-                    if (empty($initials)) $initials = strtoupper(substr($user['username'], 0, 2));
+                    $defaultAvatarSvg = <<<SVG
+<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" />
+    <path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" />
+</svg>
+SVG;
                     $avatarBg = $user['role'] === 'super_admin' ? '#B71C1C' : ($user['role'] === 'admin' ? '#dc2626' : '#15803d');
                     ?>
 
                     <!-- Profile Photo Section -->
                     <div class="p-3 mb-4 rounded-3 d-flex flex-wrap align-items-center gap-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <div id="editUserAvatarPreview" style="width: 60px; height: 60px; border-radius: 50%; background: <?= $avatarBg ?>; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div id="editUserAvatarPreview" style="width: 60px; height: 60px; border-radius: 50%; background: #F1F5F9; border: 2.5px solid <?= $avatarBg ?>; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                             <?php if (!empty($user['profile_image'])): ?>
                                 <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             <?php else: ?>
-                                <span><?= esc($initials) ?></span>
+                                <?= $defaultAvatarSvg ?>
                             <?php endif; ?>
                         </div>
                         <div style="flex: 1 1 auto; min-width: 200px;">
@@ -94,7 +95,7 @@
                                     <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" onclick="document.getElementById('editAvatarFileInput').click();" id="btnEditUploadPhoto">
                                         <i class="bi bi-camera-fill"></i> Upload New Photo
                                     </button>
-                                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm text-danger" id="btnEditRemovePhoto" onclick="removeEditUserAvatar();" style="<?= empty($user['profile_image']) ? 'display: none;' : '' ?>">
+                                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm text-danger <?= empty($user['profile_image']) ? 'd-none' : '' ?>" id="btnEditRemovePhoto" onclick="removeEditUserAvatar();" style="<?= empty($user['profile_image']) ? 'display: none !important;' : '' ?>">
                                         <i class="bi bi-trash"></i> Remove Photo
                                     </button>
                                     <span id="editAvatarFeedback" class="small fw-semibold ms-2"></span>
@@ -117,12 +118,12 @@
                             <label for="password" class="form-label-modern">Password</label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-lock-fill"></i></span>
-                                <input type="password" class="input-modern" id="password" name="password" placeholder="Leave blank to keep current password">
+                                <input type="password" class="input-modern" id="password" name="password" minlength="8" placeholder="Leave blank to keep current password">
                                 <button type="button" class="btn-modern btn-modern-outline password-toggle" id="togglePassword" title="Show or hide password" aria-label="Show or hide password">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
-                            <div class="form-text-modern">Leave blank to keep the current password.</div>
+                            <div class="form-text-modern">Leave blank to keep the current password, or enter at least 8 characters.</div>
                         </div>
                     </div>
 
@@ -398,7 +399,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     var removeBtn = document.getElementById('btnEditRemovePhoto');
                     if (removeBtn) {
-                        removeBtn.style.display = 'inline-flex';
+                        removeBtn.classList.remove('d-none');
+                        removeBtn.style.setProperty('display', 'inline-flex', 'important');
                     }
                 } else {
                     if (feedback) {
@@ -416,6 +418,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    var DEFAULT_AVATAR_SVG = '<?= str_replace(["\r", "\n"], '', $defaultAvatarSvg) ?>';
 
     window.removeEditUserAvatar = function() {
         if (!confirm('Are you sure you want to remove this profile picture?')) return;
@@ -437,9 +441,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 var preview = document.getElementById('editUserAvatarPreview');
                 if (preview) {
-                    preview.innerHTML = '<span><?= esc($initials) ?></span>';
+                    preview.innerHTML = DEFAULT_AVATAR_SVG;
                 }
-                if (removeBtn) removeBtn.style.display = 'none';
+                if (removeBtn) {
+                    removeBtn.classList.add('d-none');
+                    removeBtn.style.setProperty('display', 'none', 'important');
+                }
                 if (feedback) {
                     feedback.className = 'small text-success ms-2';
                     feedback.textContent = 'Photo removed.';

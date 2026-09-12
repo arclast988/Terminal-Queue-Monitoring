@@ -65,4 +65,22 @@ final class LogoutConfirmationTest extends CIUnitTestCase
         $this->assertStringContainsString('confirmLogout(event)', $html);
         $this->assertStringContainsString('data-bs-target="#logoutModal"', $html);
     }
+
+    public function testProfileDropdownPreservedOnStaySignedIn(): void
+    {
+        $session = service('session');
+        $session->set([
+            'isLoggedIn' => true,
+            'role'       => 'super_admin',
+            'full_name'  => 'System Administrator',
+            'username'   => 'admin',
+        ]);
+
+        $html = view('partials/header');
+
+        // Header script checks that clicking logout cancel or modal doesn't close dropdown
+        $this->assertStringContainsString('logout-btn-cancel', $html);
+        $this->assertStringContainsString('keepProfileDropdownOpen', $html);
+        $this->assertStringContainsString('_logoutFromProfileDropdown', $html);
+    }
 }

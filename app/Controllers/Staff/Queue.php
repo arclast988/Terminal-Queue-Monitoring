@@ -643,6 +643,25 @@ class Queue extends BaseController
             ]);
         }
 
+        // Validate vehicle is active (not archived or in maintenance)
+        $vehicle = $this->vehicleModel->find($vehicleId);
+        if (!$vehicle || ($vehicle['status'] ?? 'active') !== 'active') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Cannot restore trip: This vehicle is currently inactive or archived.'
+            ]);
+        }
+
+        // Validate route is active (not archived)
+        $routeModel = new \App\Models\RouteModel();
+        $route = $routeModel->find($queueItem['route_id']);
+        if (!$route || ($route['status'] ?? 'active') !== 'active') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Cannot restore trip: The assigned route is currently inactive or archived.'
+            ]);
+        }
+
         // Restore to waiting
         $db = \Config\Database::connect();
         $db->transStart();

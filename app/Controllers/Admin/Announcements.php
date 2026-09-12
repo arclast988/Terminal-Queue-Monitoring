@@ -53,6 +53,7 @@ class Announcements extends BaseController
     {
         $rules = [
             'message'     => 'required|min_length[3]|max_length[2000]',
+            'severity'    => 'permit_empty|in_list[info,warning,danger]',
             'is_active'   => 'permit_empty|in_list[0,1]',
             'terminal_id' => 'required|integer|is_not_unique[terminals.id]',
         ];
@@ -65,9 +66,15 @@ class Announcements extends BaseController
             $maxOrder  = $this->announcementModel->selectMax('sort_order')->first();
             $sortOrder = isset($maxOrder['sort_order']) ? (int)$maxOrder['sort_order'] + 1 : 0;
 
+            $severity = $this->request->getPost('severity');
+            if (!in_array($severity, ['info', 'warning', 'danger'], true)) {
+                $severity = 'info';
+            }
+
             $this->announcementModel->insert([
                 'terminal_id' => $this->request->getPost('terminal_id'),
                 'message'     => $this->request->getPost('message'),
+                'severity'    => $severity,
                 'is_active'   => $this->request->getPost('is_active') ? 1 : 0,
                 'sort_order'  => $sortOrder
             ]);
@@ -109,6 +116,7 @@ class Announcements extends BaseController
     {
         $rules = [
             'message'     => 'required|min_length[3]|max_length[2000]',
+            'severity'    => 'permit_empty|in_list[info,warning,danger]',
             'is_active'   => 'permit_empty|in_list[0,1]',
             'terminal_id' => 'required|integer|is_not_unique[terminals.id]',
         ];
@@ -117,9 +125,15 @@ class Announcements extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        $severity = $this->request->getPost('severity');
+        if (!in_array($severity, ['info', 'warning', 'danger'], true)) {
+            $severity = 'info';
+        }
+
         $newData = [
             'terminal_id' => $this->request->getPost('terminal_id'),
             'message'     => $this->request->getPost('message'),
+            'severity'    => $severity,
             'is_active'   => $this->request->getPost('is_active') ? 1 : 0,
         ];
 
@@ -144,6 +158,11 @@ class Announcements extends BaseController
 
     public function delete($id)
     {
+        $role = session()->get('role');
+        if (!in_array($role, ['admin', 'super_admin', 'staff'], true)) {
+            return redirect()->to('/admin/announcements')->with('error', 'You do not have permission to delete announcements.');
+        }
+
         try {
             $a = $this->announcementModel->find($id);
             if ($this->announcementModel->delete($id)) {
@@ -162,6 +181,11 @@ class Announcements extends BaseController
 
     public function deleteAll()
     {
+        $role = session()->get('role');
+        if (!in_array($role, ['admin', 'super_admin', 'staff'], true)) {
+            return redirect()->to('/admin/announcements')->with('error', 'You do not have permission to delete announcements.');
+        }
+
         try {
             $count = $this->announcementModel->countAllResults();
             if ($count === 0) {

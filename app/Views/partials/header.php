@@ -355,6 +355,10 @@ SVG;
             });
 
             document.addEventListener('click', function (e) {
+                // Do not close profile dropdown if clicking inside the logout confirmation modal (e.g. "Stay Signed In")
+                if (e.target && e.target.closest && (e.target.closest('.logout-btn-cancel') || e.target.closest('#logoutModal'))) {
+                    return;
+                }
                 if (!profileDropdown.contains(e.target)) {
                     profileDropdown.classList.remove('open');
                     profileBtn.setAttribute('aria-expanded', 'false');
@@ -362,6 +366,11 @@ SVG;
             });
 
             document.addEventListener('keydown', function (e) {
+                // If logout modal is currently open, let Bootstrap handle Escape for the modal without closing the dropdown
+                var logoutModal = document.getElementById('logoutModal');
+                if (logoutModal && logoutModal.classList.contains('show')) {
+                    return;
+                }
                 if (e.key === 'Escape' && profileDropdown.classList.contains('open')) {
                     profileDropdown.classList.remove('open');
                     profileBtn.setAttribute('aria-expanded', 'false');

@@ -248,6 +248,43 @@
         font-size: 12px;
         margin-top: 1px;
     }
+    .ann-item-danger {
+        border-left: 4px solid #dc2626 !important;
+    }
+    .ann-item-warning {
+        border-left: 4px solid #d97706 !important;
+    }
+    .ann-item-info {
+        border-left: 4px solid #0284c7 !important;
+    }
+    .ann-bullet-danger {
+        background: #fee2e2 !important;
+        color: #dc2626 !important;
+    }
+    .ann-bullet-warning {
+        background: #fef3c7 !important;
+        color: #d97706 !important;
+    }
+    .ann-bullet-info {
+        background: #e0f2fe !important;
+        color: #0284c7 !important;
+    }
+    .ann-severity-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-bottom: 5px;
+        line-height: 1.4;
+    }
+    .ann-tag-danger { background: #fee2e2; color: #991b1b; }
+    .ann-tag-warning { background: #fef3c7; color: #92400e; }
+    .ann-tag-info { background: #e0f2fe; color: #075985; }
     .ann-modal-text {
         flex: 1 1 auto;
         min-width: 0;
@@ -736,10 +773,29 @@
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
+<?php
+$marqueeItems = [];
+if (!empty($announcements) && is_array($announcements)) {
+    foreach ($announcements as $ann) {
+        $m = trim($ann['message'] ?? '');
+        if ($m === '') continue;
+        $s = $ann['severity'] ?? 'info';
+        if ($s === 'danger') {
+            $marqueeItems[] = '[URGENT] ' . $m;
+        } elseif ($s === 'warning') {
+            $marqueeItems[] = '[WARNING] ' . $m;
+        } else {
+            $marqueeItems[] = $m;
+        }
+    }
+}
+$annSeparator = str_repeat("\u{00A0}", 6) . '|' . str_repeat("\u{00A0}", 6);
+$rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.';
+?>
 <div class="advisory-bar">
     <div class="advisory-icon" onclick="openAnnouncementModal()" title="View Announcements"><i class="fas fa-bullhorn"></i></div>
     <div class="advisory-text">
-        <div class="marquee" id="guestMarquee"><?php if (!empty($announcements) && is_array($announcements)): ?><?= esc(preg_replace('/\s+/', ' ', implode('     |     ', array_column($announcements, 'message')))) ?><?php else: ?>Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.<?php endif; ?></div>
+        <div class="marquee" id="guestMarquee"><?= esc($rawMarqueeText) ?></div>
         <script>
             // Synchronously compute announcement marquee animation phase before paint
             // so the announcement continues seamlessly when clicking between Home, Schedules, and Fares.
@@ -751,7 +807,7 @@
                     var KEY_DUR  = 'pt_ann_duration';
 
                     var now = Date.now();
-                    var rawText = <?= json_encode(trim(!empty($announcements) && is_array($announcements) ? implode('     |     ', array_column($announcements, 'message')) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.')) ?>;
+                    var rawText = <?= json_encode(trim($rawMarqueeText)) ?>;
 
                     // Content-aware duration: maintains a steady, comfortable ~60px/sec readable speed
                     var totalDist = (window.innerWidth || 1200) + Math.max(600, rawText.length * 9.5);
@@ -808,28 +864,35 @@
         <div class="ann-modal-body">
             <ul class="ann-modal-list" id="annModalList">
                 <?php if (!empty($announcements) && is_array($announcements)): ?>
-                    <?php foreach ($announcements as $ann): ?>
-                        <li>
-                            <div class="ann-bullet-wrap">
-                                <i class="fas fa-bullhorn"></i>
+                    <?php foreach ($announcements as $ann):
+                        $sev = $ann['severity'] ?? 'info';
+                        $iconClass = ($sev === 'danger') ? 'fa-circle-exclamation' : (($sev === 'warning') ? 'fa-triangle-exclamation' : 'fa-info-circle');
+                        $tagLabel = ($sev === 'danger') ? 'Urgent' : (($sev === 'warning') ? 'Warning' : 'Notice');
+                    ?>
+                        <li class="ann-item-<?= esc($sev) ?>">
+                            <div class="ann-bullet-wrap ann-bullet-<?= esc($sev) ?>">
+                                <i class="fas <?= $iconClass ?>"></i>
                             </div>
-                            <div class="ann-modal-text"><?php
-                                $text = esc($ann['message'] ?? '');
-                                $text = preg_replace('~(\bhttps?://[^\s<]+?)\)([A-Za-z0-9])~i', '$1) $2', $text);
-                                echo preg_replace_callback(
-                                    '~https?://[^\s<]+~i',
-                                    static function ($matches) {
-                                        $url = $matches[0];
-                                        $trailing = '';
-                                        while ($url !== '' && preg_match('/[.,;!?:)]$/', $url)) {
-                                            $trailing = substr($url, -1) . $trailing;
-                                            $url = substr($url, 0, -1);
-                                        }
-                                        return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . $url . '</a>' . $trailing;
-                                    },
-                                    $text
-                                );
-                            ?></div>
+                            <div class="ann-modal-text">
+                                <div class="ann-severity-tag ann-tag-<?= esc($sev) ?>"><?= $tagLabel ?></div>
+                                <div><?php
+                                    $text = esc($ann['message'] ?? '');
+                                    $text = preg_replace('~(\bhttps?://[^\s<]+?)\)([A-Za-z0-9])~i', '$1) $2', $text);
+                                    echo preg_replace_callback(
+                                        '~https?://[^\s<]+~i',
+                                        static function ($matches) {
+                                            $url = $matches[0];
+                                            $trailing = '';
+                                            while ($url !== '' && preg_match('/[.,;!?:)]$/', $url)) {
+                                                $trailing = substr($url, -1) . $trailing;
+                                                $url = substr($url, 0, -1);
+                                            }
+                                            return '<a href="' . $url . '" target="_blank" rel="noopener noreferrer">' . $url . '</a>' . $trailing;
+                                        },
+                                        $text
+                                    );
+                                ?></div>
+                            </div>
                         </li>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -976,8 +1039,16 @@
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.success || !Array.isArray(d.announcements)) return;
-                    var msgs = d.announcements.map(function (a) { return String(a.message || '').replace(/\s+/g, ' ').trim(); }).filter(Boolean);
-                    var text = msgs.length ? msgs.join('     |     ') : FALLBACK;
+                    var msgs = d.announcements.map(function (a) {
+                        var m = String(a.message || '').replace(/\s+/g, ' ').trim();
+                        if (!m) return '';
+                        var s = a.severity || 'info';
+                        if (s === 'danger') return '[URGENT] ' + m;
+                        if (s === 'warning') return '[WARNING] ' + m;
+                        return m;
+                    }).filter(Boolean);
+                    var annSeparator = '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0|\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0';
+                    var text = msgs.length ? msgs.join(annSeparator) : FALLBACK;
                     if (text !== lastText) {
                         lastText = text;
                         bar.textContent = text;
@@ -1003,10 +1074,15 @@
                     var modalList = document.getElementById('annModalList');
                     var countBadge = document.getElementById('annCountBadge');
                     if (modalList) {
-                        if (msgs.length) {
-                            if (countBadge) countBadge.textContent = msgs.length + ' Active';
-                            modalList.innerHTML = msgs.map(function(m) {
-                                var safe = String(m || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        if (d.announcements.length) {
+                            if (countBadge) countBadge.textContent = d.announcements.length + ' Active';
+                            modalList.innerHTML = d.announcements.map(function(a) {
+                                var m = String(a.message || '').trim();
+                                if (!m) return '';
+                                var s = a.severity || 'info';
+                                var iconClass = (s === 'danger') ? 'fa-circle-exclamation' : ((s === 'warning') ? 'fa-triangle-exclamation' : 'fa-info-circle');
+                                var tagLabel = (s === 'danger') ? 'Urgent' : ((s === 'warning') ? 'Warning' : 'Notice');
+                                var safe = m.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                 safe = safe.replace(/(\bhttps?:\/\/[^\s<]+?)\)([A-Za-z0-9])/gi, '$1) $2');
                                 var withLinks = safe.replace(/https?:\/\/[^\s<]+/gi, function (fullMatch) {
                                     var url = fullMatch;
@@ -1017,8 +1093,8 @@
                                     }
                                     return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>' + trailing;
                                 });
-                                return '<li><div class="ann-bullet-wrap"><i class="fas fa-bullhorn"></i></div><div class="ann-modal-text">' + withLinks + '</div></li>';
-                            }).join('');
+                                return '<li class="ann-item-' + s + '"><div class="ann-bullet-wrap ann-bullet-' + s + '"><i class="fas ' + iconClass + '"></i></div><div class="ann-modal-text"><div class="ann-severity-tag ann-tag-' + s + '">' + tagLabel + '</div><div>' + withLinks + '</div></div></li>';
+                            }).filter(Boolean).join('');
                         } else {
                             if (countBadge) countBadge.textContent = 'Live';
                             modalList.innerHTML = '<li class="ann-modal-empty"><i class="fas fa-bell-slash"></i>No active announcements at this time.</li>';

@@ -1134,14 +1134,11 @@
                                 <td data-label="Est. Departure">
                                     <?php $qid = (int)($schedule['queue_id'] ?? $schedule['id'] ?? 0); ?>
                                     <div class="sched-dep-cell" id="sched-dep-cell-<?= $qid ?>">
-                                        <span class="time-display" id="sched-dep-time-<?= $qid ?>" style="<?= $schedule['is_full'] ? 'display:none;' : '' ?>">
+                                        <span class="time-display" id="sched-dep-time-<?= $qid ?>">
                                             <?= !empty($schedule['estimated_departure']) ? date('g:i A', strtotime($schedule['estimated_departure'])) : 'Waiting' ?>
                                         </span>
-                                        <span class="time-display full" id="sched-dep-full-<?= $qid ?>" style="<?= $schedule['is_full'] ? '' : 'display:none;' ?>">
-                                            FULL — Ready
-                                        </span>
-                                        <div class="sched-passengers-text" id="sched-passengers-<?= $qid ?>" style="font-size: 12.5px; color: var(--text-muted); <?= $schedule['is_full'] ? 'display:none;' : '' ?>">
-                                            <span id="passenger-count-<?= $qid ?>" class="passenger-count-num"><?= $schedule['current_passengers'] ?></span>/<?= $schedule['capacity'] ?> passengers
+                                        <div class="sched-passengers-text" id="sched-passengers-<?= $qid ?>" style="font-size: 12.5px; color: var(--text-muted);">
+                                            <span id="passenger-count-<?= $qid ?>" class="passenger-count-num <?= passenger_color_class((int)$schedule['current_passengers'], (int)$schedule['capacity']) ?>"><?= $schedule['current_passengers'] ?></span>/<?= $schedule['capacity'] ?> passengers
                                         </div>
                                     </div>
                                 </td>
@@ -1324,11 +1321,11 @@
                 }
                 var isFull = !!s.is_full;
                 var etaText = s.estimated_departure_formatted || 'Waiting';
+                var pColorClass = typeof getPassengerColorClass === 'function' ? getPassengerColorClass(s.current_passengers, s.capacity) : (isFull ? 'passenger-color-red' : 'passenger-color-green');
                 var dep = '<div class="sched-dep-cell" id="sched-dep-cell-' + qid + '">'
-                    + '<span class="time-display" id="sched-dep-time-' + qid + '" style="' + (isFull ? 'display:none;' : '') + '">' + escHtml(etaText) + '</span>'
-                    + '<span class="time-display full" id="sched-dep-full-' + qid + '" style="' + (isFull ? '' : 'display:none;') + '">FULL — Ready</span>'
-                    + '<div class="sched-passengers-text" id="sched-passengers-' + qid + '" style="font-size:12.5px;color:var(--text-muted);' + (isFull ? 'display:none;' : '') + '">'
-                    + '<span id="passenger-count-' + qid + '" class="passenger-count-num">' + s.current_passengers + '</span>/' + s.capacity + ' passengers</div>'
+                    + '<span class="time-display" id="sched-dep-time-' + qid + '">' + escHtml(etaText) + '</span>'
+                    + '<div class="sched-passengers-text" id="sched-passengers-' + qid + '" style="font-size:12.5px;color:var(--text-muted);">'
+                    + '<span id="passenger-count-' + qid + '" class="passenger-count-num ' + pColorClass + '">' + s.current_passengers + '</span>/' + s.capacity + ' passengers</div>'
                     + '</div>';
                 var opDisplay = s.operator_name ? escHtml(s.operator_name) : (s.driver_name ? escHtml(s.driver_name) : '—');
                 var typeSlug = String(s.vehicle_type || '').toLowerCase();
@@ -1351,9 +1348,6 @@
         function updateScheduleRowPassengers(queueId, newCount, capacity) {
             if (!queueId) return;
             var countSpan = document.getElementById('passenger-count-' + queueId);
-            var fullBadge = document.getElementById('sched-dep-full-' + queueId);
-            var timeSpan = document.getElementById('sched-dep-time-' + queueId);
-            var passDiv = document.getElementById('sched-passengers-' + queueId);
 
             newCount = parseInt(newCount, 10);
             capacity = parseInt(capacity, 10);
@@ -1362,18 +1356,12 @@
 
             if (countSpan) {
                 countSpan.textContent = newCount;
+                if (typeof applyPassengerColor === 'function') {
+                    applyPassengerColor(countSpan, newCount, capacity);
+                }
                 countSpan.classList.remove('pulse-update');
                 void countSpan.offsetWidth; // trigger reflow
                 countSpan.classList.add('pulse-update');
-            }
-            if (fullBadge) {
-                fullBadge.style.display = isFull ? 'inline-block' : 'none';
-            }
-            if (timeSpan) {
-                timeSpan.style.display = isFull ? 'none' : 'inline-block';
-            }
-            if (passDiv) {
-                passDiv.style.display = isFull ? 'none' : 'block';
             }
         }
 
@@ -1479,7 +1467,7 @@
             }
 
             QueueSync.init({
-                pollInterval:   3000,
+                pollInterval:   15000,
                 customRefresh:  function() { fetchSchedulesStatus(false); },
                 customWSHandler: handleLiveQueueUpdate
             });

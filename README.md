@@ -33,13 +33,13 @@ This project runs on **Nginx + PHP-FPM + PostgreSQL** — pure enterprise-grade 
    - starts the real-time WebSocket server,
    - waits for Nginx, then opens the app.
 4. **Open the app:** <http://localhost/>
-5. **Sign in** with a seeded account (`admin` / `admin123`, `staff` / `staff123`).
+5. **Sign in** with a seeded account (`admin` / `admin123`, `staff` / `staff123`), or with official seeder accounts (`admin@ttm.local` / `admin123`, `staff@ttm.local` / `staff123`).
 6. **Stopping the system** — double-click `stop_system.bat` to shut down PostgreSQL, PHP-FPM, Nginx, and the WebSocket server. Database data is preserved.
 
 ### Local quick start (from inside a WSL terminal)
 If you're already at a WSL bash prompt (e.g. `user@DESKTOP:~$`), use the bash wrappers instead of the `.bat` files:
 ```
-cd /mnt/c/path/to/jeepneynvans
+cd /mnt/c/path/to/jeepneynvans     # wherever you cloned it
 ./start_system.sh     # bring everything up (auto-elevates with sudo)
 ./stop_system.sh      # shut everything down
 ```
@@ -83,7 +83,7 @@ Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for yo
 - **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `sudo systemctl status php-fpm`.
 - **"Unable to connect to the database"** → PostgreSQL isn't started (`sudo systemctl status postgresql`), or `.env` credentials don't match.
 - **Real-time not updating** → run `VERIFY_SETUP.bat` or `diagnose_windows.bat` (checks Nginx proxy, ports 8081/8082, and WebSocket server daemon).
-- **Login fails** → confirm the import created the `users` table with the default seeds (`admin` / `admin123`).
+- **Login fails** → confirm the import created the `users` table with default accounts (`admin` / `admin123` or seeded `admin@ttm.local` / `admin123`).
 
 ### Security, Performance & Code Optimization Updates (June 2026)
 
@@ -112,6 +112,31 @@ We recently performed a system-wide audit and optimization:
 - **Database Caching & Midnight Rule Gap**: Cached `get_db_vehicle_types()` with 1-hour TTL to eliminate continuous `information_schema` queries on every request, and extended Departure Rule 1 to `00:00:00` to cover the midnight to 4:00 AM dispatch interval.
 - **Form Accessibility & HTML5 Validation**: Replaced `display: none` select replacement in `autocomplete-search.js` with accessible off-screen styling to prevent browser validation crashes on required select controls.
 - **Automated Verification**: Provided `VERIFY_SETUP.bat` and `VERIFY_SETUP.sh` to validate all services, database tables, PHP-FPM sockets, and WebSocket connectivity in one click.
+
+### System Audit & Production Hardening Updates (September 2026)
+- **RFC 6455 WebSocket Protocol Compliance & Socket Leak Fix**:
+  - Implemented `decodeFrame()` in `app/Commands/WsServe.php` with XOR payload unmasking per RFC 6455 §5.3.
+  - Catches Opcode `0x8` (Close Frame) on browser tab closures to cleanly release socket descriptors and prevent file descriptor and memory leaks.
+  - Replaced text pings with RFC 6455 binary Ping control frames (`pack('CCN', 0x89, 0x04, time())`) to prevent reverse proxy/load balancer timeouts.
+  - Added Cross-Site WebSocket Hijacking (CSWSH) Origin verification (`isAllowedOrigin()`) to block unauthorized third-party cross-site requests.
+- **PostgreSQL Advisory Locking & Concurrency Batching**:
+  - Protected `QueueModel::recalculateSchedule()` with PostgreSQL transaction-level advisory locks (`pg_advisory_xact_lock`), eliminating race conditions and duplicate position ranks during concurrent dispatcher actions.
+  - Preloaded terminal departure rules into memory to eliminate N+1 database queries.
+  - Batched database updates using `$this->updateBatch()`.
+- **Infrastructure & Network Security Hardening**:
+  - Closed direct public exposure of port 8081 in UFW (`deploy.sh`); all WebSocket connections route securely through Nginx (`/ws`) via standard ports 80/443 with TLS encryption.
+  - Bound WebSocket server to loopback `127.0.0.1` by default.
+  - Configured systemd service (`jeepney-websocket.service`) with `Restart=always` and `RestartSec=5s` for automatic crash recovery.
+  - Added data retention CLI command `php spark maintenance:purge [--days=60]` for automated pruning of old departures and audit logs.
+- **Frontend Scalability (100–200+ Concurrent Users)**:
+  - Relaxed fallback guest polling from 5s to 15s (backing off to 30s on WebSocket connection) across `queue-sync.js`, `schedules.php`, and dashboard views.
+  - Added modal state protection in `ajaxRefresh()` to prevent replacing the DOM while dispatchers or admins have modal dialogs open.
+  - Removed `'onclick'` attribute bypass from DOMPurify configuration in `queue-sync.js`.
+- **Session & Access Hardening**:
+  - Hardened session directory permissions in `app/Config/Session.php` from `0777` to `0700`.
+  - Standardized password minimum length to 8 characters across all controllers, forms, and views.
+  - Scoped dispatcher history queries in `History.php` to assigned routes.
+  - Synchronized vehicle status and seat capacity updates directly to active queue entries.
 
 ---
 

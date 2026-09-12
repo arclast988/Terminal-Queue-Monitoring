@@ -868,7 +868,7 @@
                                 </span>
                                 <?php if (!empty($item['capacity'])): ?>
                                 <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">
-                                    <?= $item['current_passengers'] ?? 0 ?>/<?= $item['capacity'] ?> passengers
+                                    <span class="passenger-count-num <?= passenger_color_class((int)($item['current_passengers'] ?? 0), (int)($item['capacity'] ?? 1)) ?>"><?= $item['current_passengers'] ?? 0 ?></span>/<?= $item['capacity'] ?> passengers
                                 </div>
                                 <?php endif; ?>
                             </td>

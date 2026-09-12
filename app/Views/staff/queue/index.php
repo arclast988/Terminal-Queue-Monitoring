@@ -419,10 +419,15 @@
         letter-spacing: 0.3px;
         margin-top: 2px;
     }
-    .countdown-timer.cd-plenty { background: #e8f5e9; color: #2e7d32; }
-    .countdown-timer.cd-soon { background: #fff3e0; color: #e65100; }
-    .countdown-timer.cd-imminent { background: #ffebee; color: #c62828; animation: cdPulse 1s infinite; }
-    .countdown-timer.cd-passed { background: #dcfce7; color: #15803d; }
+    .countdown-timer.cd-plenty,
+    .countdown-timer.cd-green { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .countdown-timer.cd-yellow { background: #fef9c3; color: #a16207; border: 1px solid #fef08a; }
+    .countdown-timer.cd-soon,
+    .countdown-timer.cd-orange { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+    .countdown-timer.cd-imminent,
+    .countdown-timer.cd-red { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; animation: cdPulse 1s infinite; }
+    .countdown-timer.cd-passed,
+    .countdown-timer.cd-overdue { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; animation: cdPulse 1.2s infinite; }
 
     @keyframes cdPulse {
         0%, 100% { opacity: 1; }
@@ -687,9 +692,10 @@
                             &minus;
                         </button>
                         <span id="passenger-count-<?= $item['id'] ?>"
-                            class="fw-bold <?= $isFull ? 'text-danger' : '' ?>" style="min-width:64px;text-align:center;font-size:15px;">
-                            <?= $item['current_passengers'] ?> / <?= $item['capacity'] ?>
-                            <?php if ($isFull): ?><br><span class="badge-modern badge-modern-danger" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span><?php endif; ?>
+                            data-capacity="<?= (int)$item['capacity'] ?>"
+                            class="fw-bold passenger-count-display" style="min-width:64px;text-align:center;font-size:15px;">
+                            <strong class="passenger-count-num <?= passenger_color_class((int)$item['current_passengers'], (int)$item['capacity']) ?>"><?= $item['current_passengers'] ?></strong> / <?= $item['capacity'] ?>
+                            <span id="full-badge-<?= $item['id'] ?>" class="full-badge-wrap" style="<?= $isFull ? 'display:block;' : 'display:none;' ?>"><span class="badge-modern badge-modern-danger full-badge" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span></span>
                         </span>
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
                             class="btn-counter btn-counter-plus">
@@ -1308,8 +1314,11 @@
         var countSpan = document.getElementById('passenger-count-' + id);
         var capacity = 0;
         if (countSpan) {
-            var parts = countSpan.textContent.trim().split('/');
-            capacity = parseInt(parts[1], 10) || 0;
+            capacity = parseInt(countSpan.getAttribute('data-capacity'), 10);
+            if (!capacity) {
+                var parts = countSpan.textContent.trim().split('/');
+                capacity = parseInt(parts[1], 10) || 0;
+            }
         }
         PassengerDebounce.adjust(id, action, capacity);
     }
@@ -1777,16 +1786,16 @@
             var diff = dep - now;
             if (isNaN(dep.getTime())) { el.textContent = ''; return; }
 
-            el.classList.remove('cd-plenty', 'cd-soon', 'cd-imminent', 'cd-passed');
+            el.classList.remove('cd-plenty', 'cd-green', 'cd-yellow', 'cd-soon', 'cd-orange', 'cd-imminent', 'cd-red', 'cd-passed', 'cd-overdue');
 
             if (diff <= 0) {
                 var overMin = Math.floor(Math.abs(diff) / 60000);
                 if (overMin < 5) {
                     el.textContent = '\u23F1 Departing soon!';
-                    el.classList.add('cd-imminent');
+                    el.classList.add('cd-imminent', 'cd-red');
                 } else {
                     el.textContent = '\u23F1 ' + overMin + 'm overdue';
-                    el.classList.add('cd-passed');
+                    el.classList.add('cd-passed', 'cd-overdue');
                 }
                 return;
             }
@@ -1807,11 +1816,13 @@
             el.textContent = '\u23F1 ' + label;
 
             if (totalSec <= 120) {
-                el.classList.add('cd-imminent');
+                el.classList.add('cd-imminent', 'cd-red');
+            } else if (totalSec <= 300) {
+                el.classList.add('cd-soon', 'cd-orange');
             } else if (totalSec <= 600) {
-                el.classList.add('cd-soon');
+                el.classList.add('cd-yellow');
             } else {
-                el.classList.add('cd-plenty');
+                el.classList.add('cd-plenty', 'cd-green');
             }
         });
     }

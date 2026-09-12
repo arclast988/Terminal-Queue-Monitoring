@@ -542,10 +542,10 @@ class Auth extends BaseController
         $password = (string) $this->request->getVar('password');
         $confirm = (string) $this->request->getVar('confirm_password');
 
-        if (strlen($password) < 6) {
+        if (strlen($password) < 8) {
             return view('auth/reset_password', [
                 'token'   => $token,
-                'error'   => 'Password must be at least 6 characters.',
+                'error'   => 'Password must be at least 8 characters.',
                 'invalid' => false,
             ]);
         }

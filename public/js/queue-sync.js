@@ -45,7 +45,7 @@
     var _wsUpdatedAt = {};
     var WS_COOLDOWN_MS = 2000;
     var _lastPollTimestamp = 0;
-    var WS_CONNECTED_HEARTBEAT_INTERVAL = 10000; // 10s background sync safety poll when WS connected
+    var WS_CONNECTED_HEARTBEAT_INTERVAL = 30000; // 30s background sync safety poll when WS connected
 
     /* ── Passenger UI helpers ── */
 
@@ -61,33 +61,72 @@
     function getBadge(id) {
         var el = document.getElementById('full-badge-' + id);
         if (!el) {
+            var countSpan = getCountSpan(id);
+            if (countSpan) {
+                el = countSpan.querySelector('#full-badge-' + id) || countSpan.querySelector('.full-badge-wrap') || countSpan.querySelector('.full-badge');
+            }
+        }
+        if (!el) {
             var container = document.getElementById('passenger-controls-' + id);
             if (container) {
                 el = container.parentElement
-                    ? container.parentElement.querySelector('.full-badge')
+                    ? (container.parentElement.querySelector('#full-badge-' + id) || container.parentElement.querySelector('.full-badge-wrap') || container.parentElement.querySelector('.full-badge'))
                     : null;
             }
         }
         return el;
     }
 
+    function getPassengerColorClass(count, capacity) {
+        count = parseInt(count, 10) || 0;
+        capacity = parseInt(capacity, 10) || 0;
+        if (capacity <= 0) return 'passenger-color-green';
+        var percent = (count / capacity) * 100;
+        if (percent >= 90) return 'passenger-color-red';
+        if (percent >= 70) return 'passenger-color-orange';
+        if (percent >= 50) return 'passenger-color-yellow';
+        return 'passenger-color-green';
+    }
+    window.getPassengerColorClass = getPassengerColorClass;
+
+    function applyPassengerColor(el, count, capacity) {
+        if (!el) return;
+        el.classList.remove('passenger-color-green', 'passenger-color-yellow', 'passenger-color-orange', 'passenger-color-red', 'p-green', 'p-yellow', 'p-orange', 'p-red', 'text-danger');
+        el.classList.add(getPassengerColorClass(count, capacity));
+    }
+    window.applyPassengerColor = applyPassengerColor;
+
     function updatePassengerUI(id, count, capacity) {
         var span = getCountSpan(id);
         var badge = getBadge(id);
+        var isFull = (parseInt(count, 10) >= parseInt(capacity, 10) && parseInt(capacity, 10) > 0);
 
         if (span) {
+            var colorClass = getPassengerColorClass(count, capacity);
             if (span.classList.contains('passenger-count-num')) {
                 span.textContent = count;
+                applyPassengerColor(span, count, capacity);
             } else {
-                var text = count + ' / ' + capacity;
-                if (span.textContent.trim() !== text) {
-                    span.textContent = text;
+                var innerNum = span.querySelector('.passenger-count-num');
+                if (innerNum) {
+                    innerNum.textContent = count;
+                    applyPassengerColor(innerNum, count, capacity);
+                } else {
+                    span.innerHTML = '<strong class="passenger-count-num ' + colorClass + '">' + count + '</strong> / ' + capacity;
                 }
             }
-            span.classList.toggle('text-danger', count >= capacity);
         }
         if (badge) {
-            badge.style.display = (count >= capacity) ? 'inline-block' : 'none';
+            badge.style.display = isFull ? 'block' : 'none';
+        } else if (span) {
+            if (isFull) {
+                var wrap = document.createElement('span');
+                wrap.id = 'full-badge-' + id;
+                wrap.className = 'full-badge-wrap';
+                wrap.style.display = 'block';
+                wrap.innerHTML = '<span class="badge-modern badge-modern-danger full-badge" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span>';
+                span.appendChild(wrap);
+            }
         }
     }
 
@@ -95,7 +134,7 @@
 
     function sanitizeHtml(html) {
         if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
-            return DOMPurify.sanitize(html, { ADD_ATTR: ['onclick', 'style'] });
+            return DOMPurify.sanitize(html, { ADD_ATTR: ['style'] });
         }
         return html;
     }
@@ -301,14 +340,24 @@
             refreshVehicleModalList(newDoc);
 
             // Re-mount modals (depart confirmation, etc.)
+            // Guard: Never hide or destroy a modal that the user is actively interacting with!
             if (_config.modalSelector) {
+                var openModalIds = {};
                 document.querySelectorAll(_config.modalSelector).forEach(function(m) {
+                    var isOpen = m.classList.contains('show') || !!m.querySelector(':focus');
+                    if (isOpen) {
+                        if (m.id) openModalIds[m.id] = true;
+                        return; // Preserve the open modal
+                    }
                     var inst = (typeof bootstrap !== 'undefined') ? bootstrap.Modal.getInstance(m) : null;
                     if (inst) inst.hide();
                     m.remove();
                 });
                 newDoc.querySelectorAll(_config.modalSelector).forEach(function(m) {
-                    var cleanFragment = DOMPurify.sanitize(m.outerHTML, { ADD_ATTR: ['onclick'], RETURN_DOM_FRAGMENT: true });
+                    if (m.id && openModalIds[m.id]) {
+                        return; // Skip remounting if modal is already open and active
+                    }
+                    var cleanFragment = DOMPurify.sanitize(m.outerHTML, { ADD_ATTR: ['style'], RETURN_DOM_FRAGMENT: true });
                     if (cleanFragment) {
                         document.body.appendChild(cleanFragment);
                     }
@@ -430,7 +479,7 @@
 
     function startPolling() {
         if (_pollTimer) return;
-        var interval = _config ? (_config.pollInterval || 3000) : 3000;
+        var interval = _config ? (_config.pollInterval || 15000) : 15000;
         _pollTimer = setInterval(function() {
             if (!_paused) {
                 var isWSConnected = (typeof QueueWS !== 'undefined' && QueueWS.isConnected && QueueWS.isConnected());

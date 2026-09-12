@@ -69,8 +69,9 @@ class Session extends BaseConfig
         if (DIRECTORY_SEPARATOR === '/' && (strpos(WRITEPATH, '/mnt/') === 0 || strpos(WRITEPATH, '/media/') === 0)) {
             $this->savePath = '/tmp/jeepneynvans_session';
             if (!is_dir($this->savePath)) {
-                @mkdir($this->savePath, 0777, true);
+                @mkdir($this->savePath, 0700, true);
             }
+            @chmod($this->savePath, 0700);
         }
     }
 

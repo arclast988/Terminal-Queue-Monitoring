@@ -769,6 +769,12 @@
                 updateInputValue();
             });
 
+            selectEl.addEventListener('input', () => {
+                updateInputValue();
+            });
+
+            selectEl.syncAutocompleteValue = updateInputValue;
+
             searchInput.addEventListener('keydown', (e) => {
                 const items = dropdown.querySelectorAll('.autocomplete-item');
                 if (dropdown.style.display === 'none' || items.length === 0) return;

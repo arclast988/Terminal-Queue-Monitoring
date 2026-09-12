@@ -125,10 +125,10 @@ class Vehicles extends BaseController
                 ],
             ],
             'driver_name'   => [
-                'rules'  => 'required|min_length[3]|max_length[100]',
+                'rules'  => 'required|min_length[2]|max_length[100]',
                 'errors' => [
                     'required'   => 'Please enter the driver name.',
-                    'min_length' => 'Driver name must be at least 3 characters.',
+                    'min_length' => 'Driver name must be at least 2 characters.',
                     'max_length' => 'Driver name cannot exceed 100 characters.',
                 ],
             ],
@@ -269,10 +269,10 @@ class Vehicles extends BaseController
                 ],
             ],
             'driver_name'   => [
-                'rules'  => 'required|min_length[3]|max_length[100]',
+                'rules'  => 'required|min_length[2]|max_length[100]',
                 'errors' => [
                     'required'   => 'Please enter the driver name.',
-                    'min_length' => 'Driver name must be at least 3 characters.',
+                    'min_length' => 'Driver name must be at least 2 characters.',
                     'max_length' => 'Driver name cannot exceed 100 characters.',
                 ],
             ],
@@ -375,6 +375,17 @@ class Vehicles extends BaseController
             'default_route_id' => $routeId,
         ]);
 
+        // Synchronize active queue snapshots so live boards and dispatch cards reflect changes immediately
+        $queueModel = new \App\Models\QueueModel();
+        $queueModel->where('vehicle_id', $id)
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->set([
+                'plate_number'  => $rawPlate,
+                'operator_name' => $rawOperator,
+                'driver_name'   => $driverName,
+            ])
+            ->update();
+
         // Log route change details if route was reassigned
         $oldRouteId = $vehicle['default_route_id'];
         if ((string) $oldRouteId !== (string) $routeId) {
@@ -414,6 +425,20 @@ class Vehicles extends BaseController
         }
 
         $this->vehicleModel->update($id, ['status' => 'archived']);
+
+        // Cancel any active trips for this archived vehicle so it doesn't stay stranded in the live queue
+        $queueModel = new \App\Models\QueueModel();
+        $activeTrips = $queueModel->where('vehicle_id', $id)
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->findAll();
+        if (!empty($activeTrips)) {
+            $queueModel->where('vehicle_id', $id)
+                ->whereIn('status', ['waiting', 'boarding'])
+                ->set(['status' => 'canceled'])
+                ->update();
+            $queueModel->reorderByDeparture();
+        }
+
         $this->logActivity('Deactivate vehicle', 'Deactivated vehicle ' . $vehicle['plate_number'] . '.');
         $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
 

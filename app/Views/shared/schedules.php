@@ -366,14 +366,11 @@
                                         <small class="text-muted d-block mt-1">Departed</small>
                                     <?php else: ?>
                                         <div class="sched-dep-cell" id="shared-dep-cell-<?= $qid ?>">
-                                            <span class="badge-modern badge-modern-success full-badge" id="full-badge-<?= $qid ?>" style="<?= $s['is_full'] ? '' : 'display:none;' ?>">
-                                                FULL — Ready
-                                            </span>
-                                            <span class="badge-modern badge-modern-primary" id="shared-dep-time-<?= $qid ?>" style="<?= $s['is_full'] ? 'display:none;' : '' ?>">
+                                            <span class="badge-modern badge-modern-primary" id="shared-dep-time-<?= $qid ?>">
                                                 <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'Waiting' ?>
                                             </span>
-                                            <small class="text-muted d-block mt-1" id="shared-passengers-text-<?= $qid ?>" style="<?= $s['is_full'] ? 'display:none;' : '' ?>">
-                                                <span id="passenger-count-<?= $qid ?>" class="passenger-count-num"><?= $s['current_passengers'] ?></span>/<?= $s['capacity'] ?> passengers
+                                            <small class="text-muted d-block mt-1" id="shared-passengers-text-<?= $qid ?>">
+                                                <span id="passenger-count-<?= $qid ?>" class="passenger-count-num <?= passenger_color_class((int)$s['current_passengers'], (int)$s['capacity']) ?>"><?= $s['current_passengers'] ?></span>/<?= $s['capacity'] ?> passengers
                                             </small>
                                         </div>
                                     <?php endif; ?>
@@ -498,9 +495,6 @@
     function updateSharedScheduleRowPassengers(queueId, newCount, capacity) {
         if (!queueId) return;
         var countSpan = document.getElementById('passenger-count-' + queueId);
-        var fullBadge = document.getElementById('full-badge-' + queueId);
-        var timeSpan = document.getElementById('shared-dep-time-' + queueId);
-        var passText = document.getElementById('shared-passengers-text-' + queueId);
 
         newCount = parseInt(newCount, 10);
         capacity = parseInt(capacity, 10);
@@ -509,18 +503,12 @@
 
         if (countSpan) {
             countSpan.textContent = newCount;
+            if (typeof applyPassengerColor === 'function') {
+                applyPassengerColor(countSpan, newCount, capacity);
+            }
             countSpan.classList.remove('pulse-update');
             void countSpan.offsetWidth;
             countSpan.classList.add('pulse-update');
-        }
-        if (fullBadge) {
-            fullBadge.style.display = isFull ? 'inline-block' : 'none';
-        }
-        if (timeSpan) {
-            timeSpan.style.display = isFull ? 'none' : 'inline-block';
-        }
-        if (passText) {
-            passText.style.display = isFull ? 'none' : 'block';
         }
     }
 

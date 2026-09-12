@@ -1483,10 +1483,15 @@
             letter-spacing: 0.3px;
         }
 
-        .countdown-timer.cd-plenty { background: #e8f5e9; color: #2e7d32; }
-        .countdown-timer.cd-soon { background: #fff3e0; color: #e65100; }
-        .countdown-timer.cd-imminent { background: #ffebee; color: #c62828; animation: cdPulse 1s infinite; }
-        .countdown-timer.cd-passed { background: #e3f2fd; color: #1565c0; }
+        .countdown-timer.cd-plenty,
+        .countdown-timer.cd-green { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .countdown-timer.cd-yellow { background: #fef9c3; color: #a16207; border: 1px solid #fef08a; }
+        .countdown-timer.cd-soon,
+        .countdown-timer.cd-orange { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .countdown-timer.cd-imminent,
+        .countdown-timer.cd-red { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; animation: cdPulse 1s infinite; }
+        .countdown-timer.cd-passed,
+        .countdown-timer.cd-overdue { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; animation: cdPulse 1.2s infinite; }
 
         @keyframes cdPulse {
             0%, 100% { opacity: 1; }
@@ -2219,7 +2224,7 @@
                                         <div class="passenger-status-block">
                                             <div class="passenger-count-row">
                                                 <i class="fas fa-users text-primary"></i>
-                                                <span class="passenger-count-text"><strong><?= $item['current_passengers'] ?></strong> / <?= $item['capacity'] ?> Onboard</span>
+                                                <span class="passenger-count-text"><strong class="passenger-count-num <?= passenger_color_class((int)$item['current_passengers'], (int)$item['capacity']) ?>"><?= $item['current_passengers'] ?></strong> / <?= $item['capacity'] ?> Onboard</span>
                                                 <?php if ((int) $item['current_passengers'] >= (int) $item['capacity']): ?>
                                                     <span class="badge-full-tag">FULL</span>
                                                 <?php endif; ?>
@@ -2800,7 +2805,7 @@
                 + '<div class="passenger-status-block">'
                 + '<div class="passenger-count-row">'
                 + '<i class="fas fa-users text-primary"></i>'
-                + '<span class="passenger-count-text"><strong>' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard</span>'
+                + '<span class="passenger-count-text"><strong class="passenger-count-num ' + (typeof getPassengerColorClass === 'function' ? getPassengerColorClass(item.current_passengers, item.capacity) : (percent >= 90 ? 'passenger-color-red' : (percent >= 70 ? 'passenger-color-orange' : (percent >= 50 ? 'passenger-color-yellow' : 'passenger-color-green')))) + '">' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard</span>'
                 + fullBadge
                 + '</div>'
                 + '<div class="progress progress-modern">'
@@ -2829,10 +2834,11 @@
             var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
             var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
             var isFull = Number(item.current_passengers) >= Number(item.capacity);
+            var pColorClass = typeof getPassengerColorClass === 'function' ? getPassengerColorClass(item.current_passengers, item.capacity) : (percent >= 90 ? 'passenger-color-red' : (percent >= 70 ? 'passenger-color-orange' : (percent >= 50 ? 'passenger-color-yellow' : 'passenger-color-green')));
 
             // 1. Update passenger count text without rebuilding container
             var countText = card.querySelector('.passenger-count-text');
-            var newCountHtml = '<strong>' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard';
+            var newCountHtml = '<strong class="passenger-count-num ' + pColorClass + '">' + item.current_passengers + '</strong> / ' + item.capacity + ' Onboard';
             if (countText) {
                 if (countText.innerHTML !== newCountHtml) {
                     countText.innerHTML = newCountHtml;
@@ -3132,7 +3138,7 @@
         // Initialize real-time sync. WebSocket messages refresh immediately;
         // polling still runs as the fallback if the socket is unavailable.
         QueueSync.init({
-            pollInterval: 3000,
+            pollInterval: 15000,
             customRefresh: fetchStatus,
             customWSHandler: fetchStatus
         });
@@ -3149,16 +3155,16 @@
                 var diff = dep - now;
                 if (isNaN(dep.getTime())) { el.textContent = ''; return; }
 
-                el.classList.remove('cd-plenty', 'cd-soon', 'cd-imminent', 'cd-passed');
+                el.classList.remove('cd-plenty', 'cd-green', 'cd-yellow', 'cd-soon', 'cd-orange', 'cd-imminent', 'cd-red', 'cd-passed', 'cd-overdue');
 
                 if (diff <= 0) {
                     var overMin = Math.floor(Math.abs(diff) / 60000);
                     if (overMin < 5) {
                         el.textContent = '⏱ Departing soon!';
-                        el.classList.add('cd-imminent');
+                        el.classList.add('cd-imminent', 'cd-red');
                     } else {
                         el.textContent = '⏱ ' + overMin + 'm overdue';
-                        el.classList.add('cd-passed');
+                        el.classList.add('cd-passed', 'cd-overdue');
                     }
                     return;
                 }
@@ -3179,11 +3185,13 @@
                 el.textContent = '⏱ ' + label;
 
                 if (totalSec <= 120) {
-                    el.classList.add('cd-imminent');
+                    el.classList.add('cd-imminent', 'cd-red');
+                } else if (totalSec <= 300) {
+                    el.classList.add('cd-soon', 'cd-orange');
                 } else if (totalSec <= 600) {
-                    el.classList.add('cd-soon');
+                    el.classList.add('cd-yellow');
                 } else {
-                    el.classList.add('cd-plenty');
+                    el.classList.add('cd-plenty', 'cd-green');
                 }
             });
         }

@@ -204,7 +204,7 @@ if ! grep -qF "$ENV_MARKER" "$ENV_FILE"; then
     cat >> "$ENV_FILE" <<EOF
 
 $ENV_MARKER
-CI_ENVIRONMENT = development
+CI_ENVIRONMENT = production
 # Explicit localhost baseURL: reliable for a single-machine setup (e.g. a
 # classroom Linux Mint demo). For LAN/multi-device access, set this to the
 # machine's LAN IP (or '' to auto-detect the request host) in .env on that box.

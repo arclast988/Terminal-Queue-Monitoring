@@ -146,14 +146,30 @@ html, body {
    ================================================================= */
 @media (max-width: 768px) {
     /* Touch target for buttons */
-    .btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close), 
-    button.btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close) {
+    .btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close):not(.d-none):not([style*="display: none"]):not([style*="display:none"]), 
+    button.btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close):not(.d-none):not([style*="display: none"]):not([style*="display:none"]) {
         min-height: 44px !important;
         padding: 0.5rem 1.25rem !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
         font-size: 15px !important;
+    }
+
+    /* Ensure hidden elements and modal buttons are never forced visible on mobile */
+    .btn.d-none,
+    button.btn.d-none,
+    .btn[style*="display: none"],
+    .btn[style*="display:none"],
+    button[style*="display: none"],
+    button[style*="display:none"],
+    #modalRemoveAvatarBtn.d-none,
+    #modalRemoveAvatarBtn[style*="display: none"],
+    #modalRemoveAvatarBtn[style*="display:none"],
+    .modal-footer .btn.d-none,
+    .modal-footer .btn[style*="display: none"],
+    .modal-footer .btn[style*="display:none"] {
+        display: none !important;
     }
 
     /* Form input touch targets */
@@ -1179,7 +1195,7 @@ body.staff-theme .form-select:focus {
         gap: 0.5rem;
     }
 
-    .modal-footer .btn {
+    .modal-footer .btn:not(.d-none):not([style*="display: none"]):not([style*="display:none"]) {
         flex: 1 1 auto;
         min-width: 110px;
     }
@@ -2389,18 +2405,10 @@ a[title*="delete" i]:hover .bi,
   html body table.table tbody tr td[data-label="User"],
   html body table.table-modern tbody tr td[data-label="Assigned Routes"],
   html body table.table tbody tr td[data-label="Assigned Routes"],
-  html body table.table-modern tbody tr td[data-label="Assigned Route"],
-  html body table.table tbody tr td[data-label="Assigned Route"],
-  html body table.table-modern tbody tr td[data-label="Route"],
-  html body table.table tbody tr td[data-label="Route"],
-  html body table.table-modern tbody tr td[data-label="Routes"],
-  html body table.table tbody tr td[data-label="Routes"],
   html body table.table-modern tbody tr td[data-label="Details"],
   html body table.table tbody tr td[data-label="Details"],
   html body table.table-modern tbody tr td[data-label="Message"],
-  html body table.table tbody tr td[data-label="Message"],
-  html body table.table-modern tbody tr td[data-label="Location"],
-  html body table.table tbody tr td[data-label="Location"] {
+  html body table.table tbody tr td[data-label="Message"] {
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
@@ -2413,18 +2421,10 @@ a[title*="delete" i]:hover .bi,
   html body table.table tbody tr td[data-label="User"]::before,
   html body table.table-modern tbody tr td[data-label="Assigned Routes"]::before,
   html body table.table tbody tr td[data-label="Assigned Routes"]::before,
-  html body table.table-modern tbody tr td[data-label="Assigned Route"]::before,
-  html body table.table tbody tr td[data-label="Assigned Route"]::before,
-  html body table.table-modern tbody tr td[data-label="Route"]::before,
-  html body table.table tbody tr td[data-label="Route"]::before,
-  html body table.table-modern tbody tr td[data-label="Routes"]::before,
-  html body table.table tbody tr td[data-label="Routes"]::before,
   html body table.table-modern tbody tr td[data-label="Details"]::before,
   html body table.table tbody tr td[data-label="Details"]::before,
   html body table.table-modern tbody tr td[data-label="Message"]::before,
-  html body table.table tbody tr td[data-label="Message"]::before,
-  html body table.table-modern tbody tr td[data-label="Location"]::before,
-  html body table.table tbody tr td[data-label="Location"]::before {
+  html body table.table tbody tr td[data-label="Message"]::before {
     width: 100% !important;
     max-width: 100% !important;
     padding-right: 0 !important;
@@ -2436,22 +2436,52 @@ a[title*="delete" i]:hover .bi,
   html body table.table tbody tr td[data-label="User"] > *,
   html body table.table-modern tbody tr td[data-label="Assigned Routes"] > *,
   html body table.table tbody tr td[data-label="Assigned Routes"] > *,
-  html body table.table-modern tbody tr td[data-label="Assigned Route"] > *,
-  html body table.table tbody tr td[data-label="Assigned Route"] > *,
-  html body table.table-modern tbody tr td[data-label="Route"] > *,
-  html body table.table tbody tr td[data-label="Route"] > *,
-  html body table.table-modern tbody tr td[data-label="Routes"] > *,
-  html body table.table tbody tr td[data-label="Routes"] > *,
   html body table.table-modern tbody tr td[data-label="Details"] > *,
   html body table.table tbody tr td[data-label="Details"] > *,
   html body table.table-modern tbody tr td[data-label="Message"] > *,
-  html body table.table tbody tr td[data-label="Message"] > *,
-  html body table.table-modern tbody tr td[data-label="Location"] > *,
-  html body table.table tbody tr td[data-label="Location"] > * {
+  html body table.table tbody tr td[data-label="Message"] > * {
     width: 100% !important;
     max-width: 100% !important;
     text-align: left !important;
     justify-content: flex-start !important;
+  }
+
+  /* Explicit row and right alignment on mobile for Route, Location, Assigned Route, etc. */
+  html body table.table-modern tbody tr td[data-label="Route"],
+  html body table.table tbody tr td[data-label="Route"],
+  html body table.table-modern tbody tr td[data-label="Routes"],
+  html body table.table tbody tr td[data-label="Routes"],
+  html body table.table-modern tbody tr td[data-label="Location"],
+  html body table.table tbody tr td[data-label="Location"],
+  html body table.table-modern tbody tr td[data-label="Assigned Route"],
+  html body table.table tbody tr td[data-label="Assigned Route"],
+  html body table.table-modern tbody tr td.schedule-route-cell,
+  html body table.table tbody tr td.schedule-route-cell {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    text-align: right !important;
+    min-width: 0 !important;
+  }
+
+  html body table.table-modern tbody tr td[data-label="Route"] .schedule-route-display,
+  html body table.table tbody tr td[data-label="Route"] .schedule-route-display,
+  html body table.table-modern tbody tr td[data-label="Route"] .route-info,
+  html body table.table tbody tr td[data-label="Route"] .route-info,
+  html body table.table-modern tbody tr td[data-label="Route"] > div,
+  html body table.table tbody tr td[data-label="Route"] > div,
+  html body table.table-modern tbody tr td[data-label="Assigned Route"] .route-info,
+  html body table.table tbody tr td[data-label="Assigned Route"] .route-info,
+  html body table.table-modern tbody tr td[data-label="Assigned Route"] > div,
+  html body table.table tbody tr td[data-label="Assigned Route"] > div {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    text-align: right !important;
+    gap: 6px !important;
+    flex-wrap: wrap !important;
+    max-width: 65% !important;
   }
 
   /* User avatar and text layout inside table cards */
@@ -2982,8 +3012,8 @@ a[title*="delete" i]:hover .bi,
   }
 
   /* Row-aligned cells (label left, value right): give value ample room */
-  html body table.table-modern tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Assigned Route"]):not([data-label="Route"]):not([data-label="Routes"]):not([data-label="Details"]):not([data-label="Message"]):not([data-label="Location"]):not([data-label="Operator Name"]):not([data-label="Driver Name"])::before,
-  html body table.table tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Assigned Route"]):not([data-label="Route"]):not([data-label="Routes"]):not([data-label="Details"]):not([data-label="Message"]):not([data-label="Location"]):not([data-label="Operator Name"]):not([data-label="Driver Name"])::before {
+  html body table.table-modern tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"])::before,
+  html body table.table tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"])::before {
     font-size: 11px !important;
     padding-right: 8px !important;
     flex: 0 0 auto !important;
@@ -2992,8 +3022,8 @@ a[title*="delete" i]:hover .bi,
     line-height: 1.2 !important;
   }
 
-  html body table.table-modern tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Assigned Route"]):not([data-label="Route"]):not([data-label="Routes"]):not([data-label="Details"]):not([data-label="Message"]):not([data-label="Location"]):not([data-label="Operator Name"]):not([data-label="Driver Name"]) > *,
-  html body table.table tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Assigned Route"]):not([data-label="Route"]):not([data-label="Routes"]):not([data-label="Details"]):not([data-label="Message"]):not([data-label="Location"]):not([data-label="Operator Name"]):not([data-label="Driver Name"]) > * {
+  html body table.table-modern tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"]) > *,
+  html body table.table tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"]) > * {
     max-width: 65% !important;
     font-size: 12.5px !important;
     overflow-wrap: break-word !important;
@@ -3016,22 +3046,10 @@ a[title*="delete" i]:hover .bi,
   html body table.table tbody tr td[data-label="User"],
   html body table.table-modern tbody tr td[data-label="Assigned Routes"],
   html body table.table tbody tr td[data-label="Assigned Routes"],
-  html body table.table-modern tbody tr td[data-label="Assigned Route"],
-  html body table.table tbody tr td[data-label="Assigned Route"],
-  html body table.table-modern tbody tr td[data-label="Route"],
-  html body table.table tbody tr td[data-label="Route"],
-  html body table.table-modern tbody tr td[data-label="Routes"],
-  html body table.table tbody tr td[data-label="Routes"],
   html body table.table-modern tbody tr td[data-label="Details"],
   html body table.table tbody tr td[data-label="Details"],
   html body table.table-modern tbody tr td[data-label="Message"],
-  html body table.table tbody tr td[data-label="Message"],
-  html body table.table-modern tbody tr td[data-label="Location"],
-  html body table.table tbody tr td[data-label="Location"],
-  html body table.table-modern tbody tr td[data-label="Operator Name"],
-  html body table.table tbody tr td[data-label="Operator Name"],
-  html body table.table-modern tbody tr td[data-label="Driver Name"],
-  html body table.table tbody tr td[data-label="Driver Name"] {
+  html body table.table tbody tr td[data-label="Message"] {
     flex-direction: column !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
@@ -3044,22 +3062,10 @@ a[title*="delete" i]:hover .bi,
   html body table.table tbody tr td[data-label="User"]::before,
   html body table.table-modern tbody tr td[data-label="Assigned Routes"]::before,
   html body table.table tbody tr td[data-label="Assigned Routes"]::before,
-  html body table.table-modern tbody tr td[data-label="Assigned Route"]::before,
-  html body table.table tbody tr td[data-label="Assigned Route"]::before,
-  html body table.table-modern tbody tr td[data-label="Route"]::before,
-  html body table.table tbody tr td[data-label="Route"]::before,
-  html body table.table-modern tbody tr td[data-label="Routes"]::before,
-  html body table.table tbody tr td[data-label="Routes"]::before,
   html body table.table-modern tbody tr td[data-label="Details"]::before,
   html body table.table tbody tr td[data-label="Details"]::before,
   html body table.table-modern tbody tr td[data-label="Message"]::before,
-  html body table.table tbody tr td[data-label="Message"]::before,
-  html body table.table-modern tbody tr td[data-label="Location"]::before,
-  html body table.table tbody tr td[data-label="Location"]::before,
-  html body table.table-modern tbody tr td[data-label="Operator Name"]::before,
-  html body table.table tbody tr td[data-label="Operator Name"]::before,
-  html body table.table-modern tbody tr td[data-label="Driver Name"]::before,
-  html body table.table tbody tr td[data-label="Driver Name"]::before {
+  html body table.table tbody tr td[data-label="Message"]::before {
     font-size: 11px !important;
     width: 100% !important;
     max-width: 100% !important;
@@ -3072,22 +3078,10 @@ a[title*="delete" i]:hover .bi,
   html body table.table tbody tr td[data-label="User"] > *,
   html body table.table-modern tbody tr td[data-label="Assigned Routes"] > *,
   html body table.table tbody tr td[data-label="Assigned Routes"] > *,
-  html body table.table-modern tbody tr td[data-label="Assigned Route"] > *,
-  html body table.table tbody tr td[data-label="Assigned Route"] > *,
-  html body table.table-modern tbody tr td[data-label="Route"] > *,
-  html body table.table tbody tr td[data-label="Route"] > *,
-  html body table.table-modern tbody tr td[data-label="Routes"] > *,
-  html body table.table tbody tr td[data-label="Routes"] > *,
   html body table.table-modern tbody tr td[data-label="Details"] > *,
   html body table.table tbody tr td[data-label="Details"] > *,
   html body table.table-modern tbody tr td[data-label="Message"] > *,
-  html body table.table tbody tr td[data-label="Message"] > *,
-  html body table.table-modern tbody tr td[data-label="Location"] > *,
-  html body table.table tbody tr td[data-label="Location"] > *,
-  html body table.table-modern tbody tr td[data-label="Operator Name"] > *,
-  html body table.table tbody tr td[data-label="Operator Name"] > *,
-  html body table.table-modern tbody tr td[data-label="Driver Name"] > *,
-  html body table.table tbody tr td[data-label="Driver Name"] > * {
+  html body table.table tbody tr td[data-label="Message"] > * {
     width: 100% !important;
     max-width: 100% !important;
     text-align: left !important;
@@ -3197,8 +3191,8 @@ a[title*="delete" i]:hover .bi,
     flex-shrink: 0 !important;
     gap: 8px !important;
   }
-  .modal-footer .btn,
-  .modal-footer .btn-modern {
+  .modal-footer .btn:not(.d-none):not([style*="display: none"]):not([style*="display:none"]),
+  .modal-footer .btn-modern:not(.d-none):not([style*="display: none"]):not([style*="display:none"]) {
     margin: 0 !important;
     min-height: 40px !important;
   }

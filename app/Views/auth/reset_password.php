@@ -295,7 +295,7 @@
                 <div class="field password">
                     <label for="password">New password</label>
                     <div class="control">
-                        <input type="password" id="password" name="password" placeholder="At least 6 characters" autocomplete="new-password" required minlength="6" autofocus>
+                        <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8" autofocus>
                         <button type="button" class="toggle" aria-pressed="false" aria-label="Show password">
                             <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
@@ -312,14 +312,14 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/>
                         </svg>
-                        <span>At least 6 characters</span>
+                        <span>At least 8 characters</span>
                     </p>
                 </div>
 
                 <div class="field password">
                     <label for="confirm_password">Confirm password</label>
                     <div class="control">
-                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat new password" autocomplete="new-password" required minlength="6">
+                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat new password" autocomplete="new-password" required minlength="8">
                         <button type="button" class="toggle" aria-pressed="false" aria-label="Show password">
                             <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
@@ -372,12 +372,12 @@
             var hint = document.getElementById('pwHint');
             if (pw && hint) {
                 pw.addEventListener('input', function () {
-                    if (pw.value.length >= 6) {
+                    if (pw.value.length >= 8) {
                         hint.classList.add('ok');
                         hint.querySelector('span').textContent = 'Looks good';
                     } else {
                         hint.classList.remove('ok');
-                        hint.querySelector('span').textContent = 'At least 6 characters';
+                        hint.querySelector('span').textContent = 'At least 8 characters';
                     }
                 });
             }

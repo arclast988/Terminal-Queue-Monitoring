@@ -985,3 +985,35 @@ input[name="operator_name"] {
   animation: gl-shake 0.38s ease-in-out !important;
 }
 
+/* ==========================================================================
+   Passenger Count Dynamic Colors (Green -> Yellow -> Orange -> Red)
+   ========================================================================== */
+.passenger-color-green,
+.passenger-count-num.passenger-color-green,
+.passenger-count-num.p-green {
+  color: #16a34a !important; /* Green (< 50%) */
+  font-weight: 700 !important;
+}
+
+.passenger-color-yellow,
+.passenger-count-num.passenger-color-yellow,
+.passenger-count-num.p-yellow {
+  color: #ca8a04 !important; /* Yellow (50% - 69%) */
+  font-weight: 700 !important;
+}
+
+.passenger-color-orange,
+.passenger-count-num.passenger-color-orange,
+.passenger-count-num.p-orange {
+  color: #ea580c !important; /* Orange (70% - 89%) */
+  font-weight: 700 !important;
+}
+
+.passenger-color-red,
+.passenger-count-num.passenger-color-red,
+.passenger-count-num.p-red {
+  color: #dc2626 !important; /* Red (>= 90%) */
+  font-weight: 700 !important;
+}
+
+

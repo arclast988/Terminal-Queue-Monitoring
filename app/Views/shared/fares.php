@@ -1488,12 +1488,35 @@ function filterAddDestinationOptions() {
     }
 }
 
+// Helper to synchronize visible autocomplete input with the underlying select element
+function syncAddDestinationUI() {
+    const destSelect = document.getElementById('add_destination');
+    if (!destSelect) return;
+    if (typeof destSelect.syncAutocompleteValue === 'function') {
+        destSelect.syncAutocompleteValue();
+    }
+    const wrapper = destSelect.closest('.autocomplete-wrapper');
+    if (wrapper) {
+        const searchInput = wrapper.querySelector('input[type="text"]');
+        const selectedOpt = destSelect.options[destSelect.selectedIndex];
+        if (searchInput && selectedOpt && selectedOpt.value) {
+            searchInput.value = selectedOpt.text.trim();
+            const optColor = selectedOpt.getAttribute('data-color');
+            searchInput.style.color = optColor || '';
+            searchInput.style.borderColor = optColor || '';
+            const clearBtn = wrapper.querySelector('.autocomplete-clear-btn');
+            if (clearBtn) clearBtn.style.display = 'inline-flex';
+        }
+    }
+}
+
 // Modal lifecycle listeners
 var addFareModalEl = document.getElementById('addFareModal');
 if (addFareModalEl) {
     addFareModalEl.addEventListener('shown.bs.modal', function() {
         filterAddDestinationOptions();
         validateAddFareForm();
+        syncAddDestinationUI();
     });
     addFareModalEl.addEventListener('hidden.bs.modal', function() {
         if (addForm) {
@@ -1504,6 +1527,11 @@ if (addFareModalEl) {
         var destSelect = document.getElementById('add_destination');
         if (destSelect) {
             destSelect.classList.remove('is-invalid');
+            destSelect.value = '';
+            destSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            if (typeof destSelect.syncAutocompleteValue === 'function') {
+                destSelect.syncAutocompleteValue();
+            }
         }
         var feedback = document.getElementById('add_fare_route_feedback');
         if (feedback) {
@@ -1541,11 +1569,20 @@ document.addEventListener('DOMContentLoaded', function() {
             if (targetDest) {
                 const destSelect = document.getElementById('add_destination');
                 if (destSelect) {
+                    let matched = false;
                     for (let i = 0; i < destSelect.options.length; i++) {
-                        if (destSelect.options[i].value.toUpperCase() === targetDest.toUpperCase()) {
+                        const optVal = (destSelect.options[i].value || '').trim().toUpperCase();
+                        const optDest = (destSelect.options[i].getAttribute('data-destination') || '').trim().toUpperCase();
+                        if (optVal === targetDest.toUpperCase() || optDest === targetDest.toUpperCase()) {
                             destSelect.selectedIndex = i;
+                            matched = true;
                             break;
                         }
+                    }
+                    if (matched) {
+                        destSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        destSelect.dispatchEvent(new Event('input', { bubbles: true }));
+                        syncAddDestinationUI();
                     }
                 }
             }
@@ -1559,6 +1596,7 @@ document.addEventListener('DOMContentLoaded', function() {
             bsModal.show();
 
             setTimeout(() => {
+                syncAddDestinationUI();
                 validateAddFareForm();
                 const fareInput = addModalEl.querySelector('input[name="fare"]');
                 if (fareInput) fareInput.focus();
@@ -1580,7 +1618,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var destInput = document.getElementById('add_destination');
         if (destInput) {
             destInput.value = <?= json_encode(old('destination')) ?>;
-            destInput.dispatchEvent(new Event('change'));
+            destInput.dispatchEvent(new Event('change', { bubbles: true }));
+            syncAddDestinationUI();
         }
         var fareInput = document.querySelector('#addFareForm input[name="fare"]');
         if (fareInput && <?= json_encode(old('fare')) ?>) {

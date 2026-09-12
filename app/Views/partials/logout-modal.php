@@ -252,6 +252,15 @@ function confirmLogout(event) {
         event.stopPropagation();
     }
 
+    // Track whether logout was initiated from the user profile dropdown
+    var profileDropdownEl = document.getElementById('userProfileDropdown');
+    if ((event && event.target && event.target.closest('#userProfileDropdown')) || (profileDropdownEl && profileDropdownEl.classList.contains('open'))) {
+        window._logoutFromProfileDropdown = true;
+    } else {
+        window._logoutFromProfileDropdown = false;
+    }
+    window._logoutConfirmed = false;
+
     // If mobile navigation drawer is currently open, close it cleanly first
     var adminMobileMenu = document.querySelector('header .nav-menu.mobile-open');
     if (adminMobileMenu && typeof toggleAdminMobileMenu === 'function') {
@@ -285,4 +294,40 @@ function confirmLogout(event) {
     }
     return false;
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    var modalEl = document.getElementById('logoutModal');
+    var confirmBtn = document.getElementById('btnConfirmLogout');
+    var cancelBtn = modalEl ? modalEl.querySelector('.logout-btn-cancel') : null;
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            window._logoutConfirmed = true;
+        });
+    }
+
+    function keepProfileDropdownOpen() {
+        if (!window._logoutConfirmed && window._logoutFromProfileDropdown) {
+            var profileDropdown = document.getElementById('userProfileDropdown');
+            var profileBtn = document.getElementById('userProfileBtn');
+            if (profileDropdown) {
+                profileDropdown.classList.add('open');
+                if (profileBtn) profileBtn.setAttribute('aria-expanded', 'true');
+            }
+        }
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function () {
+            keepProfileDropdownOpen();
+        });
+    }
+
+    if (modalEl) {
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            keepProfileDropdownOpen();
+            window._logoutFromProfileDropdown = false;
+        });
+    }
+});
 </script>

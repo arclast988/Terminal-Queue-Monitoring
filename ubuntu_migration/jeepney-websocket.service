@@ -9,8 +9,9 @@ User=www-data
 Group=www-data
 WorkingDirectory=/var/www/jeepneynvans
 ExecStart=/usr/bin/php spark ws:serve
-Restart=on-failure
+Restart=always
 RestartSec=5s
+Environment=websocket.bindAddress=127.0.0.1
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=jeepney-websocket

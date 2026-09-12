@@ -28,6 +28,13 @@
 <?php endif; ?>
 
 <?php
+$defaultAvatarSvg = <<<SVG
+<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" />
+    <path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" />
+</svg>
+SVG;
+
 // Compute summary counts or fallback
 $totalActiveUsers = $countActive ?? 0;
 $countAdmin = $countAdmin ?? 0;
@@ -161,19 +168,9 @@ if (!isset($countActive)) {
                                                 <?php if (!empty($user['profile_image'])): ?>
                                                     <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                                 <?php else: ?>
-                                                    <span><?= esc($initials) ?></span>
-                                                <?php endif; ?>
-                                                <?php if ($canChangeAvatar): ?>
-                                                    <div class="avatar-hover-overlay">
-                                                        <i class="bi bi-camera-fill"></i>
-                                                    </div>
+                                                    <?= $defaultAvatarSvg ?>
                                                 <?php endif; ?>
                                             </div>
-                                            <?php if ($canChangeAvatar): ?>
-                                                <span class="avatar-edit-badge" title="Change photo">
-                                                    <i class="bi bi-camera-fill"></i>
-                                                </span>
-                                            <?php endif; ?>
                                         </div>
                                         <div class="user-info-text" style="min-width: 0; flex: 1 1 auto;">
                                             <div class="fw-bold d-flex align-items-center flex-wrap gap-1" style="font-size:14.5px; color: inherit;">
@@ -428,66 +425,26 @@ if (!isset($countActive)) {
         letter-spacing: 0.5px;
         overflow: hidden;
         position: relative;
+        background: #F1F5F9;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .avatar-super-admin {
-        background: #B71C1C;
-        border: 2.5px solid rgba(183, 28, 28, 0.3);
+        border: 2.5px solid rgba(183, 28, 28, 0.45);
     }
     .avatar-admin {
-        background: #dc2626;
-        border: 2.5px solid rgba(220, 38, 38, 0.25);
+        border: 2.5px solid rgba(220, 38, 38, 0.4);
     }
     .avatar-dispatcher {
-        background: #15803d;
-        border: 2.5px solid rgba(21, 128, 61, 0.3);
+        border: 2.5px solid rgba(21, 128, 61, 0.4);
     }
 
     .avatar-editable {
         cursor: pointer;
     }
     .avatar-editable:hover .avatar-circle {
-        transform: scale(1.05);
+        transform: scale(1.06);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    }
-    .avatar-hover-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-size: 16px;
-        opacity: 0;
-        transition: opacity 0.2s ease;
-        border-radius: 50%;
-    }
-    .avatar-editable:hover .avatar-hover-overlay {
-        opacity: 1;
-    }
-    .avatar-edit-badge {
-        position: absolute;
-        bottom: -2px;
-        right: -2px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #0f172a;
-        color: #fff;
-        border: 1.5px solid #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        pointer-events: none;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s ease;
-    }
-    .avatar-editable:hover .avatar-edit-badge {
-        transform: scale(1.15);
-        background: var(--primary-red, #b71c1c);
     }
 
     .vf-count {
@@ -845,7 +802,7 @@ if (!isset($countActive)) {
             </div>
             <div class="modal-body text-center px-4 py-3">
                 <div class="d-flex flex-column align-items-center mb-3">
-                    <div id="modalAvatarPreviewCircle" style="width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #fff; background: #dc2626; box-shadow: 0 4px 14px rgba(0,0,0,0.12); overflow: hidden; margin-bottom: 12px; position: relative;">
+                    <div id="modalAvatarPreviewCircle" style="width: 84px; height: 84px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: #fff; background: #F1F5F9; border: 2.5px solid #dc2626; box-shadow: 0 4px 14px rgba(0,0,0,0.12); overflow: hidden; margin-bottom: 12px; position: relative;">
                     </div>
                     <h6 class="fw-bold mb-0" id="modalAvatarUserName" style="font-size: 15px; color: #1e293b;">User Name</h6>
                     <span class="badge mt-1" id="modalAvatarUserRole" style="font-size: 11px; padding: 3px 8px;">Role</span>
@@ -865,7 +822,7 @@ if (!isset($countActive)) {
                 </form>
             </div>
             <div class="modal-footer border-0 px-4 pb-4 pt-0 d-flex gap-2">
-                <button type="button" class="btn btn-outline-danger btn-sm" id="modalRemoveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 14px; display: none;">
+                <button type="button" class="btn btn-outline-danger btn-sm d-none" id="modalRemoveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 14px; display: none !important;">
                     <i class="bi bi-trash me-1"></i> Remove Photo
                 </button>
                 <div class="ms-auto d-flex gap-2">
@@ -1414,6 +1371,7 @@ body.modal-open #deleteUserConfirmModal,
     var _deactivateUserFormId = null;
     var _activateUserFormId = null;
     var _avatarModalUser = null;
+    var DEFAULT_AVATAR_SVG = '<?= str_replace(["\r", "\n"], '', $defaultAvatarSvg) ?>';
 
     // ── Avatar Management Modal ──
     window.openAvatarModal = function(userId, userName, currentImgUrl, initials, role) {
@@ -1461,7 +1419,13 @@ body.modal-open #deleteUserConfirmModal,
 
         var removeBtn = document.getElementById('modalRemoveAvatarBtn');
         if (removeBtn) {
-            removeBtn.style.display = (currentImgUrl && currentImgUrl.length > 0) ? 'inline-flex' : 'none';
+            if (currentImgUrl && currentImgUrl.length > 0) {
+                removeBtn.classList.remove('d-none');
+                removeBtn.style.setProperty('display', 'inline-flex', 'important');
+            } else {
+                removeBtn.classList.add('d-none');
+                removeBtn.style.setProperty('display', 'none', 'important');
+            }
         }
 
         var saveBtn = document.getElementById('modalSaveAvatarBtn');
@@ -1477,13 +1441,14 @@ body.modal-open #deleteUserConfirmModal,
         var previewEl = document.getElementById('modalAvatarPreviewCircle');
         if (!previewEl) return;
 
-        var bgColor = role === 'super_admin' ? '#B71C1C' : (role === 'admin' ? '#dc2626' : '#15803d');
-        previewEl.style.background = bgColor;
+        var borderColor = role === 'super_admin' ? '#B71C1C' : (role === 'admin' ? '#dc2626' : '#15803d');
+        previewEl.style.border = '2.5px solid ' + borderColor;
+        previewEl.style.background = '#F1F5F9';
 
         if (imgUrl && imgUrl.length > 0) {
             previewEl.innerHTML = '<img src="' + imgUrl + '" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">';
         } else {
-            previewEl.innerHTML = '<span>' + (initials || 'U') + '</span>';
+            previewEl.innerHTML = DEFAULT_AVATAR_SVG;
         }
     }
 
@@ -1774,7 +1739,10 @@ body.modal-open #deleteUserConfirmModal,
                         }
                         if (_avatarModalUser) _avatarModalUser.imgUrl = data.image_url;
                         var rBtn = document.getElementById('modalRemoveAvatarBtn');
-                        if (rBtn) rBtn.style.display = 'inline-flex';
+                        if (rBtn) {
+                            rBtn.classList.remove('d-none');
+                            rBtn.style.setProperty('display', 'inline-flex', 'important');
+                        }
 
                         if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
                             var hImgs = document.querySelectorAll('.header-avatar-circle img, .nav-profile-avatar img');
@@ -1804,7 +1772,7 @@ body.modal-open #deleteUserConfirmModal,
         var removeAvatarBtn = document.getElementById('modalRemoveAvatarBtn');
         if (removeAvatarBtn) {
             removeAvatarBtn.addEventListener('click', function() {
-                if (!confirm('Are you sure you want to remove this profile photo and revert to initials?')) return;
+                if (!confirm('Are you sure you want to remove this profile photo and revert to the default avatar?')) return;
                 var userId = document.getElementById('modalAvatarUserId').value;
 
                 removeAvatarBtn.disabled = true;
@@ -1823,11 +1791,12 @@ body.modal-open #deleteUserConfirmModal,
                     if (data.success) {
                         var rowCircle = document.getElementById('avatar-circle-' + userId);
                         if (rowCircle) {
-                            rowCircle.innerHTML = '<span>' + (_avatarModalUser ? _avatarModalUser.initials : 'U') + '</span>';
+                            rowCircle.innerHTML = DEFAULT_AVATAR_SVG;
                         }
                         if (_avatarModalUser) _avatarModalUser.imgUrl = '';
-                        updateModalAvatarPreview('', _avatarModalUser ? _avatarModalUser.initials : '', _avatarModalUser ? _avatarModalUser.role : '');
-                        removeAvatarBtn.style.display = 'none';
+                        updateModalAvatarPreview('', '', _avatarModalUser ? _avatarModalUser.role : '');
+                        removeAvatarBtn.classList.add('d-none');
+                        removeAvatarBtn.style.setProperty('display', 'none', 'important');
 
                         showAvatarAlert(data.message || 'Photo removed.', 'success');
                         setTimeout(function() {

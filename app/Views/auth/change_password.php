@@ -23,9 +23,12 @@ if (!empty($nameParts[0])) {
 if (count($nameParts) >= 2 && !empty($nameParts[count($nameParts) - 1])) {
     $initials .= strtoupper(substr($nameParts[count($nameParts) - 1], 0, 1));
 }
-if (empty($initials)) {
-    $initials = strtoupper(substr($user['username'] ?? 'US', 0, 2));
-}
+$defaultAvatarSvg = <<<SVG
+<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" />
+    <path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" />
+</svg>
+SVG;
 ?>
 
 <div class="change-password-page fade-in">
@@ -59,7 +62,7 @@ if (empty($initials)) {
                             <?php if (!empty($profileImage)): ?>
                                 <img src="<?= base_url(esc($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="avatar-img-lg">
                             <?php else: ?>
-                                <span><?= esc($initials) ?></span>
+                                <?= $defaultAvatarSvg ?>
                             <?php endif; ?>
                         </div>
                     </div>

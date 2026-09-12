@@ -39,6 +39,7 @@ class Database extends Config
         'swapPre'      => '',
         'failover'     => [],
         'port'         => 5432,
+        'options'      => '-c timezone=Asia/Manila',
         'dateFormat'   => [
             'date'     => 'Y-m-d',
             'datetime' => 'Y-m-d H:i:s',
@@ -172,6 +173,7 @@ class Database extends Config
         'swapPre'     => '',
         'failover'    => [],
         'port'        => 5432,
+        'options'     => '-c timezone=Asia/Manila',
         'dateFormat'  => [
             'date'     => 'Y-m-d',
             'datetime' => 'Y-m-d H:i:s',

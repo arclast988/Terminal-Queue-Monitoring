@@ -94,6 +94,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Terminal</th>
+                        <th>Severity</th>
                         <th>Message</th>
                         <th>Status</th>
                         <th>Created</th>
@@ -108,6 +109,17 @@
                             <tr>
                                 <td data-label="ID"><strong>#<?= $a['id'] ?></strong></td>
                                 <td data-label="Terminal"><span class="badge-modern badge-modern-primary"><?= strtoupper(esc($a['terminal_name'] ?? '—')) ?></span></td>
+                                <td data-label="Severity">
+                                    <?php
+                                    $sev = $a['severity'] ?? 'info';
+                                    if ($sev === 'danger'): ?>
+                                        <span class="badge-modern badge-modern-danger"><i class="bi bi-exclamation-octagon-fill"></i> Urgent</span>
+                                    <?php elseif ($sev === 'warning'): ?>
+                                        <span class="badge-modern badge-modern-warning"><i class="bi bi-exclamation-triangle-fill"></i> Warning</span>
+                                    <?php else: ?>
+                                        <span class="badge-modern badge-modern-info"><i class="bi bi-info-circle-fill"></i> Info</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td data-label="Message"><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?></td>
                                 <td data-label="Status">
                                     <?php if ($a['is_active']): ?>
@@ -137,7 +149,7 @@
                                         <form id="delete-announcement-form-<?= $a['id'] ?>" action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
                                             <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Delete"
-                                                onclick="showDeleteAnnouncementModal({formId:'delete-announcement-form-<?= $a['id'] ?>',announcementId:'<?= $a['id'] ?>',message:'<?= esc(addslashes(strlen($a['message']) > 60 ? substr($a['message'], 0, 60) . '…' : $a['message'])) ?>',terminal:'<?= esc(addslashes($a['terminal_name'] ?? '—')) ?>'})">
+                                                onclick="showDeleteAnnouncementModal({formId:'delete-announcement-form-<?= $a['id'] ?>',announcementId:'<?= $a['id'] ?>',message:'<?= esc(addslashes(strlen($a['message']) > 60 ? substr($a['message'], 0, 60) . '…' : $a['message'])) ?>',terminal:'<?= esc(addslashes($a['terminal_name'] ?? '—')) ?>',severity:'<?= esc(addslashes($a['severity'] ?? 'info')) ?>'})">
                                                 <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                             </button>
                                         </form>
@@ -148,7 +160,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="<?= in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true) ? '6' : '5' ?>" class="text-center py-5 text-muted empty-state-table">
+                            <td colspan="<?= in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true) ? '7' : '6' ?>" class="text-center py-5 text-muted empty-state-table">
                                 <i class="bi bi-megaphone fs-1 d-block mb-3 opacity-50"></i>
                                 <div class="fw-bold fs-6 empty-state-title">No announcements yet</div>
                                 <small class="empty-state-subtitle">Add an announcement to broadcast real-time notices to passengers.</small>
@@ -482,6 +494,7 @@ body.modal-open #deleteAnnouncementModal,
 
         var preview = document.getElementById('deleteAnnouncementPreview');
         var label = '#' + (opts.announcementId || '?');
+        if (opts.severity && opts.severity !== 'info') label += ' [' + opts.severity.toUpperCase() + ']';
         if (opts.terminal) label += ' · ' + opts.terminal.toUpperCase();
         if (opts.message) label += ' — "' + opts.message + '"';
         preview.textContent = label;

@@ -33,14 +33,15 @@ class Announcements extends Controller
             $items = [];
             try {
                 $rows = (new AnnouncementModel())
-                    ->select('id, message')
+                    ->select('id, message, severity')
                     ->where('is_active', 1)
                     ->orderBy('sort_order', 'ASC')
                     ->findAll();
                 foreach ($rows as $row) {
                     $items[] = [
-                        'id'      => (int) $row['id'],
-                        'message' => $row['message'],
+                        'id'       => (int) $row['id'],
+                        'message'  => $row['message'],
+                        'severity' => $row['severity'] ?? 'info',
                     ];
                 }
             } catch (\Throwable $e) {

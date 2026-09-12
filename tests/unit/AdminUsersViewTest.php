@@ -316,4 +316,94 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $this->assertStringContainsString('color: #d97706 !important;', $modernCss);
         $this->assertStringContainsString('background: #f59e0b !important;', $modernCss);
     }
+
+    public function testCreateUserFormAvatarUploadAndDefaultSilhouetteAndNoCameraBadge(): void
+    {
+        // 1. Verify Create form includes profile avatar upload and default silhouette
+        $createHtml = view('admin/users/create', [
+            'routes' => [],
+        ]);
+
+        $this->assertStringContainsString('enctype="multipart/form-data"', $createHtml);
+        $this->assertStringContainsString('id="createUserAvatarPreview"', $createHtml);
+        $this->assertStringContainsString('id="createAvatarFileInput"', $createHtml);
+        $this->assertStringContainsString('name="avatar"', $createHtml);
+        $this->assertStringContainsString('profile-identicon-svg', $createHtml);
+
+        // 2. Verify Index users list uses default silhouette SVG when profile_image is null
+        $session = service('session');
+        $session->set([
+            'isLoggedIn' => true,
+            'id'         => 1,
+            'role'       => 'super_admin',
+            'full_name'  => 'System Super Admin',
+            'username'   => 'superadmin@palompon.com',
+        ]);
+
+        $users = [
+            [
+                'id'            => 2,
+                'full_name'     => 'Jane Administrator',
+                'username'      => 'jane@palompon.com',
+                'role'          => 'admin',
+                'profile_image' => null,
+            ],
+        ];
+
+        $indexHtml = view('admin/users/index', [
+            'title' => 'Manage Users',
+            'users' => $users,
+        ]);
+
+        // Consistent executive user avatar silhouette is rendered for user #2
+        $this->assertStringContainsString('profile-identicon-svg', $indexHtml);
+        $this->assertStringNotContainsString('<span>JA</span>', $indexHtml);
+
+        // Camera badge is removed from the avatar, but wrapper remains clickable
+        $this->assertStringNotContainsString('avatar-edit-badge', $indexHtml);
+        $this->assertStringNotContainsString('avatar-hover-overlay', $indexHtml);
+        $this->assertStringContainsString('avatar-editable', $indexHtml);
+        $this->assertStringContainsString('openAvatarModal', $indexHtml);
+
+        // Modal Remove Photo button has d-none and display: none !important
+        $this->assertStringContainsString('id="modalRemoveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 14px; display: none !important;"', $indexHtml);
+        $this->assertStringContainsString('class="btn btn-outline-danger btn-sm d-none"', $indexHtml);
+
+        // Responsive CSS protects modalRemoveAvatarBtn from mobile display override
+        $responsiveCss = file_get_contents(FCPATH . 'assets/css/responsive.css');
+        $this->assertStringContainsString('#modalRemoveAvatarBtn.d-none', $responsiveCss);
+    }
+
+    public function testEditUserViewRendersSuccessfullyForArchivedAndActiveUsers(): void
+    {
+        $session = service('session');
+        $session->set([
+            'isLoggedIn' => true,
+            'id'         => 1,
+            'role'       => 'super_admin',
+            'full_name'  => 'System Super Admin',
+            'username'   => 'superadmin@palompon.com',
+        ]);
+
+        $archivedUser = [
+            'id'            => 4,
+            'full_name'     => 'Alice Dispatcher',
+            'username'      => 'alice@palompon.com',
+            'role'          => 'staff',
+            'status'        => 'archived',
+            'profile_image' => null,
+        ];
+
+        $html = view('admin/users/edit', [
+            'user'             => $archivedUser,
+            'routes'           => [],
+            'assignedRouteIds' => [],
+        ]);
+
+        $this->assertStringContainsString('Edit User', $html);
+        $this->assertStringContainsString('Alice Dispatcher', $html);
+        $this->assertStringContainsString('profile-identicon-svg', $html);
+        $this->assertStringContainsString('admin/users/update/4', $html);
+    }
 }
+

@@ -79,9 +79,22 @@ class QueueModel extends Model
      */
     public function recalculateSchedule(?int $targetRouteId = null): void
     {
+        $db = $this->db;
+        $db->transStart();
+
+        // 1. Acquire transaction-level PostgreSQL advisory lock to serialize concurrent recalculations
+        $driver = strtolower($db->DBDriver ?? '');
+        if (str_contains($driver, 'postgre')) {
+            $lockKey = crc32('queue_recalc_' . ($targetRouteId ?? 0));
+            if ($lockKey > 2147483647) {
+                $lockKey -= 4294967296;
+            }
+            $db->query('SELECT pg_advisory_xact_lock(?)', [(int) $lockKey]);
+        }
+
         $departureRuleModel = new DepartureRuleModel();
 
-        // 1. Fetch active queue items with route & terminal details
+        // 2. Fetch active queue items with route & terminal details
         $builder = $this->select('queue.*, routes.terminal_id, routes.destination')
                         ->join('routes', 'routes.id = queue.route_id')
                         ->whereIn('queue.status', ['waiting', 'boarding']);
@@ -104,6 +117,12 @@ class QueueModel extends Model
         $activeItems = $builder->findAll();
 
         if (!empty($activeItems)) {
+            // Pre-load all departure rules into memory to eliminate N+1 queries in the loop
+            $terminalIds = array_values(array_unique(array_filter(array_column($activeItems, 'terminal_id'))));
+            $allRules = !empty($terminalIds)
+                ? $departureRuleModel->whereIn('terminal_id', $terminalIds)->findAll()
+                : $departureRuleModel->findAll();
+
             // Group items by destination+terminal (not route_id) so vehicles
             // heading to the same place get sequential, non-overlapping slots
             // even when they have different route_id values.
@@ -112,6 +131,8 @@ class QueueModel extends Model
                 $key = $item['terminal_id'] . '|' . $item['destination'];
                 $grouped[$key][] = $item;
             }
+
+            $batchUpdates = [];
 
             foreach ($grouped as $groupKey => $items) {
                 // Sort items for this destination: boarding first, then waiting by arrival/id
@@ -136,13 +157,13 @@ class QueueModel extends Model
                         if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])) {
                             $estTime = $item['estimated_departure'];
                         } else {
-                            $waitMinutes = $this->resolveGroupInterval($departureRuleModel, date('H:i:s'), $terminalId, $groupRouteIds);
+                            $waitMinutes = $this->resolveGroupIntervalFromRules($allRules, date('H:i:s'), $terminalId, $groupRouteIds);
                             $estTime = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
                         }
                     } else {
                         // Subsequent vehicles: offset from previous vehicle's slot using the departure rule active at that previous departure time
                         $prevTimeStr = date('H:i:s', strtotime($prevEstDeparture));
-                        $waitMinutes = $this->resolveGroupInterval($departureRuleModel, $prevTimeStr, $terminalId, $groupRouteIds);
+                        $waitMinutes = $this->resolveGroupIntervalFromRules($allRules, $prevTimeStr, $terminalId, $groupRouteIds);
                         $baseTimestamp = strtotime($prevEstDeparture);
                         $estTime = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes", $baseTimestamp));
                     }
@@ -161,11 +182,18 @@ class QueueModel extends Model
                     }
 
                     if (!empty($updateData)) {
-                        $this->update($item['id'], $updateData);
+                        $updateData['id'] = $item['id'];
+                        $batchUpdates[] = $updateData;
                     }
                 }
             }
+
+            if (!empty($batchUpdates)) {
+                $this->updateBatch($batchUpdates, 'id');
+            }
         }
+
+        $db->transComplete();
     }
 
     /**
@@ -177,25 +205,53 @@ class QueueModel extends Model
     }
 
     /**
-     * Resolve the departure interval for a destination group.
-     * Checks all route_ids in the group and returns the route-specific rule
-     * if one exists, otherwise falls back to the terminal default.
-     * This ensures all vehicles heading to the same destination use the same
-     * interval, even if they have different route_id values.
+     * Resolve departure interval using in-memory pre-loaded rules (eliminates N+1 DB queries).
      */
-    private function resolveGroupInterval(DepartureRuleModel $ruleModel, string $time, int $terminalId, array $routeIds): int
+    public function resolveGroupIntervalFromRules(array $allRules, string $time, int $terminalId, array $routeIds): int
     {
-        // Try each route_id to find a route-specific rule
+        $timeStr = date('H:i:s', strtotime($time));
+
+        // 1. Check for route-specific rule match
         foreach ($routeIds as $routeId) {
-            $rule = $ruleModel->getRuleForTime($time, $terminalId, (int) $routeId);
-            // If this rule has a route_id, it's a route-specific match (not a fallback)
-            if (!empty($rule['route_id'])) {
+            foreach ($allRules as $rule) {
+                if ((int) ($rule['route_id'] ?? 0) === (int) $routeId && $this->ruleMatchesTime($rule, $timeStr)) {
+                    return (int) $rule['wait_minutes'];
+                }
+            }
+        }
+
+        // 2. Check for terminal default rule (route_id IS NULL)
+        foreach ($allRules as $rule) {
+            if ((int) ($rule['terminal_id'] ?? 0) === $terminalId && empty($rule['route_id']) && $this->ruleMatchesTime($rule, $timeStr)) {
                 return (int) $rule['wait_minutes'];
             }
         }
-        // No route-specific rule found — use terminal default
-        $rule = $ruleModel->getRuleForTime($time, $terminalId, null);
-        return (int) $rule['wait_minutes'];
+
+        // 3. Fallback default: 30 minutes
+        return 30;
+    }
+
+    private function ruleMatchesTime(array $rule, string $timeStr): bool
+    {
+        if (empty($rule['time_from']) || empty($rule['time_to'])) {
+            return false;
+        }
+        if ($rule['time_from'] > $timeStr) {
+            return false;
+        }
+        if ($timeStr >= '23:59:00') {
+            return $rule['time_to'] >= '23:59:00';
+        }
+        return $rule['time_to'] > $timeStr;
+    }
+
+    /**
+     * Legacy adapter for resolving departure interval.
+     */
+    public function resolveGroupInterval(DepartureRuleModel $ruleModel, string $time, int $terminalId, array $routeIds): int
+    {
+        $rules = $ruleModel->where('terminal_id', $terminalId)->findAll();
+        return $this->resolveGroupIntervalFromRules($rules, $time, $terminalId, $routeIds);
     }
 
     /**

@@ -81,7 +81,7 @@ class Users extends BaseController
                     'is_unique'   => 'This username/email is already registered.'
                 ]
             ],
-            'password' => 'required|min_length[6]',
+            'password' => 'required|min_length[8]',
             'full_name' => 'required|min_length[3]',
             'role' => "required|in_list[{$allowedRoles}]"
         ];
@@ -108,6 +108,27 @@ class Users extends BaseController
             return redirect()->back()->withInput()->with('error', 'Dispatchers must have at least one route assigned.');
         }
 
+        // Validate avatar upload if provided
+        $avatarFile = $this->request->getFile('avatar');
+        $hasAvatar = ($avatarFile && $avatarFile->isValid() && !$avatarFile->hasMoved());
+        if ($hasAvatar) {
+            $maxSizeBytes = 4 * 1024 * 1024;
+            if ($avatarFile->getSize() > $maxSizeBytes) {
+                return redirect()->back()->withInput()->with('error', 'The profile image exceeds the 4MB maximum allowed size.');
+            }
+
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
+            $mime = $avatarFile->getMimeType();
+            if (!in_array(strtolower($mime), $allowedMimes, true)) {
+                return redirect()->back()->withInput()->with('error', 'Invalid image file type. Only JPG, PNG, WEBP, and GIF images are allowed.');
+            }
+
+            $imageInfo = @getimagesize($avatarFile->getTempName());
+            if ($imageInfo === false) {
+                return redirect()->back()->withInput()->with('error', 'Uploaded file is not a valid image.');
+            }
+        }
+
         $data = [
             'username' => $this->request->getPost('username'),
             'email' => $this->request->getPost('username'),
@@ -117,6 +138,22 @@ class Users extends BaseController
         ];
 
         $userId = $model->insert($data);
+
+        // Save avatar if uploaded
+        if ($hasAvatar && $userId) {
+            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+
+            $ext = $avatarFile->guessExtension() ?: 'jpg';
+            $newFilename = 'avatar_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+            if ($avatarFile->move($uploadDir, $newFilename)) {
+                $relPath = 'uploads/avatars/' . $newFilename;
+                $model->update($userId, ['profile_image' => $relPath]);
+            }
+        }
 
         // Sync route assignments for staff
         if ($role === 'staff') {
@@ -215,7 +252,7 @@ class Users extends BaseController
         ];
 
         if ($this->request->getPost('password')) {
-            $rules['password'] = 'min_length[6]';
+            $rules['password'] = 'min_length[8]';
         }
 
         if (!$this->validate($rules)) {

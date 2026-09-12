@@ -21,6 +21,7 @@
   id SERIAL PRIMARY KEY,
   terminal_id INT NOT NULL DEFAULT 1 REFERENCES terminals(id) ON DELETE CASCADE,
   message TEXT NOT NULL,
+  severity VARCHAR(20) NOT NULL DEFAULT 'info',
   is_active SMALLINT NOT NULL DEFAULT 1,
   priority INT NOT NULL DEFAULT 0,
   sort_order INT NOT NULL DEFAULT 0,

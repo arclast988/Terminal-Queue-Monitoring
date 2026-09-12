@@ -12,7 +12,7 @@ class AnnouncementModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes    = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['terminal_id', 'message', 'is_active', 'sort_order'];
+    protected $allowedFields    = ['terminal_id', 'message', 'severity', 'is_active', 'sort_order'];
 
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';

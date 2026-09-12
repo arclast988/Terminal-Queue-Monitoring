@@ -87,10 +87,9 @@ systemctl start nginx
 echo "=== [7/9] Setting Up Firewall (UFW) ==="
 # Ensure SSH remains allowed so you don't lock yourself out!
 ufw allow OpenSSH
-# Allow web traffic
+# Allow web traffic (HTTP & HTTPS) - WebSocket traffic is securely reverse-proxied via Nginx /ws
 ufw allow 'Nginx Full'
-# Allow WebSocket Client Connections (Port 8081)
-ufw allow 8081/tcp
+# Note: Raw WebSocket port 8081 is bound to 127.0.0.1 and not exposed publicly for security
 # Enable firewall (non-interactively)
 ufw --force enable
 ufw status

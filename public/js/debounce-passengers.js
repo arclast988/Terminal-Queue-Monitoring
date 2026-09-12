@@ -51,9 +51,15 @@
     function getBadge(id) {
         var el = document.getElementById('full-badge-' + id);
         if (!el) {
+            var countSpan = getCountSpan(id);
+            if (countSpan) {
+                el = countSpan.querySelector('#full-badge-' + id) || countSpan.querySelector('.full-badge-wrap') || countSpan.querySelector('.full-badge');
+            }
+        }
+        if (!el) {
             var container = document.getElementById('passenger-controls-' + id);
             if (container) {
-                el = container.parentElement ? container.parentElement.querySelector('.full-badge') : null;
+                el = container.parentElement ? (container.parentElement.querySelector('#full-badge-' + id) || container.parentElement.querySelector('.full-badge-wrap') || container.parentElement.querySelector('.full-badge')) : null;
             }
         }
         return el;
@@ -65,6 +71,10 @@
 
         var span = getCountSpan(id);
         if (span) {
+            var innerNum = span.querySelector('.passenger-count-num');
+            if (innerNum) {
+                return parseInt(innerNum.textContent.trim(), 10) || 0;
+            }
             var text = span.textContent.trim();
             var parts = text.split('/');
             return parseInt(parts[0].trim(), 10) || 0;
@@ -72,20 +82,54 @@
         return 0;
     }
 
+    function getPassengerColorClass(count, capacity) {
+        count = parseInt(count, 10) || 0;
+        capacity = parseInt(capacity, 10) || 0;
+        if (capacity <= 0) return 'passenger-color-green';
+        var percent = (count / capacity) * 100;
+        if (percent >= 90) return 'passenger-color-red';
+        if (percent >= 70) return 'passenger-color-orange';
+        if (percent >= 50) return 'passenger-color-yellow';
+        return 'passenger-color-green';
+    }
+
+    function applyPassengerColor(el, count, capacity) {
+        if (!el) return;
+        el.classList.remove('passenger-color-green', 'passenger-color-yellow', 'passenger-color-orange', 'passenger-color-red', 'p-green', 'p-yellow', 'p-orange', 'p-red', 'text-danger');
+        el.classList.add(getPassengerColorClass(count, capacity));
+    }
+
     function updateUI(id, newCount, capacity) {
         var span = getCountSpan(id);
         var badge = getBadge(id);
+        var isFull = (parseInt(newCount, 10) >= parseInt(capacity, 10) && parseInt(capacity, 10) > 0);
 
         if (span) {
-            span.textContent = newCount + ' / ' + capacity;
-            if (newCount >= capacity) {
-                span.classList.add('text-danger');
+            var colorClass = getPassengerColorClass(newCount, capacity);
+            if (span.classList.contains('passenger-count-num')) {
+                span.textContent = newCount;
+                applyPassengerColor(span, newCount, capacity);
             } else {
-                span.classList.remove('text-danger');
+                var innerNum = span.querySelector('.passenger-count-num');
+                if (innerNum) {
+                    innerNum.textContent = newCount;
+                    applyPassengerColor(innerNum, newCount, capacity);
+                } else {
+                    span.innerHTML = '<strong class="passenger-count-num ' + colorClass + '">' + newCount + '</strong> / ' + capacity;
+                }
             }
         }
         if (badge) {
-            badge.style.display = (newCount >= capacity) ? 'inline-block' : 'none';
+            badge.style.display = isFull ? 'block' : 'none';
+        } else if (span) {
+            if (isFull) {
+                var wrap = document.createElement('span');
+                wrap.id = 'full-badge-' + id;
+                wrap.className = 'full-badge-wrap';
+                wrap.style.display = 'block';
+                wrap.innerHTML = '<span class="badge-modern badge-modern-danger full-badge" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span>';
+                span.appendChild(wrap);
+            }
         }
     }
 

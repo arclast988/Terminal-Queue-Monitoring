@@ -152,6 +152,8 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                         <td data-label="Fare (PHP)">
                                             <?php if (isset($route['fare']) && (float)$route['fare'] > 0): ?>
                                                 <strong style="font-size: 16px; color: var(--text-main);">₱<?= number_format($route['fare'], 2) ?></strong>
+                                            <?php elseif ($grpStatus === 'archived' || ($route['status'] ?? '') === 'archived'): ?>
+                                                <span class="text-muted" style="color: var(--text-muted, #94a3b8); font-size: 16px; font-weight: 500;">&mdash;</span>
                                             <?php else: ?>
                                                 <a href="<?= base_url('fares?action=add&terminal_id=' . $route['terminal_id'] . '&destination=' . urlencode($route['destination']) . '&vehicle_type=' . urlencode($route['vehicle_type'])) ?>" 
                                                    class="btn-modern btn-modern-sm btn-action-edit d-inline-flex align-items-center gap-1 text-decoration-none" 

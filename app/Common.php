@@ -351,3 +351,31 @@ if (! function_exists('contrast_text_color')) {
     }
 }
 
+if (! function_exists('passenger_color_class')) {
+    /**
+     * Returns the CSS class for the current passenger count based on vehicle capacity percentage:
+     * < 50%  -> Green   (passenger-color-green)
+     * 50-69% -> Yellow  (passenger-color-yellow)
+     * 70-89% -> Orange  (passenger-color-orange)
+     * >= 90% -> Red     (passenger-color-red)
+     */
+    function passenger_color_class(int $count, int $capacity): string
+    {
+        if ($capacity <= 0) {
+            return 'passenger-color-green';
+        }
+        $percent = ($count / $capacity) * 100;
+        if ($percent >= 90) {
+            return 'passenger-color-red';
+        }
+        if ($percent >= 70) {
+            return 'passenger-color-orange';
+        }
+        if ($percent >= 50) {
+            return 'passenger-color-yellow';
+        }
+        return 'passenger-color-green';
+    }
+}
+
+
