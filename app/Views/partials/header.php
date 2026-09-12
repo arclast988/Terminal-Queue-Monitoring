@@ -416,17 +416,42 @@ SVG;
             }
 
             function updateAvatarDom(imageUrl) {
+                var currentUserId = <?= (int)(session()->get('id') ?? 0) ?>;
                 if (imageUrl) {
                     var imgHtml = '<img src="' + imageUrl + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
                     if (triggerAvatar) triggerAvatar.innerHTML = imgHtml;
                     if (headerAvatar) headerAvatar.innerHTML = imgHtml;
                     if (miniMenuDeleteBtn) miniMenuDeleteBtn.classList.remove('d-none');
                     if (miniMenuEditText) miniMenuEditText.textContent = 'Edit Photo';
+
+                    var drawerAvatar = document.querySelector('.drawer-user-avatar');
+                    if (drawerAvatar) drawerAvatar.innerHTML = imgHtml;
+
+                    var tableCircle = document.getElementById('avatar-circle-' + currentUserId);
+                    if (tableCircle) {
+                        tableCircle.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+                    }
+                    var editPreview = document.getElementById('editUserAvatarPreview');
+                    if (editPreview) {
+                        editPreview.innerHTML = '<img src="' + imageUrl + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">';
+                    }
                 } else {
                     if (triggerAvatar) triggerAvatar.innerHTML = defaultIdenticonHtml;
                     if (headerAvatar) headerAvatar.innerHTML = defaultIdenticonHtml;
                     if (miniMenuDeleteBtn) miniMenuDeleteBtn.classList.add('d-none');
                     if (miniMenuEditText) miniMenuEditText.textContent = 'Upload Photo';
+
+                    var drawerAvatar = document.querySelector('.drawer-user-avatar');
+                    if (drawerAvatar) drawerAvatar.innerHTML = defaultIdenticonHtml;
+
+                    var tableCircle = document.getElementById('avatar-circle-' + currentUserId);
+                    if (tableCircle) {
+                        tableCircle.innerHTML = defaultIdenticonHtml;
+                    }
+                    var editPreview = document.getElementById('editUserAvatarPreview');
+                    if (editPreview) {
+                        editPreview.innerHTML = defaultIdenticonHtml;
+                    }
                 }
             }
 

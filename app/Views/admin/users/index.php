@@ -1679,6 +1679,17 @@ body.modal-open #deleteUserConfirmModal,
     };
 
     document.addEventListener('DOMContentLoaded', function() {
+        function getAdminUsersCsrfToken() {
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            return meta ? meta.getAttribute('content') : '';
+        }
+
+        function updateAdminUsersCsrfToken(data) {
+            if (!data || !data.csrf_hash) return;
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta) meta.setAttribute('content', data.csrf_hash);
+        }
+
         // Avatar file change preview
         var fileInput = document.getElementById('modalAvatarInput');
         if (fileInput) {
@@ -1712,6 +1723,8 @@ body.modal-open #deleteUserConfirmModal,
                 var userId = document.getElementById('modalAvatarUserId').value;
                 var formData = new FormData();
                 formData.append('avatar', fInput.files[0]);
+                var csrfToken = getAdminUsersCsrfToken();
+                if (csrfToken) formData.append('csrf_test_name', csrfToken);
 
                 saveAvatarBtn.disabled = true;
                 saveAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
@@ -1720,11 +1733,13 @@ body.modal-open #deleteUserConfirmModal,
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
                     }
                 })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
+                    updateAdminUsersCsrfToken(data);
                     saveAvatarBtn.disabled = false;
                     saveAvatarBtn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo';
                     if (data.success) {
@@ -1745,8 +1760,13 @@ body.modal-open #deleteUserConfirmModal,
                         }
 
                         if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
-                            var hImgs = document.querySelectorAll('.header-avatar-circle img, .nav-profile-avatar img');
-                            hImgs.forEach(function(el) { el.src = data.image_url; });
+                            var imgHtml = '<img src="' + data.image_url + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
+                            var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                            if (tAvatar) tAvatar.innerHTML = imgHtml;
+                            var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                            if (hAvatar) hAvatar.innerHTML = imgHtml;
+                            var dAvatar = document.querySelector('.drawer-user-avatar');
+                            if (dAvatar) dAvatar.innerHTML = imgHtml;
                         }
 
                         showAvatarAlert(data.message || 'Avatar updated successfully!', 'success');
@@ -1774,18 +1794,24 @@ body.modal-open #deleteUserConfirmModal,
             removeAvatarBtn.addEventListener('click', function() {
                 if (!confirm('Are you sure you want to remove this profile photo and revert to the default avatar?')) return;
                 var userId = document.getElementById('modalAvatarUserId').value;
+                var csrfToken = getAdminUsersCsrfToken();
+                var formData = new FormData();
+                if (csrfToken) formData.append('csrf_test_name', csrfToken);
 
                 removeAvatarBtn.disabled = true;
                 removeAvatarBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Removing...';
 
                 fetch('<?= base_url('admin/users/remove-avatar') ?>/' + userId, {
                     method: 'POST',
+                    body: formData,
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
                     }
                 })
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
+                    updateAdminUsersCsrfToken(data);
                     removeAvatarBtn.disabled = false;
                     removeAvatarBtn.innerHTML = '<i class="bi bi-trash me-1"></i> Remove Photo';
                     if (data.success) {
@@ -1797,6 +1823,15 @@ body.modal-open #deleteUserConfirmModal,
                         updateModalAvatarPreview('', '', _avatarModalUser ? _avatarModalUser.role : '');
                         removeAvatarBtn.classList.add('d-none');
                         removeAvatarBtn.style.setProperty('display', 'none', 'important');
+
+                        if (parseInt(userId, 10) === <?= (int)session()->get('id') ?>) {
+                            var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                            if (tAvatar) tAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                            var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                            if (hAvatar) hAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                            var dAvatar = document.querySelector('.drawer-user-avatar');
+                            if (dAvatar) dAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                        }
 
                         showAvatarAlert(data.message || 'Photo removed.', 'success');
                         setTimeout(function() {

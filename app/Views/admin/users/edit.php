@@ -357,6 +357,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Profile Photo Upload & Remove Handlers
+    function getEditUserCsrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    function updateEditUserCsrfToken(data) {
+        if (!data || !data.csrf_hash) return;
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) meta.setAttribute('content', data.csrf_hash);
+    }
+
     var editAvatarInput = document.getElementById('editAvatarFileInput');
     if (editAvatarInput) {
         editAvatarInput.addEventListener('change', function() {
@@ -370,6 +381,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             var formData = new FormData();
             formData.append('avatar', file);
+            var csrfToken = getEditUserCsrfToken();
+            if (csrfToken) formData.append('csrf_test_name', csrfToken);
 
             var feedback = document.getElementById('editAvatarFeedback');
             var uploadBtn = document.getElementById('btnEditUploadPhoto');
@@ -382,15 +395,28 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch('<?= base_url('admin/users/upload-avatar/' . $user['id']) ?>', {
                 method: 'POST',
                 body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken
+                }
             })
             .then(function(res) { return res.json(); })
             .then(function(data) {
+                updateEditUserCsrfToken(data);
                 if (uploadBtn) uploadBtn.disabled = false;
                 if (data.success) {
                     var preview = document.getElementById('editUserAvatarPreview');
                     if (preview) {
                         preview.innerHTML = '<img src="' + data.image_url + '" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">';
+                    }
+                    if (parseInt(<?= (int)$user['id'] ?>, 10) === <?= (int)(session()->get('id') ?? 0) ?>) {
+                        var imgHtml = '<img src="' + data.image_url + '" alt="Avatar" class="profile-avatar-img user-avatar-preview">';
+                        var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                        if (tAvatar) tAvatar.innerHTML = imgHtml;
+                        var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                        if (hAvatar) hAvatar.innerHTML = imgHtml;
+                        var dAvatar = document.querySelector('.drawer-user-avatar');
+                        if (dAvatar) dAvatar.innerHTML = imgHtml;
                     }
                     if (feedback) {
                         feedback.className = 'small text-success ms-2';
@@ -430,18 +456,34 @@ document.addEventListener('DOMContentLoaded', function() {
             feedback.textContent = 'Removing...';
         }
         if (removeBtn) removeBtn.disabled = true;
+        var csrfToken = getEditUserCsrfToken();
+        var formData = new FormData();
+        if (csrfToken) formData.append('csrf_test_name', csrfToken);
 
         fetch('<?= base_url('admin/users/remove-avatar/' . $user['id']) ?>', {
             method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken
+            }
         })
         .then(function(res) { return res.json(); })
         .then(function(data) {
+            updateEditUserCsrfToken(data);
             if (removeBtn) removeBtn.disabled = false;
             if (data.success) {
                 var preview = document.getElementById('editUserAvatarPreview');
                 if (preview) {
                     preview.innerHTML = DEFAULT_AVATAR_SVG;
+                }
+                if (parseInt(<?= (int)$user['id'] ?>, 10) === <?= (int)(session()->get('id') ?? 0) ?>) {
+                    var tAvatar = document.getElementById('navProfileTriggerAvatar');
+                    if (tAvatar) tAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                    var hAvatar = document.getElementById('navProfileHeaderAvatar');
+                    if (hAvatar) hAvatar.innerHTML = DEFAULT_AVATAR_SVG;
+                    var dAvatar = document.querySelector('.drawer-user-avatar');
+                    if (dAvatar) dAvatar.innerHTML = DEFAULT_AVATAR_SVG;
                 }
                 if (removeBtn) {
                     removeBtn.classList.add('d-none');
