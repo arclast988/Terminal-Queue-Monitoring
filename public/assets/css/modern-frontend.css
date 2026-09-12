@@ -385,6 +385,18 @@ body > * {
     transform: translateY(-2px);
 }
 
+.btn-modern-success {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    color: white;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.btn-modern-success:hover {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45);
+    transform: translateY(-2px);
+}
+
 .btn-modern-outline {
     background: white;
     color: var(--slate-700);

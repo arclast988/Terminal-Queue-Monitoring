@@ -379,6 +379,49 @@ body:has(.modal.show) > .main-content {
 .modal-backdrop {
     z-index: 1040 !important;
 }
+/* ── Mobile Form Adjustments for Add/Edit Fare Modals ── */
+@media (max-width: 576px) {
+    #addFareModal .modal-dialog,
+    #editFareModal .modal-dialog {
+        margin: 0.5rem auto !important;
+        max-width: calc(100% - 1rem) !important;
+        width: calc(100% - 1rem) !important;
+    }
+    #addFareModal .modal-content,
+    #editFareModal .modal-content {
+        border-radius: 14px !important;
+        overflow: hidden !important;
+    }
+    #addFareModal .modal-body,
+    #editFareModal .modal-body {
+        padding: 0.85rem 1rem 1rem !important;
+    }
+    #addFareModal .mb-3,
+    #editFareModal .mb-3 {
+        margin-bottom: 0.65rem !important;
+    }
+    #addFareModal .mb-4,
+    #editFareModal .mb-4 {
+        margin-bottom: 0.75rem !important;
+    }
+    #addFareModal .vt-chip-body,
+    #editFareModal .vt-chip-body {
+        padding: 5px 10px !important;
+        font-size: 12px !important;
+    }
+    #addFareModal .route-fare-inline-alert {
+        padding: 5px 10px !important;
+        font-size: 11.5px !important;
+        margin-top: 4px !important;
+    }
+}
+
+#addFareModal #add_fare_amount:focus,
+#editFareModal #edit_fare_amount:focus {
+    border-color: var(--primary, #C62828) !important;
+    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.18) !important;
+    outline: 0 !important;
+}
 
 </style>
 
@@ -674,7 +717,7 @@ $isManager = $isAdmin;
 
 <!-- ADD FARE MODAL -->
 <div class="modal fade" id="addFareModal" tabindex="-1" aria-labelledby="addFareModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title fw-bold" id="addFareModalLabel"><i class="fas fa-plus me-2 text-primary"></i>Add New Fare</h5>
@@ -733,7 +776,7 @@ $isManager = $isAdmin;
             <label class="form-label fw-semibold">Fare Amount (₱)</label>
             <div class="input-group">
               <span class="input-group-text">₱</span>
-              <input type="number" name="fare" class="form-control" step="0.01" min="1" placeholder="0.00" required>
+              <input type="number" name="fare" id="add_fare_amount" class="form-control" step="0.01" min="1" placeholder="0.00" required>
             </div>
           </div>
 
@@ -774,7 +817,7 @@ $isManager = $isAdmin;
 
 <!-- EDIT FARE MODAL -->
 <div class="modal fade" id="editFareModal" tabindex="-1" aria-labelledby="editFareModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title fw-bold" id="editFareModalLabel"><i class="fas fa-edit me-2 text-primary"></i>Edit Fare</h5>
@@ -1512,11 +1555,74 @@ function syncAddDestinationUI() {
 
 // Modal lifecycle listeners
 var addFareModalEl = document.getElementById('addFareModal');
+
+function focusAddFareInput(force) {
+    var fareInput = document.getElementById('add_fare_amount') || (addFareModalEl ? addFareModalEl.querySelector('input[name="fare"]') : null);
+    if (!fareInput) return;
+
+    var activeEl = document.activeElement;
+    if (!force && activeEl && activeEl !== document.body && activeEl !== addFareModalEl && activeEl !== fareInput && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT' || activeEl.tagName === 'TEXTAREA')) {
+        return;
+    }
+
+    try {
+        fareInput.focus({ preventScroll: true });
+    } catch (e) {
+        fareInput.focus();
+    }
+    try {
+        fareInput.select();
+    } catch (e) {}
+}
+
 if (addFareModalEl) {
+    addFareModalEl.addEventListener('show.bs.modal', function(e) {
+        // If opened via user clicking Add Fare button, ensure clean unselected initial state
+        if (e.relatedTarget) {
+            var destSelect = document.getElementById('add_destination');
+            if (destSelect) {
+                destSelect.value = '';
+                if (typeof destSelect.syncAutocompleteValue === 'function') {
+                    destSelect.syncAutocompleteValue();
+                }
+            }
+            var wrapper = destSelect ? destSelect.closest('.autocomplete-wrapper') : null;
+            if (wrapper) {
+                wrapper.classList.remove('is-open');
+                var dd = wrapper.querySelector('.autocomplete-dropdown');
+                if (dd) dd.style.display = 'none';
+                var sInput = wrapper.querySelector('input[type="text"]');
+                if (sInput) {
+                    sInput.value = '';
+                    sInput.style.color = '';
+                    sInput.style.borderColor = '';
+                }
+            }
+            var feedback = document.getElementById('add_fare_route_feedback');
+            if (feedback) {
+                feedback.style.display = 'none';
+                feedback.innerHTML = '';
+            }
+            var fareInput = document.getElementById('add_fare_amount');
+            if (fareInput) fareInput.value = '';
+        }
+    });
+
     addFareModalEl.addEventListener('shown.bs.modal', function() {
         filterAddDestinationOptions();
         validateAddFareForm();
         syncAddDestinationUI();
+        var modalBody = addFareModalEl.querySelector('.modal-body');
+        if (modalBody) modalBody.scrollTop = 0;
+
+        // Ensure autocomplete dropdown is closed and not auto-popped when opening modal
+        var destSelect = document.getElementById('add_destination');
+        var wrapper = destSelect ? destSelect.closest('.autocomplete-wrapper') : null;
+        if (wrapper) {
+            wrapper.classList.remove('is-open');
+            var dd = wrapper.querySelector('.autocomplete-dropdown');
+            if (dd) dd.style.display = 'none';
+        }
     });
     addFareModalEl.addEventListener('hidden.bs.modal', function() {
         if (addForm) {
@@ -1531,6 +1637,18 @@ if (addFareModalEl) {
             destSelect.dispatchEvent(new Event('change', { bubbles: true }));
             if (typeof destSelect.syncAutocompleteValue === 'function') {
                 destSelect.syncAutocompleteValue();
+            }
+        }
+        var wrapper = destSelect ? destSelect.closest('.autocomplete-wrapper') : null;
+        if (wrapper) {
+            wrapper.classList.remove('is-open');
+            var dd = wrapper.querySelector('.autocomplete-dropdown');
+            if (dd) dd.style.display = 'none';
+            var sInput = wrapper.querySelector('input[type="text"]');
+            if (sInput) {
+                sInput.value = '';
+                sInput.style.color = '';
+                sInput.style.borderColor = '';
             }
         }
         var feedback = document.getElementById('add_fare_route_feedback');
@@ -1593,14 +1711,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
 
+            // Guaranteed focus listener when modal finishes opening
+            const onShownFocus = function() {
+                addModalEl.removeEventListener('shown.bs.modal', onShownFocus);
+                setTimeout(function() { focusAddFareInput(true); }, 50);
+                setTimeout(function() { focusAddFareInput(true); }, 150);
+                setTimeout(function() { focusAddFareInput(true); }, 300);
+            };
+            addModalEl.addEventListener('shown.bs.modal', onShownFocus);
+
             bsModal.show();
 
             setTimeout(() => {
                 syncAddDestinationUI();
                 validateAddFareForm();
-                const fareInput = addModalEl.querySelector('input[name="fare"]');
-                if (fareInput) fareInput.focus();
-            }, 300);
+                const modalBody = addModalEl.querySelector('.modal-body');
+                if (modalBody) modalBody.scrollTop = 0;
+                focusAddFareInput(true);
+            }, 350);
+            setTimeout(function() { focusAddFareInput(true); }, 500);
+            setTimeout(function() { focusAddFareInput(true); }, 750);
 
             if (window.history.replaceState) {
                 window.history.replaceState({}, document.title, window.location.pathname);

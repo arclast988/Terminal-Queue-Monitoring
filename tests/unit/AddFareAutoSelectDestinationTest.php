@@ -24,5 +24,12 @@ final class AddFareAutoSelectDestinationTest extends CIUnitTestCase
         // Verify syncAutocompleteValue is supported in autocomplete-search.js
         $autocompleteJs = file_get_contents(FCPATH . 'assets/js/autocomplete-search.js');
         $this->assertStringContainsString('selectEl.syncAutocompleteValue = updateInputValue;', $autocompleteJs);
+
+        // Verify Fare Amount input in addFareModal has ID add_fare_amount
+        $this->assertStringContainsString('id="add_fare_amount"', $faresViewContent);
+
+        // Verify focusAddFareInput helper and shown.bs.modal focus triggers exist
+        $this->assertStringContainsString('function focusAddFareInput(', $faresViewContent);
+        $this->assertStringContainsString('focusAddFareInput(true);', $faresViewContent);
     }
 }

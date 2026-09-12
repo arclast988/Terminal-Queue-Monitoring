@@ -663,7 +663,7 @@
                         ?>
                         <?php if (!empty($opName) && strtolower(trim($opName)) !== strtolower(trim($drName))): ?>
                             <span class="small text-truncate" title="Operator: <?= esc($opName) ?>">
-                                <span class="text-muted"><i class="bi bi-building me-1"></i>Op:</span>
+                                <span class="text-muted"><i class="bi bi-building me-1"></i>Operator:</span>
                                 <strong><?= esc($opName) ?></strong>
                             </span>
                         <?php endif; ?>

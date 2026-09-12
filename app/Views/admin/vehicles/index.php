@@ -559,22 +559,19 @@ $countInService = $countActive + $countMaintenance;
 
     .vf-btn.active:hover {
         transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
+    }
+    .vf-btn#filter-btn-all.active:hover {
         box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25) !important;
-    }
-    .vf-btn.vf-jeepney.active:hover {
-        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25) !important;
-    }
-    .vf-btn.vf-van.active:hover {
-        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25) !important;
-    }
-    .vf-btn.vf-minibus.active:hover {
-        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25) !important;
     }
     .vf-btn.vf-active-status.active:hover {
         box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;
     }
     .vf-btn.vf-maintenance-status.active:hover {
         box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25) !important;
+    }
+    .vf-btn.vf-archive.active:hover {
+        box-shadow: 0 4px 12px rgba(71, 85, 105, 0.25) !important;
     }
 
     .vf-count {
@@ -603,40 +600,39 @@ $countInService = $countActive + $countMaintenance;
         color: #fff !important;
     }
 
-    /* Active states per type */
-    <?php foreach (($vehicleTypes ?? []) as $vt): ?>
-    <?php $vtCol = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($vt['slug']); ?>
-    .vf-btn.vf-<?= esc($vt['slug']) ?>.active {
-        background: <?= esc($vtCol) ?> !important;
-        border-color: <?= esc($vtCol) ?> !important;
-        color: #fff !important;
+    /* Active states for vehicle type filters (strictly derived from vehicle theme colors) */
+    <?php 
+    $typesToRender = $vehicleTypes ?? [];
+    $renderedSlugs = array_column($typesToRender, 'slug');
+    foreach (['jeepney', 'van', 'minibus', 'bus'] as $fallbackSlug) {
+        if (!in_array($fallbackSlug, $renderedSlugs, true)) {
+            $typesToRender[] = ['slug' => $fallbackSlug, 'color' => vehicle_type_color($fallbackSlug)];
+        }
     }
-    .vf-btn.vf-<?= esc($vt['slug']) ?>.active .vf-count {
-        background: rgba(255, 255, 255, 0.25) !important;
-        color: #fff !important;
+    ?>
+    <?php foreach ($typesToRender as $vt): ?>
+    <?php
+        $slug = esc($vt['slug']);
+        $col = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($slug);
+    ?>
+    .vf-btn.vf-<?= $slug ?>.active {
+        background: var(--vehicle-<?= $slug ?>-soft, <?= $col ?>18) !important;
+        border-color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+        color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
     }
-    .vf-btn.vf-<?= esc($vt['slug']) ?>.active:hover {
-        box-shadow: 0 4px 12px <?= esc($vtCol) ?>44 !important;
+    .vf-btn.vf-<?= $slug ?>.active .vf-count {
+        background: var(--vehicle-<?= $slug ?>-soft, <?= $col ?>25) !important;
+        color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+    }
+    .vf-btn.vf-<?= $slug ?>.active:hover {
+        background: var(--vehicle-<?= $slug ?>-soft, <?= $col ?>25) !important;
+        border-color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+        color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12) !important;
+        filter: brightness(0.96);
     }
     <?php endforeach; ?>
-
-    .vf-btn.vf-jeepney.active {
-        background: var(--vehicle-jeepney, #1565c0) !important;
-        border-color: var(--vehicle-jeepney, #1565c0) !important;
-        color: #fff !important;
-    }
-
-    .vf-btn.vf-van.active {
-        background: var(--vehicle-van, #c62828) !important;
-        border-color: var(--vehicle-van, #c62828) !important;
-        color: #fff !important;
-    }
-
-    .vf-btn.vf-minibus.active {
-        background: var(--vehicle-minibus, #2e7d32) !important;
-        border-color: var(--vehicle-minibus, #2e7d32) !important;
-        color: #fff !important;
-    }
 
     .vf-btn.vf-active-status.active {
         background: #16a34a !important;
@@ -650,11 +646,27 @@ $countInService = $countActive + $countMaintenance;
         color: #fff !important;
     }
 
-    .vf-btn.vf-jeepney.active .vf-count,
-    .vf-btn.vf-van.active .vf-count,
-    .vf-btn.vf-minibus.active .vf-count,
+    .vf-btn.vf-archive.active {
+        background: #475569 !important;
+        border-color: #475569 !important;
+        color: #fff !important;
+    }
+
+    .vf-btn.vf-archive.active:hover {
+        background: #334155 !important;
+        border-color: #334155 !important;
+        box-shadow: 0 4px 12px rgba(71, 85, 105, 0.3) !important;
+    }
+
+    .vf-btn.vf-archive:hover:not(.active) {
+        border-color: #94a3b8 !important;
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+    }
+
     .vf-btn.vf-active-status.active .vf-count,
-    .vf-btn.vf-maintenance-status.active .vf-count {
+    .vf-btn.vf-maintenance-status.active .vf-count,
+    .vf-btn.vf-archive.active .vf-count {
         background: rgba(255, 255, 255, 0.25) !important;
         color: #fff !important;
     }

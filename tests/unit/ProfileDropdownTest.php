@@ -259,6 +259,9 @@ final class ProfileDropdownTest extends CIUnitTestCase
         $this->assertStringContainsString('New Password', $html);
         $this->assertStringContainsString('Confirm New Password', $html);
         $this->assertStringContainsString('Update Password', $html);
+        $this->assertStringContainsString('btn-modern-success', $html);
+        $this->assertStringContainsString('updateFormValidity', $html);
+        $this->assertStringContainsString('is-valid-form', $html);
         $this->assertStringContainsString('change-password/update', $html);
         $this->assertStringContainsString('change-password/send-code', $html);
     }

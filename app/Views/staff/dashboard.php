@@ -475,6 +475,41 @@ if (!empty($recent_departures)) {
         background: rgba(255, 255, 255, 0.28);
         color: #ffffff;
     }
+
+    /* Active states for vehicle type filter buttons (strictly derived from vehicle theme colors) */
+    <?php 
+    $staffTypesToRender = $vehicleTypes ?? [];
+    $staffRenderedSlugs = array_column($staffTypesToRender, 'slug');
+    foreach (['jeepney', 'van', 'minibus', 'bus'] as $fallbackSlug) {
+        if (!in_array($fallbackSlug, $staffRenderedSlugs, true)) {
+            $staffTypesToRender[] = ['slug' => $fallbackSlug, 'color' => vehicle_type_color($fallbackSlug)];
+        }
+    }
+    ?>
+    <?php foreach ($staffTypesToRender as $vt): ?>
+        <?php
+            $slug = strtolower(esc($vt['slug']));
+            $col = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($slug);
+        ?>
+        .dep-filter-btn[data-type="<?= $slug ?>"].active {
+            background: var(--vehicle-<?= $slug ?>-soft, <?= $col ?>18) !important;
+            border-color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+            color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+        }
+        .dep-filter-btn[data-type="<?= $slug ?>"].active .dep-chip-count {
+            background: var(--vehicle-<?= $slug ?>-soft, <?= $col ?>25) !important;
+            color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+        }
+        .dep-filter-btn[data-type="<?= $slug ?>"].active:hover {
+            background: var(--vehicle-<?= $slug ?>-soft, <?= $col ?>25) !important;
+            border-color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+            color: var(--vehicle-<?= $slug ?>, <?= $col ?>) !important;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12) !important;
+            filter: brightness(0.96);
+        }
+    <?php endforeach; ?>
+
     .dep-filter-btn img {
         height: 18px;
         width: auto;

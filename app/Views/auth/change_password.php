@@ -133,13 +133,6 @@ SVG;
 
                 <div class="modern-card-body p-4">
                     <!-- Flash Notifications -->
-                    <?php if (session()->getFlashdata('error')): ?>
-                        <div class="alert-modern alert-modern-danger mb-4 fade-in">
-                            <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
-                            <div><?= session()->getFlashdata('error') ?></div>
-                        </div>
-                    <?php endif; ?>
-
                     <?php if (session()->getFlashdata('success')): ?>
                         <div class="alert-modern alert-modern-success mb-4 fade-in">
                             <i class="bi bi-check-circle-fill alert-modern-icon"></i>
@@ -437,6 +430,32 @@ SVG;
 #systemWarningOkBtn:active {
     transform: translateY(0);
 }
+
+/* Update Password Button Dynamic States */
+#btnSubmitPassword.btn-modern-success {
+    background: #e2e8f0;
+    color: #64748b !important;
+    border: 1.5px solid #cbd5e1;
+    box-shadow: none;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+#btnSubmitPassword.btn-modern-success:hover:not(.is-valid-form) {
+    background: #cbd5e1;
+    color: #334155 !important;
+}
+#btnSubmitPassword.btn-modern-success.is-valid-form {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    color: #ffffff !important;
+    border-color: transparent !important;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35) !important;
+}
+#btnSubmitPassword.btn-modern-success.is-valid-form:hover {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45) !important;
+    transform: translateY(-2px);
+}
 </style>
 
 <script>
@@ -507,12 +526,15 @@ window.alert = function(msg) {
 document.addEventListener('DOMContentLoaded', function() {
     var newPwInput = document.getElementById('new_password');
     var confirmPwInput = document.getElementById('confirm_password');
+    var curPwInput = document.getElementById('current_password');
+    var codeInput = document.getElementById('verification_code');
     var reqLength = document.getElementById('reqLength');
     var matchFeedback = document.getElementById('matchFeedback');
     var btnSendOtp = document.getElementById('btnSendOtp');
     var btnSendOtpText = document.getElementById('btnSendOtpText');
     var otpStatusBox = document.getElementById('otpStatusBox');
     var cpForm = document.getElementById('changePasswordForm');
+    var btnSubmitPassword = document.getElementById('btnSubmitPassword');
 
     // Attach listener to restore focus to invalid input field after warning modal is dismissed
     systemWarningModalEl = document.getElementById('systemWarningModal');
@@ -538,6 +560,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 200);
     <?php endif; ?>
 
+    function updateFormValidity() {
+        var cur = curPwInput ? curPwInput.value.trim() : '';
+        var code = codeInput ? codeInput.value.trim() : '';
+        var p1 = newPwInput ? newPwInput.value : '';
+        var p2 = confirmPwInput ? confirmPwInput.value : '';
+
+        var isValid = (cur.length > 0) &&
+                      (code.length === 6 && /^\d{6}$/.test(code)) &&
+                      (p1.length >= 8) &&
+                      (p1 === p2) &&
+                      (cur !== p1);
+
+        if (btnSubmitPassword) {
+            if (isValid) {
+                btnSubmitPassword.classList.add('is-valid-form');
+            } else {
+                btnSubmitPassword.classList.remove('is-valid-form');
+            }
+        }
+    }
+
     function checkRequirements() {
         var val = newPwInput ? newPwInput.value : '';
         if (val.length >= 8) {
@@ -546,6 +589,7 @@ document.addEventListener('DOMContentLoaded', function() {
             reqLength.classList.remove('req-valid');
         }
         checkMatch();
+        updateFormValidity();
     }
 
     function checkMatch() {
@@ -554,6 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!p2) {
             matchFeedback.style.display = 'none';
             matchFeedback.innerHTML = '';
+            updateFormValidity();
             return;
         }
         matchFeedback.style.display = 'block';
@@ -564,10 +609,30 @@ document.addEventListener('DOMContentLoaded', function() {
             matchFeedback.className = 'mt-1 match-error';
             matchFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Passwords do not match';
         }
+        updateFormValidity();
     }
 
-    if (newPwInput) newPwInput.addEventListener('input', checkRequirements);
-    if (confirmPwInput) confirmPwInput.addEventListener('input', checkMatch);
+    if (curPwInput) {
+        curPwInput.addEventListener('input', updateFormValidity);
+        curPwInput.addEventListener('change', updateFormValidity);
+    }
+    if (codeInput) {
+        codeInput.addEventListener('input', updateFormValidity);
+        codeInput.addEventListener('change', updateFormValidity);
+    }
+    if (newPwInput) {
+        newPwInput.addEventListener('input', checkRequirements);
+        newPwInput.addEventListener('change', updateFormValidity);
+    }
+    if (confirmPwInput) {
+        confirmPwInput.addEventListener('input', checkMatch);
+        confirmPwInput.addEventListener('change', updateFormValidity);
+    }
+
+    // Initial check on load
+    checkRequirements();
+    checkMatch();
+    updateFormValidity();
 
     // OTP Resend Cooldown Countdown
     var countdownTimer = null;
