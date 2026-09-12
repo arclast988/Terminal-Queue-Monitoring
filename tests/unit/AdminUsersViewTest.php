@@ -447,7 +447,7 @@ final class AdminUsersViewTest extends CIUnitTestCase
 
         // Check data attributes on avatar-wrapper
         $this->assertStringContainsString('data-user-id="1"', $html);
-        $this->assertStringContainsString('data-img-url="http://localhost/uploads/avatars/avatar_admin.png"', $html);
+        $this->assertStringContainsString('data-img-url="' . base_url('uploads/avatars/avatar_admin.png') . '"', $html);
         $this->assertStringContainsString('data-user-id="2"', $html);
         $this->assertStringContainsString('data-img-url=""', $html);
 
