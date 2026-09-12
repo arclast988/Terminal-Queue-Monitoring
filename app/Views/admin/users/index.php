@@ -799,11 +799,11 @@ if (!isset($countActive)) {
     <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
         <div class="modal-content" style="border-radius: 18px; overflow: hidden; border: none; box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25);">
             <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #b71c1c 0%, #dc2626 50%, #ef4444 100%);"></div>
-            <div class="modal-header border-0 pb-0 px-4 pt-4">
+            <div class="modal-header border-0 pb-0 px-4 pt-4" style="border-bottom: none !important; align-items: flex-start;">
                 <h5 class="modal-title fw-bold" id="userAvatarModalLabel" style="font-size: 1.2rem; color: #0f172a;">
                     <i class="bi bi-camera me-2 text-danger"></i>Change Profile Photo
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="margin-top: -8px; position: relative; z-index: 15;"></button>
             </div>
             <div class="modal-body text-center px-4 py-3">
                 <div class="d-flex flex-column align-items-center mb-3">
@@ -1399,6 +1399,19 @@ body.modal-open #activateUserConfirmModal,
 body.modal-open #deleteUserConfirmModal,
 #deleteUserConfirmModal {
     z-index: 100050 !important;
+}
+
+/* User Avatar modal header and close button adjustment */
+#userAvatarModal .modal-header {
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+    align-items: flex-start !important;
+}
+#userAvatarModal .modal-header .btn-close {
+    margin-top: -8px !important;
+    margin-right: -4px !important;
+    position: relative !important;
+    z-index: 15 !important;
 }
 
 /* Remove avatar confirmation layered directly over userAvatarModal */

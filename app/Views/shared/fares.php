@@ -793,7 +793,7 @@ $isManager = $isAdmin;
                     $vtIco  = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
                 ?>
                 <label class="vt-select-chip" style="--vt-color: <?= esc($vtCol) ?>;">
-                  <input type="checkbox" name="vehicle_types[]" id="add_vt_<?= esc($vtSlug) ?>" value="<?= esc($vtSlug) ?>" class="vt-chip-checkbox" <?= $index === 0 ? 'checked' : '' ?>>
+                  <input type="checkbox" name="vehicle_types[]" id="add_vt_<?= esc($vtSlug) ?>" value="<?= esc($vtSlug) ?>" class="vt-chip-checkbox">
                   <span class="vt-chip-body">
                     <i class="fas <?= esc($vtIco) ?> vt-chip-icon" style="color: <?= esc($vtCol) ?>;"></i>
                     <span class="vt-chip-name"><?= esc($vehicleType['name']) ?></span>
@@ -1605,6 +1605,10 @@ if (addFareModalEl) {
             }
             var fareInput = document.getElementById('add_fare_amount');
             if (fareInput) fareInput.value = '';
+            if (addForm) {
+                var cbs = addForm.querySelectorAll('input[name="vehicle_types[]"]');
+                cbs.forEach(function(cb) { cb.checked = false; });
+            }
         }
     });
 
@@ -1628,7 +1632,7 @@ if (addFareModalEl) {
         if (addForm) {
             addForm.reset();
             var cbs = addForm.querySelectorAll('input[name="vehicle_types[]"]');
-            cbs.forEach(function(cb, idx) { cb.checked = (idx === 0); });
+            cbs.forEach(function(cb) { cb.checked = false; });
         }
         var destSelect = document.getElementById('add_destination');
         if (destSelect) {
@@ -1684,6 +1688,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     filterAddDestinationOptions();
                 }
             }
+            if (targetType) {
+                const cbs = addModalEl.querySelectorAll('input[name="vehicle_types[]"]');
+                cbs.forEach(cb => {
+                    cb.checked = (cb.value.toLowerCase() === targetType.toLowerCase());
+                });
+            }
             if (targetDest) {
                 const destSelect = document.getElementById('add_destination');
                 if (destSelect) {
@@ -1701,14 +1711,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         destSelect.dispatchEvent(new Event('change', { bubbles: true }));
                         destSelect.dispatchEvent(new Event('input', { bubbles: true }));
                         syncAddDestinationUI();
+                        validateAddFareForm();
                     }
                 }
-            }
-            if (targetType) {
-                const cbs = addModalEl.querySelectorAll('input[name="vehicle_types[]"]');
-                cbs.forEach(cb => {
-                    cb.checked = (cb.value.toLowerCase() === targetType.toLowerCase());
-                });
             }
 
             // Guaranteed focus listener when modal finishes opening
