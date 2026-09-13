@@ -112,7 +112,18 @@
                     innerNum.textContent = count;
                     applyPassengerColor(innerNum, count, capacity);
                 } else {
-                    span.innerHTML = '<strong class="passenger-count-num ' + colorClass + '">' + count + '</strong> / ' + capacity;
+                    if (typeof span.replaceChildren === 'function') {
+                        span.replaceChildren();
+                    } else {
+                        while (span.firstChild) {
+                            span.removeChild(span.firstChild);
+                        }
+                    }
+                    var strongEl = document.createElement('strong');
+                    strongEl.className = 'passenger-count-num ' + colorClass;
+                    strongEl.textContent = count;
+                    span.appendChild(strongEl);
+                    span.appendChild(document.createTextNode(' / ' + capacity));
                 }
             }
         }
@@ -124,7 +135,13 @@
                 wrap.id = 'full-badge-' + id;
                 wrap.className = 'full-badge-wrap';
                 wrap.style.display = 'block';
-                wrap.innerHTML = '<span class="badge-modern badge-modern-danger full-badge" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span>';
+                var badgeInner = document.createElement('span');
+                badgeInner.className = 'badge-modern badge-modern-danger full-badge';
+                badgeInner.style.fontSize = '12px';
+                badgeInner.style.fontWeight = '800';
+                badgeInner.style.padding = '2px 8px';
+                badgeInner.textContent = 'FULL';
+                wrap.appendChild(badgeInner);
                 span.appendChild(wrap);
             }
         }
@@ -137,6 +154,43 @@
             return DOMPurify.sanitize(html, { ADD_ATTR: ['style'] });
         }
         return html;
+    }
+
+    function replaceElementChildrenSafely(targetEl, sourceHtml, isTableBody) {
+        if (!targetEl) return;
+        if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
+            var wrappedHtml = isTableBody
+                ? ('<table><tbody>' + (sourceHtml || '') + '</tbody></table>')
+                : ('<div>' + (sourceHtml || '') + '</div>');
+            var cleanFragment = DOMPurify.sanitize(wrappedHtml, {
+                ADD_ATTR: ['style'],
+                RETURN_DOM_FRAGMENT: true
+            });
+            if (cleanFragment) {
+                var container = isTableBody ? cleanFragment.querySelector('tbody') : cleanFragment.firstElementChild;
+                if (container) {
+                    var nodes = Array.prototype.slice.call(container.childNodes);
+                    if (typeof targetEl.replaceChildren === 'function') {
+                        targetEl.replaceChildren.apply(targetEl, nodes);
+                    } else {
+                        while (targetEl.firstChild) {
+                            targetEl.removeChild(targetEl.firstChild);
+                        }
+                        for (var i = 0; i < nodes.length; i++) {
+                            targetEl.appendChild(nodes[i]);
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+        if (typeof targetEl.replaceChildren === 'function') {
+            targetEl.replaceChildren();
+        } else {
+            while (targetEl.firstChild) {
+                targetEl.removeChild(targetEl.firstChild);
+            }
+        }
     }
 
     // Structural fingerprint of the queue IGNORING passenger counts, so that
@@ -176,29 +230,21 @@
             var curTbody = curEl.querySelector('tbody');
             var newTbody = newEl.querySelector('tbody');
             if (curTbody && newTbody) {
-                var cleanTableHtml = sanitizeHtml('<table><tbody>' + newTbody.innerHTML + '</tbody></table>');
-                var tempTable = document.createElement('div');
-                tempTable.innerHTML = cleanTableHtml;
-                var cleanTbody = tempTable.querySelector('tbody');
-                curTbody.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+                replaceElementChildrenSafely(curTbody, newTbody.innerHTML, true);
             } else {
-                curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
+                replaceElementChildrenSafely(curEl, newEl.innerHTML, false);
             }
             return;
         }
 
         // If target is <tbody>, update its row contents
         if (curEl.tagName === 'TBODY') {
-            var cleanTableHtml = sanitizeHtml('<table><tbody>' + newEl.innerHTML + '</tbody></table>');
-            var tempTable = document.createElement('div');
-            tempTable.innerHTML = cleanTableHtml;
-            var cleanTbody = tempTable.querySelector('tbody');
-            curEl.innerHTML = cleanTbody ? cleanTbody.innerHTML : '';
+            replaceElementChildrenSafely(curEl, newEl.innerHTML, true);
             return;
         }
 
         // Non-table elements (e.g. #queue-list card container)
-        curEl.innerHTML = sanitizeHtml(newEl.innerHTML);
+        replaceElementChildrenSafely(curEl, newEl.innerHTML, false);
     }
 
     function refreshQueueCards(newDoc) {
@@ -249,12 +295,12 @@
                     var curBody = curModal.querySelector('.modal-body');
                     var newBody = newModal.querySelector('.modal-body');
                     if (curBody && newBody) {
-                        curBody.innerHTML = sanitizeHtml(newBody.innerHTML);
+                        replaceElementChildrenSafely(curBody, newBody.innerHTML, false);
                     }
                     var curFoot = curModal.querySelector('.modal-footer');
                     var newFoot = newModal.querySelector('.modal-footer');
                     if (curFoot && newFoot) {
-                        curFoot.innerHTML = sanitizeHtml(newFoot.innerHTML);
+                        replaceElementChildrenSafely(curFoot, newFoot.innerHTML, false);
                     }
                     try {
                         document.dispatchEvent(new CustomEvent('vehicle-list-refreshed'));
@@ -273,7 +319,7 @@
         var searchInput = document.getElementById('vehicleModalSearch');
         var searchVal = searchInput ? searchInput.value : '';
 
-        curList.innerHTML = sanitizeHtml(newList.innerHTML);
+        replaceElementChildrenSafely(curList, newList.innerHTML, false);
 
         // Restore selection + selected styling for rows that still exist.
         var restored = 0;

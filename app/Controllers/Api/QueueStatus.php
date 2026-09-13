@@ -84,7 +84,7 @@ class QueueStatus extends Controller
                 'queue'   => $items,
                 'vehicle_type_colors' => get_db_vehicle_types(),
                 'sync_token' => $syncToken,
-                'queue_hash' => md5(json_encode($items)),
+                'queue_hash' => hash('sha256', json_encode($items)),
                 'ts'      => time()
             ]);
     }
