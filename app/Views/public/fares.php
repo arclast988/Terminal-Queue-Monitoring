@@ -319,10 +319,14 @@
             transition: var(--transition);
             border: 1px solid #edf2f7;
             border-top: 4px solid var(--fare-accent, #c62828) !important;
-            animation: fadeInUp 0.5s ease-out both;
             height: 100%;
             display: flex;
             flex-direction: column;
+        }
+
+        /* Entrance animation only on initial page load, not during live sync */
+        .fares-grid.initial-load .fare-card {
+            animation: fadeInUp 0.5s ease-out both;
         }
 
         .fare-card:hover {
@@ -331,10 +335,15 @@
             border-color: var(--fare-accent, var(--primary));
         }
 
-        .fare-card.vehicle-type-van     { --fare-accent: var(--vehicle-van, #c62828); animation-delay: 0.1s; }
-        .fare-card.vehicle-type-jeepney { --fare-accent: var(--vehicle-jeepney, #1565c0); animation-delay: 0.2s; }
-        .fare-card.vehicle-type-minibus { --fare-accent: var(--vehicle-minibus, #2e7d32); animation-delay: 0.3s; }
-        .fare-card.vehicle-type-bus     { --fare-accent: var(--vehicle-bus, #ea580c); animation-delay: 0.4s; }
+        .fare-card.vehicle-type-van     { --fare-accent: var(--vehicle-van, #c62828); }
+        .fare-card.vehicle-type-jeepney { --fare-accent: var(--vehicle-jeepney, #1565c0); }
+        .fare-card.vehicle-type-minibus { --fare-accent: var(--vehicle-minibus, #2e7d32); }
+        .fare-card.vehicle-type-bus     { --fare-accent: var(--vehicle-bus, #ea580c); }
+
+        .fares-grid.initial-load .fare-card.vehicle-type-van     { animation-delay: 0.1s; }
+        .fares-grid.initial-load .fare-card.vehicle-type-jeepney { animation-delay: 0.2s; }
+        .fares-grid.initial-load .fare-card.vehicle-type-minibus { animation-delay: 0.3s; }
+        .fares-grid.initial-load .fare-card.vehicle-type-bus     { animation-delay: 0.4s; }
 
         .card-header {
             padding: 20px 25px;
@@ -489,7 +498,7 @@
             }
         }
 
-        #discountSection {
+        #discountSection.initial-load {
             animation: fadeInUp 0.6s ease-out both;
             animation-delay: 0.4s;
         }
@@ -651,9 +660,9 @@
     <!-- Main Content -->
     <div class="container">
 
-        <div class="fares-grid" id="faresGrid">
+        <div class="fares-grid initial-load" id="faresGrid">
             <!-- Van Routes -->
-            <div class="fare-card vehicle-type-van">
+            <div class="fare-card vehicle-type-van" id="fare-card-van" data-vehicle-type="van">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/van.png') ?>" alt="Van" style="width: 45px; height: auto; object-fit: contain;"> Van Routes</h3>
                 </div>
@@ -700,7 +709,7 @@
             </div>
 
             <!-- Jeepney Routes -->
-            <div class="fare-card vehicle-type-jeepney">
+            <div class="fare-card vehicle-type-jeepney" id="fare-card-jeepney" data-vehicle-type="jeepney">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/jeep.png') ?>" alt="Jeepney" style="width: 45px; height: auto; object-fit: contain;"> Jeepney Routes</h3>
                 </div>
@@ -747,7 +756,7 @@
             </div>
 
             <!-- Minibus Routes -->
-            <div class="fare-card vehicle-type-minibus">
+            <div class="fare-card vehicle-type-minibus" id="fare-card-minibus" data-vehicle-type="minibus">
                 <div class="card-header">
                     <h3><img src="<?= base_url('images/minibus.png') ?>" alt="Minibus"> Minibus Routes</h3>
                 </div>
@@ -800,7 +809,7 @@
                     $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
                     $vtImg = vehicle_type_image($vehicleType['slug']);
                 ?>
-                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>;">
+                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" id="fare-card-<?= esc($vehicleType['slug']) ?>" data-vehicle-type="<?= esc($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>;">
                     <div class="card-header">
                         <h3>
                             <?php if (!empty($vtImg)): ?>
@@ -854,7 +863,7 @@
         </div>
 
         <!-- Passenger Discount Rates -->
-        <div id="discountSection">
+        <div id="discountSection" class="initial-load">
         <?php if (!empty($discounts)): ?>
         <?php
         $discountMeta = [
@@ -982,8 +991,46 @@
     // ══════════════════════════════════════════════════
     var _fareFingerprint = '';
     var _fareFetchPending = false;
+    var _cardFingerprints = {};
+    var _discountFingerprint = '';
+    var _vehicleTypesFingerprint = null;
+    var _isAdmin = <?= in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'true' : 'false' ?>;
+    var _adminEditBaseUrl = '<?= base_url('admin/routes/edit/') ?>';
 
-    function makeFP(obj) { return JSON.stringify(obj); }
+    // Remove initial-load entrance animation class after page has settled (1.2s)
+    setTimeout(function() {
+        var grid = document.getElementById('faresGrid');
+        if (grid) grid.classList.remove('initial-load');
+        var disc = document.getElementById('discountSection');
+        if (disc) disc.classList.remove('initial-load');
+    }, 1200);
+
+    // Stable content fingerprint that ignores timestamps, cached_at, and sync_token
+    function makeContentFingerprint(data) {
+        if (!data) return '';
+        return JSON.stringify({
+            vt: (data.vehicle_types || []).map(function(v) {
+                return { slug: v.slug, name: v.name, color: v.color, image: v.image };
+            }),
+            routes: data.routes_by_type || {},
+            discounts: (data.discounts || []).map(function(d) {
+                return { id: d.id, type: d.type, label: d.label, percent: d.discount_percent, active: d.is_active };
+            })
+        });
+    }
+
+    function makeTypeRoutesFingerprint(routes) {
+        if (!routes || !routes.length) return 'empty';
+        return JSON.stringify(routes.map(function(r) {
+            return {
+                id: r.id,
+                origin: r.origin,
+                destination: r.destination,
+                fare: r.fare,
+                df: r.discounted_fares || {}
+            };
+        }));
+    }
 
     function formatFare(n) {
         return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -995,24 +1042,27 @@
         });
     }
 
-    function buildFareCard(type, label, badgeClass, imgSrc, routes, color) {
-        var typeClass = type ? ' vehicle-type-' + type : '';
-        var accent = color || '#c62828';
-        var html = '<div class="fare-card' + typeClass + '" style="--fare-accent: ' + accent + ';">'
-            + '<div class="card-header">'
-            + '<h3><img src="' + imgSrc + '" alt="' + label + '"> ' + label + '</h3>'
-            + '</div>'
-            + '<div class="fare-list">';
-
-        if (routes.length > 0) {
+    function buildFareListContent(label, routes) {
+        var html = '';
+        if (routes && routes.length > 0) {
             routes.forEach(function(route) {
+                var origin = escapeHtml(route.origin || '');
+                var destination = escapeHtml(route.destination || '');
+                var fareDisplay = formatFare(route.fare);
+                var actionHtml = _isAdmin
+                    ? '<div class="d-flex align-items-center gap-2">'
+                        + '<div class="price-tag">' + fareDisplay + '</div>'
+                        + '<a href="' + _adminEditBaseUrl + '/' + encodeURIComponent(route.id) + '" class="btn btn-sm btn-outline-primary shadow-sm" style="border-radius: 8px; padding: 5px 10px;" title="Edit Fare"><i class="fas fa-edit"></i></a>'
+                        + '</div>'
+                    : '<div class="price-tag">' + fareDisplay + '</div>';
+
                 html += '<div class="fare-item" style="flex-direction: column; align-items: stretch;">'
                     + '<div style="display: flex; justify-content: space-between; align-items: center;">'
                     + '<div class="dest-info">'
-                    + '<div class="f-dest">' + route.origin.toUpperCase() + ' - ' + route.destination.toUpperCase() + '</div>'
-                    + '<div class="f-origin">From: ' + route.origin + '</div>'
+                    + '<div class="f-dest">' + origin.toUpperCase() + ' - ' + destination.toUpperCase() + '</div>'
+                    + '<div class="f-origin">From: ' + origin + '</div>'
                     + '</div>'
-                    + '<div class="price-tag">' + formatFare(route.fare) + '</div>'
+                    + actionHtml
                     + '</div>';
 
                 // Render discounted fares
@@ -1023,7 +1073,7 @@
                         html += '<div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">'
                             + '<span style="font-size: 13.5px; color: #334155; font-weight: 600;">'
                             + '<i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i>'
-                            + df.label + ' <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(' + Number(df.discount_percent).toFixed(0) + '% off)</span>'
+                            + escapeHtml(df.label) + ' <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(' + Number(df.discount_percent).toFixed(0) + '% off)</span>'
                             + '</span>'
                             + '<span style="font-size: 14px; font-weight: 700; color: #16a34a;">' + formatFare(df.amount) + '</span>'
                             + '</div>';
@@ -1040,9 +1090,18 @@
                 + '<span>No ' + typeName + ' fares listed.</span>'
                 + '</div>';
         }
-
-        html += '</div></div>';
         return html;
+    }
+
+    function buildFareCard(type, label, badgeClass, imgSrc, routes, color) {
+        var typeClass = type ? ' vehicle-type-' + type : '';
+        var accent = color || '#c62828';
+        return '<div class="fare-card' + typeClass + '" id="fare-card-' + escapeHtml(type) + '" data-vehicle-type="' + escapeHtml(type) + '" style="--fare-accent: ' + accent + ';">'
+            + '<div class="card-header">'
+            + '<h3><img src="' + imgSrc + '" alt="' + label + '"> ' + label + '</h3>'
+            + '</div>'
+            + '<div class="fare-list">' + buildFareListContent(label, routes) + '</div>'
+            + '</div>';
     }
 
     function buildDiscountCards(discounts) {
@@ -1063,7 +1122,7 @@
             var meta = metaMap[disc.type] || defaultMeta;
             html += '<div class="fare-card" style="text-align: center;">'
                 + '<div class="card-header">'
-                + '<h3><i class="fas ' + meta.icon + '" style="color: ' + meta.label_color + '; font-size: 22px;"></i> ' + disc.label + '</h3>'
+                + '<h3><i class="fas ' + meta.icon + '" style="color: ' + meta.label_color + '; font-size: 22px;"></i> ' + escapeHtml(disc.label) + '</h3>'
                 + '<span class="type-badge ' + meta.badge_class + '">' + Number(disc.discount_percent).toFixed(0) + '% OFF</span>'
                 + '</div>'
                 + '<div style="padding: 40px 20px;">'
@@ -1084,41 +1143,111 @@
         fetch('<?= base_url('api/fares') ?>?_=' + Date.now())
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            var fp = makeFP(data);
-            if (fp === _fareFingerprint) return; // No change
-            _fareFingerprint = fp;
+            var globalFp = makeContentFingerprint(data);
+
+            var vehicleTypes = Array.isArray(data.vehicle_types) ? data.vehicle_types : [];
+            var currentTypesFp = JSON.stringify(vehicleTypes.map(function(v) { return v.slug; }));
+            var newDiscFp = JSON.stringify(data.discounts || []);
+
+            // First fetch: seed the fingerprints without re-rendering server-rendered DOM
+            if (_fareFingerprint === '') {
+                _fareFingerprint = globalFp;
+                _vehicleTypesFingerprint = currentTypesFp;
+                _discountFingerprint = newDiscFp;
+                vehicleTypes.forEach(function(vehicleType) {
+                    var slug = vehicleType.slug;
+                    var routes = (data.routes_by_type && data.routes_by_type[slug])
+                        || data[slug + '_routes']
+                        || [];
+                    _cardFingerprints[slug] = makeTypeRoutesFingerprint(routes);
+                });
+                return;
+            }
+
+            // If absolutely nothing changed, do nothing!
+            if (globalFp === _fareFingerprint) {
+                return;
+            }
+            _fareFingerprint = globalFp;
 
             var baseImgUrl = '<?= base_url("images/") ?>';
-
-            // Rebuild fare grid
             var grid = document.getElementById('faresGrid');
+            var typesChanged = (_vehicleTypesFingerprint !== null && _vehicleTypesFingerprint !== currentTypesFp);
+            _vehicleTypesFingerprint = currentTypesFp;
+
             if (grid) {
-                var vehicleTypes = Array.isArray(data.vehicle_types) ? data.vehicle_types : [];
-                grid.innerHTML = vehicleTypes.map(function(vehicleType) {
-                    var routes = (data.routes_by_type && data.routes_by_type[vehicleType.slug])
-                        || data[vehicleType.slug + '_routes']
-                        || [];
-                    return buildFareCard(
-                        vehicleType.slug,
-                        escapeHtml(vehicleType.name) + ' Routes',
-                        '',
-                        baseImgUrl + (vehicleType.image || 'minibus.png'),
-                        routes,
-                        vehicleType.color || '#c62828'
-                    );
-                }).join('');
+                if (typesChanged || grid.children.length === 0) {
+                    // Vehicle types added/removed: rebuild grid without re-triggering entrance animation
+                    grid.classList.remove('initial-load');
+                    grid.innerHTML = vehicleTypes.map(function(vehicleType) {
+                        var routes = (data.routes_by_type && data.routes_by_type[vehicleType.slug])
+                            || data[vehicleType.slug + '_routes']
+                            || [];
+                        _cardFingerprints[vehicleType.slug] = makeTypeRoutesFingerprint(routes);
+                        return buildFareCard(
+                            vehicleType.slug,
+                            escapeHtml(vehicleType.name) + ' Routes',
+                            '',
+                            baseImgUrl + (vehicleType.image || 'minibus.png'),
+                            routes,
+                            vehicleType.color || '#c62828'
+                        );
+                    }).join('');
+                } else {
+                    // Granular update: ONLY update the specific card whose routes changed!
+                    vehicleTypes.forEach(function(vehicleType) {
+                        var slug = vehicleType.slug;
+                        var routes = (data.routes_by_type && data.routes_by_type[slug])
+                            || data[slug + '_routes']
+                            || [];
+                        var newFp = makeTypeRoutesFingerprint(routes);
+
+                        if (_cardFingerprints[slug] !== undefined && _cardFingerprints[slug] === newFp) {
+                            // No change for this vehicle type card — DO NOT TOUCH!
+                            return;
+                        }
+                        _cardFingerprints[slug] = newFp;
+
+                        var cardEl = document.getElementById('fare-card-' + slug)
+                            || grid.querySelector('[data-vehicle-type="' + slug + '"]');
+                        if (cardEl) {
+                            var fareList = cardEl.querySelector('.fare-list');
+                            if (fareList) {
+                                // Smoothly update only the fare list of this card
+                                fareList.innerHTML = buildFareListContent(escapeHtml(vehicleType.name) + ' Routes', routes);
+                            }
+                        } else {
+                            var temp = document.createElement('div');
+                            temp.innerHTML = buildFareCard(
+                                slug,
+                                escapeHtml(vehicleType.name) + ' Routes',
+                                '',
+                                baseImgUrl + (vehicleType.image || 'minibus.png'),
+                                routes,
+                                vehicleType.color || '#c62828'
+                            );
+                            if (temp.firstElementChild) {
+                                grid.appendChild(temp.firstElementChild);
+                            }
+                        }
+                    });
+                }
                 applyFareSearch();
             }
 
-            // Rebuild discount section
-            var discSection = document.getElementById('discountSection');
-            if (discSection) {
-                if (data.discounts && data.discounts.length > 0) {
-                    discSection.innerHTML = buildDiscountCards(data.discounts);
-                    discSection.style.display = '';
-                } else {
-                    discSection.innerHTML = '';
-                    discSection.style.display = 'none';
+            // Rebuild discount section ONLY if discounts changed
+            if (_discountFingerprint !== newDiscFp) {
+                _discountFingerprint = newDiscFp;
+                var discSection = document.getElementById('discountSection');
+                if (discSection) {
+                    discSection.classList.remove('initial-load');
+                    if (data.discounts && data.discounts.length > 0) {
+                        discSection.innerHTML = buildDiscountCards(data.discounts);
+                        discSection.style.display = '';
+                    } else {
+                        discSection.innerHTML = '';
+                        discSection.style.display = 'none';
+                    }
                 }
             }
         })
