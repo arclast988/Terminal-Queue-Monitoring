@@ -14,7 +14,14 @@ class Users extends BaseController
         $model = new UserModel();
         $userRouteModel = new UserRouteModel();
 
-        $users = $model->findAll();
+        $users = $model->orderBy('full_name', 'ASC')->findAll();
+
+        // Sort alphabetically case-insensitively by full_name (or username if full_name is empty)
+        usort($users, function ($a, $b) {
+            $nameA = trim($a['full_name'] ?? '') ?: ($a['username'] ?? '');
+            $nameB = trim($b['full_name'] ?? '') ?: ($b['username'] ?? '');
+            return strcasecmp($nameA, $nameB);
+        });
 
         $countActive = 0;
         $countAdmin = 0;
