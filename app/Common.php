@@ -420,9 +420,16 @@ if (! function_exists('get_all_system_settings')) {
             'theme_admin_primary'    => '#B71C1C',
             'theme_admin_nav_bg'     => '#B71C1C',
             'theme_admin_nav_text'   => '#ffffff',
+            'app_bg_mode'            => 'slideshow',
+            'app_bg_slideshow_1'     => null,
+            'app_bg_slideshow_2'     => null,
+            'app_bg_slideshow_3'     => null,
+            'app_bg_slideshow_4'     => null,
+            'app_bg_slideshow_5'     => null,
             'footer_about_title'     => 'PTTM System',
             'footer_about_text'      => 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.',
             'footer_credit'          => 'Municipality of Palompon, Leyte',
+            'footer_copyright_text'  => '© {year} {title} ({acronym}). All rights reserved. | {credit}',
             'contact_email'          => '',
             'contact_phone'          => '(053) 555-8376 / 338-2022',
             'contact_address'        => 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538',
@@ -572,6 +579,73 @@ if (! function_exists('app_footer_credit')) {
     function app_footer_credit(): string
     {
         return get_system_setting('footer_credit', 'Municipality of Palompon, Leyte') ?: 'Municipality of Palompon, Leyte';
+    }
+}
+
+if (! function_exists('app_footer_copyright')) {
+    /**
+     * Render the official system copyright & municipal attribution notice.
+     * Supports template variables: {year}, {title}, {acronym}, {credit}.
+     */
+    function app_footer_copyright(): string
+    {
+        $custom = get_system_setting('footer_copyright_text');
+        $year    = date('Y');
+        $title   = esc(app_system_title());
+        $acronym = esc(app_acronym());
+        $credit  = esc(app_footer_credit());
+
+        if (! empty($custom)) {
+            $rendered = str_replace(
+                ['{year}', '{title}', '{acronym}', '{credit}'],
+                [$year, $title, $acronym, $credit],
+                esc($custom)
+            );
+            return htmlspecialchars_decode($rendered, ENT_QUOTES);
+        }
+
+        return "&copy; {$year} {$title} ({$acronym}). All rights reserved. | {$credit}";
+    }
+}
+
+if (! function_exists('app_bg_mode')) {
+    /**
+     * Get active background mode ('slideshow' or 'single').
+     */
+    function app_bg_mode(): string
+    {
+        return get_system_setting('app_bg_mode', 'slideshow') ?: 'slideshow';
+    }
+}
+
+if (! function_exists('app_bg_slideshow')) {
+    /**
+     * Return array of 5 background picture URLs for the auth/login slideshow.
+     */
+    function app_bg_slideshow(): array
+    {
+        $defaultFiles = [
+            1 => 'images/bg/bg1_townhall.png',
+            2 => 'images/bg/bg2_aerial_port.png',
+            3 => 'images/bg/bg3_aerial_town.png',
+            4 => 'images/bg/bg4_terminal_exterior.png',
+            5 => 'images/bg/bg5_terminal_bay.png',
+        ];
+
+        $urls = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $custom = get_system_setting("app_bg_slideshow_{$i}");
+            if (! empty($custom)) {
+                $relPath = ltrim(str_replace(['\\'], '/', $custom), '/');
+                if (is_file(FCPATH . $relPath)) {
+                    $mtime = @filemtime(FCPATH . $relPath);
+                    $urls[$i] = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+                    continue;
+                }
+            }
+            $urls[$i] = base_url($defaultFiles[$i]);
+        }
+        return $urls;
     }
 }
 

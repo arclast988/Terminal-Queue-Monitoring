@@ -104,6 +104,10 @@ $routes->group('admin/settings', ['filter' => 'auth:super_admin'], function ($ro
     $routes->post('reset-logo', 'Admin\Settings::resetLogo');
     $routes->post('upload-background', 'Admin\Settings::uploadBackground');
     $routes->post('reset-background', 'Admin\Settings::resetBackground');
+    $routes->post('upload-slideshow-slot', 'Admin\Settings::uploadSlideshowSlot');
+    $routes->post('reset-slideshow-slot', 'Admin\Settings::resetSlideshowSlot');
+    $routes->post('reset-all-slideshow', 'Admin\Settings::resetAllSlideshow');
+    $routes->post('update-bg-mode', 'Admin\Settings::updateBackgroundMode');
 });
 
 // Protected Routes

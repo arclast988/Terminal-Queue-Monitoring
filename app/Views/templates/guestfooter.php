@@ -54,7 +54,7 @@
             </div>
         </div>
         <div class="f-copyright">
-            &copy; <?= date('Y') ?> <?= esc(app_system_title()) ?> (<?= esc(app_acronym()) ?>). All rights reserved. | <?= esc(app_footer_credit()) ?>
+            <?= app_footer_copyright() ?>
         </div>
     </div>
 </footer>

@@ -46,6 +46,12 @@ class CreateSystemSettingsTable extends Migration
             // Media Assets (null = use system default fallback)
             ['setting_key' => 'app_logo',            'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
             ['setting_key' => 'app_background_image','setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'app_bg_mode',         'setting_value' => 'slideshow', 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'app_bg_slideshow_1',  'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'app_bg_slideshow_2',  'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'app_bg_slideshow_3',  'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'app_bg_slideshow_4',  'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'app_bg_slideshow_5',  'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
             
             // Role Theme Templates
             ['setting_key' => 'theme_guest_primary', 'setting_value' => '#1E40AF', 'created_at' => $now, 'updated_at' => $now],
@@ -61,9 +67,10 @@ class CreateSystemSettingsTable extends Migration
             ['setting_key' => 'theme_admin_nav_text','setting_value' => '#ffffff', 'created_at' => $now, 'updated_at' => $now],
             
             // Footer & Information
-            ['setting_key' => 'footer_about_title',  'setting_value' => 'PTTM System', 'created_at' => $now, 'updated_at' => $now],
-            ['setting_key' => 'footer_about_text',   'setting_value' => 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.', 'created_at' => $now, 'updated_at' => $now],
-            ['setting_key' => 'footer_credit',       'setting_value' => 'Municipality of Palompon, Leyte', 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'footer_about_title',   'setting_value' => 'PTTM System', 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'footer_about_text',    'setting_value' => 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.', 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'footer_credit',        'setting_value' => 'Municipality of Palompon, Leyte', 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'footer_copyright_text', 'setting_value' => '© {year} {title} ({acronym}). All rights reserved. | {credit}', 'created_at' => $now, 'updated_at' => $now],
             
             // Contact
             ['setting_key' => 'contact_email',       'setting_value' => '', 'created_at' => $now, 'updated_at' => $now],
