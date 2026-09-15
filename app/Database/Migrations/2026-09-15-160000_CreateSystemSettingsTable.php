@@ -54,7 +54,7 @@ class CreateSystemSettingsTable extends Migration
             ['setting_key' => 'app_bg_slideshow_5',  'setting_value' => null, 'created_at' => $now, 'updated_at' => $now],
             
             // Role Theme Templates
-            ['setting_key' => 'theme_guest_primary', 'setting_value' => '#1E40AF', 'created_at' => $now, 'updated_at' => $now],
+            ['setting_key' => 'theme_guest_primary', 'setting_value' => '#C62828', 'created_at' => $now, 'updated_at' => $now],
             ['setting_key' => 'theme_guest_nav_bg',  'setting_value' => '#ffffff', 'created_at' => $now, 'updated_at' => $now],
             ['setting_key' => 'theme_guest_nav_text','setting_value' => '#1c2430', 'created_at' => $now, 'updated_at' => $now],
             

@@ -140,8 +140,8 @@ body.staff-theme .logo-text h1 {
   flex: 1 1 auto;
 }
 
-.nav-menu a:not(.profile-dropdown-item),
-.nav-menu .dropbtn {
+.nav-menu > a:not(.profile-dropdown-item),
+.nav-menu > .dropdown > .dropbtn {
   text-decoration: none !important;
   color: var(--nav-text, #ffffff) !important;
   -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
@@ -160,28 +160,28 @@ body.staff-theme .logo-text h1 {
   line-height: 1.2;
 }
 
-.nav-menu a:not(.profile-dropdown-item) i,
-.nav-menu .dropbtn i {
-  color: var(--nav-text-soft, rgba(255, 255, 255, 0.85)) !important;
-  -webkit-text-fill-color: var(--nav-text-soft, rgba(255, 255, 255, 0.85)) !important;
+.nav-menu > a:not(.profile-dropdown-item) i,
+.nav-menu > .dropdown > .dropbtn i {
+  color: var(--nav-text-soft, rgba(255, 255, 255, 0.9)) !important;
+  -webkit-text-fill-color: var(--nav-text-soft, rgba(255, 255, 255, 0.9)) !important;
   font-size: 14px;
 }
 
-.nav-menu a:not(.profile-dropdown-item):hover,
-.nav-menu .dropbtn:hover {
+.nav-menu > a:not(.profile-dropdown-item):hover,
+.nav-menu > .dropdown > .dropbtn:hover {
   background: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-.nav-menu a:not(.profile-dropdown-item):hover i,
-.nav-menu .dropbtn:hover i {
+.nav-menu > a:not(.profile-dropdown-item):hover i,
+.nav-menu > .dropdown > .dropbtn:hover i {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
 
-.nav-menu a.active:not(.profile-dropdown-item),
-.nav-menu .dropbtn.active {
+.nav-menu > a.active:not(.profile-dropdown-item),
+.nav-menu > .dropdown > .dropbtn.active {
   background: rgba(255, 255, 255, 0.22) !important;
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
@@ -189,7 +189,7 @@ body.staff-theme .logo-text h1 {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-.nav-menu a.active::after {
+.nav-menu > a.active::after {
   display: none !important;
 }
 
@@ -238,21 +238,57 @@ body.staff-theme .logo-text h1 {
 
 .dropdown-content a {
   color: var(--text-main, #1c2430) !important;
-  padding: 10px 16px;
+  -webkit-text-fill-color: var(--text-main, #1c2430) !important;
+  padding: 10px 18px;
   text-decoration: none;
   display: flex;
-  font-size: 14px;
-  transition: .2s;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: .15s ease;
 }
 
-.dropdown-content a i { color: var(--text-faint, #8a96a8); width: 18px; }
+.dropdown-content a i {
+  color: var(--text-faint, #64748b) !important;
+  -webkit-text-fill-color: var(--text-faint, #64748b) !important;
+  width: 18px;
+  font-size: 14px;
+  text-align: center;
+}
 
 .dropdown-content a:hover {
-  background: var(--surface-sunken, #f1f3f6);
-  color: var(--primary, #C62828) !important;
+  background: var(--surface-sunken, #f1f3f6) !important;
+  color: var(--primary, #B71C1C) !important;
+  -webkit-text-fill-color: var(--primary, #B71C1C) !important;
 }
 
-.dropdown-content a:hover i { color: var(--primary, #C62828); }
+.dropdown-content a:hover i {
+  color: var(--primary, #B71C1C) !important;
+  -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+}
+
+.dropdown-content .nav-badge-chip {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.dropdown-content .nav-badge-chip.chip-purple {
+  background: #f3e8ff !important;
+  color: #7e22ce !important;
+  -webkit-text-fill-color: #7e22ce !important;
+  border: 1px solid #e9d5ff;
+}
+.dropdown-content .nav-badge-chip.chip-amber {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  -webkit-text-fill-color: #b45309 !important;
+  border: 1px solid #fde68a;
+}
 
 @media (hover: hover) and (pointer: fine) {
   .dropdown:hover .dropdown-content { display: block; }

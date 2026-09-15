@@ -411,7 +411,7 @@ if (! function_exists('get_all_system_settings')) {
             'system_title'           => 'Palompon Transit Terminal Management System',
             'app_logo'               => null,
             'app_background_image'   => null,
-            'theme_guest_primary'    => '#1E40AF',
+            'theme_guest_primary'    => '#C62828',
             'theme_guest_nav_bg'     => '#ffffff',
             'theme_guest_nav_text'   => '#1c2430',
             'theme_staff_primary'    => '#15803d',
@@ -670,13 +670,52 @@ if (! function_exists('app_contact_email')) {
     }
 }
 
+if (! function_exists('app_theme_color_helper')) {
+    /**
+     * Internal helper to compute derived color tokens (dark, soft, contrast, alpha).
+     */
+    function app_theme_color_helper(string $hex, float $darkenFactor = 0.82): array
+    {
+        $clean = ltrim(trim($hex), '#');
+        if (strlen($clean) === 3) {
+            $clean = $clean[0] . $clean[0] . $clean[1] . $clean[1] . $clean[2] . $clean[2];
+        }
+        if (strlen($clean) !== 6 || ! ctype_xdigit($clean)) {
+            $clean = 'C62828';
+        }
+
+        $r = hexdec(substr($clean, 0, 2));
+        $g = hexdec(substr($clean, 2, 2));
+        $b = hexdec(substr($clean, 4, 2));
+
+        $darkR = max(0, min(255, (int) round($r * $darkenFactor)));
+        $darkG = max(0, min(255, (int) round($g * $darkenFactor)));
+        $darkB = max(0, min(255, (int) round($b * $darkenFactor)));
+
+        $brightness = ($r * 299 + $g * 587 + $b * 114) / 1000;
+        $onColor = ($brightness > 155) ? '#0f172a' : '#ffffff';
+
+        return [
+            'hex'       => '#' . $clean,
+            'dark'      => sprintf('#%02x%02x%02x', $darkR, $darkG, $darkB),
+            'soft'      => "rgba({$r}, {$g}, {$b}, 0.14)",
+            'softAlpha' => "rgba({$r}, {$g}, {$b}, 0.08)",
+            'on'        => $onColor,
+            'isLight'   => ($brightness > 155),
+            'softText'  => ($brightness > 155) ? 'rgba(255, 255, 255, 0.90)' : 'rgba(15, 23, 42, 0.82)',
+            'chipBg'    => ($brightness > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)',
+            'divider'   => ($brightness > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)',
+        ];
+    }
+}
+
 if (! function_exists('app_theme_css')) {
     /**
      * Outputs custom dynamic CSS variables for guest, dispatcher, and admin themes.
      */
     function app_theme_css(): string
     {
-        $guestPrimary = get_system_setting('theme_guest_primary', '#1E40AF');
+        $guestPrimary = get_system_setting('theme_guest_primary', '#C62828');
         $guestNavBg   = get_system_setting('theme_guest_nav_bg', '#ffffff');
         $guestNavText = get_system_setting('theme_guest_nav_text', '#1c2430');
 
@@ -688,28 +727,287 @@ if (! function_exists('app_theme_css')) {
         $adminNavBg   = get_system_setting('theme_admin_nav_bg', '#B71C1C');
         $adminNavText = get_system_setting('theme_admin_nav_text', '#ffffff');
 
+        $gp = app_theme_color_helper($guestPrimary);
+        $gn = app_theme_color_helper($guestNavBg);
+        $gt = app_theme_color_helper($guestNavText);
+
+        $sp = app_theme_color_helper($staffPrimary);
+        $sn = app_theme_color_helper($staffNavBg);
+        $st = app_theme_color_helper($staffNavText);
+
+        $ap = app_theme_color_helper($adminPrimary);
+        $an = app_theme_color_helper($adminNavBg);
+        $at = app_theme_color_helper($adminNavText);
+
         $css = <<<CSS
 <style id="app-dynamic-themes">
-body.guest-theme, html body.guest-theme {
-    --primary: {$guestPrimary} !important;
-    --nav-bg: {$guestNavBg} !important;
-    --nav-text: {$guestNavText} !important;
-    --nav-accent: {$guestPrimary} !important;
-    --nav-cta-bg: {$guestPrimary} !important;
+/* --- Guest Portal Dynamic Theme Tokens --- */
+:root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
+    --primary: {$gp['hex']} !important;
+    --primary-dark: {$gp['dark']} !important;
+    --primary-soft: {$gp['soft']} !important;
+    --on-primary: {$gp['on']} !important;
+    --nav-bg: {$gn['hex']} !important;
+    --nav-text: {$gt['hex']} !important;
+    --nav-text-soft: {$gt['softText']} !important;
+    --nav-accent: {$gp['hex']} !important;
+    --nav-cta-bg: {$gp['hex']} !important;
+    --nav-cta-text: {$gp['on']} !important;
+    --nav-chip-bg: {$gn['chipBg']} !important;
+    --nav-divider: {$gn['divider']} !important;
 }
+
+/* Guest Header elements responsive to dynamic theme settings */
+.guest-header .nav-menu a.login-btn {
+    background: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+}
+.guest-header .nav-menu a.login-btn:hover {
+    background: {$gp['dark']} !important;
+}
+.guest-header .nav-menu a:hover,
+.guest-header .nav-menu a.active {
+    color: {$gp['hex']} !important;
+    background: {$gp['softAlpha']} !important;
+}
+.guest-header .nav-menu a::after {
+    background: {$gp['hex']} !important;
+}
+.guest-header .breadcrumb-section a,
+.guest-header .header-clock-pill i,
+.guest-header .header-clock-pill span,
+.ann-modal-text a {
+    color: {$gp['hex']} !important;
+}
+.advisory-bar,
+.ann-modal-header {
+    background: linear-gradient(135deg, {$gp['hex']} 0%, {$gp['dark']} 100%) !important;
+}
+.advisory-icon {
+    color: {$gp['hex']} !important;
+}
+
+/* --- Dispatcher / Staff Dynamic Theme Tokens --- */
 body.staff-theme, html body.staff-theme {
-    --primary: {$staffPrimary} !important;
-    --nav-bg: {$staffNavBg} !important;
-    --nav-text: {$staffNavText} !important;
-    --nav-drawer-bg: {$staffNavBg} !important;
-    --nav-cta-text: {$staffPrimary} !important;
+    --primary: {$sp['hex']} !important;
+    --primary-dark: {$sp['dark']} !important;
+    --primary-soft: {$sp['soft']} !important;
+    --on-primary: {$sp['on']} !important;
+    --nav-bg: {$sn['hex']} !important;
+    --nav-text: {$st['hex']} !important;
+    --nav-text-soft: {$st['softText']} !important;
+    --nav-chip-bg: {$sn['chipBg']} !important;
+    --nav-divider: {$sn['divider']} !important;
+    --nav-drawer-bg: {$sn['dark']} !important;
+    --nav-cta-bg: {$sp['on']} !important;
+    --nav-cta-text: {$sp['hex']} !important;
 }
+body.staff-theme #site-header .logo-text h1,
+body.staff-theme .logo-section .logo-text h1,
+body.staff-theme .logo-text h1 {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+}
+body.staff-theme #site-header .logo-text p,
+body.staff-theme .logo-section .logo-text p,
+body.staff-theme .logo-text p {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+    opacity: 0.88;
+}
+body.staff-theme .nav-menu > a:not(.profile-dropdown-item),
+body.staff-theme .nav-menu > .dropdown > .dropbtn {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+}
+body.staff-theme .nav-menu > a:not(.profile-dropdown-item) i,
+body.staff-theme .nav-menu > .dropdown > .dropbtn i {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+    opacity: 0.92;
+}
+body.staff-theme .nav-menu > a:not(.profile-dropdown-item):hover,
+body.staff-theme .nav-menu > .dropdown > .dropbtn:hover {
+    background: {$sn['chipBg']} !important;
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+}
+body.staff-theme .nav-menu > a:not(.profile-dropdown-item):hover i,
+body.staff-theme .nav-menu > .dropdown > .dropbtn:hover i {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+    opacity: 1;
+}
+body.staff-theme .nav-menu > a.active:not(.profile-dropdown-item),
+body.staff-theme .nav-menu > .dropdown > .dropbtn.active {
+    background: {$sn['chipBg']} !important;
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+}
+body.staff-theme .nav-menu > a.active:not(.profile-dropdown-item) i,
+body.staff-theme .nav-menu > .dropdown > .dropbtn.active i {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+    opacity: 1;
+}
+body.staff-theme .nav-hamburger-btn {
+    color: {$st['hex']} !important;
+}
+body.staff-theme .nav-hamburger-btn i {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+}
+
+/* --- Admin & Super Admin Dynamic Theme Tokens --- */
 body.admin-theme, html body.admin-theme {
-    --primary: {$adminPrimary} !important;
-    --nav-bg: {$adminNavBg} !important;
-    --nav-text: {$adminNavText} !important;
-    --nav-drawer-bg: {$adminNavBg} !important;
-    --nav-cta-text: {$adminPrimary} !important;
+    --primary: {$ap['hex']} !important;
+    --primary-dark: {$ap['dark']} !important;
+    --primary-soft: {$ap['soft']} !important;
+    --on-primary: {$ap['on']} !important;
+    --nav-bg: {$an['hex']} !important;
+    --nav-text: {$at['hex']} !important;
+    --nav-text-soft: {$at['softText']} !important;
+    --nav-chip-bg: {$an['chipBg']} !important;
+    --nav-divider: {$an['divider']} !important;
+    --nav-drawer-bg: {$an['dark']} !important;
+    --nav-cta-bg: {$ap['on']} !important;
+    --nav-cta-text: {$ap['hex']} !important;
+}
+body.admin-theme #site-header .logo-text h1,
+body.admin-theme .logo-section .logo-text h1,
+body.admin-theme .logo-text h1 {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+}
+body.admin-theme #site-header .logo-text p,
+body.admin-theme .logo-section .logo-text p,
+body.admin-theme .logo-text p {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+    opacity: 0.88;
+}
+body.admin-theme .nav-menu > a:not(.profile-dropdown-item),
+body.admin-theme .nav-menu > .dropdown > .dropbtn {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+}
+body.admin-theme .nav-menu > a:not(.profile-dropdown-item) i,
+body.admin-theme .nav-menu > .dropdown > .dropbtn i {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+    opacity: 0.92;
+}
+body.admin-theme .nav-menu > a:not(.profile-dropdown-item):hover,
+body.admin-theme .nav-menu > .dropdown > .dropbtn:hover {
+    background: {$an['chipBg']} !important;
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+}
+body.admin-theme .nav-menu > a:not(.profile-dropdown-item):hover i,
+body.admin-theme .nav-menu > .dropdown > .dropbtn:hover i {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+    opacity: 1;
+}
+body.admin-theme .nav-menu > a.active:not(.profile-dropdown-item),
+body.admin-theme .nav-menu > .dropdown > .dropbtn.active {
+    background: {$an['chipBg']} !important;
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+}
+body.admin-theme .nav-menu > a.active:not(.profile-dropdown-item) i,
+body.admin-theme .nav-menu > .dropdown > .dropbtn.active i {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+    opacity: 1;
+}
+body.admin-theme .nav-hamburger-btn {
+    color: {$at['hex']} !important;
+}
+body.admin-theme .nav-hamburger-btn i {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+}
+
+/* --- Common Dropdown Menus (Management, Records, etc.) --- */
+body.admin-theme .dropdown-content,
+body.staff-theme .dropdown-content {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
+    border-radius: 12px !important;
+    padding: 6px 0 !important;
+    z-index: 100001 !important;
+    min-width: 200px !important;
+}
+body.admin-theme .dropdown-content a,
+body.staff-theme .dropdown-content a {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    padding: 10px 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    background: transparent !important;
+    text-decoration: none !important;
+    transition: background 0.15s ease, color 0.15s ease !important;
+}
+body.admin-theme .dropdown-content a i,
+body.staff-theme .dropdown-content a i {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    font-size: 14px !important;
+    width: 18px !important;
+    text-align: center !important;
+    opacity: 1 !important;
+}
+body.admin-theme .dropdown-content a:hover,
+body.staff-theme .dropdown-content a:hover {
+    background: #f1f5f9 !important;
+    color: var(--primary, #B71C1C) !important;
+    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+}
+body.admin-theme .dropdown-content a:hover i,
+body.staff-theme .dropdown-content a:hover i {
+    color: var(--primary, #B71C1C) !important;
+    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+}
+body.admin-theme .dropdown-content a.active,
+body.staff-theme .dropdown-content a.active {
+    background: #fef2f2 !important;
+    color: var(--primary, #B71C1C) !important;
+    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+    font-weight: 700 !important;
+}
+body.admin-theme .dropdown-content a.active i,
+body.staff-theme .dropdown-content a.active i {
+    color: var(--primary, #B71C1C) !important;
+    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+}
+
+/* Nav badge chips for Record / Audit status inside dropdowns */
+.nav-badge-chip {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.nav-badge-chip.chip-purple {
+    background: #f3e8ff !important;
+    color: #7e22ce !important;
+    -webkit-text-fill-color: #7e22ce !important;
+    border: 1px solid #e9d5ff;
+}
+.nav-badge-chip.chip-amber {
+    background: #fef3c7 !important;
+    color: #b45309 !important;
+    -webkit-text-fill-color: #b45309 !important;
+    border: 1px solid #fde68a;
 }
 </style>
 CSS;

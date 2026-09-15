@@ -10,20 +10,20 @@
    GUEST — warm crimson brand on soft paper. Public, welcoming, high contrast.
    -------------------------------------------------------------------------- */
 body.guest-theme {
-  --primary: #1E40AF;
-  --primary-dark: #1E3A8A;
-  --primary-soft: #EFF6FF;
+  --primary: #C62828;
+  --primary-dark: #8E1B1B;
+  --primary-soft: #FDECEA;
   --on-primary: #ffffff;
   --accent: #FFA726;
 
-  /* Navigation: white bar, blue accents */
+  /* Navigation: white bar, crimson accents */
   --nav-bg: #ffffff;
   --nav-text: #1c2430;
   --nav-text-soft: #5d6b7e;
-  --nav-accent: #1E40AF;
+  --nav-accent: #C62828;
   --nav-divider: #e2e8f0;
   --nav-chip-bg: #f1f5f9;
-  --nav-cta-bg: #1E40AF;
+  --nav-cta-bg: #C62828;
   --nav-cta-text: #ffffff;
   --nav-drawer-bg: #ffffff;
 

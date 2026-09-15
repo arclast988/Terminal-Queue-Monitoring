@@ -987,7 +987,7 @@
     </style>
 </head>
 
-<body>
+<body class="guest-theme">
 
     <?= view('templates/guest_header', [
         'announcements'      => $announcements ?? [],

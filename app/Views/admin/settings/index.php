@@ -76,18 +76,19 @@ $slotsMeta = [
 
 /* Page Header */
 .settings-header-card {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    background: #ffffff !important;
     border-radius: var(--sb-radius-lg);
     padding: 24px 28px;
     margin-bottom: 24px;
-    color: #ffffff;
+    color: var(--sb-text-main, #0f172a);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
     flex-wrap: wrap;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid var(--sb-primary, #B71C1C);
     position: relative;
     overflow: hidden;
 }
@@ -97,9 +98,9 @@ $slotsMeta = [
     position: absolute;
     top: -50%;
     right: -10%;
-    width: 320px;
-    height: 320px;
-    background: radial-gradient(circle, rgba(183,28,28,0.2) 0%, transparent 70%);
+    width: 280px;
+    height: 280px;
+    background: radial-gradient(circle, rgba(183, 28, 28, 0.05) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -121,23 +122,24 @@ $slotsMeta = [
     justify-content: center;
     font-size: 24px;
     color: #ffffff;
-    box-shadow: 0 4px 14px rgba(183, 28, 28, 0.4);
+    box-shadow: 0 4px 14px rgba(183, 28, 28, 0.35);
 }
 
 .settings-header-card h1 {
     font-size: 22px;
     font-weight: 700;
     margin: 0;
-    color: #ffffff;
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
     letter-spacing: -0.3px;
 }
 
 .settings-header-card p {
-    font-size: 13px;
-    color: #94a3b8;
+    font-size: 13.5px;
+    color: #64748b !important;
     margin: 4px 0 0;
     max-width: 600px;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .settings-header-badges {
@@ -153,14 +155,14 @@ $slotsMeta = [
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(183, 28, 28, 0.25);
-    color: #fca5a5;
-    border: 1px solid rgba(183, 28, 28, 0.4);
-    font-size: 11px;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-size: 11.5px;
     font-weight: 700;
     padding: 6px 14px;
     border-radius: 20px;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
 }
 
@@ -168,9 +170,9 @@ $slotsMeta = [
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #cbd5e1;
     font-size: 12px;
     font-weight: 600;
     padding: 6px 14px;
@@ -180,8 +182,8 @@ $slotsMeta = [
 }
 
 .sa-link-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
+    background: #f1f5f9;
+    color: #0f172a;
     transform: translateY(-1px);
 }
 
@@ -189,6 +191,11 @@ $slotsMeta = [
 .settings-tabs-wrapper {
     position: relative;
     margin-bottom: 24px;
+    background: #ffffff;
+    padding: 8px 10px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
 }
 
 .settings-tabs {
@@ -197,8 +204,8 @@ $slotsMeta = [
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-    border-bottom: 2px solid var(--sb-border);
+    padding: 2px;
+    border-bottom: none;
 }
 
 .settings-tabs::-webkit-scrollbar {
@@ -206,43 +213,50 @@ $slotsMeta = [
 }
 
 .settings-tab {
-    padding: 12px 20px;
+    padding: 10px 18px;
     font-size: 13.5px;
     font-weight: 600;
-    color: var(--sb-text-muted);
+    color: #475569;
     cursor: pointer;
-    border: none;
-    background: none;
-    border-radius: var(--sb-radius-sm) var(--sb-radius-sm) 0 0;
-    border-bottom: 3px solid transparent;
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 10px;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
-    position: relative;
-    bottom: -2px;
 }
 
 .settings-tab i {
     font-size: 15px;
-    transition: transform 0.2s ease;
+    color: #64748b;
+    transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .settings-tab:hover {
-    color: var(--sb-primary);
-    background: rgba(183, 28, 28, 0.04);
+    color: var(--sb-primary, #B71C1C);
+    background: #fef2f2;
+    border-color: #fca5a5;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(183, 28, 28, 0.12);
 }
 
 .settings-tab:hover i {
+    color: var(--sb-primary, #B71C1C);
     transform: scale(1.1);
 }
 
 .settings-tab.active {
-    color: var(--sb-primary);
-    border-bottom-color: var(--sb-primary);
-    background: #ffffff;
-    box-shadow: 0 -2px 6px rgba(0,0,0,0.02);
+    color: #ffffff !important;
+    background: var(--sb-primary, #B71C1C) !important;
+    border-color: var(--sb-primary, #B71C1C) !important;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(183, 28, 28, 0.32);
+}
+
+.settings-tab.active i {
+    color: #ffffff !important;
 }
 
 /* Tab Panels */
@@ -409,21 +423,31 @@ $slotsMeta = [
     align-items: center;
     gap: 8px;
     padding: 11px 26px;
-    background: var(--sb-primary);
-    color: #ffffff;
+    background: #C62828;
+    color: #ffffff !important;
     border: none;
-    border-radius: var(--sb-radius-sm);
+    border-radius: var(--sb-radius-sm, 8px);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(183, 28, 28, 0.2);
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
 }
 
 .btn-save:hover {
-    background: var(--sb-primary-hover);
+    background: #B71C1C;
+    color: #ffffff !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(183, 28, 28, 0.35);
+    box-shadow: 0 4px 14px rgba(183, 28, 28, 0.45);
+}
+
+.btn-save:active {
+    transform: translateY(0);
+}
+
+.btn-save i {
+    font-size: 14px;
+    color: #ffffff !important;
 }
 
 .form-action-row {
@@ -929,20 +953,22 @@ $slotsMeta = [
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
+    padding: 7px 14px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 12.5px;
     font-weight: 600;
     background: #ffffff;
-    border: 1.5px solid var(--sb-border);
+    border: 1.5px solid var(--sb-border, #e2e8f0);
     color: #334155;
     cursor: pointer;
     transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 .btn-preset:hover {
-    border-color: var(--sb-primary);
-    color: var(--sb-primary);
+    border-color: var(--sb-primary, #B71C1C);
+    color: var(--sb-primary, #B71C1C);
+    background: #fff5f5;
     transform: translateY(-1px);
 }
 
@@ -1108,7 +1134,6 @@ $slotsMeta = [
         </div>
         <div class="settings-header-badges">
             <span class="sa-badge"><i class="fas fa-shield-alt"></i> Super Admin Only</span>
-            <a href="<?= base_url('guest') ?>" target="_blank" class="sa-link-btn" title="View Public Portal"><i class="fas fa-external-link-alt"></i> View Public Site</a>
         </div>
     </div>
 
@@ -1165,10 +1190,18 @@ $slotsMeta = [
                         <small>Desktop & Mobile Navbar</small>
                     </div>
                     <div class="preview-header-bar" id="previewGuest" style="background: <?= esc($s['theme_guest_nav_bg'] ?? '#ffffff') ?>; color: <?= esc($s['theme_guest_nav_text'] ?? '#1c2430') ?>;">
-                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
-                        <div class="preview-brand">
-                            <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
-                            <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
+                            <div class="preview-brand">
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
+                            <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Schedules</span>
+                            <span class="preview-btn-guest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                Login <i class="fas fa-arrow-right" style="font-size:9px;"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1179,10 +1212,17 @@ $slotsMeta = [
                         <small>Operations Dashboard</small>
                     </div>
                     <div class="preview-header-bar" id="previewAdmin" style="background: <?= esc($s['theme_admin_nav_bg'] ?? '#B71C1C') ?>; color: <?= esc($s['theme_admin_nav_text'] ?? '#ffffff') ?>;">
-                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
-                        <div class="preview-brand">
-                            <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
-                            <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
+                            <div class="preview-brand">
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
+                            <span class="preview-btn-admin" style="background: <?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                Admin
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1193,10 +1233,17 @@ $slotsMeta = [
                         <small>Terminal Dispatch Portal</small>
                     </div>
                     <div class="preview-header-bar" id="previewStaff" style="background: <?= esc($s['theme_staff_nav_bg'] ?? '#15803d') ?>; color: <?= esc($s['theme_staff_nav_text'] ?? '#ffffff') ?>;">
-                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
-                        <div class="preview-brand">
-                            <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
-                            <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
+                            <div class="preview-brand">
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
+                            <span class="preview-btn-staff" style="background: <?= esc($s['theme_staff_primary'] ?? '#15803d') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                Staff
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1410,8 +1457,8 @@ $slotsMeta = [
             <!-- Preset Palettes Bar -->
             <div class="theme-presets-bar">
                 <span class="preset-title"><i class="fas fa-wand-magic-sparkles" style="color:var(--sb-primary); margin-right:4px;"></i> Quick Preset Themes:</span>
-                <button type="button" class="btn-preset" onclick="applyThemePreset('#1E40AF','#ffffff','#1c2430','#15803d','#15803d','#ffffff','#B71C1C','#B71C1C','#ffffff')">
-                    <span class="palette-dots"><span class="p-dot" style="background:#1E40AF"></span><span class="p-dot" style="background:#15803d"></span><span class="p-dot" style="background:#B71C1C"></span></span>
+                <button type="button" class="btn-preset" onclick="applyThemePreset('#C62828','#ffffff','#1c2430','#15803d','#15803d','#ffffff','#B71C1C','#B71C1C','#ffffff')">
+                    <span class="palette-dots"><span class="p-dot" style="background:#C62828"></span><span class="p-dot" style="background:#15803d"></span><span class="p-dot" style="background:#B71C1C"></span></span>
                     Palompon Standard
                 </button>
                 <button type="button" class="btn-preset" onclick="applyThemePreset('#0284c7','#0f172a','#f8fafc','#059669','#0f172a','#f8fafc','#dc2626','#0f172a','#f8fafc')">
@@ -1429,30 +1476,52 @@ $slotsMeta = [
                 <div class="preview-card">
                     <div class="preview-card-label">Guest Portal Header Preview</div>
                     <div class="preview-header-bar" id="themePreviewGuest" style="background: <?= esc($s['theme_guest_nav_bg'] ?? '#ffffff') ?>; color: <?= esc($s['theme_guest_nav_text'] ?? '#1c2430') ?>;">
-                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
-                        <div class="preview-brand">
-                            <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
-                            <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
+                            <div class="preview-brand">
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
+                            <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Schedules</span>
+                            <span class="preview-btn-guest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                Login <i class="fas fa-arrow-right" style="font-size:9px;"></i>
+                            </span>
                         </div>
                     </div>
                 </div>
                 <div class="preview-card">
                     <div class="preview-card-label">Admin Header Preview</div>
                     <div class="preview-header-bar" id="themePreviewAdmin" style="background: <?= esc($s['theme_admin_nav_bg'] ?? '#B71C1C') ?>; color: <?= esc($s['theme_admin_nav_text'] ?? '#ffffff') ?>;">
-                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
-                        <div class="preview-brand">
-                            <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
-                            <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
+                            <div class="preview-brand">
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
+                            <span class="preview-btn-admin" style="background: <?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                Admin
+                            </span>
                         </div>
                     </div>
                 </div>
                 <div class="preview-card" style="grid-column: 1 / -1;">
                     <div class="preview-card-label">Dispatcher / Staff Header Preview</div>
                     <div class="preview-header-bar" id="themePreviewStaff" style="background: <?= esc($s['theme_staff_nav_bg'] ?? '#15803d') ?>; color: <?= esc($s['theme_staff_nav_text'] ?? '#ffffff') ?>;">
-                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
-                        <div class="preview-brand">
-                            <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
-                            <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                            <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
+                            <div class="preview-brand">
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
+                            <span class="preview-btn-staff" style="background: <?= esc($s['theme_staff_primary'] ?? '#15803d') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
+                                Staff
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -1464,15 +1533,15 @@ $slotsMeta = [
                 <!-- Guest Portal Theme -->
                 <div class="theme-section">
                     <div class="theme-section-header">
-                        <span class="theme-dot" id="dotGuest" style="background: <?= esc($s['theme_guest_primary'] ?? '#1E40AF') ?>;"></span>
+                        <span class="theme-dot" id="dotGuest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>;"></span>
                         <h4>Guest / Commuter Public Portal</h4>
                     </div>
                     <div class="color-grid">
                         <div class="color-field">
                             <label>Primary Brand Accent</label>
                             <div class="color-picker-wrap">
-                                <input type="color" name="theme_guest_primary" id="picker_guest_primary" value="<?= esc($s['theme_guest_primary'] ?? '#1E40AF') ?>" data-sync="text_guest_primary">
-                                <input type="text" id="text_guest_primary" value="<?= esc($s['theme_guest_primary'] ?? '#1E40AF') ?>" data-sync-color="picker_guest_primary" maxlength="7">
+                                <input type="color" name="theme_guest_primary" id="picker_guest_primary" value="<?= esc($s['theme_guest_primary'] ?? '#C62828') ?>" data-sync="text_guest_primary" data-preview="Guest" data-prop="primary">
+                                <input type="text" id="text_guest_primary" value="<?= esc($s['theme_guest_primary'] ?? '#C62828') ?>" data-sync-color="picker_guest_primary" maxlength="7">
                             </div>
                         </div>
                         <div class="color-field">
@@ -1502,7 +1571,7 @@ $slotsMeta = [
                         <div class="color-field">
                             <label>Primary Brand Accent</label>
                             <div class="color-picker-wrap">
-                                <input type="color" name="theme_admin_primary" id="picker_admin_primary" value="<?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>" data-sync="text_admin_primary">
+                                <input type="color" name="theme_admin_primary" id="picker_admin_primary" value="<?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>" data-sync="text_admin_primary" data-preview="Admin" data-prop="primary">
                                 <input type="text" id="text_admin_primary" value="<?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>" data-sync-color="picker_admin_primary" maxlength="7">
                             </div>
                         </div>
@@ -1533,7 +1602,7 @@ $slotsMeta = [
                         <div class="color-field">
                             <label>Primary Brand Accent</label>
                             <div class="color-picker-wrap">
-                                <input type="color" name="theme_staff_primary" id="picker_staff_primary" value="<?= esc($s['theme_staff_primary'] ?? '#15803d') ?>" data-sync="text_staff_primary">
+                                <input type="color" name="theme_staff_primary" id="picker_staff_primary" value="<?= esc($s['theme_staff_primary'] ?? '#15803d') ?>" data-sync="text_staff_primary" data-preview="Staff" data-prop="primary">
                                 <input type="text" id="text_staff_primary" value="<?= esc($s['theme_staff_primary'] ?? '#15803d') ?>" data-sync-color="picker_staff_primary" maxlength="7">
                             </div>
                         </div>
@@ -1824,8 +1893,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewEls.forEach(function(el) {
                     if (!el) return;
                     if (previewProp === 'bg') el.style.backgroundColor = hex;
-                    if (previewProp === 'text') el.style.color = hex;
+                    if (previewProp === 'text') {
+                        el.style.color = hex;
+                        el.querySelectorAll('.preview-brand h4, .preview-brand p, .preview-nav-link').forEach(function(child) {
+                            child.style.color = hex;
+                        });
+                    }
                 });
+
+                if (previewProp === 'primary') {
+                    var dot = document.getElementById('dot' + previewRole);
+                    if (dot) dot.style.backgroundColor = hex;
+                    document.querySelectorAll('.preview-btn-' + previewRole.toLowerCase()).forEach(function(btn) {
+                        btn.style.backgroundColor = hex;
+                    });
+                }
             }
         }
 

@@ -27,8 +27,8 @@
 
     <style>
         :root {
-            --primary: #1E40AF;
-            --primary-dark: #1E3A8A;
+            --primary: #C62828;
+            --primary-dark: #8E1B1B;
             --accent: #FFA726;
             --accent-dark: #F57C00;
             --success: #43a047;
@@ -635,7 +635,7 @@
     </style>
 </head>
 
-<body>
+<body class="guest-theme">
 
     <?= view('templates/guest_header', [
         'announcements'      => $announcements ?? [],

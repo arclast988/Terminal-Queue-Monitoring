@@ -68,11 +68,11 @@
         <h3><i class="fas fa-life-ring" style="color:#3b82f6;"></i> Help Center</h3>
         <p style="font-size:14px;color:#64748b;margin-bottom:16px;">Browse common topics or view the full commuter user manual.</p>
         
-        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-            <div style="font-size: 13px; color: #1e40af; font-weight: 600;">
+        <div style="background: var(--primary-soft, #fef2f2); border: 1px solid rgba(198, 40, 40, 0.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <div style="font-size: 13px; color: var(--primary, #C62828); font-weight: 600;">
                 <i class="fas fa-book-open" style="margin-right: 6px;"></i> Complete Commuter & Passenger Guide
             </div>
-            <a href="<?= base_url('manual') ?>" style="background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 700; text-decoration: none; white-space: nowrap;">
+            <a href="<?= base_url('manual') ?>" style="background: var(--primary, #C62828); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 700; text-decoration: none; white-space: nowrap;">
                 Open Guide →
             </a>
         </div>
