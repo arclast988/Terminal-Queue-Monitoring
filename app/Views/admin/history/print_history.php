@@ -556,8 +556,8 @@
     <!-- Header Section -->
     <div class="header">
         <div class="terminal-info">
-            <h1>Palompon Transit Terminal</h1>
-            <p><i class="fas fa-map-marker-alt text-danger"></i> Palompon, Leyte, Philippines &bull; <i class="fas fa-phone text-primary"></i> Terminal Operations Office</p>
+            <h1><?= esc(app_name()) ?> Terminal</h1>
+            <p><i class="fas fa-map-marker-alt text-danger"></i> <?= esc(app_contact_address()) ?> &bull; <i class="fas fa-phone text-primary"></i> <?= esc(app_contact_phone()) ?></p>
             <p>Integrated Terminal Management System &bull; Official Departure History Report</p>
         </div>
         <div class="report-meta">
@@ -690,7 +690,7 @@
 
     <!-- Footer Section -->
     <div class="footer">
-        <div>Palompon Transit Terminal Monitoring System &bull; Official Operations Report</div>
+        <div><?= esc(app_system_title()) ?> &bull; Official Operations Report</div>
         <div>Page generated on <?= date('Y-m-d H:i:s') ?></div>
     </div>
 

@@ -216,7 +216,7 @@ abstract class BaseController extends Controller
         $emailSvc = \Config\Services::email();
 
         $fromEmail = $config->fromEmail ?: $config->SMTPUser;
-        $fromName  = $config->fromName ?: 'PTTM System Feedback';
+        $fromName  = $config->fromName ?: (app_name() . ' System');
 
         $emailSvc->setFrom($fromEmail, $fromName);
         return $emailSvc;

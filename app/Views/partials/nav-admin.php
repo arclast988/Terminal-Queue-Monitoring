@@ -47,6 +47,12 @@ $isRecordsActive    = $isActive('admin/history*') || $isActive('admin/logs*');
     </div>
 </div>
 
+<?php if (session()->get('role') === 'super_admin'): ?>
+<a href="<?= base_url('admin/settings') ?>" class="<?= $isActive('admin/settings*') ?>">
+    <i class="fas fa-palette"></i> Branding
+</a>
+<?php endif; ?>
+
 <?= view('partials/nav-profile') ?>
 
 

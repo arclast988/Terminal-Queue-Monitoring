@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vehicle Schedules - Palompon Transit</title>
+    <title>Vehicle Schedules - <?= esc(app_name()) ?></title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
-    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
-    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
+    <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
+    <link rel="apple-touch-icon" href="<?= esc(app_logo()) ?>">
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
     <?= vehicle_type_colors_css() ?>
+    <?= app_theme_css() ?>
 
     <style>
         :root {

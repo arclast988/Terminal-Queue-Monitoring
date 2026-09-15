@@ -3,8 +3,8 @@
     <div class="footer-container">
         <div class="footer-content">
             <div class="f-about">
-                <h3>PTTM System</h3>
-                <p>Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.</p>
+                <h3><?= esc(app_footer_about_title()) ?></h3>
+                <p><?= esc(app_footer_about_text()) ?></p>
             </div>
             <div class="f-links">
                 <h4>Quick Links</h4>
@@ -39,22 +39,22 @@
             <div class="f-links">
                 <h4>Contact</h4>
                 <ul>
-                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538</li>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> <?= esc(app_contact_address()) ?></li>
                     <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="tel:0535558376" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
-                            <i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> (053) 555-8376 / 338-2022
+                        <a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', app_contact_phone())) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
+                            <i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> <?= esc(app_contact_phone()) ?>
                         </a>
                     </li>
                     <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="mailto:<?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
-                            <i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>
+                        <a href="mailto:<?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
+                            <i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>
                         </a>
                     </li>
                 </ul>
             </div>
         </div>
         <div class="f-copyright">
-            &copy; <?= date('Y') ?> Palompon Transit Terminal Management System (PTTM). All rights reserved. | Municipality of Palompon, Leyte
+            &copy; <?= date('Y') ?> <?= esc(app_system_title()) ?> (<?= esc(app_acronym()) ?>). All rights reserved. | <?= esc(app_footer_credit()) ?>
         </div>
     </div>
 </footer>
@@ -180,7 +180,7 @@
         <h3><i class="fas fa-question-circle" style="color:#eab308;"></i> Frequently Asked Questions</h3>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What are the terminal operating hours? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The Palompon Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Individual vehicle departure times depend on route demand and scheduled headway intervals. Check the Live Monitor or Schedules page for up-to-date departures.</div>
+            <div class="faq-answer">The <?= esc(app_name()) ?> Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Individual vehicle departure times depend on route demand and scheduled headway intervals. Check the Live Monitor or Schedules page for up-to-date departures.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Can I buy tickets through this website? <i class="fas fa-chevron-down"></i></button>
@@ -209,10 +209,10 @@
         <div style="font-size: 14px; color: #4b5563; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
             <p><strong>Last updated: September 2026</strong></p>
             <h4 style="color: #1f2937; margin: 15px 0 5px;">1. Acceptance of Terms</h4>
-            <p>By accessing and using the Palompon Transit Terminal Management System ("PTTM System"), you agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
+            <p>By accessing and using the <?= esc(app_system_title()) ?> ("<?= esc(app_acronym()) ?> System"), agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">2. Description of Service</h4>
-            <p>The PTTM System provides real-time information regarding vehicle queues, departure schedules, and route fares within the Palompon Terminal. This is a public information service operated by the Municipality of Palompon, Leyte.</p>
+            <p>The <?= esc(app_acronym()) ?> System provides real-time information regarding vehicle queues, departure schedules, and route fares. This is a public information service operated by <?= esc(app_footer_credit()) ?>.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">3. Use of Information</h4>
             <ul>
@@ -222,10 +222,10 @@
             </ul>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">4. Disclaimer of Warranties</h4>
-            <p>The PTTM System is provided "as is" without warranties of any kind, express or implied. We do not guarantee the accuracy, completeness, or timeliness of information displayed.</p>
+            <p>The <?= esc(app_acronym()) ?> System is provided "as is" without warranties of any kind, express or implied. We do not guarantee the accuracy, completeness, or timeliness of information displayed.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">5. Limitation of Liability</h4>
-            <p>Palompon Terminal shall not be liable for any loss or damages arising from reliance on the information provided through this system, including missed departures or scheduling inaccuracies.</p>
+            <p><?= esc(app_name()) ?> Terminal shall not be liable for any loss or damages arising from reliance on the information provided through this system, including missed departures or scheduling inaccuracies.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">6. Privacy</h4>
             <p>This system does not collect personal data from guest users. Concerns submitted through the Support section are sent directly to our email for response purposes only and are not stored in any database.</p>

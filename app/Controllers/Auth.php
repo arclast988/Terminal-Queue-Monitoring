@@ -277,7 +277,7 @@ class Auth extends BaseController
         // Load Email Service
         $emailSvc = $this->getConfiguredEmailService();
         $emailSvc->setTo($email);
-        $emailSvc->setSubject('[Palompon Transit] Password Reset Verification Code');
+        $emailSvc->setSubject('[' . app_name() . '] Password Reset Verification Code');
         $emailSvc->setMessage($this->buildOtpEmailHtml($accountUsername, $resetCode, false));
 
         $devMsg = '';
@@ -430,7 +430,7 @@ class Auth extends BaseController
         // Load Email Service
         $emailSvc = $this->getConfiguredEmailService();
         $emailSvc->setTo($record->email);
-        $emailSvc->setSubject('[Palompon Transit] New Password Reset Verification Code');
+        $emailSvc->setSubject('[' . app_name() . '] New Password Reset Verification Code');
         $emailSvc->setMessage($this->buildOtpEmailHtml($record->username, $resetCode, true));
 
         $devMsg = '';
@@ -471,7 +471,7 @@ class Auth extends BaseController
         return '
         <div style="font-family: \'Google Sans\', Roboto, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px; border: 1px solid #e0e0e0; border-radius: 12px; background: #ffffff;">
             <div style="text-align: center; margin-bottom: 24px;">
-                <span style="font-size: 26px; font-weight: bold; color: #1565c0; letter-spacing: 0.5px;">Palompon Transit</span>
+                <span style="font-size: 26px; font-weight: bold; color: #1565c0; letter-spacing: 0.5px;">' . esc(app_name()) . '</span>
             </div>
             <div style="padding: 10px 0;">
                 <h2 style="font-size: 20px; color: #202124; margin-bottom: 16px; font-weight: 600;">Verify your identity</h2>
@@ -710,7 +710,7 @@ class Auth extends BaseController
         // Load Email Service
         $emailSvc = $this->getConfiguredEmailService();
         $emailSvc->setTo($email);
-        $emailSvc->setSubject('[Palompon Transit] Password Change Verification Code');
+        $emailSvc->setSubject('[' . app_name() . '] Password Change Verification Code');
         $emailSvc->setMessage($this->buildChangePasswordEmailHtml($user['full_name'] ?: $user['username'], $resetCode));
 
         $devMsg = '';
@@ -848,7 +848,7 @@ class Auth extends BaseController
         return '
         <div style="font-family: \'Google Sans\', Roboto, Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 40px 20px; border: 1px solid #e0e0e0; border-radius: 12px; background: #ffffff;">
             <div style="text-align: center; margin-bottom: 24px;">
-                <span style="font-size: 26px; font-weight: bold; color: #047857; letter-spacing: 0.5px;">Palompon Transit</span>
+                <span style="font-size: 26px; font-weight: bold; color: #047857; letter-spacing: 0.5px;">' . esc(app_name()) . '</span>
             </div>
             <div style="padding: 10px 0;">
                 <h2 style="font-size: 20px; color: #202124; margin-bottom: 16px; font-weight: 600;">Password Change Verification</h2>
@@ -856,7 +856,7 @@ class Auth extends BaseController
                     Hello <strong>' . esc($displayName) . '</strong>,
                 </p>
                 <p style="font-size: 14px; color: #5f6368; line-height: 1.5; margin-bottom: 24px;">
-                    A request was made to change the password on your Palompon Transit account. Please enter the verification code below to authorize this change:
+                    A request was made to change the password on your ' . esc(app_name()) . ' account. Please enter the verification code below to authorize this change:
                 </p>
                 <div style="background: #f0fdf4; padding: 16px 24px; border-radius: 8px; font-size: 32px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #047857; margin-bottom: 24px; border: 1px dashed #86efac;">
                     ' . $code . '

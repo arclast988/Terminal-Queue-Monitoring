@@ -37,9 +37,10 @@ class Contact extends BaseController
 
         $config = config('Email');
         $toEmail = $config->recipients;
+        $acro = app_acronym();
         $subjectLine = ($type === 'report')
-            ? '[PTTM Report Issue] ' . ($subject ?: 'Issue reported via website')
-            : '[PTTM Contact Us] ' . ($subject ?: 'Message from website');
+            ? '[' . $acro . ' Report Issue] ' . ($subject ?: 'Issue reported via website')
+            : '[' . $acro . ' Contact Us] ' . ($subject ?: 'Message from website');
 
         if ($type === 'report') {
             $issueType = $subject ?: 'General Issue';

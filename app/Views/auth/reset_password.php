@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#D62828">
-    <title>Reset Password · Palompon Transit</title>
+    <title>Reset Password · <?= esc(app_name()) ?></title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
-    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
-    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
+    <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
+    <link rel="apple-touch-icon" href="<?= esc(app_logo()) ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+    <?= app_theme_css() ?>
     <style>
         :root {
             --red: #D62828;
@@ -55,7 +56,22 @@
             position: relative;
         }
 
-        /* Semi-transparent system background watermark (Palompon Photo Slideshow) */
+        <?php if (app_has_custom_bg()): ?>
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            background-image: url('<?= esc(app_bg_image()) ?>');
+            opacity: 0.28;
+            z-index: 0;
+            pointer-events: none;
+        }
+        <?php else: ?>
         body::after {
             content: '';
             position: fixed;
@@ -83,6 +99,7 @@
             80%, 97% { background-image: url('<?= base_url('images/bg/bg5_terminal_bay.png') ?>'); opacity: 0.22; }
             99% { opacity: 0.05; }
         }
+        <?php endif; ?>
 
         .scenery { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .scenery svg { position: absolute; display: block; }
@@ -251,11 +268,11 @@
     <main class="auth">
         <div class="brand">
             <span class="brand-mark" aria-hidden="true">
-                <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>"
-                     alt="Palompon Transit logo"
+                <img src="<?= esc(app_logo()) ?>"
+                     alt="<?= esc(app_name()) ?> logo"
                      width="400" height="400" loading="eager">
             </span>
-            <span class="brand-name">Palompon Transit<span class="brand-sub">Terminal Monitoring &amp; Vehicle Dispatching</span></span>
+            <span class="brand-name"><?= esc(app_name()) ?><span class="brand-sub"><?= esc(app_subtitle()) ?></span></span>
         </div>
 
         <div class="card">

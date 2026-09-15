@@ -47,10 +47,10 @@ SVG;
             <i class="fas fa-bars" id="siteNavHamburgerIcon"></i>
         </button>
         <a href="<?= base_url($homeUrl) ?>" class="logo-section">
-            <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Palompon Transit Logo" class="logo">
+            <img src="<?= esc(app_logo()) ?>" alt="<?= esc(app_name()) ?> Logo" class="logo">
             <div class="logo-text">
-                <h1>Palompon Transit</h1>
-                <p>Terminal Monitor</p>
+                <h1><?= esc(app_name()) ?></h1>
+                <p><?= esc(app_subtitle()) ?></p>
             </div>
         </a>
     </div>
@@ -72,10 +72,10 @@ SVG;
 <aside class="sidebar-drawer" id="siteSidebarDrawer" aria-label="Navigation drawer" aria-hidden="true">
     <div class="sidebar-drawer-header">
         <a href="<?= base_url($homeUrl) ?>" class="drawer-brand-section">
-            <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Palompon Transit Logo" class="drawer-logo">
+            <img src="<?= esc(app_logo()) ?>" alt="<?= esc(app_name()) ?> Logo" class="drawer-logo">
             <div class="drawer-brand-text">
-                <span class="drawer-brand-title">Palompon Transit</span>
-                <span class="drawer-brand-subtitle">Terminal Monitor</span>
+                <span class="drawer-brand-title"><?= esc(app_name()) ?></span>
+                <span class="drawer-brand-subtitle"><?= esc(app_subtitle()) ?></span>
             </div>
         </a>
         <button class="drawer-close-btn" id="drawerCloseBtn" type="button" aria-label="Close navigation menu" title="Close menu">
@@ -136,6 +136,14 @@ SVG;
                     <i class="fas fa-history"></i>
                     <span>Departure History</span>
                 </a>
+
+                <?php if (session()->get('role') === 'super_admin'): ?>
+                <div class="drawer-section-title">System Settings</div>
+                <a href="<?= base_url('admin/settings') ?>" class="drawer-nav-item <?= $isActive('admin/settings*') ?>">
+                    <i class="fas fa-palette"></i>
+                    <span>Branding & Themes</span>
+                </a>
+                <?php endif; ?>
 
                 <div class="drawer-section-title">Help & Support</div>
                 <a href="<?= base_url('admin/help') ?>" class="drawer-nav-item <?= $isActive('admin/help*') || $isActive('admin/manual*') ?>">

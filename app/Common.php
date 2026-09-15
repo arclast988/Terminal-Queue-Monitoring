@@ -378,4 +378,293 @@ if (! function_exists('passenger_color_class')) {
     }
 }
 
+/* ==========================================================================
+   System Branding & Settings Master Helpers
+   ========================================================================== */
+
+if (! function_exists('get_all_system_settings')) {
+    /**
+     * Retrieve all system settings as a key-value dictionary with caching.
+     */
+    function get_all_system_settings(bool $forceRefresh = false): array
+    {
+        static $inMemoryCache = null;
+        if (! $forceRefresh && $inMemoryCache !== null) {
+            return $inMemoryCache;
+        }
+
+        $cache = function_exists('cache') ? cache() : null;
+        if ($forceRefresh && $cache) {
+            $cache->delete('system_settings');
+        } elseif (! $forceRefresh && $cache) {
+            $fromCache = $cache->get('system_settings');
+            if (is_array($fromCache)) {
+                $inMemoryCache = $fromCache;
+                return $fromCache;
+            }
+        }
+
+        $defaults = [
+            'app_name'               => 'Palompon Transit',
+            'app_subtitle'           => 'Terminal Monitor',
+            'acronym'                => 'PTTM',
+            'system_title'           => 'Palompon Transit Terminal Management System',
+            'app_logo'               => null,
+            'app_background_image'   => null,
+            'theme_guest_primary'    => '#1E40AF',
+            'theme_guest_nav_bg'     => '#ffffff',
+            'theme_guest_nav_text'   => '#1c2430',
+            'theme_staff_primary'    => '#15803d',
+            'theme_staff_nav_bg'     => '#15803d',
+            'theme_staff_nav_text'   => '#ffffff',
+            'theme_admin_primary'    => '#B71C1C',
+            'theme_admin_nav_bg'     => '#B71C1C',
+            'theme_admin_nav_text'   => '#ffffff',
+            'footer_about_title'     => 'PTTM System',
+            'footer_about_text'      => 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.',
+            'footer_credit'          => 'Municipality of Palompon, Leyte',
+            'contact_email'          => '',
+            'contact_phone'          => '(053) 555-8376 / 338-2022',
+            'contact_address'        => 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538',
+        ];
+
+        $settings = $defaults;
+
+        if (class_exists('\Config\Database')) {
+            try {
+                $db = \Config\Database::connect();
+                if ($db && $db->tableExists('system_settings')) {
+                    $rows = $db->table('system_settings')->get()->getResultArray();
+                    foreach ($rows as $r) {
+                        if (isset($r['setting_key'])) {
+                            $settings[$r['setting_key']] = $r['setting_value'];
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Return defaults on DB connection or query error
+            }
+        }
+
+        if ($cache) {
+            $cache->save('system_settings', $settings, 3600);
+        }
+
+        $inMemoryCache = $settings;
+        return $settings;
+    }
+}
+
+if (! function_exists('get_system_setting')) {
+    /**
+     * Retrieve a specific system setting by key.
+     */
+    function get_system_setting(string $key, ?string $default = null): ?string
+    {
+        $settings = get_all_system_settings();
+        if (array_key_exists($key, $settings) && $settings[$key] !== null) {
+            return (string) $settings[$key];
+        }
+        return $default;
+    }
+}
+
+if (! function_exists('app_name')) {
+    /**
+     * Primary system / transit name (e.g., 'Palompon Transit').
+     */
+    function app_name(): string
+    {
+        return get_system_setting('app_name', 'Palompon Transit') ?: 'Palompon Transit';
+    }
+}
+
+if (! function_exists('app_subtitle')) {
+    /**
+     * Terminal subtitle / tagline (e.g., 'Terminal Monitor').
+     */
+    function app_subtitle(): string
+    {
+        return get_system_setting('app_subtitle', 'Terminal Monitor') ?: 'Terminal Monitor';
+    }
+}
+
+if (! function_exists('app_logo')) {
+    /**
+     * URL to the active system logo (custom uploaded or default seal).
+     */
+    function app_logo(): string
+    {
+        $customLogo = get_system_setting('app_logo');
+        if (! empty($customLogo)) {
+            $relPath = ltrim(str_replace(['\\'], '/', $customLogo), '/');
+            if (is_file(FCPATH . $relPath)) {
+                $mtime = @filemtime(FCPATH . $relPath);
+                return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+            }
+        }
+        return base_url('images/9HFScgVg_400x400.png');
+    }
+}
+
+if (! function_exists('app_bg_image')) {
+    /**
+     * URL to the active background / hero picture (custom uploaded or default artwork).
+     */
+    function app_bg_image(): string
+    {
+        $customBg = get_system_setting('app_background_image');
+        if (! empty($customBg)) {
+            $relPath = ltrim(str_replace(['\\'], '/', $customBg), '/');
+            if (is_file(FCPATH . $relPath)) {
+                $mtime = @filemtime(FCPATH . $relPath);
+                return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+            }
+        }
+        return base_url('images/system bg image.png');
+    }
+}
+
+if (! function_exists('app_acronym')) {
+    /**
+     * Short system code / acronym (e.g., 'PTTM').
+     */
+    function app_acronym(): string
+    {
+        return get_system_setting('acronym', 'PTTM') ?: 'PTTM';
+    }
+}
+
+if (! function_exists('app_system_title')) {
+    /**
+     * Full official system title (e.g., 'Palompon Transit Terminal Management System').
+     */
+    function app_system_title(): string
+    {
+        return get_system_setting('system_title', 'Palompon Transit Terminal Management System') ?: 'Palompon Transit Terminal Management System';
+    }
+}
+
+if (! function_exists('app_footer_about_title')) {
+    /**
+     * Footer about heading (e.g., 'PTTM System').
+     */
+    function app_footer_about_title(): string
+    {
+        return get_system_setting('footer_about_title', 'PTTM System') ?: 'PTTM System';
+    }
+}
+
+if (! function_exists('app_footer_about_text')) {
+    /**
+     * Footer description text.
+     */
+    function app_footer_about_text(): string
+    {
+        return get_system_setting('footer_about_text', 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?: '';
+    }
+}
+
+if (! function_exists('app_footer_credit')) {
+    /**
+     * Municipality or managing agency credit.
+     */
+    function app_footer_credit(): string
+    {
+        return get_system_setting('footer_credit', 'Municipality of Palompon, Leyte') ?: 'Municipality of Palompon, Leyte';
+    }
+}
+
+if (! function_exists('app_contact_phone')) {
+    function app_contact_phone(): string
+    {
+        return get_system_setting('contact_phone', '(053) 555-8376 / 338-2022') ?: '';
+    }
+}
+
+if (! function_exists('app_contact_address')) {
+    function app_contact_address(): string
+    {
+        return get_system_setting('contact_address', 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538') ?: '';
+    }
+}
+
+if (! function_exists('app_contact_email')) {
+    function app_contact_email(): string
+    {
+        return get_system_setting('contact_email', '') ?: '';
+    }
+}
+
+if (! function_exists('app_theme_css')) {
+    /**
+     * Outputs custom dynamic CSS variables for guest, dispatcher, and admin themes.
+     */
+    function app_theme_css(): string
+    {
+        $guestPrimary = get_system_setting('theme_guest_primary', '#1E40AF');
+        $guestNavBg   = get_system_setting('theme_guest_nav_bg', '#ffffff');
+        $guestNavText = get_system_setting('theme_guest_nav_text', '#1c2430');
+
+        $staffPrimary = get_system_setting('theme_staff_primary', '#15803d');
+        $staffNavBg   = get_system_setting('theme_staff_nav_bg', '#15803d');
+        $staffNavText = get_system_setting('theme_staff_nav_text', '#ffffff');
+
+        $adminPrimary = get_system_setting('theme_admin_primary', '#B71C1C');
+        $adminNavBg   = get_system_setting('theme_admin_nav_bg', '#B71C1C');
+        $adminNavText = get_system_setting('theme_admin_nav_text', '#ffffff');
+
+        $css = <<<CSS
+<style id="app-dynamic-themes">
+body.guest-theme, html body.guest-theme {
+    --primary: {$guestPrimary} !important;
+    --nav-bg: {$guestNavBg} !important;
+    --nav-text: {$guestNavText} !important;
+    --nav-accent: {$guestPrimary} !important;
+    --nav-cta-bg: {$guestPrimary} !important;
+}
+body.staff-theme, html body.staff-theme {
+    --primary: {$staffPrimary} !important;
+    --nav-bg: {$staffNavBg} !important;
+    --nav-text: {$staffNavText} !important;
+    --nav-drawer-bg: {$staffNavBg} !important;
+    --nav-cta-text: {$staffPrimary} !important;
+}
+body.admin-theme, html body.admin-theme {
+    --primary: {$adminPrimary} !important;
+    --nav-bg: {$adminNavBg} !important;
+    --nav-text: {$adminNavText} !important;
+    --nav-drawer-bg: {$adminNavBg} !important;
+    --nav-cta-text: {$adminPrimary} !important;
+}
+</style>
+CSS;
+        return $css;
+    }
+}
+
+if (! function_exists('app_has_custom_bg')) {
+    function app_has_custom_bg(): bool
+    {
+        $customBg = get_system_setting('app_background_image');
+        if (! empty($customBg)) {
+            $relPath = ltrim(str_replace(['\\'], '/', $customBg), '/');
+            return is_file(FCPATH . $relPath);
+        }
+        return false;
+    }
+}
+
+if (! function_exists('app_has_custom_logo')) {
+    function app_has_custom_logo(): bool
+    {
+        $customLogo = get_system_setting('app_logo');
+        if (! empty($customLogo)) {
+            $relPath = ltrim(str_replace(['\\'], '/', $customLogo), '/');
+            return is_file(FCPATH . $relPath);
+        }
+        return false;
+    }
+}
+
 

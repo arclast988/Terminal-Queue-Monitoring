@@ -200,7 +200,7 @@
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>The Palompon Transit Terminal Management System utilizes role-based access control with distinct authority levels:</p>
+                    <p>The <?= esc(app_system_title()) ?> utilizes role-based access control with distinct authority levels:</p>
                     <div class="step-box">
                         <span class="profile-role-pill pill-super_admin"><i class="fas fa-shield-alt"></i> Super Admin</span><br>
                         Has unrestricted master access to all system modules, including creating Administrator accounts, editing core terminal configurations, inspecting complete security audit logs, and running database maintenance.

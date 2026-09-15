@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Status - Palompon Transit</title>
+    <title>Terminal Status - <?= esc(app_name()) ?></title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
-    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
-    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
+    <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
+    <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
+    <link rel="apple-touch-icon" href="<?= esc(app_logo()) ?>">
     <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
     <?= vehicle_type_colors_css() ?>
+    <?= app_theme_css() ?>
     <style>
         :root {
             --primary: #1E40AF;
@@ -2302,7 +2303,7 @@
             <div class="route-average-header">
                 <div>
                     <h3 class="route-average-title" id="routeAverageTitle">Departure Time Rules</h3>
-                    <p class="route-average-subtitle">Scheduled departure intervals configured for Palompon Terminal.</p>
+                    <p class="route-average-subtitle">Scheduled departure intervals configured for <?= esc(app_name()) ?> Terminal.</p>
                 </div>
                 <button type="button" class="route-average-close" id="routeAverageClose" aria-label="Close departure rules modal">
                     <i class="fas fa-times"></i>

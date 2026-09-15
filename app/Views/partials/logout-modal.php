@@ -288,7 +288,7 @@ function confirmLogout(event) {
     }
 
     // Native fallback if Bootstrap is not available
-    if (window.confirm("Are you sure you want to log out of Palompon Transit Terminal Monitor?")) {
+    if (window.confirm("Are you sure you want to log out of <?= esc(app_name()) ?> Terminal Monitor?")) {
         var logoutBtn = document.getElementById('btnConfirmLogout');
         window.location.href = logoutBtn ? logoutBtn.href : "<?= base_url('logout') ?>";
     }

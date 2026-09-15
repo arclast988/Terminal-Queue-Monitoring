@@ -790,7 +790,7 @@ if (!empty($announcements) && is_array($announcements)) {
     }
 }
 $annSeparator = str_repeat("\u{00A0}", 6) . '|' . str_repeat("\u{00A0}", 6);
-$rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) : 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.';
+$rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) : ('Welcome to ' . app_name() . ' Terminal. Check schedules and fares for your trip.');
 ?>
 <div class="advisory-bar">
     <div class="advisory-icon" onclick="openAnnouncementModal()" title="View Announcements"><i class="fas fa-bullhorn"></i></div>
@@ -914,10 +914,10 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 <header class="guest-header">
     <div class="logo-container" style="display: flex; align-items: center; gap: 24px;">
         <a href="<?= base_url('guest') ?>" class="logo-section">
-            <img src="<?= base_url('images/9HFScgVg_400x400.png') ?>" alt="Logo" class="logo">
+            <img src="<?= esc(app_logo()) ?>" alt="<?= esc(app_name()) ?> Logo" class="logo">
             <div class="logo-text">
-                <h1>Palompon Transit </h1>
-                <p>Terminal Monitor</p>
+                <h1><?= esc(app_name()) ?> </h1>
+                <p><?= esc(app_subtitle()) ?></p>
             </div>
         </a>
 
@@ -1032,7 +1032,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     (function () {
         var bar = document.querySelector('.advisory-bar .marquee');
         if (!bar) return;
-        var FALLBACK = 'Welcome to Palompon Transit Terminal. Check schedules and fares for your trip.';
+        var FALLBACK = <?= json_encode('Welcome to ' . app_name() . ' Terminal. Check schedules and fares for your trip.') ?>;
         var lastText = bar.textContent.trim();
         function refreshAnnouncements() {
             fetch('<?= base_url('api/announcements') ?>?_=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })

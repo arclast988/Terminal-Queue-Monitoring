@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($title ?? 'Commuter User Guide & Error Help - Palompon Transit') ?></title>
+    <title><?= esc($title ?? 'Commuter User Guide & Error Help - ' . app_name()) ?></title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
     <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">

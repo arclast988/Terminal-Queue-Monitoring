@@ -94,6 +94,18 @@ $routes->group('admin/announcements', ['filter' => 'auth:admin,staff'], function
     $routes->post('deleteAll', 'Admin\Announcements::deleteAll');
 });
 
+// System Branding & Settings — Super Admin only
+$routes->group('admin/settings', ['filter' => 'auth:super_admin'], function ($routes) {
+    $routes->get('', 'Admin\Settings::index');
+    $routes->post('update-branding', 'Admin\Settings::updateBranding');
+    $routes->post('update-themes', 'Admin\Settings::updateThemes');
+    $routes->post('update-footer', 'Admin\Settings::updateFooter');
+    $routes->post('upload-logo', 'Admin\Settings::uploadLogo');
+    $routes->post('reset-logo', 'Admin\Settings::resetLogo');
+    $routes->post('upload-background', 'Admin\Settings::uploadBackground');
+    $routes->post('reset-background', 'Admin\Settings::resetBackground');
+});
+
 // Protected Routes
 $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('dashboard', 'Admin\Dashboard::index');
