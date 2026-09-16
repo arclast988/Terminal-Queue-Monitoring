@@ -604,13 +604,13 @@
                     <span class="badge-modern badge-modern-primary">#<?= $item['position'] ?></span>
                     <?php
                         $vType = $item['vehicle_type'] ?? '';
-                        $imgFile = vehicle_type_image($vType);
+                        $vtPhoto = vehicle_type_photo($vType);
                         $itemCol = vehicle_type_color($vType);
                         $itemIco = vehicle_type_icon($vType);
                     ?>
                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px; background: <?= esc($itemCol) ?>18 !important; border: 1px solid <?= esc($itemCol) ?>44 !important; color: <?= esc($itemCol) ?> !important;">
-                        <?php if (!empty($imgFile)): ?>
-                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;">
+                        <?php if (!empty($vtPhoto)): ?>
+                            <img src="<?= esc($vtPhoto) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
                         <?php else: ?>
                             <i class="fas <?= esc($itemIco) ?>" style="color: <?= esc($itemCol) ?>; font-size: 16px;"></i>
                         <?php endif; ?>
@@ -1177,7 +1177,7 @@
                             <?php foreach ($vehicles as $v): ?>
                                 <?php
                                     $vType = $v['type'] ?? '';
-                                    $imgFile = vehicle_type_image($vType);
+                                    $vPhoto = vehicle_type_photo($vType);
                                     $isDeparted = !empty($v['is_departed']);
                                     $departedTime = $v['departed_time'] ?? '';
 
@@ -1201,8 +1201,8 @@
                                             $vIco = vehicle_type_icon($vType);
                                         ?>
                                         <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: <?= esc($vCol) ?>18; border: 1px solid <?= esc($vCol) ?>44;">
-                                            <?php if (!empty($imgFile)): ?>
-                                                <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;">
+                                            <?php if (!empty($vPhoto)): ?>
+                                                <img src="<?= esc($vPhoto) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
                                             <?php else: ?>
                                                 <i class="fas <?= esc($vIco) ?>" style="color: <?= esc($vCol) ?>; font-size: 16px;"></i>
                                             <?php endif; ?>

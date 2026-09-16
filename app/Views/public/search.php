@@ -848,10 +848,17 @@
                                 </div>
                             </td>
                             <td data-label="Type">
-                                <?php $vType = $item['vehicle_type'] ?? ''; ?>
+                                <?php
+                                    $vType = $item['vehicle_type'] ?? '';
+                                    $photoUrl = vehicle_type_photo($vType);
+                                ?>
                                 <div class="vehicle-type-cell">
                                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . vehicle_type_image($vType)) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        <?php if (!empty($photoUrl)): ?>
+                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc($vType) ?>" style="height:36px;width:auto;" title="<?= vehicle_type_label($vType) ?>" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
+                                        <?php else: ?>
+                                            <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="color: <?= esc(vehicle_type_color($vType)) ?>; font-size: 18px;"></i>
+                                        <?php endif; ?>
                                     </span>
                                     <?= vehicle_type_badge($vType) ?>
                                 </div>

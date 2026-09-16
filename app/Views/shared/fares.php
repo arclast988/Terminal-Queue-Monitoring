@@ -470,7 +470,7 @@ $fareTypes = array_map(static fn(array $type) => [
     'color' => !empty($type['color']) ? $type['color'] : vehicle_type_color($type['slug']),
     'icon' => !empty($type['icon']) ? $type['icon'] : vehicle_type_icon($type['slug']),
     'bi_icon' => vehicle_type_bi_icon($type['slug'], $type['icon'] ?? null),
-    'img' => vehicle_type_image($type['slug']),
+    'photo' => vehicle_type_photo($type['slug']),
     'badge' => vehicle_type_badge($type['slug']),
     'badgeClass' => vehicle_type_class($type['slug']),
 ], $vehicleTypes ?? []);
@@ -553,9 +553,13 @@ $fareTypes = array_map(static fn(array $type) => [
     <div class="modern-card shadow-modern h-100 fare-section-card <?= vehicle_type_class($ft['type']) ?> fade-in" style="--fare-accent: <?= esc($vtColor) ?>; border-top: 3.5px solid var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($cardTopBorder) ?>) !important;">
         <div class="modern-card-header d-flex justify-content-between align-items-center">
             <span class="modern-card-title fare-section-title d-flex align-items-center gap-2" style="color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($headerTitleColor) ?>) !important;">
-                <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 28px; height: 28px; background-color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($iconBoxBg) ?>); color: <?= esc($iconBoxColor) ?>; <?= $iconBoxBorder ?> font-size: 13px;">
-                    <i class="fas <?= esc($vtIcon) ?>" style="color: <?= esc($iconBoxColor) ?> !important;"></i>
-                </span>
+                <?php if (!empty($ft['photo'])): ?>
+                    <img src="<?= esc($ft['photo']) ?>" alt="<?= esc($ft['name']) ?>" style="width: 28px; height: 28px; object-fit: contain;" data-vt-photo="<?= esc(vehicle_type_key($ft['key'])) ?>">
+                <?php else: ?>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 28px; height: 28px; background-color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($iconBoxBg) ?>); color: <?= esc($iconBoxColor) ?>; <?= $iconBoxBorder ?> font-size: 13px;" data-vt-icon-box="<?= esc(vehicle_type_key($ft['key'])) ?>">
+                        <i class="fas <?= esc($vtIcon) ?>" style="color: <?= esc($iconBoxColor) ?> !important;"></i>
+                    </span>
+                <?php endif; ?>
                 <span class="fw-bold" style="color: var(--vehicle-<?= esc($ft['key']) ?>, <?= esc($headerTitleColor) ?>) !important;"><?= esc($ft['label']) ?></span>
             </span>
         </div>

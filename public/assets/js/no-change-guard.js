@@ -25,7 +25,17 @@
         fd.forEach(function (value, key) {
             var el = form.querySelector('[name="' + key + '"]');
             if (el && el.hasAttribute && el.hasAttribute('data-no-change-ignore')) return;
-            if (el && el.type === 'file') return;
+            if (el && el.type === 'file') {
+                if (!Object.prototype.hasOwnProperty.call(data, key)) data[key] = [];
+                if (el.files && el.files.length > 0) {
+                    for (var i = 0; i < el.files.length; i++) {
+                        data[key].push(el.files[i].name + ':' + el.files[i].size);
+                    }
+                } else {
+                    data[key].push('');
+                }
+                return;
+            }
             if (typeof value !== 'string') return;
             if (!Object.prototype.hasOwnProperty.call(data, key)) data[key] = [];
             data[key].push(value);
@@ -45,16 +55,16 @@
         if (existing) return existing;
         var wrapper = document.createElement('div');
         wrapper.innerHTML =
-            '<div class="modal fade" id="' + POPUP_ID + '" tabindex="-1" aria-hidden="true">'
-            + '<div class="modal-dialog modal-dialog-centered modal-sm">'
-            + '<div class="modal-content">'
+            '<div class="modal fade" id="' + POPUP_ID + '" tabindex="-1" aria-hidden="true" style="z-index: 100060 !important;">'
+            + '<div class="modal-dialog modal-dialog-centered modal-sm" style="max-width: 360px;">'
+            + '<div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">'
             + '<div class="modal-body text-center p-4">'
-            + '<div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width:52px;height:52px;background:#fef9c3;color:#a16207;font-size:22px;">'
-            + '<i class="bi bi-exclamation-circle-fill"></i>'
+            + '<div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 54px; height: 54px; background: #fef3c7; color: #d97706; font-size: 24px; box-shadow: 0 4px 12px rgba(217,119,6,0.15);">'
+            + '<i class="bi bi-exclamation-triangle-fill"></i>'
             + '</div>'
-            + '<h6 class="fw-bold mb-2">No changes detected</h6>'
-            + '<p class="text-muted small mb-3">You didn\'t change anything, so nothing was updated.</p>'
-            + '<button type="button" class="btn btn-modern btn-modern-primary btn-sm px-4" data-bs-dismiss="modal">OK</button>'
+            + '<h6 class="fw-bold mb-1 text-dark" style="font-size: 16px;">No Changes Detected</h6>'
+            + '<p class="text-muted small mb-4" style="line-height: 1.5; font-size: 13px;">You didn\'t change anything, so nothing was updated.</p>'
+            + '<button type="button" class="btn btn-warning btn-sm px-4 fw-semibold text-dark shadow-sm" data-bs-dismiss="modal" style="border-radius: 8px; min-width: 100px;">Got it</button>'
             + '</div>'
             + '</div>'
             + '</div>'
@@ -76,22 +86,29 @@
     }
 
     function showInlineNotice(form) {
+        var modalBody = form.querySelector('.modal-body');
+        var target = modalBody || form;
         var notice = document.createElement('div');
-        notice.className = 'nc-inline-notice alert alert-warning alert-dismissible d-flex align-items-center gap-2 mt-1 mb-3';
+        notice.className = 'nc-inline-notice alert alert-warning alert-dismissible fade show d-flex align-items-center gap-2 mt-1 mb-3 shadow-sm';
         notice.setAttribute('role', 'alert');
-        notice.innerHTML = '<i class="bi bi-exclamation-circle-fill"></i>'
-            + '<div><strong>No changes detected</strong> — nothing was updated.</div>'
-            + '<button type="button" class="btn-close ms-auto" aria-label="Close"></button>';
+        notice.style.cssText = 'background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-left: 4px solid #f59e0b !important; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 500; z-index: 10; position: relative;';
+        notice.innerHTML = '<i class="bi bi-exclamation-triangle-fill flex-shrink-0" style="font-size: 16px; color: #d97706;"></i>'
+            + '<div class="flex-grow-1"><strong>No changes detected</strong> — nothing was updated.</div>'
+            + '<button type="button" class="btn-close" aria-label="Close" style="padding: 10px; font-size: 10px;"></button>';
         var closeBtn = notice.querySelector('.btn-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', function () { removeInlineNotice(notice); });
         }
-        form.prepend(notice);
-        try {
-            notice.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        } catch (e) { /* ignore */ }
+        target.prepend(notice);
+        if (modalBody) {
+            modalBody.scrollTop = 0;
+        } else {
+            try {
+                notice.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } catch (e) { /* ignore */ }
+        }
         // Auto-fade after a few seconds so it never lingers.
-        notice._ncTimer = setTimeout(function () { removeInlineNotice(notice); }, 5000);
+        notice._ncTimer = setTimeout(function () { removeInlineNotice(notice); }, 6000);
     }
 
     function removeInlineNotice(notice) {
@@ -130,6 +147,18 @@
         form.addEventListener('submit', function (e) {
             var old = form.querySelector('.nc-inline-notice');
             if (old) removeInlineNotice(old);
+
+            // If user selected any file(s), changes are present — allow submission!
+            var hasFileSelected = false;
+            form.querySelectorAll('input[type="file"]').forEach(function (fi) {
+                if (fi.files && fi.files.length > 0) {
+                    hasFileSelected = true;
+                }
+            });
+            if (hasFileSelected) {
+                return;
+            }
+
             var before = form.getAttribute('data-nc-snapshot');
             var now = null;
             try {

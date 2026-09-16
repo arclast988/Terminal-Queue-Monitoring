@@ -267,7 +267,7 @@
 
         // 1. Update App Name
         if (data.app_name) {
-            document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title').forEach(function(el) {
+            document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title, .previewNameEl').forEach(function(el) {
                 el.textContent = data.app_name;
             });
             document.querySelectorAll('.footer-app-name, .footer-brand-title, .guest-footer-title').forEach(function(el) {
@@ -275,38 +275,65 @@
             });
         }
 
-        // 2. Update Subtitle / System Title
-        if (data.system_title) {
-            document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .drawer-brand-subtitle, .app-system-title, .header-brand-subtitle').forEach(function(el) {
-                el.textContent = data.system_title;
+        // 2. Update Subtitle
+        if (data.app_subtitle) {
+            document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .drawer-brand-subtitle, .header-brand-subtitle, .previewSubEl').forEach(function(el) {
+                el.textContent = data.app_subtitle;
             });
-            document.querySelectorAll('.footer-system-title, .guest-footer-subtitle').forEach(function(el) {
+        }
+
+        // 3. Update System Title
+        if (data.system_title) {
+            document.querySelectorAll('.app-system-title, .footer-system-title, .guest-footer-subtitle, #previewSysTitleCard').forEach(function(el) {
                 el.textContent = data.system_title;
             });
         }
 
-        // 3. Update Logo Image
+        // 3b. Update Acronym
+        if (data.acronym) {
+            document.querySelectorAll('.app-acronym, #previewAcronymCard').forEach(function(el) {
+                el.textContent = data.acronym;
+            });
+        }
+
+        // 4. Update Logo Image
         if (data.app_logo) {
             var logoUrl = data.app_logo + (data.app_logo.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo').forEach(function(img) {
+            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg').forEach(function(img) {
                 img.src = logoUrl;
             });
         }
 
-        // 4. Update Dynamic Theme Colors
+        // 5. Update Dynamic Theme Colors
         if (data.theme_admin_primary) {
             document.documentElement.style.setProperty('--primary-color', data.theme_admin_primary);
             document.documentElement.style.setProperty('--admin-primary', data.theme_admin_primary);
             document.documentElement.style.setProperty('--primary', data.theme_admin_primary);
+            document.documentElement.style.setProperty('--sb-primary', data.theme_admin_primary);
+            document.querySelectorAll('header#site-header, .navbar-theme-admin').forEach(function(hdr) {
+                if (document.body.classList.contains('admin-theme')) {
+                    hdr.style.backgroundColor = data.theme_admin_nav_bg || data.theme_admin_primary;
+                }
+            });
         }
         if (data.theme_guest_primary) {
             document.documentElement.style.setProperty('--guest-primary', data.theme_guest_primary);
+            document.querySelectorAll('.navbar-theme-guest').forEach(function(hdr) {
+                if (!document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme')) {
+                    hdr.style.backgroundColor = data.theme_guest_nav_bg || '#ffffff';
+                }
+            });
         }
         if (data.theme_staff_primary) {
             document.documentElement.style.setProperty('--staff-primary', data.theme_staff_primary);
+            document.querySelectorAll('.navbar-theme-staff').forEach(function(hdr) {
+                if (document.body.classList.contains('staff-theme')) {
+                    hdr.style.backgroundColor = data.theme_staff_nav_bg || data.theme_staff_primary;
+                }
+            });
         }
 
-        // 5. Update Footer Text
+        // 6. Update Footer Text
         if (data.footer_about_title) {
             document.querySelectorAll('.footer-about-title').forEach(function(el) {
                 el.textContent = data.footer_about_title;
@@ -323,13 +350,53 @@
             });
         }
 
-        // 6. Broadcast event for page-specific custom listeners
+        // 7. Broadcast event for page-specific custom listeners
         try {
             document.dispatchEvent(new CustomEvent('pttm:branding-applied', { detail: data }));
         } catch(e) {}
     }
 
+    // Cross-tab broadcast channel for immediate multi-tab sync across all open tabs/windows
+    var _brandingChannel = null;
+    try {
+        if (window.BroadcastChannel) {
+            _brandingChannel = new BroadcastChannel('pttm_branding_channel');
+            _brandingChannel.onmessage = function(e) {
+                if (e.data && e.data.type === 'branding_updated' && e.data.data) {
+                    applyLiveBranding(e.data.data);
+                }
+            };
+        }
+    } catch(e) {}
+
+    // Cross-tab localStorage fallback for instant cross-tab sync
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'pttm_live_branding' && e.newValue) {
+            try {
+                var parsed = JSON.parse(e.newValue);
+                if (parsed && parsed.data) {
+                    applyLiveBranding(parsed.data);
+                }
+            } catch(err) {}
+        }
+    });
+
+    function broadcastLiveBranding(data) {
+        if (!data) return;
+        applyLiveBranding(data);
+        if (_brandingChannel) {
+            try {
+                _brandingChannel.postMessage({ type: 'branding_updated', data: data });
+            } catch(e) {}
+        }
+        try {
+            localStorage.setItem('pttm_live_branding', JSON.stringify({ data: data, time: Date.now() }));
+        } catch(e) {}
+    }
+
     window.applyLiveBranding = applyLiveBranding;
+    window.broadcastLiveBranding = broadcastLiveBranding;
     window.QueueWS.applyLiveBranding = applyLiveBranding;
+    window.QueueWS.broadcastLiveBranding = broadcastLiveBranding;
 
 })(window);

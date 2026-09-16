@@ -665,7 +665,21 @@
             <!-- Van Routes -->
             <div class="fare-card vehicle-type-van" id="fare-card-van" data-vehicle-type="van">
                 <div class="card-header">
-                    <h3><img src="<?= base_url('images/van.png') ?>" alt="Van" style="width: 45px; height: auto; object-fit: contain;"> Van Routes</h3>
+                    <?php
+                        $vanPhoto = vehicle_type_photo('van');
+                        $vanColor = vehicle_type_color('van');
+                        $vanIcon = vehicle_type_icon('van');
+                    ?>
+                    <h3>
+                        <?php if (!empty($vanPhoto)): ?>
+                            <img src="<?= esc($vanPhoto) ?>" alt="Van" style="width: 36px; height: 36px; object-fit: contain;" data-vt-photo="van">
+                        <?php else: ?>
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($vanColor) ?>; font-size: 16px;" data-vt-icon-box="van">
+                                <i class="fas <?= esc($vanIcon) ?>"></i>
+                            </span>
+                        <?php endif; ?>
+                        Van Routes
+                    </h3>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($van_routes)): ?>
@@ -712,7 +726,21 @@
             <!-- Jeepney Routes -->
             <div class="fare-card vehicle-type-jeepney" id="fare-card-jeepney" data-vehicle-type="jeepney">
                 <div class="card-header">
-                    <h3><img src="<?= base_url('images/jeep.png') ?>" alt="Jeepney" style="width: 45px; height: auto; object-fit: contain;"> Jeepney Routes</h3>
+                    <?php
+                        $jeepPhoto = vehicle_type_photo('jeepney');
+                        $jeepColor = vehicle_type_color('jeepney');
+                        $jeepIcon = vehicle_type_icon('jeepney');
+                    ?>
+                    <h3>
+                        <?php if (!empty($jeepPhoto)): ?>
+                            <img src="<?= esc($jeepPhoto) ?>" alt="Jeepney" style="width: 36px; height: 36px; object-fit: contain;" data-vt-photo="jeepney">
+                        <?php else: ?>
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($jeepColor) ?>; font-size: 16px;" data-vt-icon-box="jeepney">
+                                <i class="fas <?= esc($jeepIcon) ?>"></i>
+                            </span>
+                        <?php endif; ?>
+                        Jeepney Routes
+                    </h3>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($jeepney_routes)): ?>
@@ -759,7 +787,21 @@
             <!-- Minibus Routes -->
             <div class="fare-card vehicle-type-minibus" id="fare-card-minibus" data-vehicle-type="minibus">
                 <div class="card-header">
-                    <h3><img src="<?= base_url('images/minibus.png') ?>" alt="Minibus"> Minibus Routes</h3>
+                    <?php
+                        $minibusPhoto = vehicle_type_photo('minibus');
+                        $minibusColor = vehicle_type_color('minibus');
+                        $minibusIcon = vehicle_type_icon('minibus');
+                    ?>
+                    <h3>
+                        <?php if (!empty($minibusPhoto)): ?>
+                            <img src="<?= esc($minibusPhoto) ?>" alt="Minibus" style="width: 36px; height: 36px; object-fit: contain;" data-vt-photo="minibus">
+                        <?php else: ?>
+                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($minibusColor) ?>; font-size: 16px;" data-vt-icon-box="minibus">
+                                <i class="fas <?= esc($minibusIcon) ?>"></i>
+                            </span>
+                        <?php endif; ?>
+                        Minibus Routes
+                    </h3>
                 </div>
                 <div class="fare-list">
                     <?php if (!empty($minibus_routes)): ?>
@@ -808,13 +850,13 @@
                 <?php 
                     $vtColor = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
                     $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
-                    $vtImg = vehicle_type_image($vehicleType['slug']);
+                    $vtPhoto = vehicle_type_photo($vehicleType['slug']);
                 ?>
                 <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" id="fare-card-<?= esc($vehicleType['slug']) ?>" data-vehicle-type="<?= esc($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>;">
                     <div class="card-header">
                         <h3>
-                            <?php if (!empty($vtImg)): ?>
-                                <img src="<?= base_url('images/' . $vtImg) ?>" alt="<?= esc($vehicleType['name']) ?>">
+                            <?php if (!empty($vtPhoto)): ?>
+                                <img src="<?= esc($vtPhoto) ?>" alt="<?= esc($vehicleType['name']) ?>" data-vt-photo="<?= esc(vehicle_type_key($vehicleType['slug'])) ?>">
                             <?php else: ?>
                                 <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; font-size: 15px;">
                                     <i class="fas <?= esc($vtIcon) ?>"></i>
@@ -1094,12 +1136,16 @@
         return html;
     }
 
-    function buildFareCard(type, label, badgeClass, imgSrc, routes, color) {
+    function buildFareCard(type, label, badgeClass, photoUrl, routes, color, icon) {
         var typeClass = type ? ' vehicle-type-' + type : '';
         var accent = color || '#c62828';
+        var vtIcon = icon || 'fa-bus';
+        var headerVisual = photoUrl
+            ? '<img src="' + photoUrl + '" alt="' + label + '" style="width:36px;height:36px;object-fit:contain;" data-vt-photo="' + escapeHtml(type) + '">'
+            : '<span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white me-2" style="width:36px;height:36px;background-color:' + accent + ';font-size:16px;" data-vt-icon-box="' + escapeHtml(type) + '"><i class="fas ' + vtIcon + '"></i></span>';
         return '<div class="fare-card' + typeClass + '" id="fare-card-' + escapeHtml(type) + '" data-vehicle-type="' + escapeHtml(type) + '" style="--fare-accent: ' + accent + ';">'
             + '<div class="card-header">'
-            + '<h3><img src="' + imgSrc + '" alt="' + label + '"> ' + label + '</h3>'
+            + '<h3>' + headerVisual + ' ' + label + '</h3>'
             + '</div>'
             + '<div class="fare-list">' + buildFareListContent(label, routes) + '</div>'
             + '</div>';
@@ -1147,7 +1193,9 @@
             var globalFp = makeContentFingerprint(data);
 
             var vehicleTypes = Array.isArray(data.vehicle_types) ? data.vehicle_types : [];
-            var currentTypesFp = JSON.stringify(vehicleTypes.map(function(v) { return v.slug; }));
+            var currentTypesFp = JSON.stringify(vehicleTypes.map(function(v) {
+                return v.slug + ':' + (v.photo || '') + ':' + (v.icon || '') + ':' + (v.color || '');
+            }));
             var newDiscFp = JSON.stringify(data.discounts || []);
 
             // First fetch: seed the fingerprints without re-rendering server-rendered DOM
@@ -1166,12 +1214,11 @@
             }
 
             // If absolutely nothing changed, do nothing!
-            if (globalFp === _fareFingerprint) {
+            if (globalFp === _fareFingerprint && currentTypesFp === _vehicleTypesFingerprint) {
                 return;
             }
             _fareFingerprint = globalFp;
 
-            var baseImgUrl = '<?= base_url("images/") ?>';
             var grid = document.getElementById('faresGrid');
             var typesChanged = (_vehicleTypesFingerprint !== null && _vehicleTypesFingerprint !== currentTypesFp);
             _vehicleTypesFingerprint = currentTypesFp;
@@ -1185,13 +1232,16 @@
                             || data[vehicleType.slug + '_routes']
                             || [];
                         _cardFingerprints[vehicleType.slug] = makeTypeRoutesFingerprint(routes);
+                        var cardPhoto = vehicleType.photo || '';
+                        var cardIcon = vehicleType.icon || 'fa-bus';
                         return buildFareCard(
                             vehicleType.slug,
                             escapeHtml(vehicleType.name) + ' Routes',
                             '',
-                            baseImgUrl + (vehicleType.image || 'minibus.png'),
+                            cardPhoto,
                             routes,
-                            vehicleType.color || '#c62828'
+                            vehicleType.color || '#c62828',
+                            cardIcon
                         );
                     }).join('');
                 } else {
@@ -1219,13 +1269,16 @@
                             }
                         } else {
                             var temp = document.createElement('div');
+                            var cardPhoto = vehicleType.photo || '';
+                            var cardIcon = vehicleType.icon || 'fa-bus';
                             temp.innerHTML = buildFareCard(
                                 slug,
                                 escapeHtml(vehicleType.name) + ' Routes',
                                 '',
-                                baseImgUrl + (vehicleType.image || 'minibus.png'),
+                                cardPhoto,
                                 routes,
-                                vehicleType.color || '#c62828'
+                                vehicleType.color || '#c62828',
+                                cardIcon
                             );
                             if (temp.firstElementChild) {
                                 grid.appendChild(temp.firstElementChild);

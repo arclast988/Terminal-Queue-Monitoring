@@ -581,18 +581,92 @@
         Object.keys(colors).forEach(function(slug) {
             var entry = colors[slug];
             var color = (entry && typeof entry === 'object') ? entry.color : entry;
-            if (typeof color !== 'string' || !/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(color)) return;
+            var photo = (entry && typeof entry === 'object') ? entry.photo : null;
+            var icon = (entry && typeof entry === 'object' && entry.icon) ? entry.icon : 'fa-bus';
             var key = String(slug).toLowerCase().replace(/[^a-z0-9_-]+/g, '_').replace(/^[_-]+|[_-]+$/g, '');
             if (!key) return;
-            try {
-                root.style.setProperty('--vehicle-' + key, color);
-                root.style.setProperty('--vehicle-' + key + '-soft', color + '18');
-                applied++;
-            } catch (e) { /* ignore */ }
+
+            if (typeof color === 'string' && /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(color)) {
+                try {
+                    root.style.setProperty('--vehicle-' + key, color);
+                    root.style.setProperty('--vehicle-' + key + '-soft', color + '18');
+                    applied++;
+                } catch (e) { /* ignore */ }
+            }
+
+            if (photo) {
+                try {
+                    var selectors = [
+                        'img[data-vt-photo="' + key + '"]',
+                        '.vehicle-type-' + key + ' img',
+                        '.vehicle-type-icon.vehicle-type-' + key + ' img',
+                        '#fare-card-' + key + ' .card-header img',
+                        '[data-vehicle-type="' + key + '"] .vehicle-type-icon img',
+                        '[data-vehicle-type="' + key + '"] .vehicle-thumb-img',
+                        'button[data-type="' + key + '"] img',
+                        '.vf-' + key + ' img'
+                    ];
+                    var foundImgs = document.querySelectorAll(selectors.join(', '));
+                    foundImgs.forEach(function(img) {
+                        img.src = photo;
+                    });
+
+                    // Upgrade icon-only elements to img if needed
+                    document.querySelectorAll('.vehicle-type-icon.vehicle-type-' + key + ', [data-vehicle-type="' + key + '"] .vehicle-type-icon').forEach(function(iconBox) {
+                        if (!iconBox.querySelector('img')) {
+                            var iEl = iconBox.querySelector('i');
+                            var img = document.createElement('img');
+                            img.src = photo;
+                            img.alt = key;
+                            img.style.height = '28px';
+                            img.style.width = 'auto';
+                            img.style.maxWidth = '32px';
+                            img.style.objectFit = 'contain';
+                            img.setAttribute('data-vt-photo', key);
+                            if (iEl) {
+                                iconBox.replaceChild(img, iEl);
+                            } else {
+                                iconBox.appendChild(img);
+                            }
+                        }
+                    });
+                } catch (e) { /* ignore */ }
+            } else {
+                // Photo is removed / null: revert to assigned icon
+                try {
+                    document.querySelectorAll('.vehicle-type-icon.vehicle-type-' + key + ', [data-vehicle-type="' + key + '"] .vehicle-type-icon').forEach(function(iconBox) {
+                        var oldImg = iconBox.querySelector('img');
+                        if (oldImg) {
+                            var iEl = document.createElement('i');
+                            iEl.className = 'fas ' + icon;
+                            iEl.style.color = color || 'var(--vehicle-' + key + ')';
+                            iEl.style.fontSize = '16px';
+                            iconBox.replaceChild(iEl, oldImg);
+                        } else {
+                            var curI = iconBox.querySelector('i');
+                            if (curI) {
+                                curI.className = 'fas ' + icon;
+                                if (color) curI.style.color = color;
+                            }
+                        }
+                    });
+
+                    document.querySelectorAll('button[data-type="' + key + '"], .vf-' + key + ', .dep-filter-btn[data-type="' + key + '"]').forEach(function(btn) {
+                        var oldImg = btn.querySelector('img');
+                        if (oldImg) {
+                            var iEl = document.createElement('i');
+                            iEl.className = 'fas ' + icon + ' me-1';
+                            iEl.style.color = color || 'var(--vehicle-' + key + ')';
+                            iEl.style.fontSize = '13px';
+                            btn.replaceChild(iEl, oldImg);
+                        }
+                    });
+                } catch (e) { /* ignore */ }
+            }
         });
         if (applied > 0) {
             try {
-                document.dispatchEvent(new CustomEvent('vt-colors-updated'));
+                document.dispatchEvent(new CustomEvent('vt-colors-updated', { detail: colors }));
             } catch (e) { /* ignore */ }
         }
     }
@@ -607,6 +681,33 @@
             applyVehicleTypeColors(data.colors);
         } else if (message.colors) {
             applyVehicleTypeColors(message.colors);
+        }
+
+        if (data.photo && (data.new_slug || data.slug)) {
+            var sKey = String(data.new_slug || data.slug).toLowerCase().replace(/[^a-z0-9_-]+/g, '_').replace(/^[_-]+|[_-]+$/g, '');
+            if (sKey) {
+                var pSelectors = [
+                    'img[data-vt-photo="' + sKey + '"]',
+                    '.vehicle-type-' + sKey + ' img',
+                    '.vehicle-type-icon.vehicle-type-' + sKey + ' img',
+                    '#fare-card-' + sKey + ' .card-header img',
+                    '[data-vehicle-type="' + sKey + '"] .vehicle-type-icon img',
+                    '[data-vehicle-type="' + sKey + '"] .vehicle-thumb-img',
+                    'button[data-type="' + sKey + '"] img'
+                ];
+                try {
+                    document.querySelectorAll(pSelectors.join(', ')).forEach(function(img) {
+                        img.src = data.photo;
+                    });
+                } catch (e) { /* ignore */ }
+            }
+        }
+
+        // On vehicle type create/update/delete, refresh the page content to ensure all server cards match
+        if (data.type === 'vehicle_type_update' || message.type === 'vehicle_type_update' || (data.action && (data.action === 'create' || data.action === 'update' || data.action === 'delete'))) {
+            try {
+                doRefresh();
+            } catch (e) { /* ignore */ }
         }
 
         if (data.action === 'passenger_change') {

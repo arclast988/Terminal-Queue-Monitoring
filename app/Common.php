@@ -47,9 +47,13 @@ if (! function_exists('get_db_vehicle_types')) {
                         $photoUrl = null;
                         if (!empty($r['photo'])) {
                             $relPath = ltrim(str_replace(['\\'], '/', $r['photo']), '/');
-                            if (is_file(FCPATH . $relPath)) {
-                                $mtime = @filemtime(FCPATH . $relPath);
+                            $fc = defined('FCPATH') ? FCPATH : (defined('ROOTPATH') ? rtrim(ROOTPATH, '/\\') . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR : '');
+                            $fullPath = $fc ? (rtrim($fc, '/\\') . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relPath)) : '';
+                            if ($fullPath && is_file($fullPath)) {
+                                $mtime = @filemtime($fullPath);
                                 $photoUrl = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+                            } else {
+                                $photoUrl = base_url($relPath);
                             }
                         }
                         $cached[$key] = [
@@ -74,14 +78,6 @@ if (! function_exists('get_db_vehicle_types')) {
     }
 }
 
-if (! function_exists('vehicle_type_photo')) {
-    function vehicle_type_photo(?string $type): ?string
-    {
-        $typeKey = vehicle_type_key($type);
-        $dbTypes = get_db_vehicle_types();
-        return $dbTypes[$typeKey]['photo'] ?? null;
-    }
-}
 
 if (! function_exists('vehicle_type_label')) {
     function vehicle_type_label(?string $type): string
@@ -153,52 +149,31 @@ if (! function_exists('vehicle_type_image')) {
     function vehicle_type_image(?string $type): ?string
     {
         $key = vehicle_type_key($type);
-        $images = [
-            'jeepney'     => 'jeep.png',
-            'jeep'        => 'jeep.png',
-            'van'         => 'van.png',
-            'minibus'     => 'minibus.png',
-            'bus'         => 'bus.png',
-            'coach'       => 'bus.png',
-            'tricycle'    => 'tricycle.png',
-            'tricecle'    => 'tricycle.png',
-            'trike'       => 'tricycle.png',
-            'motorcycle'  => 'motorcycle.png',
-            'motorbike'   => 'motorcycle.png',
-            'habal_habal' => 'motorcycle.png',
-            'habalhabal'  => 'motorcycle.png',
-            'car'         => 'car.png',
-            'sedan'       => 'car.png',
-            'taxi'        => 'taxi.png',
-            'cab'         => 'taxi.png',
-        ];
-
-        if (isset($images[$key])) {
-            return $images[$key];
+        $dbTypes = get_db_vehicle_types();
+        if (!empty($dbTypes[$key]['photo'])) {
+            $photoPath = explode('?', $dbTypes[$key]['photo'], 2)[0];
+            $base = base_url();
+            if (str_starts_with($photoPath, $base)) {
+                $photoPath = ltrim(substr($photoPath, strlen($base)), '/');
+            }
+            return '../' . ltrim($photoPath, '/');
         }
 
-        if (str_contains($key, 'habal') || str_contains($key, 'motor') || str_contains($key, 'bike')) {
-            return 'motorcycle.png';
-        }
-        if (str_contains($key, 'tri')) {
-            return 'tricycle.png';
-        }
-        if (str_contains($key, 'bus')) {
-            return 'bus.png';
-        }
-        if (str_contains($key, 'taxi') || str_contains($key, 'cab')) {
-            return 'taxi.png';
-        }
-        if (str_contains($key, 'car') || str_contains($key, 'sedan')) {
-            return 'car.png';
-        }
-        if (str_contains($key, 'van') || str_contains($key, 'shuttle')) {
-            return 'van.png';
-        }
-        if (str_contains($key, 'jeep')) {
-            return 'jeep.png';
-        }
+        return null;
+    }
+}
 
+if (! function_exists('vehicle_type_photo')) {
+    function vehicle_type_photo(?string $type): ?string
+    {
+        if ($type === null || $type === '') {
+            return null;
+        }
+        $key = vehicle_type_key($type);
+        $dbTypes = get_db_vehicle_types();
+        if (!empty($dbTypes[$key]['photo'])) {
+            return $dbTypes[$key]['photo'];
+        }
         return null;
     }
 }

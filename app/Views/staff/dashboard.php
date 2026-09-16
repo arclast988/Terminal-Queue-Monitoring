@@ -153,28 +153,30 @@ if (!empty($recent_departures)) {
                         <?php 
                             $slug = strtolower($vt['slug']); 
                             $count = $typeCounts[$slug] ?? 0;
-                            $img = vehicle_type_image($slug);
+                            $photo = vehicle_type_photo($slug);
+                            $vIcon = vehicle_type_icon($slug, $vt['icon'] ?? null);
+                            $vColor = vehicle_type_color($slug, $vt['color'] ?? null);
                         ?>
                         <button type="button" class="dep-filter-btn" data-type="<?= esc($slug) ?>" onclick="setDepartureTypeFilter('<?= esc($slug) ?>', this)">
-                            <?php if ($img): ?>
-                                <img src="<?= base_url('images/' . $img) ?>" alt="<?= esc($vt['name']) ?>" class="dep-filter-icon">
+                            <?php if ($photo): ?>
+                                <img src="<?= esc($photo) ?>" alt="<?= esc($vt['name']) ?>" class="dep-filter-icon" data-vt-photo="<?= esc($slug) ?>">
                             <?php else: ?>
-                                <i class="bi bi-truck me-1"></i>
+                                <i class="fas <?= esc($vIcon) ?> me-1" style="color: <?= esc($vColor) ?>;" data-vt-icon="<?= esc($slug) ?>"></i>
                             <?php endif; ?>
                             <?= esc($vt['name']) ?> <span class="dep-chip-count" id="count-<?= esc($slug) ?>"><?= $count ?></span>
                         </button>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <button type="button" class="dep-filter-btn" data-type="jeepney" onclick="setDepartureTypeFilter('jeepney', this)">
-                        <img src="<?= base_url('images/' . vehicle_type_image('jeepney')) ?>" alt="Jeepney">
+                        <?php $jp = vehicle_type_photo('jeepney'); if ($jp): ?><img src="<?= esc($jp) ?>" alt="Jeepney" class="dep-filter-icon" data-vt-photo="jeepney"><?php else: ?><i class="fas <?= esc(vehicle_type_icon('jeepney')) ?> me-1" style="color: <?= esc(vehicle_type_color('jeepney')) ?>;" data-vt-icon="jeepney"></i><?php endif; ?>
                         Jeepney <span class="dep-chip-count"><?= $typeCounts['jeepney'] ?? 0 ?></span>
                     </button>
                     <button type="button" class="dep-filter-btn" data-type="minibus" onclick="setDepartureTypeFilter('minibus', this)">
-                        <img src="<?= base_url('images/' . vehicle_type_image('minibus')) ?>" alt="Minibus">
+                        <?php $mb = vehicle_type_photo('minibus'); if ($mb): ?><img src="<?= esc($mb) ?>" alt="Minibus" class="dep-filter-icon" data-vt-photo="minibus"><?php else: ?><i class="fas <?= esc(vehicle_type_icon('minibus')) ?> me-1" style="color: <?= esc(vehicle_type_color('minibus')) ?>;" data-vt-icon="minibus"></i><?php endif; ?>
                         Minibus <span class="dep-chip-count"><?= $typeCounts['minibus'] ?? 0 ?></span>
                     </button>
                     <button type="button" class="dep-filter-btn" data-type="van" onclick="setDepartureTypeFilter('van', this)">
-                        <img src="<?= base_url('images/' . vehicle_type_image('van')) ?>" alt="Van">
+                        <?php $vn = vehicle_type_photo('van'); if ($vn): ?><img src="<?= esc($vn) ?>" alt="Van" class="dep-filter-icon" data-vt-photo="van"><?php else: ?><i class="fas <?= esc(vehicle_type_icon('van')) ?> me-1" style="color: <?= esc(vehicle_type_color('van')) ?>;" data-vt-icon="van"></i><?php endif; ?>
                         Van <span class="dep-chip-count"><?= $typeCounts['van'] ?? 0 ?></span>
                     </button>
                 <?php endif; ?>
@@ -246,11 +248,15 @@ if (!empty($recent_departures)) {
                             <td data-label="Type">
                                 <?php 
                                     $vType = $dept['vehicle_type'] ?? '';
-                                    $imgFile = vehicle_type_image($vType);
+                                    $photoUrl = vehicle_type_photo($vType);
                                 ?>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                        <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                        <?php if (!empty($photoUrl)): ?>
+                                            <img src="<?= esc($photoUrl) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
+                                        <?php else: ?>
+                                            <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="color: <?= esc(vehicle_type_color($vType)) ?>; font-size: 18px;"></i>
+                                        <?php endif; ?>
                                     </span>
                                     <?= vehicle_type_badge($vType) ?>
                                 </div>

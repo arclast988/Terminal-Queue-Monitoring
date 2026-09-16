@@ -1114,11 +1114,15 @@
                                 <td data-label="Type">
                                     <?php
                                         $vType = $schedule['vehicle_type'] ?? '';
-                                        $imgFile = vehicle_type_image($vType);
+                                        $photoUrl = vehicle_type_photo($vType);
                                     ?>
                                     <div class="vehicle-type-cell">
                                         <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
-                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>">
+                                            <?php if (!empty($photoUrl)): ?>
+                                                <img src="<?= esc($photoUrl) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
+                                            <?php else: ?>
+                                                <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="color: <?= esc(vehicle_type_color($vType)) ?>; font-size: 18px;"></i>
+                                            <?php endif; ?>
                                         </span>
                                         <?= vehicle_type_badge($vType) ?>
                                     </div>
@@ -1313,7 +1317,7 @@
             schedules.forEach(function(s) {
                 var qid = s.queue_id || s.id;
                 var typeMeta = vehicleTypeMeta[s.vehicle_type] || {};
-                var imgFile = typeMeta.image || 'minibus.png';
+                var photoUrl = typeMeta.photo || '';
                 var typeLabel = typeMeta.name || s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); });
                 var statusClass = statusClassMap[s.status] || 'status-waiting';
                 function escHtml(v) {
@@ -1331,12 +1335,15 @@
                 var opDisplay = s.operator_name ? escHtml(s.operator_name) : (s.driver_name ? escHtml(s.driver_name) : '—');
                 var typeSlug = String(s.vehicle_type || '').toLowerCase();
                 var typeColor = typeMeta.color || '#1565c0';
+                var photoImg = photoUrl
+                    ? '<img src="' + photoUrl + '" style="height:36px;width:auto" data-vt-photo="' + escHtml(typeSlug) + '">'
+                    : '<i class="fas ' + escHtml(typeMeta.icon || 'fa-bus') + '" style="font-size:18px;color:' + typeColor + '"></i>';
                 html += '<tr data-queue-id="' + qid + '" data-plate="' + escHtml(s.plate_number) + '" data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml(typeSlug) + '">' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +
                     '<td data-label="Plate"><span class="plate-number">' + escHtml(s.plate_number) + '</span></td>' +
                     '<td data-label="Operator"><div class="operator-cell"><i class="fas fa-building text-muted"></i>' + opDisplay + '</div></td>' +
                     '<td data-label="Driver"><div class="driver-cell"><i class="fas fa-user-tie"></i>' + (s.driver_name ? escHtml(s.driver_name) : '—') + '</div></td>' +
-                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(typeSlug) + '"><img src="<?= base_url('images/') ?>' + imgFile + '" style="height:36px;width:auto"></span><span class="vehicle-type-chip vehicle-type-' + escHtml(typeSlug) + '" data-vtype="' + escHtml(typeSlug) + '" style="background: var(--vehicle-' + escHtml(typeSlug) + '-soft, ' + typeColor + '18) !important; color: var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important; border: 1.5px solid var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important;">' + escHtml(typeLabel) + '</span></div></td>' +
+                    '<td data-label="Type"><div class="vehicle-type-cell"><span class="vehicle-type-icon vehicle-type-' + escHtml(typeSlug) + '">' + photoImg + '</span><span class="vehicle-type-chip vehicle-type-' + escHtml(typeSlug) + '" data-vtype="' + escHtml(typeSlug) + '" style="background: var(--vehicle-' + escHtml(typeSlug) + '-soft, ' + typeColor + '18) !important; color: var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important; border: 1.5px solid var(--vehicle-' + escHtml(typeSlug) + ', ' + typeColor + ') !important;">' + escHtml(typeLabel) + '</span></div></td>' +
                     '<td data-label="Route"><div class="route-info"><span style="color:var(--text-muted)">' + escHtml(s.origin).toUpperCase() + '</span><i class="fas fa-arrow-right" style="color:var(--primary);font-size:12px"></i><span style="font-weight:700;color:var(--primary-dark)">' + escHtml(s.destination).toUpperCase() + '</span></div></td>' +
                     '<td data-label="Est. Departure">' + dep + '</td>' +
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '" id="sched-status-' + qid + '">' + s.status.toUpperCase() + '</span></td>' +

@@ -182,13 +182,13 @@ $countInService = $countActive + $countMaintenance;
             
             <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
             <?php 
-                $tabImg = vehicle_type_image($vehicleType['slug']);
+                $tabImg = vehicle_type_photo($vehicleType['slug']);
                 $tabCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
                 $tabIco = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
             ?>
             <button type="button" class="vf-btn vf-<?= esc($vehicleType['slug']) ?>" id="filter-btn-<?= esc($vehicleType['slug']) ?>" onclick="filterVehicles('<?= esc($vehicleType['slug']) ?>')">
                 <?php if (!empty($tabImg)): ?>
-                    <img src="<?= base_url('images/' . $tabImg) ?>" alt="" style="height:18px; width:auto;">
+                    <img src="<?= esc($tabImg) ?>" alt="" style="height:18px; width:auto; max-width:24px; object-fit:contain;">
                 <?php else: ?>
                     <i class="fas <?= esc($tabIco) ?>" style="color: <?= esc($tabCol) ?>; font-size: 13px;"></i>
                 <?php endif; ?>
@@ -267,12 +267,12 @@ $countInService = $countActive + $countMaintenance;
                                     </div>
                                 </td>
                                 <td data-label="Vehicle Type">
-                                    <?php $imgFile = vehicle_type_image($vehicle['type']); ?>
+                                    <?php $imgFile = vehicle_type_photo($vehicle['type']); ?>
                                     <div class="vehicle-type-cell">
                                         <?php if (!empty($imgFile)): ?>
                                             <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
-                                                <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
-                                                    style="height:28px; width:auto;" title="<?= vehicle_type_label($vehicle['type']) ?>">
+                                                <img src="<?= esc($imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
+                                                    style="height:28px; width:auto; max-width:32px; object-fit:contain;" title="<?= vehicle_type_label($vehicle['type']) ?>">
                                             </span>
                                         <?php else: ?>
                                             <?php 
@@ -1483,6 +1483,7 @@ $countInService = $countActive + $countMaintenance;
             badge.style.setProperty('color', contrastColor, 'important');
             badge.style.border = (contrastColor === '#0f172a') ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.25)';
         }
+        clearAddVtPhoto();
         updateAddVtPreview();
     }
 
@@ -1635,13 +1636,13 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 ?>
 
 <div class="modal fade" id="manageVehicleTypesModal" tabindex="-1" aria-labelledby="manageVehicleTypesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 550px; width: calc(100% - 1.5rem);">
-        <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem);">
-            <div class="modal-header py-2 px-3 bg-white" style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border, #e2e8f0);">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 550px; width: calc(100% - 1.5rem); max-height: calc(100vh - 2rem);">
+        <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem); display: flex; flex-direction: column; overflow: hidden; border-radius: 16px;">
+            <div class="modal-header py-2 px-3 bg-white flex-shrink-0" style="border-bottom: 1px solid var(--border, #e2e8f0); z-index: 10;">
                 <h5 class="modal-title fw-bold fs-6 mb-0" id="manageVehicleTypesModalLabel"><i class="bi bi-gear-fill me-2"></i>Manage Vehicle Types</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body p-0 flex-grow-1" style="overflow-y: auto !important; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto;">
                 <?php if (!empty($vehicleTypes)): ?>
                     <div class="list-group list-group-flush">
                         <?php foreach ($vehicleTypes as $vt): ?>
@@ -1697,7 +1698,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                     <div class="p-4 text-center text-muted">No vehicle types configured.</div>
                 <?php endif; ?>
             </div>
-            <div class="modal-footer py-2 px-3 bg-white d-flex align-items-center justify-content-between flex-nowrap w-100" style="position: sticky; bottom: 0; z-index: 10; border-top: 1px solid var(--border, #e2e8f0);">
+            <div class="modal-footer py-2 px-3 bg-white d-flex align-items-center justify-content-between flex-nowrap w-100 flex-shrink-0" style="border-top: 1px solid var(--border, #e2e8f0); z-index: 10;">
                 <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" onclick="openAddVehicleTypeModal()">
                     <i class="bi bi-plus-lg"></i> Add New Type
                 </button>
@@ -1715,15 +1716,15 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
         ?>
         <!-- Edit Vehicle Type Modal for <?= esc($vt['name']) ?> -->
         <div class="modal fade" id="editVehicleTypeModal<?= $vt['id'] ?>" tabindex="-1" aria-labelledby="editVehicleTypeModalLabel<?= $vt['id'] ?>" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 500px; width: calc(100% - 1.5rem);">
-                <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem);">
-                    <div class="modal-header py-2 px-3 bg-white" style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border, #e2e8f0);">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 500px; width: calc(100% - 1.5rem); max-height: calc(100vh - 2rem);">
+                <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem); display: flex; flex-direction: column; overflow: hidden; border-radius: 16px;">
+                    <div class="modal-header py-2 px-3 bg-white flex-shrink-0" style="border-bottom: 1px solid var(--border, #e2e8f0); z-index: 10;">
                         <h5 class="modal-title fw-bold fs-6 mb-0" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
                         <button type="button" class="btn-close" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')" aria-label="Close"></button>
                     </div>
-                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden" data-no-change-guard>
+                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1" style="min-height: 0; flex: 1 1 auto; overflow: hidden;" data-no-change-guard>
                         <?= csrf_field() ?>
-                        <div class="modal-body py-2 px-3">
+                        <div class="modal-body py-3 px-3 flex-grow-1" style="overflow-y: auto !important; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto;">
                             <!-- Name -->
                             <div class="mb-2">
                                 <label for="edit_vehicle_type_name_<?= $vt['id'] ?>" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
@@ -1748,16 +1749,14 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                     </div>
                                     <?php endif; ?>
                                 </label>
-                                <div class="vt-photo-upload-box d-flex align-items-center gap-2 p-2 rounded-3" style="border: 1.5px dashed #cbd5e1; background: #f8fafc; transition: all 0.2s ease;">
-                                    <div class="vt-photo-preview-thumb rounded-2 border d-flex align-items-center justify-content-center bg-white" style="width: 44px; height: 44px; flex-shrink: 0; overflow: hidden;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-2 border d-flex align-items-center justify-content-center bg-light flex-shrink-0" style="width: 38px; height: 38px; overflow: hidden; border-color: #cbd5e1 !important;">
                                         <img id="edit_vt_photo_preview_<?= $vt['id'] ?>" src="<?= esc($vtPhotoUrl) ?>" alt="Photo" style="width: 100%; height: 100%; object-fit: cover; <?= empty($vtPhotoUrl) ? 'display: none;' : '' ?>">
-                                        <i id="edit_vt_photo_placeholder_<?= $vt['id'] ?>" class="fas fa-image text-muted" style="font-size: 18px; <?= !empty($vtPhotoUrl) ? 'display: none;' : '' ?>"></i>
+                                        <i id="edit_vt_photo_placeholder_<?= $vt['id'] ?>" class="fas fa-image text-muted" style="font-size: 16px; <?= !empty($vtPhotoUrl) ? 'display: none;' : '' ?>"></i>
                                     </div>
-                                    <div class="flex-grow-1 min-w-0">
-                                        <input type="file" id="edit_vt_photo_input_<?= $vt['id'] ?>" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm" onchange="previewEditVtPhoto(<?= $vt['id'] ?>, this)">
-                                        <div class="text-muted" style="font-size: 10.5px; margin-top: 2px;">PNG, JPG, WEBP &bull; Max 2MB</div>
-                                    </div>
+                                    <input type="file" id="edit_vt_photo_input_<?= $vt['id'] ?>" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm flex-grow-1" style="height: 38px; border-radius: 8px; font-size: 12.5px;" onchange="previewEditVtPhoto(<?= $vt['id'] ?>, this)">
                                 </div>
+                                <div class="form-text mt-1" style="font-size: 11px;">PNG, JPG, WEBP &bull; Max 2MB</div>
                             </div>
 
                             <!-- Color Assignment -->
@@ -1834,7 +1833,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer py-2 px-3 bg-white justify-content-between" style="position: sticky; bottom: 0; z-index: 10; border-top: 1px solid var(--border, #e2e8f0);">
+                        <div class="modal-footer py-2 px-3 bg-white justify-content-between flex-shrink-0" style="border-top: 1px solid var(--border, #e2e8f0); z-index: 10;">
                             <button type="button" class="btn btn-sm btn-outline-secondary" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')">Cancel</button>
                             <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-check-lg me-1"></i>Save Changes</button>
                         </div>
@@ -1846,15 +1845,15 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 <?php endif; ?>
 
 <div class="modal fade" id="addVehicleTypeModal" tabindex="-1" aria-labelledby="addVehicleTypeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 500px; width: calc(100% - 1.5rem);">
-        <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem);">
-            <div class="modal-header py-2 px-3 bg-white" style="position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border, #e2e8f0);">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 500px; width: calc(100% - 1.5rem); max-height: calc(100vh - 2rem);">
+        <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem); display: flex; flex-direction: column; overflow: hidden; border-radius: 16px;">
+            <div class="modal-header py-2 px-3 bg-white flex-shrink-0" style="border-bottom: 1px solid var(--border, #e2e8f0); z-index: 10;">
                 <h5 class="modal-title fw-bold fs-6 mb-0" id="addVehicleTypeModalLabel"><i class="bi bi-tags me-2"></i>Add Vehicle Type</h5>
                 <button type="button" class="btn-close" onclick="closeAddVehicleTypeModal()" aria-label="Close"></button>
             </div>
-            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden">
+            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1" style="min-height: 0; flex: 1 1 auto; overflow: hidden;">
                 <?= csrf_field() ?>
-                <div class="modal-body py-2 px-3">
+                <div class="modal-body py-3 px-3 flex-grow-1" style="overflow-y: auto !important; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto;">
                     <!-- Vehicle Type Name -->
                     <div class="mb-2">
                         <label for="vehicle_type_name" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
@@ -1870,16 +1869,14 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <i class="fas fa-times"></i> Clear
                             </span>
                         </label>
-                        <div class="vt-photo-upload-box d-flex align-items-center gap-2 p-2 rounded-3" style="border: 1.5px dashed #cbd5e1; background: #f8fafc; transition: all 0.2s ease;">
-                            <div class="vt-photo-preview-thumb rounded-2 border d-flex align-items-center justify-content-center bg-white" style="width: 44px; height: 44px; flex-shrink: 0; overflow: hidden;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-2 border d-flex align-items-center justify-content-center bg-light flex-shrink-0" style="width: 38px; height: 38px; overflow: hidden; border-color: #cbd5e1 !important;">
                                 <img id="add_vt_photo_preview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-                                <i id="add_vt_photo_placeholder" class="fas fa-image text-muted" style="font-size: 18px;"></i>
+                                <i id="add_vt_photo_placeholder" class="fas fa-image text-muted" style="font-size: 16px;"></i>
                             </div>
-                            <div class="flex-grow-1 min-w-0">
-                                <input type="file" id="add_vt_photo_input" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm" onchange="previewAddVtPhoto(this)">
-                                <div class="text-muted" style="font-size: 10.5px; margin-top: 2px;">PNG, JPG, WEBP &bull; Max 2MB</div>
-                            </div>
+                            <input type="file" id="add_vt_photo_input" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm flex-grow-1" style="height: 38px; border-radius: 8px; font-size: 12.5px;" onchange="previewAddVtPhoto(this)">
                         </div>
+                        <div class="form-text mt-1" style="font-size: 11px;">PNG, JPG, WEBP &bull; Max 2MB</div>
                     </div>
 
                     <!-- Assign Color -->
@@ -1959,7 +1956,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer py-2 px-3 bg-white justify-content-between" style="position: sticky; bottom: 0; z-index: 10; border-top: 1px solid var(--border, #e2e8f0);">
+                <div class="modal-footer py-2 px-3 bg-white justify-content-between flex-shrink-0" style="border-top: 1px solid var(--border, #e2e8f0); z-index: 10;">
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeAddVehicleTypeModal()">Cancel</button>
                     <button type="submit" class="btn btn-sm btn-primary px-3"><i class="bi bi-plus-lg me-1"></i>Add Vehicle Type</button>
                 </div>
@@ -2307,6 +2304,51 @@ body.modal-open #deleteVehicleTypeConfirmModal,
     z-index: 100070 !important;
 }
 
+/* Vehicle Type Modals: Full Scrollability, Clean Layout & No Cutoff */
+#manageVehicleTypesModal .modal-dialog,
+[id^="editVehicleTypeModal"] .modal-dialog,
+#addVehicleTypeModal .modal-dialog {
+    max-height: calc(100vh - 2rem) !important;
+}
+
+#manageVehicleTypesModal .modal-content,
+[id^="editVehicleTypeModal"] .modal-content,
+#addVehicleTypeModal .modal-content {
+    max-height: calc(100vh - 2rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border-radius: 16px !important;
+}
+
+[id^="editVehicleTypeModal"] form,
+#addVehicleTypeModal form {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+#manageVehicleTypesModal .modal-body,
+[id^="editVehicleTypeModal"] .modal-body,
+#addVehicleTypeModal .modal-body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overscroll-behavior: contain !important;
+    padding-bottom: 1.25rem !important;
+}
+
+#manageVehicleTypesModal .modal-header,
+#manageVehicleTypesModal .modal-footer,
+[id^="editVehicleTypeModal"] .modal-header,
+[id^="editVehicleTypeModal"] .modal-footer,
+#addVehicleTypeModal .modal-header,
+#addVehicleTypeModal .modal-footer {
+    flex-shrink: 0 !important;
+}
 
 /* ── Vehicle Type Color Swatches & Custom Color Picker ── */
 .vt-palette-wrap {

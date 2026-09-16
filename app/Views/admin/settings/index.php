@@ -509,11 +509,21 @@ $slotsMeta = [
     flex-shrink: 0;
 }
 
+.preview-header-bar .preview-brand {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
 .preview-header-bar .preview-brand h4 {
     font-size: 14.5px;
     font-weight: 700;
     margin: 0;
     line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
 }
 
 .preview-header-bar .preview-brand p {
@@ -522,6 +532,10 @@ $slotsMeta = [
     opacity: 0.82;
     font-weight: 600;
     letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
 }
 
 /* Public Live Footer Preview (Matching User Screenshot) */
@@ -1059,39 +1073,79 @@ $slotsMeta = [
     text-transform: uppercase;
 }
 
-/* Toast Notifications */
+/* Toast Notifications - Top Center Floating HUD below Fixed Header */
 .sb-toast {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
-    padding: 12px 20px;
-    background: #0f172a;
+    top: calc(var(--site-header-height, 80px) + 16px) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -35px) scale(0.96) !important;
+    max-width: 480px;
+    width: calc(100% - 32px);
+    padding: 13px 20px;
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     color: #ffffff;
-    border-radius: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
     font-size: 13.5px;
     font-weight: 600;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.18);
     display: flex;
     align-items: center;
-    gap: 10px;
-    z-index: 99999;
-    transform: translateY(100px);
+    gap: 12px;
+    z-index: 100060 !important;
     opacity: 0;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    border-left: 4px solid var(--sb-primary);
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-left: 5px solid var(--sb-primary);
 }
 
 .sb-toast.show {
-    transform: translateY(0);
+    transform: translate(-50%, 0) scale(1) !important;
     opacity: 1;
+    pointer-events: auto;
 }
 
 .sb-toast.success {
     border-left-color: #22c55e;
 }
 
+.sb-toast.success #sbToastIcon {
+    color: #22c55e;
+}
+
+.sb-toast.warning,
+.sb-toast.info {
+    border-left-color: #f59e0b;
+}
+
+.sb-toast.warning #sbToastIcon,
+.sb-toast.info #sbToastIcon {
+    color: #f59e0b;
+}
+
 .sb-toast.error {
     border-left-color: #ef4444;
+}
+
+.sb-toast.error #sbToastIcon {
+    color: #ef4444;
+}
+
+@media (max-width: 600px) {
+    .sb-toast {
+        top: calc(var(--site-header-height, 70px) + 12px) !important;
+        left: 16px !important;
+        right: 16px !important;
+        transform: translateY(-20px) scale(0.96) !important;
+        max-width: none;
+        width: auto;
+    }
+    .sb-toast.show {
+        transform: translateY(0) scale(1) !important;
+    }
 }
 
 /* ==========================================================================
@@ -1138,6 +1192,7 @@ $slotsMeta = [
     </div>
 
     <!-- Alert Flash Messages -->
+    <?= view('partials/flash_notices') ?>
     <?php if (session()->getFlashdata('success')): ?>
         <div class="alert-modern alert-modern-success fade-in" style="margin-bottom: 20px;">
             <i class="bi bi-check-circle-fill alert-modern-icon"></i>
@@ -1743,8 +1798,9 @@ $slotsMeta = [
 
 <!-- Floating Toast Container -->
 <div id="sbToast" class="sb-toast">
-    <i class="fas fa-check-circle" id="sbToastIcon"></i>
-    <span id="sbToastMsg">Settings updated.</span>
+    <i class="fas fa-check-circle" id="sbToastIcon" style="font-size: 18px; flex-shrink: 0;"></i>
+    <span id="sbToastMsg" style="flex-grow: 1; line-height: 1.4;">Settings updated.</span>
+    <button type="button" onclick="document.getElementById('sbToast').classList.remove('show');" aria-label="Close" style="background:none; border:none; color: rgba(255,255,255,0.65); font-size: 18px; cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; margin-left: 6px;">&times;</button>
 </div>
 
 <script>
@@ -1809,20 +1865,31 @@ document.addEventListener('DOMContentLoaded', function() {
         if (meta) meta.content = newHash;
     }
 
-    function showToast(msg, isSuccess) {
+    function showToast(msg, status) {
         var toast = document.getElementById('sbToast');
         var toastMsg = document.getElementById('sbToastMsg');
         var toastIcon = document.getElementById('sbToastIcon');
         if (!toast) return;
 
-        toast.className = 'sb-toast ' + (isSuccess ? 'success' : 'error') + ' show';
+        var type = 'success';
+        if (status === false || status === 'error') {
+            type = 'error';
+        } else if (status === 'warning' || status === 'info') {
+            type = 'warning';
+        }
+
+        toast.className = 'sb-toast ' + type + ' show';
         if (toastMsg) toastMsg.textContent = msg;
-        if (toastIcon) toastIcon.className = isSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-circle';
+        if (toastIcon) {
+            if (type === 'success') toastIcon.className = 'fas fa-check-circle';
+            else if (type === 'warning') toastIcon.className = 'fas fa-exclamation-triangle';
+            else toastIcon.className = 'fas fa-exclamation-circle';
+        }
 
         clearTimeout(toast._timeout);
         toast._timeout = setTimeout(function() {
             toast.classList.remove('show');
-        }, 3800);
+        }, 4200);
     }
 
     // =========================================================================
@@ -2380,12 +2447,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                 if (data.success) {
-                    showToast(data.message || defaultSuccessMsg, true);
-                    if (data.data && typeof window.applyLiveBranding === 'function') {
-                        window.applyLiveBranding(data.data);
+                    if (data.no_change) {
+                        showToast(data.message || 'No changes detected — nothing was updated.', 'warning');
+                    } else {
+                        showToast(data.message || defaultSuccessMsg, 'success');
+                        if (data.data) {
+                            if (typeof window.applyLiveBranding === 'function') {
+                                window.applyLiveBranding(data.data);
+                            }
+                            if (typeof window.broadcastLiveBranding === 'function') {
+                                window.broadcastLiveBranding(data.data);
+                            }
+                        }
                     }
                 } else {
-                    showToast(data.message || 'Failed to save changes.', false);
+                    showToast(data.message || 'Failed to save changes.', 'error');
                 }
             })
             .catch(function() {

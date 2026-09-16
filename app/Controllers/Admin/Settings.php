@@ -59,6 +59,27 @@ class Settings extends BaseController
             return redirect()->back()->withInput()->with('error', 'System name is required.');
         }
 
+        $currentSettings = get_all_system_settings();
+        $hasChange = false;
+        foreach ($fields as $k => $v) {
+            if (trim((string) ($currentSettings[$k] ?? '')) !== $v) {
+                $hasChange = true;
+                break;
+            }
+        }
+        if (! $hasChange) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'    => true,
+                    'no_change'  => true,
+                    'message'    => 'No changes detected — system identity is already up to date.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return $this->noChangesResponse();
+        }
+
         $model->setMultiple($fields);
         get_all_system_settings(true);
         $this->broadcastBrandingChange();
@@ -116,12 +137,31 @@ class Settings extends BaseController
             }
         }
 
-        if (! empty($updates)) {
-            $model->setMultiple($updates);
-            get_all_system_settings(true);
-            $this->broadcastBrandingChange();
-            $this->logActivity('System Settings', 'Updated role theme colours (' . count($updates) . ' settings)');
+        $currentSettings = get_all_system_settings();
+        $hasThemeChange = false;
+        foreach ($updates as $k => $v) {
+            if (strtolower(trim((string) ($currentSettings[$k] ?? ''))) !== strtolower($v)) {
+                $hasThemeChange = true;
+                break;
+            }
         }
+        if (! $hasThemeChange || empty($updates)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'    => true,
+                    'no_change'  => true,
+                    'message'    => 'No changes detected — theme colours are already up to date.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return $this->noChangesResponse();
+        }
+
+        $model->setMultiple($updates);
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+        $this->logActivity('System Settings', 'Updated role theme colours (' . count($updates) . ' settings)');
 
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
@@ -155,6 +195,27 @@ class Settings extends BaseController
             'footer_credit'         => trim($this->request->getPost('footer_credit') ?? ''),
             'footer_copyright_text' => trim($this->request->getPost('footer_copyright_text') ?? ''),
         ];
+
+        $currentSettings = get_all_system_settings();
+        $hasFooterChange = false;
+        foreach ($fields as $k => $v) {
+            if (trim((string) ($currentSettings[$k] ?? '')) !== $v) {
+                $hasFooterChange = true;
+                break;
+            }
+        }
+        if (! $hasFooterChange) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'    => true,
+                    'no_change'  => true,
+                    'message'    => 'No changes detected — footer settings are already up to date.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return $this->noChangesResponse();
+        }
 
         $model->setMultiple($fields);
         get_all_system_settings(true);

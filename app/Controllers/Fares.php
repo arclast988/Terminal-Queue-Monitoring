@@ -185,6 +185,7 @@ class Fares extends BaseController
                 ->orderBy('name', 'ASC')
                 ->findAll();
             foreach ($vehicleTypes as &$vehicleType) {
+                $vehicleType['photo'] = vehicle_type_photo($vehicleType['slug']);
                 $vehicleType['image'] = vehicle_type_image($vehicleType['slug']);
             }
             unset($vehicleType);

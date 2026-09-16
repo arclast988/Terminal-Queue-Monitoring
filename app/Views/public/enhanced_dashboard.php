@@ -2159,7 +2159,7 @@
                         <?php foreach ($active_queue as $item): ?>
                             <?php
                             $vType = $item['vehicle_type'] ?? '';
-                            $imgFile = vehicle_type_image($vType);
+                            $photoUrl = vehicle_type_photo($vType);
                             $vColor = vehicle_type_color($vType);
                             $vContrast = contrast_text_color($vColor);
                             $vIsLight = ($vContrast === '#0f172a');
@@ -2176,8 +2176,8 @@
                                 <!-- Left: Vehicle Identity Block -->
                                 <div class="queue-card-left">
                                     <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12 !important; border-color: <?= esc($vColor) ?>35 !important;">
-                                        <?php if (!empty($imgFile)): ?>
-                                            <img src="<?= base_url('images/' . $imgFile) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img">
+                                        <?php if (!empty($photoUrl)): ?>
+                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
                                         <?php else: ?>
                                             <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>;"></i>
                                         <?php endif; ?>
@@ -2562,7 +2562,7 @@
                 $acc[$k] = [
                     'color'    => $color,
                     'contrast' => contrast_text_color($color),
-                    'image'    => vehicle_type_image($k),
+                    'photo'    => vehicle_type_photo($k),
                     'icon'     => vehicle_type_icon($k),
                     'label'    => vehicle_type_label($k),
                 ];
@@ -2755,13 +2755,13 @@
             var vMeta = (vehicleTypeMeta && vehicleTypeMeta[vType]) ? vehicleTypeMeta[vType] : {
                 color: '#1565c0',
                 contrast: '#ffffff',
-                image: 'van.png',
+                photo: null,
                 icon: 'fa-bus',
                 label: vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van'
             };
             var posColor = vMeta.color || '#1565c0';
             var posContrast = vMeta.contrast || '#ffffff';
-            var imgFile = vMeta.image || 'van.png';
+            var photoUrl = vMeta.photo || '';
             var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
             var isLight = (posContrast === '#0f172a');
             var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
@@ -2774,10 +2774,14 @@
             var estDepIso = item.estimated_departure ? item.estimated_departure.replace(' ', 'T') : null;
             var extraClass = isEnter ? ' card-enter' : '';
 
+            var iconOrImg = photoUrl
+                ? '<img src="' + photoUrl + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img" data-vt-photo="' + vType + '">'
+                : '<i class="fas ' + (vMeta.icon || 'fa-bus') + '" style="font-size: 28px; color: ' + posColor + ';"></i>';
+
             return '<div class="queue-card queue-card-' + vType + extraClass + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '" data-queue-id="' + item.id + '" data-plate="' + item.plate_number + '">'
                 + '<div class="queue-card-left">'
                 + '<div class="vehicle-thumb-box vehicle-type-' + vType + '" style="background:' + posColor + '12 !important; border-color:' + posColor + '35 !important;">'
-                + '<img src="<?= base_url("images/") ?>' + imgFile + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img">'
+                + iconOrImg
                 + '<span class="queue-badge-pill" style="background:' + posColor + '; color:' + posContrast + '; ' + pillBorder + '">#' + item.position + '</span>'
                 + '</div>'
                 + '<span class="vehicle-type-chip vehicle-type-' + vType + '" style="' + badgeStyle + '">' + vTypeLabel + '</span>'
@@ -2960,18 +2964,48 @@
                     if (data.db_vehicle_types) {
                         Object.keys(data.db_vehicle_types).forEach(function (k) {
                             var vt = data.db_vehicle_types[k];
-                            if (vt && vt.color) {
-                                var color = vt.color;
+                            if (vt) {
                                 vehicleTypeMeta[k] = vehicleTypeMeta[k] || {};
-                                vehicleTypeMeta[k].color = color;
-                                vehicleTypeMeta[k].contrast = getContrastTextColor(color);
+                                if (vt.color) {
+                                    var color = vt.color;
+                                    vehicleTypeMeta[k].color = color;
+                                    vehicleTypeMeta[k].contrast = getContrastTextColor(color);
+                                    try {
+                                        document.documentElement.style.setProperty('--vehicle-' + k, color);
+                                        document.documentElement.style.setProperty('--vehicle-' + k + '-soft', color + '18');
+                                    } catch (e) { /* ignore */ }
+                                }
                                 if (vt.name) vehicleTypeMeta[k].label = vt.name;
                                 if (vt.icon) vehicleTypeMeta[k].icon = vt.icon;
-                                // Keep CSS-var icon boxes/chips in sync without reload.
-                                try {
-                                    document.documentElement.style.setProperty('--vehicle-' + k, color);
-                                    document.documentElement.style.setProperty('--vehicle-' + k + '-soft', color + '18');
-                                } catch (e) { /* ignore */ }
+                                if (vt.photo) {
+                                    vehicleTypeMeta[k].photo = vt.photo;
+                                    document.querySelectorAll('img[data-vt-photo="' + k + '"], .vehicle-type-' + k + ' img').forEach(function(img) {
+                                        img.src = vt.photo;
+                                    });
+                                    document.querySelectorAll('[data-vehicle-type="' + k + '"] .vehicle-thumb-box').forEach(function(thumbBox) {
+                                        var oldI = thumbBox.querySelector('i');
+                                        if (oldI && !thumbBox.querySelector('img')) {
+                                            var img = document.createElement('img');
+                                            img.src = vt.photo;
+                                            img.alt = vehicleTypeMeta[k].label || k;
+                                            img.className = 'vehicle-thumb-img';
+                                            img.setAttribute('data-vt-photo', k);
+                                            thumbBox.replaceChild(img, oldI);
+                                        }
+                                    });
+                                } else {
+                                    vehicleTypeMeta[k].photo = null;
+                                    document.querySelectorAll('[data-vehicle-type="' + k + '"] .vehicle-thumb-box').forEach(function(thumbBox) {
+                                        var oldImg = thumbBox.querySelector('img');
+                                        if (oldImg) {
+                                            var iEl = document.createElement('i');
+                                            iEl.className = 'fas ' + (vehicleTypeMeta[k].icon || 'fa-bus');
+                                            iEl.style.fontSize = '28px';
+                                            iEl.style.color = vehicleTypeMeta[k].color || 'var(--vehicle-' + k + ')';
+                                            thumbBox.replaceChild(iEl, oldImg);
+                                        }
+                                    });
+                                }
                             }
                         });
                     }

@@ -41,18 +41,32 @@ class VehicleTypes extends BaseController
         // Photo handling
         $photoRelPath = null;
         $photoFile = $this->request->getFile('photo');
-        if ($photoFile && $photoFile->isValid() && ! $photoFile->hasMoved()) {
-            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
-            if (in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && $photoFile->getSize() <= 5 * 1024 * 1024) {
-                $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
-                if (! is_dir($uploadDir)) {
-                    @mkdir($uploadDir, 0755, true);
-                }
-                $ext = $photoFile->guessExtension() ?: 'png';
-                $newFilename = 'vt_' . $slug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
-                if ($photoFile->move($uploadDir, $newFilename)) {
-                    $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
-                }
+        if ($photoFile && $photoFile->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (! $photoFile->isValid()) {
+                return redirect()->back()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
+            }
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp', 'image/gif'];
+            $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+            if (! in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && ! in_array($clientExt, $allowedExts, true)) {
+                return redirect()->back()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP, GIF).');
+            }
+
+            if ($photoFile->getSize() > 5 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'The uploaded photo exceeds the 5MB size limit.');
+            }
+
+            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
+            if (! is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            $ext = $clientExt ?: 'png';
+            $newFilename = 'vt_' . $slug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+            if ($photoFile->move($uploadDir, $newFilename)) {
+                $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
+            } else {
+                return redirect()->back()->with('error', 'Failed to save uploaded photo to destination directory.');
             }
         }
 
@@ -266,24 +280,38 @@ class VehicleTypes extends BaseController
         $removePhoto = $this->request->getPost('remove_photo');
         $photoFile = $this->request->getFile('photo');
 
-        if ($photoFile && $photoFile->isValid() && ! $photoFile->hasMoved()) {
-            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
-            if (in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && $photoFile->getSize() <= 5 * 1024 * 1024) {
-                $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
-                if (! is_dir($uploadDir)) {
-                    @mkdir($uploadDir, 0755, true);
+        if ($photoFile && $photoFile->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (! $photoFile->isValid()) {
+                return redirect()->back()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
+            }
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp', 'image/gif'];
+            $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+
+            if (! in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && ! in_array($clientExt, $allowedExts, true)) {
+                return redirect()->back()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP, GIF).');
+            }
+
+            if ($photoFile->getSize() > 5 * 1024 * 1024) {
+                return redirect()->back()->with('error', 'The uploaded photo exceeds the 5MB size limit.');
+            }
+
+            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
+            if (! is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            if (! empty($type['photo'])) {
+                $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
+                if (is_file($oldFull)) {
+                    @unlink($oldFull);
                 }
-                if (! empty($type['photo'])) {
-                    $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
-                    if (is_file($oldFull)) {
-                        @unlink($oldFull);
-                    }
-                }
-                $ext = $photoFile->guessExtension() ?: 'png';
-                $newFilename = 'vt_' . $newSlug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
-                if ($photoFile->move($uploadDir, $newFilename)) {
-                    $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
-                }
+            }
+            $ext = $clientExt ?: 'png';
+            $newFilename = 'vt_' . $newSlug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+            if ($photoFile->move($uploadDir, $newFilename)) {
+                $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
+            } else {
+                return redirect()->back()->with('error', 'Failed to save uploaded photo to destination directory.');
             }
         } elseif ($removePhoto === '1' || $removePhoto === 'true') {
             if (! empty($type['photo'])) {

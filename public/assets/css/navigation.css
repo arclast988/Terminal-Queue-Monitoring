@@ -102,6 +102,9 @@ header#site-header {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: clamp(160px, 32vw, 380px) !important;
 }
 
 /* Admin & Staff logo text – crisp white for strong contrast against colored navbars */
@@ -128,6 +131,9 @@ body.staff-theme .logo-text h1 {
   text-transform: uppercase !important;
   margin: 0 !important;
   white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: clamp(160px, 32vw, 380px) !important;
 }
 
 /* --- Menu --------------------------------------------------------------- */
