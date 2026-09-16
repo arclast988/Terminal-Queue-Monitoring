@@ -59,8 +59,16 @@
         var data = (message && message.data) || message || {};
         if (data.colors) applyColors(data.colors);
         else if (message && message.colors) applyColors(message.colors);
+
+        // If photo or type details updated, dispatch event and update photo thumbnails
+        if (data.type) {
+            try {
+                document.dispatchEvent(new CustomEvent('pttm:vehicle-type-updated', { detail: data.type }));
+            } catch (e) {}
+        }
+
         // Any structural refresh also implies colors may have changed.
-        else if (data.action && data.action !== 'passenger_change') {
+        if (data.action && data.action !== 'passenger_change') {
             try {
                 document.dispatchEvent(new CustomEvent('vt-colors-updated'));
             } catch (e) { /* ignore */ }

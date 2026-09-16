@@ -30,6 +30,9 @@ class Settings extends BaseController
     public function updateBranding()
     {
         if (session()->get('role') !== 'super_admin') {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+            }
             return redirect()->back()->with('error', 'Unauthorized.');
         }
 
@@ -45,13 +48,41 @@ class Settings extends BaseController
         ];
 
         if (empty($fields['app_name'])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success'    => false,
+                    'message'    => 'System name is required.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
             return redirect()->back()->withInput()->with('error', 'System name is required.');
         }
 
         $model->setMultiple($fields);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Updated system branding identity (name: ' . $fields['app_name'] . ')');
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => 'System branding updated successfully.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+                'data'       => [
+                    'app_name'        => app_name(),
+                    'app_subtitle'    => app_subtitle(),
+                    'acronym'         => app_acronym(),
+                    'system_title'    => app_system_title(),
+                    'contact_phone'   => app_contact_phone(),
+                    'contact_address' => app_contact_address(),
+                    'contact_email'   => app_contact_email(),
+                    'app_logo'        => app_logo(),
+                ],
+            ]);
+        }
 
         return redirect()->to('/admin/settings#identity')->with('success', 'System branding updated successfully.');
     }
@@ -62,6 +93,9 @@ class Settings extends BaseController
     public function updateThemes()
     {
         if (session()->get('role') !== 'super_admin') {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+            }
             return redirect()->back()->with('error', 'Unauthorized.');
         }
 
@@ -85,7 +119,18 @@ class Settings extends BaseController
         if (! empty($updates)) {
             $model->setMultiple($updates);
             get_all_system_settings(true);
+            $this->broadcastBrandingChange();
             $this->logActivity('System Settings', 'Updated role theme colours (' . count($updates) . ' settings)');
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => 'Theme colours updated successfully.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+                'updates'    => $updates,
+            ]);
         }
 
         return redirect()->to('/admin/settings#themes')->with('success', 'Theme colours updated successfully.');
@@ -97,6 +142,9 @@ class Settings extends BaseController
     public function updateFooter()
     {
         if (session()->get('role') !== 'super_admin') {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+            }
             return redirect()->back()->with('error', 'Unauthorized.');
         }
 
@@ -110,8 +158,18 @@ class Settings extends BaseController
 
         $model->setMultiple($fields);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Updated footer and public information');
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => 'Footer & public attribution updated successfully.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
 
         return redirect()->to('/admin/settings#footer')->with('success', 'Footer & public attribution updated successfully.');
     }
@@ -196,6 +254,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_logo', $relPath);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Uploaded new system logo: ' . $newFilename);
 
@@ -223,6 +282,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_logo', null);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Reset system logo to default');
 
@@ -312,6 +372,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_background_image', $relPath);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Uploaded new system background picture: ' . $newFilename);
 
@@ -339,6 +400,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_background_image', null);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Reset system background to default');
 
@@ -368,6 +430,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_bg_mode', $mode);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Switched background display mode to: ' . $mode);
 
@@ -381,7 +444,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Upload a custom picture for one of the 5 slideshow slots.
+     * Upload a custom picture for any slideshow slot (Slot 1 to 5+).
      */
     public function uploadSlideshowSlot()
     {
@@ -390,10 +453,10 @@ class Settings extends BaseController
         }
 
         $slot = (int) $this->request->getPost('slot');
-        if ($slot < 1 || $slot > 5) {
+        if ($slot < 1) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
-                'message'    => 'Invalid slideshow slot (must be 1-5).',
+                'message'    => 'Invalid slideshow slot.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
@@ -466,6 +529,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting($settingKey, $relPath);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', "Uploaded new slideshow background picture for slot {$slot}: {$newFilename}");
 
@@ -481,7 +545,140 @@ class Settings extends BaseController
     }
 
     /**
-     * Reset a single slideshow slot back to default artwork.
+     * Dynamically add a new slideshow photo slot (Slot 6+).
+     */
+    public function addSlideshowSlot()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+        }
+
+        $file = $this->request->getFile('image');
+        if (! $file || ! $file->isValid()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Please select a valid image file to add.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        if ($file->getSize() > 8 * 1024 * 1024) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'The image exceeds the 8 MB maximum allowed size.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp'];
+        $mime = $file->getMimeType();
+        if (! in_array(strtolower($mime), $allowedMimes, true)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Invalid file type. Only PNG, JPG, and WEBP are allowed.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Find next slot index
+        $allSettings = get_all_system_settings(true);
+        $highestSlot = 5;
+        foreach ($allSettings as $k => $val) {
+            if (preg_match('/^app_bg_slideshow_([0-9]+)$/', $k, $matches)) {
+                $num = (int) $matches[1];
+                if ($num > $highestSlot) {
+                    $highestSlot = $num;
+                }
+            }
+        }
+        $nextSlot = $highestSlot + 1;
+
+        $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
+        if (! is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+
+        $ext = $file->guessExtension() ?: 'png';
+        $newFilename = "bg_slot_{$nextSlot}_" . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+        if (! $file->move($uploadDir, $newFilename)) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success'    => false,
+                'message'    => 'Failed to save new slideshow photo.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $relPath = 'uploads/settings/' . $newFilename;
+        $settingKey = "app_bg_slideshow_{$nextSlot}";
+
+        $model = new SystemSettingModel();
+        $model->setSetting($settingKey, $relPath);
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+
+        $this->logActivity('System Settings', "Added new slideshow slot {$nextSlot}: {$newFilename}");
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'slot'       => $nextSlot,
+            'message'    => "Slideshow Slot {$nextSlot} added successfully.",
+            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'filename'   => $newFilename,
+            'title'      => "Custom Photo Slot {$nextSlot}",
+            'csrf_token' => csrf_token(),
+            'csrf_hash'  => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Delete an extra slideshow slot (slots > 5).
+     */
+    public function deleteSlideshowSlot()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+        }
+
+        $slot = (int) $this->request->getPost('slot');
+        if ($slot <= 5) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Base slots (1 to 5) cannot be deleted. You can reset them instead.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
+        $settingKey = "app_bg_slideshow_{$slot}";
+        $this->deleteOldMedia($settingKey, $uploadDir);
+
+        $db = \Config\Database::connect();
+        if ($db->tableExists('system_settings')) {
+            $db->table('system_settings')->where('setting_key', $settingKey)->delete();
+        }
+
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+
+        $this->logActivity('System Settings', "Deleted slideshow slot {$slot}");
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'slot'       => $slot,
+            'message'    => "Slideshow slot {$slot} deleted successfully.",
+            'csrf_token' => csrf_token(),
+            'csrf_hash'  => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Reset a single slideshow slot back to default artwork, or delete if slot > 5.
      */
     public function resetSlideshowSlot()
     {
@@ -490,7 +687,7 @@ class Settings extends BaseController
         }
 
         $slot = (int) $this->request->getPost('slot');
-        if ($slot < 1 || $slot > 5) {
+        if ($slot < 1) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
                 'message'    => 'Invalid slideshow slot.',
@@ -504,8 +701,27 @@ class Settings extends BaseController
         $this->deleteOldMedia($settingKey, $uploadDir);
 
         $model = new SystemSettingModel();
+        if ($slot > 5) {
+            $db = \Config\Database::connect();
+            if ($db->tableExists('system_settings')) {
+                $db->table('system_settings')->where('setting_key', $settingKey)->delete();
+            }
+            get_all_system_settings(true);
+            $this->broadcastBrandingChange();
+
+            return $this->response->setJSON([
+                'success'    => true,
+                'deleted'    => true,
+                'slot'       => $slot,
+                'message'    => "Custom slot {$slot} removed.",
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
         $model->setSetting($settingKey, null);
         get_all_system_settings(true);
+        $this->broadcastBrandingChange();
 
         $defaultFiles = [
             1 => 'images/bg/bg1_townhall.png',
@@ -529,7 +745,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Reset all 5 slideshow slots back to system default artworks.
+     * Reset all slideshow slots back to system default artworks (resets 1-5 and cleans up 6+).
      */
     public function resetAllSlideshow()
     {
@@ -539,6 +755,7 @@ class Settings extends BaseController
 
         $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
         $model = new SystemSettingModel();
+        $allSettings = get_all_system_settings(true);
 
         $defaultFiles = [
             1 => 'images/bg/bg1_townhall.png',
@@ -553,13 +770,25 @@ class Settings extends BaseController
             $model->setSetting("app_bg_slideshow_{$i}", null);
         }
 
-        get_all_system_settings(true);
+        // Clean up any extra slots > 5
+        $db = \Config\Database::connect();
+        foreach ($allSettings as $k => $val) {
+            if (preg_match('/^app_bg_slideshow_([6-9]|[1-9][0-9]+)$/', $k, $matches)) {
+                $this->deleteOldMedia($k, $uploadDir);
+                if ($db->tableExists('system_settings')) {
+                    $db->table('system_settings')->where('setting_key', $k)->delete();
+                }
+            }
+        }
 
-        $this->logActivity('System Settings', 'Reset all 5 slideshow background pictures to defaults');
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+
+        $this->logActivity('System Settings', 'Reset all slideshow background pictures to defaults');
 
         return $this->response->setJSON([
             'success'    => true,
-            'message'    => 'All 5 slideshow pictures have been restored to system defaults.',
+            'message'    => 'All slideshow pictures have been restored to system defaults.',
             'defaults'   => array_map(fn($f) => base_url($f), $defaultFiles),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
@@ -579,4 +808,38 @@ class Settings extends BaseController
             }
         }
     }
+
+    /**
+     * Broadcast branding changes across WebSocket to all connected clients in real time.
+     */
+    protected function broadcastBrandingChange(): void
+    {
+        try {
+            $payload = [
+                'app_name'             => app_name(),
+                'app_subtitle'         => app_subtitle(),
+                'acronym'              => app_acronym(),
+                'system_title'         => app_system_title(),
+                'app_logo'             => app_logo(),
+                'app_background_image' => app_bg_image(),
+                'theme_guest_primary'  => get_system_setting('theme_guest_primary', '#C62828'),
+                'theme_guest_nav_bg'   => get_system_setting('theme_guest_nav_bg', '#ffffff'),
+                'theme_guest_nav_text' => get_system_setting('theme_guest_nav_text', '#1c2430'),
+                'theme_staff_primary'  => get_system_setting('theme_staff_primary', '#15803d'),
+                'theme_staff_nav_bg'   => get_system_setting('theme_staff_nav_bg', '#15803d'),
+                'theme_staff_nav_text' => get_system_setting('theme_staff_nav_text', '#ffffff'),
+                'theme_admin_primary'  => get_system_setting('theme_admin_primary', '#B71C1C'),
+                'theme_admin_nav_bg'   => get_system_setting('theme_admin_nav_bg', '#B71C1C'),
+                'theme_admin_nav_text' => get_system_setting('theme_admin_nav_text', '#ffffff'),
+                'app_bg_mode'          => app_bg_mode(),
+                'contact_phone'        => app_contact_phone(),
+                'contact_address'      => app_contact_address(),
+                'contact_email'        => app_contact_email(),
+            ];
+            $this->broadcastUpdate('branding_updated', $payload);
+        } catch (\Throwable $e) {
+            // Silently continue if daemon offline
+        }
+    }
 }
+

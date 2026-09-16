@@ -91,6 +91,24 @@
             gap: 20px;
         }
 
+        .terminal-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .report-logo {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            padding: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
         .terminal-info h1 {
             color: #b71c1c;
             margin: 0 0 4px 0;
@@ -357,6 +375,17 @@
                 margin-bottom: 16px;
             }
 
+            .terminal-brand-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .report-logo {
+                width: 56px;
+                height: 56px;
+            }
+
             .terminal-info h1 {
                 font-size: 21px;
             }
@@ -493,6 +522,18 @@
                 flex-direction: row !important;
                 justify-content: space-between !important;
             }
+            .terminal-brand-group {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 14px !important;
+            }
+            .report-logo {
+                width: 58px !important;
+                height: 58px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
             .report-meta {
                 text-align: right !important;
                 background: none !important;
@@ -555,10 +596,25 @@
 
     <!-- Header Section -->
     <div class="header">
-        <div class="terminal-info">
-            <h1><?= esc(app_name()) ?> Terminal</h1>
-            <p><i class="fas fa-map-marker-alt text-danger"></i> <?= esc(app_contact_address()) ?> &bull; <i class="fas fa-phone text-primary"></i> <?= esc(app_contact_phone()) ?></p>
-            <p>Integrated Terminal Management System &bull; Official Departure History Report</p>
+        <div class="terminal-brand-group">
+            <img src="<?= esc(app_logo()) ?>" alt="Official Seal" class="report-logo" onerror="this.style.display='none'">
+            <div class="terminal-info">
+                <h1><?= esc(app_name()) ?><?= str_ends_with(strtolower(trim(app_name())), 'terminal') ? '' : ' Terminal' ?></h1>
+                <?php if (!empty(app_contact_address()) || !empty(app_contact_phone())): ?>
+                <p>
+                    <?php if (!empty(app_contact_address())): ?>
+                        <i class="fas fa-map-marker-alt text-danger"></i> <?= esc(app_contact_address()) ?>
+                    <?php endif; ?>
+                    <?php if (!empty(app_contact_address()) && !empty(app_contact_phone())): ?>
+                        &bull;
+                    <?php endif; ?>
+                    <?php if (!empty(app_contact_phone())): ?>
+                        <i class="fas fa-phone text-primary"></i> <?= esc(app_contact_phone()) ?>
+                    <?php endif; ?>
+                </p>
+                <?php endif; ?>
+                <p><?= esc(app_system_title()) ?> &bull; Official Departure History Report</p>
+            </div>
         </div>
         <div class="report-meta">
             <h2>Departure History Report</h2>

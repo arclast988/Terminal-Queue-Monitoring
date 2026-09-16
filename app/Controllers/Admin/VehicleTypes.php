@@ -38,17 +38,60 @@ class VehicleTypes extends BaseController
             $icon = vehicle_type_icon($slug);
         }
 
+        // Photo handling
+        $photoRelPath = null;
+        $photoFile = $this->request->getFile('photo');
+        if ($photoFile && $photoFile->isValid() && ! $photoFile->hasMoved()) {
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && $photoFile->getSize() <= 5 * 1024 * 1024) {
+                $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
+                if (! is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+                $ext = $photoFile->guessExtension() ?: 'png';
+                $newFilename = 'vt_' . $slug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+                if ($photoFile->move($uploadDir, $newFilename)) {
+                    $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
+                }
+            }
+        }
+
         $types->insert([
             'name'      => $name,
             'slug'      => $slug,
             'color'     => $color,
             'icon'      => $icon,
+            'photo'     => $photoRelPath,
             'is_active' => 1,
         ]);
 
         $this->logActivity('Add vehicle type', 'Added vehicle type ' . $name . ' (' . $color . ', ' . $icon . ').');
         get_db_vehicle_types(true);
-        $this->broadcastUpdate('vehicle_type_update', ['action' => 'create', 'slug' => $slug, 'colors' => get_db_vehicle_types()]);
+        $this->broadcastUpdate('vehicle_type_update', [
+            'action' => 'create',
+            'slug'   => $slug,
+            'name'   => $name,
+            'color'  => $color,
+            'icon'   => $icon,
+            'photo'  => $photoRelPath ? base_url($photoRelPath) : null,
+            'colors' => get_db_vehicle_types(),
+        ]);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => $name . ' was added successfully.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+                'data'       => [
+                    'name'  => $name,
+                    'slug'  => $slug,
+                    'color' => $color,
+                    'icon'  => $icon,
+                    'photo' => $photoRelPath ? base_url($photoRelPath) : null,
+                ],
+            ]);
+        }
 
         return redirect()->to('/admin/vehicles')->with('success', $name . ' was added. It is now available for vehicles and fares.');
     }
@@ -218,17 +261,62 @@ class VehicleTypes extends BaseController
             $icon = $type['icon'] ?? vehicle_type_icon($newSlug);
         }
 
+        // Photo handling
+        $photoRelPath = $type['photo'] ?? null;
+        $removePhoto = $this->request->getPost('remove_photo');
+        $photoFile = $this->request->getFile('photo');
+
+        if ($photoFile && $photoFile->isValid() && ! $photoFile->hasMoved()) {
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && $photoFile->getSize() <= 5 * 1024 * 1024) {
+                $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
+                if (! is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+                if (! empty($type['photo'])) {
+                    $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
+                    if (is_file($oldFull)) {
+                        @unlink($oldFull);
+                    }
+                }
+                $ext = $photoFile->guessExtension() ?: 'png';
+                $newFilename = 'vt_' . $newSlug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+                if ($photoFile->move($uploadDir, $newFilename)) {
+                    $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
+                }
+            }
+        } elseif ($removePhoto === '1' || $removePhoto === 'true') {
+            if (! empty($type['photo'])) {
+                $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
+                if (is_file($oldFull)) {
+                    @unlink($oldFull);
+                }
+            }
+            $photoRelPath = null;
+        }
+
         if ($this->inputsUnchanged([
             'name'  => trim((string) ($type['name'] ?? '')),
             'slug'  => $type['slug'] ?? '',
             'color' => $type['color'] ?? '',
             'icon'  => $type['icon'] ?? '',
+            'photo' => $type['photo'] ?? null,
         ], [
             'name'  => $name,
             'slug'  => $newSlug,
             'color' => $color,
             'icon'  => $icon,
+            'photo' => $photoRelPath,
         ])) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'    => true,
+                    'no_change'  => true,
+                    'message'    => 'No changes were detected.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
             return $this->noChangesResponse();
         }
 
@@ -237,17 +325,53 @@ class VehicleTypes extends BaseController
             'slug'  => $newSlug,
             'color' => $color,
             'icon'  => $icon,
+            'photo' => $photoRelPath,
         ]);
 
         $db->transComplete();
 
         if ($db->transStatus() === false) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success'    => false,
+                    'message'    => 'Failed to update vehicle type.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
             return redirect()->back()->with('error', 'Failed to update vehicle type.');
         }
 
         $this->logActivity('Update vehicle type', 'Updated vehicle type ' . $type['name'] . ' to ' . $name . '.');
         get_db_vehicle_types(true);
-        $this->broadcastUpdate('vehicle_type_update', ['action' => 'update', 'old_slug' => $oldSlug, 'new_slug' => $newSlug, 'colors' => get_db_vehicle_types()]);
+        $this->broadcastUpdate('vehicle_type_update', [
+            'action'   => 'update',
+            'id'       => (int) $id,
+            'old_slug' => $oldSlug,
+            'new_slug' => $newSlug,
+            'name'     => $name,
+            'color'    => $color,
+            'icon'     => $icon,
+            'photo'    => $photoRelPath ? base_url($photoRelPath) : null,
+            'colors'   => get_db_vehicle_types(),
+        ]);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => 'Vehicle type updated successfully to "' . $name . '".',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+                'data'       => [
+                    'id'    => (int) $id,
+                    'name'  => $name,
+                    'slug'  => $newSlug,
+                    'color' => $color,
+                    'icon'  => $icon,
+                    'photo' => $photoRelPath ? base_url($photoRelPath) : null,
+                ],
+            ]);
+        }
 
         return redirect()->back()->with('success', 'Vehicle type updated successfully to "' . $name . '".');
     }

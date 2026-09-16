@@ -1371,20 +1371,29 @@ $slotsMeta = [
             <div id="sectionSlideshowManager" style="<?= $bgMode === 'slideshow' ? '' : 'display:none;' ?>">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                     <div>
-                        <h4 style="font-size:15px; font-weight:700; margin:0; color:var(--sb-text-main);"><i class="fas fa-film" style="color:var(--sb-primary);"></i> 5-Photo Slideshow Slots</h4>
-                        <span style="font-size:12px; color:var(--sb-text-muted);">Click "Change Photo" on any slot to upload your own photos, or reset individual slots back to default.</span>
+                        <h4 style="font-size:15px; font-weight:700; margin:0; color:var(--sb-text-main);"><i class="fas fa-film" style="color:var(--sb-primary);"></i> Dynamic Slideshow Gallery (5+ Rotating Photos)</h4>
+                        <span style="font-size:12px; color:var(--sb-text-muted);">Click "Change Photo" on any slot, "+ Add Slideshow Photo" to add more than 5 photos, or reset to defaults.</span>
                     </div>
                     <button type="button" class="btn-reset-media" id="btnResetAllSlideshow">
                         <i class="fas fa-rotate-left"></i> Reset All 5 to System Defaults
                     </button>
                 </div>
 
-                <div class="slideshow-grid">
-                    <?php for ($i = 1; $i <= 5; $i++): ?>
+                <div class="slideshow-grid" id="slideshowGrid">
+                    <?php
+                    $allSlotKeys = array_unique(array_merge([1, 2, 3, 4, 5], array_keys($slideshowUrls)));
+                    sort($allSlotKeys, SORT_NUMERIC);
+                    ?>
+                    <?php foreach ($allSlotKeys as $i): ?>
                         <?php
-                        $meta     = $slotsMeta[$i];
-                        $slotUrl  = $slideshowUrls[$i] ?? base_url('images/bg/' . $meta['defaultFile']);
-                        $isCustom = $meta['isCustom'];
+                        $meta     = $slotsMeta[$i] ?? [
+                            'name'        => 'Custom Slot ' . $i,
+                            'desc'        => 'Additional rotating background photo for sign-in screens',
+                            'defaultFile' => '',
+                            'isCustom'    => true,
+                        ];
+                        $slotUrl  = $slideshowUrls[$i] ?? (!empty($meta['defaultFile']) ? base_url('images/bg/' . $meta['defaultFile']) : '');
+                        $isCustom = ($i > 5) || !empty($meta['isCustom']);
                         ?>
                         <div class="slideshow-slot-card" id="slotCard-<?= $i ?>" data-slot="<?= $i ?>">
                             <div class="slot-card-image-wrap">
@@ -1402,13 +1411,31 @@ $slotsMeta = [
                                     <button type="button" class="btn-slot-upload" onclick="document.getElementById('slotFileInput-<?= $i ?>').click();" title="Upload new photo for Slot <?= $i ?>">
                                         <i class="fas fa-upload"></i> Change Photo
                                     </button>
+                                    <?php if ($i <= 5): ?>
                                     <button type="button" class="btn-slot-reset" id="btnResetSlot-<?= $i ?>" onclick="resetSlotPhoto(<?= $i ?>);" title="Reset to default artwork" style="<?= $isCustom ? '' : 'display:none;' ?>">
                                         <i class="fas fa-undo"></i>
                                     </button>
+                                    <?php else: ?>
+                                    <button type="button" class="btn-slot-reset text-danger" id="btnDeleteSlot-<?= $i ?>" onclick="deleteSlotPhoto(<?= $i ?>);" title="Delete custom slot <?= $i ?>" style="border-color:#fca5a5; color:#dc2626; background:#fef2f2;">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
-                    <?php endfor; ?>
+                    <?php endforeach; ?>
+
+                    <!-- Dedicated Card to Add Slot 6+ Photos -->
+                    <div class="slideshow-slot-card add-slot-card" id="addSlotCard" onclick="document.getElementById('newSlotFileInput').click();" style="border: 2px dashed #cbd5e1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; min-height:240px; background:#f8fafc; border-radius:12px; transition:all 0.2s ease;" onmouseover="this.style.borderColor='#b71c1c'; this.style.background='#fff5f5';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
+                        <input type="file" id="newSlotFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;" onchange="handleAddNewSlot(this);">
+                        <div style="text-align:center; padding:20px;">
+                            <div style="width:52px; height:52px; border-radius:50%; background:#fee2e2; color:#b71c1c; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px; box-shadow:0 2px 8px rgba(183,28,28,0.15);">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <h5 style="margin:0 0 6px 0; font-size:15px; font-weight:700; color:#0f172a;">Add Slideshow Photo</h5>
+                            <p style="margin:0; font-size:12px; color:#64748b; line-height:1.4;">Upload a 6th+ photo to rotate in login slideshow</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1819,6 +1846,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.previewNameEl').forEach(function(el) { el.textContent = name; });
         document.querySelectorAll('.previewSubEl').forEach(function(el) { el.textContent = sub; });
 
+        // Update active page header and drawer in real-time
+        document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .drawer-brand-title, .app-brand-name').forEach(function(el) {
+            el.textContent = name;
+        });
+        document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .drawer-brand-subtitle, .app-system-title').forEach(function(el) {
+            el.textContent = sub;
+        });
+
         var cardTitle = document.getElementById('previewSysTitleCard');
         var cardAcro  = document.getElementById('previewAcronymCard');
         if (cardTitle) cardTitle.textContent = titl;
@@ -1907,6 +1942,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.querySelectorAll('.preview-btn-' + previewRole.toLowerCase()).forEach(function(btn) {
                         btn.style.backgroundColor = hex;
                     });
+                    if (previewRole === 'Admin') {
+                        document.documentElement.style.setProperty('--primary-color', hex);
+                        document.documentElement.style.setProperty('--admin-primary', hex);
+                        document.documentElement.style.setProperty('--primary', hex);
+                    }
                 }
             }
         }
@@ -2041,8 +2081,9 @@ document.addEventListener('DOMContentLoaded', function() {
         showToast('Uploading system logo...', true);
         uploadMedia('<?= base_url("admin/settings/upload-logo") ?>', 'logo', file, {}, function(data) {
             showToast(data.message || 'Logo updated!', true);
-            if (logoPreviewImg) logoPreviewImg.src = data.image_url;
-            document.querySelectorAll('.previewLogoImg').forEach(function(el) { el.src = data.image_url; });
+            var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+            if (logoPreviewImg) logoPreviewImg.src = newUrl;
+            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
             if (logoFilename) logoFilename.textContent = file.name;
             if (logoStatusChip) {
                 logoStatusChip.className = 'status-chip custom';
@@ -2065,8 +2106,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                     if (data.success) {
                         showToast(data.message, true);
-                        if (logoPreviewImg) logoPreviewImg.src = data.image_url;
-                        document.querySelectorAll('.previewLogoImg').forEach(function(el) { el.src = data.image_url; });
+                        var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+                        if (logoPreviewImg) logoPreviewImg.src = newUrl;
+                        document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
                         if (logoFilename) logoFilename.textContent = 'Default Seal (9HFScgVg_400x400.png)';
                         if (logoStatusChip) {
                             logoStatusChip.className = 'status-chip default';
@@ -2144,35 +2186,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // =========================================================================
-    // 9. 5-Photo Slideshow Slots Upload & Reset
+    // 9. Dynamic Slideshow Slots Upload, Reset, Add & Delete (5+ Photos)
     // =========================================================================
-    for (var i = 1; i <= 5; i++) {
-        (function(slot) {
-            var fileInput = document.getElementById('slotFileInput-' + slot);
-            if (!fileInput) return;
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.matches('input[id^="slotFileInput-"]')) {
+            var input = e.target;
+            var slot = parseInt(input.dataset.slot, 10);
+            if (!slot || input.files.length === 0) return;
+            var file = input.files[0];
+            showToast('Uploading photo for Slot ' + slot + '...', true);
 
-            fileInput.addEventListener('change', function() {
-                if (fileInput.files.length === 0) return;
-                var file = fileInput.files[0];
-                showToast('Uploading photo for Slot ' + slot + '...', true);
-
-                uploadMedia('<?= base_url("admin/settings/upload-slideshow-slot") ?>', 'image', file, { slot: slot }, function(data) {
-                    showToast(data.message, true);
-                    var img = document.getElementById('slotImg-' + slot);
-                    if (img) img.src = data.image_url;
-                    var badge = document.getElementById('slotBadge-' + slot);
-                    if (badge) {
-                        badge.className = 'slot-status-badge custom';
-                        badge.textContent = 'Custom';
-                    }
-                    var resetBtn = document.getElementById('btnResetSlot-' + slot);
-                    if (resetBtn) resetBtn.style.display = 'inline-flex';
-                }, function(err) {
-                    showToast(err, false);
-                });
+            uploadMedia('<?= base_url("admin/settings/upload-slideshow-slot") ?>', 'image', file, { slot: slot }, function(data) {
+                showToast(data.message, true);
+                var img = document.getElementById('slotImg-' + slot);
+                if (img) img.src = data.image_url;
+                var badge = document.getElementById('slotBadge-' + slot);
+                if (badge) {
+                    badge.className = 'slot-status-badge custom';
+                    badge.textContent = 'Custom';
+                }
+                var resetBtn = document.getElementById('btnResetSlot-' + slot);
+                if (resetBtn) resetBtn.style.display = 'inline-flex';
+            }, function(err) {
+                showToast(err, false);
             });
-        })(i);
-    }
+        }
+    });
 
     window.resetSlotPhoto = function(slot) {
         if (!confirm('Restore Slot ' + slot + ' back to default system photo?')) return;
@@ -2200,6 +2239,78 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(function() { showToast('Reset failed.', false); });
+    };
+
+    window.handleAddNewSlot = function(input) {
+        if (!input || !input.files || input.files.length === 0) return;
+        var file = input.files[0];
+        showToast('Adding new slideshow slot photo...', true);
+
+        uploadMedia('<?= base_url("admin/settings/add-slideshow-slot") ?>', 'image', file, {}, function(data) {
+            showToast(data.message || 'New slideshow photo added!', true);
+            input.value = '';
+            var slot = data.slot;
+            var imageUrl = data.image_url;
+
+            // Build DOM card for new slot and insert before addSlotCard
+            var addCard = document.getElementById('addSlotCard');
+            var newCard = document.createElement('div');
+            newCard.className = 'slideshow-slot-card';
+            newCard.id = 'slotCard-' + slot;
+            newCard.dataset.slot = slot;
+            newCard.innerHTML = '<div class="slot-card-image-wrap">' +
+                '<img src="' + imageUrl + '" alt="Slot ' + slot + '" id="slotImg-' + slot + '">' +
+                '<span class="slot-number-badge">Slot ' + slot + '</span>' +
+                '<span class="slot-status-badge custom" id="slotBadge-' + slot + '">Custom</span>' +
+                '</div>' +
+                '<div class="slot-card-body">' +
+                '<h5>Custom Slot ' + slot + '</h5>' +
+                '<p>Additional rotating background photo for sign-in screens</p>' +
+                '<div class="slot-card-actions">' +
+                '<input type="file" id="slotFileInput-' + slot + '" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;" data-slot="' + slot + '">' +
+                '<button type="button" class="btn-slot-upload" onclick="document.getElementById(\'slotFileInput-' + slot + '\').click();" title="Upload new photo for Slot ' + slot + '">' +
+                '<i class="fas fa-upload"></i> Change Photo' +
+                '</button>' +
+                '<button type="button" class="btn-slot-reset text-danger" id="btnDeleteSlot-' + slot + '" onclick="deleteSlotPhoto(' + slot + ');" title="Delete custom slot ' + slot + '" style="border-color:#fca5a5; color:#dc2626; background:#fef2f2;">' +
+                '<i class="fas fa-trash-alt"></i>' +
+                '</button>' +
+                '</div>' +
+                '</div>';
+            if (addCard && addCard.parentNode) {
+                addCard.parentNode.insertBefore(newCard, addCard);
+            }
+        }, function(err) {
+            showToast(err, false);
+            input.value = '';
+        });
+    };
+
+    window.deleteSlotPhoto = function(slot) {
+        if (!confirm('Are you sure you want to remove Slot ' + slot + ' from the slideshow?')) return;
+        var fd = new FormData();
+        fd.append('slot', slot);
+        fd.append(currentCsrfToken, currentCsrfHash);
+
+        fetch('<?= base_url("admin/settings/delete-slideshow-slot") ?>', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                if (data.success) {
+                    showToast(data.message || 'Slot deleted', true);
+                    var card = document.getElementById('slotCard-' + slot);
+                    if (card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.8)';
+                        setTimeout(function() {
+                            if (card.parentNode) card.parentNode.removeChild(card);
+                        }, 300);
+                    }
+                } else {
+                    showToast(data.message || 'Failed to delete slot.', false);
+                }
+            })
+            .catch(function() { showToast('Delete failed.', false); });
     };
 
     var btnResetAll = document.getElementById('btnResetAllSlideshow');
@@ -2233,6 +2344,63 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(function() { showToast('Reset failed.', false); });
         });
     }
+
+    // =========================================================================
+    // 10. AJAX Form Submissions with Instant Real-Time Sync & Toasts
+    // =========================================================================
+    function bindAjaxForm(formId, defaultSuccessMsg) {
+        var form = document.getElementById(formId);
+        if (!form) return;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var submitBtn = form.querySelector('button[type="submit"]');
+            var originalText = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
+
+            var fd = new FormData(form);
+            if (!fd.has(currentCsrfToken)) {
+                fd.append(currentCsrfToken, currentCsrfHash);
+            }
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: fd
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+                if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                if (data.success) {
+                    showToast(data.message || defaultSuccessMsg, true);
+                    if (data.data && typeof window.applyLiveBranding === 'function') {
+                        window.applyLiveBranding(data.data);
+                    }
+                } else {
+                    showToast(data.message || 'Failed to save changes.', false);
+                }
+            })
+            .catch(function() {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+                form.submit(); // fallback to standard post
+            });
+        });
+    }
+
+    bindAjaxForm('formIdentity', 'Branding identity updated successfully.');
+    bindAjaxForm('formThemes', 'Theme palettes updated successfully.');
+    bindAjaxForm('formFooter', 'Footer settings updated successfully.');
 });
 </script>
 

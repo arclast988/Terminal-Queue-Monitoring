@@ -833,4 +833,11 @@ SVG;
             } catch (e) {}
         }
     });
+
+    // Listen for real-time branding updates across connected sessions
+    document.addEventListener('pttm:ws-branding_updated', function (e) {
+        if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {
+            window.applyLiveBranding(e.detail.data);
+        }
+    });
 </script>

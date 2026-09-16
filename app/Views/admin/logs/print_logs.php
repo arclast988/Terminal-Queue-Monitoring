@@ -91,6 +91,24 @@
             gap: 20px;
         }
 
+        .terminal-brand-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .report-logo {
+            width: 68px;
+            height: 68px;
+            object-fit: contain;
+            flex-shrink: 0;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            padding: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
         .terminal-info h1 {
             color: #b71c1c;
             margin: 0 0 4px 0;
@@ -101,9 +119,9 @@
         }
 
         .terminal-info p {
-            margin: 0;
+            margin: 2px 0;
             color: #64748b;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 500;
         }
 
@@ -272,6 +290,137 @@
             font-size: 11px;
             color: #64748b;
             text-transform: uppercase;
+        /* Responsive Styles for Mobile & Tablets */
+        @media screen and (max-width: 860px) {
+            body {
+                padding: 18px 16px 24px;
+            }
+
+            .print-toolbar {
+                margin: -18px -16px 18px -16px;
+                padding: 10px 16px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .print-toolbar-title {
+                justify-content: center;
+                text-align: center;
+                font-size: 13.5px;
+            }
+
+            .print-toolbar-actions {
+                display: flex;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .btn-toolbar {
+                flex: 1;
+                justify-content: center;
+                padding: 9px 14px;
+                font-size: 12.5px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+                padding-bottom: 14px;
+                margin-bottom: 16px;
+            }
+
+            .terminal-brand-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .report-logo {
+                width: 56px;
+                height: 56px;
+            }
+
+            .terminal-info h1 {
+                font-size: 21px;
+            }
+
+            .report-meta {
+                text-align: left;
+                min-width: 0;
+                width: 100%;
+                background: #f8fafc;
+                padding: 12px 14px;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .report-meta h2 {
+                font-size: 16px;
+            }
+
+            .filter-summary {
+                padding: 12px 14px;
+                gap: 12px 16px;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                margin-bottom: 16px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 9px 10px;
+            }
+
+            .signatory-section {
+                margin-top: 24px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+            }
+
+            .signatory-box {
+                width: 100%;
+                max-width: 280px;
+                margin: 0 auto;
+            }
+
+            .footer {
+                margin-top: 20px;
+                padding-top: 12px;
+                flex-direction: column;
+                text-align: center;
+                gap: 6px;
+                font-size: 11px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 14px 12px 20px;
+            }
+
+            .print-toolbar {
+                margin: -14px -12px 14px -12px;
+                padding: 9px 12px;
+            }
+
+            .terminal-info h1 {
+                font-size: 18px;
+            }
+
+            .terminal-info p {
+                font-size: 11.5px;
+            }
+
+            .filter-summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
         }
 
         @media print {
@@ -280,6 +429,49 @@
             }
             .print-toolbar {
                 display: none !important;
+            }
+            .header {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+            }
+            .terminal-brand-group {
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 14px !important;
+            }
+            .report-logo {
+                width: 58px !important;
+                height: 58px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .report-meta {
+                text-align: right !important;
+                background: none !important;
+                border: none !important;
+                padding: 0 !important;
+                width: auto !important;
+            }
+            .filter-summary {
+                display: flex !important;
+                flex-direction: row !important;
+            }
+            .signatory-section {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
+            }
+            .signatory-box {
+                width: 220px !important;
+                max-width: 220px !important;
+                margin: 0 !important;
+            }
+            .footer {
+                display: flex !important;
+                flex-direction: row !important;
+                justify-content: space-between !important;
             }
             tr {
                 page-break-inside: avoid;
@@ -310,10 +502,25 @@
 
     <!-- Header Section -->
     <div class="header">
-        <div class="terminal-info">
-            <h1><?= esc(app_name()) ?> Terminal</h1>
-            <p><i class="fas fa-map-marker-alt text-danger"></i> <?= esc(app_contact_address()) ?> &bull; <i class="fas fa-phone text-primary"></i> <?= esc(app_contact_phone()) ?></p>
-            <p>Integrated Terminal Management System &bull; System Activity Audit Log</p>
+        <div class="terminal-brand-group">
+            <img src="<?= esc(app_logo()) ?>" alt="Official Seal" class="report-logo" onerror="this.style.display='none'">
+            <div class="terminal-info">
+                <h1><?= esc(app_name()) ?><?= str_ends_with(strtolower(trim(app_name())), 'terminal') ? '' : ' Terminal' ?></h1>
+                <?php if (!empty(app_contact_address()) || !empty(app_contact_phone())): ?>
+                <p>
+                    <?php if (!empty(app_contact_address())): ?>
+                        <i class="fas fa-map-marker-alt text-danger"></i> <?= esc(app_contact_address()) ?>
+                    <?php endif; ?>
+                    <?php if (!empty(app_contact_address()) && !empty(app_contact_phone())): ?>
+                        &bull;
+                    <?php endif; ?>
+                    <?php if (!empty(app_contact_phone())): ?>
+                        <i class="fas fa-phone text-primary"></i> <?= esc(app_contact_phone()) ?>
+                    <?php endif; ?>
+                </p>
+                <?php endif; ?>
+                <p><?= esc(app_system_title()) ?> &bull; System Activity Audit Log</p>
+            </div>
         </div>
         <div class="report-meta">
             <h2>Activity Logs Report</h2>

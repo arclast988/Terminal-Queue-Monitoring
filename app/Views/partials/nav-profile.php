@@ -120,6 +120,20 @@ SVG;
         <div class="profile-dropdown-divider"></div>
         <?php endif; ?>
 
+        <?php if ($sessionRole === 'super_admin'): ?>
+        <!-- System Settings (Super Admin only) -->
+        <div class="profile-dropdown-section">
+            <div class="profile-section-label">System Settings</div>
+            <a href="<?= base_url('admin/settings') ?>" class="profile-dropdown-item" role="menuitem">
+                <i class="fas fa-palette"></i>
+                <span class="item-text">Branding & Themes</span>
+                <span class="profile-badge-chip chip-amber">Super Admin</span>
+            </a>
+        </div>
+
+        <div class="profile-dropdown-divider"></div>
+        <?php endif; ?>
+
         <!-- Help Guide -->
         <div class="profile-dropdown-section">
             <div class="profile-section-label">Help & Support</div>

@@ -148,6 +148,16 @@
                 if (message.type === 'announcement_update' && _config && _config.onAnnouncementUpdate) {
                     _config.onAnnouncementUpdate(message);
                 }
+
+                // Convenience: branding_updated specific handler
+                if (message.type === 'branding_updated' && message.data) {
+                    if (typeof window.applyLiveBranding === 'function') {
+                        window.applyLiveBranding(message.data);
+                    }
+                    if (_config && _config.onBrandingUpdate) {
+                        _config.onBrandingUpdate(message);
+                    }
+                }
             } catch (e) {
                 // Ignore malformed messages
             }
@@ -247,5 +257,79 @@
             _config = null;
         }
     };
+
+    /**
+     * Globally accessible helper to apply real-time branding changes across the DOM.
+     * Updates navbar, drawer, footers, logo images, and dynamic theme colors without page reload.
+     */
+    function applyLiveBranding(data) {
+        if (!data) return;
+
+        // 1. Update App Name
+        if (data.app_name) {
+            document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title').forEach(function(el) {
+                el.textContent = data.app_name;
+            });
+            document.querySelectorAll('.footer-app-name, .footer-brand-title, .guest-footer-title').forEach(function(el) {
+                el.textContent = data.app_name;
+            });
+        }
+
+        // 2. Update Subtitle / System Title
+        if (data.system_title) {
+            document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .drawer-brand-subtitle, .app-system-title, .header-brand-subtitle').forEach(function(el) {
+                el.textContent = data.system_title;
+            });
+            document.querySelectorAll('.footer-system-title, .guest-footer-subtitle').forEach(function(el) {
+                el.textContent = data.system_title;
+            });
+        }
+
+        // 3. Update Logo Image
+        if (data.app_logo) {
+            var logoUrl = data.app_logo + (data.app_logo.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo').forEach(function(img) {
+                img.src = logoUrl;
+            });
+        }
+
+        // 4. Update Dynamic Theme Colors
+        if (data.theme_admin_primary) {
+            document.documentElement.style.setProperty('--primary-color', data.theme_admin_primary);
+            document.documentElement.style.setProperty('--admin-primary', data.theme_admin_primary);
+            document.documentElement.style.setProperty('--primary', data.theme_admin_primary);
+        }
+        if (data.theme_guest_primary) {
+            document.documentElement.style.setProperty('--guest-primary', data.theme_guest_primary);
+        }
+        if (data.theme_staff_primary) {
+            document.documentElement.style.setProperty('--staff-primary', data.theme_staff_primary);
+        }
+
+        // 5. Update Footer Text
+        if (data.footer_about_title) {
+            document.querySelectorAll('.footer-about-title').forEach(function(el) {
+                el.textContent = data.footer_about_title;
+            });
+        }
+        if (data.footer_about_desc) {
+            document.querySelectorAll('.footer-about-desc').forEach(function(el) {
+                el.textContent = data.footer_about_desc;
+            });
+        }
+        if (data.footer_credit) {
+            document.querySelectorAll('.footer-credit').forEach(function(el) {
+                el.textContent = data.footer_credit;
+            });
+        }
+
+        // 6. Broadcast event for page-specific custom listeners
+        try {
+            document.dispatchEvent(new CustomEvent('pttm:branding-applied', { detail: data }));
+        } catch(e) {}
+    }
+
+    window.applyLiveBranding = applyLiveBranding;
+    window.QueueWS.applyLiveBranding = applyLiveBranding;
 
 })(window);

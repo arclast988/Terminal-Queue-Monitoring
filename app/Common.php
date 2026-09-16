@@ -44,11 +44,20 @@ if (! function_exists('get_db_vehicle_types')) {
                     $rows = $db->table('vehicle_types')->get()->getResultArray();
                     foreach ($rows as $r) {
                         $key = vehicle_type_key($r['slug']);
+                        $photoUrl = null;
+                        if (!empty($r['photo'])) {
+                            $relPath = ltrim(str_replace(['\\'], '/', $r['photo']), '/');
+                            if (is_file(FCPATH . $relPath)) {
+                                $mtime = @filemtime(FCPATH . $relPath);
+                                $photoUrl = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+                            }
+                        }
                         $cached[$key] = [
                             'name'  => $r['name'],
                             'slug'  => $r['slug'],
                             'color' => $r['color'] ?? null,
                             'icon'  => $r['icon'] ?? null,
+                            'photo' => $photoUrl,
                         ];
                     }
                 }
@@ -62,6 +71,15 @@ if (! function_exists('get_db_vehicle_types')) {
         }
 
         return $cached;
+    }
+}
+
+if (! function_exists('vehicle_type_photo')) {
+    function vehicle_type_photo(?string $type): ?string
+    {
+        $typeKey = vehicle_type_key($type);
+        $dbTypes = get_db_vehicle_types();
+        return $dbTypes[$typeKey]['photo'] ?? null;
     }
 }
 
@@ -620,7 +638,7 @@ if (! function_exists('app_bg_mode')) {
 
 if (! function_exists('app_bg_slideshow')) {
     /**
-     * Return array of 5 background picture URLs for the auth/login slideshow.
+     * Return array of background picture URLs for the auth/login slideshow (supporting 5+ photos).
      */
     function app_bg_slideshow(): array
     {
@@ -645,6 +663,21 @@ if (! function_exists('app_bg_slideshow')) {
             }
             $urls[$i] = base_url($defaultFiles[$i]);
         }
+
+        // Additional custom slots (slot 6+)
+        $allSettings = get_all_system_settings();
+        foreach ($allSettings as $k => $val) {
+            if (preg_match('/^app_bg_slideshow_([6-9]|[1-9][0-9]+)$/', $k, $matches) && ! empty($val)) {
+                $slotIdx = (int) $matches[1];
+                $relPath = ltrim(str_replace(['\\'], '/', $val), '/');
+                if (is_file(FCPATH . $relPath)) {
+                    $mtime = @filemtime(FCPATH . $relPath);
+                    $urls[$slotIdx] = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+                }
+            }
+        }
+
+        ksort($urls);
         return $urls;
     }
 }

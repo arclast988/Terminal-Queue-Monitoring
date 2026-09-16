@@ -1503,6 +1503,87 @@ $countInService = $countActive + $countMaintenance;
         updateEditVtPreview(id);
     }
 
+    // Photo preview helper functions
+    window.previewAddVtPhoto = function(input) {
+        var preview = document.getElementById('add_vt_photo_preview');
+        var placeholder = document.getElementById('add_vt_photo_placeholder');
+        var clearBtn = document.getElementById('add_vt_photo_clear');
+        var previewPhoto = document.getElementById('add_vt_preview_photo');
+        var previewIcon = document.getElementById('add_vt_preview_icon_i');
+
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+                if (placeholder) placeholder.style.display = 'none';
+                if (clearBtn) clearBtn.style.display = 'inline-flex';
+                if (previewPhoto) { previewPhoto.src = e.target.result; previewPhoto.style.display = 'block'; }
+                if (previewIcon) previewIcon.style.display = 'none';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.clearAddVtPhoto = function() {
+        var input = document.getElementById('add_vt_photo_input');
+        var preview = document.getElementById('add_vt_photo_preview');
+        var placeholder = document.getElementById('add_vt_photo_placeholder');
+        var clearBtn = document.getElementById('add_vt_photo_clear');
+        var previewPhoto = document.getElementById('add_vt_preview_photo');
+        var previewIcon = document.getElementById('add_vt_preview_icon_i');
+
+        if (input) input.value = '';
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        if (placeholder) placeholder.style.display = 'block';
+        if (clearBtn) clearBtn.style.display = 'none';
+        if (previewPhoto) { previewPhoto.src = ''; previewPhoto.style.display = 'none'; }
+        if (previewIcon) previewIcon.style.display = 'inline-block';
+    };
+
+    window.previewEditVtPhoto = function(id, input) {
+        var preview = document.getElementById('edit_vt_photo_preview_' + id);
+        var placeholder = document.getElementById('edit_vt_photo_placeholder_' + id);
+        var previewPhoto = document.getElementById('edit_vt_preview_photo_' + id);
+        var previewIcon = document.getElementById('edit_vt_preview_icon_i_' + id);
+        var removeCheck = document.getElementById('remove_photo_' + id);
+
+        if (removeCheck) removeCheck.checked = false;
+
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+                if (placeholder) placeholder.style.display = 'none';
+                if (previewPhoto) { previewPhoto.src = e.target.result; previewPhoto.style.display = 'block'; }
+                if (previewIcon) previewIcon.style.display = 'none';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    };
+
+    window.toggleRemoveEditPhoto = function(id, isChecked) {
+        var input = document.getElementById('edit_vt_photo_input_' + id);
+        var preview = document.getElementById('edit_vt_photo_preview_' + id);
+        var placeholder = document.getElementById('edit_vt_photo_placeholder_' + id);
+        var previewPhoto = document.getElementById('edit_vt_preview_photo_' + id);
+        var previewIcon = document.getElementById('edit_vt_preview_icon_i_' + id);
+
+        if (isChecked) {
+            if (input) input.value = '';
+            if (preview) preview.style.display = 'none';
+            if (placeholder) placeholder.style.display = 'block';
+            if (previewPhoto) previewPhoto.style.display = 'none';
+            if (previewIcon) previewIcon.style.display = 'inline-block';
+        } else {
+            if (preview && preview.getAttribute('src')) {
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+                if (previewPhoto) previewPhoto.style.display = 'block';
+                if (previewIcon) previewIcon.style.display = 'none';
+            }
+        }
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         var addModalEl = document.getElementById('addVehicleTypeModal');
         if (addModalEl) {
@@ -1572,8 +1653,12 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                             ?>
                             <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3 no-stack flex-nowrap gap-2">
                                 <div class="d-flex align-items-center gap-2 gap-sm-3 flex-grow-1" style="min-width: 0;">
-                                    <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; color: <?= esc($vtContrast) ?>; <?= $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '' ?>">
-                                        <i class="fas <?= esc($vtIcon) ?>" style="font-size: 15px; color: <?= esc($vtContrast) ?> !important;"></i>
+                                    <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; color: <?= esc($vtContrast) ?>; <?= $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '' ?> overflow: hidden;">
+                                        <?php if (!empty($vt['photo'])): ?>
+                                            <img src="<?= base_url(esc($vt['photo'])) ?>" alt="<?= esc($vt['name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <?php else: ?>
+                                            <i class="fas <?= esc($vtIcon) ?>" style="font-size: 15px; color: <?= esc($vtContrast) ?> !important;"></i>
+                                        <?php endif; ?>
                                     </div>
                                     <div style="min-width: 0; flex: 1;">
                                         <div class="fw-bold text-dark d-flex align-items-center gap-2 flex-wrap" style="font-size: 13.5px; line-height: 1.3;">
@@ -1636,7 +1721,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                         <h5 class="modal-title fw-bold fs-6 mb-0" id="editVehicleTypeModalLabel<?= $vt['id'] ?>"><i class="bi bi-pencil me-2"></i>Edit Vehicle Type</h5>
                         <button type="button" class="btn-close" onclick="backToManageVehicleTypesModal('editVehicleTypeModal<?= $vt['id'] ?>')" aria-label="Close"></button>
                     </div>
-                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" class="d-flex flex-column flex-grow-1 overflow-hidden" data-no-change-guard>
+                    <form action="<?= base_url('admin/vehicle-types/update/' . $vt['id']) ?>" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden" data-no-change-guard>
                         <?= csrf_field() ?>
                         <div class="modal-body py-2 px-3">
                             <!-- Name -->
@@ -1644,6 +1729,35 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <label for="edit_vehicle_type_name_<?= $vt['id'] ?>" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
                                 <input id="edit_vehicle_type_name_<?= $vt['id'] ?>" name="name" type="text" class="form-control form-control-sm" value="<?= esc($vt['name']) ?>" maxlength="80" required oninput="updateEditVtPreview(<?= $vt['id'] ?>)">
                                 <div class="form-text mt-0" style="font-size: 11px;">Updates display name and slug across vehicles and routes.</div>
+                            </div>
+
+                            <!-- Vehicle Photo / Emblem -->
+                            <?php
+                            $vtPhoto = $vt['photo'] ?? null;
+                            $vtPhotoUrl = !empty($vtPhoto) ? base_url($vtPhoto) : '';
+                            ?>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
+                                    <span>Vehicle Photo / Emblem <small class="text-muted fw-normal">(Optional image)</small></span>
+                                    <?php if (!empty($vtPhotoUrl)): ?>
+                                    <div class="form-check form-check-inline m-0 p-0 d-flex align-items-center gap-1">
+                                        <input class="form-check-input mt-0" type="checkbox" name="remove_photo" id="remove_photo_<?= $vt['id'] ?>" value="1" onchange="toggleRemoveEditPhoto(<?= $vt['id'] ?>, this.checked)">
+                                        <label class="form-check-label text-danger fw-semibold" for="remove_photo_<?= $vt['id'] ?>" style="font-size: 11px; cursor:pointer;">
+                                            <i class="fas fa-trash-alt"></i> Remove photo
+                                        </label>
+                                    </div>
+                                    <?php endif; ?>
+                                </label>
+                                <div class="vt-photo-upload-box d-flex align-items-center gap-2 p-2 rounded-3" style="border: 1.5px dashed #cbd5e1; background: #f8fafc; transition: all 0.2s ease;">
+                                    <div class="vt-photo-preview-thumb rounded-2 border d-flex align-items-center justify-content-center bg-white" style="width: 44px; height: 44px; flex-shrink: 0; overflow: hidden;">
+                                        <img id="edit_vt_photo_preview_<?= $vt['id'] ?>" src="<?= esc($vtPhotoUrl) ?>" alt="Photo" style="width: 100%; height: 100%; object-fit: cover; <?= empty($vtPhotoUrl) ? 'display: none;' : '' ?>">
+                                        <i id="edit_vt_photo_placeholder_<?= $vt['id'] ?>" class="fas fa-image text-muted" style="font-size: 18px; <?= !empty($vtPhotoUrl) ? 'display: none;' : '' ?>"></i>
+                                    </div>
+                                    <div class="flex-grow-1 min-w-0">
+                                        <input type="file" id="edit_vt_photo_input_<?= $vt['id'] ?>" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm" onchange="previewEditVtPhoto(<?= $vt['id'] ?>, this)">
+                                        <div class="text-muted" style="font-size: 10.5px; margin-top: 2px;">PNG, JPG, WEBP &bull; Max 2MB</div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Color Assignment -->
@@ -1707,8 +1821,9 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <div class="rounded-3 shadow-sm bg-white p-2" id="edit_vt_preview_card_<?= $vt['id'] ?>" style="border-top: 3.5px solid <?= esc($curColor) ?>;">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <div class="d-flex align-items-center gap-2">
-                                            <span id="edit_vt_preview_icon_<?= $vt['id'] ?>" class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 26px; height: 26px; background-color: <?= esc($curColor) ?>; color: <?= esc($curContrast) ?>; font-size: 12px;">
-                                                <i class="fas <?= esc($curIcon) ?>" style="color: <?= esc($curContrast) ?> !important;"></i>
+                                            <span id="edit_vt_preview_icon_<?= $vt['id'] ?>" class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 26px; height: 26px; background-color: <?= esc($curColor) ?>; color: <?= esc($curContrast) ?>; font-size: 12px; overflow: hidden;">
+                                                <img id="edit_vt_preview_photo_<?= $vt['id'] ?>" src="<?= esc($vtPhotoUrl) ?>" alt="Photo" style="width: 100%; height: 100%; object-fit: cover; <?= empty($vtPhotoUrl) ? 'display: none;' : '' ?>">
+                                                <i class="fas <?= esc($curIcon) ?>" id="edit_vt_preview_icon_i_<?= $vt['id'] ?>" style="color: <?= esc($curContrast) ?> !important; <?= !empty($vtPhotoUrl) ? 'display: none;' : '' ?>"></i>
                                             </span>
                                             <strong id="edit_vt_preview_title_<?= $vt['id'] ?>" style="color: <?= esc($curColor) ?>; font-size: 13px;"><?= esc($vt['name']) ?> Routes</strong>
                                         </div>
@@ -1737,7 +1852,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                 <h5 class="modal-title fw-bold fs-6 mb-0" id="addVehicleTypeModalLabel"><i class="bi bi-tags me-2"></i>Add Vehicle Type</h5>
                 <button type="button" class="btn-close" onclick="closeAddVehicleTypeModal()" aria-label="Close"></button>
             </div>
-            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post" class="d-flex flex-column flex-grow-1 overflow-hidden">
+            <form action="<?= base_url('admin/vehicle-types/store') ?>" method="post" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden">
                 <?= csrf_field() ?>
                 <div class="modal-body py-2 px-3">
                     <!-- Vehicle Type Name -->
@@ -1745,6 +1860,26 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                         <label for="vehicle_type_name" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
                         <input id="vehicle_type_name" name="name" type="text" class="form-control form-control-sm" placeholder="e.g. Bus, Tricycle, Taxi" maxlength="80" required oninput="updateAddVtPreview()">
                         <div class="form-text mt-0" style="font-size: 11px;">It will be available in Vehicle Register and as a new Route Fares card.</div>
+                    </div>
+
+                    <!-- Vehicle Photo / Emblem -->
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
+                            <span>Vehicle Photo / Emblem <small class="text-muted fw-normal">(Optional image)</small></span>
+                            <span id="add_vt_photo_clear" class="badge rounded-pill bg-light text-danger border" style="cursor:pointer; display:none;" onclick="clearAddVtPhoto()">
+                                <i class="fas fa-times"></i> Clear
+                            </span>
+                        </label>
+                        <div class="vt-photo-upload-box d-flex align-items-center gap-2 p-2 rounded-3" style="border: 1.5px dashed #cbd5e1; background: #f8fafc; transition: all 0.2s ease;">
+                            <div class="vt-photo-preview-thumb rounded-2 border d-flex align-items-center justify-content-center bg-white" style="width: 44px; height: 44px; flex-shrink: 0; overflow: hidden;">
+                                <img id="add_vt_photo_preview" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                <i id="add_vt_photo_placeholder" class="fas fa-image text-muted" style="font-size: 18px;"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <input type="file" id="add_vt_photo_input" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm" onchange="previewAddVtPhoto(this)">
+                                <div class="text-muted" style="font-size: 10.5px; margin-top: 2px;">PNG, JPG, WEBP &bull; Max 2MB</div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Assign Color -->
@@ -1811,8 +1946,9 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                         <div class="rounded-3 shadow-sm bg-white p-2" id="add_vt_preview_card" style="border-top: 3.5px solid <?= esc($suggestedColor) ?>;">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span id="add_vt_preview_icon" class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 26px; height: 26px; background-color: <?= esc($suggestedColor) ?>; color: <?= esc($sugContrast) ?>; font-size: 12px;">
-                                        <i class="fas fa-bus-simple" style="color: <?= esc($sugContrast) ?> !important;"></i>
+                                    <span id="add_vt_preview_icon" class="d-inline-flex align-items-center justify-content-center rounded-2 flex-shrink-0" style="width: 26px; height: 26px; background-color: <?= esc($suggestedColor) ?>; color: <?= esc($sugContrast) ?>; font-size: 12px; overflow: hidden;">
+                                        <img id="add_vt_preview_photo" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                                        <i class="fas fa-bus-simple" id="add_vt_preview_icon_i" style="color: <?= esc($sugContrast) ?> !important;"></i>
                                     </span>
                                     <strong id="add_vt_preview_title" style="color: <?= esc($suggestedColor) ?>; font-size: 13px;">New Vehicle Routes</strong>
                                 </div>

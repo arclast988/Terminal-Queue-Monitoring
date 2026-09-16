@@ -188,4 +188,66 @@ final class SystemSettingsTest extends CIUnitTestCase
         $this->assertStringContainsString(esc(app_system_title()), $guestFooterHtml);
         $this->assertStringContainsString(esc(app_acronym()), $guestFooterHtml);
     }
+
+    public function testSuperAdminProfileDropdownContainsBrandingLink(): void
+    {
+        $session = service('session');
+        $session->set([
+            'isLoggedIn' => true,
+            'role'       => 'super_admin',
+            'full_name'  => 'System Administrator',
+            'username'   => 'superadmin',
+        ]);
+
+        $profileHtml = view('partials/nav-profile');
+        $this->assertStringContainsString('admin/settings', $profileHtml);
+        $this->assertStringContainsString('Branding & Themes', $profileHtml);
+
+        // Test regular admin does not see branding in profile dropdown
+        $session->set(['role' => 'admin']);
+        $adminProfileHtml = view('partials/nav-profile');
+        $this->assertStringNotContainsString('admin/settings', $adminProfileHtml);
+        $this->assertStringNotContainsString('Branding & Themes', $adminProfileHtml);
+    }
+
+    public function testVehicleTypeModelContainsPhotoField(): void
+    {
+        $vtModel = new \App\Models\VehicleTypeModel();
+        $this->assertContains('photo', $vtModel->allowedFields);
+    }
+
+    public function testVehicleTypePhotoHelper(): void
+    {
+        $this->assertNull(vehicle_type_photo(null));
+        $this->assertNull(vehicle_type_photo(''));
+    }
+
+    public function testPrintReportsContainBrandGroupAndLogo(): void
+    {
+        $historyHtml = view('admin/history/print_history', [
+            'title'       => 'Print Departures',
+            'results'     => [],
+            'from_date'   => '',
+            'to_date'     => '',
+            'vehicle_type'=> '',
+            'destination' => '',
+        ]);
+        $this->assertStringContainsString('terminal-brand-group', $historyHtml);
+        $this->assertStringContainsString('report-logo', $historyHtml);
+
+        $logsHtml = view('admin/logs/print_logs', [
+            'title'        => 'Print Logs',
+            'results'      => [],
+            'from_date'    => '',
+            'to_date'      => '',
+            'action_type'  => '',
+            'selected_user'=> null,
+            'user_id'      => '',
+            'search'       => '',
+            'generated_at' => 'now',
+        ]);
+        $this->assertStringContainsString('terminal-brand-group', $logsHtml);
+        $this->assertStringContainsString('report-logo', $logsHtml);
+    }
 }
+
