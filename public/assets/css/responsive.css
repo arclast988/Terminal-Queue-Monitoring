@@ -3175,6 +3175,30 @@ a[title*="delete" i]:hover .bi,
     flex-direction: column !important;
     overflow: hidden !important;
   }
+  #registerVehicleModal.modal {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  #registerVehicleModal .modal-dialog {
+    max-height: none !important;
+    height: auto !important;
+    min-height: calc(100% - 1rem) !important;
+  }
+  #registerVehicleModal .modal-content {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  #registerVehicleModal form {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  #registerVehicleModal .modal-body {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
   .modal-header {
     padding: 10px 14px !important;
     flex-shrink: 0 !important;

@@ -67,6 +67,8 @@ mkdir -p /var/run/php
 
 # --- 4. Start core services ---
 service postgresql start 2>/dev/null
+sed -i 's/^upload_max_filesize = .*/upload_max_filesize = 20M/' "/etc/php/${PHPVER}/fpm/php.ini" 2>/dev/null || true
+sed -i 's/^post_max_size = .*/post_max_size = 25M/' "/etc/php/${PHPVER}/fpm/php.ini" 2>/dev/null || true
 service "php${PHPVER}-fpm" start 2>/dev/null
 
 # After starting FPM, wait briefly for the socket file to appear and symlink

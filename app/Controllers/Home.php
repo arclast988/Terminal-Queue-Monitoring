@@ -30,7 +30,7 @@ class Home extends BaseController
             // Table may not exist yet; show guest page without announcements
         }
 
-        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
+        $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
             ->withFullJoins()
             ->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy('routes.destination', 'ASC')
@@ -75,7 +75,7 @@ class Home extends BaseController
         if (! is_array($payload)) {
             $queueModel = new QueueModel();
 
-            $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
+            $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('routes.destination', 'ASC')
@@ -87,6 +87,8 @@ class Home extends BaseController
             foreach ($active_queue as &$item) {
                 $item['estimated_departure_formatted'] = !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A';
                 $item['percent'] = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
+                $item['photo_url'] = vehicle_resolved_photo($item, $item['vehicle_type'] ?? null);
+                $item['has_custom_photo'] = !empty($item['vehicle_photo'] ?? $item['photo'] ?? null);
             }
             unset($item);
 

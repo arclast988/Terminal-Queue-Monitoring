@@ -83,6 +83,9 @@
 
                 if (existingImgs.length > 0) {
                     existingImgs.forEach(function (img) {
+                        if (img.hasAttribute('data-vehicle-custom-photo') || img.classList.contains('vehicle-custom-photo')) {
+                            return; // NEVER overwrite individual vehicle's custom photo!
+                        }
                         img.src = photo;
                     });
                 }
@@ -126,6 +129,9 @@
                 document.querySelectorAll('[data-vehicle-type="' + key + '"] .vehicle-thumb-box').forEach(function (thumbBox) {
                     var oldImg = thumbBox.querySelector('img');
                     if (oldImg) {
+                        if (oldImg.hasAttribute('data-vehicle-custom-photo') || oldImg.classList.contains('vehicle-custom-photo')) {
+                            return; // PRESERVE individual vehicle's custom photo!
+                        }
                         oldImg.src = photo;
                     } else {
                         var oldI = thumbBox.querySelector('i');

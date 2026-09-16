@@ -187,6 +187,7 @@
                     delete _pending[id];
                     if (!isNaN(serverCount) && !isNaN(serverCapacity)) {
                         updateUI(id, serverCount, serverCapacity);
+                        broadcastPassengerChange(id, serverCount, serverCapacity);
                     }
                 } else {
                     scheduleSend(id, 0);
@@ -249,6 +250,9 @@
             // Immediately update the UI
             updateUI(id, newCount, capacity);
 
+            // Broadcast passenger change across all tabs
+            broadcastPassengerChange(id, newCount, capacity);
+
             // Notify QueueSync (if present) to set a cooldown so the pending
             // poll doesn't overwrite this optimistic update with stale data.
             var ev = new CustomEvent('passenger-optimistic-update', { detail: { id: id, count: newCount, capacity: capacity } });
@@ -261,5 +265,36 @@
             scheduleSend(id, _inflight[id] === undefined ? 0 : DEBOUNCE_MS);
         }
     };
+
+    // Cross-tab broadcast channel for immediate multi-tab sync of passenger counters
+    var _queueChannel = null;
+    try {
+        if (window.BroadcastChannel) {
+            _queueChannel = new BroadcastChannel('pttm_queue_channel');
+        }
+    } catch(e) {}
+
+    function broadcastPassengerChange(id, count, capacity) {
+        if (_queueChannel) {
+            try {
+                _queueChannel.postMessage({
+                    type: 'queue_update',
+                    action: 'passenger_change',
+                    id: id,
+                    new_count: count,
+                    capacity: capacity
+                });
+            } catch(e) {}
+        }
+        try {
+            localStorage.setItem('pttm_queue_sync', JSON.stringify({
+                action: 'passenger_change',
+                id: id,
+                new_count: count,
+                capacity: capacity,
+                t: Date.now()
+            }));
+        } catch(e) {}
+    }
 
 })(window);

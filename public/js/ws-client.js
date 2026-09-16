@@ -267,17 +267,27 @@
 
         // 1. Update App Name
         if (data.app_name) {
-            document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title, .previewNameEl').forEach(function(el) {
+            document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .guest-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title, .previewNameEl').forEach(function(el) {
                 el.textContent = data.app_name;
             });
             document.querySelectorAll('.footer-app-name, .footer-brand-title, .guest-footer-title').forEach(function(el) {
                 el.textContent = data.app_name;
             });
+            // Update browser document tab title in real-time
+            if (document.title) {
+                var titleParts = document.title.split(' - ');
+                if (titleParts.length > 1) {
+                    titleParts[titleParts.length - 1] = data.app_name;
+                    document.title = titleParts.join(' - ');
+                } else {
+                    document.title = data.app_name;
+                }
+            }
         }
 
         // 2. Update Subtitle
         if (data.app_subtitle) {
-            document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .drawer-brand-subtitle, .header-brand-subtitle, .previewSubEl').forEach(function(el) {
+            document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .guest-header .logo-text p, .drawer-brand-subtitle, .header-brand-subtitle, .previewSubEl').forEach(function(el) {
                 el.textContent = data.app_subtitle;
             });
         }
@@ -299,7 +309,7 @@
         // 4. Update Logo Image
         if (data.app_logo) {
             var logoUrl = data.app_logo + (data.app_logo.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg').forEach(function(img) {
+            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .guest-header img.logo, .guest-header .logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg').forEach(function(img) {
                 img.src = logoUrl;
             });
         }

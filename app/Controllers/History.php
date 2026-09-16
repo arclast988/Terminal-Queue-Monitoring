@@ -48,6 +48,7 @@ class History extends BaseController
             COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name) as operator_name,
             vehicles.owner_name, 
             vehicles.type as vehicle_type, 
+            vehicles.photo as vehicle_photo, 
             routes.destination, 
             terminals.name as origin
         ')

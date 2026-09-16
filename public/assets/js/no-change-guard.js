@@ -82,7 +82,14 @@
                 return;
             }
         } catch (e) { /* fall through */ }
-        window.alert('No changes detected — nothing was updated.');
+        if (typeof window.showSystemAlert === 'function') {
+            window.showSystemAlert({
+                title: 'No Changes Detected',
+                message: 'No changes detected — nothing was updated.',
+                variant: 'warning'
+            });
+            return;
+        }
     }
 
     function showInlineNotice(form) {

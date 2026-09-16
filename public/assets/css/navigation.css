@@ -1350,6 +1350,7 @@ body.staff-theme .drawer-nav-item.active i {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     line-height: 1.15 !important;
+    max-width: clamp(120px, 46vw, 240px) !important;
   }
 
   .logo-text p {
@@ -1359,6 +1360,7 @@ body.staff-theme .drawer-nav-item.active i {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     line-height: 1.1 !important;
+    max-width: clamp(120px, 46vw, 240px) !important;
   }
 
   .nav-menu {
@@ -1582,12 +1584,18 @@ body.swal2-shown .register-vehicle-card {
 #logReportFilterModal .modal-content,
 #logReportFilterModal .modal-body,
 #logReportFilterModal .mb-3,
+#registerVehicleModal .modal-content,
+#registerVehicleModal .modal-body,
+#registerVehicleModal form,
+#registerVehicleModal .row,
+#registerVehicleModal [class*="col-"],
 .modal .modal-content,
 .modal .modal-body {
   overflow: visible !important;
 }
 
 #logReportFilterModal .autocomplete-wrapper.is-open,
+#registerVehicleModal .autocomplete-wrapper.is-open,
 .modal .autocomplete-wrapper:focus-within,
 .modal .autocomplete-wrapper:hover,
 .modal .autocomplete-wrapper:active,
@@ -1600,7 +1608,12 @@ body.swal2-shown .register-vehicle-card {
   z-index: 1070 !important;
 }
 
+.autocomplete-dropdown.dropdown-flipped {
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.16) !important;
+}
+
 #logReportFilterModal .modal-footer,
+#registerVehicleModal .modal-footer,
 .modal .modal-footer {
   position: relative;
   z-index: 1;
@@ -1750,4 +1763,99 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
 .modal {
   z-index: 100020 !important;
 }
+
+/* ── Hide redundant chevron when autocomplete search wraps the input ── */
+.autocomplete-wrapper ~ .dropdown-chevron-icon,
+.position-relative:has(.autocomplete-wrapper) > .dropdown-chevron-icon {
+  display: none !important;
+}
+
+/* ── Vehicle Photo Clear Button ── */
+.veh-photo-clear-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 5px 14px !important;
+  border-radius: 20px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  line-height: 1.2 !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.veh-photo-clear-btn:hover {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.veh-photo-clear-btn i,
+.veh-photo-clear-btn svg {
+  font-size: 11.5px !important;
+  color: inherit !important;
+}
+
+.veh-photo-clear-btn.has-photo {
+  background-color: var(--primary, #dc2626) !important;
+  border-color: var(--primary, #dc2626) !important;
+  color: var(--on-primary, #ffffff) !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.28) !important;
+}
+
+.veh-photo-clear-btn.has-photo:hover {
+  filter: brightness(0.9);
+  border-color: var(--primary, #dc2626) !important;
+  color: var(--on-primary, #ffffff) !important;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.38) !important;
+}
+
+/* ── Form Input Clear (X) Button ── */
+.input-clear-btn {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  color: #94a3b8 !important;
+  cursor: pointer !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: 50% !important;
+  z-index: 10 !important;
+  line-height: 1 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.input-clear-btn:hover {
+  color: #1e293b !important;
+  background: #f1f5f9 !important;
+}
+
+.input-clear-btn:active {
+  background: #e2e8f0 !important;
+}
+
+.input-clear-btn i,
+.input-clear-btn svg {
+  font-size: 13px !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
 

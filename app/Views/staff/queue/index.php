@@ -1474,7 +1474,9 @@
             })
             .catch(function(err) {
                 console.error('[Queue] Cancel error:', err);
-                alert(err.message || 'Failed to cancel trip.');
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({ title: 'Cancel Trip Failed', message: err.message || 'Failed to cancel trip.', variant: 'danger' });
+                }
                 if (window.QueueSync) {
                     window.QueueSync.refresh();
                 } else {
@@ -1642,13 +1644,17 @@
                     window.location.reload();
                 }
             } else {
-                alert(data.message || 'Failed to restore trip.');
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({ title: 'Restore Trip Failed', message: data.message || 'Failed to restore trip.', variant: 'danger' });
+                }
                 hideUndoBanner();
             }
         })
         .catch(function(err) {
             console.error('[Queue] Undo error:', err);
-            alert('Network error while restoring trip.');
+            if (typeof window.showSystemAlert === 'function') {
+                window.showSystemAlert({ title: 'Network Error', message: 'Network error while restoring trip.', variant: 'danger' });
+            }
             hideUndoBanner();
         });
     }
@@ -1741,11 +1747,15 @@
                         }
                     }
                 } else {
-                    alert(data.message || 'Failed to update driver.');
+                    if (typeof window.showSystemAlert === 'function') {
+                        window.showSystemAlert({ title: 'Update Driver Failed', message: data.message || 'Failed to update driver.', variant: 'danger' });
+                    }
                 }
             })
             .catch(function() {
-                alert('Network error. Please try again.');
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({ title: 'Network Error', message: 'Network error. Please try again.', variant: 'danger' });
+                }
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Driver';
             });

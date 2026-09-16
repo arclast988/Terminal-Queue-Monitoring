@@ -46,7 +46,7 @@ SVG;
         <button class="nav-hamburger-btn" id="siteNavHamburgerBtn" type="button" aria-label="Toggle navigation drawer" aria-expanded="false" title="Main menu">
             <i class="fas fa-bars" id="siteNavHamburgerIcon"></i>
         </button>
-        <a href="<?= base_url($homeUrl) ?>" class="logo-section">
+        <a href="<?= base_url($homeUrl) ?>" class="logo-section" title="<?= esc(app_name()) ?>">
             <img src="<?= esc(app_logo()) ?>" alt="<?= esc(app_name()) ?> Logo" class="logo">
             <div class="logo-text">
                 <h1><?= esc(app_name()) ?></h1>

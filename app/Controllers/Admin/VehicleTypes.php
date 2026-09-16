@@ -14,12 +14,12 @@ class VehicleTypes extends BaseController
         $slug = trim($slug, '_');
 
         if ($name === '' || strlen($name) < 2 || strlen($name) > 80 || $slug === '' || strlen($slug) > 50) {
-            return redirect()->to('/admin/vehicles')->with('error', 'Enter a vehicle type name between 2 and 80 characters.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Enter a vehicle type name between 2 and 80 characters.');
         }
 
         $types = new VehicleTypeModel();
         if ($types->where('slug', $slug)->first()) {
-            return redirect()->to('/admin/vehicles')->with('error', 'That vehicle type already exists.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'That vehicle type already exists.');
         }
 
         // Color handling
@@ -43,18 +43,18 @@ class VehicleTypes extends BaseController
         $photoFile = $this->request->getFile('photo');
         if ($photoFile && $photoFile->getError() !== UPLOAD_ERR_NO_FILE) {
             if (! $photoFile->isValid()) {
-                return redirect()->back()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
             }
             $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp', 'image/gif'];
             $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
             $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
             if (! in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && ! in_array($clientExt, $allowedExts, true)) {
-                return redirect()->back()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP, GIF).');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Please upload a valid image file (JPG, PNG, WEBP, GIF).');
             }
 
             if ($photoFile->getSize() > 5 * 1024 * 1024) {
-                return redirect()->back()->with('error', 'The uploaded photo exceeds the 5MB size limit.');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'The uploaded photo exceeds the 5MB size limit.');
             }
 
             $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
@@ -66,7 +66,7 @@ class VehicleTypes extends BaseController
             if ($photoFile->move($uploadDir, $newFilename)) {
                 $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
             } else {
-                return redirect()->back()->with('error', 'Failed to save uploaded photo to destination directory.');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to save uploaded photo to destination directory.');
             }
         }
 
@@ -107,7 +107,7 @@ class VehicleTypes extends BaseController
             ]);
         }
 
-        return redirect()->to('/admin/vehicles')->with('success', $name . ' was added. It is now available for vehicles and fares.');
+        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', $name . ' was added. It is now available for vehicles and fares.');
     }
 
     public function delete($id)
@@ -116,7 +116,7 @@ class VehicleTypes extends BaseController
         $type  = $types->find($id);
 
         if (!$type) {
-            return redirect()->back()->with('error', 'Vehicle type not found.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Vehicle type not found.');
         }
 
         $slug = $type['slug'];
@@ -144,7 +144,7 @@ class VehicleTypes extends BaseController
         $vehicleIds = array_column($vehicles, 'id');
 
         if (! empty($vehicleIds)) {
-            return redirect()->back()->with(
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with(
                 'error',
                 'Cannot delete vehicle type "' . $name . '" while registered vehicles use it. Reassign or remove those vehicles first.'
             );
@@ -170,7 +170,7 @@ class VehicleTypes extends BaseController
             $activeCheck->groupEnd();
             $activeCount = (int) $activeCheck->countAllResults();
             if ($activeCount > 0) {
-                return redirect()->back()->with('error', 'Cannot delete vehicle type "' . $name . '" while ' . $activeCount . ' vehicle(s) are still waiting/boarding. Depart or cancel those trips first.');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Cannot delete vehicle type "' . $name . '" while ' . $activeCount . ' vehicle(s) are still waiting/boarding. Depart or cancel those trips first.');
             }
         }
 
@@ -223,14 +223,14 @@ class VehicleTypes extends BaseController
         $db->transComplete();
 
         if ($db->transStatus() === false) {
-            return redirect()->back()->with('error', 'Failed to delete vehicle type "' . $name . '".');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to delete vehicle type "' . $name . '".');
         }
 
         $this->logActivity('Delete vehicle type', 'Deleted vehicle type ' . $name . ' (' . $slug . ') and associated routes and fares.');
         get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', ['action' => 'delete', 'slug' => $slug, 'colors' => get_db_vehicle_types()]);
 
-        return redirect()->back()->with('success', 'Vehicle type "' . $name . '" and its connected fares and routes were deleted successfully.');
+        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', 'Vehicle type "' . $name . '" and its connected fares and routes were deleted successfully.');
     }
 
     public function update($id)
@@ -239,12 +239,12 @@ class VehicleTypes extends BaseController
         $type  = $types->find($id);
 
         if (!$type) {
-            return redirect()->back()->with('error', 'Vehicle type not found.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Vehicle type not found.');
         }
 
         $name = trim((string) $this->request->getPost('name'));
         if ($name === '' || strlen($name) < 2 || strlen($name) > 80) {
-            return redirect()->back()->with('error', 'Enter a vehicle type name between 2 and 80 characters.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Enter a vehicle type name between 2 and 80 characters.');
         }
 
         $oldSlug = $type['slug'];
@@ -254,7 +254,7 @@ class VehicleTypes extends BaseController
         // Check for duplicate slug on other types
         $existing = $types->where('slug', $newSlug)->where('id !=', $id)->first();
         if ($existing) {
-            return redirect()->back()->with('error', 'A vehicle type with that name/slug already exists.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'A vehicle type with that name/slug already exists.');
         }
 
         $db = \Config\Database::connect();
@@ -282,18 +282,18 @@ class VehicleTypes extends BaseController
 
         if ($photoFile && $photoFile->getError() !== UPLOAD_ERR_NO_FILE) {
             if (! $photoFile->isValid()) {
-                return redirect()->back()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
             }
             $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp', 'image/gif'];
             $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
             $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
 
             if (! in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && ! in_array($clientExt, $allowedExts, true)) {
-                return redirect()->back()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP, GIF).');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Please upload a valid image file (JPG, PNG, WEBP, GIF).');
             }
 
             if ($photoFile->getSize() > 5 * 1024 * 1024) {
-                return redirect()->back()->with('error', 'The uploaded photo exceeds the 5MB size limit.');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'The uploaded photo exceeds the 5MB size limit.');
             }
 
             $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicle_types';
@@ -311,7 +311,7 @@ class VehicleTypes extends BaseController
             if ($photoFile->move($uploadDir, $newFilename)) {
                 $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
             } else {
-                return redirect()->back()->with('error', 'Failed to save uploaded photo to destination directory.');
+                return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to save uploaded photo to destination directory.');
             }
         } elseif ($removePhoto === '1' || $removePhoto === 'true') {
             if (! empty($type['photo'])) {
@@ -345,7 +345,7 @@ class VehicleTypes extends BaseController
                     'csrf_hash'  => csrf_hash(),
                 ]);
             }
-            return $this->noChangesResponse();
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('info', 'No changes detected — nothing was updated.');
         }
 
         $types->update($id, [
@@ -367,7 +367,7 @@ class VehicleTypes extends BaseController
                     'csrf_hash'  => csrf_hash(),
                 ]);
             }
-            return redirect()->back()->with('error', 'Failed to update vehicle type.');
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to update vehicle type.');
         }
 
         $this->logActivity('Update vehicle type', 'Updated vehicle type ' . $type['name'] . ' to ' . $name . '.');
@@ -401,6 +401,6 @@ class VehicleTypes extends BaseController
             ]);
         }
 
-        return redirect()->back()->with('success', 'Vehicle type updated successfully to "' . $name . '".');
+        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', 'Vehicle type updated successfully to "' . $name . '".');
     }
 }

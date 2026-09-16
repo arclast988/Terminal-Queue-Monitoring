@@ -2159,7 +2159,8 @@
                         <?php foreach ($active_queue as $item): ?>
                             <?php
                             $vType = $item['vehicle_type'] ?? '';
-                            $photoUrl = vehicle_type_photo($vType);
+                            $hasCustomPhoto = !empty($item['vehicle_photo'] ?? $item['photo'] ?? null);
+                            $photoUrl = vehicle_resolved_photo($item, $vType);
                             $vColor = vehicle_type_color($vType);
                             $vContrast = contrast_text_color($vColor);
                             $vIsLight = ($vContrast === '#0f172a');
@@ -2177,7 +2178,7 @@
                                 <div class="queue-card-left">
                                     <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12 !important; border-color: <?= esc($vColor) ?>35 !important;">
                                         <?php if (!empty($photoUrl)): ?>
-                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
+                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img <?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?>>
                                         <?php else: ?>
                                             <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>;"></i>
                                         <?php endif; ?>
@@ -2760,8 +2761,8 @@
                 label: vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van'
             };
             var posColor = vMeta.color || '#1565c0';
-            var posContrast = vMeta.contrast || '#ffffff';
-            var photoUrl = vMeta.photo || '';
+            var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
+            var photoUrl = (item.photo_url || (item.vehicle_photo ? ('/uploads/vehicles/' + item.vehicle_photo) : (item.photo ? ('/uploads/vehicles/' + item.photo) : ''))) || vMeta.photo || '';
             var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
             var isLight = (posContrast === '#0f172a');
             var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
@@ -2775,8 +2776,8 @@
             var extraClass = isEnter ? ' card-enter' : '';
 
             var iconOrImg = photoUrl
-                ? '<img src="' + photoUrl + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img" data-vt-photo="' + vType + '">'
-                : '<i class="fas ' + (vMeta.icon || 'fa-bus') + '" style="font-size: 28px; color: ' + posColor + ';"></i>';
+                ? ('<img src="' + photoUrl + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img' + (hasCustom ? ' vehicle-custom-photo' : '') + '" ' + (hasCustom ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' + vType + '"')) + '>')
+                : ('<i class="fas ' + (vMeta.icon || 'fa-bus') + '" style="font-size: 28px; color: ' + posColor + ';"></i>');
 
             return '<div class="queue-card queue-card-' + vType + extraClass + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '" data-queue-id="' + item.id + '" data-plate="' + item.plate_number + '">'
                 + '<div class="queue-card-left">'
@@ -2980,9 +2981,12 @@
                                 if (vt.photo) {
                                     vehicleTypeMeta[k].photo = vt.photo;
                                     document.querySelectorAll('img[data-vt-photo="' + k + '"], .vehicle-type-' + k + ' img').forEach(function(img) {
+                                        if (img.hasAttribute('data-vehicle-custom-photo') || img.classList.contains('vehicle-custom-photo')) return;
                                         img.src = vt.photo;
                                     });
                                     document.querySelectorAll('[data-vehicle-type="' + k + '"] .vehicle-thumb-box').forEach(function(thumbBox) {
+                                        var customImg = thumbBox.querySelector('img[data-vehicle-custom-photo="true"], img.vehicle-custom-photo');
+                                        if (customImg) return;
                                         var oldI = thumbBox.querySelector('i');
                                         if (oldI && !thumbBox.querySelector('img')) {
                                             var img = document.createElement('img');
@@ -2996,6 +3000,8 @@
                                 } else {
                                     vehicleTypeMeta[k].photo = null;
                                     document.querySelectorAll('[data-vehicle-type="' + k + '"] .vehicle-thumb-box').forEach(function(thumbBox) {
+                                        var customImg = thumbBox.querySelector('img[data-vehicle-custom-photo="true"], img.vehicle-custom-photo');
+                                        if (customImg) return;
                                         var oldImg = thumbBox.querySelector('img');
                                         if (oldImg) {
                                             var iEl = document.createElement('i');
@@ -3170,12 +3176,72 @@
             }
         });
 
+        function handleRealtimePassengerChange(data) {
+            if (!data) return;
+            var pId = data.id;
+            var pCount = parseInt(data.new_count, 10);
+            var pCap = parseInt(data.capacity, 10);
+            if (!pId || isNaN(pCount)) return;
+
+            var card = document.querySelector('.queue-card[data-queue-id="' + pId + '"]');
+            if (card) {
+                var cap = pCap;
+                if (!cap || isNaN(cap)) {
+                    var capText = card.querySelector('.passenger-count-text');
+                    if (capText) {
+                        var parts = capText.textContent.split('/');
+                        if (parts.length > 1) cap = parseInt(parts[1], 10) || 14;
+                    }
+                }
+                var itemStub = {
+                    id: pId,
+                    current_passengers: pCount,
+                    capacity: cap || 14,
+                    status: card.classList.contains('queue-card-boarding') ? 'boarding' : 'waiting'
+                };
+                updateQueueCardInPlace(card, itemStub, {});
+            } else {
+                fetchStatus();
+            }
+        }
+
         // Initialize real-time sync. WebSocket messages refresh immediately;
         // polling still runs as the fallback if the socket is unavailable.
         QueueSync.init({
             pollInterval: 15000,
             customRefresh: fetchStatus,
-            customWSHandler: fetchStatus
+            customWSHandler: function(msg) {
+                if (msg && (msg.action === 'passenger_change' || (msg.data && msg.data.action === 'passenger_change'))) {
+                    var pData = msg.action === 'passenger_change' ? msg : msg.data;
+                    handleRealtimePassengerChange(pData);
+                    return;
+                }
+                fetchStatus();
+            }
+        });
+
+        // Cross-tab broadcast sync for instant passenger updates across open windows
+        try {
+            if (window.BroadcastChannel) {
+                var _pttmQueueChannel = new BroadcastChannel('pttm_queue_channel');
+                _pttmQueueChannel.onmessage = function(e) {
+                    if (e.data && (e.data.action === 'passenger_change' || (e.data.data && e.data.data.action === 'passenger_change'))) {
+                        var pData = e.data.action === 'passenger_change' ? e.data : e.data.data;
+                        handleRealtimePassengerChange(pData);
+                    }
+                };
+            }
+        } catch(e) {}
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'pttm_queue_sync' && e.newValue) {
+                try {
+                    var parsed = JSON.parse(e.newValue);
+                    if (parsed && parsed.action === 'passenger_change') {
+                        handleRealtimePassengerChange(parsed);
+                    }
+                } catch(err) {}
+            }
         });
 
         fetchStatus(); // Initial fetch

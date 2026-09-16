@@ -445,11 +445,20 @@
         position: relative;
         z-index: 1;
     }
+    .guest-header .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
     .guest-header .logo-section {
         display: flex;
         align-items: center;
         gap: 15px;
         text-decoration: none;
+        min-width: 0;
+        max-width: 100%;
     }
     .guest-header .logo {
         width: 64px;
@@ -460,9 +469,14 @@
         -ms-interpolation-mode: bicubic;
         filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        flex-shrink: 0;
     }
     .guest-header .logo-section:hover .logo {
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    }
+    .guest-header .logo-text {
+        min-width: 0;
+        overflow: hidden;
     }
     .guest-header .logo-text h1 {
         font-size: 20px;
@@ -470,6 +484,10 @@
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.5px;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: clamp(180px, 32vw, 420px) !important;
     }
     .guest-header .logo-text p {
         font-size: 12px;
@@ -478,6 +496,10 @@
         text-transform: uppercase;
         letter-spacing: 0.8px;
         margin: 0;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: clamp(180px, 32vw, 420px) !important;
     }
     .guest-header .nav-menu {
         display: flex;
@@ -638,12 +660,25 @@
             height: 38px;
             border-radius: 8px;
         }
+        .guest-header .logo-text {
+            min-width: 0 !important;
+            overflow: hidden !important;
+        }
         .guest-header .logo-text h1 {
             font-size: 14px;
             letter-spacing: -0.2px;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: clamp(120px, 46vw, 240px) !important;
+            line-height: 1.2 !important;
         }
         .guest-header .logo-text p {
             font-size: 9px;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: clamp(120px, 46vw, 240px) !important;
         }
         .guest-header .header-info {
             padding-left: 10px !important;
@@ -736,11 +771,24 @@
             height: 32px !important;
             border-radius: 6px !important;
         }
+        .guest-header .logo-text {
+            min-width: 0 !important;
+            overflow: hidden !important;
+        }
         .guest-header .logo-text h1 {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: clamp(110px, 42vw, 190px) !important;
+            line-height: 1.2 !important;
         }
         .guest-header .logo-text p {
             font-size: 7.5px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-width: clamp(110px, 42vw, 190px) !important;
         }
         .guest-header .header-info {
             padding-left: 8px !important;
@@ -912,11 +960,11 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 
 <!-- Header & Navigation -->
 <header class="guest-header">
-    <div class="logo-container" style="display: flex; align-items: center; gap: 24px;">
-        <a href="<?= base_url('guest') ?>" class="logo-section">
+    <div class="logo-container">
+        <a href="<?= base_url('guest') ?>" class="logo-section" title="<?= esc(app_name()) ?>">
             <img src="<?= esc(app_logo()) ?>" alt="<?= esc(app_name()) ?> Logo" class="logo">
             <div class="logo-text">
-                <h1><?= esc(app_name()) ?> </h1>
+                <h1><?= esc(app_name()) ?></h1>
                 <p><?= esc(app_subtitle()) ?></p>
             </div>
         </a>

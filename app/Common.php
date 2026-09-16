@@ -178,6 +178,47 @@ if (! function_exists('vehicle_type_photo')) {
     }
 }
 
+if (! function_exists('vehicle_resolved_photo')) {
+    /**
+     * Resolves the display photo for a vehicle.
+     * Highest priority: The individual vehicle's uploaded photo (never overridden by vehicle type).
+     * Fallback: The vehicle type's assigned photo.
+     * Return null if neither exists.
+     */
+    function vehicle_resolved_photo($vehicleOrQueueItem, ?string $fallbackType = null): ?string
+    {
+        $vehPhoto = null;
+        if (is_array($vehicleOrQueueItem)) {
+            $vehPhoto = $vehicleOrQueueItem['vehicle_photo'] ?? $vehicleOrQueueItem['photo'] ?? null;
+            if (empty($fallbackType)) {
+                $fallbackType = $vehicleOrQueueItem['vehicle_type'] ?? $vehicleOrQueueItem['type'] ?? null;
+            }
+        } elseif (is_string($vehicleOrQueueItem) && !empty($vehicleOrQueueItem)) {
+            $vehPhoto = $vehicleOrQueueItem;
+        }
+
+        if (!empty($vehPhoto)) {
+            $photoPath = trim((string)$vehPhoto);
+            if (str_starts_with($photoPath, 'http://') || str_starts_with($photoPath, 'https://')) {
+                return $photoPath;
+            }
+            return base_url(ltrim($photoPath, '/'));
+        }
+
+        if (!empty($fallbackType)) {
+            $typePhoto = vehicle_type_photo($fallbackType);
+            if (!empty($typePhoto)) {
+                if (str_starts_with($typePhoto, 'http://') || str_starts_with($typePhoto, 'https://')) {
+                    return $typePhoto;
+                }
+                return base_url(ltrim($typePhoto, '/'));
+            }
+        }
+
+        return null;
+    }
+}
+
 if (! function_exists('vehicle_type_color')) {
     function vehicle_type_color(?string $type, ?string $customColor = null): string
     {

@@ -72,6 +72,7 @@ class Queue extends BaseController
             COALESCE(NULLIF(queue.operator_name, \'\'), NULLIF(vehicles.operator_name, \'\'), vehicles.owner_name) as operator_name,
             vehicles.owner_name, 
             vehicles.type as vehicle_type, 
+            vehicles.photo as vehicle_photo, 
             terminals.name as origin, 
             routes.destination, 
             vehicles.capacity
@@ -468,7 +469,7 @@ class Queue extends BaseController
         $this->logActivity($actionLabel, $actionLabel . ' for ' . $label . '.' . $opDriver);
 
         // Fetch updated queue item for broadcast
-        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
+        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, vehicles.capacity, terminals.name as origin, routes.destination')
             ->withFullJoins()
             ->where('queue.id', $id)
             ->first();
@@ -684,7 +685,7 @@ class Queue extends BaseController
         $this->logActivity('Undo Cancel Trip', 'Restored trip for ' . $plateNumber . ' back to the active queue.');
 
         // Broadcast update to all clients
-        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.capacity, terminals.name as origin, routes.destination')
+        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, vehicles.capacity, terminals.name as origin, routes.destination')
             ->withFullJoins()
             ->where('queue.id', $id)
             ->first();

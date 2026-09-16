@@ -48,6 +48,22 @@
         wrapper.style.zIndex = isInModal ? '1065' : '100';
         dropdown.style.display = 'block';
 
+        // Dynamic smart placement: flip upward if space below is limited and space above has more room
+        try {
+            var rect = wrapper.getBoundingClientRect();
+            var spaceBelow = window.innerHeight - rect.bottom;
+            var spaceAbove = rect.top;
+            if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = 'calc(100% + 6px)';
+                dropdown.classList.add('dropdown-flipped');
+            } else {
+                dropdown.style.top = 'calc(100% + 6px)';
+                dropdown.style.bottom = 'auto';
+                dropdown.classList.remove('dropdown-flipped');
+            }
+        } catch (err) {}
+
         const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
         if (parentContainer) {
             parentContainer.classList.add('autocomplete-parent-active');
@@ -61,6 +77,7 @@
         wrapper.classList.remove('is-open');
         wrapper.style.zIndex = '';
         dropdown.style.display = 'none';
+        dropdown.classList.remove('dropdown-flipped');
 
         const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
         if (parentContainer) {
@@ -108,6 +125,9 @@
             .modal .autocomplete-dropdown {
                 z-index: 1070 !important;
             }
+            .autocomplete-dropdown.dropdown-flipped {
+                box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.16) !important;
+            }
             .autocomplete-item {
                 color: #1e293b;
                 background: #ffffff;
@@ -139,6 +159,11 @@
             }
 
             /* Autocomplete & Filter Clear (x) Button - Clean, Instant, No Animations */
+            .autocomplete-wrapper ~ .dropdown-chevron-icon,
+            .position-relative:has(.autocomplete-wrapper) > .dropdown-chevron-icon {
+                display: none !important;
+            }
+
             .autocomplete-clear-btn {
                 position: absolute !important;
                 right: 12px !important;
@@ -500,8 +525,17 @@
             // Container wrapper
             const wrapper = document.createElement('div');
             wrapper.className = 'autocomplete-wrapper position-relative w-100';
-            selectEl.parentNode.insertBefore(wrapper, selectEl);
+            const parent = selectEl.parentNode;
+            parent.insertBefore(wrapper, selectEl);
             wrapper.appendChild(selectEl);
+
+            // Hide any adjacent dropdown chevron icon that was rendered for the raw select
+            if (parent) {
+                const chevron = parent.querySelector('.dropdown-chevron-icon');
+                if (chevron) {
+                    chevron.style.setProperty('display', 'none', 'important');
+                }
+            }
 
             // If inside an input-group-modern flex container, inherit flex properties
             if (wrapper.parentNode && wrapper.parentNode.classList.contains('input-group-modern')) {

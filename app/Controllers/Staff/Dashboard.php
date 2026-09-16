@@ -51,6 +51,7 @@ class Dashboard extends BaseController
             vehicles.owner_name, 
             vehicles.capacity, 
             vehicles.type as vehicle_type, 
+            vehicles.photo as vehicle_photo, 
             routes.destination, 
             terminals.name as origin
         ')

@@ -12,7 +12,7 @@ class VehicleModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['plate_number', 'driver_name', 'operator_name', 'owner_name', 'type', 'capacity', 'status', 'default_route_id', 'scheduled_departure_time', 'created_at'];
+    protected $allowedFields    = ['plate_number', 'driver_name', 'operator_name', 'owner_name', 'type', 'capacity', 'status', 'default_route_id', 'scheduled_departure_time', 'photo', 'created_at'];
 
     // Dates — vehicles table has created_at
     protected $useTimestamps = true;

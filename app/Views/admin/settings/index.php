@@ -115,6 +115,12 @@ $slotsMeta = [
 .settings-header-icon {
     width: 52px;
     height: 52px;
+    min-width: 52px;
+    max-width: 52px;
+    min-height: 52px;
+    max-height: 52px;
+    flex-shrink: 0 !important;
+    flex: 0 0 52px !important;
     border-radius: 14px;
     background: linear-gradient(135deg, #B71C1C 0%, #ef4444 100%);
     display: flex;
@@ -1160,9 +1166,29 @@ $slotsMeta = [
 
 @media (max-width: 640px) {
     .settings-page { padding: 8px 10px 30px; }
-    .settings-header-card { padding: 18px 16px; border-radius: 12px; }
-    .settings-header-icon { width: 42px; height: 42px; font-size: 18px; }
-    .settings-header-card h1 { font-size: 18px; }
+    .settings-header-card { padding: 16px 14px; border-radius: 12px; }
+    .settings-header-left {
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+    .settings-header-left > div:last-child {
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+    }
+    .settings-header-icon {
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        min-height: 44px !important;
+        max-height: 44px !important;
+        flex-shrink: 0 !important;
+        flex: 0 0 44px !important;
+        font-size: 19px !important;
+        border-radius: 12px !important;
+    }
+    .settings-header-card h1 { font-size: 17px !important; line-height: 1.3 !important; }
+    .settings-header-card p { font-size: 12px !important; line-height: 1.4 !important; }
     .settings-card { padding: 18px 14px; border-radius: 12px; }
     .settings-tab { padding: 10px 14px; font-size: 12.5px; }
     .btn-save { width: 100%; justify-content: center; }
@@ -2096,6 +2122,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // 6. Generic AJAX File Uploader Helper
     // =========================================================================
     function uploadMedia(url, fieldName, file, extraData, onSuccess, onError) {
+        if (file && file.size > 10 * 1024 * 1024) {
+            var sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+            if (typeof window.showSystemAlert === 'function') {
+                window.showSystemAlert({
+                    title: 'File Too Large',
+                    message: 'The selected image is ' + sizeMb + 'MB. The maximum allowed upload size is 10MB. Please select a smaller file.',
+                    variant: 'danger'
+                });
+            }
+            if (typeof onError === 'function') onError('File exceeds 10MB limit.');
+            return;
+        }
+
         var fd = new FormData();
         fd.append(fieldName, file);
         fd.append(currentCsrfToken, currentCsrfHash);
@@ -2106,17 +2145,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         fetch(url, { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                if (r.status === 413) {
+                    throw new Error('The file you selected is too large for the server to process. Please select an image under 10MB.');
+                }
+                if (!r.ok) {
+                    throw new Error('Server error (' + r.status + '). Please try a smaller image or different format.');
+                }
+                return r.json();
+            })
             .then(function(data) {
                 if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                 if (data.success) {
                     onSuccess(data);
                 } else {
-                    onError(data.message || 'Upload failed.');
+                    var err = data.message || 'Upload failed.';
+                    if (typeof window.showSystemAlert === 'function') {
+                        window.showSystemAlert({ title: 'Upload Failed', message: err, variant: 'danger' });
+                    }
+                    onError(err);
                 }
             })
             .catch(function(err) {
-                onError('Network communication error.');
+                var msg = (err && err.message) ? err.message : 'Network communication error.';
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({ title: 'Upload Error', message: msg, variant: 'danger' });
+                }
+                onError(msg);
             });
     }
 
@@ -2164,27 +2219,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (btnResetLogo) {
         btnResetLogo.addEventListener('click', function() {
-            if (!confirm('Reset logo back to default municipal seal?')) return;
-            var fd = new FormData();
-            fd.append(currentCsrfToken, currentCsrfHash);
-            fetch('<?= base_url("admin/settings/reset-logo") ?>', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
-                    if (data.success) {
-                        showToast(data.message, true);
-                        var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-                        if (logoPreviewImg) logoPreviewImg.src = newUrl;
-                        document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
-                        if (logoFilename) logoFilename.textContent = 'Default Seal (9HFScgVg_400x400.png)';
-                        if (logoStatusChip) {
-                            logoStatusChip.className = 'status-chip default';
-                            logoStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Seal';
+            var doReset = function() {
+                var fd = new FormData();
+                fd.append(currentCsrfToken, currentCsrfHash);
+                fetch('<?= base_url("admin/settings/reset-logo") ?>', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                        if (data.success) {
+                            showToast(data.message, true);
+                            var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+                            if (logoPreviewImg) logoPreviewImg.src = newUrl;
+                            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
+                            if (logoFilename) logoFilename.textContent = 'Default Seal (9HFScgVg_400x400.png)';
+                            if (logoStatusChip) {
+                                logoStatusChip.className = 'status-chip default';
+                                logoStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Seal';
+                            }
+                            btnResetLogo.style.display = 'none';
                         }
-                        btnResetLogo.style.display = 'none';
-                    }
-                })
-                .catch(function() { showToast('Reset failed.', false); });
+                    })
+                    .catch(function() { showToast('Reset failed.', false); });
+            };
+
+            if (typeof window.confirmAction === 'function') {
+                window.confirmAction({
+                    title: 'Reset Logo',
+                    message: 'Reset logo back to default municipal seal?',
+                    confirmText: 'Reset Logo',
+                    onConfirm: doReset
+                });
+            } else if (confirm('Reset logo back to default municipal seal?')) {
+                doReset();
+            }
         });
     }
 
@@ -2230,25 +2297,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (btnResetBg) {
         btnResetBg.addEventListener('click', function() {
-            if (!confirm('Reset background back to system default artwork?')) return;
-            var fd = new FormData();
-            fd.append(currentCsrfToken, currentCsrfHash);
-            fetch('<?= base_url("admin/settings/reset-background") ?>', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
-                    if (data.success) {
-                        showToast(data.message, true);
-                        if (bgPreviewImg) bgPreviewImg.src = data.image_url;
-                        if (bgFilename) bgFilename.textContent = 'Default Artwork (system bg image.png)';
-                        if (bgStatusChip) {
-                            bgStatusChip.className = 'status-chip default';
-                            bgStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';
+            var doResetBg = function() {
+                var fd = new FormData();
+                fd.append(currentCsrfToken, currentCsrfHash);
+                fetch('<?= base_url("admin/settings/reset-background") ?>', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                        if (data.success) {
+                            showToast(data.message, true);
+                            if (bgPreviewImg) bgPreviewImg.src = data.image_url;
+                            if (bgFilename) bgFilename.textContent = 'Default Artwork (system bg image.png)';
+                            if (bgStatusChip) {
+                                bgStatusChip.className = 'status-chip default';
+                                bgStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';
+                            }
+                            btnResetBg.style.display = 'none';
                         }
-                        btnResetBg.style.display = 'none';
-                    }
-                })
-                .catch(function() { showToast('Reset failed.', false); });
+                    })
+                    .catch(function() { showToast('Reset failed.', false); });
+            };
+
+            if (typeof window.confirmAction === 'function') {
+                window.confirmAction({
+                    title: 'Reset Background',
+                    message: 'Reset background back to system default artwork?',
+                    confirmText: 'Reset Background',
+                    onConfirm: doResetBg
+                });
+            } else if (confirm('Reset background back to system default artwork?')) {
+                doResetBg();
+            }
         });
     }
 
@@ -2281,31 +2360,43 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     window.resetSlotPhoto = function(slot) {
-        if (!confirm('Restore Slot ' + slot + ' back to default system photo?')) return;
-        var fd = new FormData();
-        fd.append('slot', slot);
-        fd.append(currentCsrfToken, currentCsrfHash);
+        var doResetSlot = function() {
+            var fd = new FormData();
+            fd.append('slot', slot);
+            fd.append(currentCsrfToken, currentCsrfHash);
 
-        fetch('<?= base_url("admin/settings/reset-slideshow-slot") ?>', { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
-                if (data.success) {
-                    showToast(data.message, true);
-                    var img = document.getElementById('slotImg-' + slot);
-                    if (img) img.src = data.image_url;
-                    var badge = document.getElementById('slotBadge-' + slot);
-                    if (badge) {
-                        badge.className = 'slot-status-badge default';
-                        badge.textContent = 'Default';
+            fetch('<?= base_url("admin/settings/reset-slideshow-slot") ?>', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                    if (data.success) {
+                        showToast(data.message, true);
+                        var img = document.getElementById('slotImg-' + slot);
+                        if (img) img.src = data.image_url;
+                        var badge = document.getElementById('slotBadge-' + slot);
+                        if (badge) {
+                            badge.className = 'slot-status-badge default';
+                            badge.textContent = 'Default';
+                        }
+                        var resetBtn = document.getElementById('btnResetSlot-' + slot);
+                        if (resetBtn) resetBtn.style.display = 'none';
+                    } else {
+                        showToast(data.message || 'Reset failed', false);
                     }
-                    var resetBtn = document.getElementById('btnResetSlot-' + slot);
-                    if (resetBtn) resetBtn.style.display = 'none';
-                } else {
-                    showToast(data.message || 'Reset failed', false);
-                }
-            })
-            .catch(function() { showToast('Reset failed.', false); });
+                })
+                .catch(function() { showToast('Reset failed.', false); });
+        };
+
+        if (typeof window.confirmAction === 'function') {
+            window.confirmAction({
+                title: 'Restore Default Photo',
+                message: 'Restore Slot ' + slot + ' back to default system photo?',
+                confirmText: 'Restore Photo',
+                onConfirm: doResetSlot
+            });
+        } else if (confirm('Restore Slot ' + slot + ' back to default system photo?')) {
+            doResetSlot();
+        }
     };
 
     window.handleAddNewSlot = function(input) {
@@ -2353,62 +2444,88 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.deleteSlotPhoto = function(slot) {
-        if (!confirm('Are you sure you want to remove Slot ' + slot + ' from the slideshow?')) return;
-        var fd = new FormData();
-        fd.append('slot', slot);
-        fd.append(currentCsrfToken, currentCsrfHash);
+        var doDelete = function() {
+            var fd = new FormData();
+            fd.append('slot', slot);
+            fd.append(currentCsrfToken, currentCsrfHash);
 
-        fetch('<?= base_url("admin/settings/delete-slideshow-slot") ?>', { method: 'POST', body: fd })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
-                if (data.success) {
-                    showToast(data.message || 'Slot deleted', true);
-                    var card = document.getElementById('slotCard-' + slot);
-                    if (card) {
-                        card.style.transition = 'all 0.3s ease';
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.8)';
-                        setTimeout(function() {
-                            if (card.parentNode) card.parentNode.removeChild(card);
-                        }, 300);
+            fetch('<?= base_url("admin/settings/delete-slideshow-slot") ?>', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                    if (data.success) {
+                        showToast(data.message || 'Slot deleted', true);
+                        var card = document.getElementById('slotCard-' + slot);
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.8)';
+                            setTimeout(function() {
+                                if (card.parentNode) card.parentNode.removeChild(card);
+                            }, 300);
+                        }
+                    } else {
+                        showToast(data.message || 'Failed to delete slot.', false);
                     }
-                } else {
-                    showToast(data.message || 'Failed to delete slot.', false);
-                }
-            })
-            .catch(function() { showToast('Delete failed.', false); });
+                })
+                .catch(function() { showToast('Delete failed.', false); });
+        };
+
+        if (typeof window.confirmAction === 'function') {
+            window.confirmAction({
+                title: 'Delete Slot',
+                message: 'Are you sure you want to remove Slot ' + slot + ' from the slideshow?',
+                confirmText: 'Delete Slot',
+                onConfirm: doDelete
+            });
+        } else if (confirm('Are you sure you want to remove Slot ' + slot + ' from the slideshow?')) {
+            doDelete();
+        }
     };
 
     var btnResetAll = document.getElementById('btnResetAllSlideshow');
     if (btnResetAll) {
         btnResetAll.addEventListener('click', function() {
-            if (!confirm('Are you sure you want to reset ALL 5 slideshow pictures back to system defaults?')) return;
-            var fd = new FormData();
-            fd.append(currentCsrfToken, currentCsrfHash);
+            var doResetAll = function() {
+                var fd = new FormData();
+                fd.append(currentCsrfToken, currentCsrfHash);
 
-            fetch('<?= base_url("admin/settings/reset-all-slideshow") ?>', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
-                    if (data.success) {
-                        showToast(data.message, true);
-                        if (data.defaults) {
-                            for (var s = 1; s <= 5; s++) {
-                                var img = document.getElementById('slotImg-' + s);
-                                if (img && data.defaults[s]) img.src = data.defaults[s];
-                                var badge = document.getElementById('slotBadge-' + s);
-                                if (badge) {
-                                    badge.className = 'slot-status-badge default';
-                                    badge.textContent = 'Default';
+                fetch('<?= base_url("admin/settings/reset-all-slideshow") ?>', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                        if (data.success) {
+                            showToast(data.message, true);
+                            if (data.defaults) {
+                                for (var s = 1; s <= 5; s++) {
+                                    var img = document.getElementById('slotImg-' + s);
+                                    if (img && data.defaults[s]) img.src = data.defaults[s];
+                                    var badge = document.getElementById('slotBadge-' + s);
+                                    if (badge) {
+                                        badge.className = 'slot-status-badge default';
+                                        badge.textContent = 'Default';
+                                    }
+                                    var resetBtn = document.getElementById('btnResetSlot-' + s);
+                                    if (resetBtn) resetBtn.style.display = 'none';
                                 }
-                                var resetBtn = document.getElementById('btnResetSlot-' + s);
-                                if (resetBtn) resetBtn.style.display = 'none';
                             }
+                        } else {
+                            showToast(data.message || 'Reset failed', false);
                         }
-                    }
-                })
-                .catch(function() { showToast('Reset failed.', false); });
+                    })
+                    .catch(function() { showToast('Reset failed.', false); });
+            };
+
+            if (typeof window.confirmAction === 'function') {
+                window.confirmAction({
+                    title: 'Reset All Slideshow Photos',
+                    message: 'Are you sure you want to reset ALL 5 slideshow pictures back to system defaults?',
+                    confirmText: 'Reset All Photos',
+                    onConfirm: doResetAll
+                });
+            } else if (confirm('Are you sure you want to reset ALL 5 slideshow pictures back to system defaults?')) {
+                doResetAll();
+            }
         });
     }
 

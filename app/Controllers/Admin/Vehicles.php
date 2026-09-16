@@ -203,15 +203,49 @@ class Vehicles extends BaseController
             $status = 'active';
         }
 
+        // Handle vehicle photo upload
+        $photoRelPath = null;
+        $photoFile = $this->request->getFile('photo');
+        if ($photoFile && $photoFile->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (!$photoFile->isValid()) {
+                return redirect()->back()->withInput()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
+            }
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp'];
+            $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (!in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && !in_array($clientExt, $allowedExts, true)) {
+                return redirect()->back()->withInput()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP).');
+            }
+
+            if ($photoFile->getSize() > 5 * 1024 * 1024) {
+                return redirect()->back()->withInput()->with('error', 'The uploaded photo exceeds the 5MB size limit.');
+            }
+
+            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicles';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            $ext = $clientExt ?: 'jpg';
+            $safePlate = preg_replace('/[^a-zA-Z0-9]/', '_', $rawPlate);
+            $newFilename = 'veh_' . strtolower($safePlate) . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+            if ($photoFile->move($uploadDir, $newFilename)) {
+                $photoRelPath = 'uploads/vehicles/' . $newFilename;
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Failed to save vehicle photo to upload directory.');
+            }
+        }
+
         $this->vehicleModel->save([
-            'plate_number'  => $rawPlate,
-            'operator_name' => $rawOperator,
-            'owner_name'    => $rawOperator,
-            'driver_name'   => $driverName,
-            'type'          => $vehicleType,
-            'capacity'      => $this->request->getPost('capacity'),
-            'status'        => $status,
+            'plate_number'     => $rawPlate,
+            'operator_name'    => $rawOperator,
+            'owner_name'       => $rawOperator,
+            'driver_name'      => $driverName,
+            'type'             => $vehicleType,
+            'capacity'         => $this->request->getPost('capacity'),
+            'status'           => $status,
             'default_route_id' => $routeId,
+            'photo'            => $photoRelPath,
         ]);
 
         $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
@@ -344,7 +378,54 @@ class Vehicles extends BaseController
             return redirect()->back()->withInput()->with('error', 'Driver and Operator must not be the same person.');
         }
 
-        if ($this->inputsUnchanged([
+        // Handle photo upload / removal
+        $photoRelPath = $vehicle['photo'] ?? null;
+        $photoChanged = false;
+
+        if ($this->request->getPost('remove_photo') == '1') {
+            if (!empty($photoRelPath) && file_exists(FCPATH . $photoRelPath)) {
+                @unlink(FCPATH . $photoRelPath);
+            }
+            $photoRelPath = null;
+            $photoChanged = true;
+        }
+
+        $photoFile = $this->request->getFile('photo');
+        if ($photoFile && $photoFile->getError() !== UPLOAD_ERR_NO_FILE) {
+            if (!$photoFile->isValid()) {
+                return redirect()->back()->withInput()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
+            }
+            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp'];
+            $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (!in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && !in_array($clientExt, $allowedExts, true)) {
+                return redirect()->back()->withInput()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP).');
+            }
+
+            if ($photoFile->getSize() > 5 * 1024 * 1024) {
+                return redirect()->back()->withInput()->with('error', 'The uploaded photo exceeds the 5MB size limit.');
+            }
+
+            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'vehicles';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            $ext = $clientExt ?: 'jpg';
+            $safePlate = preg_replace('/[^a-zA-Z0-9]/', '_', $rawPlate);
+            $newFilename = 'veh_' . strtolower($safePlate) . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
+            if ($photoFile->move($uploadDir, $newFilename)) {
+                if (!empty($vehicle['photo']) && file_exists(FCPATH . $vehicle['photo'])) {
+                    @unlink(FCPATH . $vehicle['photo']);
+                }
+                $photoRelPath = 'uploads/vehicles/' . $newFilename;
+                $photoChanged = true;
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Failed to save vehicle photo to upload directory.');
+            }
+        }
+
+        if (!$photoChanged && $this->inputsUnchanged([
             'plate_number'     => strtoupper(trim((string) ($vehicle['plate_number'] ?? ''))),
             'operator_name'    => strtoupper(trim((string) ($vehicle['operator_name'] ?? ''))),
             'driver_name'      => trim((string) ($vehicle['driver_name'] ?? '')),
@@ -365,14 +446,15 @@ class Vehicles extends BaseController
         }
 
         $this->vehicleModel->update($id, [
-            'plate_number'  => $rawPlate,
-            'operator_name' => $rawOperator,
-            'owner_name'    => $rawOperator,
-            'driver_name'   => $driverName,
-            'type'          => $vehicleType,
-            'capacity'      => $this->request->getPost('capacity'),
-            'status'        => $this->request->getPost('status'),
+            'plate_number'     => $rawPlate,
+            'operator_name'    => $rawOperator,
+            'owner_name'       => $rawOperator,
+            'driver_name'      => $driverName,
+            'type'             => $vehicleType,
+            'capacity'         => $this->request->getPost('capacity'),
+            'status'           => $this->request->getPost('status'),
             'default_route_id' => $routeId,
+            'photo'            => $photoRelPath,
         ]);
 
         // Synchronize active queue snapshots so live boards and dispatch cards reflect changes immediately
@@ -407,6 +489,10 @@ class Vehicles extends BaseController
         $vehicle = $this->vehicleModel->find($id);
         if (!$vehicle) {
             return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
+        }
+
+        if (!empty($vehicle['photo']) && file_exists(FCPATH . $vehicle['photo'])) {
+            @unlink(FCPATH . $vehicle['photo']);
         }
 
         if ($this->vehicleModel->delete($id)) {

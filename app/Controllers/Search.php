@@ -18,7 +18,7 @@ class Search extends BaseController
         $queueModel = new QueueModel();
 
         // Search in active queue
-        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, queue.current_passengers, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, routes.destination, terminals.name as origin')
+        $activeResults = $queueModel->select('queue.*, queue.estimated_departure, queue.current_passengers, vehicles.plate_number, vehicles.driver_name, vehicles.operator_name, vehicles.owner_name, vehicles.capacity, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, routes.destination, terminals.name as origin')
                                     ->withFullJoins()
                                     ->whereIn('queue.status', ['waiting', 'boarding'])
                                     ->groupStart()

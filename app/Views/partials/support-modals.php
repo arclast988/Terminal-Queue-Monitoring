@@ -119,8 +119,12 @@
                 var modalEl = document.getElementById('systemAlertModal');
                 if (modalEl && window.bootstrap) {
                     window.showSystemAlert({ message: String(message) });
-                } else if (typeof window.originalAlert === 'function') {
-                    window.originalAlert(message);
+                } else if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        window.showSystemAlert({ message: String(message) });
+                    }, { once: true });
+                } else {
+                    console.warn('[System Notice]', message);
                 }
             };
         }

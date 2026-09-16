@@ -40,7 +40,7 @@ class QueueStatus extends Controller
         if (! is_array($cached)) {
             $queueModel = new QueueModel();
 
-            $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.driver_name, queue.estimated_departure, terminals.name as origin, routes.destination')
+            $queue = $queueModel->select('queue.id, queue.position, queue.status, queue.current_passengers, vehicles.capacity, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, vehicles.driver_name, queue.estimated_departure, terminals.name as origin, routes.destination')
                 ->withFullJoins()
                 ->whereIn('queue.status', ['waiting', 'boarding'])
                 ->orderBy('routes.destination', 'ASC')
@@ -59,6 +59,8 @@ class QueueStatus extends Controller
                     'capacity'           => (int)$item['capacity'],
                     'plate_number'       => $item['plate_number'],
                     'vehicle_type'       => $item['vehicle_type'] ?? null,
+                    'photo_url'          => vehicle_resolved_photo($item, $item['vehicle_type'] ?? null),
+                    'has_custom_photo'   => !empty($item['vehicle_photo'] ?? $item['photo'] ?? null),
                     'driver_name'        => $item['driver_name'] ?? null,
                     'estimated_departure'=> $item['estimated_departure'] ?? null,
                     'origin'             => $item['origin'],

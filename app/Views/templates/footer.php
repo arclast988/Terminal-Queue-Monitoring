@@ -3,7 +3,7 @@
     <?= view('partials/footer') ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
-    <script src="<?= base_url('assets/js/autocomplete-search.js?v=20260906') ?>"></script>
+    <script src="<?= base_url('assets/js/autocomplete-search.js?v=20260917') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('assets/js/no-change-guard.js?v=20260909') ?>"></script>
     <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>

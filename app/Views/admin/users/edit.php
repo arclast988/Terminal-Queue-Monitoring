@@ -374,7 +374,13 @@ document.addEventListener('DOMContentLoaded', function() {
             var file = this.files[0];
             if (!file) return;
             if (file.size > 4 * 1024 * 1024) {
-                alert('File exceeds 4MB maximum allowed size.');
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({
+                        title: 'File Too Large',
+                        message: 'The selected avatar exceeds the 4MB maximum allowed size. Please select a smaller image.',
+                        variant: 'warning'
+                    });
+                }
                 this.value = '';
                 return;
             }

@@ -65,6 +65,7 @@ class Schedules extends BaseController
                 vehicles.id as vehicle_id,
                 vehicles.plate_number,
                 vehicles.type as vehicle_type,
+                vehicles.photo as vehicle_photo,
                 vehicles.capacity,
                 vehicles.operator_name,
                 vehicles.driver_name,
@@ -103,6 +104,8 @@ class Schedules extends BaseController
         // Calculate full status
         foreach ($schedules as &$s) {
             $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
+            $s['photo_url'] = vehicle_resolved_photo($s, $s['vehicle_type'] ?? null);
+            $s['has_custom_photo'] = !empty($s['vehicle_photo'] ?? $s['photo'] ?? null);
         }
         unset($s);
 
@@ -208,6 +211,7 @@ class Schedules extends BaseController
                     queue.estimated_departure,
                     vehicles.plate_number,
                     vehicles.type as vehicle_type,
+                    vehicles.photo as vehicle_photo,
                     vehicles.capacity,
                     vehicles.operator_name,
                     vehicles.driver_name,
@@ -241,10 +245,12 @@ class Schedules extends BaseController
 
             foreach ($schedules as &$s) {
                 $s['id'] = (int) $s['queue_id'];
-                if (empty($s['estimated_departure'])) {
+                if ($s['status'] === 'boarding') {
                     $s['estimated_departure'] = null;
                 }
                 $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
+                $s['photo_url'] = vehicle_resolved_photo($s, $s['vehicle_type'] ?? null);
+                $s['has_custom_photo'] = !empty($s['vehicle_photo'] ?? $s['photo'] ?? null);
                 $s['estimated_departure_formatted'] = !empty($s['estimated_departure'])
                     ? date('g:i A', strtotime($s['estimated_departure'])) : null;
             }

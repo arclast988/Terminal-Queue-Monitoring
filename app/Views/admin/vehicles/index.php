@@ -12,8 +12,8 @@
         <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageVehicleTypesModal">
             <i class="bi bi-gear-fill me-1"></i> Manage Types
         </button>
-        <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#addVehicleTypeModal">
-            <i class="bi bi-tags me-1"></i> Add Vehicle Type
+        <button type="button" class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#registerVehicleModal">
+            <i class="bi bi-plus-circle me-1"></i> Register Vehicle
         </button>
     </div>
 </div>
@@ -47,88 +47,6 @@
 
 <?= view('partials/flash_notices') ?>
 
-<!-- Add Vehicle Form -->
-<div class="modern-card shadow-modern fade-in mb-4 register-vehicle-card" id="registerVehicleCard">
-    <div class="modern-card-header">
-        <span class="modern-card-title">
-            <i class="bi bi-plus-circle" style="color: var(--primary-red);"></i>
-            Register New Vehicle
-        </span>
-    </div>
-    <div class="modern-card-body">
-        <form action="<?= base_url('admin/vehicles/store') ?>" method="post" id="registerVehicleForm">
-            <?= csrf_field() ?>
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <label for="operator_name" class="form-label-modern">Operator Name</label>
-                    <input type="text" class="form-control-modern text-uppercase" id="operator_name" name="operator_name"
-                        placeholder="E.G. LETRANSCO" value="<?= old('operator_name') ?>" style="text-transform: uppercase;"
-                        oninput="this.value = this.value.toUpperCase()" required>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <label for="driver_name" class="form-label-modern">Driver Name</label>
-                    <input type="text" class="form-control-modern" id="driver_name" name="driver_name"
-                        placeholder="e.g. Pedro Santos" value="<?= old('driver_name') ?>" required>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2 plate-col-wrapper">
-                    <label for="plate_number" class="form-label-modern">Plate Number</label>
-                    <div class="position-relative">
-                        <input type="text" class="form-control-modern text-uppercase" id="plate_number" name="plate_number"
-                            placeholder="E.G. ABC-1234" value="<?= old('plate_number') ?>" style="text-transform: uppercase;"
-                            oninput="this.value = this.value.toUpperCase(); validatePlateRealtime(this.value);" required>
-                        <span id="plate-validation-icon" class="plate-validation-icon" style="display: none;"></span>
-                    </div>
-                    <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <label for="type" class="form-label-modern">Type</label>
-                    <div class="position-relative">
-                        <select class="form-select-modern pe-5" id="type" name="type" required>
-                            <option value="">-- Select Type --</option>
-                            <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                                <?php $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); ?>
-                                <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" <?= old('type') === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <span class="dropdown-chevron-icon">
-                            <i class="fas fa-chevron-down"></i>
-                        </span>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-4 col-xl-2">
-                    <label for="route_id" class="form-label-modern">Destination</label>
-                    <div class="position-relative">
-                        <select class="form-select-modern pe-5" id="route_id" name="route_id" required>
-                            <option value="">-- Select Type First --</option>
-                            <?php if (!empty($routes)): ?>
-                                <?php foreach ($routes as $r): ?>
-                                    <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
-                                        <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
-                                        <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                        <span class="dropdown-chevron-icon">
-                            <i class="fas fa-chevron-down"></i>
-                        </span>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-2 col-xl-1">
-                    <label for="capacity" class="form-label-modern">Capacity</label>
-                    <input type="number" class="form-control-modern" id="capacity" name="capacity" placeholder="16"
-                        value="<?= old('capacity') ?>" min="1" required>
-                </div>
-                <input type="hidden" name="status" value="active">
-                <div class="col-12 col-sm-6 col-md-2 col-xl-1">
-                    <button type="submit" class="btn-modern btn-modern-primary w-100 px-2" style="min-height: 44px; white-space: nowrap;">
-                        <i class="bi bi-plus-lg"></i> Add
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
 
 <?php
 // Count vehicles by type and status
@@ -267,12 +185,18 @@ $countInService = $countActive + $countMaintenance;
                                     </div>
                                 </td>
                                 <td data-label="Vehicle Type">
-                                    <?php $imgFile = vehicle_type_photo($vehicle['type']); ?>
+                                    <?php 
+                                        $hasVehPhoto = !empty($vehicle['photo']);
+                                        $vehPhotoUrl = $hasVehPhoto ? base_url($vehicle['photo']) : null;
+                                        $typePhotoUrl = vehicle_type_photo($vehicle['type']);
+                                        $displayPhoto = $vehPhotoUrl ?: $typePhotoUrl;
+                                    ?>
                                     <div class="vehicle-type-cell">
-                                        <?php if (!empty($imgFile)): ?>
-                                            <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>">
-                                                <img src="<?= esc($imgFile) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
-                                                    style="height:28px; width:auto; max-width:32px; object-fit:contain;" title="<?= vehicle_type_label($vehicle['type']) ?>">
+                                        <?php if (!empty($displayPhoto)): ?>
+                                            <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>" style="<?= $hasVehPhoto ? 'border-radius: 8px; overflow: hidden; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #cbd5e1; background: #ffffff;' : '' ?>">
+                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
+                                                    style="<?= $hasVehPhoto ? 'width: 100%; height: 100%; object-fit: cover;' : 'height:28px; width:auto; max-width:32px; object-fit:contain;' ?>" 
+                                                    title="<?= $hasVehPhoto ? ('Vehicle ' . esc($vehicle['plate_number']) . ' (' . vehicle_type_label($vehicle['type']) . ')') : vehicle_type_label($vehicle['type']) ?>">
                                             </span>
                                         <?php else: ?>
                                             <?php 
@@ -871,7 +795,7 @@ $countInService = $countActive + $countMaintenance;
     }
     .plate-validation-icon {
         position: absolute;
-        right: 10px;
+        right: 38px;
         top: 50%;
         transform: translateY(-50%);
         font-size: 16px;
@@ -1052,7 +976,7 @@ $countInService = $countActive + $countMaintenance;
                             feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>' + (data.message || 'Plate number is not available');
                             input.classList.remove('plate-valid');
                             input.classList.add('plate-invalid');
-                            icon.innerHTML = '<i class="bi bi-x-circle-fill" style="color: #dc3545;"></i>';
+                            icon.innerHTML = '<i class="bi bi-exclamation-circle-fill" style="color: #dc3545;"></i>';
                             plateIsValid = false;
                         }
                     } catch(e) {
@@ -1103,7 +1027,65 @@ $countInService = $countActive + $countMaintenance;
         if (plateInput && plateInput.value.trim() !== '') {
             validatePlateRealtime(plateInput.value);
         }
+
+        if (typeof window.initVehicleInputClearBtns === 'function') {
+            window.initVehicleInputClearBtns(document);
+        }
+        var regModal = document.getElementById('registerVehicleModal');
+        if (regModal) {
+            regModal.addEventListener('shown.bs.modal', function() {
+                if (typeof window.initVehicleInputClearBtns === 'function') {
+                    window.initVehicleInputClearBtns(regModal);
+                }
+            });
+        }
     });
+
+    window.toggleFieldClearBtn = function(input, btnId) {
+        var btn = document.getElementById(btnId);
+        if (!btn) return;
+        if (input && input.value && input.value.trim().length > 0) {
+            btn.style.setProperty('display', 'inline-flex', 'important');
+        } else {
+            btn.style.setProperty('display', 'none', 'important');
+        }
+    };
+
+    window.clearVehicleInput = function(inputId) {
+        var input = document.getElementById(inputId);
+        if (!input) return;
+        input.value = '';
+        var clearBtn = document.getElementById(inputId + '_clear');
+        if (clearBtn) {
+            clearBtn.style.setProperty('display', 'none', 'important');
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (inputId === 'plate_number' && typeof validatePlateRealtime === 'function') {
+            validatePlateRealtime('');
+        }
+        input.focus();
+    };
+
+    window.initVehicleInputClearBtns = function(container) {
+        var root = container || document;
+        var fields = ['plate_number', 'operator_name', 'driver_name'];
+        fields.forEach(function(id) {
+            var input = root.querySelector ? root.querySelector('#' + id) : document.getElementById(id);
+            if (input) {
+                window.toggleFieldClearBtn(input, id + '_clear');
+                if (!input.dataset.clearBtnBound) {
+                    input.dataset.clearBtnBound = '1';
+                    input.addEventListener('input', function() {
+                        window.toggleFieldClearBtn(this, id + '_clear');
+                    });
+                    input.addEventListener('change', function() {
+                        window.toggleFieldClearBtn(this, id + '_clear');
+                    });
+                }
+            }
+        });
+    };
 })();
 </script>
 
@@ -1143,32 +1125,139 @@ $countInService = $countActive + $countMaintenance;
                 filterRoutes();
             });
         }
+
+        // Initialize type fallback on load if a type was already selected (e.g. old() input)
+        if (typeSelect && typeSelect.value) {
+            updateRegTypeFallback(typeSelect);
+        }
+
+        <?php if (session()->getFlashdata('manage_vehicle_types_open') || (isset($_GET['manage_types']) && $_GET['manage_types'] == '1')): ?>
+        var mTypesEl = document.getElementById('manageVehicleTypesModal');
+        if (mTypesEl) {
+            var mTypesModal = bootstrap.Modal.getOrCreateInstance(mTypesEl);
+            mTypesModal.show();
+        }
+        <?php elseif (session()->getFlashdata('errors') || session()->getFlashdata('error')): ?>
+        var regModalEl = document.getElementById('registerVehicleModal');
+        if (regModalEl) {
+            var regModal = bootstrap.Modal.getOrCreateInstance(regModalEl);
+            regModal.show();
+        }
+        <?php endif; ?>
+
+        var _isSubmittingVehicleTypeForm = false;
+
+        // When submitting forms in Add/Edit modals, prevent auto-reopen of Manage modal before page reload
+        document.querySelectorAll('#addVehicleTypeModal form, [id^="editVehicleTypeModal"] form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                setTimeout(function() {
+                    if (!e.defaultPrevented) {
+                        _isSubmittingVehicleTypeForm = true;
+                    }
+                }, 0);
+            });
+        });
+
+        // When Add or Edit modal is closed (via Cancel, X, backdrop, or ESC), transition back to Manage modal
+        document.querySelectorAll('#addVehicleTypeModal, [id^="editVehicleTypeModal"]').forEach(function(subModal) {
+            subModal.addEventListener('hidden.bs.modal', function() {
+                if (_isSubmittingVehicleTypeForm) return;
+                var manageEl = document.getElementById('manageVehicleTypesModal');
+                if (manageEl) {
+                    var manageModal = bootstrap.Modal.getOrCreateInstance(manageEl);
+                    manageModal.show();
+                }
+            });
+        });
     });
+
+    function previewRegVehiclePhoto(input) {
+        var preview = document.getElementById('reg_veh_photo_preview');
+        var fallback = document.getElementById('reg_veh_type_fallback');
+        var clearBtn = document.getElementById('reg_veh_photo_clear');
+        if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                input.value = '';
+                clearRegVehiclePhoto();
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({
+                        title: 'File Too Large',
+                        message: 'The selected vehicle photo is ' + (file.size / (1024 * 1024)).toFixed(1) + 'MB. The maximum allowed size is 5MB. Please choose a smaller image.',
+                        variant: 'danger'
+                    });
+                }
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.style.setProperty('display', 'block', 'important');
+                }
+                if (fallback) fallback.style.setProperty('display', 'none', 'important');
+                if (clearBtn) clearBtn.classList.add('has-photo');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function clearRegVehiclePhoto() {
+        var input = document.getElementById('reg_veh_photo_input');
+        var preview = document.getElementById('reg_veh_photo_preview');
+        var fallback = document.getElementById('reg_veh_type_fallback');
+        var clearBtn = document.getElementById('reg_veh_photo_clear');
+        if (input) input.value = '';
+        if (preview) {
+            preview.src = '';
+            preview.style.setProperty('display', 'none', 'important');
+        }
+        if (fallback) fallback.style.setProperty('display', 'flex', 'important');
+        if (clearBtn) clearBtn.classList.remove('has-photo');
+        var typeSelect = document.getElementById('type');
+        if (typeSelect) updateRegTypeFallback(typeSelect);
+    }
+
+    function updateRegTypeFallback(select) {
+        var preview = document.getElementById('reg_veh_photo_preview');
+        if (preview && preview.style.display === 'block' && preview.src && preview.src.length > 0) return;
+
+        var fallback = document.getElementById('reg_veh_type_fallback');
+        if (!fallback) return;
+        var opt = select.options[select.selectedIndex];
+        if (!opt || !opt.value) {
+            fallback.innerHTML = '<i class="fas fa-bus-simple text-muted" style="font-size: 26px;"></i>';
+            return;
+        }
+
+        var photo = opt.getAttribute('data-photo');
+        var icon = opt.getAttribute('data-icon') || 'fa-bus-simple';
+        var color = opt.getAttribute('data-color') || '#475569';
+
+        if (photo) {
+            fallback.innerHTML = '<img src="' + photo + '" alt="Emblem" style="width:100%;height:100%;object-fit:cover;">';
+        } else {
+            fallback.innerHTML = '<i class="fas ' + icon + '" style="font-size:26px;color:' + color + ';"></i>';
+        }
+    }
 
     function openAddVehicleTypeModal() {
         var manageEl = document.getElementById('manageVehicleTypesModal');
         var addEl = document.getElementById('addVehicleTypeModal');
         if (!addEl) return;
-        addEl.dataset.fromManage = "true";
 
         function showAdd() {
-            // Remove any leftover backdrops just in case
-            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right');
             var addModal = bootstrap.Modal.getOrCreateInstance(addEl);
             addModal.show();
         }
 
-        if (manageEl) {
+        if (manageEl && manageEl.classList.contains('show')) {
             var manageModal = bootstrap.Modal.getInstance(manageEl);
             if (manageModal) {
-                // Wait for the manage modal to fully hide before showing add modal
-                manageEl.addEventListener('hidden.bs.modal', function onHidden() {
-                    manageEl.removeEventListener('hidden.bs.modal', onHidden);
+                manageEl.addEventListener('hidden.bs.modal', function onManageHidden() {
+                    manageEl.removeEventListener('hidden.bs.modal', onManageHidden);
                     showAdd();
-                });
+                }, { once: true });
                 manageModal.hide();
             } else {
                 showAdd();
@@ -1184,22 +1273,17 @@ $countInService = $countActive + $countMaintenance;
         if (!editEl) return;
 
         function showEdit() {
-            // Remove any leftover backdrops just in case
-            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right');
             var editModal = bootstrap.Modal.getOrCreateInstance(editEl);
             editModal.show();
         }
 
-        if (manageEl) {
+        if (manageEl && manageEl.classList.contains('show')) {
             var manageModal = bootstrap.Modal.getInstance(manageEl);
             if (manageModal) {
-                manageEl.addEventListener('hidden.bs.modal', function onHidden() {
-                    manageEl.removeEventListener('hidden.bs.modal', onHidden);
+                manageEl.addEventListener('hidden.bs.modal', function onManageHidden() {
+                    manageEl.removeEventListener('hidden.bs.modal', onManageHidden);
                     showEdit();
-                });
+                }, { once: true });
                 manageModal.hide();
             } else {
                 showEdit();
@@ -1211,41 +1295,16 @@ $countInService = $countActive + $countMaintenance;
 
     function backToManageVehicleTypesModal(currentModalId) {
         var currentEl = document.getElementById(currentModalId);
-        var manageEl = document.getElementById('manageVehicleTypesModal');
-        if (!currentEl || !manageEl) return;
-
-        function showManage() {
-            document.querySelectorAll('.modal-backdrop').forEach(function(b) { b.remove(); });
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('overflow');
-            document.body.style.removeProperty('padding-right');
-            var manageModal = bootstrap.Modal.getOrCreateInstance(manageEl);
-            manageModal.show();
-        }
-
-        var currentModal = bootstrap.Modal.getInstance(currentEl);
-        if (currentModal) {
-            currentEl.addEventListener('hidden.bs.modal', function onHidden() {
-                currentEl.removeEventListener('hidden.bs.modal', onHidden);
-                showManage();
-            });
-            currentModal.hide();
-        } else {
-            showManage();
+        if (currentEl) {
+            var currentModal = bootstrap.Modal.getInstance(currentEl);
+            if (currentModal) {
+                currentModal.hide();
+            }
         }
     }
 
     function closeAddVehicleTypeModal() {
-        var addEl = document.getElementById('addVehicleTypeModal');
-        if (addEl && addEl.dataset.fromManage === "true") {
-            delete addEl.dataset.fromManage;
-            backToManageVehicleTypesModal('addVehicleTypeModal');
-        } else if (addEl) {
-            var addModal = bootstrap.Modal.getInstance(addEl);
-            if (addModal) {
-                addModal.hide();
-            }
-        }
+        backToManageVehicleTypesModal('addVehicleTypeModal');
     }
 
     function getContrastTextColor(hexColor) {
@@ -1372,7 +1431,15 @@ $countInService = $countActive + $countMaintenance;
             iconEl.style.setProperty('background-color', color, 'important');
             iconEl.style.setProperty('color', contrastColor, 'important');
             iconEl.style.border = isLightColor ? '1.5px solid #cbd5e1' : 'none';
-            iconEl.innerHTML = '<i class="fas ' + icon + '" style="color: ' + contrastColor + ' !important;"></i>';
+            var iconI = document.getElementById('add_vt_preview_icon_i');
+            if (iconI) {
+                var cleanIcon = icon.trim();
+                if (!cleanIcon.startsWith('fa-') && !cleanIcon.startsWith('fas ') && !cleanIcon.startsWith('bi-')) {
+                    cleanIcon = 'fa-' + cleanIcon;
+                }
+                iconI.className = cleanIcon.indexOf(' ') !== -1 ? cleanIcon : ('fas ' + cleanIcon);
+                iconI.style.setProperty('color', contrastColor, 'important');
+            }
         }
         if (badge) {
             badge.style.backgroundColor = isLightColor ? '#f1f5f9' : (color + '18');
@@ -1460,7 +1527,15 @@ $countInService = $countActive + $countMaintenance;
             iconEl.style.setProperty('background-color', color, 'important');
             iconEl.style.setProperty('color', contrastColor, 'important');
             iconEl.style.border = isLightColor ? '1.5px solid #cbd5e1' : 'none';
-            iconEl.innerHTML = '<i class="fas ' + icon + '" style="color: ' + contrastColor + ' !important;"></i>';
+            var iconI = document.getElementById('edit_vt_preview_icon_i_' + id);
+            if (iconI) {
+                var cleanIcon = icon.trim();
+                if (!cleanIcon.startsWith('fa-') && !cleanIcon.startsWith('fas ') && !cleanIcon.startsWith('bi-')) {
+                    cleanIcon = 'fa-' + cleanIcon;
+                }
+                iconI.className = cleanIcon.indexOf(' ') !== -1 ? cleanIcon : ('fas ' + cleanIcon);
+                iconI.style.setProperty('color', contrastColor, 'important');
+            }
         }
         if (badge) {
             badge.style.backgroundColor = isLightColor ? '#f1f5f9' : (color + '18');
@@ -1502,6 +1577,15 @@ $countInService = $countActive + $countMaintenance;
             badge.style.border = (contrastColor === '#0f172a') ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(255,255,255,0.25)';
         }
         updateEditVtPreview(id);
+        var preview = document.getElementById('edit_vt_photo_preview_' + id);
+        var clearBtn = document.getElementById('edit_vt_photo_clear_' + id);
+        if (clearBtn) {
+            if (preview && preview.getAttribute('src') && preview.getAttribute('src').trim() !== '') {
+                clearBtn.classList.add('has-photo');
+            } else {
+                clearBtn.classList.remove('has-photo');
+            }
+        }
     }
 
     // Photo preview helper functions
@@ -1513,15 +1597,29 @@ $countInService = $countActive + $countMaintenance;
         var previewIcon = document.getElementById('add_vt_preview_icon_i');
 
         if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+                input.value = '';
+                clearAddVtPhoto();
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({
+                        title: 'File Too Large',
+                        message: 'The selected photo is ' + (file.size / (1024 * 1024)).toFixed(1) + 'MB. The maximum allowed size for a vehicle type emblem is 2MB. Please choose a smaller image.',
+                        variant: 'danger'
+                    });
+                }
+                return;
+            }
+
             var reader = new FileReader();
             reader.onload = function(e) {
                 if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
                 if (placeholder) placeholder.style.display = 'none';
-                if (clearBtn) clearBtn.style.display = 'inline-flex';
+                if (clearBtn) clearBtn.classList.add('has-photo');
                 if (previewPhoto) { previewPhoto.src = e.target.result; previewPhoto.style.display = 'block'; }
                 if (previewIcon) previewIcon.style.display = 'none';
             };
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
         }
     };
 
@@ -1536,7 +1634,7 @@ $countInService = $countActive + $countMaintenance;
         if (input) input.value = '';
         if (preview) { preview.src = ''; preview.style.display = 'none'; }
         if (placeholder) placeholder.style.display = 'block';
-        if (clearBtn) clearBtn.style.display = 'none';
+        if (clearBtn) clearBtn.classList.remove('has-photo');
         if (previewPhoto) { previewPhoto.src = ''; previewPhoto.style.display = 'none'; }
         if (previewIcon) previewIcon.style.display = 'inline-block';
     };
@@ -1547,19 +1645,52 @@ $countInService = $countActive + $countMaintenance;
         var previewPhoto = document.getElementById('edit_vt_preview_photo_' + id);
         var previewIcon = document.getElementById('edit_vt_preview_icon_i_' + id);
         var removeCheck = document.getElementById('remove_photo_' + id);
+        var clearBtn = document.getElementById('edit_vt_photo_clear_' + id);
 
         if (removeCheck) removeCheck.checked = false;
 
         if (input.files && input.files[0]) {
+            var file = input.files[0];
+            if (file.size > 2 * 1024 * 1024) {
+                input.value = '';
+                if (typeof window.showSystemAlert === 'function') {
+                    window.showSystemAlert({
+                        title: 'File Too Large',
+                        message: 'The selected photo is ' + (file.size / (1024 * 1024)).toFixed(1) + 'MB. The maximum allowed size for a vehicle type emblem is 2MB. Please choose a smaller image.',
+                        variant: 'danger'
+                    });
+                }
+                return;
+            }
+
             var reader = new FileReader();
             reader.onload = function(e) {
                 if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
                 if (placeholder) placeholder.style.display = 'none';
                 if (previewPhoto) { previewPhoto.src = e.target.result; previewPhoto.style.display = 'block'; }
                 if (previewIcon) previewIcon.style.display = 'none';
+                if (clearBtn) clearBtn.classList.add('has-photo');
             };
-            reader.readAsDataURL(input.files[0]);
+            reader.readAsDataURL(file);
         }
+    };
+
+    window.clearEditVtPhoto = function(id) {
+        var input = document.getElementById('edit_vt_photo_input_' + id);
+        var preview = document.getElementById('edit_vt_photo_preview_' + id);
+        var placeholder = document.getElementById('edit_vt_photo_placeholder_' + id);
+        var previewPhoto = document.getElementById('edit_vt_preview_photo_' + id);
+        var previewIcon = document.getElementById('edit_vt_preview_icon_i_' + id);
+        var removeCheck = document.getElementById('remove_photo_' + id);
+        var clearBtn = document.getElementById('edit_vt_photo_clear_' + id);
+
+        if (input) input.value = '';
+        if (preview) { preview.src = ''; preview.style.display = 'none'; }
+        if (placeholder) placeholder.style.display = 'block';
+        if (previewPhoto) { previewPhoto.src = ''; previewPhoto.style.display = 'none'; }
+        if (previewIcon) previewIcon.style.display = 'inline-block';
+        if (removeCheck) removeCheck.checked = true;
+        if (clearBtn) clearBtn.classList.remove('has-photo');
     };
 
     window.toggleRemoveEditPhoto = function(id, isChecked) {
@@ -1568,6 +1699,7 @@ $countInService = $countActive + $countMaintenance;
         var placeholder = document.getElementById('edit_vt_photo_placeholder_' + id);
         var previewPhoto = document.getElementById('edit_vt_preview_photo_' + id);
         var previewIcon = document.getElementById('edit_vt_preview_icon_i_' + id);
+        var clearBtn = document.getElementById('edit_vt_photo_clear_' + id);
 
         if (isChecked) {
             if (input) input.value = '';
@@ -1575,12 +1707,14 @@ $countInService = $countActive + $countMaintenance;
             if (placeholder) placeholder.style.display = 'block';
             if (previewPhoto) previewPhoto.style.display = 'none';
             if (previewIcon) previewIcon.style.display = 'inline-block';
+            if (clearBtn) clearBtn.classList.remove('has-photo');
         } else {
             if (preview && preview.getAttribute('src')) {
                 preview.style.display = 'block';
                 if (placeholder) placeholder.style.display = 'none';
                 if (previewPhoto) previewPhoto.style.display = 'block';
                 if (previewIcon) previewIcon.style.display = 'none';
+                if (clearBtn) clearBtn.classList.add('has-photo');
             }
         }
     };
@@ -1635,6 +1769,286 @@ $availableColors = array_values(array_diff($colorPalette, $usedColors));
 $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 ?>
 
+<style>
+    /* Keep vehicle registration modal dropdowns fully visible and unclipped */
+    #registerVehicleModal.modal {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #registerVehicleModal .modal-dialog {
+        max-height: none !important;
+        height: auto !important;
+        min-height: calc(100% - 1rem) !important;
+        display: flex !important;
+        align-items: center !important;
+        overflow: visible !important;
+    }
+
+    #registerVehicleModal .modal-content {
+        border-radius: 16px;
+        max-height: none !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: visible !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+    }
+
+    #registerVehicleModal form {
+        display: flex !important;
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+
+    #registerVehicleModal .modal-body,
+    #registerVehicleModal .row,
+    #registerVehicleModal [class*="col-"] {
+        overflow: visible !important;
+    }
+
+    #registerVehicleModal .modal-body {
+        height: auto !important;
+        max-height: none !important;
+        flex: none !important;
+    }
+
+    #registerVehicleModal .modal-header {
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+    }
+
+    #registerVehicleModal .modal-footer {
+        position: relative;
+        z-index: 1 !important;
+        border-bottom-left-radius: 16px;
+        border-bottom-right-radius: 16px;
+        margin-top: auto !important;
+        flex-shrink: 0 !important;
+    }
+
+    #registerVehicleModal .autocomplete-wrapper.is-open {
+        position: relative !important;
+        z-index: 1065 !important;
+    }
+
+    #registerVehicleModal .autocomplete-dropdown {
+        z-index: 1070 !important;
+    }
+
+    /* Mobile responsiveness enhancements for vehicle modals */
+    @media (max-width: 576px) {
+        #registerVehicleModal .modal-dialog,
+        #manageVehicleTypesModal .modal-dialog,
+        #addVehicleTypeModal .modal-dialog,
+        [id^="editVehicleTypeModal"] .modal-dialog {
+            margin: 0.5rem auto !important;
+            width: calc(100% - 1rem) !important;
+            max-width: calc(100% - 1rem) !important;
+        }
+
+        #registerVehicleModal .modal-dialog {
+            max-height: none !important;
+            height: auto !important;
+            min-height: calc(100dvh - 1rem) !important;
+        }
+
+        #registerVehicleModal .modal-content {
+            max-height: none !important;
+            height: auto !important;
+            overflow: visible !important;
+        }
+
+        #registerVehicleModal form {
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        #registerVehicleModal .modal-body {
+            padding: 0.875rem !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        #registerVehicleModal .modal-footer {
+            padding: 0.75rem 0.875rem !important;
+            margin-top: 0.5rem !important;
+        }
+
+        #manageVehicleTypesModal .list-group-item {
+            padding: 0.625rem 0.625rem !important;
+        }
+
+        #manageVehicleTypesModal .modal-header,
+        #manageVehicleTypesModal .modal-footer,
+        #addVehicleTypeModal .modal-header,
+        #addVehicleTypeModal .modal-footer,
+        [id^="editVehicleTypeModal"] .modal-header,
+        [id^="editVehicleTypeModal"] .modal-footer {
+            padding: 0.625rem 0.75rem !important;
+        }
+
+        .btn-action-edit,
+        .btn-action-delete {
+            min-width: 32px !important;
+            height: 30px !important;
+            padding: 0 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+    }
+</style>
+
+<!-- Register New Vehicle Modal -->
+<div class="modal fade" id="registerVehicleModal" tabindex="-1" aria-labelledby="registerVehicleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered mx-auto my-2 my-sm-4" style="max-width: 680px; width: calc(100% - 1.5rem);">
+        <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+            <div class="modal-header py-2 px-3 bg-white flex-shrink-0" style="border-bottom: 1px solid var(--border, #e2e8f0); border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                <h5 class="modal-title fw-bold fs-6 mb-0 text-dark" id="registerVehicleModalLabel">
+                    <i class="bi bi-plus-circle me-2" style="color: var(--primary-red);"></i>Register New Vehicle
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="<?= base_url('admin/vehicles/store') ?>" method="post" enctype="multipart/form-data" id="registerVehicleForm">
+                <?= csrf_field() ?>
+                <div class="modal-body py-3 px-3 px-sm-4">
+                    
+                    <!-- Vehicle Photo Upload Section -->
+                    <div class="mb-3 p-3 rounded-3" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
+                        <label class="form-label-modern d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="bi bi-camera me-1"></i> Vehicle Photo / Icon <small class="text-muted fw-normal">(Optional)</small></span>
+                            <button type="button" id="reg_veh_photo_clear" class="veh-photo-clear-btn" onclick="clearRegVehiclePhoto()">
+                                <i class="fas fa-times me-1"></i> Clear Photo
+                            </button>
+                        </label>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 border flex-shrink-0 shadow-sm position-relative" style="width: 68px; height: 68px; overflow: hidden; border-color: #cbd5e1 !important; background: #ffffff;">
+                                <img id="reg_veh_photo_preview" src="" alt="Vehicle Photo" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; display: none !important;">
+                                <div id="reg_veh_type_fallback" class="veh-fallback-box" style="position: absolute; inset: 0; width: 100%; height: 100%; display: flex !important; align-items: center; justify-content: center; background: #f1f5f9; z-index: 1;">
+                                    <i id="reg_veh_type_icon" class="fas fa-bus-simple text-muted" style="font-size: 26px;"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="file" id="reg_veh_photo_input" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm" style="height: 38px; border-radius: 8px; font-size: 13px;" onchange="previewRegVehiclePhoto(this)">
+                                <div class="form-text mt-1 text-muted" style="font-size: 11.5px;">
+                                    Supports JPG, PNG, WEBP &bull; Max 5MB &bull; Falls back to vehicle type emblem if empty.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 1: Plate Number, Operator Name, Driver Name -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-4 plate-col-wrapper">
+                            <label for="plate_number" class="form-label-modern">Plate Number <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control-modern text-uppercase" id="plate_number" name="plate_number"
+                                    placeholder="E.G. ABC-1234" value="<?= old('plate_number') ?>" style="text-transform: uppercase; padding-right: 58px;"
+                                    oninput="this.value = this.value.toUpperCase(); validatePlateRealtime(this.value); toggleFieldClearBtn(this, 'plate_number_clear');" required>
+                                <button type="button" class="input-clear-btn" id="plate_number_clear" onclick="clearVehicleInput('plate_number')" title="Clear" aria-label="Clear plate number">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <span id="plate-validation-icon" class="plate-validation-icon" style="display: none;"></span>
+                            </div>
+                            <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
+                            <div class="form-text-modern" style="font-size:11px;">Unique identifier</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="operator_name" class="form-label-modern">Operator Name <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control-modern text-uppercase" id="operator_name" name="operator_name"
+                                    placeholder="E.G. LETRANSCO" value="<?= old('operator_name') ?>" style="text-transform: uppercase; padding-right: 36px;"
+                                    oninput="this.value = this.value.toUpperCase(); toggleFieldClearBtn(this, 'operator_name_clear');" required>
+                                <button type="button" class="input-clear-btn" id="operator_name_clear" onclick="clearVehicleInput('operator_name')" title="Clear" aria-label="Clear operator name">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="form-text-modern" style="font-size:11px;">Operator's full name</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="driver_name" class="form-label-modern">Driver Name <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control-modern" id="driver_name" name="driver_name"
+                                    placeholder="e.g. Pedro Santos" value="<?= old('driver_name') ?>" style="padding-right: 36px;"
+                                    oninput="toggleFieldClearBtn(this, 'driver_name_clear');" required>
+                                <button type="button" class="input-clear-btn" id="driver_name_clear" onclick="clearVehicleInput('driver_name')" title="Clear" aria-label="Clear driver name">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="form-text-modern" style="font-size:11px;">Assigned driver</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Type, Destination, Capacity -->
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label for="type" class="form-label-modern">Vehicle Type <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <select class="form-select-modern pe-5" id="type" name="type" required onchange="updateRegTypeFallback(this)">
+                                    <option value="">-- Select Type --</option>
+                                    <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
+                                        <?php 
+                                            $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); 
+                                            $optPhoto = !empty($vehicleType['photo']) ? base_url($vehicleType['photo']) : '';
+                                            $optIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
+                                        ?>
+                                        <option value="<?= esc($vehicleType['slug']) ?>" 
+                                                data-color="<?= esc($optCol) ?>" 
+                                                data-photo="<?= esc($optPhoto) ?>" 
+                                                data-icon="<?= esc($optIcon) ?>"
+                                                <?= old('type') === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-text-modern" style="font-size:11px;">Classification</div>
+                        </div>
+                        <div class="col-12 col-md-5">
+                            <label for="route_id" class="form-label-modern">Destination <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <select class="form-select-modern pe-5" id="route_id" name="route_id" required>
+                                    <option value="">-- Select Type First --</option>
+                                    <?php if (!empty($routes)): ?>
+                                        <?php foreach ($routes as $r): ?>
+                                            <option value="<?= $r['id'] ?>" data-type="<?= esc($r['vehicle_type']) ?>"
+                                                <?= old('route_id') == $r['id'] ? 'selected' : '' ?>>
+                                                <?= strtoupper(esc($r['origin'])) ?> → <?= strtoupper(esc($r['destination'])) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="form-text-modern" style="font-size:11px;">Filtered by vehicle type</div>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label for="capacity" class="form-label-modern">Capacity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control-modern" id="capacity" name="capacity" placeholder="16"
+                                value="<?= old('capacity') ?>" min="1" required>
+                            <div class="form-text-modern" style="font-size:11px;">Max passengers</div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="status" value="active">
+                </div>
+                <div class="modal-footer py-2 px-3 bg-white d-flex align-items-center justify-content-between flex-nowrap w-100" style="border-top: 1px solid var(--border, #e2e8f0); border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; position: relative; z-index: 1;">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-modern btn-modern-primary px-3" style="min-height: 38px;">
+                        <i class="bi bi-plus-lg me-1"></i> Register Vehicle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="manageVehicleTypesModal" tabindex="-1" aria-labelledby="manageVehicleTypesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable mx-auto my-2 my-sm-4" style="max-width: 550px; width: calc(100% - 1.5rem); max-height: calc(100vh - 2rem);">
         <div class="modal-content border-0 shadow" style="max-height: calc(100vh - 2rem); display: flex; flex-direction: column; overflow: hidden; border-radius: 16px;">
@@ -1642,6 +2056,29 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                 <h5 class="modal-title fw-bold fs-6 mb-0" id="manageVehicleTypesModalLabel"><i class="bi bi-gear-fill me-2"></i>Manage Vehicle Types</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <?php if (session()->getFlashdata('manage_vehicle_types_open')): ?>
+                <?php if (session()->getFlashdata('success')): ?>
+                    <div class="alert alert-success m-2 py-2 px-3 d-flex align-items-center gap-2" style="font-size: 13px; border-radius: 8px;">
+                        <i class="bi bi-check-circle-fill flex-shrink-0"></i>
+                        <div><?= esc(session()->getFlashdata('success')) ?></div>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('error')): ?>
+                    <div class="alert alert-danger m-2 py-2 px-3 d-flex align-items-center gap-2" style="font-size: 13px; border-radius: 8px;">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                        <div><?= esc(session()->getFlashdata('error')) ?></div>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('errors')): ?>
+                    <div class="alert alert-danger m-2 py-2 px-3" style="font-size: 13px; border-radius: 8px;">
+                        <ul class="mb-0 ps-3">
+                            <?php foreach (session()->getFlashdata('errors') as $err): ?>
+                                <li><?= esc($err) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
             <div class="modal-body p-0 flex-grow-1" style="overflow-y: auto !important; -webkit-overflow-scrolling: touch; min-height: 0; flex: 1 1 auto;">
                 <?php if (!empty($vehicleTypes)): ?>
                     <div class="list-group list-group-flush">
@@ -1652,7 +2089,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 $vtContrast = contrast_text_color($vtColor);
                                 $vtIsLight = ($vtContrast === '#0f172a');
                             ?>
-                            <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-3 no-stack flex-nowrap gap-2">
+                            <div class="list-group-item d-flex align-items-center justify-content-between py-2 px-2 px-sm-3 no-stack flex-nowrap gap-2">
                                 <div class="d-flex align-items-center gap-2 gap-sm-3 flex-grow-1" style="min-width: 0;">
                                     <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; color: <?= esc($vtContrast) ?>; <?= $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '' ?> overflow: hidden;">
                                         <?php if (!empty($vt['photo'])): ?>
@@ -1662,22 +2099,23 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                         <?php endif; ?>
                                     </div>
                                     <div style="min-width: 0; flex: 1;">
-                                        <div class="fw-bold text-dark d-flex align-items-center gap-2 flex-wrap" style="font-size: 13.5px; line-height: 1.3;">
-                                            <span class="text-truncate"><?= esc($vt['name']) ?></span>
-                                            <span class="badge rounded-pill flex-shrink-0" style="background-color: <?= $vtIsLight ? '#f1f5f9' : (esc($vtColor) . '18') ?>; color: <?= $vtIsLight ? '#0f172a' : esc($vtColor) ?>; border: 1px solid <?= $vtIsLight ? '#cbd5e1' : (esc($vtColor) . '40') ?>; font-size: 11px;">
+                                        <div class="fw-bold text-dark d-flex align-items-center gap-1 gap-sm-2" style="font-size: 13.5px; line-height: 1.3;">
+                                            <span class="text-truncate" style="max-width: 170px;"><?= esc($vt['name']) ?></span>
+                                            <span class="badge rounded-pill flex-shrink-0 d-none d-sm-inline-block" style="background-color: <?= $vtIsLight ? '#f1f5f9' : (esc($vtColor) . '18') ?>; color: <?= $vtIsLight ? '#0f172a' : esc($vtColor) ?>; border: 1px solid <?= $vtIsLight ? '#cbd5e1' : (esc($vtColor) . '40') ?>; font-size: 11px;">
                                                 <?= esc($vtColor) ?>
                                             </span>
+                                            <span class="rounded-circle d-inline-block d-sm-none flex-shrink-0" style="width: 8px; height: 8px; background-color: <?= esc($vtColor) ?>; border: 1px solid rgba(0,0,0,0.15);" title="<?= esc($vtColor) ?>"></span>
                                         </div>
-                                        <small class="text-muted d-block text-truncate" style="font-size: 11.5px;">Slug: <code><?= esc($vt['slug']) ?></code> &bull; <?= $typeCounts[$vt['slug']] ?? 0 ?> vehicle(s)</small>
+                                        <small class="text-muted d-block text-truncate" style="font-size: 11px;">Slug: <code><?= esc($vt['slug']) ?></code> &bull; <?= $typeCounts[$vt['slug']] ?? 0 ?> <span class="d-none d-sm-inline">vehicle(s)</span><span class="d-sm-none">veh</span></small>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-1 gap-sm-2 flex-shrink-0 ms-auto">
-                                    <button type="button" class="btn btn-sm btn-action-edit" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" onclick="openEditVehicleTypeModal(<?= $vt['id'] ?>)" title="Edit Vehicle Type">
-                                        <i class="bi bi-pencil me-1"></i>Edit
+                                    <button type="button" class="btn btn-sm btn-action-edit d-inline-flex align-items-center justify-content-center" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" onclick="openEditVehicleTypeModal(<?= $vt['id'] ?>)" title="Edit Vehicle Type">
+                                        <i class="bi bi-pencil"></i><span class="d-none d-sm-inline ms-1">Edit</span>
                                     </button>
                                     <form id="delete-vehicle-type-form-<?= $vt['id'] ?>" action="<?= base_url('admin/vehicle-types/delete/' . $vt['id']) ?>" method="post" class="d-inline m-0 p-0">
                                         <?= csrf_field() ?>
-                                        <button type="button" class="btn btn-sm btn-action-delete" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" title="Delete Vehicle Type"
+                                        <button type="button" class="btn btn-sm btn-action-delete d-inline-flex align-items-center justify-content-center" style="padding: 4px 8px; font-size: 12px; border-radius: 6px; white-space: nowrap;" title="Delete Vehicle Type"
                                             onclick="showDeleteVehicleTypeModal({
                                                 formId: 'delete-vehicle-type-form-<?= $vt['id'] ?>',
                                                 id: '<?= $vt['id'] ?>',
@@ -1687,7 +2125,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                                 icon: '<?= esc(addslashes($vtIcon)) ?>',
                                                 vehicleCount: <?= (int)($typeCounts[$vt['slug']] ?? 0) ?>
                                             })">
-                                            <i class="bi bi-trash me-1"></i>Delete
+                                            <i class="bi bi-trash"></i><span class="d-none d-sm-inline ms-1">Delete</span>
                                         </button>
                                     </form>
                                 </div>
@@ -1740,14 +2178,10 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                             <div class="mb-2">
                                 <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
                                     <span>Vehicle Photo / Emblem <small class="text-muted fw-normal">(Optional image)</small></span>
-                                    <?php if (!empty($vtPhotoUrl)): ?>
-                                    <div class="form-check form-check-inline m-0 p-0 d-flex align-items-center gap-1">
-                                        <input class="form-check-input mt-0" type="checkbox" name="remove_photo" id="remove_photo_<?= $vt['id'] ?>" value="1" onchange="toggleRemoveEditPhoto(<?= $vt['id'] ?>, this.checked)">
-                                        <label class="form-check-label text-danger fw-semibold" for="remove_photo_<?= $vt['id'] ?>" style="font-size: 11px; cursor:pointer;">
-                                            <i class="fas fa-trash-alt"></i> Remove photo
-                                        </label>
-                                    </div>
-                                    <?php endif; ?>
+                                    <button type="button" id="edit_vt_photo_clear_<?= $vt['id'] ?>" class="veh-photo-clear-btn <?= !empty($vtPhotoUrl) ? 'has-photo' : '' ?>" onclick="clearEditVtPhoto(<?= $vt['id'] ?>)">
+                                        <i class="fas fa-times me-1"></i> Clear Photo
+                                    </button>
+                                    <input type="checkbox" name="remove_photo" id="remove_photo_<?= $vt['id'] ?>" value="1" style="display: none;">
                                 </label>
                                 <div class="d-flex align-items-center gap-2">
                                     <div class="rounded-2 border d-flex align-items-center justify-content-center bg-light flex-shrink-0" style="width: 38px; height: 38px; overflow: hidden; border-color: #cbd5e1 !important;">
@@ -1865,9 +2299,9 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                     <div class="mb-2">
                         <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
                             <span>Vehicle Photo / Emblem <small class="text-muted fw-normal">(Optional image)</small></span>
-                            <span id="add_vt_photo_clear" class="badge rounded-pill bg-light text-danger border" style="cursor:pointer; display:none;" onclick="clearAddVtPhoto()">
-                                <i class="fas fa-times"></i> Clear
-                            </span>
+                            <button type="button" id="add_vt_photo_clear" class="veh-photo-clear-btn" onclick="clearAddVtPhoto()">
+                                <i class="fas fa-times me-1"></i> Clear Photo
+                            </button>
                         </label>
                         <div class="d-flex align-items-center gap-2">
                             <div class="rounded-2 border d-flex align-items-center justify-content-center bg-light flex-shrink-0" style="width: 38px; height: 38px; overflow: hidden; border-color: #cbd5e1 !important;">
@@ -2294,13 +2728,19 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 
 /* Ensure modal paints above fixed navbar */
 body.modal-open #deleteVehicleConfirmModal,
-#deleteVehicleConfirmModal {
+#deleteVehicleConfirmModal,
+body.modal-open #manageVehicleTypesModal,
+#manageVehicleTypesModal {
     z-index: 100050 !important;
 }
 
-/* Ensure Delete Vehicle Type Confirmation Modal floats cleanly above Manage Vehicle Types Modal */
+/* Ensure Sub-Modals (Add, Edit, Delete Vehicle Type) float cleanly above Manage Vehicle Types Modal */
 body.modal-open #deleteVehicleTypeConfirmModal,
-#deleteVehicleTypeConfirmModal {
+#deleteVehicleTypeConfirmModal,
+body.modal-open #addVehicleTypeModal,
+#addVehicleTypeModal,
+body.modal-open [id^="editVehicleTypeModal"],
+[id^="editVehicleTypeModal"] {
     z-index: 100070 !important;
 }
 

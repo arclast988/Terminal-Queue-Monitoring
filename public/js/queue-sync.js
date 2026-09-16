@@ -697,6 +697,9 @@
                 ];
                 try {
                     document.querySelectorAll(pSelectors.join(', ')).forEach(function(img) {
+                        if (img.hasAttribute('data-vehicle-custom-photo') || img.classList.contains('vehicle-custom-photo')) {
+                            return; // NEVER overwrite individual vehicle's custom photo!
+                        }
                         img.src = data.photo;
                     });
                 } catch (e) { /* ignore */ }
@@ -760,6 +763,33 @@
             document.addEventListener('passenger-optimistic-update', function(e) {
                 if (e.detail && e.detail.id) {
                     _wsUpdatedAt[e.detail.id] = Date.now();
+                }
+            });
+
+            // Listen to cross-tab BroadcastChannel for instant queue updates
+            try {
+                if (window.BroadcastChannel) {
+                    var _bc = new BroadcastChannel('pttm_queue_channel');
+                    _bc.onmessage = function(e) {
+                        if (e.data && e.data.type === 'queue_update') {
+                            handleWSMessage(e.data);
+                        }
+                    };
+                }
+            } catch(e) {}
+
+            // Listen to cross-tab storage event as fallback
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'pttm_queue_sync' && e.newValue) {
+                    try {
+                        var parsed = JSON.parse(e.newValue);
+                        if (parsed && parsed.action === 'passenger_change') {
+                            handleWSMessage({
+                                type: 'queue_update',
+                                data: parsed
+                            });
+                        }
+                    } catch(err) {}
                 }
             });
 
