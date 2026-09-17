@@ -121,14 +121,14 @@ class InitialSchema extends Migration
 
     public function down()
     {
-        $this->forge->dropTable('audit_logs', true);
-        $this->forge->dropTable('logs', true);
-        $this->forge->dropTable('trip_status_history', true);
-        $this->forge->dropTable('queue', true);
-        $this->forge->dropTable('vehicle_assignments', true);
-        $this->forge->dropTable('routes', true);
-        $this->forge->dropTable('vehicles', true);
-        $this->forge->dropTable('terminals', true);
-        $this->forge->dropTable('users', true);
+        $this->forge->dropTable('audit_logs', true, true);
+        $this->forge->dropTable('logs', true, true);
+        $this->forge->dropTable('trip_status_history', true, true);
+        $this->forge->dropTable('queue', true, true);
+        $this->forge->dropTable('vehicle_assignments', true, true);
+        $this->forge->dropTable('routes', true, true);
+        $this->forge->dropTable('vehicles', true, true);
+        $this->forge->dropTable('terminals', true, true);
+        $this->forge->dropTable('users', true, true);
     }
 }

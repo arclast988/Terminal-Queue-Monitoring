@@ -259,6 +259,13 @@ final class SystemSettingsTest extends CIUnitTestCase
 
     public function testOperationalSettingsCustomValuesPersistAndResolve(): void
     {
+        $db = \Config\Database::connect();
+        if ($db && !$db->tableExists('system_settings')) {
+            $runner = service('migrations');
+            $runner->setNamespace('App');
+            $runner->latest('tests');
+        }
+
         $model = new \App\Models\SystemSettingModel();
         $model->setMultiple([
             'vehicle_cooldown_minutes' => '45',
