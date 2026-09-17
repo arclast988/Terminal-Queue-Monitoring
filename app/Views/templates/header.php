@@ -96,12 +96,9 @@
             color: var(--text-main) !important;
         }
 
-        body.admin-theme #site-header .logo-text h1,
         body.admin-theme .logo-text h1,
-        body.staff-theme #site-header .logo-text h1,
         body.staff-theme .logo-text h1 {
-            color: #000000 !important;
-            -webkit-text-fill-color: #000000 !important;
+            color: inherit;
         }
 
 
@@ -524,7 +521,7 @@
 </head>
 
 <body
-    class="layout-lock <?= (in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : '')) ?><?= esc($body_class ?? '') ?>">
+    class="layout-lock <?= (in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : 'guest-theme ')) ?><?= esc($body_class ?? '') ?>">
     <?php include __DIR__ . '/navbar.php'; ?>
     <script>
         (function() {

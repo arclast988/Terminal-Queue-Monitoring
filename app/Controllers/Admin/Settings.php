@@ -170,6 +170,7 @@ class Settings extends BaseController
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'updates'    => $updates,
+                'data'       => $updates,
             ]);
         }
 

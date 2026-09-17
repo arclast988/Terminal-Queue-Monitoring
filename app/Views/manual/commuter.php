@@ -20,11 +20,14 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
+    <?= app_theme_css() ?>
 
     <style>
         :root {
-            --primary: #B71C1C;
-            --primary-dark: #7F0000;
+            --primary: var(--primary, #B71C1C);
+            --primary-dark: var(--primary-dark, #7F0000);
+            --primary-soft: var(--primary-soft, rgba(183, 28, 28, 0.12));
+            --on-primary: var(--on-primary, #ffffff);
             --accent: #FFA726;
             --text-main: #0f172a;
             --text-muted: #475569;
@@ -51,12 +54,12 @@
 
         /* Hero Banner */
         .guide-hero {
-            background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
+            background: linear-gradient(135deg, var(--primary, #B71C1C) 0%, var(--primary-dark, #7F0000) 100%);
             color: #ffffff !important;
             border-radius: 18px;
             padding: 32px 28px;
             margin-bottom: 24px;
-            box-shadow: 0 10px 25px -5px rgba(183, 28, 28, 0.28);
+            box-shadow: 0 10px 25px -5px var(--primary-soft, rgba(183, 28, 28, 0.28));
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -96,7 +99,7 @@
 
         .btn-hero-action {
             background: #ffffff;
-            color: #B71C1C !important;
+            color: var(--primary, #B71C1C) !important;
             font-weight: 700;
             border: none;
             padding: 10px 18px;
@@ -113,7 +116,7 @@
 
         .btn-hero-action:hover {
             background: #fef2f2;
-            color: #7F0000 !important;
+            color: var(--primary-dark, #7F0000) !important;
             transform: translateY(-1px);
         }
 
@@ -205,10 +208,10 @@
         }
 
         .guide-pill-btn.active {
-            background: #B71C1C;
-            border-color: #B71C1C;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(183, 28, 28, 0.25);
+            background: var(--primary, #B71C1C);
+            border-color: var(--primary, #B71C1C);
+            color: var(--on-primary, #ffffff);
+            box-shadow: 0 4px 12px var(--primary-soft, rgba(183, 28, 28, 0.25));
         }
 
         @media (max-width: 640px) {

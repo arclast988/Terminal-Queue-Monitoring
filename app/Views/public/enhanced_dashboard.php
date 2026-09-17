@@ -19,8 +19,10 @@
     <?= app_theme_css() ?>
     <style>
         :root {
-            --primary: #C62828;
-            --primary-dark: #8E1B1B;
+            --primary: var(--primary, #C62828);
+            --primary-dark: var(--primary-dark, #8E1B1B);
+            --primary-soft: var(--primary-soft, rgba(198, 40, 40, 0.12));
+            --on-primary: var(--on-primary, #ffffff);
             --accent: #FFA726;
             --accent-dark: #F57C00;
             --success: #43a047;
@@ -136,8 +138,8 @@
         }
 
         .nav-menu a.login-btn {
-            background: #1e3a8a;
-            color: white !important;
+            background: var(--primary, #1e3a8a);
+            color: var(--on-primary, white) !important;
             padding: 10px 25px;
             border-radius: 25px;
             font-size: 14px;
@@ -151,7 +153,7 @@
 
         .nav-menu a.login-btn:hover {
             transform: translateY(-1px);
-            background: #172554 !important;
+            background: var(--primary-dark, #172554) !important;
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
@@ -247,8 +249,8 @@
         }
 
         .search-bar:focus-within {
-            border-color: #B71C1C;
-            box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.15), var(--shadow-lg);
+            border-color: var(--primary, #B71C1C);
+            box-shadow: 0 0 0 4px var(--primary-soft, rgba(214, 40, 40, 0.15)), var(--shadow-lg);
         }
 
         .search-bar input {
@@ -262,8 +264,8 @@
         }
 
         .search-bar button {
-            background: #B71C1C;
-            color: white;
+            background: var(--primary, #B71C1C);
+            color: var(--on-primary, white);
             border: none;
             padding: 0 35px;
             border-radius: 50px;
@@ -273,7 +275,7 @@
         }
 
         .search-bar button:hover {
-            background: #8B0000;
+            background: var(--primary-dark, #8B0000);
         }
 
         /* --- Stats Grid --- */
@@ -607,9 +609,9 @@
         }
 
         .rules-route-chip:hover {
-            border-color: #D62828;
-            color: #D62828;
-            background: rgba(214, 40, 40, 0.06);
+            border-color: var(--primary, #D62828);
+            color: var(--primary, #D62828);
+            background: var(--primary-soft, rgba(214, 40, 40, 0.06));
             transform: translateY(-1px);
         }
 
@@ -907,9 +909,9 @@
         }
 
         .filter-chip:hover {
-            border-color: #D62828;
-            color: #D62828;
-            background: rgba(214, 40, 40, 0.06);
+            border-color: var(--primary, #D62828);
+            color: var(--primary, #D62828);
+            background: var(--primary-soft, rgba(214, 40, 40, 0.06));
         }
 
         .filter-chip.active {
@@ -942,8 +944,8 @@
         }
 
         .filter-chip:hover:not(.active) .chip-count {
-            background: rgba(214, 40, 40, 0.12);
-            color: #D62828;
+            background: var(--primary-soft, rgba(214, 40, 40, 0.12));
+            color: var(--primary, #D62828);
         }
 
         .no-results-message {

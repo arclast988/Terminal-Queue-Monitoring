@@ -51,8 +51,8 @@ $slotsMeta = [
    ========================================================================== */
 
 :root {
-    --sb-primary: #B71C1C;
-    --sb-primary-hover: #991b1b;
+    --sb-primary: var(--primary, #B71C1C);
+    --sb-primary-hover: var(--primary-dark, #991b1b);
     --sb-primary-light: rgba(183, 28, 28, 0.08);
     --sb-surface: #ffffff;
     --sb-surface-subtle: #f8fafc;
@@ -1252,7 +1252,7 @@ $slotsMeta = [
             </div>
             <div>
                 <h1>System Branding & Themes</h1>
-                <p>Configure public identity, visual role themes, high-resolution media assets, and footer attribution for the Palompon Transit network.</p>
+                <p>Configure public identity, visual role themes, high-resolution media assets, and footer attribution for the Transit network.</p>
             </div>
         </div>
         <div class="settings-header-badges">
@@ -1326,7 +1326,7 @@ $slotsMeta = [
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
                             <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Schedules</span>
-                            <span class="preview-btn-guest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            <span class="preview-btn-guest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>; color: <?= contrast_text_color($s['theme_guest_primary'] ?? '#C62828') ?>; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
                                 Login <i class="fas fa-arrow-right" style="font-size:9px;"></i>
                             </span>
                         </div>
@@ -1347,8 +1347,9 @@ $slotsMeta = [
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
-                            <span class="preview-btn-admin" style="background: <?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
-                                Admin
+                            <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Dashboard</span>
+                            <span class="preview-profile-pill preview-btn-admin" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); color: <?= esc($s['theme_admin_nav_text'] ?? '#ffffff') ?>; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-shield-alt" style="color: <?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>; font-size: 10px;"></i> Admin
                             </span>
                         </div>
                     </div>
@@ -1368,8 +1369,9 @@ $slotsMeta = [
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
-                            <span class="preview-btn-staff" style="background: <?= esc($s['theme_staff_primary'] ?? '#15803d') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
-                                Staff
+                            <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Queue</span>
+                            <span class="preview-profile-pill preview-btn-staff" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); color: <?= esc($s['theme_staff_nav_text'] ?? '#ffffff') ?>; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-headset" style="color: <?= esc($s['theme_staff_primary'] ?? '#15803d') ?>; font-size: 10px;"></i> Staff
                             </span>
                         </div>
                     </div>
@@ -1613,7 +1615,7 @@ $slotsMeta = [
                 <span class="preset-title"><i class="fas fa-wand-magic-sparkles" style="color:var(--sb-primary); margin-right:4px;"></i> Quick Preset Themes:</span>
                 <button type="button" class="btn-preset" onclick="applyThemePreset('#C62828','#ffffff','#1c2430','#15803d','#15803d','#ffffff','#B71C1C','#B71C1C','#ffffff')">
                     <span class="palette-dots"><span class="p-dot" style="background:#C62828"></span><span class="p-dot" style="background:#15803d"></span><span class="p-dot" style="background:#B71C1C"></span></span>
-                    Palompon Standard
+                    Default Standard
                 </button>
                 <button type="button" class="btn-preset" onclick="applyThemePreset('#0284c7','#0f172a','#f8fafc','#059669','#0f172a','#f8fafc','#dc2626','#0f172a','#f8fafc')">
                     <span class="palette-dots"><span class="p-dot" style="background:#0284c7"></span><span class="p-dot" style="background:#059669"></span><span class="p-dot" style="background:#dc2626"></span></span>
@@ -1639,7 +1641,7 @@ $slotsMeta = [
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
                             <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Schedules</span>
-                            <span class="preview-btn-guest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>; color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                            <span class="preview-btn-guest" style="background: <?= esc($s['theme_guest_primary'] ?? '#C62828') ?>; color: <?= contrast_text_color($s['theme_guest_primary'] ?? '#C62828') ?>; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
                                 Login <i class="fas fa-arrow-right" style="font-size:9px;"></i>
                             </span>
                         </div>
@@ -1656,8 +1658,9 @@ $slotsMeta = [
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
-                            <span class="preview-btn-admin" style="background: <?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
-                                Admin
+                            <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Dashboard</span>
+                            <span class="preview-profile-pill preview-btn-admin" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); color: <?= esc($s['theme_admin_nav_text'] ?? '#ffffff') ?>; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-shield-alt" style="color: <?= esc($s['theme_admin_primary'] ?? '#B71C1C') ?>; font-size: 10px;"></i> Admin
                             </span>
                         </div>
                     </div>
@@ -1673,8 +1676,9 @@ $slotsMeta = [
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:8px; margin-left:auto; flex-shrink:0;">
-                            <span class="preview-btn-staff" style="background: <?= esc($s['theme_staff_primary'] ?? '#15803d') ?>; border: 1px solid rgba(255,255,255,0.3); color: #ffffff; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">
-                                Staff
+                            <span class="preview-nav-link" style="font-size:11.5px; font-weight:600; opacity:0.85;">Queue</span>
+                            <span class="preview-profile-pill preview-btn-staff" style="background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.25); color: <?= esc($s['theme_staff_nav_text'] ?? '#ffffff') ?>; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-headset" style="color: <?= esc($s['theme_staff_primary'] ?? '#15803d') ?>; font-size: 10px;"></i> Staff
                             </span>
                         </div>
                     </div>
@@ -2195,6 +2199,19 @@ document.addEventListener('DOMContentLoaded', function() {
         syncFooterPreview();
     };
 
+    // Helper to calculate contrast text color for buttons and pills
+    function getContrastTextColor(hex) {
+        if (!hex) return '#ffffff';
+        var c = hex.replace('#', '').trim();
+        if (c.length === 3) c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+        if (c.length !== 6) return '#ffffff';
+        var r = parseInt(c.substr(0, 2), 16) || 0;
+        var g = parseInt(c.substr(2, 2), 16) || 0;
+        var b = parseInt(c.substr(4, 2), 16) || 0;
+        var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+        return (yiq >= 155) ? '#0f172a' : '#ffffff';
+    }
+
     // =========================================================================
     // 4. Role Theme Palettes Sync & Live Color Pickers
     // =========================================================================
@@ -2204,7 +2221,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function updateColor(hex) {
             textEl.value = hex.toUpperCase();
-            // Check if preview element needs update
             var previewRole = picker.dataset.preview;
             var previewProp = picker.dataset.prop;
             if (previewRole) {
@@ -2214,10 +2230,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 ];
                 previewEls.forEach(function(el) {
                     if (!el) return;
-                    if (previewProp === 'bg') el.style.backgroundColor = hex;
+                    if (previewProp === 'bg') {
+                        el.style.backgroundColor = hex;
+                        var isLight = (getContrastTextColor(hex) === '#0f172a');
+                        var chipBg = isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.18)';
+                        var divider = isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.25)';
+                        el.querySelectorAll('.preview-profile-pill').forEach(function(pill) {
+                            pill.style.backgroundColor = chipBg;
+                            pill.style.borderColor = divider;
+                        });
+                    }
                     if (previewProp === 'text') {
                         el.style.color = hex;
-                        el.querySelectorAll('.preview-brand h4, .preview-brand p, .preview-nav-link').forEach(function(child) {
+                        el.querySelectorAll('.preview-brand h4, .preview-brand p, .preview-nav-link, .preview-profile-pill').forEach(function(child) {
                             child.style.color = hex;
                         });
                     }
@@ -2226,13 +2251,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (previewProp === 'primary') {
                     var dot = document.getElementById('dot' + previewRole);
                     if (dot) dot.style.backgroundColor = hex;
-                    document.querySelectorAll('.preview-btn-' + previewRole.toLowerCase()).forEach(function(btn) {
-                        btn.style.backgroundColor = hex;
-                    });
-                    if (previewRole === 'Admin') {
+                    
+                    if (previewRole === 'Guest') {
+                        document.querySelectorAll('.preview-btn-guest').forEach(function(btn) {
+                            btn.style.backgroundColor = hex;
+                            btn.style.color = getContrastTextColor(hex);
+                        });
+                    } else if (previewRole === 'Admin') {
+                        document.querySelectorAll('.preview-btn-admin i').forEach(function(icon) {
+                            icon.style.color = hex;
+                        });
                         document.documentElement.style.setProperty('--primary-color', hex);
                         document.documentElement.style.setProperty('--admin-primary', hex);
                         document.documentElement.style.setProperty('--primary', hex);
+                        document.documentElement.style.setProperty('--sb-primary', hex);
+                    } else if (previewRole === 'Staff') {
+                        document.querySelectorAll('.preview-btn-staff i').forEach(function(icon) {
+                            icon.style.color = hex;
+                        });
                     }
                 }
             }
@@ -2241,6 +2277,9 @@ document.addEventListener('DOMContentLoaded', function() {
         picker.addEventListener('input', function() { updateColor(picker.value); });
         textEl.addEventListener('input', function() {
             var val = textEl.value.trim();
+            if (!val.startsWith('#') && /^[0-9a-fA-F]{6}$/.test(val)) {
+                val = '#' + val;
+            }
             if (/^#[0-9a-fA-F]{6}$/.test(val)) {
                 picker.value = val;
                 updateColor(val);

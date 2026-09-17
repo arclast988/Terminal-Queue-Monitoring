@@ -319,32 +319,64 @@
         }
 
         // 5. Update Dynamic Theme Colors
+        var isGuest = !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme');
         if (data.theme_admin_primary) {
-            document.documentElement.style.setProperty('--primary-color', data.theme_admin_primary);
             document.documentElement.style.setProperty('--admin-primary', data.theme_admin_primary);
-            document.documentElement.style.setProperty('--primary', data.theme_admin_primary);
-            document.documentElement.style.setProperty('--sb-primary', data.theme_admin_primary);
-            document.querySelectorAll('header#site-header, .navbar-theme-admin').forEach(function(hdr) {
-                if (document.body.classList.contains('admin-theme')) {
+            if (document.body.classList.contains('admin-theme')) {
+                document.documentElement.style.setProperty('--primary', data.theme_admin_primary);
+                document.documentElement.style.setProperty('--primary-color', data.theme_admin_primary);
+                document.documentElement.style.setProperty('--sb-primary', data.theme_admin_primary);
+                if (data.theme_admin_nav_bg) document.documentElement.style.setProperty('--nav-bg', data.theme_admin_nav_bg);
+                if (data.theme_admin_nav_text) document.documentElement.style.setProperty('--nav-text', data.theme_admin_nav_text);
+                document.querySelectorAll('header#site-header').forEach(function(hdr) {
                     hdr.style.backgroundColor = data.theme_admin_nav_bg || data.theme_admin_primary;
+                });
+                if (data.theme_admin_nav_text) {
+                    document.querySelectorAll('header#site-header .logo-text h1').forEach(function(el) {
+                        el.style.color = data.theme_admin_nav_text;
+                    });
                 }
-            });
-        }
-        if (data.theme_guest_primary) {
-            document.documentElement.style.setProperty('--guest-primary', data.theme_guest_primary);
-            document.querySelectorAll('.navbar-theme-guest').forEach(function(hdr) {
-                if (!document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme')) {
-                    hdr.style.backgroundColor = data.theme_guest_nav_bg || '#ffffff';
-                }
-            });
+            }
         }
         if (data.theme_staff_primary) {
             document.documentElement.style.setProperty('--staff-primary', data.theme_staff_primary);
-            document.querySelectorAll('.navbar-theme-staff').forEach(function(hdr) {
-                if (document.body.classList.contains('staff-theme')) {
+            if (document.body.classList.contains('staff-theme')) {
+                document.documentElement.style.setProperty('--primary', data.theme_staff_primary);
+                document.documentElement.style.setProperty('--primary-color', data.theme_staff_primary);
+                if (data.theme_staff_nav_bg) document.documentElement.style.setProperty('--nav-bg', data.theme_staff_nav_bg);
+                if (data.theme_staff_nav_text) document.documentElement.style.setProperty('--nav-text', data.theme_staff_nav_text);
+                document.querySelectorAll('header#site-header').forEach(function(hdr) {
                     hdr.style.backgroundColor = data.theme_staff_nav_bg || data.theme_staff_primary;
+                });
+                if (data.theme_staff_nav_text) {
+                    document.querySelectorAll('header#site-header .logo-text h1').forEach(function(el) {
+                        el.style.color = data.theme_staff_nav_text;
+                    });
                 }
-            });
+            }
+        }
+        if (data.theme_guest_primary) {
+            document.documentElement.style.setProperty('--guest-primary', data.theme_guest_primary);
+            if (isGuest) {
+                document.documentElement.style.setProperty('--primary', data.theme_guest_primary);
+                document.documentElement.style.setProperty('--primary-color', data.theme_guest_primary);
+                if (data.theme_guest_nav_bg) document.documentElement.style.setProperty('--nav-bg', data.theme_guest_nav_bg);
+                if (data.theme_guest_nav_text) document.documentElement.style.setProperty('--nav-text', data.theme_guest_nav_text);
+                document.querySelectorAll('.guest-header, header#site-header').forEach(function(hdr) {
+                    hdr.style.backgroundColor = data.theme_guest_nav_bg || '#ffffff';
+                });
+                if (data.theme_guest_nav_text) {
+                    document.querySelectorAll('.guest-header .logo-text h1, header#site-header .logo-text h1').forEach(function(el) {
+                        el.style.color = data.theme_guest_nav_text;
+                    });
+                    document.querySelectorAll('.guest-header .nav-menu a:not(.login-btn)').forEach(function(el) {
+                        el.style.color = data.theme_guest_nav_text;
+                    });
+                }
+                document.querySelectorAll('.guest-header .nav-menu a.login-btn, .search-bar button, .filter-btn').forEach(function(btn) {
+                    btn.style.backgroundColor = data.theme_guest_primary;
+                });
+            }
         }
 
         // 6. Update Footer Text

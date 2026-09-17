@@ -849,24 +849,117 @@ if (! function_exists('app_theme_css')) {
 }
 
 /* Guest Header elements responsive to dynamic theme settings */
-.guest-header .nav-menu a.login-btn {
-    background: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
+.guest-header {
+    background: {$gn['hex']} !important;
+    border-bottom: 1px solid {$gn['divider']} !important;
 }
-.guest-header .nav-menu a.login-btn:hover {
-    background: {$gp['dark']} !important;
+.guest-header .logo-text h1,
+body.guest-theme #site-header .logo-text h1,
+body.guest-theme .logo-section .logo-text h1,
+body.guest-theme .logo-text h1,
+body:not(.admin-theme):not(.staff-theme) #site-header .logo-text h1,
+body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text h1 {
+    color: {$gt['hex']} !important;
+    -webkit-text-fill-color: {$gt['hex']} !important;
 }
-.guest-header .nav-menu a:hover,
-.guest-header .nav-menu a.active {
+.guest-header .logo-text p,
+body.guest-theme #site-header .logo-text p,
+body.guest-theme .logo-section .logo-text p,
+body.guest-theme .logo-text p,
+body:not(.admin-theme):not(.staff-theme) #site-header .logo-text p,
+body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text p {
+    color: {$gt['softText']} !important;
+    -webkit-text-fill-color: {$gt['softText']} !important;
+    opacity: 0.90;
+}
+.guest-header .nav-menu > a:not(.login-btn):not(.profile-dropdown-item),
+body.guest-theme .nav-menu > a:not(.login-btn):not(.profile-dropdown-item),
+body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) {
+    color: {$gt['hex']} !important;
+    -webkit-text-fill-color: {$gt['hex']} !important;
+}
+.guest-header .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i,
+body.guest-theme .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i,
+body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i {
+    color: {$gt['softText']} !important;
+    -webkit-text-fill-color: {$gt['softText']} !important;
+}
+.guest-header .nav-menu > a:not(.login-btn):hover,
+body.guest-theme .nav-menu > a:not(.login-btn):hover,
+body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover {
     color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
     background: {$gp['softAlpha']} !important;
+}
+.guest-header .nav-menu > a:not(.login-btn):hover i,
+body.guest-theme .nav-menu > a:not(.login-btn):hover i,
+body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover i {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+}
+.guest-header .nav-menu > a:not(.login-btn).active,
+body.guest-theme .nav-menu > a:not(.login-btn).active,
+body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+    background: {$gp['softAlpha']} !important;
+    font-weight: 700;
+}
+.guest-header .nav-menu > a:not(.login-btn).active i,
+body.guest-theme .nav-menu > a:not(.login-btn).active i,
+body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active i {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
 }
 .guest-header .nav-menu a::after {
     background: {$gp['hex']} !important;
 }
-.guest-header .breadcrumb-section a,
-.guest-header .header-clock-pill i,
+.guest-header .nav-menu a.login-btn,
+body.guest-theme .nav-menu a.login-btn,
+body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn {
+    background: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+}
+.guest-header .nav-menu a.login-btn i,
+body.guest-theme .nav-menu a.login-btn i,
+body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn i {
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+}
+.guest-header .nav-menu a.login-btn:hover,
+body.guest-theme .nav-menu a.login-btn:hover,
+body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn:hover {
+    background: {$gp['dark']} !important;
+}
+.guest-header .mobile-toggle,
+body.guest-theme .nav-hamburger-btn,
+body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn {
+    color: {$gt['hex']} !important;
+}
+.guest-header .mobile-toggle i,
+body.guest-theme .nav-hamburger-btn i,
+body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn i {
+    color: {$gt['hex']} !important;
+    -webkit-text-fill-color: {$gt['hex']} !important;
+}
+.guest-header .header-info {
+    border-left-color: {$gn['divider']} !important;
+}
+.guest-header .header-clock-pill,
+.header-clock-pill {
+    color: {$gt['hex']} !important;
+}
 .guest-header .header-clock-pill span,
+.header-clock-pill span {
+    color: {$gt['hex']} !important;
+}
+.guest-header .header-clock-pill i,
+.header-clock-pill i {
+    color: {$gp['hex']} !important;
+}
+.breadcrumb-section a,
+.guest-header ~ .breadcrumb-section a,
 .ann-modal-text a {
     color: {$gp['hex']} !important;
 }
@@ -876,6 +969,139 @@ if (! function_exists('app_theme_css')) {
 }
 .advisory-icon {
     color: {$gp['hex']} !important;
+}
+.ann-bullet-wrap {
+    color: {$gp['hex']} !important;
+    background: {$gp['soft']} !important;
+}
+@media (max-width: 1200px) {
+    .guest-header .nav-menu {
+        background: {$gn['hex']} !important;
+        border-left: 1px solid {$gn['divider']} !important;
+    }
+    .guest-header .nav-menu a:not(.login-btn) {
+        background: {$gn['chipBg']} !important;
+        color: {$gt['hex']} !important;
+    }
+    .guest-header .nav-menu a:not(.login-btn).active {
+        background: {$gp['soft']} !important;
+        color: {$gp['hex']} !important;
+    }
+}
+/* Autocomplete dynamic styles for Public / Guest */
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item i,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item .autocomplete-item-text i {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+}
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item {
+    background-color: {$gp['soft']} !important;
+    color: {$gp['hex']} !important;
+}
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover span,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item span,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover .autocomplete-item-text,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item .autocomplete-item-text,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover i,
+body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item i {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+}
+body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
+    background-color: {$gp['soft']} !important;
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+    border: 1px solid {$gp['soft']} !important;
+}
+
+/* Guest / Public Portal Dynamic Button, Filter & Search Accent Overrides */
+body.guest-theme .search-bar button,
+body:not(.admin-theme):not(.staff-theme) .search-bar button,
+body.guest-theme .filter-btn,
+body:not(.admin-theme):not(.staff-theme) .filter-btn,
+body.guest-theme .btn-primary,
+body:not(.admin-theme):not(.staff-theme) .btn-primary {
+    background: {$gp['hex']} !important;
+    background-color: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+}
+body.guest-theme .search-bar button:hover,
+body:not(.admin-theme):not(.staff-theme) .search-bar button:hover,
+body.guest-theme .filter-btn:hover,
+body:not(.admin-theme):not(.staff-theme) .filter-btn:hover,
+body.guest-theme .btn-primary:hover,
+body:not(.admin-theme):not(.staff-theme) .btn-primary:hover {
+    background: {$gp['dark']} !important;
+    background-color: {$gp['dark']} !important;
+    border-color: {$gp['dark']} !important;
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+}
+body.guest-theme .search-bar:focus-within,
+body:not(.admin-theme):not(.staff-theme) .search-bar:focus-within {
+    border-color: {$gp['hex']} !important;
+    box-shadow: 0 0 0 4px {$gp['soft']}, var(--shadow-lg) !important;
+}
+body.guest-theme .rules-route-chip:hover,
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip:hover,
+body.guest-theme .filter-chip:hover,
+body:not(.admin-theme):not(.staff-theme) .filter-chip:hover,
+body.guest-theme .route-chip:hover,
+body:not(.admin-theme):not(.staff-theme) .route-chip:hover {
+    border-color: {$gp['hex']} !important;
+    color: {$gp['hex']} !important;
+    background: {$gp['softAlpha']} !important;
+}
+body.guest-theme .filter-chip:hover:not(.active) .chip-count,
+body:not(.admin-theme):not(.staff-theme) .filter-chip:hover:not(.active) .chip-count,
+body.guest-theme .route-chip:hover:not(.active) .chip-count,
+body:not(.admin-theme):not(.staff-theme) .route-chip:hover:not(.active) .chip-count {
+    background: {$gp['soft']} !important;
+    color: {$gp['hex']} !important;
+}
+body.guest-theme .filter-badge,
+body:not(.admin-theme):not(.staff-theme) .filter-badge {
+    color: {$gp['hex']} !important;
+}
+body.guest-theme .back-link,
+body:not(.admin-theme):not(.staff-theme) .back-link {
+    color: {$gp['hex']} !important;
+    border-color: {$gp['soft']} !important;
+}
+body.guest-theme .back-link:hover,
+body:not(.admin-theme):not(.staff-theme) .back-link:hover {
+    background: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+}
+body.guest-theme .btn-outline-primary,
+body:not(.admin-theme):not(.staff-theme) .btn-outline-primary {
+    color: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+}
+body.guest-theme .btn-outline-primary:hover,
+body:not(.admin-theme):not(.staff-theme) .btn-outline-primary:hover {
+    background-color: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+}
+body.guest-theme .guide-pill-btn.active,
+body:not(.admin-theme):not(.staff-theme) .guide-pill-btn.active {
+    background: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+    box-shadow: 0 4px 12px {$gp['soft']} !important;
+}
+body.guest-theme .btn-hero-action:not(.btn-hero-outline),
+body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline) {
+    color: {$gp['hex']} !important;
+}
+body.guest-theme .btn-hero-action:not(.btn-hero-outline):hover,
+body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline):hover {
+    color: {$gp['dark']} !important;
 }
 
 /* --- Dispatcher / Staff Dynamic Theme Tokens --- */
@@ -892,6 +1118,10 @@ body.staff-theme, html body.staff-theme {
     --nav-drawer-bg: {$sn['dark']} !important;
     --nav-cta-bg: {$sp['on']} !important;
     --nav-cta-text: {$sp['hex']} !important;
+}
+body.staff-theme header#site-header {
+    background: {$sn['hex']} !important;
+    border-bottom: 1px solid {$sn['divider']} !important;
 }
 body.staff-theme #site-header .logo-text h1,
 body.staff-theme .logo-section .logo-text h1,
@@ -948,6 +1178,59 @@ body.staff-theme .nav-hamburger-btn i {
     color: {$st['hex']} !important;
     -webkit-text-fill-color: {$st['hex']} !important;
 }
+body.staff-theme .profile-trigger-name {
+    color: {$st['hex']} !important;
+    -webkit-text-fill-color: {$st['hex']} !important;
+}
+body.staff-theme .profile-trigger-caret {
+    color: {$st['softText']} !important;
+}
+body.staff-theme .profile-trigger-btn {
+    background: {$sn['chipBg']} !important;
+    border-color: {$sn['divider']} !important;
+}
+body.staff-theme .user-profile-dropdown {
+    border-left-color: {$sn['divider']} !important;
+}
+body.staff-theme .drawer-brand-subtitle {
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .drawer-nav-item:hover {
+    background: {$sp['soft']} !important;
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .drawer-nav-item:hover i {
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .drawer-nav-item.active {
+    background: {$sp['soft']} !important;
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .drawer-nav-item.active i {
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .logout-stripe {
+    background: linear-gradient(90deg, {$sp['hex']} 0%, {$sp['dark']} 100%) !important;
+}
+body.staff-theme .logout-btn-confirm {
+    background: linear-gradient(135deg, {$sp['hex']} 0%, {$sp['dark']} 100%) !important;
+}
+body.staff-theme .autocomplete-item i,
+body.staff-theme .autocomplete-item .autocomplete-item-text i {
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+}
+body.staff-theme .autocomplete-item:hover,
+body.staff-theme .autocomplete-item.active-item {
+    background-color: {$sp['soft']} !important;
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .autocomplete-badge {
+    background-color: {$sp['soft']} !important;
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+    border: 1px solid {$sp['soft']} !important;
+}
 
 /* --- Admin & Super Admin Dynamic Theme Tokens --- */
 body.admin-theme, html body.admin-theme {
@@ -955,6 +1238,8 @@ body.admin-theme, html body.admin-theme {
     --primary-dark: {$ap['dark']} !important;
     --primary-soft: {$ap['soft']} !important;
     --on-primary: {$ap['on']} !important;
+    --sb-primary: {$ap['hex']} !important;
+    --sb-primary-hover: {$ap['dark']} !important;
     --nav-bg: {$an['hex']} !important;
     --nav-text: {$at['hex']} !important;
     --nav-text-soft: {$at['softText']} !important;
@@ -963,6 +1248,10 @@ body.admin-theme, html body.admin-theme {
     --nav-drawer-bg: {$an['dark']} !important;
     --nav-cta-bg: {$ap['on']} !important;
     --nav-cta-text: {$ap['hex']} !important;
+}
+body.admin-theme header#site-header {
+    background: {$an['hex']} !important;
+    border-bottom: 1px solid {$an['divider']} !important;
 }
 body.admin-theme #site-header .logo-text h1,
 body.admin-theme .logo-section .logo-text h1,
@@ -1019,6 +1308,59 @@ body.admin-theme .nav-hamburger-btn i {
     color: {$at['hex']} !important;
     -webkit-text-fill-color: {$at['hex']} !important;
 }
+body.admin-theme .profile-trigger-name {
+    color: {$at['hex']} !important;
+    -webkit-text-fill-color: {$at['hex']} !important;
+}
+body.admin-theme .profile-trigger-caret {
+    color: {$at['softText']} !important;
+}
+body.admin-theme .profile-trigger-btn {
+    background: {$an['chipBg']} !important;
+    border-color: {$an['divider']} !important;
+}
+body.admin-theme .user-profile-dropdown {
+    border-left-color: {$an['divider']} !important;
+}
+body.admin-theme .drawer-brand-subtitle {
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .drawer-nav-item:hover {
+    background: {$ap['soft']} !important;
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .drawer-nav-item:hover i {
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .drawer-nav-item.active {
+    background: {$ap['soft']} !important;
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .drawer-nav-item.active i {
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .logout-stripe {
+    background: linear-gradient(90deg, {$ap['hex']} 0%, {$ap['dark']} 100%) !important;
+}
+body.admin-theme .logout-btn-confirm {
+    background: linear-gradient(135deg, {$ap['hex']} 0%, {$ap['dark']} 100%) !important;
+}
+body.admin-theme .autocomplete-item i,
+body.admin-theme .autocomplete-item .autocomplete-item-text i {
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
+}
+body.admin-theme .autocomplete-item:hover,
+body.admin-theme .autocomplete-item.active-item {
+    background-color: {$ap['soft']} !important;
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .autocomplete-badge {
+    background-color: {$ap['soft']} !important;
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
+    border: 1px solid {$ap['soft']} !important;
+}
 
 /* --- Common Dropdown Menus (Management, Records, etc.) --- */
 body.admin-theme .dropdown-content,
@@ -1054,28 +1396,43 @@ body.staff-theme .dropdown-content a i {
     text-align: center !important;
     opacity: 1 !important;
 }
-body.admin-theme .dropdown-content a:hover,
-body.staff-theme .dropdown-content a:hover {
+body.admin-theme .dropdown-content a:hover {
     background: #f1f5f9 !important;
-    color: var(--primary, #B71C1C) !important;
-    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
 }
-body.admin-theme .dropdown-content a:hover i,
-body.staff-theme .dropdown-content a:hover i {
-    color: var(--primary, #B71C1C) !important;
-    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+body.admin-theme .dropdown-content a:hover i {
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
 }
-body.admin-theme .dropdown-content a.active,
-body.staff-theme .dropdown-content a.active {
-    background: #fef2f2 !important;
-    color: var(--primary, #B71C1C) !important;
-    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+body.admin-theme .dropdown-content a.active {
+    background: {$ap['soft']} !important;
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
     font-weight: 700 !important;
 }
-body.admin-theme .dropdown-content a.active i,
+body.admin-theme .dropdown-content a.active i {
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
+}
+body.staff-theme .dropdown-content a:hover {
+    background: #f1f5f9 !important;
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+}
+body.staff-theme .dropdown-content a:hover i {
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+}
+body.staff-theme .dropdown-content a.active {
+    background: {$sp['soft']} !important;
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+    font-weight: 700 !important;
+}
 body.staff-theme .dropdown-content a.active i {
-    color: var(--primary, #B71C1C) !important;
-    -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
 }
 
 /* Nav badge chips for Record / Audit status inside dropdowns */

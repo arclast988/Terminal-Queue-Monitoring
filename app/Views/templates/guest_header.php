@@ -21,7 +21,7 @@
 <style>
     /* --- Advisory Bar --- */
     .advisory-bar {
-        background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
+        background: linear-gradient(135deg, var(--primary, #B71C1C) 0%, var(--primary-dark, #7F0000) 100%);
         color: #ffffff;
         padding: 0 20px;
         min-height: 42px;
@@ -43,7 +43,7 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        color: #B71C1C;
+        color: var(--primary, #B71C1C);
         font-size: 13px;
         font-weight: 900;
         flex-shrink: 0;
@@ -122,7 +122,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 18px 24px;
-        background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
+        background: linear-gradient(135deg, var(--primary, #B71C1C) 0%, var(--primary-dark, #7F0000) 100%);
         border-radius: 20px 20px 0 0;
         color: white;
         flex-shrink: 0;
@@ -239,8 +239,8 @@
         width: 28px;
         height: 28px;
         border-radius: 50%;
-        background: #fee2e2;
-        color: #B71C1C;
+        background: var(--primary-soft, #fee2e2);
+        color: var(--primary, #B71C1C);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -293,14 +293,14 @@
         white-space: pre-line;
     }
     .ann-modal-text a {
-        color: #B71C1C;
+        color: var(--primary, #B71C1C);
         font-weight: 600;
         text-decoration: underline;
         text-underline-offset: 2px;
         word-break: break-all;
     }
     .ann-modal-text a:hover {
-        color: #7F0000;
+        color: var(--primary-dark, #7F0000);
     }
     .ann-modal-empty {
         text-align: center;
@@ -436,7 +436,7 @@
 
     /* --- Guest Header (logo + nav + clock + language) --- */
     .guest-header {
-        background: #ffffff;
+        background: var(--nav-bg, #ffffff);
         padding: 8px 5%;
         box-shadow: var(--shadow-sm);
         display: flex;
@@ -481,7 +481,7 @@
     }
     .guest-header .logo-text h1 {
         font-size: 20px;
-        color: #000000;
+        color: var(--nav-text, #000000);
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.5px;
@@ -498,7 +498,7 @@
     .guest-header .logo-text p {
         font-size: 12px;
         font-weight: 700;
-        color: #64748b;
+        color: var(--nav-text-soft, #64748b);
         text-transform: uppercase;
         letter-spacing: 0.8px;
         margin: 0;
@@ -520,7 +520,7 @@
     }
     .guest-header .nav-menu a {
         text-decoration: none;
-        color: var(--text-muted);
+        color: var(--nav-text-soft, var(--text-muted));
         font-size: 14.5px;
         font-weight: 600;
         transition: var(--transition);
@@ -541,13 +541,13 @@
         left: 0;
         width: 0;
         height: 2px;
-        background: #D62828;
+        background: var(--primary, #D62828);
         transition: var(--transition);
     }
     .guest-header .nav-menu a:hover,
     .guest-header .nav-menu a.active {
-        color: #D62828;
-        background: rgba(214, 40, 40, 0.06);
+        color: var(--primary, #D62828);
+        background: var(--primary-soft, rgba(214, 40, 40, 0.06));
     }
     .guest-header .nav-menu a:hover::after,
     .guest-header .nav-menu a.active::after {
@@ -559,8 +559,8 @@
         box-shadow: none !important;
     }
     .guest-header .nav-menu a.login-btn {
-        background: #B71C1C;
-        color: white !important;
+        background: var(--primary, #B71C1C);
+        color: var(--on-primary, white) !important;
         padding: 10px 25px;
         border-radius: 25px;
         font-size: 14px;
@@ -572,14 +572,14 @@
         gap: 8px;
     }
     .guest-header .nav-menu a.login-btn:hover {
-        background: #8B0000 !important;
+        background: var(--primary-dark, #8B0000) !important;
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
     }
     /* --- Mobile Toggle --- */
     .guest-header .mobile-toggle {
         display: none;
         font-size: 24px;
-        color: #000000;
+        color: var(--nav-text, #000000);
         cursor: pointer;
     }
 
@@ -596,7 +596,7 @@
         color: #cbd5e0;
     }
     .breadcrumb-section a {
-        color: #D62828;
+        color: var(--primary, #D62828);
         text-decoration: none;
         font-weight: 500;
     }
@@ -604,7 +604,7 @@
     .guest-header .header-info {
         display: flex;
         align-items: center;
-        border-left: 1.5px solid #e2e8f0;
+        border-left: 1.5px solid var(--nav-divider, #e2e8f0);
         padding-left: 18px;
         height: 28px;
         margin-top: -6px;
@@ -615,13 +615,13 @@
         align-items: center;
         gap: 7px;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--nav-text, #0f172a);
         font-size: 15px;
         letter-spacing: 0.5px;
         line-height: 1;
     }
     .header-clock-pill i {
-        color: #D62828;
+        color: var(--primary, #D62828);
         font-size: 15px;
     }
 
@@ -727,7 +727,7 @@
             right: -100%;
             width: 260px;
             height: 100vh;
-            background: white;
+            background: var(--nav-bg, white);
             flex-direction: column;
             justify-content: flex-start;
             padding: 70px 25px 30px;
@@ -743,17 +743,18 @@
             width: 100%;
             padding: 12px 18px;
             border-radius: 12px;
-            background: #f8fafc;
+            background: var(--nav-chip-bg, #f8fafc);
             font-size: 15px;
             font-weight: 600;
+            color: var(--nav-text, #1e293b);
         }
         .guest-header .nav-menu a.active {
-            background: rgba(214, 40, 40, 0.08);
-            color: #D62828;
+            background: var(--primary-soft, rgba(214, 40, 40, 0.08));
+            color: var(--primary, #D62828);
         }
         .guest-header .nav-menu a.login-btn {
-            background: #B71C1C;
-            color: white !important;
+            background: var(--primary, #B71C1C);
+            color: var(--on-primary, white) !important;
             text-align: center;
             justify-content: center;
             margin-top: 10px;
@@ -1004,10 +1005,9 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
             </div>
         </a>
 
-        <div class="header-info"
-            style="display: flex; align-items: center; border-left: 1px solid #eee; padding-left: 18px;">
-            <div class="header-clock-pill" style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #0f172a; font-size: 14px; letter-spacing: 0.5px;">
-                <i class="fas fa-clock" style="color: #D62828; font-size: 14px;"></i>
+        <div class="header-info">
+            <div class="header-clock-pill">
+                <i class="fas fa-clock"></i>
                 <span id="headerClock"><?= date('h:i:s A') ?></span>
             </div>
         </div>

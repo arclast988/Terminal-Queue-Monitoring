@@ -20,8 +20,10 @@
     <?= app_theme_css() ?>
     <style>
         :root {
-            --primary: #C62828;
-            --primary-dark: #8E1B1B;
+            --primary: var(--primary, #C62828);
+            --primary-dark: var(--primary-dark, #8E1B1B);
+            --primary-soft: var(--primary-soft, rgba(198, 40, 40, 0.12));
+            --on-primary: var(--on-primary, #ffffff);
             --accent: #FFA726;
             --accent-dark: #F57C00;
             --success: #43a047;
@@ -238,8 +240,8 @@
         }
 
         .search-bar:focus-within {
-            border-color: #B71C1C;
-            box-shadow: 0 0 0 4px rgba(214, 40, 40, 0.15), var(--shadow-lg);
+            border-color: var(--primary, #B71C1C);
+            box-shadow: 0 0 0 4px var(--primary-soft, rgba(214, 40, 40, 0.15)), var(--shadow-lg);
         }
 
         .search-bar input {
@@ -253,8 +255,8 @@
         }
 
         .search-bar button {
-            background: #B71C1C;
-            color: white;
+            background: var(--primary, #B71C1C);
+            color: var(--on-primary, white);
             border: none;
             padding: 0 35px;
             border-radius: 50px;
@@ -264,7 +266,7 @@
         }
 
         .search-bar button:hover {
-            background: #8B0000;
+            background: var(--primary-dark, #8B0000);
         }
 
         #guest-results-clear-btn {

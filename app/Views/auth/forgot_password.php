@@ -16,9 +16,9 @@
     <?= app_theme_css() ?>
     <style>
         :root {
-            --red: #D62828;
-            --red-dark: #B71C1C;
-            --red-soft: rgba(214, 40, 40, .10);
+            --red: var(--primary, #D62828);
+            --red-dark: var(--primary-dark, #B71C1C);
+            --red-soft: var(--primary-soft, rgba(214, 40, 40, .10));
             --white: #FFFFFF;
             --bg: #F8F9FA;
             --text: #1F2937;
