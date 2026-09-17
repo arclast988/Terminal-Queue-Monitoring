@@ -1043,7 +1043,7 @@ body:not(.auth-page)::before {
     z-index: 0;
     pointer-events: none;
 }
-body:not(.auth-page) > *:not(.modal):not(.dropdown-content) {
+body:not(.auth-page) > *:not(.modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay) {
     position: relative;
     z-index: 1;
 }

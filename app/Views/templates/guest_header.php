@@ -427,11 +427,11 @@
 
     /* --- Fixed wrapper that locks advisory bar + nav together --- */
     .sticky-top-wrapper {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 1010;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1010 !important;
     }
 
     /* --- Guest Header (logo + nav + clock + language) --- */
