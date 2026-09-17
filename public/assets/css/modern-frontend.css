@@ -245,7 +245,7 @@ body > * {
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #ef4444, #dc2626);
+    background: linear-gradient(90deg, var(--primary, #ef4444), var(--primary-dark, #dc2626));
     opacity: 1;
     transition: opacity var(--transition-base);
 }
@@ -313,14 +313,14 @@ body > * {
     gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    color: var(--primary-red);
+    color: var(--primary, #c62828);
     text-decoration: none;
     margin-top: 16px;
     transition: all var(--transition-fast);
 }
 
 .stat-card-link:not(.stat-card):hover {
-    color: var(--primary-red-dark);
+    color: var(--primary-dark, #991b1b);
     gap: 10px;
 }
 
@@ -1569,7 +1569,7 @@ input[type="search"]::-webkit-search-results-decoration {
 /* Guest Search Clear Button (preserves existing guest layout) */
 .guest-clear-search-btn {
     position: absolute;
-    right: 120px;
+    right: 155px;
     top: 50%;
     transform: translateY(-50%);
     background: none !important;
@@ -1587,20 +1587,25 @@ input[type="search"]::-webkit-search-results-decoration {
     box-shadow: none !important;
     outline: none !important;
 }
-/* For home hero search where button is wider ("TRACK STATUS") */
+/* For home hero search - aligned neatly adjacent to the "TRACK STATUS" button like schedule part */
 #guest-hero-clear-btn {
-    right: 165px !important;
+    right: 155px !important;
 }
 .guest-clear-search-btn:hover {
     color: #475569 !important;
 }
 @media (max-width: 768px) {
     .guest-clear-search-btn {
-        right: 95px;
+        right: 98px;
         font-size: 16px !important;
     }
     #guest-hero-clear-btn {
-        right: 135px !important;
+        right: 110px !important;
+    }
+}
+@media (max-width: 480px) {
+    #guest-hero-clear-btn {
+        right: 95px !important;
     }
 }
 

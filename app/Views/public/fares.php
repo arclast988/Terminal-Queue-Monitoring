@@ -275,13 +275,14 @@
             flex: 1;
             border: none;
             padding: 15px 25px;
+            padding-right: 185px !important;
             font-size: 16px;
             outline: none;
             background: transparent;
             font-family: inherit;
         }
 
-        .search-bar button {
+        .search-bar button:not(.guest-clear-search-btn) {
             background: var(--primary, #B71C1C);
             color: var(--on-primary, white);
             border: none;
@@ -292,16 +293,19 @@
             transition: var(--transition);
         }
 
-        .search-bar button:hover {
+        .search-bar button:not(.guest-clear-search-btn):hover {
             background: var(--primary-dark, #8B0000);
         }
 
         #guest-fare-clear-btn {
-            right: 120px !important;
+            right: 155px !important;
         }
         @media (max-width: 768px) {
+            .search-bar input {
+                padding-right: 125px !important;
+            }
             #guest-fare-clear-btn {
-                right: 95px !important;
+                right: 98px !important;
             }
         }
 
@@ -631,7 +635,7 @@
                 flex: 1;
                 width: auto;
             }
-            .search-bar button {
+            .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 18px;
                 height: 42px;
                 border-radius: 50px;
@@ -668,7 +672,7 @@
                 padding: 7px 10px;
                 font-size: 12px;
             }
-            .search-bar button {
+            .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 12px;
                 height: 36px;
                 font-size: 11px;
@@ -1374,7 +1378,21 @@
     fetchFareData();
     setInterval(fetchFareData, 10000);
     document.addEventListener('vt-colors-updated', function() { fetchFareData(); });
+    document.addEventListener('pttm:ws-vehicle_type_update', function() { fetchFareData(); });
     document.addEventListener('pttm:ws-fare_update', function() { fetchFareData(); });
+    document.addEventListener('pttm:ws-branding_updated', function() { fetchFareData(); });
+
+    // Multi-tab sync via BroadcastChannel
+    if (window.BroadcastChannel) {
+        try {
+            var _faresBc = new BroadcastChannel('pttm_queue_channel');
+            _faresBc.onmessage = function(e) {
+                if (e.data && (e.data.type === 'fare_update' || e.data.type === 'vehicle_type_update')) {
+                    fetchFareData();
+                }
+            };
+        } catch(e) {}
+    }
 
     </script>
 </body>

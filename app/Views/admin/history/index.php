@@ -198,7 +198,15 @@
                     <option value="">All Types</option>
                     <?php if (!empty($vehicleTypes)): ?>
                         <?php foreach ($vehicleTypes as $vt): ?>
-                            <option value="<?= esc($vt['slug'] ?? $vt['name']) ?>" <?= ($vehicle_type ?? '') === ($vt['slug'] ?? $vt['name']) ? 'selected' : '' ?>>
+                            <?php 
+                                $vtSlug = $vt['slug'] ?? $vt['name'];
+                                $vtIcon = !empty($vt['icon']) ? $vt['icon'] : vehicle_type_icon($vtSlug);
+                                $vtColor = !empty($vt['color']) ? $vt['color'] : vehicle_type_color($vtSlug);
+                            ?>
+                            <option value="<?= esc($vtSlug) ?>"
+                                    data-icon="<?= esc($vtIcon) ?>"
+                                    data-color="<?= esc($vtColor) ?>"
+                                    <?= ($vehicle_type ?? '') === $vtSlug ? 'selected' : '' ?>>
                                 <?= esc($vt['name']) ?>
                             </option>
                         <?php endforeach; ?>

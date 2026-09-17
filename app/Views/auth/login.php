@@ -77,8 +77,7 @@
         /* Semi-transparent system background watermark (Palompon Photo Slideshow or Single Hero) */
         <?php
         $bgMode = app_bg_mode();
-        $useSingle = ($bgMode === 'single' && app_has_custom_bg());
-        $slides = app_bg_slideshow();
+        $useSingle = ($bgMode === 'single');
         ?>
         <?php if ($useSingle): ?>
         body::after {
@@ -96,33 +95,7 @@
             pointer-events: none;
         }
         <?php else: ?>
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: cover;
-            opacity: 0.22;
-            z-index: 0;
-            pointer-events: none;
-            animation: palomponBgSlideshow 30s infinite ease-in-out;
-        }
-
-        @keyframes palomponBgSlideshow {
-            0%, 17% { background-image: url('<?= esc($slides[1]) ?>'); opacity: 0.22; }
-            19% { opacity: 0.05; }
-            20%, 37% { background-image: url('<?= esc($slides[2]) ?>'); opacity: 0.22; }
-            39% { opacity: 0.05; }
-            40%, 57% { background-image: url('<?= esc($slides[3]) ?>'); opacity: 0.22; }
-            59% { opacity: 0.05; }
-            60%, 77% { background-image: url('<?= esc($slides[4]) ?>'); opacity: 0.22; }
-            79% { opacity: 0.05; }
-            80%, 97% { background-image: url('<?= esc($slides[5]) ?>'); opacity: 0.22; }
-            99% { opacity: 0.05; }
-        }
+        <?= app_bg_slideshow_css(null, 0.22) ?>
         <?php endif; ?>
 
         /* ---- Subtle transportation scenery (route lines, nodes, faint skyline) ---- */
@@ -159,15 +132,16 @@
             gap: var(--space-3);
             margin-bottom: clamp(var(--space-5), 4vh, var(--space-8));
             animation: fadeDown .6s ease .1s both;
+            width: fit-content;
         }
         .brand-mark {
-            width: 46px;
-            height: 46px;
-            border-radius: 13px;
-            padding: 3px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            padding: 2px;
             background: var(--white);
             border: 1.5px solid var(--border);
-            box-shadow: 0 8px 18px -8px rgba(15, 23, 42, .22);
+            box-shadow: 0 4px 12px -4px rgba(15, 23, 42, .18);
             display: grid;
             place-items: center;
             overflow: hidden;
@@ -177,11 +151,11 @@
             display: block;
             width: 100%;
             height: 100%;
-            border-radius: 9px;
+            border-radius: 50%;
             object-fit: cover;
         }
-        .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; color: var(--text); line-height: 1.2; }
-        .brand-sub { display: block; font-size: 12.5px; font-weight: 500; color: var(--text-2); margin-top: 2px; letter-spacing: 0; }
+        .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .brand-sub { display: block; font-size: 12px; font-weight: 800; color: #000000 !important; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
         /* ---- Main grid: hero (left) / card (right) ---- */
         .login-layout {
@@ -195,13 +169,15 @@
         /* =================================================================
            Hero / Branding column
            ================================================================= */
-        .hero-copy { animation: fadeUp .7s ease .15s both; }
+        .hero-copy {
+            animation: fadeUp .7s ease .15s both;
+        }
         .kicker {
             display: inline-flex;
             align-items: center;
             gap: var(--space-2);
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 800;
             letter-spacing: .14em;
             text-transform: uppercase;
             color: var(--red);
@@ -210,7 +186,7 @@
         .kicker::before {
             content: "";
             width: 26px;
-            height: 2px;
+            height: 2.5px;
             border-radius: 2px;
             background: var(--red);
         }
@@ -219,17 +195,19 @@
             font-weight: 800;
             letter-spacing: -.035em;
             line-height: 1.08;
-            color: var(--text);
-            max-width: 13ch;
+            color: #000000 !important;
+            max-width: 14ch;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
         }
         .hero-copy h1 .accent { color: var(--red); }
         .hero-copy .lede {
             margin-top: var(--space-5);
-            font-size: 16.5px;
+            font-size: 16px;
             line-height: 1.65;
-            color: var(--text-2);
-            max-width: 46ch;
-            font-weight: 400;
+            color: #000000 !important;
+            max-width: 48ch;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
         }
 
         .features {
@@ -240,18 +218,18 @@
         }
         .feature { display: flex; align-items: center; gap: var(--space-4); }
         .feature-icon {
-            width: 40px; height: 40px;
-            border-radius: 11px;
+            width: 42px; height: 42px;
+            border-radius: 12px;
             background: var(--white);
-            border: 1px solid var(--border);
+            border: 1.5px solid rgba(15, 23, 42, 0.08);
             display: grid; place-items: center;
             color: var(--red);
             flex-shrink: 0;
-            box-shadow: 0 4px 10px -4px rgba(15, 23, 42, .08);
+            box-shadow: 0 6px 14px -4px rgba(15, 23, 42, .1);
         }
-        .feature-icon svg { width: 19px; height: 19px; }
-        .feature-text b { display: block; font-size: 14.5px; font-weight: 600; color: var(--text); }
-        .feature-text span { font-size: 13.5px; color: var(--text-2); line-height: 1.45; }
+        .feature-icon svg { width: 20px; height: 20px; }
+        .feature-text b { display: block; font-size: 14.5px; font-weight: 800; color: #000000 !important; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .feature-text span { font-size: 13.5px; color: #000000 !important; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
         /* ---- Hero artwork: framed on a red plate so it blends in ---- */
         .hero-art {
@@ -499,13 +477,21 @@
         }
 
         .page-foot {
-            margin-top: var(--space-12);
+            margin: var(--space-8) auto 0;
             text-align: center;
-            font-size: 13px;
-            color: var(--text-2);
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #000000 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             animation: fadeUp .7s ease .5s both;
+            align-self: center;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
         }
-        .page-foot b { color: var(--red); font-weight: 600; }
+        .page-foot b { color: #000000 !important; font-weight: 800; }
+        .page-foot .foot-sub { color: #000000 !important; font-weight: 700; }
 
         /* ---- Focus visibility (keyboard) ---- */
         a:focus-visible, button:focus-visible, input:focus-visible {
@@ -620,11 +606,10 @@
             <!-- Left — hero copy + artwork -->
             <section class="hero">
                 <div class="hero-copy">
-                    <p class="kicker"><?= esc(app_name()) ?> · Terminal Operations</p>
-                    <h1>Move every van, jeepney &amp; bus <span class="accent">on time.</span></h1>
+                    <p class="kicker"><?= esc(app_name()) ?> · <?= esc(login_kicker()) ?></p>
+                    <h1><?= login_headline_html() ?></h1>
                     <p class="lede">
-                        <?= esc(app_name()) ?> gives dispatchers a live view of vehicle queues,
-                        routes, and departures — so every trip leaves the terminal on schedule.
+                        <?= esc(app_name()) ?> <?= esc(login_subheadline()) ?>
                     </p>
                     <div class="features">
                         <div class="feature">
@@ -635,8 +620,8 @@
                                 </svg>
                             </span>
                             <span class="feature-text">
-                                <b>Real-time queue</b>
-                                <span>Live queue and departure status across every route.</span>
+                                <b><?= esc(login_feature1_title()) ?></b>
+                                <span><?= esc(login_feature1_desc()) ?></span>
                             </span>
                         </div>
                         <div class="feature">
@@ -647,8 +632,8 @@
                                 </svg>
                             </span>
                             <span class="feature-text">
-                                <b>Secure &amp; audited</b>
-                                <span>Role-based access with a full activity audit trail.</span>
+                                <b><?= esc(login_feature2_title()) ?></b>
+                                <span><?= esc(login_feature2_desc()) ?></span>
                             </span>
                         </div>
                     </div>
@@ -757,7 +742,7 @@
         </main>
 
         <footer class="page-foot">
-            <b><?= esc(app_name()) ?></b> · <?= esc(app_subtitle()) ?>
+            <b><?= esc(app_name()) ?></b> · <span class="foot-sub"><?= esc(app_subtitle()) ?></span>
         </footer>
     </div>
 

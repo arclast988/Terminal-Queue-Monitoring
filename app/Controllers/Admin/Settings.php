@@ -38,13 +38,20 @@ class Settings extends BaseController
 
         $model = new SystemSettingModel();
         $fields = [
-            'app_name'        => trim($this->request->getPost('app_name') ?? ''),
-            'app_subtitle'    => trim($this->request->getPost('app_subtitle') ?? ''),
-            'acronym'         => trim($this->request->getPost('acronym') ?? ''),
-            'system_title'    => trim($this->request->getPost('system_title') ?? ''),
-            'contact_phone'   => trim($this->request->getPost('contact_phone') ?? ''),
-            'contact_address' => trim($this->request->getPost('contact_address') ?? ''),
-            'contact_email'   => trim($this->request->getPost('contact_email') ?? ''),
+            'app_name'              => trim($this->request->getPost('app_name') ?? ''),
+            'app_subtitle'          => trim($this->request->getPost('app_subtitle') ?? ''),
+            'acronym'               => trim($this->request->getPost('acronym') ?? ''),
+            'system_title'          => trim($this->request->getPost('system_title') ?? ''),
+            'contact_phone'         => trim($this->request->getPost('contact_phone') ?? ''),
+            'contact_address'       => trim($this->request->getPost('contact_address') ?? ''),
+            'contact_email'         => trim($this->request->getPost('contact_email') ?? ''),
+            'login_headline'        => trim($this->request->getPost('login_headline') ?? ''),
+            'login_subheadline'     => trim($this->request->getPost('login_subheadline') ?? ''),
+            'login_kicker'          => trim($this->request->getPost('login_kicker') ?? ''),
+            'login_feature1_title'  => trim($this->request->getPost('login_feature1_title') ?? ''),
+            'login_feature1_desc'   => trim($this->request->getPost('login_feature1_desc') ?? ''),
+            'login_feature2_title'  => trim($this->request->getPost('login_feature2_title') ?? ''),
+            'login_feature2_desc'   => trim($this->request->getPost('login_feature2_desc') ?? ''),
         ];
 
         if (empty($fields['app_name'])) {
@@ -93,14 +100,21 @@ class Settings extends BaseController
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'data'       => [
-                    'app_name'        => app_name(),
-                    'app_subtitle'    => app_subtitle(),
-                    'acronym'         => app_acronym(),
-                    'system_title'    => app_system_title(),
-                    'contact_phone'   => app_contact_phone(),
-                    'contact_address' => app_contact_address(),
-                    'contact_email'   => app_contact_email(),
-                    'app_logo'        => app_logo(),
+                    'app_name'              => app_name(),
+                    'app_subtitle'          => app_subtitle(),
+                    'acronym'               => app_acronym(),
+                    'system_title'          => app_system_title(),
+                    'contact_phone'         => app_contact_phone(),
+                    'contact_address'       => app_contact_address(),
+                    'contact_email'         => app_contact_email(),
+                    'app_logo'              => app_logo(),
+                    'login_headline'        => login_headline(),
+                    'login_subheadline'     => login_subheadline(),
+                    'login_kicker'          => login_kicker(),
+                    'login_feature1_title'  => login_feature1_title(),
+                    'login_feature1_desc'   => login_feature1_desc(),
+                    'login_feature2_title'  => login_feature2_title(),
+                    'login_feature2_desc'   => login_feature2_desc(),
                 ],
             ]);
         }
@@ -170,7 +184,17 @@ class Settings extends BaseController
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'updates'    => $updates,
-                'data'       => $updates,
+                'data'       => [
+                    'theme_guest_primary'  => get_system_setting('theme_guest_primary', '#C62828'),
+                    'theme_guest_nav_bg'   => get_system_setting('theme_guest_nav_bg', '#ffffff'),
+                    'theme_guest_nav_text' => get_system_setting('theme_guest_nav_text', '#1c2430'),
+                    'theme_staff_primary'  => get_system_setting('theme_staff_primary', '#15803d'),
+                    'theme_staff_nav_bg'   => get_system_setting('theme_staff_nav_bg', '#15803d'),
+                    'theme_staff_nav_text' => get_system_setting('theme_staff_nav_text', '#ffffff'),
+                    'theme_admin_primary'  => get_system_setting('theme_admin_primary', '#B71C1C'),
+                    'theme_admin_nav_bg'   => get_system_setting('theme_admin_nav_bg', '#B71C1C'),
+                    'theme_admin_nav_text' => get_system_setting('theme_admin_nav_text', '#ffffff'),
+                ],
             ]);
         }
 
@@ -814,6 +838,30 @@ class Settings extends BaseController
 
         $model = new SystemSettingModel();
         $model->setSetting($settingKey, $relPath);
+
+        // Also add $nextSlot to active slots list
+        $slotsSetting = get_system_setting('app_bg_slideshow_slots');
+        if (! empty($slotsSetting)) {
+            $rawSlots = explode(',', $slotsSetting);
+            $activeSlots = [];
+            foreach ($rawSlots as $rs) {
+                $v = (int) trim($rs);
+                if ($v > 0) $activeSlots[] = $v;
+            }
+            $activeSlots[] = $nextSlot;
+            $activeSlots = array_values(array_unique($activeSlots));
+        } else {
+            $activeSlots = [1, 2, 3, 4, 5, $nextSlot];
+            foreach ($allSettings as $k => $val) {
+                if (preg_match('/^app_bg_slideshow_([6-9]|[1-9][0-9]+)$/', $k, $matches) && ! empty($val)) {
+                    $activeSlots[] = (int) $matches[1];
+                }
+            }
+            $activeSlots = array_values(array_unique($activeSlots));
+        }
+        sort($activeSlots, SORT_NUMERIC);
+        $model->setSetting('app_bg_slideshow_slots', implode(',', $activeSlots));
+
         get_all_system_settings(true);
         $this->broadcastBrandingChange();
 
@@ -832,7 +880,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Delete an extra slideshow slot (slots > 5).
+     * Delete any slideshow slot (1..N) and update the active slots list.
      */
     public function deleteSlideshowSlot()
     {
@@ -841,19 +889,60 @@ class Settings extends BaseController
         }
 
         $slot = (int) $this->request->getPost('slot');
-        if ($slot <= 5) {
+        if ($slot < 1) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
-                'message'    => 'Base slots (1 to 5) cannot be deleted. You can reset them instead.',
+                'message'    => 'Invalid slideshow slot.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
         }
 
+        // Determine currently active slots
+        $slotsSetting = get_system_setting('app_bg_slideshow_slots');
+        if (! empty($slotsSetting)) {
+            $rawSlots = explode(',', $slotsSetting);
+            $activeSlots = [];
+            foreach ($rawSlots as $rs) {
+                $v = (int) trim($rs);
+                if ($v > 0) {
+                    $activeSlots[] = $v;
+                }
+            }
+            $activeSlots = array_values(array_unique($activeSlots));
+        } else {
+            $activeSlots = [1, 2, 3, 4, 5];
+            $allSettings = get_all_system_settings(true);
+            foreach ($allSettings as $k => $val) {
+                if (preg_match('/^app_bg_slideshow_([6-9]|[1-9][0-9]+)$/', $k, $matches) && ! empty($val)) {
+                    $activeSlots[] = (int) $matches[1];
+                }
+            }
+            $activeSlots = array_values(array_unique($activeSlots));
+        }
+
+        if (count($activeSlots) <= 1) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Cannot delete the last remaining slideshow picture. At least 1 picture is required.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        // Remove the slot from active slots
+        $activeSlots = array_values(array_diff($activeSlots, [$slot]));
+        sort($activeSlots, SORT_NUMERIC);
+
         $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
         $settingKey = "app_bg_slideshow_{$slot}";
         $this->deleteOldMedia($settingKey, $uploadDir);
 
+        $model = new SystemSettingModel();
+        // Update active slots list
+        $model->setSetting('app_bg_slideshow_slots', implode(',', $activeSlots));
+
+        // If custom uploaded picture was saved in system_settings, remove or reset it
         $db = \Config\Database::connect();
         if ($db->tableExists('system_settings')) {
             $db->table('system_settings')->where('setting_key', $settingKey)->delete();
@@ -862,14 +951,17 @@ class Settings extends BaseController
         get_all_system_settings(true);
         $this->broadcastBrandingChange();
 
-        $this->logActivity('System Settings', "Deleted slideshow slot {$slot}");
+        $remainingCount = count($activeSlots);
+        $this->logActivity('System Settings', "Deleted slideshow slot {$slot}. Active slots remaining: " . implode(',', $activeSlots));
 
         return $this->response->setJSON([
-            'success'    => true,
-            'slot'       => $slot,
-            'message'    => "Slideshow slot {$slot} deleted successfully.",
-            'csrf_token' => csrf_token(),
-            'csrf_hash'  => csrf_hash(),
+            'success'      => true,
+            'slot'         => $slot,
+            'active_slots' => $activeSlots,
+            'count'        => $remainingCount,
+            'message'      => "Slideshow picture removed successfully. ({$remainingCount} active)",
+            'csrf_token'   => csrf_token(),
+            'csrf_hash'    => csrf_hash(),
         ]);
     }
 
@@ -941,7 +1033,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Reset all slideshow slots back to system default artworks (resets 1-5 and cleans up 6+).
+     * Reset all slideshow slots back to system default artworks (resets 1-5, cleans up 6+, resets active slots list).
      */
     public function resetAllSlideshow()
     {
@@ -976,6 +1068,9 @@ class Settings extends BaseController
                 }
             }
         }
+
+        // Reset active slots list back to base 1,2,3,4,5
+        $model->setSetting('app_bg_slideshow_slots', '1,2,3,4,5');
 
         get_all_system_settings(true);
         $this->broadcastBrandingChange();

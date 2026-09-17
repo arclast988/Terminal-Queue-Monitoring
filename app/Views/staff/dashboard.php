@@ -24,24 +24,24 @@
 <div class="row g-4 mb-4">
     <div class="col-md-6">
         <div class="stat-card-modern success-accent fade-in">
-            <div class="stat-card-icon" style="background: #dcfce7; color: #15803d;">
+            <div class="stat-card-icon" style="background: var(--primary-soft, #dcfce7); color: var(--primary, #15803d);">
                 <i class="bi bi-people"></i>
             </div>
             <div class="stat-card-value"><?= esc($active_queue_count) ?></div>
             <div class="stat-card-label">Active in Queue</div>
-            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link" style="color: #15803d;">
+            <a href="<?= base_url('staff/queue') ?>" class="stat-card-link" style="color: var(--primary, #15803d);">
                 Manage Queue <i class="bi bi-arrow-right"></i>
             </a>
         </div>
     </div>
     <div class="col-md-6">
         <div class="stat-card-modern success-accent fade-in">
-            <div class="stat-card-icon" style="background: #dcfce7; color: #15803d;">
+            <div class="stat-card-icon" style="background: var(--primary-soft, #dcfce7); color: var(--primary, #15803d);">
                 <i class="bi bi-calendar-check"></i>
             </div>
             <div class="stat-card-value"><?= strtoupper(date('D, M j')) ?></div>
             <div class="stat-card-label">Today's Date</div>
-            <div class="stat-card-link" style="color: #15803d;">
+            <div class="stat-card-link" style="color: var(--primary, #15803d);">
                 Active Duty
             </div>
         </div>
@@ -58,7 +58,7 @@
     </div>
     <?php foreach ($routeBreakdowns as $rb): ?>
     <div class="col-sm-6 col-lg-3">
-        <div class="modern-card shadow-modern fade-in h-100" style="border-left: 3px solid #15803d;">
+        <div class="modern-card shadow-modern fade-in h-100" style="border-left: 3px solid var(--primary, #15803d);">
             <div class="modern-card-body p-3">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="fw-bold text-dark text-truncate" style="font-size: 14px;" title="<?= strtoupper(esc($rb['destination'])) ?>">
@@ -83,7 +83,7 @@
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-header">
         <span class="modern-card-title">
-            <i class="bi bi-lightning-charge" style="color: #15803d;"></i>
+            <i class="bi bi-lightning-charge" style="color: var(--primary, #15803d);"></i>
             Quick Actions
         </span>
     </div>
@@ -359,14 +359,14 @@ if (!empty($recent_departures)) {
     .route-chip:hover {
         border-color: var(--primary, #15803d);
         color: var(--primary, #15803d);
-        background: rgba(21, 128, 61, 0.06);
+        background: var(--primary-soft, rgba(21, 128, 61, 0.06));
         transform: translateY(-1px);
     }
     .route-chip.active {
         background: var(--primary, #15803d) !important;
         border-color: var(--primary, #15803d) !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.28);
+        color: var(--on-primary, #ffffff) !important;
+        box-shadow: 0 4px 12px var(--primary-soft, rgba(21, 128, 61, 0.28));
         transform: translateY(0);
     }
     .route-chip .chip-count {
@@ -385,7 +385,7 @@ if (!empty($recent_departures)) {
     }
     .route-chip.active .chip-count {
         background: rgba(255, 255, 255, 0.25);
-        color: #ffffff;
+        color: var(--on-primary, #ffffff);
     }
 
     /* Search capsule */
@@ -423,7 +423,7 @@ if (!empty($recent_departures)) {
     .departure-search-group:focus-within .input-group-text,
     .departure-search-group:focus-within .departure-search-input {
         border-color: var(--primary, #15803d);
-        box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.14);
+        box-shadow: 0 0 0 3px var(--primary-soft, rgba(21, 128, 61, 0.14));
     }
     
     .filter-label-text {
@@ -462,8 +462,8 @@ if (!empty($recent_departures)) {
     .dep-filter-btn.active {
         background: var(--primary, #15803d) !important;
         border-color: var(--primary, #15803d) !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(21, 128, 61, 0.28);
+        color: var(--on-primary, #ffffff) !important;
+        box-shadow: 0 4px 10px var(--primary-soft, rgba(21, 128, 61, 0.28));
     }
     .dep-filter-btn .dep-chip-count {
         display: inline-flex;
@@ -480,7 +480,7 @@ if (!empty($recent_departures)) {
     }
     .dep-filter-btn.active .dep-chip-count {
         background: rgba(255, 255, 255, 0.28);
-        color: #ffffff;
+        color: var(--on-primary, #ffffff);
     }
 
     /* Active states for vehicle type filter buttons (strictly derived from vehicle theme colors) */
@@ -635,6 +635,26 @@ if (!empty($recent_departures)) {
 
     // Real-time WebSocket listener for immediate dashboard departures refresh
     document.addEventListener('pttm:ws-queue_update', function(e) {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-vehicle_type_update', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-fare_update', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-operational_settings_updated', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-branding_updated', function() {
         if (window.QueueSync && window.QueueSync.refresh) {
             window.QueueSync.refresh();
         }

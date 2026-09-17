@@ -64,8 +64,8 @@ header#site-header {
 }
 
 .nav-hamburger-btn i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
 }
 
 /* --- Logo --------------------------------------------------------------- */
@@ -93,17 +93,23 @@ header#site-header {
 
 .logo-section:hover .logo { transform: scale(1.05); }
 
-/* Base logo text – white for public/guest headers */
+/* Base logo text – dynamic token-driven for all themes (admin, staff, guest) */
 #site-header .logo-text h1,
 .logo-section .logo-text h1,
-.logo-text h1 {
+.logo-text h1,
+body.admin-theme #site-header .logo-text h1,
+body.admin-theme .logo-section .logo-text h1,
+body.admin-theme .logo-text h1,
+body.staff-theme #site-header .logo-text h1,
+body.staff-theme .logo-section .logo-text h1,
+body.staff-theme .logo-text h1 {
   font-family: var(--font-display, 'Outfit', sans-serif) !important;
   font-size: 16.5px !important;
   font-weight: 800 !important;
   line-height: 1.15 !important;
   margin: 0 !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
   white-space: normal !important;
   word-break: break-word !important;
   overflow-wrap: anywhere !important;
@@ -115,26 +121,21 @@ header#site-header {
   max-width: clamp(180px, 22vw, 380px) !important;
 }
 
-/* Admin & Staff logo text – crisp white for strong contrast against colored navbars */
-body.admin-theme #site-header .logo-text h1,
-body.admin-theme .logo-section .logo-text h1,
-body.admin-theme .logo-text h1,
-body.staff-theme #site-header .logo-text h1,
-body.staff-theme .logo-section .logo-text h1,
-body.staff-theme .logo-text h1 {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-/* Base logo subtitle – white for public/guest headers */
+/* Base logo subtitle – dynamic token-driven */
 #site-header .logo-text p,
 .logo-section .logo-text p,
-.logo-text p {
+.logo-text p,
+body.admin-theme #site-header .logo-text p,
+body.admin-theme .logo-section .logo-text p,
+body.admin-theme .logo-text p,
+body.staff-theme #site-header .logo-text p,
+body.staff-theme .logo-section .logo-text p,
+body.staff-theme .logo-text p {
   font-family: var(--font-body, 'Outfit', sans-serif) !important;
   font-size: 10.5px !important;
   font-weight: 600 !important;
-  color: rgba(255, 255, 255, 0.9) !important;
-  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+  color: var(--nav-text-soft, var(--nav-text, rgba(255, 255, 255, 0.85))) !important;
+  -webkit-text-fill-color: var(--nav-text-soft, var(--nav-text, rgba(255, 255, 255, 0.85))) !important;
   letter-spacing: 0.8px !important;
   text-transform: uppercase !important;
   margin: 0 !important;
@@ -191,22 +192,22 @@ body.staff-theme .logo-text h1 {
 
 .nav-menu > a:not(.profile-dropdown-item):hover,
 .nav-menu > .dropdown > .dropbtn:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.15)) !important;
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
 }
 
 .nav-menu > a:not(.profile-dropdown-item):hover i,
 .nav-menu > .dropdown > .dropbtn:hover i {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
 }
 
 .nav-menu > a.active:not(.profile-dropdown-item),
 .nav-menu > .dropdown > .dropbtn.active {
-  background: rgba(255, 255, 255, 0.22) !important;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.22)) !important;
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
@@ -330,7 +331,7 @@ body.staff-theme .logo-text h1 {
   gap: 6px;
 }
 
-.dropbtn:hover { color: var(--nav-accent, #C62828); opacity: .92; }
+.dropbtn:hover { color: var(--nav-text, inherit); opacity: 1; }
 
 /* --- User Profile Dropdown (Modern Horizontal Glass Pill) ---------------- */
 .user-profile-dropdown {
@@ -346,8 +347,8 @@ body.staff-theme .logo-text h1 {
 
 /* Trigger button: Sleek horizontal glass capsule pill */
 .profile-trigger-btn {
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.12)) !important;
+  border: 1px solid var(--nav-divider, rgba(255, 255, 255, 0.22)) !important;
   outline: none;
   cursor: pointer;
   display: inline-flex;
@@ -363,14 +364,15 @@ body.staff-theme .logo-text h1 {
 }
 
 .profile-trigger-btn:hover {
-  background: rgba(255, 255, 255, 0.20);
-  border-color: rgba(255, 255, 255, 0.38);
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.20)) !important;
+  border-color: var(--nav-divider, rgba(255, 255, 255, 0.38)) !important;
+  filter: brightness(0.95);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .user-profile-dropdown.open .profile-trigger-btn {
-  background: rgba(255, 255, 255, 0.28);
-  border-color: rgba(255, 255, 255, 0.45);
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.28)) !important;
+  border-color: var(--nav-divider, rgba(255, 255, 255, 0.45)) !important;
 }
 
 .profile-avatar-circle {
@@ -405,19 +407,20 @@ body.staff-theme .logo-text h1 {
   font-family: inherit;
   font-weight: 700;
   font-size: 13px;
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
   letter-spacing: -0.2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: none !important;
   flex-shrink: 0 !important;
 }
 
 .profile-trigger-caret {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--nav-text-soft, var(--nav-text, rgba(255, 255, 255, 0.85))) !important;
+  -webkit-text-fill-color: var(--nav-text-soft, var(--nav-text, rgba(255, 255, 255, 0.85))) !important;
   transition: transform .2s ease;
   flex-shrink: 0 !important;
 }
@@ -1425,16 +1428,32 @@ body.staff-theme .drawer-nav-item.active i {
    The rules below restore correct contrast using the nav-text/nav-accent tokens.
    ========================================================================== */
 .nav-menu a:not(.btn):not(.profile-dropdown-item) {
-  color: var(--nav-text, #1c2430) !important;
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
 }
 .nav-menu a:not(.btn):not(.profile-dropdown-item) i {
-  color: var(--nav-text-soft, var(--nav-accent, #C62828)) !important;
+  color: var(--nav-text-soft, var(--nav-text, inherit)) !important;
+  -webkit-text-fill-color: var(--nav-text-soft, var(--nav-text, inherit)) !important;
 }
 .nav-menu a:hover:not(.btn):not(.profile-dropdown-item) {
-  color: var(--nav-accent, #C62828) !important;
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.15)) !important;
+}
+.nav-menu a:hover:not(.btn):not(.profile-dropdown-item) i {
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  opacity: 1 !important;
 }
 .nav-menu a.active:not(.btn):not(.profile-dropdown-item) {
-  color: var(--nav-accent, #C62828) !important;
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.22)) !important;
+}
+.nav-menu a.active:not(.btn):not(.profile-dropdown-item) i {
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  opacity: 1 !important;
 }
 
 /* --- Profile Dropdown: explicit text/icon visibility on white card --- */
@@ -1489,13 +1508,32 @@ body.staff-theme .drawer-nav-item.active i {
 }
 
 .nav-menu .dropbtn {
-  color: var(--nav-text, #1c2430) !important;
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
 }
 .nav-menu .dropbtn i {
-  color: var(--nav-text-soft, var(--nav-accent, #C62828)) !important;
+  color: var(--nav-text-soft, var(--nav-text, inherit)) !important;
+  -webkit-text-fill-color: var(--nav-text-soft, var(--nav-text, inherit)) !important;
 }
 .nav-menu .dropbtn:hover {
-  color: var(--nav-accent, #C62828) !important;
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.15)) !important;
+}
+.nav-menu .dropbtn:hover i {
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  opacity: 1 !important;
+}
+.nav-menu .dropbtn.active {
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  background: var(--nav-chip-bg, rgba(255, 255, 255, 0.22)) !important;
+}
+.nav-menu .dropbtn.active i {
+  color: var(--nav-text, inherit) !important;
+  -webkit-text-fill-color: var(--nav-text, inherit) !important;
+  opacity: 1 !important;
 }
 
 /* ==================================================================
@@ -1748,16 +1786,16 @@ body.admin-theme .autocomplete-badge {
   border: 1px solid #fca5a5 !important;
 }
 
-/* STAFF THEME (GREEN) */
+/* STAFF THEME */
 body.staff-theme .autocomplete-item i,
 body.staff-theme .autocomplete-item .autocomplete-item-text i {
-  color: #15803d !important;
-  -webkit-text-fill-color: #15803d !important;
+  color: var(--primary, #15803d) !important;
+  -webkit-text-fill-color: var(--primary, #15803d) !important;
 }
 body.staff-theme .autocomplete-item:hover,
 body.staff-theme .autocomplete-item.active-item {
-  background-color: #dcfce7 !important;
-  color: #15803d !important;
+  background-color: var(--primary-soft, #dcfce7) !important;
+  color: var(--primary, #15803d) !important;
 }
 body.staff-theme .autocomplete-item:hover span,
 body.staff-theme .autocomplete-item.active-item span,
@@ -1765,26 +1803,26 @@ body.staff-theme .autocomplete-item:hover .autocomplete-item-text,
 body.staff-theme .autocomplete-item.active-item .autocomplete-item-text,
 body.staff-theme .autocomplete-item:hover i,
 body.staff-theme .autocomplete-item.active-item i {
-  color: #15803d !important;
-  -webkit-text-fill-color: #15803d !important;
+  color: var(--primary, #15803d) !important;
+  -webkit-text-fill-color: var(--primary, #15803d) !important;
 }
 body.staff-theme .autocomplete-badge {
-  background-color: #dcfce7 !important;
-  color: #15803d !important;
-  -webkit-text-fill-color: #15803d !important;
-  border: 1px solid #86efac !important;
+  background-color: var(--primary-soft, #dcfce7) !important;
+  color: var(--primary, #15803d) !important;
+  -webkit-text-fill-color: var(--primary, #15803d) !important;
+  border: 1px solid var(--primary-soft, #86efac) !important;
 }
 
-/* GUEST THEME (ORANGE) */
+/* GUEST THEME */
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item i,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item-text i {
-  color: #ea580c !important;
-  -webkit-text-fill-color: #ea580c !important;
+  color: var(--primary, #C62828) !important;
+  -webkit-text-fill-color: var(--primary, #C62828) !important;
 }
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item {
-  background-color: #fff7ed !important;
-  color: #ea580c !important;
+  background-color: var(--primary-soft, #fee2e2) !important;
+  color: var(--primary, #C62828) !important;
 }
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover span,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item span,
@@ -1792,14 +1830,14 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover .autocomplete-
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item .autocomplete-item-text,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover i,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item i {
-  color: #ea580c !important;
-  -webkit-text-fill-color: #ea580c !important;
+  color: var(--primary, #C62828) !important;
+  -webkit-text-fill-color: var(--primary, #C62828) !important;
 }
 body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
-  background-color: #fff7ed !important;
-  color: #c2410c !important;
-  -webkit-text-fill-color: #c2410c !important;
-  border: 1px solid #ffedd5 !important;
+  background-color: var(--primary-soft, #fee2e2) !important;
+  color: var(--primary, #C62828) !important;
+  -webkit-text-fill-color: var(--primary, #C62828) !important;
+  border: 1px solid var(--primary-soft, #fecaca) !important;
 }
 
 /* Ensure modals and backdrops are always above the fixed navigation */

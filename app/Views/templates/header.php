@@ -98,7 +98,8 @@
 
         body.admin-theme .logo-text h1,
         body.staff-theme .logo-text h1 {
-            color: inherit;
+            color: var(--nav-text) !important;
+            -webkit-text-fill-color: var(--nav-text) !important;
         }
 
 

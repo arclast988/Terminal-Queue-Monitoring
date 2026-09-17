@@ -59,8 +59,12 @@
                                     <?php
                                     $typeSlug = is_array($type) ? $type['slug'] : $type;
                                     $typeName = is_array($type) ? $type['name'] : vehicle_type_label($type);
+                                    $typeIcon = is_array($type) && !empty($type['icon']) ? $type['icon'] : vehicle_type_icon($typeSlug);
+                                    $typeColor = is_array($type) && !empty($type['color']) ? $type['color'] : vehicle_type_color($typeSlug);
                                     ?>
-                                    <option value="<?= esc($typeSlug) ?>"><?= esc($typeName) ?></option>
+                                    <option value="<?= esc($typeSlug) ?>"
+                                            data-icon="<?= esc($typeIcon) ?>"
+                                            data-color="<?= esc($typeColor) ?>"><?= esc($typeName) ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>

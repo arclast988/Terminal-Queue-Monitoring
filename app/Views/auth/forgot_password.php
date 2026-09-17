@@ -53,8 +53,7 @@
 
         <?php
         $bgMode = app_bg_mode();
-        $useSingle = ($bgMode === 'single' && app_has_custom_bg());
-        $slides = app_bg_slideshow();
+        $useSingle = ($bgMode === 'single');
         ?>
         <?php if ($useSingle): ?>
         body::after {
@@ -72,33 +71,7 @@
             pointer-events: none;
         }
         <?php else: ?>
-        body::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            width: 100vw;
-            height: 100vh;
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: cover;
-            opacity: 0.22;
-            z-index: 0;
-            pointer-events: none;
-            animation: palomponBgSlideshow 30s infinite ease-in-out;
-        }
-
-        @keyframes palomponBgSlideshow {
-            0%, 17% { background-image: url('<?= esc($slides[1]) ?>'); opacity: 0.22; }
-            19% { opacity: 0.05; }
-            20%, 37% { background-image: url('<?= esc($slides[2]) ?>'); opacity: 0.22; }
-            39% { opacity: 0.05; }
-            40%, 57% { background-image: url('<?= esc($slides[3]) ?>'); opacity: 0.22; }
-            59% { opacity: 0.05; }
-            60%, 77% { background-image: url('<?= esc($slides[4]) ?>'); opacity: 0.22; }
-            79% { opacity: 0.05; }
-            80%, 97% { background-image: url('<?= esc($slides[5]) ?>'); opacity: 0.22; }
-            99% { opacity: 0.05; }
-        }
+        <?= app_bg_slideshow_css(null, 0.22) ?>
         <?php endif; ?>
 
         .scenery { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }

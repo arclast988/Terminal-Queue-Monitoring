@@ -689,6 +689,7 @@
                     <span class="text-muted small flex-shrink-0">Passengers</span>
                     <div class="d-flex align-items-center gap-2 ms-auto">
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
+                            data-action="passenger-decrement" data-id="<?= $item['id'] ?>"
                             class="btn-counter btn-counter-minus">
                             &minus;
                         </button>
@@ -699,10 +700,12 @@
                             <span id="full-badge-<?= $item['id'] ?>" class="full-badge-wrap" style="<?= $isFull ? 'display:block;' : 'display:none;' ?>"><span class="badge-modern badge-modern-danger full-badge" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span></span>
                         </span>
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
+                            data-action="passenger-increment" data-id="<?= $item['id'] ?>"
                             class="btn-counter btn-counter-plus">
                             &#43;
                         </button>
                         <button onclick="updatePassengers(<?= $item['id'] ?>, 'max')"
+                            data-action="passenger-max" data-id="<?= $item['id'] ?>"
                             class="btn-counter-max">MAX</button>
                     </div>
                 </div>
@@ -711,6 +714,7 @@
                 <div class="d-flex gap-2 px-3 pb-3">
                     <?php if ($isWaiting): ?>
                         <button onclick="updateStatus(<?= $item['id'] ?>, 'boarding', null, this)"
+                            data-action="update-status" data-id="<?= $item['id'] ?>" data-status="boarding"
                             class="btn-modern btn-modern-primary flex-fill" style="white-space:nowrap;">
                             Start Boarding
                         </button>
@@ -1777,6 +1781,88 @@
         extraRefresh: function() {
             // New queue cards carry fresh countdown targets — repaint immediately.
             updateCountdowns();
+        }
+    });
+
+    // Universal WebSocket document event listeners for full real-time reactivity
+    document.addEventListener('pttm:ws-queue_update', function(e) {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-vehicle_type_update', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-fare_update', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-operational_settings_updated', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-branding_updated', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+
+    // Delegated click listener for counter buttons and status actions so dynamically
+    // refreshed or replaced DOM cards always handle clicks without needing page reload
+    document.addEventListener('click', function(e) {
+        var minusBtn = e.target.closest('.btn-counter-minus, [data-action="passenger-decrement"]');
+        if (minusBtn) {
+            var id = minusBtn.getAttribute('data-id');
+            if (!id && minusBtn.getAttribute('onclick')) {
+                var m = minusBtn.getAttribute('onclick').match(/updatePassengers\((\d+)/);
+                if (m) id = m[1];
+            }
+            if (id) {
+                e.preventDefault();
+                updatePassengers(id, 'decrement');
+                return;
+            }
+        }
+        var plusBtn = e.target.closest('.btn-counter-plus, [data-action="passenger-increment"]');
+        if (plusBtn) {
+            var id = plusBtn.getAttribute('data-id');
+            if (!id && plusBtn.getAttribute('onclick')) {
+                var m = plusBtn.getAttribute('onclick').match(/updatePassengers\((\d+)/);
+                if (m) id = m[1];
+            }
+            if (id) {
+                e.preventDefault();
+                updatePassengers(id, 'increment');
+                return;
+            }
+        }
+        var maxBtn = e.target.closest('.btn-counter-max, [data-action="passenger-max"]');
+        if (maxBtn) {
+            var id = maxBtn.getAttribute('data-id');
+            if (!id && maxBtn.getAttribute('onclick')) {
+                var m = maxBtn.getAttribute('onclick').match(/updatePassengers\((\d+)/);
+                if (m) id = m[1];
+            }
+            if (id) {
+                e.preventDefault();
+                updatePassengers(id, 'max');
+                return;
+            }
+        }
+        var statusBtn = e.target.closest('[data-action="update-status"]');
+        if (statusBtn) {
+            var sId = statusBtn.getAttribute('data-id');
+            var status = statusBtn.getAttribute('data-status');
+            var modalId = statusBtn.getAttribute('data-modal-id') || null;
+            if (sId && status) {
+                e.preventDefault();
+                updateStatus(sId, status, modalId, statusBtn);
+                return;
+            }
         }
     });
 

@@ -741,7 +741,7 @@ body.staff-theme .badge.badge-truncate {
     font-size: clamp(14px, 0.4vw + 0.8rem, 16px) !important;
     box-sizing: border-box;
 }
-.search-bar button {
+.search-bar button:not(.guest-clear-search-btn) {
     padding: 0 clamp(15px, 3vw, 35px) !important;
     font-size: clamp(13px, 0.3vw + 0.75rem, 15px) !important;
     box-sizing: border-box;
@@ -765,7 +765,7 @@ body.staff-theme .badge.badge-truncate {
         flex: 1 1 auto !important;
         width: 1% !important;
     }
-    .search-bar button {
+    .search-bar button:not(.guest-clear-search-btn) {
         padding: 0 16px !important;
         height: 40px !important;
         border-radius: 50px !important;
@@ -785,7 +785,7 @@ body.staff-theme .badge.badge-truncate {
         padding: 7px 8px !important;
         font-size: 12px !important;
     }
-    .search-bar button {
+    .search-bar button:not(.guest-clear-search-btn) {
         padding: 0 11px !important;
         height: 36px !important;
         font-size: 11px !important;
@@ -3184,7 +3184,7 @@ a[title*="delete" i]:hover .bi,
     padding: 6px 8px !important;
     font-size: 12px !important;
   }
-  .search-bar button {
+  .search-bar button:not(.guest-clear-search-btn) {
     padding: 0 10px !important;
     height: 34px !important;
     font-size: 11px !important;

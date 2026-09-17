@@ -38,15 +38,15 @@
             <div class="f-links">
                 <h4>Contact</h4>
                 <ul>
-                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: #f97316;"></i> <?= esc(app_contact_address()) ?></li>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <?= esc(app_contact_address()) ?></li>
                     <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', app_contact_phone())) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
-                            <i class="fas fa-phone" style="margin-right: 10px; color: #f97316;"></i> <?= esc(app_contact_phone()) ?>
+                        <a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', app_contact_phone())) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;">
+                            <i class="fas fa-phone" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <?= esc(app_contact_phone()) ?>
                         </a>
                     </li>
                     <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="mailto:<?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;" onmouseover="this.style.color='#f97316'" onmouseout="this.style.color='inherit'">
-                            <i class="fas fa-envelope" style="margin-right: 10px; color: #f97316;"></i> <?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>
+                        <a href="mailto:<?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;">
+                            <i class="fas fa-envelope" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>
                         </a>
                     </li>
                 </ul>
@@ -385,7 +385,7 @@ footer {
     margin-bottom: 40px;
 }
 
-.f-about h3 { color: #f97316; font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+.f-about h3 { color: var(--primary, #C62828); font-size: 18px; font-weight: 800; margin-bottom: 20px; }
 .f-about p { font-size: 14px; color: #e2e8f0; line-height: 1.6; }
 
 .f-links h4 { margin-bottom: 20px; font-size: 16px; font-weight: 700; color: #ffffff; position: relative; }
@@ -393,7 +393,7 @@ footer {
     content: '';
     width: 30px;
     height: 2px;
-    background: #f97316;
+    background: var(--primary, #C62828);
     position: absolute;
     bottom: -8px;
     left: 0;
@@ -405,7 +405,7 @@ footer {
     color: #e2e8f0; text-decoration: none; font-size: 14px; font-weight: 500;
     transition: var(--transition);
 }
-.f-links a:hover { color: #f97316; padding-left: 5px; font-weight: 600; }
+.f-links a:hover { color: var(--primary, #C62828); padding-left: 5px; font-weight: 600; }
 
 /* Center copyright */
 .f-copyright {

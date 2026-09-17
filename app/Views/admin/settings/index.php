@@ -571,11 +571,11 @@ $slotsMeta = [
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #f97316 0%, #ef4444 50%, #f97316 100%);
+    background: linear-gradient(90deg, var(--sb-primary, #B71C1C) 0%, #ef4444 50%, var(--sb-primary, #B71C1C) 100%);
 }
 
 .footer-preview-about h4 {
-    color: #f97316;
+    color: var(--sb-primary, #B71C1C);
     font-size: 17px;
     font-weight: 700;
     margin: 0 0 10px;
@@ -1421,6 +1421,41 @@ $slotsMeta = [
                         <label class="form-label">Terminal Physical Address</label>
                         <input type="text" name="contact_address" class="form-input" value="<?= esc($s['contact_address'] ?? '') ?>" maxlength="200" placeholder="e.g. Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538">
                     </div>
+
+                    <div class="form-group full-width" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-main, #1e293b); margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-sign-in-alt text-danger"></i> Login Page Hero Presentation
+                        </h4>
+                        <p style="font-size: 12.5px; color: var(--text-muted, #64748b); margin-bottom: 12px;">Customize the headline, description, and feature points displayed on the login portal screen.</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Login Eyebrow / Kicker</label>
+                        <input type="text" name="login_kicker" class="form-input" value="<?= esc($s['login_kicker'] ?? 'Terminal Operations') ?>" maxlength="60" placeholder="e.g. Terminal Operations">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Login Main Headline</label>
+                        <input type="text" name="login_headline" class="form-input" value="<?= esc($s['login_headline'] ?? 'Move every van, jeepney & bus on time.') ?>" maxlength="120" placeholder="e.g. Move every van, jeepney & bus on time.">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Login Subheadline / Description</label>
+                        <textarea name="login_subheadline" class="form-input" rows="2" maxlength="250" placeholder="e.g. gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule."><?= esc($s['login_subheadline'] ?? 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.') ?></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Feature 1 Title</label>
+                        <input type="text" name="login_feature1_title" class="form-input" value="<?= esc($s['login_feature1_title'] ?? 'Real-time queue') ?>" maxlength="60" placeholder="e.g. Real-time queue">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Feature 1 Description</label>
+                        <input type="text" name="login_feature1_desc" class="form-input" value="<?= esc($s['login_feature1_desc'] ?? 'Live queue and departure status across every route.') ?>" maxlength="120" placeholder="e.g. Live queue and departure status across every route.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Feature 2 Title</label>
+                        <input type="text" name="login_feature2_title" class="form-input" value="<?= esc($s['login_feature2_title'] ?? 'Secure & audited') ?>" maxlength="60" placeholder="e.g. Secure & audited">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Feature 2 Description</label>
+                        <input type="text" name="login_feature2_desc" class="form-input" value="<?= esc($s['login_feature2_desc'] ?? 'Role-based access with a full activity audit trail.') ?>" maxlength="120" placeholder="e.g. Role-based access with a full activity audit trail.">
+                    </div>
                 </div>
                 <div class="form-action-row">
                     <button type="submit" class="btn-save"><i class="fas fa-save"></i> Save System Identity</button>
@@ -1500,18 +1535,19 @@ $slotsMeta = [
             <div id="sectionSlideshowManager" style="<?= $bgMode === 'slideshow' ? '' : 'display:none;' ?>">
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                     <div>
-                        <h4 style="font-size:15px; font-weight:700; margin:0; color:var(--sb-text-main);"><i class="fas fa-film" style="color:var(--sb-primary);"></i> Dynamic Slideshow Gallery (5+ Rotating Photos)</h4>
-                        <span style="font-size:12px; color:var(--sb-text-muted);">Click "Change Photo" on any slot, "+ Add Slideshow Photo" to add more than 5 photos, or reset to defaults.</span>
+                        <h4 style="font-size:15px; font-weight:700; margin:0; color:var(--sb-text-main);"><i class="fas fa-film" style="color:var(--sb-primary);"></i> Dynamic Slideshow Gallery (Rotating Photos)</h4>
+                        <span style="font-size:12px; color:var(--sb-text-muted);">Configure 1, 2, 3, 4, 5, or more rotating photos. Click "Change Photo" on any slot, delete with the trash icon, or click "+ Add Slideshow Photo".</span>
                     </div>
                     <button type="button" class="btn-reset-media" id="btnResetAllSlideshow">
-                        <i class="fas fa-rotate-left"></i> Reset All 5 to System Defaults
+                        <i class="fas fa-rotate-left"></i> Reset to Default 5 Photos
                     </button>
                 </div>
 
                 <div class="slideshow-grid" id="slideshowGrid">
                     <?php
-                    $allSlotKeys = array_unique(array_merge([1, 2, 3, 4, 5], array_keys($slideshowUrls)));
+                    $allSlotKeys = array_keys($slideshowUrls);
                     sort($allSlotKeys, SORT_NUMERIC);
+                    $slotCount = count($allSlotKeys);
                     ?>
                     <?php foreach ($allSlotKeys as $i): ?>
                         <?php
@@ -1544,11 +1580,10 @@ $slotsMeta = [
                                     <button type="button" class="btn-slot-reset" id="btnResetSlot-<?= $i ?>" onclick="resetSlotPhoto(<?= $i ?>);" title="Reset to default artwork" style="<?= $isCustom ? '' : 'display:none;' ?>">
                                         <i class="fas fa-undo"></i>
                                     </button>
-                                    <?php else: ?>
-                                    <button type="button" class="btn-slot-reset text-danger" id="btnDeleteSlot-<?= $i ?>" onclick="deleteSlotPhoto(<?= $i ?>);" title="Delete custom slot <?= $i ?>" style="border-color:#fca5a5; color:#dc2626; background:#fef2f2;">
+                                    <?php endif; ?>
+                                    <button type="button" class="btn-slot-reset text-danger btn-delete-slot" id="btnDeleteSlot-<?= $i ?>" onclick="deleteSlotPhoto(<?= $i ?>);" title="Delete photo from slideshow" style="border-color:#fca5a5; color:#dc2626; background:#fef2f2; <?= $slotCount > 1 ? '' : 'display:none;' ?>">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
-                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -1804,7 +1839,7 @@ $slotsMeta = [
             <!-- Public Footer Exact Live Preview (Matches Screenshot 1 & Screenshot 2) -->
             <div style="margin-bottom: 24px;">
                 <div style="font-size:12px; font-weight:700; color:var(--sb-text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">
-                    <i class="fas fa-eye" style="color:#f97316;"></i> Public Portal Footer Live Preview (Real-time View)
+                    <i class="fas fa-eye" style="color:var(--sb-primary, #B71C1C);"></i> Public Portal Footer Live Preview (Real-time View)
                 </div>
                 <div class="footer-preview-container">
                     <div class="footer-preview-about">
@@ -1826,7 +1861,7 @@ $slotsMeta = [
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">
-                            <span>Footer Headline Title <strong style="color:#f97316;">(Picture 1 Heading)</strong></span>
+                            <span>Footer Headline Title <strong style="color:var(--sb-primary, #B71C1C);">(Picture 1 Heading)</strong></span>
                             <span class="label-hint">e.g. PTTM System</span>
                         </label>
                         <input type="text" name="footer_about_title" class="form-input" id="inputFooterTitle" value="<?= esc($s['footer_about_title'] ?? 'PTTM System') ?>" maxlength="60" placeholder="e.g. PTTM System" required>
@@ -2215,6 +2250,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
     // 4. Role Theme Palettes Sync & Live Color Pickers
     // =========================================================================
+    function normalizeHex(hex) {
+        if (!hex) return '';
+        hex = hex.trim();
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        if (/^#[0-9a-fA-F]{3}$/.test(hex)) {
+            hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+        }
+        if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+            return hex.toUpperCase();
+        }
+        return '';
+    }
+
     document.querySelectorAll('input[type="color"][data-sync]').forEach(function(picker) {
         var textEl = document.getElementById(picker.dataset.sync);
         if (!textEl) return;
@@ -2275,17 +2323,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         picker.addEventListener('input', function() { updateColor(picker.value); });
-        textEl.addEventListener('input', function() {
-            var val = textEl.value.trim();
-            if (!val.startsWith('#') && /^[0-9a-fA-F]{6}$/.test(val)) {
-                val = '#' + val;
+
+        function syncFromText() {
+            var norm = normalizeHex(textEl.value);
+            if (norm) {
+                picker.value = norm;
+                updateColor(norm);
             }
-            if (/^#[0-9a-fA-F]{6}$/.test(val)) {
-                picker.value = val;
-                updateColor(val);
+        }
+
+        textEl.addEventListener('input', syncFromText);
+        textEl.addEventListener('change', syncFromText);
+        textEl.addEventListener('blur', function() {
+            var norm = normalizeHex(textEl.value);
+            if (norm) {
+                textEl.value = norm;
+                picker.value = norm;
+                updateColor(norm);
+            } else {
+                textEl.value = picker.value.toUpperCase();
             }
         });
     });
+
+    var formThemesEl = document.getElementById('formThemes');
+    if (formThemesEl) {
+        formThemesEl.addEventListener('submit', function() {
+            document.querySelectorAll('input[type="color"][data-sync]').forEach(function(p) {
+                var t = document.getElementById(p.dataset.sync);
+                if (t) {
+                    var norm = normalizeHex(t.value);
+                    if (norm) {
+                        p.value = norm;
+                        t.value = norm;
+                    }
+                }
+            });
+        }, true);
+    }
 
     // Preset helper function
     window.applyThemePreset = function(gp, gnb, gnt, sp, snb, snt, ap, anb, ant) {
@@ -2655,14 +2730,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 '<span class="slot-status-badge custom" id="slotBadge-' + slot + '">Custom</span>' +
                 '</div>' +
                 '<div class="slot-card-body">' +
-                '<h5>Custom Slot ' + slot + '</h5>' +
+                '<h5>Custom Photo Slot ' + slot + '</h5>' +
                 '<p>Additional rotating background photo for sign-in screens</p>' +
                 '<div class="slot-card-actions">' +
                 '<input type="file" id="slotFileInput-' + slot + '" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;" data-slot="' + slot + '">' +
                 '<button type="button" class="btn-slot-upload" onclick="document.getElementById(\'slotFileInput-' + slot + '\').click();" title="Upload new photo for Slot ' + slot + '">' +
                 '<i class="fas fa-upload"></i> Change Photo' +
                 '</button>' +
-                '<button type="button" class="btn-slot-reset text-danger" id="btnDeleteSlot-' + slot + '" onclick="deleteSlotPhoto(' + slot + ');" title="Delete custom slot ' + slot + '" style="border-color:#fca5a5; color:#dc2626; background:#fef2f2;">' +
+                '<button type="button" class="btn-slot-reset text-danger btn-delete-slot" id="btnDeleteSlot-' + slot + '" onclick="deleteSlotPhoto(' + slot + ');" title="Delete photo from slideshow" style="border-color:#fca5a5; color:#dc2626; background:#fef2f2;">' +
                 '<i class="fas fa-trash-alt"></i>' +
                 '</button>' +
                 '</div>' +
@@ -2670,6 +2745,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (addCard && addCard.parentNode) {
                 addCard.parentNode.insertBefore(newCard, addCard);
             }
+            // Ensure delete buttons are visible since we now have > 1 slot
+            document.querySelectorAll('.btn-delete-slot').forEach(function(btn) { btn.style.display = 'inline-flex'; });
         }, function(err) {
             showToast(err, false);
             input.value = '';
@@ -2687,7 +2764,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(function(data) {
                     if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                     if (data.success) {
-                        showToast(data.message || 'Slot deleted', true);
+                        showToast(data.message || 'Photo removed from slideshow.', true);
                         var card = document.getElementById('slotCard-' + slot);
                         if (card) {
                             card.style.transition = 'all 0.3s ease';
@@ -2695,6 +2772,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             card.style.transform = 'scale(0.8)';
                             setTimeout(function() {
                                 if (card.parentNode) card.parentNode.removeChild(card);
+                                var remaining = document.querySelectorAll('.slideshow-grid .slideshow-slot-card:not(.add-slot-card)');
+                                if (remaining.length <= 1) {
+                                    document.querySelectorAll('.btn-delete-slot').forEach(function(btn) { btn.style.display = 'none'; });
+                                }
                             }, 300);
                         }
                     } else {
@@ -2706,9 +2787,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (typeof window.confirmAction === 'function') {
             window.confirmAction({
-                title: 'Delete Slot',
+                title: 'Remove Photo',
                 message: 'Are you sure you want to remove Slot ' + slot + ' from the slideshow?',
-                confirmText: 'Delete Slot',
+                confirmText: 'Remove Photo',
                 onConfirm: doDelete
             });
         } else if (confirm('Are you sure you want to remove Slot ' + slot + ' from the slideshow?')) {
@@ -2729,19 +2810,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                         if (data.success) {
                             showToast(data.message, true);
-                            if (data.defaults) {
-                                for (var s = 1; s <= 5; s++) {
-                                    var img = document.getElementById('slotImg-' + s);
-                                    if (img && data.defaults[s]) img.src = data.defaults[s];
-                                    var badge = document.getElementById('slotBadge-' + s);
-                                    if (badge) {
-                                        badge.className = 'slot-status-badge default';
-                                        badge.textContent = 'Default';
-                                    }
-                                    var resetBtn = document.getElementById('btnResetSlot-' + s);
-                                    if (resetBtn) resetBtn.style.display = 'none';
-                                }
-                            }
+                            setTimeout(function() {
+                                window.location.reload();
+                            }, 600);
                         } else {
                             showToast(data.message || 'Reset failed', false);
                         }
@@ -2752,11 +2823,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.confirmAction === 'function') {
                 window.confirmAction({
                     title: 'Reset All Slideshow Photos',
-                    message: 'Are you sure you want to reset ALL 5 slideshow pictures back to system defaults?',
+                    message: 'Are you sure you want to restore the default 5 slideshow pictures?',
                     confirmText: 'Reset All Photos',
                     onConfirm: doResetAll
                 });
-            } else if (confirm('Are you sure you want to reset ALL 5 slideshow pictures back to system defaults?')) {
+            } else if (confirm('Are you sure you want to restore the default 5 slideshow pictures?')) {
                 doResetAll();
             }
         });

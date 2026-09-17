@@ -161,7 +161,7 @@
     </div>
     <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="stat-card-modern fade-in">
-            <div class="stat-card-icon" style="background: #fdecea; color: #c62828;">
+            <div class="stat-card-icon" style="background: var(--primary-soft, #fdecea); color: var(--primary, #c62828);">
                 <i class="bi bi-journal-text"></i>
             </div>
             <div class="stat-card-value"><?= $stats['logs'] ?></div>
@@ -279,6 +279,26 @@
         }
     });
     document.addEventListener('pttm:ws-fare_update', function(e) {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-vehicle_type_update', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-operational_settings_updated', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-announcement_update', function() {
+        if (window.QueueSync && window.QueueSync.refresh) {
+            window.QueueSync.refresh();
+        }
+    });
+    document.addEventListener('pttm:ws-branding_updated', function() {
         if (window.QueueSync && window.QueueSync.refresh) {
             window.QueueSync.refresh();
         }

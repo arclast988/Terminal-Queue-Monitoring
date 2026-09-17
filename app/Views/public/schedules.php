@@ -266,13 +266,14 @@
             flex: 1;
             border: none;
             padding: 15px 25px;
+            padding-right: 185px !important;
             font-size: 16px;
             outline: none;
             background: transparent;
             font-family: inherit;
         }
 
-        .search-bar button {
+        .search-bar button:not(.guest-clear-search-btn) {
             background: var(--primary, #B71C1C);
             color: var(--on-primary, white);
             border: none;
@@ -283,16 +284,19 @@
             transition: var(--transition);
         }
 
-        .search-bar button:hover {
+        .search-bar button:not(.guest-clear-search-btn):hover {
             background: var(--primary-dark, #8B0000);
         }
 
         #guest-schedule-clear-btn {
-            right: 120px !important;
+            right: 155px !important;
         }
         @media (max-width: 768px) {
+            .search-bar input {
+                padding-right: 125px !important;
+            }
             #guest-schedule-clear-btn {
-                right: 95px !important;
+                right: 98px !important;
             }
         }
 
@@ -468,7 +472,7 @@
         }
 
         .count-badge {
-            background: #e3f2fd;
+            background: var(--primary-soft, #e3f2fd);
             color: var(--primary);
             padding: 5px 15px;
             border-radius: 50px;
@@ -752,7 +756,7 @@
                 flex: 1;
                 width: auto;
             }
-            .search-bar button {
+            .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 18px;
                 height: 42px;
                 border-radius: 50px;
@@ -876,10 +880,10 @@
         }
 
         .route-chip.active {
-            background: #000000 !important;
-            border-color: #000000 !important;
-            color: #ffffff !important;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            background: var(--primary, #C62828) !important;
+            border-color: var(--primary, #C62828) !important;
+            color: var(--on-primary, #ffffff) !important;
+            box-shadow: 0 3px 8px var(--primary-soft, rgba(0, 0, 0, 0.25));
             transform: translateY(0);
         }
 
@@ -901,7 +905,7 @@
 
         .route-chip.active .chip-count {
             background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+            color: var(--on-primary, #ffffff);
         }
 
         /* --- Compact Mobile (≤ 420px) --- */
@@ -933,7 +937,7 @@
                 padding: 8px 10px !important;
                 font-size: 12px !important;
             }
-            .search-bar button {
+            .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 12px !important;
                 height: 36px !important;
                 font-size: 11px !important;
@@ -1024,7 +1028,10 @@
                     <select name="type" id="vehicleTypeSelect">
                         <option value="">All Types</option>
                         <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                            <option value="<?= esc($vehicleType['slug']) ?>" <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                            <option value="<?= esc($vehicleType['slug']) ?>"
+                                    data-icon="<?= esc(!empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug'])) ?>"
+                                    data-color="<?= esc(!empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug'])) ?>"
+                                    <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -1484,10 +1491,37 @@
                 customWSHandler: handleLiveQueueUpdate
             });
 
-            // Universal WebSocket document event listener
+            // Universal WebSocket document event listeners for full real-time responsiveness
             document.addEventListener('pttm:ws-queue_update', function(e) {
                 handleLiveQueueUpdate(e.detail);
             });
+            document.addEventListener('pttm:ws-vehicle_type_update', function() {
+                fetchSchedulesStatus(false);
+            });
+            document.addEventListener('pttm:ws-operational_settings_updated', function() {
+                fetchSchedulesStatus(false);
+            });
+            document.addEventListener('pttm:ws-fare_update', function() {
+                fetchSchedulesStatus(false);
+            });
+            document.addEventListener('pttm:ws-announcement_update', function() {
+                fetchSchedulesStatus(false);
+            });
+            document.addEventListener('pttm:ws-branding_updated', function() {
+                fetchSchedulesStatus(false);
+            });
+
+            // Multi-tab sync via BroadcastChannel for instant local updates
+            if (window.BroadcastChannel) {
+                try {
+                    var _queueBc = new BroadcastChannel('pttm_queue_channel');
+                    _queueBc.onmessage = function(e) {
+                        if (e.data) {
+                            handleLiveQueueUpdate(e.data);
+                        }
+                    };
+                } catch(e) {}
+            }
 
             fetchSchedulesStatus(false);
         });

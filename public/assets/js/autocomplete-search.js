@@ -212,16 +212,16 @@
                 -webkit-text-fill-color: #1e293b !important;
             }
 
-            /* --- ADMIN THEME (RED) --- */
+            /* --- ADMIN THEME --- */
             body.admin-theme .autocomplete-item i,
             body.admin-theme .autocomplete-item .autocomplete-item-text i {
-                color: #c62828 !important;
-                -webkit-text-fill-color: #c62828 !important;
+                color: var(--primary, #B71C1C) !important;
+                -webkit-text-fill-color: var(--primary, #B71C1C) !important;
             }
             body.admin-theme .autocomplete-item:hover,
             body.admin-theme .autocomplete-item.active-item {
-                background-color: #fdecea !important;
-                color: #c62828 !important;
+                background-color: var(--primary-soft, #fee2e2) !important;
+                color: var(--primary, #B71C1C) !important;
             }
             body.admin-theme .autocomplete-item:hover span,
             body.admin-theme .autocomplete-item.active-item span,
@@ -229,26 +229,26 @@
             body.admin-theme .autocomplete-item.active-item .autocomplete-item-text,
             body.admin-theme .autocomplete-item:hover i,
             body.admin-theme .autocomplete-item.active-item i {
-                color: #c62828 !important;
-                -webkit-text-fill-color: #c62828 !important;
+                color: var(--primary, #B71C1C) !important;
+                -webkit-text-fill-color: var(--primary, #B71C1C) !important;
             }
             body.admin-theme .autocomplete-badge {
-                background: #fdecea !important;
-                color: #b71c1c !important;
-                -webkit-text-fill-color: #b71c1c !important;
-                border: 1px solid #fca5a5 !important;
+                background: var(--primary-soft, #fee2e2) !important;
+                color: var(--primary, #B71C1C) !important;
+                -webkit-text-fill-color: var(--primary, #B71C1C) !important;
+                border: 1px solid var(--primary-soft, #fca5a5) !important;
             }
 
-            /* --- STAFF THEME (BLUE) --- */
+            /* --- STAFF THEME --- */
             body.staff-theme .autocomplete-item i,
             body.staff-theme .autocomplete-item .autocomplete-item-text i {
-                color: #1565c0 !important;
-                -webkit-text-fill-color: #1565c0 !important;
+                color: var(--primary, #15803d) !important;
+                -webkit-text-fill-color: var(--primary, #15803d) !important;
             }
             body.staff-theme .autocomplete-item:hover,
             body.staff-theme .autocomplete-item.active-item {
-                background-color: #e8effd !important;
-                color: #1565c0 !important;
+                background-color: var(--primary-soft, #dcfce7) !important;
+                color: var(--primary, #15803d) !important;
             }
             body.staff-theme .autocomplete-item:hover span,
             body.staff-theme .autocomplete-item.active-item span,
@@ -256,26 +256,26 @@
             body.staff-theme .autocomplete-item.active-item .autocomplete-item-text,
             body.staff-theme .autocomplete-item:hover i,
             body.staff-theme .autocomplete-item.active-item i {
-                color: #1565c0 !important;
-                -webkit-text-fill-color: #1565c0 !important;
+                color: var(--primary, #15803d) !important;
+                -webkit-text-fill-color: var(--primary, #15803d) !important;
             }
             body.staff-theme .autocomplete-badge {
-                background: #e8effd !important;
-                color: #1565c0 !important;
-                -webkit-text-fill-color: #1565c0 !important;
-                border: 1px solid #93c5fd !important;
+                background: var(--primary-soft, #dcfce7) !important;
+                color: var(--primary, #15803d) !important;
+                -webkit-text-fill-color: var(--primary, #15803d) !important;
+                border: 1px solid var(--primary-soft, #86efac) !important;
             }
 
-            /* --- GUEST / DEFAULT THEME (ORANGE / TEAL) --- */
+            /* --- GUEST / DEFAULT THEME --- */
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item i,
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item-text i {
-                color: #ea580c !important;
-                -webkit-text-fill-color: #ea580c !important;
+                color: var(--primary, #C62828) !important;
+                -webkit-text-fill-color: var(--primary, #C62828) !important;
             }
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover,
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item {
-                background-color: #fff7ed !important;
-                color: #ea580c !important;
+                background-color: var(--primary-soft, #fee2e2) !important;
+                color: var(--primary, #C62828) !important;
             }
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover span,
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item span,
@@ -283,14 +283,14 @@
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item .autocomplete-item-text,
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover i,
             body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item i {
-                color: #ea580c !important;
-                -webkit-text-fill-color: #ea580c !important;
+                color: var(--primary, #C62828) !important;
+                -webkit-text-fill-color: var(--primary, #C62828) !important;
             }
             body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
-                background: #fff7ed !important;
-                color: #c2410c !important;
-                -webkit-text-fill-color: #c2410c !important;
-                border: 1px solid #ffedd5 !important;
+                background: var(--primary-soft, #fee2e2) !important;
+                color: var(--primary, #C62828) !important;
+                -webkit-text-fill-color: var(--primary, #C62828) !important;
+                border: 1px solid var(--primary-soft, #fecaca) !important;
             }
         `;
         document.head.appendChild(style);
@@ -618,6 +618,7 @@
                         text: opt.text.trim(),
                         selected: opt.selected,
                         color: opt.getAttribute('data-color') || '',
+                        icon: opt.getAttribute('data-icon') || '',
                         isPlaceholder: isPlaceholderOption(opt),
                         isDeparted: opt.getAttribute('data-departed') === 'true' || opt.text.toUpperCase().includes('DEPARTED')
                     }));
@@ -641,6 +642,7 @@
             }
 
             updateInputValue();
+            selectEl.addEventListener('change', updateInputValue);
             wrapper.appendChild(searchInput);
             wrapper.appendChild(clearBtn);
 
@@ -716,6 +718,18 @@
                     iconColor = '#e11d48';
                 }
 
+                function resolveVehicleTypeIconMeta(val, txt) {
+                    const key = ((val || '') + ' ' + (txt || '')).toLowerCase();
+                    if (key.includes('van') || key.includes('shuttle')) return { icon: 'fa-van-shuttle', color: '#c62828' };
+                    if (key.includes('jeep')) return { icon: 'fa-truck-front', color: '#1565c0' };
+                    if (key.includes('minibus')) return { icon: 'fa-bus', color: '#2e7d32' };
+                    if (key.includes('bus') || key.includes('coach')) return { icon: 'fa-bus-simple', color: '#ea580c' };
+                    if (key.includes('tri') || key.includes('habal') || key.includes('motor') || key.includes('bike')) return { icon: 'fa-motorcycle', color: '#7c3aed' };
+                    if (key.includes('taxi') || key.includes('cab')) return { icon: 'fa-taxi', color: '#ca8a04' };
+                    if (key.includes('car') || key.includes('sedan')) return { icon: 'fa-car', color: '#0891b2' };
+                    return null;
+                }
+
                 dropdown.innerHTML = filtered.map((opt, idx) => {
                     let displayName = opt.text;
                     // Only apply text highlight if actively filtering (not just focusing with the full text selected)
@@ -726,10 +740,26 @@
                     const departedBadgeHtml = opt.isDeparted ? `<span class="badge bg-secondary bg-opacity-75 text-white ms-2" style="font-size: 10px; padding: 2px 7px; border-radius: 4px;"><i class="bi bi-send-check me-1"></i>DEPARTED</span>` : '';
                     const isAllOption = /^all\b/i.test(opt.text);
                     const itemBadge = isAllOption ? 'All' : categoryBadge;
-                    const itemIcon = isAllOption ? 'bi bi-grid-fill' : iconClass;
-                    // Per-option color (e.g. vehicle-type options carry their
-                    // type color) keeps dropdown icons consistent with badges.
-                    const itemColor = isAllOption ? '#64748b' : (opt.color || iconColor);
+                    let itemIcon = isAllOption ? 'bi bi-grid-fill' : iconClass;
+                    let itemColor = isAllOption ? '#64748b' : (opt.color || iconColor);
+
+                    if (!isAllOption) {
+                        if (opt.icon) {
+                            if (opt.icon.startsWith('fa-')) {
+                                itemIcon = 'fas ' + opt.icon;
+                            } else if (opt.icon.startsWith('bi-')) {
+                                itemIcon = 'bi ' + opt.icon;
+                            } else {
+                                itemIcon = opt.icon;
+                            }
+                        } else if (fieldName.includes('type') || fieldName.includes('vehicle')) {
+                            const vtMeta = resolveVehicleTypeIconMeta(opt.value, opt.text);
+                            if (vtMeta) {
+                                itemIcon = 'fas ' + vtMeta.icon;
+                                if (!opt.color) itemColor = vtMeta.color;
+                            }
+                        }
+                    }
 
                     return `
                         <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"

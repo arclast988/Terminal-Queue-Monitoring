@@ -257,13 +257,18 @@
             flex: 1;
             border: none;
             padding: 15px 25px;
+            padding-right: 185px !important;
             font-size: 16px;
             outline: none;
             background: transparent;
             font-family: inherit;
         }
 
-        .search-bar button {
+        #guest-hero-clear-btn {
+            right: 155px !important;
+        }
+
+        .search-bar button:not(.guest-clear-search-btn) {
             background: var(--primary, #B71C1C);
             color: var(--on-primary, white);
             border: none;
@@ -274,7 +279,7 @@
             transition: var(--transition);
         }
 
-        .search-bar button:hover {
+        .search-bar button:not(.guest-clear-search-btn):hover {
             background: var(--primary-dark, #8B0000);
         }
 
@@ -332,13 +337,17 @@
             }
             .search-bar input {
                 padding: 10px 14px;
+                padding-right: 140px !important;
                 font-size: 13.5px;
                 text-align: left;
                 min-width: 0;
                 flex: 1;
                 width: auto;
             }
-            .search-bar button {
+            #guest-hero-clear-btn {
+                right: 110px !important;
+            }
+            .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 18px;
                 height: 42px;
                 border-radius: 50px;
@@ -351,6 +360,12 @@
         }
 
         @media (max-width: 480px) {
+            .search-bar input {
+                padding-right: 120px !important;
+            }
+            #guest-hero-clear-btn {
+                right: 95px !important;
+            }
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
                 justify-content: center;
@@ -425,7 +440,7 @@
         .stat-card:hover {
             transform: translateY(-8px);
             box-shadow: var(--shadow-lg);
-            border-color: rgba(30, 64, 175, 0.1);
+            border-color: var(--primary-soft, rgba(30, 64, 175, 0.1));
         }
 
         .stat-card-link {
@@ -438,7 +453,7 @@
         .stat-card-link:focus,
         .stat-card-button:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.25), var(--shadow-md);
+            box-shadow: 0 0 0 3px var(--primary-soft, rgba(21, 101, 192, 0.25)), var(--shadow-md);
         }
 
         .stat-card .stat-icon-wrapper {
@@ -616,10 +631,10 @@
         }
 
         .rules-route-chip.active {
-            background: #000000 !important;
-            border-color: #000000 !important;
-            color: #ffffff !important;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            background: var(--primary, #C62828) !important;
+            border-color: var(--primary, #C62828) !important;
+            color: var(--on-primary, #ffffff) !important;
+            box-shadow: 0 3px 8px var(--primary-soft, rgba(0, 0, 0, 0.25));
             transform: translateY(0);
         }
 
@@ -641,7 +656,7 @@
 
         .rules-route-chip.active .chip-count {
             background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+            color: var(--on-primary, #ffffff);
         }
 
         .route-average-body {
@@ -915,10 +930,10 @@
         }
 
         .filter-chip.active {
-            background: #000000;
-            border-color: #000000;
-            color: white;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+            background: var(--primary, #C62828);
+            border-color: var(--primary, #C62828);
+            color: var(--on-primary, white);
+            box-shadow: 0 3px 8px var(--primary-soft, rgba(0, 0, 0, 0.25));
         }
 
         .filter-chip .chip-count {
@@ -940,7 +955,7 @@
 
         .filter-chip.active .chip-count {
             background: rgba(255, 255, 255, 0.25);
-            color: #ffffff;
+            color: var(--on-primary, #ffffff);
         }
 
         .filter-chip:hover:not(.active) .chip-count {
@@ -1986,7 +2001,7 @@
         }
 
         .support-widget:hover {
-            border-color: var(--accent);
+            border-color: var(--primary, #C62828);
             transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
         }
@@ -3294,6 +3309,14 @@
                 fetchStatus();
             }
         });
+
+        // Universal WebSocket document event listeners for full real-time reactivity
+        document.addEventListener('pttm:ws-queue_update', function() { fetchStatus(); });
+        document.addEventListener('pttm:ws-vehicle_type_update', function() { fetchStatus(); });
+        document.addEventListener('pttm:ws-fare_update', function() { fetchStatus(); });
+        document.addEventListener('pttm:ws-operational_settings_updated', function() { fetchStatus(); });
+        document.addEventListener('pttm:ws-announcement_update', function() { fetchStatus(); });
+        document.addEventListener('pttm:ws-branding_updated', function() { fetchStatus(); });
 
         // Cross-tab broadcast sync for instant passenger updates across open windows
         try {

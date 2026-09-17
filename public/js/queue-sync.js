@@ -156,14 +156,33 @@
         return html;
     }
 
-    function replaceElementChildrenSafely(targetEl, sourceHtml, isTableBody) {
+    function replaceElementChildrenSafely(targetEl, source, isTableBody) {
         if (!targetEl) return;
+
+        // Fast & faithful path: If source is an Element/Node from DOMParser (same-origin, authenticated HTML)
+        if (source && typeof source === 'object' && source.nodeType) {
+            var frag = document.createDocumentFragment();
+            while (source.firstChild) {
+                frag.appendChild(document.importNode(source.firstChild, true));
+            }
+            if (typeof targetEl.replaceChildren === 'function') {
+                targetEl.replaceChildren(frag);
+            } else {
+                while (targetEl.firstChild) {
+                    targetEl.removeChild(targetEl.firstChild);
+                }
+                targetEl.appendChild(frag);
+            }
+            return;
+        }
+
+        var sourceHtml = (typeof source === 'string') ? source : (source ? source.innerHTML : '');
         if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
             var wrappedHtml = isTableBody
                 ? ('<table><tbody>' + (sourceHtml || '') + '</tbody></table>')
                 : ('<div>' + (sourceHtml || '') + '</div>');
             var cleanFragment = DOMPurify.sanitize(wrappedHtml, {
-                ADD_ATTR: ['style'],
+                ADD_ATTR: ['style', 'data-action', 'data-id', 'data-plate', 'data-type', 'data-driver', 'data-capacity', 'data-destination', 'data-vehicle-type', 'data-search', 'data-departure'],
                 RETURN_DOM_FRAGMENT: true
             });
             if (cleanFragment) {
@@ -232,21 +251,21 @@
             var curTbody = curEl.querySelector('tbody');
             var newTbody = newEl.querySelector('tbody');
             if (curTbody && newTbody) {
-                replaceElementChildrenSafely(curTbody, newTbody.innerHTML, true);
+                replaceElementChildrenSafely(curTbody, newTbody, true);
             } else {
-                replaceElementChildrenSafely(curEl, newEl.innerHTML, false);
+                replaceElementChildrenSafely(curEl, newEl, false);
             }
             return;
         }
 
         // If target is <tbody>, update its row contents
         if (curEl.tagName === 'TBODY') {
-            replaceElementChildrenSafely(curEl, newEl.innerHTML, true);
+            replaceElementChildrenSafely(curEl, newEl, true);
             return;
         }
 
         // Non-table elements (e.g. #queue-list card container)
-        replaceElementChildrenSafely(curEl, newEl.innerHTML, false);
+        replaceElementChildrenSafely(curEl, newEl, false);
     }
 
     function refreshQueueCards(newDoc) {
@@ -297,12 +316,12 @@
                     var curBody = curModal.querySelector('.modal-body');
                     var newBody = newModal.querySelector('.modal-body');
                     if (curBody && newBody) {
-                        replaceElementChildrenSafely(curBody, newBody.innerHTML, false);
+                        replaceElementChildrenSafely(curBody, newBody, false);
                     }
                     var curFoot = curModal.querySelector('.modal-footer');
                     var newFoot = newModal.querySelector('.modal-footer');
                     if (curFoot && newFoot) {
-                        replaceElementChildrenSafely(curFoot, newFoot.innerHTML, false);
+                        replaceElementChildrenSafely(curFoot, newFoot, false);
                     }
                     try {
                         document.dispatchEvent(new CustomEvent('vehicle-list-refreshed'));
@@ -321,7 +340,7 @@
         var searchInput = document.getElementById('vehicleModalSearch');
         var searchVal = searchInput ? searchInput.value : '';
 
-        replaceElementChildrenSafely(curList, newList.innerHTML, false);
+        replaceElementChildrenSafely(curList, newList, false);
 
         // Restore selection + selected styling for rows that still exist.
         var restored = 0;

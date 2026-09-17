@@ -248,13 +248,14 @@
             flex: 1;
             border: none;
             padding: 15px 25px;
+            padding-right: 185px !important;
             font-size: 16px;
             outline: none;
             background: transparent;
             font-family: inherit;
         }
 
-        .search-bar button {
+        .search-bar button:not(.guest-clear-search-btn) {
             background: var(--primary, #B71C1C);
             color: var(--on-primary, white);
             border: none;
@@ -265,16 +266,19 @@
             transition: var(--transition);
         }
 
-        .search-bar button:hover {
+        .search-bar button:not(.guest-clear-search-btn):hover {
             background: var(--primary-dark, #8B0000);
         }
 
         #guest-results-clear-btn {
-            right: 120px !important;
+            right: 155px !important;
         }
         @media (max-width: 768px) {
+            .search-bar input {
+                padding-right: 125px !important;
+            }
             #guest-results-clear-btn {
-                right: 95px !important;
+                right: 98px !important;
             }
         }
 
@@ -393,50 +397,57 @@
         .results-section {
             background: white;
             border-radius: 20px;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 30px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: var(--shadow-md);
             border: 1px solid #edf2f7;
-            overflow: hidden;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+
+        .results-section:hover {
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-soft, rgba(198, 40, 40, 0.1));
         }
 
         .results-section-header {
-            background: #1e3a8a !important;
-            color: #ffffff !important;
-            padding: 18px 25px;
+            padding: 20px 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 15px;
+            background: white !important;
+            border-bottom: 1px solid #eee;
         }
 
         .results-section-header h3 {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 800;
             margin: 0;
             display: flex;
             align-items: center;
             gap: 12px;
-            color: #ffffff !important;
+            color: #000000 !important;
         }
 
         .results-section-header h3 i {
             font-size: 20px;
-            color: #ffffff !important;
+            color: var(--primary, #C62828) !important;
         }
 
         .badge-count {
-            background: rgba(255,255,255,0.22) !important;
-            color: #ffffff !important;
-            border: 1px solid rgba(255,255,255,0.3) !important;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 12.5px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
+            background: var(--primary-soft, #fee2e2) !important;
+            color: var(--primary, #C62828) !important;
+            border: none !important;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: normal;
         }
 
         .section-departures-header {
-            background: #334155 !important;
+            background: white !important;
         }
 
         .operator-cell {
@@ -463,17 +474,17 @@
         }
 
         .results-table th {
-            padding: 18px;
+            padding: 15px 25px;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
-            color: var(--primary-dark);
+            color: var(--text-muted, #64748b);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .results-table td {
-            padding: 18px;
+            padding: 20px 25px;
             border-bottom: 1px solid #edf2f7;
             font-size: 14px;
             color: var(--text-main);
@@ -531,8 +542,40 @@
 
         .plate-number {
             font-weight: 700;
-            color: var(--primary-dark);
+            color: var(--text-main, #1e293b);
+            font-family: monospace;
             font-size: 15px;
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+
+        .operator-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 14px;
+        }
+        .operator-cell i {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .driver-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 14px;
+        }
+        .driver-cell i {
+            color: #64748b;
+            font-size: 13px;
         }
 
         .route-info {
@@ -560,19 +603,6 @@
             padding: 5px 12px;
             border-radius: 8px;
             display: inline-block;
-        }
-
-        .driver-cell {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-weight: 600;
-            color: var(--text-main);
-            font-size: 14px;
-        }
-        .driver-cell i {
-            color: var(--text-muted);
-            font-size: 12px;
         }
 
         .status-badge {
@@ -691,7 +721,7 @@
                 flex: 1;
                 width: auto;
             }
-            .search-bar button {
+            .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 18px;
                 height: 42px;
                 border-radius: 50px;
@@ -747,7 +777,7 @@
                 text-transform: uppercase;
                 text-align: left;
             }
-            .results-section-header { flex-direction: column; align-items: flex-start; }
+            .results-section-header { padding: 16px 20px; flex-wrap: wrap; }
             .vehicle-icon { width: 40px; height: 40px; margin-right: 6px; }
         }
 

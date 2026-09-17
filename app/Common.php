@@ -257,11 +257,6 @@ if (! function_exists('vehicle_type_icon')) {
         }
 
         $typeKey = vehicle_type_key($type);
-        $dbTypes = get_db_vehicle_types();
-        if (!empty($dbTypes[$typeKey]['icon'])) {
-            return $dbTypes[$typeKey]['icon'];
-        }
-
         $icons = [
             'van'         => 'fa-van-shuttle',
             'jeepney'     => 'fa-truck-front',
@@ -275,17 +270,42 @@ if (! function_exists('vehicle_type_icon')) {
             'car'         => 'fa-car',
         ];
 
+        $dbTypes = get_db_vehicle_types();
+        if (!empty($dbTypes[$typeKey]['icon'])) {
+            $dbIcon = $dbTypes[$typeKey]['icon'];
+            // If the database has the legacy unconfigured default 'fa-bus' on a non-bus
+            // type (like Van or Jeepney), return the proper distinct icon matching the system.
+            if ($dbIcon !== 'fa-bus' || in_array($typeKey, ['minibus', 'bus'], true)) {
+                return $dbIcon;
+            }
+        }
+
         if (str_contains($typeKey, 'habal') || str_contains($typeKey, 'motor') || str_contains($typeKey, 'bike')) {
             return 'fa-motorcycle';
         }
         if (str_contains($typeKey, 'tri')) {
             return 'fa-motorcycle';
         }
-        if (str_contains($typeKey, 'bus')) {
+        if (str_contains($typeKey, 'jeep')) {
+            return 'fa-truck-front';
+        }
+        if (str_contains($typeKey, 'van') || str_contains($typeKey, 'shuttle')) {
+            return 'fa-van-shuttle';
+        }
+        if (str_contains($typeKey, 'taxi') || str_contains($typeKey, 'cab')) {
+            return 'fa-taxi';
+        }
+        if (str_contains($typeKey, 'car') || str_contains($typeKey, 'sedan')) {
+            return 'fa-car';
+        }
+        if (str_contains($typeKey, 'minibus')) {
             return 'fa-bus';
         }
+        if (str_contains($typeKey, 'bus') || str_contains($typeKey, 'coach')) {
+            return 'fa-bus-simple';
+        }
 
-        return $icons[$typeKey] ?? 'fa-bus';
+        return $icons[$typeKey] ?? 'fa-bus-simple';
     }
 }
 
@@ -313,12 +333,30 @@ if (! function_exists('vehicle_type_bi_icon')) {
         if (str_contains($typeKey, 'habal') || str_contains($typeKey, 'motor') || str_contains($typeKey, 'bike') || str_contains($typeKey, 'tri')) {
             return 'bi-bicycle';
         }
+        if (str_contains($typeKey, 'jeep')) {
+            return 'bi-truck';
+        }
+        if (str_contains($typeKey, 'van') || str_contains($typeKey, 'shuttle')) {
+            return 'bi-truck-front';
+        }
+        if (str_contains($typeKey, 'taxi') || str_contains($typeKey, 'cab')) {
+            return 'bi-taxi-front';
+        }
+        if (str_contains($typeKey, 'car') || str_contains($typeKey, 'sedan')) {
+            return 'bi-car-front';
+        }
+        if (str_contains($typeKey, 'minibus')) {
+            return 'bi-bus-front';
+        }
+        if (str_contains($typeKey, 'bus')) {
+            return 'bi-bus-front-fill';
+        }
 
         if (! empty($faIcon)) {
             if (str_contains($faIcon, 'motorcycle') || str_contains($faIcon, 'bicycle')) return 'bi-bicycle';
             if (str_contains($faIcon, 'car')) return 'bi-car-front';
             if (str_contains($faIcon, 'taxi')) return 'bi-taxi-front';
-            if (str_contains($faIcon, 'van')) return 'bi-truck-front';
+            if (str_contains($faIcon, 'van') || str_contains($faIcon, 'shuttle')) return 'bi-truck-front';
             if (str_contains($faIcon, 'truck')) return 'bi-truck';
             if (str_contains($faIcon, 'bus')) return 'bi-bus-front';
         }
@@ -470,6 +508,13 @@ if (! function_exists('get_all_system_settings')) {
             'contact_email'          => '',
             'contact_phone'          => '(053) 555-8376 / 338-2022',
             'contact_address'        => 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538',
+            'login_headline'         => 'Move every van, jeepney & bus on time.',
+            'login_subheadline'      => 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.',
+            'login_kicker'           => 'Terminal Operations',
+            'login_feature1_title'   => 'Real-time queue',
+            'login_feature1_desc'    => 'Live queue and departure status across every route.',
+            'login_feature2_title'   => 'Secure & audited',
+            'login_feature2_desc'    => 'Role-based access with a full activity audit trail.',
             'log_retention_days'       => '60',
             'departure_retention_days' => '60',
             'vehicle_cooldown_minutes' => '30',
@@ -569,6 +614,71 @@ if (! function_exists('app_subtitle')) {
     function app_subtitle(): string
     {
         return get_system_setting('app_subtitle', 'Terminal Monitor') ?: 'Terminal Monitor';
+    }
+}
+
+if (! function_exists('login_headline')) {
+    function login_headline(): string
+    {
+        return get_system_setting('login_headline', 'Move every van, jeepney & bus on time.') ?: 'Move every van, jeepney & bus on time.';
+    }
+}
+
+if (! function_exists('login_headline_html')) {
+    function login_headline_html(): string
+    {
+        $raw = login_headline();
+        if (str_contains($raw, '<span')) {
+            return $raw;
+        }
+        $words = explode(' ', trim($raw));
+        if (count($words) >= 2) {
+            $lastTwo = array_splice($words, -2);
+            return esc(implode(' ', $words)) . ' <span class="accent">' . esc(implode(' ', $lastTwo)) . '</span>';
+        }
+        return esc($raw);
+    }
+}
+
+if (! function_exists('login_subheadline')) {
+    function login_subheadline(): string
+    {
+        return get_system_setting('login_subheadline', 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.') ?: 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.';
+    }
+}
+
+if (! function_exists('login_kicker')) {
+    function login_kicker(): string
+    {
+        return get_system_setting('login_kicker', 'Terminal Operations') ?: 'Terminal Operations';
+    }
+}
+
+if (! function_exists('login_feature1_title')) {
+    function login_feature1_title(): string
+    {
+        return get_system_setting('login_feature1_title', 'Real-time queue') ?: 'Real-time queue';
+    }
+}
+
+if (! function_exists('login_feature1_desc')) {
+    function login_feature1_desc(): string
+    {
+        return get_system_setting('login_feature1_desc', 'Live queue and departure status across every route.') ?: 'Live queue and departure status across every route.';
+    }
+}
+
+if (! function_exists('login_feature2_title')) {
+    function login_feature2_title(): string
+    {
+        return get_system_setting('login_feature2_title', 'Secure & audited') ?: 'Secure & audited';
+    }
+}
+
+if (! function_exists('login_feature2_desc')) {
+    function login_feature2_desc(): string
+    {
+        return get_system_setting('login_feature2_desc', 'Role-based access with a full activity audit trail.') ?: 'Role-based access with a full activity audit trail.';
     }
 }
 
@@ -696,7 +806,7 @@ if (! function_exists('app_bg_mode')) {
 
 if (! function_exists('app_bg_slideshow')) {
     /**
-     * Return array of background picture URLs for the auth/login slideshow (supporting 5+ photos).
+     * Return array of background picture URLs for the auth/login slideshow (supporting 1, 2, 3, 4, 5, or more photos).
      */
     function app_bg_slideshow(): array
     {
@@ -708,35 +818,113 @@ if (! function_exists('app_bg_slideshow')) {
             5 => 'images/bg/bg5_terminal_bay.png',
         ];
 
+        // Active slots setting (e.g. '1,2,3,4,5' or '1,2' or '1,3,4')
+        $slotsSetting = get_system_setting('app_bg_slideshow_slots');
+        if (! empty($slotsSetting)) {
+            $rawSlots = explode(',', $slotsSetting);
+            $activeSlots = [];
+            foreach ($rawSlots as $rs) {
+                $val = (int) trim($rs);
+                if ($val > 0) {
+                    $activeSlots[] = $val;
+                }
+            }
+            $activeSlots = array_values(array_unique($activeSlots));
+        } else {
+            $activeSlots = [1, 2, 3, 4, 5];
+        }
+
+        // Also include any custom slots 6+
+        $allSettings = get_all_system_settings();
+        foreach ($allSettings as $k => $val) {
+            if (preg_match('/^app_bg_slideshow_([6-9]|[1-9][0-9]+)$/', $k, $matches) && ! empty($val)) {
+                $sIdx = (int) $matches[1];
+                if (! in_array($sIdx, $activeSlots, true)) {
+                    $activeSlots[] = $sIdx;
+                }
+            }
+        }
+
+        sort($activeSlots, SORT_NUMERIC);
+
         $urls = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $custom = get_system_setting("app_bg_slideshow_{$i}");
+        foreach ($activeSlots as $slotIdx) {
+            $custom = get_system_setting("app_bg_slideshow_{$slotIdx}");
             if (! empty($custom)) {
                 $relPath = ltrim(str_replace(['\\'], '/', $custom), '/');
                 if (is_file(FCPATH . $relPath)) {
                     $mtime = @filemtime(FCPATH . $relPath);
-                    $urls[$i] = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+                    $urls[$slotIdx] = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
                     continue;
                 }
             }
-            $urls[$i] = base_url($defaultFiles[$i]);
-        }
-
-        // Additional custom slots (slot 6+)
-        $allSettings = get_all_system_settings();
-        foreach ($allSettings as $k => $val) {
-            if (preg_match('/^app_bg_slideshow_([6-9]|[1-9][0-9]+)$/', $k, $matches) && ! empty($val)) {
-                $slotIdx = (int) $matches[1];
-                $relPath = ltrim(str_replace(['\\'], '/', $val), '/');
-                if (is_file(FCPATH . $relPath)) {
-                    $mtime = @filemtime(FCPATH . $relPath);
-                    $urls[$slotIdx] = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
-                }
+            if (isset($defaultFiles[$slotIdx])) {
+                $urls[$slotIdx] = base_url($defaultFiles[$slotIdx]);
             }
         }
 
-        ksort($urls);
+        if (empty($urls)) {
+            $urls[1] = base_url('images/bg/bg1_townhall.png');
+        }
+
         return $urls;
+    }
+}
+
+if (! function_exists('app_bg_slideshow_css')) {
+    /**
+     * Dynamically generate CSS animation and background rules for ANY number of slideshow images (1, 2, 3, 4, 5, or more).
+     */
+    function app_bg_slideshow_css(?array $slides = null, float $targetOpacity = 0.22): string
+    {
+        if ($slides === null) {
+            $slides = app_bg_slideshow();
+        }
+        $slideList = array_values($slides);
+        $count = count($slideList);
+
+        if ($count <= 0) {
+            $bg = app_bg_image();
+            return "body::after { content: ''; position: fixed; inset: 0; width: 100vw; height: 100vh; background-repeat: no-repeat; background-position: center center; background-size: cover; background-image: url('{$bg}'); opacity: {$targetOpacity}; z-index: 0; pointer-events: none; }";
+        }
+
+        if ($count === 1) {
+            $url = esc($slideList[0]);
+            return "body::after { content: ''; position: fixed; inset: 0; width: 100vw; height: 100vh; background-repeat: no-repeat; background-position: center center; background-size: cover; background-image: url('{$url}'); opacity: {$targetOpacity}; z-index: 0; pointer-events: none; }";
+        }
+
+        $duration = $count * 6; // 6 seconds per slide
+        $keyframes = "@keyframes palomponBgSlideshow {\n";
+
+        for ($i = 0; $i < $count; $i++) {
+            $url = esc($slideList[$i]);
+            $startPct = round(($i / $count) * 100, 1);
+            $holdPct  = round((($i + 0.85) / $count) * 100, 1);
+            $fadePct  = round((($i + 0.95) / $count) * 100, 1);
+
+            $keyframes .= "    {$startPct}%, {$holdPct}% { background-image: url('{$url}'); opacity: {$targetOpacity}; }\n";
+            $keyframes .= "    {$fadePct}% { opacity: 0.04; }\n";
+        }
+        $keyframes .= "    100% { opacity: {$targetOpacity}; }\n";
+        $keyframes .= "}\n";
+
+        $css = "body::after {\n";
+        $css .= "    content: '';\n";
+        $css .= "    position: fixed;\n";
+        $css .= "    inset: 0;\n";
+        $css .= "    width: 100vw;\n";
+        $css .= "    height: 100vh;\n";
+        $css .= "    background-repeat: no-repeat;\n";
+        $css .= "    background-position: center center;\n";
+        $css .= "    background-size: cover;\n";
+        $css .= "    opacity: {$targetOpacity};\n";
+        $css .= "    z-index: 0;\n";
+        $css .= "    pointer-events: none;\n";
+        $css .= "    animation: palomponBgSlideshow {$duration}s infinite ease-in-out;\n";
+        $css .= "}\n";
+        $css .= $keyframes;
+
+        return $css;
     }
 }
 
@@ -791,11 +979,12 @@ if (! function_exists('app_theme_color_helper')) {
             'dark'      => sprintf('#%02x%02x%02x', $darkR, $darkG, $darkB),
             'soft'      => "rgba({$r}, {$g}, {$b}, 0.14)",
             'softAlpha' => "rgba({$r}, {$g}, {$b}, 0.08)",
-            'on'        => $onColor,
-            'isLight'   => ($brightness > 155),
-            'softText'  => ($brightness > 155) ? 'rgba(255, 255, 255, 0.90)' : 'rgba(15, 23, 42, 0.82)',
-            'chipBg'    => ($brightness > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)',
-            'divider'   => ($brightness > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)',
+            'on'            => $onColor,
+            'isLight'       => ($brightness > 155),
+            'softText'      => ($brightness > 155) ? 'rgba(255, 255, 255, 0.90)' : 'rgba(15, 23, 42, 0.82)',
+            'chipBg'        => ($brightness > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)',
+            'divider'       => ($brightness > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)',
+            'activeBadgeBg' => ($brightness > 155) ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.25)',
         ];
     }
 }
@@ -830,13 +1019,43 @@ if (! function_exists('app_theme_css')) {
         $an = app_theme_color_helper($adminNavBg);
         $at = app_theme_color_helper($adminNavText);
 
+        $bgMode = app_bg_mode();
+        $bgImg = app_bg_image();
+        $bgOpacity = ($bgMode === 'single') ? '0.12' : '0.07';
+
         $css = <<<CSS
 <style id="app-dynamic-themes">
+/* --- Universal Single/System Background Layer across all pages --- */
+body:not(.auth-page)::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    background-image: url('{$bgImg}');
+    opacity: {$bgOpacity};
+    z-index: 0;
+    pointer-events: none;
+}
+body:not(.auth-page) > *:not(.modal):not(.dropdown-content) {
+    position: relative;
+    z-index: 1;
+}
+
 /* --- Guest Portal Dynamic Theme Tokens --- */
 :root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
     --primary: {$gp['hex']} !important;
     --primary-dark: {$gp['dark']} !important;
     --primary-soft: {$gp['soft']} !important;
+    --primary-red: {$gp['hex']} !important;
+    --primary-red-dark: {$gp['dark']} !important;
+    --primary-red-light: {$gp['soft']} !important;
     --on-primary: {$gp['on']} !important;
     --nav-bg: {$gn['hex']} !important;
     --nav-text: {$gt['hex']} !important;
@@ -1015,25 +1234,66 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
     border: 1px solid {$gp['soft']} !important;
 }
 
+/* Universal Search Clear Button Protection (keeps icon clean, transparent, and non-pill) */
+body.guest-theme .search-bar .guest-clear-search-btn,
+body:not(.admin-theme):not(.staff-theme) .search-bar .guest-clear-search-btn,
+.search-bar .guest-clear-search-btn,
+.guest-clear-search-btn,
+.btn-clear-search,
+.fare-search-clear {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+body.guest-theme .search-bar .guest-clear-search-btn:hover,
+body:not(.admin-theme):not(.staff-theme) .search-bar .guest-clear-search-btn:hover,
+.search-bar .guest-clear-search-btn:hover,
+.guest-clear-search-btn:hover,
+.btn-clear-search:hover,
+.fare-search-clear:hover {
+    color: #475569 !important;
+    -webkit-text-fill-color: #475569 !important;
+    background: rgba(0, 0, 0, 0.05) !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
 /* Guest / Public Portal Dynamic Button, Filter & Search Accent Overrides */
-body.guest-theme .search-bar button,
-body:not(.admin-theme):not(.staff-theme) .search-bar button,
+body.guest-theme .search-bar button:not(.guest-clear-search-btn),
+body:not(.admin-theme):not(.staff-theme) .search-bar button:not(.guest-clear-search-btn),
 body.guest-theme .filter-btn,
 body:not(.admin-theme):not(.staff-theme) .filter-btn,
 body.guest-theme .btn-primary,
-body:not(.admin-theme):not(.staff-theme) .btn-primary {
+body:not(.admin-theme):not(.staff-theme) .btn-primary,
+body.guest-theme .btn-hero-action:not(.btn-hero-outline),
+body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline) {
     background: {$gp['hex']} !important;
     background-color: {$gp['hex']} !important;
     border-color: {$gp['hex']} !important;
     color: {$gp['on']} !important;
     -webkit-text-fill-color: {$gp['on']} !important;
 }
-body.guest-theme .search-bar button:hover,
-body:not(.admin-theme):not(.staff-theme) .search-bar button:hover,
+body.guest-theme .search-bar button:not(.guest-clear-search-btn):hover,
+body:not(.admin-theme):not(.staff-theme) .search-bar button:not(.guest-clear-search-btn):hover,
 body.guest-theme .filter-btn:hover,
 body:not(.admin-theme):not(.staff-theme) .filter-btn:hover,
 body.guest-theme .btn-primary:hover,
-body:not(.admin-theme):not(.staff-theme) .btn-primary:hover {
+body:not(.admin-theme):not(.staff-theme) .btn-primary:hover,
+body.guest-theme .btn-hero-action:not(.btn-hero-outline):hover,
+body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline):hover {
     background: {$gp['dark']} !important;
     background-color: {$gp['dark']} !important;
     border-color: {$gp['dark']} !important;
@@ -1045,22 +1305,136 @@ body:not(.admin-theme):not(.staff-theme) .search-bar:focus-within {
     border-color: {$gp['hex']} !important;
     box-shadow: 0 0 0 4px {$gp['soft']}, var(--shadow-lg) !important;
 }
-body.guest-theme .rules-route-chip:hover,
-body:not(.admin-theme):not(.staff-theme) .rules-route-chip:hover,
-body.guest-theme .filter-chip:hover,
-body:not(.admin-theme):not(.staff-theme) .filter-chip:hover,
-body.guest-theme .route-chip:hover,
-body:not(.admin-theme):not(.staff-theme) .route-chip:hover {
+
+/* Guest Filter Chips & Route Chips (inactive, hover, active, active hover) */
+body.guest-theme .filter-chip:not(.active),
+body:not(.admin-theme):not(.staff-theme) .filter-chip:not(.active),
+body.guest-theme .route-chip:not(.active),
+body:not(.admin-theme):not(.staff-theme) .route-chip:not(.active),
+body.guest-theme .rules-route-chip:not(.active),
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip:not(.active) {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    color: #475569;
+}
+body.guest-theme .filter-chip:not(.active) .chip-count,
+body:not(.admin-theme):not(.staff-theme) .filter-chip:not(.active) .chip-count,
+body.guest-theme .route-chip:not(.active) .chip-count,
+body:not(.admin-theme):not(.staff-theme) .route-chip:not(.active) .chip-count,
+body.guest-theme .rules-route-chip:not(.active) .chip-count,
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip:not(.active) .chip-count {
+    background: #e2e8f0;
+    color: #475569;
+    -webkit-text-fill-color: #475569;
+}
+
+body.guest-theme .rules-route-chip:hover:not(.active),
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip:hover:not(.active),
+body.guest-theme .filter-chip:hover:not(.active),
+body:not(.admin-theme):not(.staff-theme) .filter-chip:hover:not(.active),
+body.guest-theme .route-chip:hover:not(.active),
+body:not(.admin-theme):not(.staff-theme) .route-chip:hover:not(.active) {
     border-color: {$gp['hex']} !important;
     color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
     background: {$gp['softAlpha']} !important;
 }
 body.guest-theme .filter-chip:hover:not(.active) .chip-count,
 body:not(.admin-theme):not(.staff-theme) .filter-chip:hover:not(.active) .chip-count,
 body.guest-theme .route-chip:hover:not(.active) .chip-count,
-body:not(.admin-theme):not(.staff-theme) .route-chip:hover:not(.active) .chip-count {
+body:not(.admin-theme):not(.staff-theme) .route-chip:hover:not(.active) .chip-count,
+body.guest-theme .rules-route-chip:hover:not(.active) .chip-count,
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip:hover:not(.active) .chip-count {
+    background: {$gp['soft']} !important;
+    color: {$gp['dark']} !important;
+    -webkit-text-fill-color: {$gp['dark']} !important;
+}
+
+body.guest-theme .filter-chip.active,
+body:not(.admin-theme):not(.staff-theme) .filter-chip.active,
+body.guest-theme .route-chip.active,
+body:not(.admin-theme):not(.staff-theme) .route-chip.active,
+body.guest-theme .rules-route-chip.active,
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip.active {
+    background: {$gp['hex']} !important;
+    background-color: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+    box-shadow: 0 4px 12px {$gp['soft']} !important;
+}
+body.guest-theme .filter-chip.active:hover,
+body:not(.admin-theme):not(.staff-theme) .filter-chip.active:hover,
+body.guest-theme .route-chip.active:hover,
+body:not(.admin-theme):not(.staff-theme) .route-chip.active:hover,
+body.guest-theme .rules-route-chip.active:hover,
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip.active:hover {
+    background: {$gp['dark']} !important;
+    background-color: {$gp['dark']} !important;
+    border-color: {$gp['dark']} !important;
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+}
+body.guest-theme .filter-chip.active .chip-count,
+body:not(.admin-theme):not(.staff-theme) .filter-chip.active .chip-count,
+body.guest-theme .route-chip.active .chip-count,
+body:not(.admin-theme):not(.staff-theme) .route-chip.active .chip-count,
+body.guest-theme .rules-route-chip.active .chip-count,
+body:not(.admin-theme):not(.staff-theme) .rules-route-chip.active .chip-count {
+    background: {$gp['activeBadgeBg']} !important;
+    color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
+}
+
+/* Guest Cards & Interactive Element Hover/Focus Highlights */
+body.guest-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type])::before,
+body:not(.admin-theme):not(.staff-theme) .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type])::before {
+    background: linear-gradient(90deg, {$gp['hex']}, {$gp['dark']}) !important;
+}
+body.guest-theme .stat-card:hover,
+body:not(.admin-theme):not(.staff-theme) .stat-card:hover,
+body.guest-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):hover,
+body:not(.admin-theme):not(.staff-theme) .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):hover,
+body.guest-theme .modern-card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body:not(.admin-theme):not(.staff-theme) .modern-card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.guest-theme .card-modern:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body:not(.admin-theme):not(.staff-theme) .card-modern:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.guest-theme .card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body:not(.admin-theme):not(.staff-theme) .card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.guest-theme .schedule-card:hover,
+body:not(.admin-theme):not(.staff-theme) .schedule-card:hover,
+body.guest-theme .filter-box:hover,
+body:not(.admin-theme):not(.staff-theme) .filter-box:hover {
+    border-color: {$gp['soft']} !important;
+    box-shadow: 0 10px 25px {$gp['soft']} !important;
+}
+body.guest-theme .stat-card-link:not(.stat-card),
+body:not(.admin-theme):not(.staff-theme) .stat-card-link:not(.stat-card) {
+    color: {$gp['hex']} !important;
+}
+body.guest-theme .stat-card-link:not(.stat-card):hover,
+body:not(.admin-theme):not(.staff-theme) .stat-card-link:not(.stat-card):hover {
+    color: {$gp['dark']} !important;
+}
+body.guest-theme .card-header-modern .card-title-modern i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
+body.guest-theme .modern-card-header .modern-card-title i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
+body.guest-theme .schedule-card .card-header h3 i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
+body:not(.admin-theme):not(.staff-theme) .card-header-modern .card-title-modern i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
+body:not(.admin-theme):not(.staff-theme) .modern-card-header .modern-card-title i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
+body:not(.admin-theme):not(.staff-theme) .schedule-card .card-header h3 i:first-child:not(.text-danger):not(.text-warning):not(.text-success) {
+    color: {$gp['hex']} !important;
+}
+body.guest-theme .count-badge,
+body:not(.admin-theme):not(.staff-theme) .count-badge {
     background: {$gp['soft']} !important;
     color: {$gp['hex']} !important;
+}
+body.guest-theme .stat-card-link:focus,
+body.guest-theme .stat-card-button:focus,
+body:not(.admin-theme):not(.staff-theme) .stat-card-link:focus,
+body:not(.admin-theme):not(.staff-theme) .stat-card-button:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px {$gp['soft']}, var(--shadow-md) !important;
 }
 body.guest-theme .filter-badge,
 body:not(.admin-theme):not(.staff-theme) .filter-badge {
@@ -1078,15 +1452,22 @@ body:not(.admin-theme):not(.staff-theme) .back-link:hover {
     color: {$gp['on']} !important;
 }
 body.guest-theme .btn-outline-primary,
-body:not(.admin-theme):not(.staff-theme) .btn-outline-primary {
+body:not(.admin-theme):not(.staff-theme) .btn-outline-primary,
+body.guest-theme .btn-hero-outline,
+body:not(.admin-theme):not(.staff-theme) .btn-hero-outline {
     color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
     border-color: {$gp['hex']} !important;
+    background: transparent !important;
 }
 body.guest-theme .btn-outline-primary:hover,
-body:not(.admin-theme):not(.staff-theme) .btn-outline-primary:hover {
+body:not(.admin-theme):not(.staff-theme) .btn-outline-primary:hover,
+body.guest-theme .btn-hero-outline:hover,
+body:not(.admin-theme):not(.staff-theme) .btn-hero-outline:hover {
     background-color: {$gp['hex']} !important;
     border-color: {$gp['hex']} !important;
     color: {$gp['on']} !important;
+    -webkit-text-fill-color: {$gp['on']} !important;
 }
 body.guest-theme .guide-pill-btn.active,
 body:not(.admin-theme):not(.staff-theme) .guide-pill-btn.active {
@@ -1095,13 +1476,36 @@ body:not(.admin-theme):not(.staff-theme) .guide-pill-btn.active {
     color: {$gp['on']} !important;
     box-shadow: 0 4px 12px {$gp['soft']} !important;
 }
-body.guest-theme .btn-hero-action:not(.btn-hero-outline),
-body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline) {
-    color: {$gp['hex']} !important;
+body.guest-theme .pagination .page-item.active .page-link,
+body:not(.admin-theme):not(.staff-theme) .pagination .page-item.active .page-link {
+    background-color: {$gp['hex']} !important;
+    border-color: {$gp['hex']} !important;
+    color: {$gp['on']} !important;
 }
-body.guest-theme .btn-hero-action:not(.btn-hero-outline):hover,
-body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline):hover {
-    color: {$gp['dark']} !important;
+
+/* Guest Footer Elements dynamic brand accent */
+body.guest-theme footer .f-about h3,
+body:not(.admin-theme):not(.staff-theme) footer .f-about h3 {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+}
+body.guest-theme footer .f-links h4::after,
+body:not(.admin-theme):not(.staff-theme) footer .f-links h4::after {
+    background: {$gp['hex']} !important;
+}
+body.guest-theme footer .f-links a:hover,
+body:not(.admin-theme):not(.staff-theme) footer .f-links a:hover {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
+}
+body.guest-theme footer .f-links li i.fa-map-marker-alt,
+body.guest-theme footer .f-links li i.fa-phone,
+body.guest-theme footer .f-links li i.fa-envelope,
+body:not(.admin-theme):not(.staff-theme) footer .f-links li i.fa-map-marker-alt,
+body:not(.admin-theme):not(.staff-theme) footer .f-links li i.fa-phone,
+body:not(.admin-theme):not(.staff-theme) footer .f-links li i.fa-envelope {
+    color: {$gp['hex']} !important;
+    -webkit-text-fill-color: {$gp['hex']} !important;
 }
 
 /* --- Dispatcher / Staff Dynamic Theme Tokens --- */
@@ -1109,10 +1513,14 @@ body.staff-theme, html body.staff-theme {
     --primary: {$sp['hex']} !important;
     --primary-dark: {$sp['dark']} !important;
     --primary-soft: {$sp['soft']} !important;
+    --primary-red: {$sp['hex']} !important;
+    --primary-red-dark: {$sp['dark']} !important;
+    --primary-red-light: {$sp['soft']} !important;
     --on-primary: {$sp['on']} !important;
     --nav-bg: {$sn['hex']} !important;
     --nav-text: {$st['hex']} !important;
     --nav-text-soft: {$st['softText']} !important;
+    --nav-accent: {$st['hex']} !important;
     --nav-chip-bg: {$sn['chipBg']} !important;
     --nav-divider: {$sn['divider']} !important;
     --nav-drawer-bg: {$sn['dark']} !important;
@@ -1181,13 +1589,20 @@ body.staff-theme .nav-hamburger-btn i {
 body.staff-theme .profile-trigger-name {
     color: {$st['hex']} !important;
     -webkit-text-fill-color: {$st['hex']} !important;
+    text-shadow: none !important;
 }
 body.staff-theme .profile-trigger-caret {
     color: {$st['softText']} !important;
+    -webkit-text-fill-color: {$st['softText']} !important;
 }
 body.staff-theme .profile-trigger-btn {
     background: {$sn['chipBg']} !important;
     border-color: {$sn['divider']} !important;
+}
+body.staff-theme .profile-trigger-btn:hover {
+    background: {$sn['chipBg']} !important;
+    border-color: {$sn['divider']} !important;
+    filter: brightness(0.92);
 }
 body.staff-theme .user-profile-dropdown {
     border-left-color: {$sn['divider']} !important;
@@ -1232,17 +1647,149 @@ body.staff-theme .autocomplete-badge {
     border: 1px solid {$sp['soft']} !important;
 }
 
+/* Dispatcher Buttons, Chips & Cards */
+body.staff-theme .btn-primary,
+body.staff-theme .btn-modern.btn-primary,
+body.staff-theme .btn-modern.btn-modern-primary,
+body.staff-theme .btn-action-primary {
+    background: {$sp['hex']} !important;
+    background-color: {$sp['hex']} !important;
+    border-color: {$sp['hex']} !important;
+    color: {$sp['on']} !important;
+    -webkit-text-fill-color: {$sp['on']} !important;
+    box-shadow: 0 2px 6px {$sp['soft']} !important;
+}
+body.staff-theme .btn-primary:hover,
+body.staff-theme .btn-modern.btn-primary:hover,
+body.staff-theme .btn-modern.btn-modern-primary:hover,
+body.staff-theme .btn-action-primary:hover {
+    background: {$sp['dark']} !important;
+    background-color: {$sp['dark']} !important;
+    border-color: {$sp['dark']} !important;
+    color: {$sp['on']} !important;
+    -webkit-text-fill-color: {$sp['on']} !important;
+}
+body.staff-theme .btn-outline-primary {
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+    border-color: {$sp['hex']} !important;
+    background: transparent !important;
+}
+body.staff-theme .btn-outline-primary:hover {
+    background-color: {$sp['hex']} !important;
+    border-color: {$sp['hex']} !important;
+    color: {$sp['on']} !important;
+    -webkit-text-fill-color: {$sp['on']} !important;
+}
+
+body.staff-theme .route-chip:not(.active) {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+body.staff-theme .route-chip:not(.active) .chip-count {
+    background: #e2e8f0;
+    color: #475569;
+    -webkit-text-fill-color: #475569;
+}
+body.staff-theme .route-chip:hover:not(.active),
+body.staff-theme .dep-filter-btn[data-type="all"]:hover:not(.active) {
+    border-color: {$sp['hex']} !important;
+    color: {$sp['hex']} !important;
+    -webkit-text-fill-color: {$sp['hex']} !important;
+    background: {$sp['softAlpha']} !important;
+}
+body.staff-theme .route-chip:hover:not(.active) .chip-count,
+body.staff-theme .dep-filter-btn[data-type="all"]:hover:not(.active) .dep-chip-count {
+    background: {$sp['soft']} !important;
+    color: {$sp['dark']} !important;
+    -webkit-text-fill-color: {$sp['dark']} !important;
+}
+body.staff-theme .route-chip.active,
+body.staff-theme .dep-filter-btn[data-type="all"].active {
+    background: {$sp['hex']} !important;
+    background-color: {$sp['hex']} !important;
+    border-color: {$sp['hex']} !important;
+    color: {$sp['on']} !important;
+    -webkit-text-fill-color: {$sp['on']} !important;
+    box-shadow: 0 4px 12px {$sp['soft']} !important;
+}
+body.staff-theme .route-chip.active:hover,
+body.staff-theme .dep-filter-btn[data-type="all"].active:hover {
+    background: {$sp['dark']} !important;
+    background-color: {$sp['dark']} !important;
+    border-color: {$sp['dark']} !important;
+    color: {$sp['on']} !important;
+    -webkit-text-fill-color: {$sp['on']} !important;
+}
+body.staff-theme .route-chip.active .chip-count,
+body.staff-theme .dep-filter-btn[data-type="all"].active .dep-chip-count {
+    background: {$sp['activeBadgeBg']} !important;
+    color: {$sp['on']} !important;
+    -webkit-text-fill-color: {$sp['on']} !important;
+}
+
+/* Dispatcher Cards & Highlights (preserving vehicle type and fare colors) */
+body.staff-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type])::before,
+body.staff-theme .stat-card-modern.success-accent::before {
+    background: linear-gradient(90deg, {$sp['hex']}, {$sp['dark']}) !important;
+}
+body.staff-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]) .stat-card-icon,
+body.staff-theme .stat-card-modern.success-accent .stat-card-icon {
+    background: {$sp['soft']} !important;
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .modern-card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.staff-theme .card-modern:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.staff-theme .card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.staff-theme .stat-card:hover,
+body.staff-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):hover {
+    border-color: {$sp['soft']} !important;
+    box-shadow: 0 8px 25px {$sp['soft']} !important;
+}
+body.staff-theme .stat-card-link:not(.stat-card) {
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .stat-card-link:not(.stat-card):hover {
+    color: {$sp['dark']} !important;
+}
+body.staff-theme .modern-card-header .modern-card-title i:not(.text-danger):not(.text-warning):not(.text-success),
+body.staff-theme .card-header-modern .card-title-modern i:not(.text-danger):not(.text-warning):not(.text-success),
+body.staff-theme .card-header .card-title i:not(.text-danger):not(.text-warning):not(.text-success) {
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .route-breakdown-card {
+    border-left-color: {$sp['hex']} !important;
+}
+body.staff-theme .departure-search-group:focus-within .input-group-text,
+body.staff-theme .departure-search-group:focus-within .departure-search-input {
+    border-color: {$sp['hex']} !important;
+    box-shadow: 0 0 0 3px {$sp['soft']} !important;
+}
+body.staff-theme .route-filter-label i {
+    color: {$sp['hex']} !important;
+}
+body.staff-theme .pagination .page-item.active .page-link {
+    background-color: {$sp['hex']} !important;
+    border-color: {$sp['hex']} !important;
+    color: {$sp['on']} !important;
+}
+
 /* --- Admin & Super Admin Dynamic Theme Tokens --- */
 body.admin-theme, html body.admin-theme {
     --primary: {$ap['hex']} !important;
     --primary-dark: {$ap['dark']} !important;
     --primary-soft: {$ap['soft']} !important;
+    --primary-red: {$ap['hex']} !important;
+    --primary-red-dark: {$ap['dark']} !important;
+    --primary-red-light: {$ap['soft']} !important;
     --on-primary: {$ap['on']} !important;
     --sb-primary: {$ap['hex']} !important;
     --sb-primary-hover: {$ap['dark']} !important;
     --nav-bg: {$an['hex']} !important;
     --nav-text: {$at['hex']} !important;
     --nav-text-soft: {$at['softText']} !important;
+    --nav-accent: {$at['hex']} !important;
     --nav-chip-bg: {$an['chipBg']} !important;
     --nav-divider: {$an['divider']} !important;
     --nav-drawer-bg: {$an['dark']} !important;
@@ -1311,13 +1858,20 @@ body.admin-theme .nav-hamburger-btn i {
 body.admin-theme .profile-trigger-name {
     color: {$at['hex']} !important;
     -webkit-text-fill-color: {$at['hex']} !important;
+    text-shadow: none !important;
 }
 body.admin-theme .profile-trigger-caret {
     color: {$at['softText']} !important;
+    -webkit-text-fill-color: {$at['softText']} !important;
 }
 body.admin-theme .profile-trigger-btn {
     background: {$an['chipBg']} !important;
     border-color: {$an['divider']} !important;
+}
+body.admin-theme .profile-trigger-btn:hover {
+    background: {$an['chipBg']} !important;
+    border-color: {$an['divider']} !important;
+    filter: brightness(0.92);
 }
 body.admin-theme .user-profile-dropdown {
     border-left-color: {$an['divider']} !important;
@@ -1360,6 +1914,123 @@ body.admin-theme .autocomplete-badge {
     color: {$ap['hex']} !important;
     -webkit-text-fill-color: {$ap['hex']} !important;
     border: 1px solid {$ap['soft']} !important;
+}
+
+/* Admin Buttons, Tabs, Chips & Cards */
+body.admin-theme .btn-primary,
+body.admin-theme .btn-modern.btn-primary,
+body.admin-theme .btn-modern.btn-modern-primary,
+body.admin-theme .btn-submit,
+body.admin-theme .btn-action-primary {
+    background: {$ap['hex']} !important;
+    background-color: {$ap['hex']} !important;
+    border-color: {$ap['hex']} !important;
+    color: {$ap['on']} !important;
+    -webkit-text-fill-color: {$ap['on']} !important;
+    box-shadow: 0 2px 6px {$ap['soft']} !important;
+}
+body.admin-theme .btn-primary:hover,
+body.admin-theme .btn-modern.btn-primary:hover,
+body.admin-theme .btn-modern.btn-modern-primary:hover,
+body.admin-theme .btn-submit:hover,
+body.admin-theme .btn-action-primary:hover {
+    background: {$ap['dark']} !important;
+    background-color: {$ap['dark']} !important;
+    border-color: {$ap['dark']} !important;
+    color: {$ap['on']} !important;
+    -webkit-text-fill-color: {$ap['on']} !important;
+}
+body.admin-theme .btn-outline-primary {
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
+    border-color: {$ap['hex']} !important;
+    background: transparent !important;
+}
+body.admin-theme .btn-outline-primary:hover {
+    background-color: {$ap['hex']} !important;
+    border-color: {$ap['hex']} !important;
+    color: {$ap['on']} !important;
+    -webkit-text-fill-color: {$ap['on']} !important;
+}
+
+body.admin-theme .nav-tabs .nav-link.active,
+body.admin-theme .nav-pills .nav-link.active,
+body.admin-theme .settings-tab-btn.active,
+body.admin-theme .tab-pill.active {
+    background-color: {$ap['hex']} !important;
+    border-color: {$ap['hex']} !important;
+    color: {$ap['on']} !important;
+    -webkit-text-fill-color: {$ap['on']} !important;
+}
+body.admin-theme .btn-filter.active,
+body.admin-theme .route-filter-btn.active,
+body.admin-theme .admin-chip.active {
+    background: {$ap['hex']} !important;
+    background-color: {$ap['hex']} !important;
+    border-color: {$ap['hex']} !important;
+    color: {$ap['on']} !important;
+    -webkit-text-fill-color: {$ap['on']} !important;
+    box-shadow: 0 3px 10px {$ap['soft']} !important;
+}
+body.admin-theme .btn-filter.active .chip-count,
+body.admin-theme .route-filter-btn.active .chip-count,
+body.admin-theme .admin-chip.active .chip-count {
+    background: {$ap['activeBadgeBg']} !important;
+    color: {$ap['on']} !important;
+    -webkit-text-fill-color: {$ap['on']} !important;
+}
+body.admin-theme .btn-filter:hover:not(.active),
+body.admin-theme .route-filter-btn:hover:not(.active),
+body.admin-theme .admin-chip:hover:not(.active) {
+    border-color: {$ap['hex']} !important;
+    color: {$ap['hex']} !important;
+    -webkit-text-fill-color: {$ap['hex']} !important;
+    background: {$ap['softAlpha']} !important;
+}
+body.admin-theme .btn-filter:hover:not(.active) .chip-count,
+body.admin-theme .route-filter-btn:hover:not(.active) .chip-count,
+body.admin-theme .admin-chip:hover:not(.active) .chip-count {
+    background: {$ap['soft']} !important;
+    color: {$ap['dark']} !important;
+    -webkit-text-fill-color: {$ap['dark']} !important;
+}
+
+/* Admin Cards & Highlights (preserving vehicle type and fare colors) */
+body.admin-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):not(.blue-accent):not(.gold-accent):not(.success-accent)::before {
+    background: linear-gradient(90deg, {$ap['hex']}, {$ap['dark']}) !important;
+}
+body.admin-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):not(.blue-accent):not(.gold-accent):not(.success-accent) .stat-card-icon {
+    background: {$ap['soft']} !important;
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .modern-card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.admin-theme .card-modern:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.admin-theme .card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
+body.admin-theme .stat-card:hover,
+body.admin-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):hover {
+    border-color: {$ap['soft']} !important;
+    box-shadow: 0 8px 25px {$ap['soft']} !important;
+}
+body.admin-theme .stat-card-link:not(.stat-card) {
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .stat-card-link:not(.stat-card):hover {
+    color: {$ap['dark']} !important;
+}
+body.admin-theme .modern-card-header .modern-card-title i:not(.text-danger):not(.text-warning):not(.text-success),
+body.admin-theme .card-header-modern .card-title-modern i:not(.text-danger):not(.text-warning):not(.text-success),
+body.admin-theme .card-header .card-title i:not(.text-danger):not(.text-warning):not(.text-success) {
+    color: {$ap['hex']} !important;
+}
+body.admin-theme .form-control:focus,
+body.admin-theme .form-select:focus {
+    border-color: {$ap['hex']} !important;
+    box-shadow: 0 0 0 3px {$ap['soft']} !important;
+}
+body.admin-theme .pagination .page-item.active .page-link {
+    background-color: {$ap['hex']} !important;
+    border-color: {$ap['hex']} !important;
+    color: {$ap['on']} !important;
 }
 
 /* --- Common Dropdown Menus (Management, Records, etc.) --- */

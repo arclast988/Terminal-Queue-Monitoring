@@ -232,7 +232,10 @@
                 <select name="type" id="sharedTypeSelect" class="form-select-modern">
                     <option value="">All Types</option>
                     <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
-                        <option value="<?= esc($vehicleType['slug']) ?>" <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
+                        <option value="<?= esc($vehicleType['slug']) ?>"
+                                data-icon="<?= esc(!empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug'])) ?>"
+                                data-color="<?= esc(!empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug'])) ?>"
+                                <?= $vehicle_type === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
