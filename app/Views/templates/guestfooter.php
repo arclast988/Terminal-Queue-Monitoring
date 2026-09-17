@@ -28,12 +28,11 @@
             <div class="f-links">
                 <h4>Support</h4>
                 <ul>
-                    <li><a href="<?= base_url('manual') ?>"><i class="fas fa-book-open"></i> User Guide & Error Help</a></li>
-                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('helpModal')">Help Center</a></li>
-                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('reportModal')">Report Issue</a></li>
-                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('contactModal')">Contact Us</a></li>
-                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('faqModal')">FAQ</a></li>
-                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('termsModal')">Terms of Service</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('helpModal')"><i class="fas fa-life-ring" style="margin-right: 6px; color: #38bdf8;"></i> Help Guide</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('reportModal')"><i class="fas fa-exclamation-triangle" style="margin-right: 6px; color: #f87171;"></i> Report Issue</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('contactModal')"><i class="fas fa-envelope-open-text" style="margin-right: 6px; color: #4ade80;"></i> Contact Us</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('faqModal')"><i class="fas fa-question-circle" style="margin-right: 6px; color: #facc15;"></i> FAQ</a></li>
+                    <li><a href="javascript:void(0)" onclick="event.preventDefault(); openSupportModal('termsModal')"><i class="fas fa-file-contract" style="margin-right: 6px; color: #818cf8;"></i> Terms of Service</a></li>
                 </ul>
             </div>
             <div class="f-links">
@@ -61,37 +60,150 @@
 
 <!-- ===== Modals ===== -->
 
-<!-- 1. Help Center Modal -->
+<!-- 1. Help Guide Modal (Consolidated Commuter User Manual & Operational Guide) -->
 <div id="helpModal" class="support-modal-backdrop">
     <div class="support-modal">
         <button class="close-modal" onclick="closeSupportModal('helpModal')">&times;</button>
-        <h3><i class="fas fa-life-ring" style="color:#3b82f6;"></i> Help Center</h3>
-        <p style="font-size:14px;color:#64748b;margin-bottom:16px;">Browse common topics or view the full commuter user manual.</p>
-        
-        <div style="background: var(--primary-soft, #fef2f2); border: 1px solid rgba(198, 40, 40, 0.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-            <div style="font-size: 13px; color: var(--primary, #C62828); font-weight: 600;">
-                <i class="fas fa-book-open" style="margin-right: 6px;"></i> Complete Commuter & Passenger Guide
-            </div>
-            <a href="<?= base_url('manual') ?>" style="background: var(--primary, #C62828); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 700; text-decoration: none; white-space: nowrap;">
-                Open Guide →
-            </a>
-        </div>
+        <h3><i class="fas fa-life-ring" style="color:#0284c7;"></i> Commuter Help Guide & Travel Assistance</h3>
+        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Official commuter guidance for tracking live queues, boarding status, LTFRB route fares, and daily schedules at <?= esc(app_name()) ?> Terminal.</p>
 
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">How do I track a vehicle? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the search bar on the main page or visit the Trip Search page to search by plate number, destination, or vehicle type. Results show the vehicle's current queue position, remaining seats, and estimated departure time.</div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">How often is queue data updated? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The Terminal Queue on the home page refreshes instantly via real-time WebSocket synchronization. If connection drops, it automatically falls back to background HTTP updates every 20 seconds.</div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">How do I view route fares & discounts? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Click "Fares" in the navigation bar. Official LTFRB fare tables and 20% statutory discounts for Students, Senior Citizens, and PWDs are calculated automatically.</div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">Is there a mobile app available? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">No app store download is necessary! This website is fully mobile-responsive. Simply visit the URL in your mobile browser or tap "Add to Home Screen" for quick access.</div>
+        <div class="accordion-list">
+            <!-- Item 1: Live Terminal Queue & Boarding -->
+            <div class="accordion-item active">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-tv" style="color:#0284c7;"></i> 1. Live Terminal Queue & Boarding Badges</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>The Terminal Monitor displays arriving, queued, and departing public utility vehicles connecting Palompon to regional destinations. Each vehicle displays a real-time status badge:</p>
+                    <div class="step-box">
+                        <span class="status-badge status-boarding"><i class="fas fa-door-open"></i> Boarding</span><br>
+                        <strong>Actively Loading:</strong> The vehicle is physically stationed at the terminal bay. Passengers are paying fares and taking seats. Head to the bay promptly to secure your ride.
+                    </div>
+                    <div class="step-box">
+                        <span class="status-badge status-waiting"><i class="fas fa-hourglass-half"></i> Waiting</span><br>
+                        <strong>In Queue:</strong> The vehicle has checked into the terminal and is in line. When the current boarding vehicle leaves, Position #1 moves into the boarding bay.
+                    </div>
+                    <div class="step-box">
+                        <span class="status-badge status-full"><i class="fas fa-user-check"></i> FULL</span><br>
+                        <strong>Capacity Reached:</strong> All passenger seats are taken. The vehicle will dispatch immediately. Passengers should queue for the next vehicle in line.
+                    </div>
+                    <div class="step-box">
+                        <span class="status-badge status-departed"><i class="fas fa-check-circle"></i> Departed</span><br>
+                        <strong>Trip Dispatched:</strong> The vehicle has departed the terminal. Departure time is archived in official records.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 2: Trip Search & Vehicle Filtering -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-search" style="color:#0284c7;"></i> 2. Searching Trips & Filtering Vehicle Types</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>You can quickly find your vehicle or route using the interactive filters and search bar:</p>
+                    <ol style="padding-left: 20px; margin: 0 0 10px 0;">
+                        <li><strong>Vehicle Type Filter:</strong> Switch between <em>All</em>, <em>PUJ (Jeepney)</em>, <em>UV Express Van</em>, and <em>Modern Minibus</em> on the monitor to see only your preferred transit option.</li>
+                        <li><strong>Trip Search:</strong> Visit the <a href="<?= base_url('search') ?>" style="color:#0284c7; font-weight:700; text-decoration:none;">Trip Search page</a> to search by license plate number, destination municipality, or driver name.</li>
+                    </ol>
+                    <div class="help-tip">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Search results display the vehicle's exact current bay position, remaining seats, and estimated departure countdown.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 3: Daily Schedules & Departure Headways -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-clock" style="color:#0284c7;"></i> 3. Departure Schedules & Headway Rules</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>Estimated Departure Times (ETD) are governed by official municipal headway rules:</p>
+                    <div class="step-box">
+                        <strong>Headway Wait Timers:</strong> During peak commute hours (morning and late afternoon), departures are spaced closely (typically every 15–20 minutes). During off-peak periods, wait intervals are typically 30–45 minutes.
+                    </div>
+                    <div class="step-box">
+                        <strong>Early Departure on Full Capacity:</strong> Vehicles do not need to wait for the timer to reach zero. Once 100% of seats are filled, the dispatcher sends the vehicle immediately for passenger convenience.
+                    </div>
+                    <p>Check complete daily timetables by visiting the <a href="<?= base_url('schedules') ?>" style="color:#0284c7; font-weight:700; text-decoration:none;">Schedules page</a>.</p>
+                </div>
+            </div>
+
+            <!-- Item 4: Fares & Statutory Discounts -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-tags" style="color:#0284c7;"></i> 4. Route Fares & 20% Statutory Discounts</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>All passenger fares strictly comply with official LTFRB fare matrices determined by highway kilometers:</p>
+                    <div class="step-box">
+                        <strong>Statutory 20% Discount:</strong> Under Philippine Law (RA 9994, RA 10754, RA 11314), a <strong>20% discount</strong> is granted to:
+                        <ul style="margin: 6px 0 0 16px; padding: 0;">
+                            <li><strong>Students:</strong> Enrolled elementary, high school, vocational, or undergraduate students (present valid school ID).</li>
+                            <li><strong>Senior Citizens:</strong> Filipino citizens aged 60 and above (present OSCA Senior Citizen ID).</li>
+                            <li><strong>Persons with Disability (PWD):</strong> Registered PWDs (present valid National PWD ID).</li>
+                        </ul>
+                    </div>
+                    <p>To view official base fares and calculate discounted fares for all routes, visit the <a href="<?= base_url('fares') ?>" style="color:#0284c7; font-weight:700; text-decoration:none;">Route Fares page</a>.</p>
+                </div>
+            </div>
+
+            <!-- Item 5: Real-Time Sync & Failover -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-wifi" style="color:#0284c7;"></i> 5. Real-Time Updates & Network Failover</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>The system utilizes sub-second WebSocket synchronization to push queue changes directly to your device:</p>
+                    <div class="step-box">
+                        <strong>Zero Manual Refreshing Needed:</strong> When a dispatcher updates passenger counts or boards a new vehicle, your screen updates instantly without reloading the page.
+                    </div>
+                    <div class="step-box">
+                        <strong>Automatic Network Recovery:</strong> If your mobile signal fluctuates or drops, the system seamlessly transitions to background HTTP polling every 20 seconds and automatically reconnects once your connection stabilizes.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 6: Commuter Troubleshooting & Issue Reporting -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-wrench" style="color:#0284c7;"></i> 6. Commuter Troubleshooting & Reporting Issues</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>If you encounter unexpected situations while planning your commute:</p>
+                    <div class="step-box">
+                        <strong>Queue Appears Inactive:</strong> If departure times seem unchanged, verify your internet connection. You can perform a quick browser pull-to-refresh to fetch fresh queue states.
+                    </div>
+                    <div class="step-box">
+                        <strong>Reporting Overcharging or Lost Belongings:</strong> If an operator charges above the official LTFRB fare or if you misplaced items at the terminal, click <a href="javascript:void(0)" onclick="closeSupportModal('helpModal'); openSupportModal('reportModal');" style="color:#ef4444; font-weight:700;">Report Issue</a> or <a href="javascript:void(0)" onclick="closeSupportModal('helpModal'); openSupportModal('contactModal');" style="color:#16a34a; font-weight:700;">Contact Us</a>. Submissions are delivered directly to municipal terminal administrators.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Item 7: Mobile Web & Home Screen Access -->
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleHelpAccordion(this)">
+                    <h4 class="accordion-header-text"><i class="fas fa-mobile-screen-button" style="color:#0284c7;"></i> 7. Mobile Browser & Smartphone Tips</h4>
+                    <i class="fas fa-chevron-down accordion-header-icon"></i>
+                </div>
+                <div class="accordion-body">
+                    <p>No App Store or Play Store download is required. For fast, one-tap access on your phone:</p>
+                    <ol style="padding-left: 20px; margin: 0 0 10px 0;">
+                        <li><strong>Android (Chrome):</strong> Tap the three-dot browser menu $\rightarrow$ tap <em>"Add to Home screen"</em> or <em>"Install app"</em>.</li>
+                        <li><strong>iPhone (Safari):</strong> Tap the Share button $\rightarrow$ scroll down and tap <em>"Add to Home Screen"</em>.</li>
+                    </ol>
+                    <div class="help-tip">
+                        <i class="fas fa-check-circle"></i>
+                        <span>This creates a dedicated full-screen icon on your phone that launches the terminal monitor instantly like a native app.</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -125,12 +237,13 @@
                     <option>Missing vehicle from queue</option>
                     <option>Website display / technical problem</option>
                     <option>Incorrect fare information / overcharging</option>
-                    <option>Other issue</option>
+                    <option>Lost and found inquiry</option>
+                    <option>Other operational issue</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Describe the Issue *</label>
-                <textarea name="message" placeholder="Please describe what went wrong and when it happened..." required></textarea>
+                <textarea name="message" placeholder="Please provide plate number, destination, date/time, and a brief description..." required></textarea>
             </div>
             <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Submit Report</button>
         </form>
@@ -141,20 +254,20 @@
 <div id="contactModal" class="support-modal-backdrop">
     <div class="support-modal">
         <button class="close-modal" onclick="closeSupportModal('contactModal')">&times;</button>
-        <h3><i class="fas fa-envelope-open-text" style="color:#22c55e;"></i> Contact Us</h3>
+        <h3><i class="fas fa-envelope-open-text" style="color:#16a34a;"></i> Contact Us</h3>
         <?php if (session()->getFlashdata('contact_success')): ?>
         <div class="alert-success-banner"><i class="fas fa-check-circle"></i> <?= session()->getFlashdata('contact_success') ?></div>
         <?php endif; ?>
         <?php if (session()->getFlashdata('contact_error')): ?>
         <div class="alert-error-banner"><i class="fas fa-times-circle"></i> <?= session()->getFlashdata('contact_error') ?></div>
         <?php endif; ?>
-        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message and terminal administration will get back to you as soon as possible.</p>
+        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message to <?= esc(app_name()) ?> Terminal administration. We are committed to safe, reliable public transport.</p>
         <form action="<?= base_url('contact/send') ?>" method="post">
             <?= csrf_field() ?>
             <input type="hidden" name="type" value="contact">
             <div class="form-group">
                 <label>Your Name *</label>
-                <input type="text" name="name" placeholder="e.g. Juan Dela Cruz" required>
+                <input type="text" name="name" placeholder="e.g. Maria Santos" required>
             </div>
             <div class="form-group">
                 <label>Your Email *</label>
@@ -162,11 +275,11 @@
             </div>
             <div class="form-group">
                 <label>Subject</label>
-                <input type="text" name="subject" placeholder="e.g. Question about schedules">
+                <input type="text" name="subject" placeholder="e.g. Inquiring about special holiday trip schedules">
             </div>
             <div class="form-group">
                 <label>Message *</label>
-                <textarea name="message" placeholder="Write your message here..." required></textarea>
+                <textarea name="message" placeholder="Write your inquiry or feedback here..." required></textarea>
             </div>
             <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Send Message</button>
         </form>
@@ -180,23 +293,31 @@
         <h3><i class="fas fa-question-circle" style="color:#eab308;"></i> Frequently Asked Questions</h3>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What are the terminal operating hours? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The <?= esc(app_name()) ?> Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Individual vehicle departure times depend on route demand and scheduled headway intervals. Check the Live Monitor or Schedules page for up-to-date departures.</div>
+            <div class="faq-answer">The <?= esc(app_name()) ?> Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Earliest trips dispatch starting at 4:30 AM, with frequent departures throughout peak commute hours. Check the Live Monitor or Schedules page for real-time departure status.</div>
         </div>
         <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">Can I buy tickets through this website? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">No. This system provides real-time public monitoring only. Cash fares and tickets are handled directly at the terminal bays or with the vehicle conductor.</div>
+            <button class="faq-question" onclick="toggleFaq(this)">Can I purchase tickets or book seats online? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">No. This platform is a real-time public information monitor. In accordance with municipal and LTFRB regulations, passenger fares and ticketing are handled in cash directly at the terminal boarding bays or with the vehicle conductor.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What vehicle types operate from this terminal? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">PUJs (Jeepneys), UV Express Vans, and Modern Minibuses operate across certified routes including Ormoc, Tacloban, Isabel, Naval, and Kananga. You can filter the queue and fares by vehicle type.</div>
+            <div class="faq-answer">The terminal services <strong>PUJs (Jeepneys)</strong>, <strong>UV Express Vans</strong>, and <strong>Modern Minibuses</strong> across certified regional routes including Ormoc City, Tacloban City, Isabel, Naval, and Kananga. You can filter the queue and fare matrices by vehicle type.</div>
         </div>
         <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">How accurate are the estimated departure times? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Estimated Departure Times (ETD) are calculated automatically based on official headway rules set by terminal administration. A vehicle may depart early once all passenger seats are filled.</div>
+            <button class="faq-question" onclick="toggleFaq(this)">How accurate are the estimated departure times (ETD)? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">Estimated Departure Times are automatically calculated based on official departure headway rules set by terminal administration. <em>Note:</em> If a vehicle reaches 100% seating capacity earlier than scheduled, it will dispatch immediately for passenger convenience.</div>
         </div>
         <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">Who do I contact for complaints or feedback? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the "Contact Us" or "Report Issue" forms on this page. Your message goes directly to our support team at <a href="mailto:<?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>" style="color:#2563eb; font-weight:600;"><?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?></a>.</div>
+            <button class="faq-question" onclick="toggleFaq(this)">Who is eligible for the 20% statutory fare discount? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">Under Philippine law (RA 9994, RA 10754, RA 11314), a <strong>20% discount</strong> applies to currently enrolled <strong>Students</strong> (with valid school ID), <strong>Senior Citizens</strong> aged 60+ (with OSCA ID), and <strong>Persons with Disability</strong> (with National PWD ID). Visit the Fares page to view discounted rates.</div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">How often does the live queue update? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">Queue updates occur in sub-seconds via real-time WebSocket communication. When a vehicle boards or departs, your screen updates instantly without requiring a page refresh. If your internet connection drops, the system falls back to automatic background HTTP polling.</div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">How do I report overcharging, lost items, or file complaints? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">Use the "Report Issue" or "Contact Us" forms in this support section. Please include the route, vehicle plate number, date, and time. Messages are routed directly to terminal management at <a href="mailto:<?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>" style="color:#0284c7; font-weight:600;"><?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?></a>.</div>
         </div>
     </div>
 </div>
@@ -209,26 +330,32 @@
         <div style="font-size: 14px; color: #4b5563; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
             <p><strong>Last updated: September 2026</strong></p>
             <h4 style="color: #1f2937; margin: 15px 0 5px;">1. Acceptance of Terms</h4>
-            <p>By accessing and using the <?= esc(app_system_title()) ?> ("<?= esc(app_acronym()) ?> System"), agree to be bound by these Terms of Service. If you do not agree, please do not use this service.</p>
+            <p>By accessing and using the <?= esc(app_system_title()) ?> ("<?= esc(app_acronym()) ?> System"), you agree to be bound by these Terms of Service and all applicable municipal guidelines. If you do not agree with any portion of these terms, please discontinue use of this service.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">2. Description of Service</h4>
-            <p>The <?= esc(app_acronym()) ?> System provides real-time information regarding vehicle queues, departure schedules, and route fares. This is a public information service operated by <?= esc(app_footer_credit()) ?>.</p>
+            <p>The <?= esc(app_acronym()) ?> System is a municipal transit monitoring platform providing real-time information regarding vehicle queue positions, departure headway estimates, and official route fares for the Municipality of Palompon, Leyte. This public service is maintained and operated by <?= esc(app_footer_credit()) ?>.</p>
 
-            <h4 style="color: #1f2937; margin: 15px 0 5px;">3. Use of Information</h4>
+            <h4 style="color: #1f2937; margin: 15px 0 5px;">3. Use of Transit Information & Estimates</h4>
             <ul>
-                <li>All information provided is for general informational purposes only.</li>
-                <li>Departure times and schedules are estimates and may vary due to actual operational conditions.</li>
-                <li>The system does not support online booking, ticketing, or fare collection.</li>
+                <li>All queue statuses, seat counts, and timetables are provided for public convenience and travel planning.</li>
+                <li>Estimated Departure Times (ETD) are operational targets. Vehicles may depart ahead of schedule upon reaching 100% capacity, or experience minor delays due to prevailing road, weather, or traffic conditions.</li>
+                <li>The system serves as an information monitor and does not support advance seat reservations, online ticketing, or digital fare transactions.</li>
             </ul>
 
-            <h4 style="color: #1f2937; margin: 15px 0 5px;">4. Disclaimer of Warranties</h4>
-            <p>The <?= esc(app_acronym()) ?> System is provided "as is" without warranties of any kind, express or implied. We do not guarantee the accuracy, completeness, or timeliness of information displayed.</p>
+            <h4 style="color: #1f2937; margin: 15px 0 5px;">4. Fare Schedules & Statutory Concessions</h4>
+            <p>All route fares displayed conform to official LTFRB tariff guidelines. Statutory 20% discounts for Students, Senior Citizens (OSCA), and Persons with Disability (PWD) are mandated by national law and require presentation of valid government or institutional identification upon boarding.</p>
 
-            <h4 style="color: #1f2937; margin: 15px 0 5px;">5. Limitation of Liability</h4>
-            <p><?= esc(app_name()) ?> Terminal shall not be liable for any loss or damages arising from reliance on the information provided through this system, including missed departures or scheduling inaccuracies.</p>
+            <h4 style="color: #1f2937; margin: 15px 0 5px;">5. Disclaimer of Warranties</h4>
+            <p>The <?= esc(app_acronym()) ?> System is provided on an "as is" and "as available" basis without warranties of any kind, whether express or implied. While terminal dispatchers endeavor to maintain continuous accuracy, we do not warrant that service will be uninterrupted or entirely error-free under adverse network conditions.</p>
 
-            <h4 style="color: #1f2937; margin: 15px 0 5px;">6. Privacy</h4>
-            <p>This system does not collect personal data from guest users. Concerns submitted through the Support section are sent directly to our email for response purposes only and are not stored in any database.</p>
+            <h4 style="color: #1f2937; margin: 15px 0 5px;">6. Limitation of Liability</h4>
+            <p><?= esc(app_name()) ?> Terminal and its administrators shall not be liable for any direct, indirect, incidental, or consequential loss resulting from reliance on displayed departure schedules, missed connections, or unforeseen operational changes.</p>
+
+            <h4 style="color: #1f2937; margin: 15px 0 5px;">7. Privacy & Support Communications</h4>
+            <p>This system does not harvest personal user tracking data from guest commuters. Inquiries and operational issue reports submitted through the Support section are transmitted securely via email to terminal management solely for verification and resolution purposes, and are never shared with unauthorized third parties.</p>
+
+            <h4 style="color: #1f2937; margin: 15px 0 5px;">8. Governing Law & Jurisdiction</h4>
+            <p>These Terms shall be governed and interpreted under the laws of the Republic of the Philippines and local ordinances of the Municipality of Palompon, Province of Leyte.</p>
         </div>
     </div>
 </div>
@@ -322,9 +449,133 @@ footer {
     overscroll-behavior: contain;
 }
 
-#termsModal .support-modal {
-    max-width: 850px;
+#termsModal .support-modal,
+#helpModal .support-modal {
+    max-width: 820px;
 }
+
+/* Commuter Guide Accordion within Help Modal */
+.support-modal .accordion-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.support-modal .accordion-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.support-modal .accordion-item.active {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.support-modal .accordion-header {
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    background: #f8fafc;
+    transition: background-color 0.15s ease;
+}
+
+.support-modal .accordion-header:hover {
+    background-color: #f1f5f9;
+}
+
+.support-modal .accordion-header-text {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    line-height: 1.4;
+}
+
+.support-modal .accordion-header-icon {
+    color: #64748b;
+    font-size: 13px;
+    transition: transform 0.25s cubic-bezier(.4, 0, .2, 1);
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.support-modal .accordion-item.active .accordion-header-icon {
+    transform: rotate(180deg);
+    color: #0284c7;
+}
+
+.support-modal .accordion-item.active .accordion-header-text {
+    color: #0284c7;
+}
+
+.support-modal .accordion-body {
+    display: none;
+    padding: 14px 18px 18px;
+    color: #334155;
+    font-size: 13.5px;
+    line-height: 1.65;
+    background: #ffffff;
+    animation: accordionFadeIn 0.2s ease;
+}
+
+.support-modal .accordion-item.active .accordion-body {
+    display: block;
+}
+
+.support-modal .step-box {
+    background: #f8fafc;
+    border-left: 3px solid #0284c7;
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    margin: 10px 0;
+    font-size: 13px;
+}
+
+.support-modal .step-box strong {
+    color: #0f172a;
+}
+
+.support-modal .help-tip {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 9px 13px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: #0369a1;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.support-modal .help-tip i {
+    margin-top: 2px;
+}
+
+.support-modal .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.support-modal .status-waiting { background: #f1f5f9; color: #475569; }
+.support-modal .status-boarding { background: #dbeafe; color: #1e40af; }
+.support-modal .status-full { background: #fee2e2; color: #991b1b; }
+.support-modal .status-departed { background: #dcfce7; color: #166534; }
 
 .support-modal h3 { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; padding-right: 32px; word-break: break-word; }
 .support-modal .close-modal {
@@ -369,30 +620,107 @@ footer {
 .alert-success-banner { background: #d1fae5; color: #065f46; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .alert-error-banner   { background: #fee2e2; color: #991b1b; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
-@media (max-width: 530px) {
+@media (max-width: 768px) {
     .support-modal {
-        padding: 22px 16px;
-        border-radius: 18px;
-        width: 100%;
-        max-width: calc(100vw - 24px);
+        padding: 24px 20px;
+        max-height: 86vh;
     }
     .support-modal h3 {
-        font-size: 17px;
+        font-size: 18px;
         margin-bottom: 16px;
     }
-    .support-modal .close-modal {
-        top: 14px;
-        right: 14px;
-    }
 }
-@media (max-width: 420px) {
+
+@media (max-width: 530px) {
+    .support-modal-backdrop {
+        padding: 10px;
+    }
     .support-modal {
-        padding: 16px 10px;
-        border-radius: 12px;
-        max-width: calc(100vw - 12px);
+        padding: 20px 14px 22px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 100%;
+        max-height: 88vh;
+        -webkit-overflow-scrolling: touch;
     }
     .support-modal h3 {
-        font-size: 15px;
+        font-size: 16px;
+        margin-bottom: 14px;
+        padding-right: 36px;
+    }
+    .support-modal .close-modal {
+        top: 12px;
+        right: 12px;
+        width: 34px;
+        height: 34px;
+        font-size: 20px;
+    }
+    .support-modal .accordion-header {
+        padding: 11px 12px;
+    }
+    .support-modal .accordion-header-text {
+        font-size: 13.5px;
+        gap: 8px;
+    }
+    .support-modal .accordion-body {
+        padding: 11px 12px 14px;
+        font-size: 12.8px;
+        line-height: 1.55;
+    }
+    .support-modal .step-box {
+        padding: 9px 12px;
+        font-size: 12.5px;
+        margin: 8px 0;
+    }
+    .support-modal .help-tip {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    .support-modal input, .support-modal textarea, .support-modal select {
+        padding: 10px 12px;
+        font-size: 13.5px;
+    }
+    .support-modal .submit-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+    .faq-question {
+        padding: 12px 14px;
+        font-size: 13.5px;
+    }
+    .faq-answer {
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+}
+
+@media (max-width: 380px) {
+    .support-modal-backdrop {
+        padding: 6px;
+    }
+    .support-modal {
+        padding: 16px 10px 18px;
+        border-radius: 14px;
+        max-height: 92vh;
+    }
+    .support-modal h3 {
+        font-size: 14.5px;
+        padding-right: 32px;
+    }
+    .support-modal .accordion-header {
+        padding: 10px 9px;
+    }
+    .support-modal .accordion-header-text {
+        font-size: 12.5px;
+    }
+    .support-modal .accordion-body {
+        padding: 9px 9px 12px;
+        font-size: 12px;
+    }
+    .support-modal .step-box {
+        padding: 7px 9px;
+        font-size: 11.8px;
     }
     .support-modal input, .support-modal textarea, .support-modal select {
         padding: 8px 10px;
@@ -400,7 +728,15 @@ footer {
     }
     .support-modal .submit-btn {
         padding: 11px;
-        font-size: 13.5px;
+        font-size: 13px;
+    }
+    .faq-question {
+        padding: 10px 12px;
+        font-size: 12.5px;
+    }
+    .faq-answer {
+        padding: 10px 12px;
+        font-size: 12px;
     }
 }
 
@@ -476,4 +812,26 @@ function toggleFaq(btn){
     if(answer.classList.contains('open')) icon.classList.replace('fa-chevron-down','fa-chevron-up');
     else icon.classList.replace('fa-chevron-up','fa-chevron-down');
 }
+
+function toggleHelpAccordion(headerEl) {
+    const item = headerEl.closest('.accordion-item');
+    if (!item) return;
+    item.classList.toggle('active');
+}
+
+// Auto-open support modal if query parameter exists (e.g. redirected from /manual)
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('help')) {
+        openSupportModal('helpModal');
+    } else if (urlParams.has('faq')) {
+        openSupportModal('faqModal');
+    } else if (urlParams.has('terms')) {
+        openSupportModal('termsModal');
+    } else if (urlParams.has('report')) {
+        openSupportModal('reportModal');
+    } else if (urlParams.has('contact')) {
+        openSupportModal('contactModal');
+    }
+});
 </script>

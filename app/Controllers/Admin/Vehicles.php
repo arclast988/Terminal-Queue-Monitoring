@@ -479,7 +479,14 @@ class Vehicles extends BaseController
             $this->logActivity('Update vehicle', 'Updated vehicle ' . $rawPlate);
         }
 
-        $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
+        $this->broadcastUpdate('queue_update', [
+            'action'           => 'vehicle_updated',
+            'id'               => (int) $id,
+            'plate_number'     => $rawPlate,
+            'vehicle_type'     => $vehicleType,
+            'photo'            => $photoRelPath ? base_url($photoRelPath) : null,
+            'has_custom_photo' => !empty($photoRelPath),
+        ]);
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle updated successfully.');
     }

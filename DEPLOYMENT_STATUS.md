@@ -63,20 +63,21 @@ Schema:   public
 ```
 ```
 
-### Current Schema (13 Tables)
+### Current Schema (14 Tables)
 1. `users` - User/admin accounts
 2. `terminals` - Transit hubs
 3. `routes` - Jeepney/van routes
-4. `vehicles` - Registered vehicles
-5. `queue` - Real-time queues
-6. `announcements` - System notifications
-7. `audit_logs` - Audit trail
-8. `departure_rules` - Schedule rules
-9. `fare_discounts` - Pricing
-10. `fares` - Route fares
-11. `user_routes` - User-route assignments
-12. `password_reset_tokens` - Secure reset tokens & verification codes
-13. `migrations` - Schema version tracking
+4. `vehicle_types` - Dynamic vehicle classifications (PUJ, Van, Minibus, Bus)
+5. `vehicles` - Registered vehicles
+6. `queue` - Real-time queues
+7. `announcements` - System notifications
+8. `audit_logs` - Audit trail
+9. `departure_rules` - Schedule rules
+10. `fare_discounts` - Pricing & statutory concessions
+11. `fares` - Route fares
+12. `user_routes` - User-route assignments
+13. `password_reset_tokens` - Secure reset tokens & verification codes
+14. `migrations` - Schema version tracking
 
 ---
 

@@ -63,9 +63,9 @@ abstract class BaseController extends Controller
                 'timestamp' => date('Y-m-d H:i:s')
             ]);
 
-            // Opportunistically prune logs older than 60 days (throttled to run at most every 6 hours)
+            // Opportunistically prune logs older than retention period (throttled to run at most every 6 hours)
             if (!cache('rt_logs_last_purged')) {
-                $logModel->purgeOldLogs(60);
+                $logModel->purgeOldLogs(log_retention_days());
                 cache()->save('rt_logs_last_purged', time(), 21600);
             }
         } catch (\Throwable $e) {
@@ -106,12 +106,11 @@ abstract class BaseController extends Controller
             $cache->delete('rt_queue_status');
             $cache->delete('rt_queue_status_pkg');
             $cache->delete('rt_home_status');
-            // Schedules display passenger counts, so passenger updates MUST invalidate schedules cache
-            $cache->delete('rt_sched_status_cbe5cfdf7c2118a9c3d78ef1d684f3afa089201352886449a06a6511cfef74a7');
+            // Schedules display passenger counts and status, so updates MUST invalidate schedules cache
             try {
-                $cache->deleteMatching('rt_sched_status_*');
+                $cache->deleteMatching('rt_sched_*');
             } catch (\Throwable $e) {
-                // FileHandler glob scan fallback
+                // ignore
             }
 
             if (! $isPassengerChange) {

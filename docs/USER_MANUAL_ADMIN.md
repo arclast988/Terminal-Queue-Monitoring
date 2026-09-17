@@ -15,6 +15,7 @@
 9. [Public Announcements & Emergency Advisories](#9-public-announcements--emergency-advisories)
 10. [Audit Trails & Departure History Reports](#10-audit-trails--departure-history-reports)
 11. [System Maintenance & Daemons](#11-system-maintenance--daemons)
+12. [System Branding, Operational Rules & Data Retention](#12-system-branding-operational-rules--data-retention)
 
 ---
 
@@ -87,16 +88,20 @@ Terminals represent physical dispatch stations and boarding bays within the Palo
 
 The vehicle register holds certified public utility vehicles authorized to operate within the Palompon Terminal.
 
-#### 5.1 Registering a Vehicle
+#### 5.1 Registering a Vehicle & Photo Upload
 1. Navigate to **Management** $\rightarrow$ **Vehicle Register**.
-2. Click **+ Add Vehicle**.
-3. Fill in the mandatory technical parameters:
+2. Click **+ Add Vehicle** (or click Edit on an existing vehicle).
+3. Fill in the technical and operational parameters:
    - **Plate Number**: Standard LTO plate format (e.g., `ABC-1234` or `HAA-5678`). The system performs a live uniqueness check (`admin/vehicles/check-plate`).
-   - **Vehicle Type**: Select from registered types (PUJ Jeepney, UV Express Van, Modern Minibus).
+   - **Vehicle Type**: Select from registered dynamic types (PUJ Jeepney, UV Express Van, Modern Minibus, Bus).
    - **Seating Capacity**: Total passenger capacity excluding the driver (e.g., 14 for UV Express, 18 for PUJ, 22 for Minibus).
-   - **Default Route**: Primary route assigned to this vehicle.
+   - **Default Route**: Primary destination route assigned to this vehicle.
    - **Operator / Franchise Owner Name**: Name of the franchise holder or cooperative.
    - **Default Driver Name**: Primary authorized driver.
+   - **Vehicle Registration Photo Upload**:
+     - Drag-and-drop or select an official vehicle image file (`.jpg`, `.jpeg`, `.png`, `.webp` up to 2MB).
+     - The interface generates an immediate real-time thumbnail preview and includes a one-click **Remove Photo** action.
+     - When saved, the photo is stored securely in `/uploads/vehicles/` and displayed prominently on dispatcher queue cards, fleet registries, and passenger trip searches.
    - **Status**: Set to `Active`.
 4. Click **Save Vehicle**. The vehicle is immediately available in the dispatcher's "Ready to Queue" pool.
 
@@ -107,14 +112,15 @@ The vehicle register holds certified public utility vehicles authorized to opera
 
 ---
 
-### 6. Vehicle Types & Capacity Settings
-**URL**: `/admin/routes` (Vehicle Types Tab) or via settings
+### 6. Dynamic Vehicle Types & Capacity Settings
+**URL**: `/admin/routes` (Vehicle Types Tab) or `/admin/vehicle-types`
 
-Administrators can adjust vehicle classification parameters:
-- **Identifier**: `puj`, `van`, `minibus`.
-- **Display Label**: Human-readable label (e.g., `PUJ (Jeepney)`, `UV Express Van`).
-- **Default Capacity**: Default seat baseline applied to new registrations.
-- **Icon / Badge**: Visual styling used across commuter queue displays.
+Administrators and Super Administrators can dynamically add, update, and manage vehicle types:
+- **Slug / Identifier**: Unique slug (e.g., `puj`, `van`, `minibus`, `bus`).
+- **Display Label**: Human-readable label (e.g., `PUJ (Jeepney)`, `UV Express Van`, `Modern Minibus`).
+- **Brand Color & Icon**: Select an accent color (e.g., `#B71C1C`, `#0284c7`) and FontAwesome icon (e.g., `fa-bus`, `fa-van-shuttle`) used across badges and public monitors.
+- **Default Capacity**: Default seat baseline applied automatically to new registrations.
+- **Active Status**: Toggle active or inactive to control whether the type appears in queue filters and registration dropdowns.
 
 ---
 
@@ -148,15 +154,16 @@ Departure rules dictate target vehicle departure intervals (headways) based on t
 
 #### 8.1 How Departure Rules Work
 When a vehicle enters the queue or transitions to **Boarding**, the system matches the current local time against active departure rules for that route and calculates the **Estimated Departure Time (ETD)**:
+- **24-Hour Continuous Coverage**: Rules cover the full day seamlessly, including the midnight interval (`00:00:00` to `04:00:00`).
 - **Peak Hours Rule** (e.g., 06:00 AM – 09:00 AM & 04:30 PM – 07:00 PM): Shorter wait time (e.g., 15–20 minutes) due to high passenger volume.
 - **Off-Peak Rule** (e.g., 09:01 AM – 04:29 PM): Standard headway interval (e.g., 30–45 minutes).
-- **Minimum Passengers Threshold**: Minimum passenger load required before early departure is triggered.
+- **Early Departure on Full Capacity**: Once all passenger seats reach 100% capacity, the vehicle dispatches immediately without waiting for the timer to reach zero.
 
 #### 8.2 Adding a Departure Rule
 1. Navigate to **Management** $\rightarrow$ **Departure Rules**.
 2. Click **+ Add Departure Rule**.
-3. Select the **Route** and target **Terminal**.
-4. Set the **Start Time** and **End Time** (e.g., `06:00:00` to `09:00:00`).
+3. Select the **Route** and target **Terminal** (or leave terminal blank for terminal-wide application).
+4. Set the **Start Time** and **End Time** (e.g., `00:00:00` to `04:00:00` or `06:00:00` to `09:00:00`).
 5. Enter **Wait Minutes** (e.g., `20`).
 6. Enter an intuitive **Rule Label** (e.g., `Morning Peak - Ormoc Express`).
 7. Click **Save Rule**.
@@ -219,3 +226,29 @@ php spark migrate
 # Re-seed test or initial user records
 php spark db:seed UserSeeder
 ```
+
+---
+
+### 12. System Branding, Operational Rules & Data Retention
+**URL**: `/admin/settings` (Super Administrator only)
+
+Super Administrators have granular control over system identity, theme palettes, and critical operational intervals:
+
+#### 12.1 Vehicle Queue Re-Entry Cooldown Interval
+- **Purpose**: Prevents premature re-queuing and enforces fair vehicle rotation among transit operators.
+- **Default**: 30 minutes.
+- **Customization**: Can be adjusted in minutes or hours (e.g., 15m, 30m, 45m, 1h, 2h, 4h) or set to `0` to disable the cooldown entirely for rapid turnaround.
+- **Enforcement**: Departed vehicles remain hidden from dispatchers and rejected by API checks until the cooldown expires.
+
+#### 12.2 System Audit Logs Retention Policy
+- **Purpose**: Governs how many days security logs are retained before automated maintenance purge.
+- **Default**: 60 days.
+- **Customization**: Configurable from 1 to 3,650 days (presets: 30, 60, 90, 180, 365 days).
+- **Automated Prune**: Evaluated every 6 hours and during report generation.
+
+#### 12.3 Departure History Retention Policy
+- **Purpose**: Governs how many days completed trip ledgers are preserved before being archived/purged.
+- **Default**: 60 days.
+- **Customization**: Configurable from 1 to 3,650 days (presets: 30, 60, 90, 180, 365 days).
+- **Automated Prune**: Evaluated automatically during maintenance routines and history views.
+

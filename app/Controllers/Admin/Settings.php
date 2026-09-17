@@ -236,6 +236,140 @@ class Settings extends BaseController
     }
 
     /**
+     * Update operational & data retention settings (log retention, departure retention, vehicle queue cooldown).
+     */
+    public function updateOperations()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+            }
+            return redirect()->back()->with('error', 'Unauthorized.');
+        }
+
+        $rawCooldown     = $this->request->getPost('vehicle_cooldown_minutes');
+        $rawCooldownUnit = $this->request->getPost('vehicle_cooldown_unit') ?? 'minutes';
+        $rawLogDays      = $this->request->getPost('log_retention_days');
+        $rawDepDays      = $this->request->getPost('departure_retention_days');
+
+        // Convert hours to minutes if unit is hours
+        $cooldownVal = (int) $rawCooldown;
+        if ($rawCooldownUnit === 'hours') {
+            $cooldownVal = (int) round(((float) $rawCooldown) * 60);
+        }
+
+        if ($cooldownVal < 0 || $cooldownVal > 10080) { // Max 7 days
+            $errMsg = 'Vehicle queue cooldown must be between 0 minutes and 7 days (10,080 minutes).';
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success'    => false,
+                    'message'    => $errMsg,
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', $errMsg);
+        }
+
+        $logDaysVal = (int) $rawLogDays;
+        if ($logDaysVal < 1 || $logDaysVal > 3650) {
+            $errMsg = 'System logs retention must be between 1 and 3,650 days (10 years).';
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success'    => false,
+                    'message'    => $errMsg,
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', $errMsg);
+        }
+
+        $depDaysVal = (int) $rawDepDays;
+        if ($depDaysVal < 1 || $depDaysVal > 3650) {
+            $errMsg = 'Departure history retention must be between 1 and 3,650 days (10 years).';
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success'    => false,
+                    'message'    => $errMsg,
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return redirect()->back()->withInput()->with('error', $errMsg);
+        }
+
+        $fields = [
+            'vehicle_cooldown_minutes' => (string) $cooldownVal,
+            'log_retention_days'       => (string) $logDaysVal,
+            'departure_retention_days' => (string) $depDaysVal,
+        ];
+
+        $currentSettings = get_all_system_settings();
+        $hasChange = false;
+        foreach ($fields as $k => $v) {
+            if ((string) ($currentSettings[$k] ?? '') !== $v) {
+                $hasChange = true;
+                break;
+            }
+        }
+
+        if (! $hasChange) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'    => true,
+                    'no_change'  => true,
+                    'message'    => 'No changes detected — operational settings are already up to date.',
+                    'csrf_token' => csrf_token(),
+                    'csrf_hash'  => csrf_hash(),
+                ]);
+            }
+            return $this->noChangesResponse();
+        }
+
+        $model = new SystemSettingModel();
+        $model->setMultiple($fields);
+        get_all_system_settings(true);
+
+        // Opportunistically run purges with new retention rules immediately
+        try {
+            (new \App\Models\LogModel())->purgeOldLogs($logDaysVal);
+            (new \App\Models\QueueModel())->purgeOldDepartures($depDaysVal);
+        } catch (\Throwable $e) {
+            // Silently continue
+        }
+
+        // Notify queue sync across sockets if daemon active
+        try {
+            $this->broadcastUpdate('operational_settings_updated', [
+                'vehicle_cooldown_minutes' => $cooldownVal,
+                'log_retention_days'       => $logDaysVal,
+                'departure_retention_days' => $depDaysVal,
+            ]);
+        } catch (\Throwable $e) {
+            // Silently continue if daemon offline
+        }
+
+        $this->logActivity('System Settings', "Updated operational rules: Queue Cooldown={$cooldownVal}m, Log Retention={$logDaysVal}d, Departure Retention={$depDaysVal}d");
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'    => true,
+                'message'    => 'Operational & retention rules updated successfully.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+                'data'       => [
+                    'vehicle_cooldown_minutes' => $cooldownVal,
+                    'log_retention_days'       => $logDaysVal,
+                    'departure_retention_days' => $depDaysVal,
+                ],
+            ]);
+        }
+
+        return redirect()->to('/admin/settings#operations')->with('success', 'Operational & retention rules updated successfully.');
+    }
+
+    /**
      * Upload a custom system logo.
      */
     public function uploadLogo()

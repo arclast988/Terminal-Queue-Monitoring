@@ -17,8 +17,8 @@ class Logs extends BaseController
 
     public function index()
     {
-        // Automatically enforce 60-day retention policy
-        $this->logModel->purgeOldLogs(60);
+        // Automatically enforce retention policy
+        $this->logModel->purgeOldLogs(log_retention_days());
 
         $search       = trim((string) $this->request->getGet('q'));
         $fromDate     = trim((string) $this->request->getGet('from_date'));
@@ -77,7 +77,7 @@ class Logs extends BaseController
     public function print()
     {
         // Enforce retention policy
-        $this->logModel->purgeOldLogs(60);
+        $this->logModel->purgeOldLogs(log_retention_days());
 
         $search       = trim((string) $this->request->getGet('q'));
         $fromDate     = trim((string) $this->request->getGet('from_date'));

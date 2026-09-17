@@ -269,13 +269,14 @@ class QueueModel extends Model
     }
 
     /**
-     * Automatically purge departed queue records older than the specified retention days (default: 60 days).
+     * Automatically purge departed queue records older than the specified retention days.
      *
-     * @param int $days Number of days to retain departure records (default: 60)
+     * @param int|null $days Number of days to retain departure records (defaults to system setting departure_retention_days())
      * @return int Number of deleted rows
      */
-    public function purgeOldDepartures(int $days = 60): int
+    public function purgeOldDepartures(?int $days = null): int
     {
+        $days = ($days !== null && $days >= 1) ? $days : departure_retention_days();
         $cutoff = date('Y-m-d H:i:s', strtotime("-{$days} days"));
         return (int) $this->where('status', 'departed')
             ->where('departure_time <', $cutoff)

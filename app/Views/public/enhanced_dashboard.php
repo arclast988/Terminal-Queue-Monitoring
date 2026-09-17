@@ -2764,6 +2764,7 @@
             var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
             var photoUrl = (item.photo_url || (item.vehicle_photo ? ('/uploads/vehicles/' + item.vehicle_photo) : (item.photo ? ('/uploads/vehicles/' + item.photo) : ''))) || vMeta.photo || '';
             var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
+            var posContrast = vMeta.contrast || (typeof getContrastTextColor === 'function' ? getContrastTextColor(posColor) : '#ffffff');
             var isLight = (posContrast === '#0f172a');
             var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
             var badgeStyle = isLight 
@@ -2828,7 +2829,7 @@
                 + '<div class="dep-time-col">'
                 + '<div class="dep-header-label">EST. DEPARTURE</div>'
                 + '<div class="dep-time-group">'
-                + '<div class="dep-time-highlight">' + (item.estimated_departure_formatted || 'Waiting') + '</div>'
+                + '<div class="dep-time-highlight">' + (item.estimated_departure_formatted || 'TBA') + '</div>'
                 + (item.status === 'boarding' && estDepIso ? '<div class="countdown-timer" data-departure="' + estDepIso + '"></div>' : '')
                 + '</div>'
                 + '</div>'
@@ -2886,7 +2887,7 @@
 
             // 5. Update estimated departure text
             var depHighlight = card.querySelector('.dep-time-highlight');
-            var depText = item.estimated_departure_formatted || 'Waiting';
+            var depText = item.estimated_departure_formatted || 'TBA';
             if (depHighlight && depHighlight.textContent !== depText) {
                 depHighlight.textContent = depText;
             }
@@ -2925,6 +2926,76 @@
             // 9. Update dataset attributes for filtering
             card.dataset.destination = (item.destination || '').toLowerCase();
             card.dataset.vehicleType = (item.vehicle_type || '').toLowerCase();
+
+            // 10. Update vehicle thumbnail / custom photo / fallback icon in place
+            var thumbBox = card.querySelector('.vehicle-thumb-box');
+            if (thumbBox) {
+                var vType = (item.vehicle_type || '').toLowerCase();
+                var vMeta = (vehicleTypeMeta && vehicleTypeMeta[vType]) ? vehicleTypeMeta[vType] : {
+                    color: '#1565c0',
+                    contrast: '#ffffff',
+                    photo: null,
+                    icon: 'fa-bus',
+                    label: vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van'
+                };
+                var posColor = vMeta.color || '#1565c0';
+                var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
+                var photoUrl = (item.photo_url || (item.vehicle_photo ? ('/uploads/vehicles/' + item.vehicle_photo) : (item.photo ? ('/uploads/vehicles/' + item.photo) : ''))) || vMeta.photo || '';
+                var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
+
+                var currentImg = thumbBox.querySelector('img');
+                var currentI = thumbBox.querySelector('i');
+                var badgePill = thumbBox.querySelector('.queue-badge-pill');
+
+                if (photoUrl) {
+                    if (currentImg) {
+                        var curSrc = currentImg.getAttribute('src') || '';
+                        if (curSrc !== photoUrl && currentImg.src !== photoUrl) {
+                            currentImg.src = photoUrl;
+                        }
+                        if (hasCustom) {
+                            currentImg.classList.add('vehicle-custom-photo');
+                            currentImg.setAttribute('data-vehicle-custom-photo', 'true');
+                            currentImg.removeAttribute('data-vt-photo');
+                        } else {
+                            currentImg.classList.remove('vehicle-custom-photo');
+                            currentImg.removeAttribute('data-vehicle-custom-photo');
+                            currentImg.setAttribute('data-vt-photo', vType);
+                        }
+                        currentImg.alt = vTypeLabel;
+                        if (currentI) currentI.remove();
+                    } else {
+                        var newImg = document.createElement('img');
+                        newImg.src = photoUrl;
+                        newImg.alt = vTypeLabel;
+                        newImg.className = 'vehicle-thumb-img' + (hasCustom ? ' vehicle-custom-photo' : '');
+                        if (hasCustom) {
+                            newImg.setAttribute('data-vehicle-custom-photo', 'true');
+                        } else {
+                            newImg.setAttribute('data-vt-photo', vType);
+                        }
+                        if (currentI) {
+                            thumbBox.replaceChild(newImg, currentI);
+                        } else if (badgePill) {
+                            thumbBox.insertBefore(newImg, badgePill);
+                        } else {
+                            thumbBox.appendChild(newImg);
+                        }
+                    }
+                } else {
+                    // No photo (removed and no default type photo): replace with FontAwesome icon
+                    if (currentImg) {
+                        var newI = document.createElement('i');
+                        newI.className = 'fas ' + (vMeta.icon || 'fa-bus');
+                        newI.style.fontSize = '28px';
+                        newI.style.color = posColor;
+                        thumbBox.replaceChild(newI, currentImg);
+                    } else if (currentI) {
+                        currentI.className = 'fas ' + (vMeta.icon || 'fa-bus');
+                        currentI.style.color = posColor;
+                    }
+                }
+            }
         }
 
         // Fetch status for real-time sync
@@ -3062,6 +3133,8 @@
 
                                     var existingCard = existingCardMap[key];
                                     if (existingCard) {
+                                        // If card was transitioning out and restored, clear card-leave
+                                        existingCard.classList.remove('card-leave');
                                         // IN-PLACE TARGETED UPDATE: Never destroy card, smoothly update numbers & progress
                                         updateQueueCardInPlace(existingCard, item, passengerDeltas);
                                         // Re-appending moves/preserves order without re-rendering or losing state
@@ -3087,7 +3160,7 @@
                                         if (cardToRemove && !cardToRemove.classList.contains('card-leave')) {
                                             cardToRemove.classList.add('card-leave');
                                             setTimeout(function() {
-                                                if (cardToRemove && cardToRemove.parentNode) {
+                                                if (cardToRemove && cardToRemove.parentNode && cardToRemove.classList.contains('card-leave')) {
                                                     cardToRemove.parentNode.removeChild(cardToRemove);
                                                 }
                                             }, 320);
@@ -3228,6 +3301,8 @@
                     if (e.data && (e.data.action === 'passenger_change' || (e.data.data && e.data.data.action === 'passenger_change'))) {
                         var pData = e.data.action === 'passenger_change' ? e.data : e.data.data;
                         handleRealtimePassengerChange(pData);
+                    } else {
+                        fetchStatus();
                     }
                 };
             }

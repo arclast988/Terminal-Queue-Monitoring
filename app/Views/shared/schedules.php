@@ -342,12 +342,13 @@
                                 <td data-label="Type">
                                     <?php
                                         $vType = $s['vehicle_type'] ?? '';
-                                        $photoUrl = vehicle_type_photo($vType);
+                                        $photoUrl = vehicle_resolved_photo($s, $vType);
+                                        $hasCustomPhoto = !empty($s['vehicle_photo'] ?? $s['photo'] ?? null);
                                     ?>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
                                             <?php if (!empty($photoUrl)): ?>
-                                                <img src="<?= esc($photoUrl) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
+                                                <img src="<?= esc($photoUrl) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>" class="<?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?>>
                                             <?php else: ?>
                                                 <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="color: <?= esc(vehicle_type_color($vType)) ?>; font-size: 18px;"></i>
                                             <?php endif; ?>
@@ -371,7 +372,7 @@
                                     <?php else: ?>
                                         <div class="sched-dep-cell" id="shared-dep-cell-<?= $qid ?>">
                                             <span class="badge-modern badge-modern-primary" id="shared-dep-time-<?= $qid ?>">
-                                                <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'Waiting' ?>
+                                                <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'TBA' ?>
                                             </span>
                                             <small class="text-muted d-block mt-1" id="shared-passengers-text-<?= $qid ?>">
                                                 <span id="passenger-count-<?= $qid ?>" class="passenger-count-num <?= passenger_color_class((int)$s['current_passengers'], (int)$s['capacity']) ?>"><?= $s['current_passengers'] ?></span>/<?= $s['capacity'] ?> passengers
@@ -522,7 +523,7 @@
         if (data.action === 'passenger_change') {
             updateSharedScheduleRowPassengers(data.id, data.new_count, data.capacity);
         } else if (window.QueueSync && window.QueueSync.refresh) {
-            window.QueueSync.refresh();
+            window.QueueSync.refresh(true);
         }
     }
 

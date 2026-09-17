@@ -837,16 +837,16 @@
     <!-- Tab 4: 30-Minute Departure Cooldown Rule -->
     <div id="tab-cooldown" class="tab-content">
         <div class="manual-card">
-            <h3><i class="fas fa-stopwatch" style="color:#f59e0b;"></i> The 30-Minute Departure Cooldown Rule</h3>
+            <h3><i class="fas fa-stopwatch" style="color:#f59e0b;"></i> The Post-Departure Cooldown Rule</h3>
             <p style="color:#475569; font-size:13.5px;">
-                To prevent unfair queue hogging and ensure equitable rotation among all transport operators:
+                To prevent unfair queue hogging and ensure equitable rotation among all transport operators, the system enforces a post-departure cooldown period (default is <strong>30 minutes</strong>, configurable by the Superadmin in System Settings):
             </p>
 
             <div class="rule-callout warning">
                 <h5 style="margin:0 0 6px; font-weight:800;"><i class="fas fa-ban"></i> Cooldown Protection:</h5>
-                <p style="margin:0;">Once a vehicle departs (<code>status = departed</code>), it cannot immediately re-enter the queue.</p>
-                <p style="margin:6px 0 0;">If a driver returns early and asks to be queued before 30 minutes pass, the system intercepts the request and informs you: <em>"Vehicle ABC-1234 departed recently. Please wait about 14 more minute(s) before adding it back."</em></p>
-                <p style="margin:6px 0 0;">The system automatically unlocks the vehicle the instant the 30-minute timer expires—no manual override needed!</p>
+                <p style="margin:0;">Once a vehicle departs (<code>status = departed</code>), it cannot immediately re-enter the queue until its cooldown has elapsed.</p>
+                <p style="margin:6px 0 0;">If a driver returns early and asks to be queued before the cooldown interval passes, the system intercepts the request and informs you: <em>"Vehicle ABC-1234 departed recently. Please wait about X more minute(s) before adding it back."</em></p>
+                <p style="margin:6px 0 0;">The system automatically unlocks the vehicle the instant the cooldown timer expires—no manual override needed!</p>
             </div>
         </div>
     </div>

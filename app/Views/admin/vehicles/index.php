@@ -1780,7 +1780,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
     #registerVehicleModal .modal-dialog {
         max-height: none !important;
         height: auto !important;
-        min-height: calc(100% - 1rem) !important;
+        min-height: auto !important;
         display: flex !important;
         align-items: center !important;
         overflow: visible !important;
@@ -1856,7 +1856,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
         #registerVehicleModal .modal-dialog {
             max-height: none !important;
             height: auto !important;
-            min-height: calc(100dvh - 1rem) !important;
+            min-height: auto !important;
         }
 
         #registerVehicleModal .modal-content {
@@ -1910,7 +1910,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 
 <!-- Register New Vehicle Modal -->
 <div class="modal fade" id="registerVehicleModal" tabindex="-1" aria-labelledby="registerVehicleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered mx-auto my-2 my-sm-4" style="max-width: 680px; width: calc(100% - 1.5rem);">
+    <div class="modal-dialog modal-dialog-centered mx-auto my-2" style="max-width: 680px; width: calc(100% - 1.5rem);">
         <div class="modal-content border-0 shadow" style="border-radius: 16px;">
             <div class="modal-header py-2 px-3 bg-white flex-shrink-0" style="border-bottom: 1px solid var(--border, #e2e8f0); border-top-left-radius: 16px; border-top-right-radius: 16px;">
                 <h5 class="modal-title fw-bold fs-6 mb-0 text-dark" id="registerVehicleModalLabel">

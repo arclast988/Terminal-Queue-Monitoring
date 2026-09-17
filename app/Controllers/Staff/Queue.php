@@ -153,8 +153,9 @@ class Queue extends BaseController
                     $depDate = date('Y-m-d', $depTimestamp);
                     $elapsedMinutes = ($currentTime - $depTimestamp) / 60;
 
-                    // If departed less than 30 minutes ago, hide completely (disappear for 30 mins)
-                    if ($elapsedMinutes < 30) {
+                    // If departed less than cooldown period ago, hide completely
+                    $cooldownMin = vehicle_cooldown_minutes();
+                    if ($cooldownMin > 0 && $elapsedMinutes < $cooldownMin) {
                         continue;
                     }
 
@@ -257,7 +258,8 @@ class Queue extends BaseController
         $errors = [];
         $warnings = [];
 
-        $thirtyMinutesAgo = date('Y-m-d H:i:s', strtotime('-30 minutes'));
+        $cooldownMin = vehicle_cooldown_minutes();
+        $cooldownCutoff = date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes"));
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s');
 
@@ -307,20 +309,22 @@ class Queue extends BaseController
                 continue;
             }
 
-            // Enforce the same 30-minute cooldown shown in the vehicle list.
-            $recentDeparture = $this->queueModel->where('vehicle_id', $vehicleId)
-                ->where('status', 'departed')
-                ->where('departure_time >=', $thirtyMinutesAgo)
-                ->orderBy('departure_time', 'DESC')
-                ->first();
+            // Enforce the configured departure cooldown shown in the vehicle list.
+            if ($cooldownMin > 0) {
+                $recentDeparture = $this->queueModel->where('vehicle_id', $vehicleId)
+                    ->where('status', 'departed')
+                    ->where('departure_time >=', $cooldownCutoff)
+                    ->orderBy('departure_time', 'DESC')
+                    ->first();
 
-            if ($recentDeparture) {
-                $departTime = strtotime($recentDeparture['departure_time']);
-                $secondsAgo = time() - $departTime;
-                $remainingSeconds = max(0, (30 * 60) - $secondsAgo);
-                $remainingMinutes = (int) ceil($remainingSeconds / 60);
-                $errors[] = $vehicle['plate_number'] . ' departed recently. Please wait about ' . $remainingMinutes . ' more minute(s) before adding it back.';
-                continue;
+                if ($recentDeparture) {
+                    $departTime = strtotime($recentDeparture['departure_time']);
+                    $secondsAgo = time() - $departTime;
+                    $remainingSeconds = max(0, ($cooldownMin * 60) - $secondsAgo);
+                    $remainingMinutes = (int) ceil($remainingSeconds / 60);
+                    $errors[] = $vehicle['plate_number'] . ' departed recently. Please wait about ' . $remainingMinutes . ' more minute(s) before adding it back.';
+                    continue;
+                }
             }
 
             // Calculate next position for this route (temporary — reorderByDeparture() finalises it)

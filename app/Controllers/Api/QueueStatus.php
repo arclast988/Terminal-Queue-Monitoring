@@ -111,27 +111,30 @@ class QueueStatus extends Controller
             ]);
         }
 
-        // 2. Check for recent departure (within the 30-minute cooldown)
-        $thirtyMinutesAgo = date('Y-m-d H:i:s', strtotime('-30 minutes'));
-        $recentDeparture = $queueModel->where('vehicle_id', $vehicleId)
-            ->where('status', 'departed')
-            ->where('departure_time >=', $thirtyMinutesAgo)
-            ->orderBy('departure_time', 'DESC')
-            ->first();
+        // 2. Check for recent departure (within configured cooldown)
+        $cooldownMin = vehicle_cooldown_minutes();
+        if ($cooldownMin > 0) {
+            $cooldownCutoff = date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes"));
+            $recentDeparture = $queueModel->where('vehicle_id', $vehicleId)
+                ->where('status', 'departed')
+                ->where('departure_time >=', $cooldownCutoff)
+                ->orderBy('departure_time', 'DESC')
+                ->first();
 
-        if ($recentDeparture) {
-            $departTime = strtotime($recentDeparture['departure_time']);
-            $secondsAgo = time() - $departTime;
-            $waitRemaining = max(0, (30 * 60) - $secondsAgo);
-            $waitMinutes = (int) ceil($waitRemaining / 60);
-            
-            return $this->response->setJSON([
-                'success'   => true,
-                'available' => false,
-                'reason'    => 'recently_departed',
-                'message'   => "This vehicle departed recently. Please wait about {$waitMinutes} more minute(s).",
-                'departure_time' => $recentDeparture['departure_time']
-            ]);
+            if ($recentDeparture) {
+                $departTime = strtotime($recentDeparture['departure_time']);
+                $secondsAgo = time() - $departTime;
+                $waitRemaining = max(0, ($cooldownMin * 60) - $secondsAgo);
+                $waitMinutes = (int) ceil($waitRemaining / 60);
+                
+                return $this->response->setJSON([
+                    'success'   => true,
+                    'available' => false,
+                    'reason'    => 'recently_departed',
+                    'message'   => "This vehicle departed recently. Please wait about {$waitMinutes} more minute(s).",
+                    'departure_time' => $recentDeparture['departure_time']
+                ]);
+            }
         }
 
         return $this->response->setJSON([

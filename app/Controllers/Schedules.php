@@ -101,11 +101,17 @@ class Schedules extends BaseController
                              ->orderBy('queue.estimated_departure', 'ASC')
                              ->findAll();
 
-        // Calculate full status
+        // Calculate full status and ensure estimated departure is formatted
         foreach ($schedules as &$s) {
             $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
             $s['photo_url'] = vehicle_resolved_photo($s, $s['vehicle_type'] ?? null);
             $s['has_custom_photo'] = !empty($s['vehicle_photo'] ?? $s['photo'] ?? null);
+            if (empty($s['estimated_departure'])) {
+                $baseTime = !empty($s['arrival_time']) ? strtotime($s['arrival_time']) : time();
+                $s['estimated_departure'] = date('Y-m-d H:i:s', $baseTime + (15 * 60));
+            }
+            $s['estimated_departure_formatted'] = !empty($s['estimated_departure'])
+                ? date('g:i A', strtotime($s['estimated_departure'])) : 'TBA';
         }
         unset($s);
 
@@ -191,7 +197,7 @@ class Schedules extends BaseController
         $syncTokenTime = (float) $syncToken;
 
         $useCache  = ($search === '');
-        $cacheKey  = 'rt_sched_status_' . hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? ''));
+        $cacheKey  = 'rt_sched_' . substr(md5(($vehicleType ?? '') . '|' . ($destination ?? '')), 0, 16);
         $payload   = $useCache ? cache($cacheKey) : null;
 
         // Air-tight guarantee: if a queue mutation happened after this payload was cached, discard stale cache immediately
@@ -245,14 +251,15 @@ class Schedules extends BaseController
 
             foreach ($schedules as &$s) {
                 $s['id'] = (int) $s['queue_id'];
-                if ($s['status'] === 'boarding') {
-                    $s['estimated_departure'] = null;
+                if (empty($s['estimated_departure'])) {
+                    $baseTime = !empty($s['arrival_time']) ? strtotime($s['arrival_time']) : time();
+                    $s['estimated_departure'] = date('Y-m-d H:i:s', $baseTime + (15 * 60));
                 }
                 $s['is_full'] = ((int) $s['current_passengers'] >= (int) $s['capacity']);
                 $s['photo_url'] = vehicle_resolved_photo($s, $s['vehicle_type'] ?? null);
                 $s['has_custom_photo'] = !empty($s['vehicle_photo'] ?? $s['photo'] ?? null);
                 $s['estimated_departure_formatted'] = !empty($s['estimated_departure'])
-                    ? date('g:i A', strtotime($s['estimated_departure'])) : null;
+                    ? date('g:i A', strtotime($s['estimated_departure'])) : 'TBA';
             }
             unset($s);
 

@@ -1193,10 +1193,10 @@
             </div>
 
             <div class="rule-callout">
-                <h5 style="margin:0 0 6px; font-weight:800;"><i class="fas fa-stopwatch"></i> Scenario 2: 30-Minute Departure Cooldown</h5>
-                <p style="margin:0;"><strong>Problem:</strong> Driver departs, turns around immediately, and demands to re-enter the queue before 30 minutes pass.</p>
-                <p style="margin:4px 0 0;"><strong>Diagnosis:</strong> Plain-language alert informs the dispatcher: <em>"Vehicle ABC-1234 departed recently. Please wait about 14 more minute(s) before adding it back."</em></p>
-                <p style="margin:4px 0 0;"><strong>Recovery:</strong> The system automatically tracks the remaining minutes and re-enables the vehicle in the Available pool the instant 30 minutes expire.</p>
+                <h5 style="margin:0 0 6px; font-weight:800;"><i class="fas fa-stopwatch"></i> Scenario 2: Post-Departure Cooldown Rule</h5>
+                <p style="margin:0;"><strong>Problem:</strong> Driver departs, turns around immediately, and demands to re-enter the queue before the cooldown period passes (default: 30 minutes, customizable in System Settings &gt; Retention & Queue Rules).</p>
+                <p style="margin:4px 0 0;"><strong>Diagnosis:</strong> Plain-language alert informs the dispatcher: <em>"Vehicle ABC-1234 departed recently. Please wait about X more minute(s) before adding it back."</em></p>
+                <p style="margin:4px 0 0;"><strong>Recovery:</strong> The system automatically tracks the remaining minutes and re-enables the vehicle in the Available pool the instant the cooldown expires.</p>
             </div>
 
             <div class="success-callout">

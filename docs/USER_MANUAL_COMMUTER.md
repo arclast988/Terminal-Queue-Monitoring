@@ -139,7 +139,7 @@ The website is a progressive web-compatible responsive site. You do not need to 
 
 ### 11. Getting Help, Submitting Feedback & Reporting Issues
 We welcome commuter feedback to continuously improve terminal services!
-- **Help Center**: Click **Help Center** in the footer for quick operational guidelines.
+- **Help Guide**: Click **Help Guide** in the footer for the complete, mobile-responsive operational guide, boarding status definitions, and headway rules.
 - **Report an Issue**: Click **Report Issue** in the footer to report inaccurate schedules, missing vehicles, or fare overcharging directly to terminal supervisors.
 - **Contact Us**: Click **Contact Us** in the footer or email the terminal administration at `arclast988@gmail.com`.
 - **Physical Assistance**: Visit the **Palompon Terminal Office** located at the terminal grounds, Rizal Street, Palompon, Leyte.

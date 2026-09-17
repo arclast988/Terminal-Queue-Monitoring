@@ -526,10 +526,15 @@ $slotsMeta = [
     font-weight: 700;
     margin: 0;
     line-height: 1.25;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 220px;
+    max-width: 100%;
 }
 
 .preview-header-bar .preview-brand p {
@@ -538,10 +543,15 @@ $slotsMeta = [
     opacity: 0.82;
     font-weight: 600;
     letter-spacing: 0.3px;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 220px;
+    max-width: 100%;
 }
 
 /* Public Live Footer Preview (Matching User Screenshot) */
@@ -1003,6 +1013,39 @@ $slotsMeta = [
     border-radius: 50%;
 }
 
+.preset-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.btn-preset-pill {
+    padding: 5px 12px;
+    background: #f1f5f9;
+    border: 1px solid var(--sb-border, #e2e8f0);
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-preset-pill:hover {
+    background: #e2e8f0;
+    border-color: var(--sb-primary, #B71C1C);
+    color: var(--sb-primary, #B71C1C);
+    transform: translateY(-1px);
+}
+
+.btn-preset-pill.active {
+    background: var(--sb-primary-light, rgba(183, 28, 28, 0.08));
+    border-color: var(--sb-primary, #B71C1C);
+    color: var(--sb-primary, #B71C1C);
+    font-weight: 700;
+}
+
 .theme-section {
     background: #f8fafc;
     border: 1px solid var(--sb-border);
@@ -1247,6 +1290,9 @@ $slotsMeta = [
             <button class="settings-tab" data-tab="footer" role="tab" id="tabBtn-footer">
                 <i class="fas fa-layer-group"></i> Footer & Public Attribution
             </button>
+            <button class="settings-tab" data-tab="operations" role="tab" id="tabBtn-operations">
+                <i class="fas fa-sliders"></i> Retention & Queue Rules
+            </button>
         </div>
     </div>
 
@@ -1335,7 +1381,7 @@ $slotsMeta = [
                         <small>Reports & Documents</small>
                     </div>
                     <div style="padding: 14px 18px; background: #f8fafc; font-size: 13px;">
-                        <div style="font-weight: 700; color: var(--sb-text-main);" id="previewSysTitleCard"><?= esc($s['system_title'] ?? 'Palompon Transit Terminal Management System') ?></div>
+                        <div style="font-weight: 700; color: var(--sb-text-main); word-break: break-word; overflow-wrap: anywhere;" id="previewSysTitleCard"><?= esc($s['system_title'] ?? 'Palompon Transit Terminal Management System') ?></div>
                         <div style="color: var(--sb-text-muted); font-size: 11.5px; margin-top: 3px;">Short Acronym: <span style="font-weight: 700; color: var(--sb-primary);" id="previewAcronymCard"><?= esc($s['acronym'] ?? 'PTTM') ?></span></div>
                     </div>
                 </div>
@@ -1818,6 +1864,154 @@ $slotsMeta = [
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- ====================================================================
+         TAB 5: RETENTION & QUEUE RULES
+         ==================================================================== -->
+    <div class="tab-content" id="tab-operations">
+        <form method="post" action="<?= base_url('admin/settings/update-operations') ?>" autocomplete="off" id="formOperations">
+            <?= csrf_field() ?>
+
+            <!-- Card 1: Vehicle Queue Re-Entry Cooldown -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="card-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <div>
+                        <h3>Vehicle Queue Re-Entry Cooldown Period</h3>
+                        <p>Configure how many minutes or hours must elapse after a vehicle departs before it becomes visible and eligible to be added back into the terminal departure queue. The default is 30 minutes.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="inputCooldownMinutes">
+                            <span>Departure Queue Cooldown <strong style="color:var(--sb-primary);">(Minutes)</strong></span>
+                            <span class="label-hint" id="cooldownHumanDisplay" style="font-weight:700; color:#d97706; font-size:12.5px;"></span>
+                        </label>
+                        <div style="display: flex; gap: 10px; align-items: center; max-width: 480px;">
+                            <input type="number" name="vehicle_cooldown_minutes" class="form-input" id="inputCooldownMinutes"
+                                value="<?= esc($s['vehicle_cooldown_minutes'] ?? '30') ?>" min="0" max="10080" step="1" required
+                                style="font-weight: 700; font-size: 16px;">
+                            <span style="font-size: 13.5px; font-weight: 600; color: var(--sb-text-muted); white-space: nowrap;">minutes</span>
+                        </div>
+
+                        <!-- Presets Bar -->
+                        <div class="preset-pills-wrap">
+                            <span style="font-size: 12px; color: var(--sb-text-muted); align-self: center; margin-right: 4px;"><i class="fas fa-bolt text-warning"></i> Quick Presets:</span>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(0)">0m (No Cooldown)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(15)">15 mins</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(30)">30 mins (Default)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(45)">45 mins</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(60)">1 hour (60m)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(90)">1.5 hours (90m)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(120)">2 hours (120m)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setCooldownPreset(240)">4 hours (240m)</button>
+                        </div>
+
+                        <div style="margin-top: 14px; padding: 12px 16px; background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; font-size: 13px; color: #854d0e; line-height: 1.5;">
+                            <i class="fas fa-info-circle me-1" style="color:#ca8a04;"></i>
+                            <strong>Operational Impact:</strong> When a vehicle is marked as <em>Departed</em>, it remains hidden from the terminal dispatcher's check-in selection until this cooldown has expired. If dispatchers attempt to manually queue a vehicle before its cooldown finishes, the system blocks the action and displays the remaining wait time. Setting this value to <strong>0</strong> removes the cooldown, allowing vehicles to be queued again immediately after departure.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: System Audit Logs Retention Policy -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="card-icon" style="background: rgba(59, 130, 246, 0.12); color: #2563eb;">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <h3>System Audit Logs Retention Period</h3>
+                        <p>Configure the retention window (in days) before system activity and administrative audit logs are automatically purged by automated background maintenance. The default is 60 days.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="inputLogRetention">
+                            <span>Audit Log Retention Period <strong style="color:var(--sb-primary);">(Days)</strong></span>
+                            <span class="label-hint" id="logRetentionHumanDisplay" style="font-weight:700; color:#2563eb; font-size:12.5px;"></span>
+                        </label>
+                        <div style="display: flex; gap: 10px; align-items: center; max-width: 480px;">
+                            <input type="number" name="log_retention_days" class="form-input" id="inputLogRetention"
+                                value="<?= esc($s['log_retention_days'] ?? '60') ?>" min="1" max="3650" step="1" required
+                                style="font-weight: 700; font-size: 16px;">
+                            <span style="font-size: 13.5px; font-weight: 600; color: var(--sb-text-muted); white-space: nowrap;">days</span>
+                        </div>
+
+                        <!-- Presets Bar -->
+                        <div class="preset-pills-wrap">
+                            <span style="font-size: 12px; color: var(--sb-text-muted); align-self: center; margin-right: 4px;"><i class="fas fa-calendar-alt text-primary"></i> Retention Presets:</span>
+                            <button type="button" class="btn-preset-pill" onclick="setLogRetentionPreset(30)">30 Days (1 Month)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setLogRetentionPreset(60)">60 Days (Default)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setLogRetentionPreset(90)">90 Days (3 Months)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setLogRetentionPreset(180)">180 Days (6 Months)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setLogRetentionPreset(365)">365 Days (1 Year)</button>
+                        </div>
+
+                        <div style="margin-top: 14px; padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; font-size: 13px; color: #1e40af; line-height: 1.5;">
+                            <i class="fas fa-shield-alt me-1" style="color:#2563eb;"></i>
+                            <strong>Automated Maintenance:</strong> Audit logs record staff logins, departure overrides, and settings modifications. Records older than the configured days are pruned automatically during routine maintenance and log report generation.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Departure History Retention Policy -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+                        <i class="fas fa-clock-rotate-left"></i>
+                    </div>
+                    <div>
+                        <h3>Departure History Retention Period</h3>
+                        <p>Configure how many days completed departure trip records are preserved in official departure ledgers before being pruned. The default is 60 days.</p>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label class="form-label" for="inputDepRetention">
+                            <span>Departure History Retention Period <strong style="color:var(--sb-primary);">(Days)</strong></span>
+                            <span class="label-hint" id="depRetentionHumanDisplay" style="font-weight:700; color:#059669; font-size:12.5px;"></span>
+                        </label>
+                        <div style="display: flex; gap: 10px; align-items: center; max-width: 480px;">
+                            <input type="number" name="departure_retention_days" class="form-input" id="inputDepRetention"
+                                value="<?= esc($s['departure_retention_days'] ?? '60') ?>" min="1" max="3650" step="1" required
+                                style="font-weight: 700; font-size: 16px;">
+                            <span style="font-size: 13.5px; font-weight: 600; color: var(--sb-text-muted); white-space: nowrap;">days</span>
+                        </div>
+
+                        <!-- Presets Bar -->
+                        <div class="preset-pills-wrap">
+                            <span style="font-size: 12px; color: var(--sb-text-muted); align-self: center; margin-right: 4px;"><i class="fas fa-history text-success"></i> History Presets:</span>
+                            <button type="button" class="btn-preset-pill" onclick="setDepRetentionPreset(30)">30 Days (1 Month)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setDepRetentionPreset(60)">60 Days (Default)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setDepRetentionPreset(90)">90 Days (3 Months)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setDepRetentionPreset(180)">180 Days (6 Months)</button>
+                            <button type="button" class="btn-preset-pill" onclick="setDepRetentionPreset(365)">365 Days (1 Year)</button>
+                        </div>
+
+                        <div style="margin-top: 14px; padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; font-size: 13px; color: #065f46; line-height: 1.5;">
+                            <i class="fas fa-database me-1" style="color:#059669;"></i>
+                            <strong>Ledger Optimization:</strong> Completed trip records older than the selected retention period are cleared during maintenance runs and ledger access, keeping municipal departure stats fast, lightweight, and responsive.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Action Button -->
+            <div class="form-action-row" style="margin-top: 0; margin-bottom: 24px;">
+                <button type="submit" class="btn-save" id="btnSaveOperations">
+                    <i class="fas fa-save"></i> Save Retention & Queue Rules
+                </button>
+            </div>
+        </form>
     </div>
 
 </div>
@@ -2591,9 +2785,90 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // =========================================================================
+    // 11. Operational Rules (Cooldown & Retention) Live Helpers & Presets
+    // =========================================================================
+    var inputCooldown = document.getElementById('inputCooldownMinutes');
+    var cooldownHuman = document.getElementById('cooldownHumanDisplay');
+    var inputLogRetention = document.getElementById('inputLogRetention');
+    var logRetentionHuman = document.getElementById('logRetentionHumanDisplay');
+    var inputDepRetention = document.getElementById('inputDepRetention');
+    var depRetentionHuman = document.getElementById('depRetentionHumanDisplay');
+
+    function updateCooldownHuman() {
+        if (!inputCooldown || !cooldownHuman) return;
+        var mins = parseInt(inputCooldown.value, 10);
+        if (isNaN(mins) || mins < 0) {
+            cooldownHuman.textContent = '';
+            return;
+        }
+        if (mins === 0) {
+            cooldownHuman.textContent = '0 mins (Immediate - No Cooldown)';
+            return;
+        }
+        var h = Math.floor(mins / 60);
+        var m = mins % 60;
+        var parts = [];
+        if (h > 0) parts.push(h + (h === 1 ? ' hr' : ' hrs'));
+        if (m > 0) parts.push(m + ' min' + (m === 1 ? '' : 's'));
+        var decimalHrs = (mins / 60).toFixed(1).replace(/\.0$/, '');
+        cooldownHuman.textContent = mins + ' mins (' + decimalHrs + ' hrs)';
+    }
+
+    function updateRetentionHuman(inputEl, displayEl) {
+        if (!inputEl || !displayEl) return;
+        var days = parseInt(inputEl.value, 10);
+        if (isNaN(days) || days < 1) {
+            displayEl.textContent = '';
+            return;
+        }
+        var months = (days / 30).toFixed(1).replace(/\.0$/, '');
+        if (days >= 365) {
+            var yrs = (days / 365).toFixed(1).replace(/\.0$/, '');
+            displayEl.textContent = days + ' days (~' + yrs + (yrs === '1' ? ' yr)' : ' yrs)');
+        } else if (days >= 30) {
+            displayEl.textContent = days + ' days (~' + months + ' mos)';
+        } else {
+            displayEl.textContent = days + ' days';
+        }
+    }
+
+    if (inputCooldown) {
+        inputCooldown.addEventListener('input', updateCooldownHuman);
+        updateCooldownHuman();
+    }
+    if (inputLogRetention) {
+        inputLogRetention.addEventListener('input', function() { updateRetentionHuman(inputLogRetention, logRetentionHuman); });
+        updateRetentionHuman(inputLogRetention, logRetentionHuman);
+    }
+    if (inputDepRetention) {
+        inputDepRetention.addEventListener('input', function() { updateRetentionHuman(inputDepRetention, depRetentionHuman); });
+        updateRetentionHuman(inputDepRetention, depRetentionHuman);
+    }
+
+    window.setCooldownPreset = function(mins) {
+        if (inputCooldown) {
+            inputCooldown.value = mins;
+            updateCooldownHuman();
+        }
+    };
+    window.setLogRetentionPreset = function(days) {
+        if (inputLogRetention) {
+            inputLogRetention.value = days;
+            updateRetentionHuman(inputLogRetention, logRetentionHuman);
+        }
+    };
+    window.setDepRetentionPreset = function(days) {
+        if (inputDepRetention) {
+            inputDepRetention.value = days;
+            updateRetentionHuman(inputDepRetention, depRetentionHuman);
+        }
+    };
+
     bindAjaxForm('formIdentity', 'Branding identity updated successfully.');
     bindAjaxForm('formThemes', 'Theme palettes updated successfully.');
     bindAjaxForm('formFooter', 'Footer settings updated successfully.');
+    bindAjaxForm('formOperations', 'Retention & queue rules updated successfully.');
 });
 </script>
 

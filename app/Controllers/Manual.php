@@ -7,18 +7,12 @@ use CodeIgniter\Controller;
 class Manual extends BaseController
 {
     /**
-     * Public Commuter & Passenger User Guide
+     * Public Commuter & Passenger User Guide (Redirect to Unified Help Guide)
      * Accessible at /manual and /user-manual (No login required)
      */
     public function index()
     {
-        $data = [
-            'title'              => 'Commuter User Guide & Error Recovery',
-            'breadcrumb_current' => 'User Guide',
-            'role'               => 'guest',
-        ];
-
-        return view('manual/commuter', $data);
+        return redirect()->to(base_url('?help=1'));
     }
 
     /**

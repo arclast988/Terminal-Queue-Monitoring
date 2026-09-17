@@ -595,6 +595,35 @@ html, body {
     object-fit: contain;
 }
 
+.fare-card-vt-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fare-card-vt-icon i {
+    color: #ffffff !important;
+    font-size: 16px !important;
+    display: inline-block;
+    line-height: 1;
+}
+
+.fare-card-vt-icon.is-light {
+    border: 1.5px solid #cbd5e1 !important;
+}
+
+.fare-card-vt-icon.is-light i {
+    color: #0f172a !important;
+}
+
 /* Side-by-side icon + badge layout for guest table Type columns */
 .vehicle-type-cell {
     display: inline-flex;

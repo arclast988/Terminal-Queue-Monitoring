@@ -249,5 +249,53 @@ final class SystemSettingsTest extends CIUnitTestCase
         $this->assertStringContainsString('terminal-brand-group', $logsHtml);
         $this->assertStringContainsString('report-logo', $logsHtml);
     }
+
+    public function testOperationalSettingsHelpersReturnDefaults(): void
+    {
+        $this->assertSame(30, vehicle_cooldown_minutes());
+        $this->assertSame(60, log_retention_days());
+        $this->assertSame(60, departure_retention_days());
+    }
+
+    public function testOperationalSettingsCustomValuesPersistAndResolve(): void
+    {
+        $model = new \App\Models\SystemSettingModel();
+        $model->setMultiple([
+            'vehicle_cooldown_minutes' => '45',
+            'log_retention_days'       => '90',
+            'departure_retention_days' => '120',
+        ]);
+        get_all_system_settings(true);
+
+        $this->assertSame(45, vehicle_cooldown_minutes());
+        $this->assertSame(90, log_retention_days());
+        $this->assertSame(120, departure_retention_days());
+
+        // Restore defaults
+        $model->setMultiple([
+            'vehicle_cooldown_minutes' => '30',
+            'log_retention_days'       => '60',
+            'departure_retention_days' => '60',
+        ]);
+        get_all_system_settings(true);
+
+        $this->assertSame(30, vehicle_cooldown_minutes());
+        $this->assertSame(60, log_retention_days());
+        $this->assertSame(60, departure_retention_days());
+    }
+
+    public function testAdminSettingsViewContainsOperationsTabAndInputs(): void
+    {
+        $html = view('admin/settings/index', [
+            'settings' => get_all_system_settings(),
+        ]);
+
+        $this->assertStringContainsString('tabBtn-operations', $html);
+        $this->assertStringContainsString('tab-operations', $html);
+        $this->assertStringContainsString('vehicle_cooldown_minutes', $html);
+        $this->assertStringContainsString('log_retention_days', $html);
+        $this->assertStringContainsString('departure_retention_days', $html);
+        $this->assertStringContainsString('admin/settings/update-operations', $html);
+    }
 }
 

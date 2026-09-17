@@ -19,19 +19,17 @@ class MaintenancePurge extends BaseCommand
 
     public function run(array $params)
     {
-        $days = isset($params[0]) && is_numeric($params[0]) ? (int) $params[0] : 60;
-        if ($days < 1) {
-            $days = 60;
-        }
+        $depDays = isset($params[0]) && is_numeric($params[0]) ? (int) $params[0] : departure_retention_days();
+        $logDays = isset($params[0]) && is_numeric($params[0]) ? (int) $params[0] : log_retention_days();
 
-        CLI::write("Starting maintenance purge for records older than {$days} days...", 'yellow');
+        CLI::write("Starting maintenance purge (Departures older than {$depDays} days, Audit logs older than {$logDays} days)...", 'yellow');
 
         $queueModel = new QueueModel();
-        $deletedTrips = $queueModel->purgeOldDepartures($days);
+        $deletedTrips = $queueModel->purgeOldDepartures($depDays);
         CLI::write("✓ Purged {$deletedTrips} departed queue record(s).", 'green');
 
         $logModel = new LogModel();
-        $deletedLogs = $logModel->purgeOldLogs($days);
+        $deletedLogs = $logModel->purgeOldLogs($logDays);
         CLI::write("✓ Purged {$deletedLogs} audit log record(s).", 'green');
 
         CLI::write('Maintenance purge completed successfully.', 'light_green');

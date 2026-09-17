@@ -62,20 +62,20 @@ The Queue Management screen is divided into two primary zones:
 4. Click **+ Add to Queue** (or check-in button).
 5. The system performs the following automatic checks:
    - Verifies the vehicle is not already active in the queue.
-   - Verifies that the vehicle has satisfied the 30-minute departure cooldown.
+   - Verifies that the vehicle has satisfied the post-departure cooldown period (default 30 minutes, or custom interval configured by Superadmin).
    - Matches the current time to the active **Departure Rule** for that route to assign an accurate **Estimated Departure Time (ETD)**.
    - Appends the vehicle to the queue in strict chronological FIFO order.
 6. A success alert will display: `"[Plate Number] added to queue."`
 
 ---
 
-### 5. The 30-Minute Departure Cooldown Rule
+### 5. The Departure Cooldown Rule
 
-To prevent accidental double-queuing and ensure fair rotation among transport operators, the system enforces a **30-minute cooldown**:
-- Once a vehicle departs (`status = departed`), it cannot be immediately re-entered into the queue.
-- If an operator arrives early and you try to add them before 30 minutes have elapsed, the system prevents the action and displays a helpful notice:
+To prevent accidental double-queuing and ensure fair rotation among transport operators, the system enforces a post-departure cooldown period (default **30 minutes**, configurable by the Superadmin in System Settings):
+- Once a vehicle departs (`status = departed`), it cannot be immediately re-entered into the queue until the cooldown expires.
+- If an operator arrives early and you try to add them before the cooldown has elapsed, the system prevents the action and displays a helpful notice:
   > *"Vehicle [Plate] departed recently. Please wait about X more minute(s) before adding it back."*
-- You do not need to calculate the time manually; the system automatically tracks the elapsed minutes and unlocks the vehicle as soon as the cooldown expires.
+- You do not need to calculate the time manually; the system automatically tracks the elapsed minutes and unlocks the vehicle as soon as the cooldown expires. (If the Superadmin has disabled the cooldown by setting it to 0 minutes, vehicles can be re-queued immediately).
 
 ---
 
@@ -177,3 +177,22 @@ Dispatchers have permission to post live announcements:
    - *"Weather Advisory: Heavy rain along Kananga-Ormoc road. Minor travel delays expected."*
    - *"Notice: Temporary boarding bay reassignment for Naval route to Bay 3."*
 4. Click **Publish**. It displays on the public marquee immediately.
+
+---
+
+### 13. Account Security & Self-Service Password Change
+**URL**: `/change-password`
+
+Dispatchers can update their login credentials without needing administrator intervention:
+1. Open your profile menu from the top bar and click **Change Password**.
+2. Click **Send Verification Code**. The system sends a 6-digit verification code to your registered email address (valid for 15 minutes).
+3. Enter your **Current Password**, **New Password**, and the **6-Digit Verification Code**.
+4. Click **Update Password**.
+5. *Security Protection*: Accounts lock automatically for 15 minutes after 5 consecutive incorrect login attempts to protect against brute-force attacks.
+
+---
+
+### 14. Quick Help Guide & Support
+**URL**: `/staff/help`
+
+For operational assistance during your shift, access the interactive **Dispatcher Quick Help Guide** directly from the top navigation or sidebar. It provides step-by-step procedures, troubleshooting tips, and answers to common queue scenarios.

@@ -206,6 +206,8 @@
                 item.plate_number,
                 item.capacity,
                 item.vehicle_type || '',
+                item.photo_url || '',
+                item.has_custom_photo ? 'custom' : 'default',
                 item.driver_name || '',
                 item.origin || '',
                 item.destination || '',
@@ -831,8 +833,14 @@
         updatePassengerUI: updatePassengerUI,
 
         /** Manually trigger a full refresh */
-        refresh: function() {
-            doRefresh();
+        refresh: function(forceAjax) {
+            if (_config && _config.customRefresh) {
+                _config.customRefresh();
+            } else if (forceAjax || (_config && _config.refreshUrl)) {
+                ajaxRefresh();
+            } else {
+                doRefresh();
+            }
         },
 
         /** Apply vehicle-type colors live (slug -> hex or {color}) */

@@ -169,13 +169,13 @@
                 var fareCardImg = document.querySelector('#fare-card-' + key + ' .card-header img[data-vt-photo="' + key + '"], #fare-card-' + key + ' .card-header img');
                 if (fareCardImg) {
                     var iconSpan = document.createElement('span');
-                    iconSpan.className = 'd-inline-flex align-items-center justify-content-center rounded-2 text-white me-2';
-                    iconSpan.style.width = '36px';
-                    iconSpan.style.height = '36px';
+                    iconSpan.className = 'fare-card-vt-icon me-2';
+                    iconSpan.style.width = '38px';
+                    iconSpan.style.height = '38px';
                     iconSpan.style.backgroundColor = color || 'var(--vehicle-' + key + ', #c62828)';
                     iconSpan.style.fontSize = '16px';
                     iconSpan.setAttribute('data-vt-icon-box', key);
-                    iconSpan.innerHTML = '<i class="fas ' + icon + '"></i>';
+                    iconSpan.innerHTML = '<i class="fas ' + icon + '" style="color: #ffffff !important;"></i>';
                     if (fareCardImg.parentNode) {
                         fareCardImg.parentNode.replaceChild(iconSpan, fareCardImg);
                     }
@@ -183,7 +183,10 @@
                     var existingBox = document.querySelector('#fare-card-' + key + ' .card-header [data-vt-icon-box="' + key + '"]');
                     if (existingBox) {
                         var curI = existingBox.querySelector('i');
-                        if (curI) curI.className = 'fas ' + icon;
+                        if (curI) {
+                            curI.className = 'fas ' + icon;
+                            curI.style.color = '#ffffff';
+                        }
                         if (color) existingBox.style.backgroundColor = color;
                     }
                 }

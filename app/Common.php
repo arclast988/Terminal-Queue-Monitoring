@@ -428,8 +428,11 @@ if (! function_exists('get_all_system_settings')) {
         }
 
         $cache = function_exists('cache') ? cache() : null;
-        if ($forceRefresh && $cache) {
-            $cache->delete('system_settings');
+        if ($forceRefresh) {
+            $inMemoryCache = null;
+            if ($cache) {
+                $cache->delete('system_settings');
+            }
         } elseif (! $forceRefresh && $cache) {
             $fromCache = $cache->get('system_settings');
             if (is_array($fromCache)) {
@@ -467,6 +470,9 @@ if (! function_exists('get_all_system_settings')) {
             'contact_email'          => '',
             'contact_phone'          => '(053) 555-8376 / 338-2022',
             'contact_address'        => 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538',
+            'log_retention_days'       => '60',
+            'departure_retention_days' => '60',
+            'vehicle_cooldown_minutes' => '30',
         ];
 
         $settings = $defaults;
@@ -507,6 +513,42 @@ if (! function_exists('get_system_setting')) {
             return (string) $settings[$key];
         }
         return $default;
+    }
+}
+
+if (! function_exists('vehicle_cooldown_minutes')) {
+    /**
+     * Vehicle cooldown interval before being visible / eligible back in queue management.
+     * Default: 30 minutes. Configurable by Superadmin in System Settings.
+     */
+    function vehicle_cooldown_minutes(): int
+    {
+        $val = get_system_setting('vehicle_cooldown_minutes', '30');
+        return is_numeric($val) && (int) $val >= 0 ? (int) $val : 30;
+    }
+}
+
+if (! function_exists('log_retention_days')) {
+    /**
+     * Number of days to retain system audit logs before automated maintenance purge.
+     * Default: 60 days. Configurable by Superadmin in System Settings.
+     */
+    function log_retention_days(): int
+    {
+        $val = get_system_setting('log_retention_days', '60');
+        return is_numeric($val) && (int) $val >= 1 ? (int) $val : 60;
+    }
+}
+
+if (! function_exists('departure_retention_days')) {
+    /**
+     * Number of days to retain completed trip departure history before automated maintenance purge.
+     * Default: 60 days. Configurable by Superadmin in System Settings.
+     */
+    function departure_retention_days(): int
+    {
+        $val = get_system_setting('departure_retention_days', '60');
+        return is_numeric($val) && (int) $val >= 1 ? (int) $val : 60;
     }
 }
 

@@ -477,6 +477,7 @@
     .guest-header .logo-text {
         min-width: 0;
         overflow: hidden;
+        flex: 0 1 auto;
     }
     .guest-header .logo-text h1 {
         font-size: 20px;
@@ -484,10 +485,15 @@
         font-weight: 800;
         margin: 0;
         letter-spacing: -0.5px;
-        white-space: nowrap !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        max-width: clamp(180px, 32vw, 420px) !important;
+        max-width: clamp(260px, 38vw, 560px) !important;
     }
     .guest-header .logo-text p {
         font-size: 12px;
@@ -496,15 +502,21 @@
         text-transform: uppercase;
         letter-spacing: 0.8px;
         margin: 0;
-        white-space: nowrap !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
-        max-width: clamp(180px, 32vw, 420px) !important;
+        max-width: clamp(260px, 38vw, 560px) !important;
     }
     .guest-header .nav-menu {
         display: flex;
         gap: 20px;
         align-items: center;
+        flex-shrink: 0 !important;
     }
     .guest-header .nav-menu a {
         text-decoration: none;
@@ -596,6 +608,7 @@
         padding-left: 18px;
         height: 28px;
         margin-top: -6px;
+        flex-shrink: 0 !important;
     }
     .header-clock-pill {
         display: flex;
@@ -667,18 +680,28 @@
         .guest-header .logo-text h1 {
             font-size: 14px;
             letter-spacing: -0.2px;
-            white-space: nowrap !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            max-width: clamp(120px, 46vw, 240px) !important;
+            max-width: clamp(160px, 54vw, 360px) !important;
             line-height: 1.2 !important;
         }
         .guest-header .logo-text p {
             font-size: 9px;
-            white-space: nowrap !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            max-width: clamp(120px, 46vw, 240px) !important;
+            max-width: clamp(160px, 54vw, 360px) !important;
         }
         .guest-header .header-info {
             padding-left: 10px !important;
@@ -686,6 +709,7 @@
             display: flex !important;
             height: 22px !important;
             margin-top: -4px !important;
+            flex-shrink: 0 !important;
         }
         .header-clock-pill {
             font-size: 12.5px !important;
@@ -777,21 +801,32 @@
         }
         .guest-header .logo-text h1 {
             font-size: 12.5px !important;
-            white-space: nowrap !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            max-width: clamp(110px, 42vw, 190px) !important;
+            max-width: clamp(150px, 56vw, 270px) !important;
             line-height: 1.2 !important;
         }
         .guest-header .logo-text p {
             font-size: 7.5px !important;
-            white-space: nowrap !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
-            max-width: clamp(110px, 42vw, 190px) !important;
+            max-width: clamp(150px, 56vw, 270px) !important;
         }
         .guest-header .header-info {
             padding-left: 8px !important;
+            flex-shrink: 0 !important;
         }
         .header-clock-pill {
             font-size: 11px !important;

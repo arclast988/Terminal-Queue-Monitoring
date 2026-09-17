@@ -374,6 +374,51 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
         }
 
+        .card-header h3 [data-vt-icon-box],
+        .fare-card-vt-icon {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 38px !important;
+            height: 38px !important;
+            min-width: 38px !important;
+            min-height: 38px !important;
+            border-radius: 10px !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-header h3 [data-vt-icon-box] i,
+        .fare-card-vt-icon i {
+            color: #ffffff !important;
+            font-size: 16px !important;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        .fare-card:hover .card-header h3 [data-vt-icon-box],
+        .fare-card:hover .fare-card-vt-icon {
+            transform: scale(1.08);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .fare-card-vt-icon.is-light,
+        [data-vt-icon-box].is-light {
+            border: 1.5px solid #cbd5e1 !important;
+        }
+        .fare-card-vt-icon.is-light i,
+        [data-vt-icon-box].is-light i {
+            color: #0f172a !important;
+        }
+
+        /* Essential utility fallbacks for public views without Bootstrap */
+        .text-white { color: #ffffff !important; }
+        .rounded-2 { border-radius: 8px !important; }
+        .d-inline-flex { display: inline-flex !important; }
+        .align-items-center { align-items: center !important; }
+        .justify-content-center { justify-content: center !important; }
+
         .fare-card:hover .card-header h3 {
             transform: scale(1.02);
         }
@@ -669,13 +714,16 @@
                         $vanPhoto = vehicle_type_photo('van');
                         $vanColor = vehicle_type_color('van');
                         $vanIcon = vehicle_type_icon('van');
+                        $vanIsLight = (contrast_text_color($vanColor) === '#0f172a');
+                        $vanIconColor = $vanIsLight ? '#0f172a' : '#ffffff';
+                        $vanIconBorder = $vanIsLight ? 'border: 1.5px solid #cbd5e1;' : '';
                     ?>
                     <h3>
                         <?php if (!empty($vanPhoto)): ?>
                             <img src="<?= esc($vanPhoto) ?>" alt="Van" style="width: 36px; height: 36px; object-fit: contain;" data-vt-photo="van">
                         <?php else: ?>
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($vanColor) ?>; font-size: 16px;" data-vt-icon-box="van">
-                                <i class="fas <?= esc($vanIcon) ?>"></i>
+                            <span class="fare-card-vt-icon <?= $vanIsLight ? 'is-light' : '' ?>" style="background-color: var(--vehicle-van, <?= esc($vanColor) ?>); color: <?= esc($vanIconColor) ?>; <?= $vanIconBorder ?>" data-vt-icon-box="van">
+                                <i class="fas <?= esc($vanIcon) ?>" style="color: <?= esc($vanIconColor) ?> !important;"></i>
                             </span>
                         <?php endif; ?>
                         Van Routes
@@ -730,13 +778,16 @@
                         $jeepPhoto = vehicle_type_photo('jeepney');
                         $jeepColor = vehicle_type_color('jeepney');
                         $jeepIcon = vehicle_type_icon('jeepney');
+                        $jeepIsLight = (contrast_text_color($jeepColor) === '#0f172a');
+                        $jeepIconColor = $jeepIsLight ? '#0f172a' : '#ffffff';
+                        $jeepIconBorder = $jeepIsLight ? 'border: 1.5px solid #cbd5e1;' : '';
                     ?>
                     <h3>
                         <?php if (!empty($jeepPhoto)): ?>
                             <img src="<?= esc($jeepPhoto) ?>" alt="Jeepney" style="width: 36px; height: 36px; object-fit: contain;" data-vt-photo="jeepney">
                         <?php else: ?>
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($jeepColor) ?>; font-size: 16px;" data-vt-icon-box="jeepney">
-                                <i class="fas <?= esc($jeepIcon) ?>"></i>
+                            <span class="fare-card-vt-icon <?= $jeepIsLight ? 'is-light' : '' ?>" style="background-color: var(--vehicle-jeepney, <?= esc($jeepColor) ?>); color: <?= esc($jeepIconColor) ?>; <?= $jeepIconBorder ?>" data-vt-icon-box="jeepney">
+                                <i class="fas <?= esc($jeepIcon) ?>" style="color: <?= esc($jeepIconColor) ?> !important;"></i>
                             </span>
                         <?php endif; ?>
                         Jeepney Routes
@@ -791,13 +842,16 @@
                         $minibusPhoto = vehicle_type_photo('minibus');
                         $minibusColor = vehicle_type_color('minibus');
                         $minibusIcon = vehicle_type_icon('minibus');
+                        $minibusIsLight = (contrast_text_color($minibusColor) === '#0f172a');
+                        $minibusIconColor = $minibusIsLight ? '#0f172a' : '#ffffff';
+                        $minibusIconBorder = $minibusIsLight ? 'border: 1.5px solid #cbd5e1;' : '';
                     ?>
                     <h3>
                         <?php if (!empty($minibusPhoto)): ?>
                             <img src="<?= esc($minibusPhoto) ?>" alt="Minibus" style="width: 36px; height: 36px; object-fit: contain;" data-vt-photo="minibus">
                         <?php else: ?>
-                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($minibusColor) ?>; font-size: 16px;" data-vt-icon-box="minibus">
-                                <i class="fas <?= esc($minibusIcon) ?>"></i>
+                            <span class="fare-card-vt-icon <?= $minibusIsLight ? 'is-light' : '' ?>" style="background-color: var(--vehicle-minibus, <?= esc($minibusColor) ?>); color: <?= esc($minibusIconColor) ?>; <?= $minibusIconBorder ?>" data-vt-icon-box="minibus">
+                                <i class="fas <?= esc($minibusIcon) ?>" style="color: <?= esc($minibusIconColor) ?> !important;"></i>
                             </span>
                         <?php endif; ?>
                         Minibus Routes
@@ -848,18 +902,22 @@
                 <?php if (in_array($vehicleType['slug'], ['van', 'jeepney', 'minibus'], true)) continue; ?>
                 <?php $typeRoutes = ($routesByType ?? [])[$vehicleType['slug']] ?? []; ?>
                 <?php 
-                    $vtColor = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']);
-                    $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
-                    $vtPhoto = vehicle_type_photo($vehicleType['slug']);
+                    $vtSlug = $vehicleType['slug'];
+                    $vtColor = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vtSlug);
+                    $vtIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
+                    $vtPhoto = vehicle_type_photo($vtSlug);
+                    $vtIsLight = (contrast_text_color($vtColor) === '#0f172a');
+                    $vtIconColor = $vtIsLight ? '#0f172a' : '#ffffff';
+                    $vtIconBorder = $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '';
                 ?>
-                <div class="fare-card <?= vehicle_type_class($vehicleType['slug']) ?>" id="fare-card-<?= esc($vehicleType['slug']) ?>" data-vehicle-type="<?= esc($vehicleType['slug']) ?>" style="--fare-accent: <?= esc($vtColor) ?>;">
+                <div class="fare-card <?= vehicle_type_class($vtSlug) ?>" id="fare-card-<?= esc($vtSlug) ?>" data-vehicle-type="<?= esc($vtSlug) ?>" style="--fare-accent: <?= esc($vtColor) ?>;">
                     <div class="card-header">
                         <h3>
                             <?php if (!empty($vtPhoto)): ?>
-                                <img src="<?= esc($vtPhoto) ?>" alt="<?= esc($vehicleType['name']) ?>" data-vt-photo="<?= esc(vehicle_type_key($vehicleType['slug'])) ?>">
+                                <img src="<?= esc($vtPhoto) ?>" alt="<?= esc($vehicleType['name']) ?>" data-vt-photo="<?= esc(vehicle_type_key($vtSlug)) ?>">
                             <?php else: ?>
-                                <span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; font-size: 15px;">
-                                    <i class="fas <?= esc($vtIcon) ?>"></i>
+                                <span class="fare-card-vt-icon <?= $vtIsLight ? 'is-light' : '' ?>" style="background-color: var(--vehicle-<?= esc($vtSlug) ?>, <?= esc($vtColor) ?>); color: <?= esc($vtIconColor) ?>; <?= $vtIconBorder ?>" data-vt-icon-box="<?= esc($vtSlug) ?>">
+                                    <i class="fas <?= esc($vtIcon) ?>" style="color: <?= esc($vtIconColor) ?> !important;"></i>
                                 </span>
                             <?php endif; ?>
                             <?= esc($vehicleType['name']) ?> Routes
@@ -1142,7 +1200,7 @@
         var vtIcon = icon || 'fa-bus';
         var headerVisual = photoUrl
             ? '<img src="' + photoUrl + '" alt="' + label + '" style="width:36px;height:36px;object-fit:contain;" data-vt-photo="' + escapeHtml(type) + '">'
-            : '<span class="d-inline-flex align-items-center justify-content-center rounded-2 text-white me-2" style="width:36px;height:36px;background-color:' + accent + ';font-size:16px;" data-vt-icon-box="' + escapeHtml(type) + '"><i class="fas ' + vtIcon + '"></i></span>';
+            : '<span class="fare-card-vt-icon me-2" style="background-color:' + accent + ';color:#ffffff;" data-vt-icon-box="' + escapeHtml(type) + '"><i class="fas ' + vtIcon + '" style="color:#ffffff !important;"></i></span>';
         return '<div class="fare-card' + typeClass + '" id="fare-card-' + escapeHtml(type) + '" data-vehicle-type="' + escapeHtml(type) + '" style="--fare-accent: ' + accent + ';">'
             + '<div class="card-header">'
             + '<h3>' + headerVisual + ' ' + label + '</h3>'

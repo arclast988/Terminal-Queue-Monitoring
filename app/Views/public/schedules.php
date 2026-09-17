@@ -1114,12 +1114,13 @@
                                 <td data-label="Type">
                                     <?php
                                         $vType = $schedule['vehicle_type'] ?? '';
-                                        $photoUrl = vehicle_type_photo($vType);
+                                        $photoUrl = vehicle_resolved_photo($schedule, $vType);
+                                        $hasCustomPhoto = !empty($schedule['vehicle_photo'] ?? $schedule['photo'] ?? null);
                                     ?>
                                     <div class="vehicle-type-cell">
                                         <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>">
                                             <?php if (!empty($photoUrl)): ?>
-                                                <img src="<?= esc($photoUrl) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>" data-vt-photo="<?= esc(vehicle_type_key($vType)) ?>">
+                                                <img src="<?= esc($photoUrl) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:36px; width:auto;" title="<?= vehicle_type_label($vType) ?>" class="<?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?>>
                                             <?php else: ?>
                                                 <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="color: <?= esc(vehicle_type_color($vType)) ?>; font-size: 18px;"></i>
                                             <?php endif; ?>
@@ -1140,7 +1141,7 @@
                                     <?php $qid = (int)($schedule['queue_id'] ?? $schedule['id'] ?? 0); ?>
                                     <div class="sched-dep-cell" id="sched-dep-cell-<?= $qid ?>">
                                         <span class="time-display" id="sched-dep-time-<?= $qid ?>">
-                                            <?= !empty($schedule['estimated_departure']) ? date('g:i A', strtotime($schedule['estimated_departure'])) : 'Waiting' ?>
+                                            <?= !empty($schedule['estimated_departure']) ? date('g:i A', strtotime($schedule['estimated_departure'])) : (!empty($schedule['estimated_departure_formatted']) ? esc($schedule['estimated_departure_formatted']) : 'TBA') ?>
                                         </span>
                                         <div class="sched-passengers-text" id="sched-passengers-<?= $qid ?>" style="font-size: 12.5px; color: var(--text-muted);">
                                             <span id="passenger-count-<?= $qid ?>" class="passenger-count-num <?= passenger_color_class((int)$schedule['current_passengers'], (int)$schedule['capacity']) ?>"><?= $schedule['current_passengers'] ?></span>/<?= $schedule['capacity'] ?> passengers
@@ -1317,15 +1318,16 @@
             schedules.forEach(function(s) {
                 var qid = s.queue_id || s.id;
                 var typeMeta = vehicleTypeMeta[s.vehicle_type] || {};
-                var photoUrl = typeMeta.photo || '';
-                var typeLabel = typeMeta.name || s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); });
+                var hasCustom = !!(s.has_custom_photo || s.vehicle_photo || s.photo);
+                var photoUrl = (s.photo_url || (s.vehicle_photo ? ('/uploads/vehicles/' + s.vehicle_photo) : (s.photo ? ('/uploads/vehicles/' + s.photo) : ''))) || typeMeta.photo || '';
+                var typeLabel = typeMeta.name || (s.vehicle_type ? s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); }) : 'Van');
                 var statusClass = statusClassMap[s.status] || 'status-waiting';
                 function escHtml(v) {
                     if (v === null || v === undefined) return '';
                     return String(v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
                 }
                 var isFull = !!s.is_full;
-                var etaText = s.estimated_departure_formatted || 'Waiting';
+                var etaText = s.estimated_departure_formatted || (s.estimated_departure ? (function(t){ try { return new Date(t.replace(/-/g, '/')).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit', hour12: true}); } catch(e){ return t; } })(s.estimated_departure) : 'TBA');
                 var pColorClass = typeof getPassengerColorClass === 'function' ? getPassengerColorClass(s.current_passengers, s.capacity) : (isFull ? 'passenger-color-red' : 'passenger-color-green');
                 var dep = '<div class="sched-dep-cell" id="sched-dep-cell-' + qid + '">'
                     + '<span class="time-display" id="sched-dep-time-' + qid + '">' + escHtml(etaText) + '</span>'
@@ -1336,7 +1338,7 @@
                 var typeSlug = String(s.vehicle_type || '').toLowerCase();
                 var typeColor = typeMeta.color || '#1565c0';
                 var photoImg = photoUrl
-                    ? '<img src="' + photoUrl + '" style="height:36px;width:auto" data-vt-photo="' + escHtml(typeSlug) + '">'
+                    ? '<img src="' + photoUrl + '" style="height:36px;width:auto" class="' + (hasCustom ? 'vehicle-custom-photo' : '') + '" ' + (hasCustom ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' + escHtml(typeSlug) + '"')) + '>'
                     : '<i class="fas ' + escHtml(typeMeta.icon || 'fa-bus') + '" style="font-size:18px;color:' + typeColor + '"></i>';
                 html += '<tr data-queue-id="' + qid + '" data-plate="' + escHtml(s.plate_number) + '" data-destination="' + escHtml((s.destination || '').toLowerCase()) + '" data-type="' + escHtml(typeSlug) + '">' +
                     '<td data-label="Queue #"><span class="time-display">#' + s.position + '</span></td>' +

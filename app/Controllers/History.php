@@ -14,7 +14,7 @@ class History extends BaseController
         }
 
         $queueModel = new QueueModel();
-        $queueModel->purgeOldDepartures(60);
+        $queueModel->purgeOldDepartures(departure_retention_days());
 
         // Get filter parameters
         $search = $this->request->getGet('q');

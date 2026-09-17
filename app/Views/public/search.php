@@ -872,7 +872,7 @@
                             </td>
                             <td data-label="Est. Departure">
                                 <span class="time-display">
-                                    <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'Waiting' ?>
+                                    <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'TBA' ?>
                                 </span>
                                 <?php if (!empty($item['capacity'])): ?>
                                 <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">

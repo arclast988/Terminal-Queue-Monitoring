@@ -11,8 +11,8 @@ class History extends BaseController
     public function index()
     {
         $queueModel = new QueueModel();
-        // Automatically enforce 60-day retention policy
-        $queueModel->purgeOldDepartures(60);
+        // Automatically enforce retention policy
+        $queueModel->purgeOldDepartures(departure_retention_days());
 
         $search = $this->request->getGet('q');
         $fromDate = $this->request->getGet('from_date');
@@ -80,7 +80,7 @@ class History extends BaseController
     public function print()
     {
         $queueModel = new QueueModel();
-        $queueModel->purgeOldDepartures(60);
+        $queueModel->purgeOldDepartures(departure_retention_days());
 
         $search = $this->request->getGet('q');
         $fromDate = $this->request->getGet('from_date');

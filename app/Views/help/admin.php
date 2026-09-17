@@ -169,13 +169,80 @@
         margin-top: 3px;
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
+        .help-guide-wrapper {
+            width: 96%;
+            margin: 18px auto 40px;
+        }
         .help-card-container {
-            padding: 20px 16px;
+            padding: 22px 18px;
+            border-radius: 16px;
+        }
+    }
+
+    @media (max-width: 530px) {
+        .help-guide-wrapper {
+            width: 100%;
+            padding: 0 10px;
+            margin: 14px auto 30px;
+        }
+        .help-card-container {
+            padding: 16px 12px;
             border-radius: 14px;
         }
+        .help-card-header {
+            gap: 10px;
+            padding-bottom: 14px;
+            margin-bottom: 6px;
+        }
+        .help-header-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 17px;
+            border-radius: 10px;
+        }
+        .help-header-title {
+            font-size: 16px;
+        }
+        .accordion-header {
+            padding: 12px 6px;
+        }
         .accordion-header-text {
-            font-size: 14px;
+            font-size: 13.5px;
+            gap: 8px;
+        }
+        .accordion-body {
+            padding: 0 2px 14px;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .step-box {
+            padding: 9px 12px;
+            font-size: 12.5px;
+            margin: 8px 0;
+        }
+        .help-tip {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+    }
+
+    @media (max-width: 380px) {
+        .help-guide-wrapper {
+            padding: 0 6px;
+        }
+        .help-card-container {
+            padding: 12px 8px;
+        }
+        .help-header-title {
+            font-size: 15px;
+        }
+        .accordion-header-text {
+            font-size: 12.8px;
+        }
+        .step-box {
+            padding: 7px 9px;
+            font-size: 12px;
         }
     }
 </style>
@@ -288,21 +355,26 @@
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
                     <h3 class="accordion-header-text">
-                        5. Vehicle Registration
+                        5. Vehicle Registration, Photo Upload & Vehicle Types
                     </h3>
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Only registered vehicles can be queued by dispatchers:</p>
+                    <p>Only registered vehicles in active status can enter the terminal queue:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
-                        <li>Go to <strong>Management &gt; Vehicle Register</strong>.</li>
-                        <li>Fill in the vehicle details: Operator Name, Driver Name, Plate Number, Vehicle Type, Destination, and Passenger Capacity.</li>
-                        <li>Set the operational status to <strong>Active</strong> (ready for trips) or <strong>Maintenance</strong> (under repair).</li>
-                        <li>Click <strong>Add</strong> to save the vehicle.</li>
+                        <li>Navigate to <strong>Management &gt; Vehicle Register</strong>.</li>
+                        <li>Click <strong>+ Add Vehicle</strong> (or edit an existing vehicle).</li>
+                        <li><strong>Vehicle Technical Details:</strong> Enter Plate Number (e.g. <code>ABC-1234</code>), Operator Name, Default Driver, Destination, and Seating Capacity.</li>
+                        <li><strong>Vehicle Registration Photo:</strong> Drag-and-drop or select an official vehicle image (JPG, PNG, WEBP up to 2MB). The upload card displays a real-time preview and includes a one-click <em>Remove Photo</em> button.</li>
+                        <li><strong>Operational Status:</strong> Set to <strong>Active</strong> (ready for queuing) or <strong>Maintenance</strong> (temporarily out of service).</li>
+                        <li>Click <strong>Save Vehicle</strong>. The vehicle photo and details immediately appear in the queue pool.</li>
                     </ol>
+                    <div class="step-box">
+                        <strong>Dynamic Vehicle Types (Super Admin & Admin):</strong> Under the <em>Vehicle Types</em> management tab, administrators can define and configure new vehicle classifications (e.g., <em>PUJ / Jeepney</em>, <em>UV Express Van</em>, <em>Modern Minibus</em>, <em>Bus</em>) with customized icon badges, theme colors, and default capacities.
+                    </div>
                     <div class="help-tip">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <span>Vehicles set to <em>Maintenance</em> are automatically excluded from the dispatcher's queue list.</span>
+                        <span>Vehicles marked as <em>Maintenance</em> or currently serving the post-departure cooldown (configurable in <em>System Settings &gt; Retention & Queue Rules</em>, default 30 minutes) are automatically hidden from the dispatcher's check-in list.</span>
                     </div>
                 </div>
             </div>
@@ -311,22 +383,22 @@
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
                     <h3 class="accordion-header-text">
-                        6. Departure Rules & Waiting Time
+                        6. Departure Rules & Headway Scheduling
                     </h3>
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Departure rules control how long a vehicle waits for passengers before it has to depart:</p>
+                    <p>Departure rules establish target headway intervals based on route demand and time of day:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Go to <strong>Management &gt; Departure Rules</strong>.</li>
-                        <li>Click <strong>Add Rule</strong>.</li>
-                        <li><strong>Destination:</strong> Select a specific route destination, or leave it blank to apply as a terminal-wide rule.</li>
-                        <li><strong>Active Hours (Time From / Time To):</strong> Set the hours when this rule is active (e.g., 05:00 to 18:00).</li>
-                        <li><strong>Wait Time:</strong> Set how long the vehicle waits for passengers while boarding (e.g., 00:30 for 30 minutes).</li>
-                        <li><strong>Rule Name (Label):</strong> Optional name to identify the rule (e.g., <em>Morning Rush</em> or <em>Regular</em>).</li>
+                        <li>Click <strong>+ Add Rule</strong>.</li>
+                        <li><strong>Destination:</strong> Select a specific destination route (e.g., <em>Ormoc</em>) or leave blank to establish a terminal-wide default.</li>
+                        <li><strong>24-Hour Coverage (Time From / Time To):</strong> Define the rule's active hours. Rules now cover all intervals seamlessly, including the midnight-to-morning period (<code>00:00:00</code> to <code>04:00:00</code>).</li>
+                        <li><strong>Headway Wait Time:</strong> Set the waiting interval (e.g., <code>15</code> minutes for peak rush hours, <code>30</code> minutes for regular daytime).</li>
+                        <li><strong>Rule Label:</strong> Enter an identifiable name (e.g., <em>Morning Peak Rush</em> or <em>Regular Daytime Headway</em>).</li>
                     </ol>
                     <div class="step-box">
-                        <strong>Early Departure for Full Vehicles:</strong> When a vehicle reaches 100% capacity (all seats filled), the dispatcher can send it off immediately without waiting for the timer to run out.
+                        <strong>Automatic ETD Calculation & Full Capacity:</strong> When a dispatcher places a vehicle into <em>Boarding</em> status, the system calculates the Estimated Departure Time automatically. If 100% seating capacity is reached ahead of time, the dispatcher can dispatch the vehicle immediately.
                     </div>
                 </div>
             </div>
@@ -335,17 +407,19 @@
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
                     <h3 class="accordion-header-text">
-                        7. Staff & Dispatcher Account Management
+                        7. Staff Accounts, Security & Route Jurisdictions
                     </h3>
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Administrators manage terminal floor staff accounts:</p>
+                    <p>Administrators manage terminal floor staff accounts and maintain strict access boundaries:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Go to <strong>Management &gt; Users</strong>.</li>
-                        <li>Click <strong>Create User</strong>, fill in the full name, username, email, and set the role to <em>Staff (Dispatcher)</em>.</li>
-                        <li>Under <em>Assigned Routes</em>, select the specific routes this dispatcher is authorized to operate.</li>
-                        <li>If a staff member is locked out after repeated incorrect password attempts, edit their account and click <strong>Unlock Account</strong> or reset their password.</li>
+                        <li>Click <strong>Create User</strong>, fill in the full name, username, official email, and select <em>Staff (Dispatcher)</em> or <em>Admin</em>.</li>
+                        <li><strong>Route Jurisdictions:</strong> Select the authorized routes for each dispatcher under <em>Assigned Routes</em>. Dispatchers are strictly restricted to queueing and boarding vehicles on their assigned routes.</li>
+                        <li><strong>Profile Avatars:</strong> Staff and administrators can upload a personalized profile avatar directly from their profile menu.</li>
+                        <li><strong>Account Lockout Protection:</strong> Accounts are automatically locked for 15 minutes after 5 consecutive failed login attempts. An administrator can unlock the account or trigger an OTP password reset at any time.</li>
+                        <li><strong>Dispatcher Change Password Authentication:</strong> Dispatchers can securely update their passwords via <code>/change-password</code> by entering a 6-digit verification code sent to their registered email.</li>
                     </ol>
                 </div>
             </div>
@@ -380,10 +454,10 @@
                 <div class="accordion-body">
                     <p>Review system activities and generate official terminal operations documentation:</p>
                     <div class="step-box">
-                        <strong>Security Audit Logs:</strong> Click <strong>Logs</strong> in the navigation menu to review all user logins, failed attempts, fare rate changes, vehicle modifications, and record deletions with exact timestamps and IP addresses.
+                        <strong>Security Audit Logs:</strong> Click <strong>Logs</strong> in the navigation menu to review all user logins, failed attempts, fare rate changes, vehicle modifications, and record deletions with exact timestamps and IP addresses. Records are kept according to the Superadmin retention policy (default: 60 days, customizable in System Settings).
                     </div>
                     <div class="step-box">
-                        <strong>Departure History & Reports:</strong> Click <strong>History</strong> in the navigation menu. Filter trips by date range, route, or vehicle type. Click <strong>Generate Report</strong> to preview or <strong>Print</strong> to export official records for municipal transport reporting.
+                        <strong>Departure History & Reports:</strong> Click <strong>History</strong> in the navigation menu. Filter trips by date range, route, or vehicle type. Click <strong>Generate Report</strong> to preview or <strong>Print</strong> to export official records for municipal transport reporting. Completed records are maintained per the Superadmin departure history retention policy (default: 60 days).
                     </div>
                 </div>
             </div>
@@ -398,20 +472,28 @@
                 </div>
                 <div class="accordion-body">
                     <div class="step-box">
+                        <strong>Q: How do I upload or change a vehicle registration photo?</strong><br>
+                        A: In <em>Management &gt; Vehicle Register</em>, click Edit on any vehicle. Use the drag-and-drop photo uploader to select a JPG, PNG, or WEBP image up to 2MB. Click Save Vehicle. The image renders across queue management and search displays.
+                    </div>
+                    <div class="step-box">
+                        <strong>Q: How do I configure data retention or the vehicle queue cooldown interval?</strong><br>
+                        A: Superadmins can navigate to <em>System Settings</em> (top right profile &gt; System Settings or <code>/admin/settings</code>) and click the <strong>Retention & Queue Rules</strong> tab. You can adjust the Vehicle Departure Cooldown (in minutes or hours, default 30 mins) and set custom retention days for Audit Logs and Departure History.
+                    </div>
+                    <div class="step-box">
                         <strong>Q: How do I assign a dispatcher to a specific terminal or route?</strong><br>
-                        A: Go to <em>Management &gt; Users</em>, edit the dispatcher's profile, and check the routes/terminals they are assigned to manage.
+                        A: Go to <em>Management &gt; Users</em>, edit the dispatcher's profile, and check the routes they are authorized to manage under Assigned Routes.
                     </div>
                     <div class="step-box">
                         <strong>Q: What happens if a route's fare changes due to a new LTFRB order?</strong><br>
-                        A: Go to the <em>Fares</em> page and update the fare amount for the applicable route and passenger category. The fare tables update immediately system-wide.
+                        A: Go to the <em>Fares</em> page and update the base fare or per-kilometer rate. The updated pricing and 20% statutory discounts recalculate immediately system-wide.
                     </div>
                     <div class="step-box">
                         <strong>Q: A dispatcher account is locked due to repeated failed logins. How do I unlock it?</strong><br>
-                        A: Open <em>Management &gt; Users</em>, edit the locked account, and clear the lock or provide a new password. You can also inspect the failed attempt logs under <em>Logs</em>.
+                        A: Open <em>Management &gt; Users</em>, edit the locked account, and click <strong>Unlock Account</strong> or reset their password. You can review failed attempts under <em>Logs</em>.
                     </div>
                     <div class="step-box">
                         <strong>Q: A vehicle is not appearing in the dispatcher's queue dropdown. Why?</strong><br>
-                        A: Check <em>Management &gt; Vehicle Register</em>. Ensure the vehicle is registered, its status is set to <em>Active</em> rather than <em>Maintenance</em>, and that it has not departed within the last 30 minutes (30-minute cooldown period).
+                        A: Check <em>Management &gt; Vehicle Register</em>. Ensure the vehicle is active rather than in Maintenance, and that it has completed its post-departure cooldown period (configurable by Superadmin in Settings, default 30 minutes).
                     </div>
                 </div>
             </div>

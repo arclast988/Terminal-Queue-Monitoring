@@ -127,6 +127,10 @@
                     if (message.type) {
                         document.dispatchEvent(new CustomEvent('pttm:ws-' + message.type, { detail: message }));
                     }
+                    if (window.BroadcastChannel) {
+                        var _bc = new BroadcastChannel('pttm_queue_channel');
+                        _bc.postMessage(message);
+                    }
                 } catch (e) { /* ignore event dispatch error */ }
 
                 // Convenience: queue_update and vehicle_type_update specific handler
