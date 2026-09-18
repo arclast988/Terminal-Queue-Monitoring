@@ -1543,25 +1543,19 @@ input[type="search"]::-webkit-search-results-decoration {
     box-shadow: none !important;
     outline: none !important;
 }
-/* For home hero search - aligned neatly adjacent to the "TRACK STATUS" button like schedule part */
+/* For home hero search - flex-based alignment adjacent to the button */
 #guest-hero-clear-btn {
-    right: 155px !important;
+    position: relative !important;
+    right: auto !important;
+    align-self: center;
+    flex-shrink: 0;
 }
 .guest-clear-search-btn:hover {
     color: #475569 !important;
 }
 @media (max-width: 768px) {
     .guest-clear-search-btn {
-        right: 98px;
         font-size: 16px !important;
-    }
-    #guest-hero-clear-btn {
-        right: 110px !important;
-    }
-}
-@media (max-width: 480px) {
-    #guest-hero-clear-btn {
-        right: 95px !important;
     }
 }
 

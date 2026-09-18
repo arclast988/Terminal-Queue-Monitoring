@@ -110,11 +110,11 @@ class ThemeConsistencyAndClearButtonTest extends CIUnitTestCase
     {
         $modernCss = file_get_contents(FCPATH . 'assets/css/modern-frontend.css');
         $this->assertStringContainsString('#guest-hero-clear-btn', $modernCss);
-        $this->assertStringContainsString('right: 155px !important;', $modernCss);
+        $this->assertStringContainsString('align-self: center;', $modernCss);
 
         $enhancedDash = file_get_contents(APPPATH . 'Views/public/enhanced_dashboard.php');
         $this->assertStringContainsString('#guest-hero-clear-btn', $enhancedDash);
-        $this->assertStringContainsString('padding-right: 185px !important;', $enhancedDash);
+        $this->assertStringContainsString('padding-right: 40px !important;', $enhancedDash);
 
         $searchView = file_get_contents(APPPATH . 'Views/public/search.php');
         $this->assertStringContainsString('.plate-number {', $searchView);
