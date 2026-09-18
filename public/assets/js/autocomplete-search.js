@@ -44,23 +44,49 @@
         if (!wrapper || !dropdown) return;
         closeAllAutocompleteDropdowns(wrapper);
         wrapper.classList.add('is-open');
-        var isInModal = Boolean(wrapper.closest('.modal'));
+        var modalEl = wrapper.closest('.modal-content, .modal-body, .modal-dialog, .modal');
+        var isInModal = Boolean(modalEl);
         wrapper.style.zIndex = isInModal ? '1065' : '100';
         dropdown.style.display = 'block';
 
         // Dynamic smart placement: flip upward if space below is limited and space above has more room
         try {
             var rect = wrapper.getBoundingClientRect();
-            var spaceBelow = window.innerHeight - rect.bottom;
-            var spaceAbove = rect.top;
-            if (spaceBelow < 220 && spaceAbove > spaceBelow) {
+            var boundaryBottom = window.innerHeight;
+            var boundaryTop = 0;
+
+            if (modalEl) {
+                var modalContent = wrapper.closest('.modal-content') || modalEl;
+                var mRect = modalContent.getBoundingClientRect();
+                boundaryBottom = mRect.bottom;
+                boundaryTop = mRect.top;
+
+                var modalFooter = modalContent.querySelector('.modal-footer');
+                if (modalFooter) {
+                    var fRect = modalFooter.getBoundingClientRect();
+                    if (fRect.top > rect.bottom) {
+                        boundaryBottom = Math.min(boundaryBottom, fRect.top);
+                    }
+                }
+            }
+
+            var spaceBelow = boundaryBottom - rect.bottom;
+            var spaceAbove = rect.top - boundaryTop;
+
+            if (spaceBelow < 200 && spaceAbove > spaceBelow) {
                 dropdown.style.top = 'auto';
                 dropdown.style.bottom = 'calc(100% + 6px)';
                 dropdown.classList.add('dropdown-flipped');
+                dropdown.style.maxHeight = Math.min(220, Math.max(120, spaceAbove - 15)) + 'px';
             } else {
                 dropdown.style.top = 'calc(100% + 6px)';
                 dropdown.style.bottom = 'auto';
                 dropdown.classList.remove('dropdown-flipped');
+                if (spaceBelow < 250) {
+                    dropdown.style.maxHeight = Math.max(120, spaceBelow - 15) + 'px';
+                } else {
+                    dropdown.style.maxHeight = '';
+                }
             }
         } catch (err) {}
 
@@ -78,6 +104,7 @@
         wrapper.style.zIndex = '';
         dropdown.style.display = 'none';
         dropdown.classList.remove('dropdown-flipped');
+        dropdown.style.maxHeight = '';
 
         const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
         if (parentContainer) {

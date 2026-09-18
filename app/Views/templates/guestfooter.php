@@ -425,33 +425,51 @@ footer {
 
 /* --- Modals --- */
 .support-modal-backdrop {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,.6);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    overscroll-behavior: contain;
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    inset: 0 !important;
+    width: 100% !important;
+    width: 100vw !important;
+    height: 100% !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background: rgba(0, 0, 0, .65) !important;
+    z-index: 999999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+    overscroll-behavior: contain !important;
+    transform: none !important;
 }
-.support-modal-backdrop.active { display: flex; }
+.support-modal-backdrop.active {
+    display: flex !important;
+}
 
 .support-modal {
-    background: white;
-    border-radius: 24px;
-    width: 95%;
-    max-width: 550px;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 35px 30px;
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0,0,0,.3);
-    overscroll-behavior: contain;
+    background: white !important;
+    border-radius: 24px !important;
+    width: 95% !important;
+    max-width: 550px !important;
+    max-height: 90vh !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    padding: 35px 30px !important;
+    position: relative !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35) !important;
+    overscroll-behavior: contain !important;
+    margin: auto !important;
+    box-sizing: border-box !important;
+    z-index: 1000000 !important;
 }
 
 #termsModal .support-modal,
 #helpModal .support-modal {
-    max-width: 820px;
+    max-width: 820px !important;
 }
 
 /* Commuter Guide Accordion within Help Modal */
@@ -633,14 +651,16 @@ footer {
 
 @media (max-width: 530px) {
     .support-modal-backdrop {
-        padding: 10px;
+        padding: 10px !important;
     }
     .support-modal {
-        padding: 20px 14px 22px;
-        border-radius: 16px;
-        width: 100%;
-        max-width: 100%;
-        max-height: 88vh;
+        padding: 20px 14px 22px !important;
+        border-radius: 16px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 88vh !important;
+        max-height: 88dvh !important;
+        margin: auto !important;
         -webkit-overflow-scrolling: touch;
     }
     .support-modal h3 {
@@ -753,7 +773,7 @@ footer {
 <script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20260917') ?>"></script>
 <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-<script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
 <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
 <script>
 let savedSupportScrollY = 0;

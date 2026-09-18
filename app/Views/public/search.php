@@ -20,10 +20,6 @@
     <?= app_theme_css() ?>
     <style>
         :root {
-            --primary: var(--primary, #C62828);
-            --primary-dark: var(--primary-dark, #8E1B1B);
-            --primary-soft: var(--primary-soft, rgba(198, 40, 40, 0.12));
-            --on-primary: var(--on-primary, #ffffff);
             --accent: #FFA726;
             --accent-dark: #F57C00;
             --success: #43a047;
@@ -72,8 +68,10 @@
         }
 
         .logo {
-            width: 58px;
-            height: 58px;
+            width: 68px;
+            height: 68px;
+            min-width: 68px;
+            flex-shrink: 0;
             object-fit: contain;
             border-radius: 10px;
             image-rendering: -webkit-optimize-contrast;
@@ -701,7 +699,7 @@
 
             .logo-text h1 { font-size: 15px; letter-spacing: -0.2px; }
             .logo-text p { font-size: 8px; }
-            .logo { width: 40px; height: 40px; border-radius: 8px; }
+            .logo { width: 48px; height: 48px; min-width: 48px; border-radius: 10px; flex-shrink: 0; }
             .hero { padding: 25px 5% 20px !important; }
             .container { width: 92% !important; margin: 20px auto 30px !important; }
             .hero h2 { font-size: 28px; }

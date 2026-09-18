@@ -308,7 +308,7 @@ final class SystemSettingsTest extends CIUnitTestCase
     {
         $defaultImg = app_login_card_image();
         $this->assertIsString($defaultImg);
-        $this->assertStringContainsString('system bg image.png', rawurldecode($defaultImg));
+        $this->assertStringContainsString('logo.webp', rawurldecode($defaultImg));
         $this->assertFalse(app_has_custom_login_card());
 
         $testFile = FCPATH . 'uploads/settings/custom_card.png';
@@ -332,7 +332,7 @@ final class SystemSettingsTest extends CIUnitTestCase
         }
 
         $this->assertFalse(app_has_custom_login_card());
-        $this->assertStringContainsString('system bg image.png', rawurldecode(app_login_card_image()));
+        $this->assertStringContainsString('logo.webp', rawurldecode(app_login_card_image()));
     }
 
     public function testFullBrandingPayloadContainsAllKeys(): void

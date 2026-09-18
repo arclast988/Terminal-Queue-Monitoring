@@ -27,10 +27,6 @@
 
     <style>
         :root {
-            --primary: var(--primary, #B71C1C);
-            --primary-dark: var(--primary-dark, #8B0000);
-            --primary-soft: var(--primary-soft, rgba(183, 28, 28, 0.12));
-            --on-primary: var(--on-primary, #ffffff);
             --accent: #FFA726;
             --accent-dark: #F57C00;
             --success: #43a047;
@@ -82,8 +78,10 @@
         }
 
         .logo {
-            width: 58px;
-            height: 58px;
+            width: 68px;
+            height: 68px;
+            min-width: 68px;
+            flex-shrink: 0;
             object-fit: contain;
             border-radius: 10px;
             image-rendering: -webkit-optimize-contrast;
@@ -686,7 +684,7 @@
         /* --- Responsive Queries --- */
         @media (max-width: 768px) {
             header { padding: 10px 5%; min-height: 65px; border-bottom: 1px solid #eee; }
-            .logo { width: 40px; height: 40px; border-radius: 8px; }
+            .logo { width: 48px; height: 48px; min-width: 48px; border-radius: 10px; flex-shrink: 0; }
             .logo-text h1 { font-size: 15px; letter-spacing: -0.2px; }
             .logo-text p { font-size: 8px; }
 
@@ -1184,7 +1182,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
-        <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
+        <script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
         <script src="<?= base_url('js/queue-sync.js?v=20260906') ?>"></script>
         <script>
         var currentType = '<?= esc($vehicle_type) ?>';

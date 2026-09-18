@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title ?? 'Commuter User Guide & Error Help - ' . app_name()) ?></title>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= base_url('images/9HFScgVg_400x400.png') ?>">
+    <link rel="icon" type="image/webp" href="<?= base_url('images/logo.webp') ?>">
     <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
     <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
 
@@ -24,10 +24,6 @@
 
     <style>
         :root {
-            --primary: var(--primary, #B71C1C);
-            --primary-dark: var(--primary-dark, #7F0000);
-            --primary-soft: var(--primary-soft, rgba(183, 28, 28, 0.12));
-            --on-primary: var(--on-primary, #ffffff);
             --accent: #FFA726;
             --text-main: #0f172a;
             --text-muted: #475569;

@@ -81,14 +81,16 @@ header#site-header {
 }
 
 .logo {
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
+  min-width: 68px;
   object-fit: contain;
   border-radius: 10px;
   image-rendering: auto;
   -ms-interpolation-mode: bicubic;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.15));
   transition: transform .3s cubic-bezier(.175, .885, .32, 1.275);
+  flex-shrink: 0;
 }
 
 .logo-section:hover .logo { transform: scale(1.05); }
@@ -862,7 +864,7 @@ body.staff-theme .logo-text p {
    Google Classroom-Style Sidebar Drawer & Overlay (Universal Desktop & Mobile)
    ========================================================================== */
 .sidebar-drawer-overlay {
-  position: fixed;
+  position: fixed !important;
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(2px);
@@ -881,10 +883,10 @@ body.staff-theme .logo-text p {
 }
 
 .sidebar-drawer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
   width: 320px;
   max-width: 88vw;
   height: 100vh;
@@ -1222,12 +1224,14 @@ body.staff-theme .drawer-nav-item.active i {
   padding: 4px;
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1280px) {
   /* On tablets/laptops, show hamburger and hide top-bar text links (handled in left drawer) */
   .nav-hamburger-btn {
     display: flex !important;
   }
 
+  header#site-header .nav-menu > a,
+  header#site-header .nav-menu > .dropdown,
   .nav-menu > a,
   .nav-menu > .dropdown {
     display: none !important;
@@ -1269,6 +1273,10 @@ body.staff-theme .drawer-nav-item.active i {
 }
 
 @media (max-width: 768px) {
+  header#site-header {
+    max-height: 64px !important;
+  }
+
   /* On mobile screens, hide the user text info and show a sleek circular avatar button */
   .profile-trigger-info {
     display: none !important;
@@ -1373,8 +1381,10 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .logo {
-    width: 36px !important;
-    height: 36px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
 

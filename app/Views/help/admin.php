@@ -171,24 +171,25 @@
 
     @media (max-width: 768px) {
         .help-guide-wrapper {
-            width: 96%;
-            margin: 18px auto 40px;
+            width: 100% !important;
+            margin: 10px auto 24px !important;
+            padding: 0 !important;
         }
         .help-card-container {
-            padding: 22px 18px;
-            border-radius: 16px;
+            padding: 20px 16px !important;
+            border-radius: 16px !important;
         }
     }
 
     @media (max-width: 530px) {
         .help-guide-wrapper {
-            width: 100%;
-            padding: 0 10px;
-            margin: 14px auto 30px;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 6px auto 20px !important;
         }
         .help-card-container {
-            padding: 16px 12px;
-            border-radius: 14px;
+            padding: 16px 12px !important;
+            border-radius: 14px !important;
         }
         .help-card-header {
             gap: 10px;

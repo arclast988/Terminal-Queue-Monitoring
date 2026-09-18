@@ -461,8 +461,9 @@
         max-width: 100%;
     }
     .guest-header .logo {
-        width: 64px;
-        height: 64px;
+        width: 68px;
+        height: 68px;
+        min-width: 68px;
         object-fit: contain;
         border-radius: 10px;
         image-rendering: auto;
@@ -669,9 +670,11 @@
             gap: 12px !important;
         }
         .guest-header .logo {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
+            width: 54px !important;
+            height: 54px !important;
+            min-width: 54px !important;
+            border-radius: 10px !important;
+            flex-shrink: 0 !important;
         }
         .guest-header .logo-text {
             min-width: 0 !important;
@@ -792,9 +795,11 @@
             gap: 8px !important;
         }
         .guest-header .logo {
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 6px !important;
+            width: 48px !important;
+            height: 48px !important;
+            min-width: 48px !important;
+            border-radius: 10px !important;
+            flex-shrink: 0 !important;
         }
         .guest-header .logo-text {
             min-width: 0 !important;

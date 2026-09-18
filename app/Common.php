@@ -697,7 +697,7 @@ if (! function_exists('app_logo')) {
                 return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
             }
         }
-        return base_url('images/9HFScgVg_400x400.png');
+        return base_url('images/logo.webp');
     }
 }
 
@@ -715,7 +715,7 @@ if (! function_exists('app_bg_image')) {
                 return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
             }
         }
-        return base_url('images/system bg image.png');
+        return base_url('images/logo.webp');
     }
 }
 
@@ -733,7 +733,7 @@ if (! function_exists('app_login_card_image')) {
                 return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
             }
         }
-        return base_url('images/system bg image.png');
+        return base_url('images/logo.webp');
     }
 }
 
@@ -756,9 +756,9 @@ if (! function_exists('app_full_branding_payload')) {
     /**
      * Unified, full branding payload for WebSocket broadcast and AJAX settings responses.
      */
-    function app_full_branding_payload(): array
+    function app_full_branding_payload(?string $category = null): array
     {
-        return [
+        $payload = [
             'app_name'              => app_name(),
             'app_subtitle'          => app_subtitle(),
             'acronym'               => app_acronym(),
@@ -788,6 +788,10 @@ if (! function_exists('app_full_branding_payload')) {
             'login_subheadline'     => login_subheadline(),
             'login_kicker'          => login_kicker(),
         ];
+        if ($category !== null) {
+            $payload['category'] = $category;
+        }
+        return $payload;
     }
 }
 
@@ -884,11 +888,11 @@ if (! function_exists('app_bg_slideshow')) {
     function app_bg_slideshow(): array
     {
         $defaultFiles = [
-            1 => 'images/bg/bg1_townhall.png',
-            2 => 'images/bg/bg2_aerial_port.png',
-            3 => 'images/bg/bg3_aerial_town.png',
-            4 => 'images/bg/bg4_terminal_exterior.png',
-            5 => 'images/bg/bg5_terminal_bay.png',
+            1 => 'images/bg/bg1_townhall.webp',
+            2 => 'images/bg/bg2_aerial_port.webp',
+            3 => 'images/bg/bg3_aerial_town.webp',
+            4 => 'images/bg/bg4_terminal_exterior.webp',
+            5 => 'images/bg/bg5_terminal_bay.webp',
         ];
 
         // Active slots setting (e.g. '1,2,3,4,5' or '1,2' or '1,3,4')
@@ -937,7 +941,7 @@ if (! function_exists('app_bg_slideshow')) {
         }
 
         if (empty($urls)) {
-            $urls[1] = base_url('images/bg/bg1_townhall.png');
+            $urls[1] = base_url('images/bg/bg1_townhall.webp');
         }
 
         return $urls;
@@ -1054,7 +1058,7 @@ if (! function_exists('app_theme_color_helper')) {
             'softAlpha' => "rgba({$r}, {$g}, {$b}, 0.08)",
             'on'            => $onColor,
             'isLight'       => ($brightness > 155),
-            'softText'      => ($brightness > 155) ? 'rgba(255, 255, 255, 0.90)' : 'rgba(15, 23, 42, 0.82)',
+            'softText'      => ($brightness > 155) ? 'rgba(255, 255, 255, 0.90)' : '#5d6b7e',
             'chipBg'        => ($brightness > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)',
             'divider'       => ($brightness > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)',
             'activeBadgeBg' => ($brightness > 155) ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.25)',
@@ -1127,7 +1131,7 @@ BGCSS;
         $css = <<<CSS
 <style id="app-dynamic-themes">
 {$bgLayerCss}
-body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay):not(.scenery):not(.global-progress-bar):not(#global-progress-bar):not(.footer):not(footer) {
+body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay):not(.sidebar-drawer-overlay):not(#sidebarDrawerOverlay):not(.sidebar-drawer):not(#siteSidebarDrawer):not(aside):not(.support-modal-backdrop):not(.scenery):not(.global-progress-bar):not(#global-progress-bar):not(.footer):not(footer) {
     position: relative;
     z-index: 1;
 }
@@ -1165,7 +1169,6 @@ body.guest-theme .logo-text h1,
 body:not(.admin-theme):not(.staff-theme) #site-header .logo-text h1,
 body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text h1 {
     color: {$gt['hex']} !important;
-    -webkit-text-fill-color: {$gt['hex']} !important;
 }
 .guest-header .logo-text p,
 body.guest-theme #site-header .logo-text p,
@@ -1174,39 +1177,33 @@ body.guest-theme .logo-text p,
 body:not(.admin-theme):not(.staff-theme) #site-header .logo-text p,
 body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text p {
     color: {$gt['softText']} !important;
-    -webkit-text-fill-color: {$gt['softText']} !important;
     opacity: 0.90;
 }
 .guest-header .nav-menu > a:not(.login-btn):not(.profile-dropdown-item),
 body.guest-theme .nav-menu > a:not(.login-btn):not(.profile-dropdown-item),
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) {
-    color: {$gt['hex']} !important;
-    -webkit-text-fill-color: {$gt['hex']} !important;
+    color: {$gt['softText']} !important;
 }
 .guest-header .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i,
 body.guest-theme .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i {
     color: {$gt['softText']} !important;
-    -webkit-text-fill-color: {$gt['softText']} !important;
 }
 .guest-header .nav-menu > a:not(.login-btn):hover,
 body.guest-theme .nav-menu > a:not(.login-btn):hover,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover {
     color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
     background: {$gp['softAlpha']} !important;
 }
 .guest-header .nav-menu > a:not(.login-btn):hover i,
 body.guest-theme .nav-menu > a:not(.login-btn):hover i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover i {
     color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
 }
 .guest-header .nav-menu > a:not(.login-btn).active,
 body.guest-theme .nav-menu > a:not(.login-btn).active,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active {
     color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
     background: {$gp['softAlpha']} !important;
     font-weight: 700;
 }
@@ -1214,7 +1211,6 @@ body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active {
 body.guest-theme .nav-menu > a:not(.login-btn).active i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active i {
     color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
 }
 .guest-header .nav-menu a::after {
     background: {$gp['hex']} !important;

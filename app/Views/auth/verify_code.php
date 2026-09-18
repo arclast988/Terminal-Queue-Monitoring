@@ -96,23 +96,23 @@
             gap: var(--space-8);
         }
 
-        .brand { display: inline-flex; align-items: center; gap: 12px; animation: fadeDown .6s ease .1s both; }
+        .brand { display: inline-flex; align-items: center; gap: 14px; animation: fadeDown .6s ease .1s both; }
         .brand-mark {
-            width: 46px; height: 46px; border-radius: 13px;
-            padding: 3px;
-            background: rgba(255, 255, 255, 0.85);
-            border: 1.5px solid var(--border);
-            box-shadow: 0 8px 18px -8px rgba(15, 23, 42, .22);
+            width: 60px; height: 60px; border-radius: 16px;
+            padding: 3.5px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid var(--border);
+            box-shadow: 0 8px 20px -6px rgba(15, 23, 42, .22);
             display: grid; place-items: center;
             overflow: hidden;
             flex-shrink: 0;
         }
         .brand-mark img {
             display: block; width: 100%; height: 100%;
-            border-radius: 9px; object-fit: cover;
+            border-radius: 12px; object-fit: cover;
         }
-        .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
-        .brand-sub { display: block; font-size: 12px; font-weight: 800; color: #000000 !important; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .brand-name { font-size: 21px; font-weight: 800; letter-spacing: -.015em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .brand-sub { display: block; font-size: 13.5px; font-weight: 800; color: #000000 !important; margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
         .card {
             width: 100%;
@@ -442,7 +442,7 @@
     </script>
     <script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260918') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
     <script>
     document.addEventListener('pttm:ws-branding_updated', function (e) {
         if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {

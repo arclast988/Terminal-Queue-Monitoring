@@ -118,7 +118,7 @@ body::after {
 }
 
 /* Ensure all direct body children sit above the watermark */
-body > * {
+body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.sidebar-drawer-overlay):not(#sidebarDrawerOverlay):not(.sidebar-drawer):not(#siteSidebarDrawer) {
     position: relative;
     z-index: 1;
 }

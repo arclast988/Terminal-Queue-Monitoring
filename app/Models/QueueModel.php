@@ -189,7 +189,11 @@ class QueueModel extends Model
             }
 
             if (!empty($batchUpdates)) {
-                $this->updateBatch($batchUpdates, 'id');
+                foreach ($batchUpdates as $upd) {
+                    $uid = $upd['id'];
+                    unset($upd['id']);
+                    $this->update($uid, $upd);
+                }
             }
         }
 

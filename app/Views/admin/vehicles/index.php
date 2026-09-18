@@ -237,8 +237,8 @@ $countInService = $countActive + $countMaintenance;
                                         <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= !empty($vehicle['created_at']) ? date('M d, Y', strtotime($vehicle['created_at'])) : 'N/A' ?>
                                     </div>
                                 </td>
-                                <td data-label="Action">
-                                    <div class="d-flex gap-2 justify-content-end">
+                                <td data-label="Action" style="white-space: nowrap;">
+                                    <div class="d-flex gap-2 justify-content-end flex-nowrap">
                                         <?php if (($vehicle['status'] ?? 'active') === 'archived'): ?>
                                             <button type="button" class="btn-modern btn-modern-sm btn-action-activate" title="Activate vehicle"
                                                 onclick="showActivateVehicleModal({
@@ -778,6 +778,11 @@ $countInService = $countActive + $countMaintenance;
             emptyRow.remove();
         }
     }
+
+    // Hide archived rows on initial page load
+    document.addEventListener('DOMContentLoaded', function() {
+        filterVehicles('all');
+    });
 </script>
 
 <!-- Real-time Plate Number Validation -->
@@ -806,17 +811,19 @@ $countInService = $countActive + $countMaintenance;
         position: relative;
     }
     .plate-validation-feedback {
-        position: absolute;
-        left: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
-        top: 100%;
-        z-index: 20 !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin-top: 6px !important;
+        margin-bottom: 4px !important;
+        box-sizing: border-box !important;
         font-size: 11.5px;
-        margin-top: 4px;
         padding: 6px 12px;
         line-height: 1.35;
-        min-width: 220px;
-        max-width: min(320px, calc(100vw - 40px));
-        width: max-content;
         transition: opacity 0.2s ease, transform 0.2s ease;
         font-weight: 500;
         background: rgba(255, 255, 255, 0.92);
@@ -825,7 +832,7 @@ $countInService = $countActive + $countMaintenance;
         border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
-        pointer-events: none;
+        pointer-events: auto;
     }
     .plate-validation-feedback.feedback-error {
         background: rgba(255, 245, 245, 0.94);

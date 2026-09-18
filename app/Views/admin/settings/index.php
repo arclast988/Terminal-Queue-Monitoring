@@ -17,31 +17,31 @@ $slotsMeta = [
     1 => [
         'name'        => 'Town Hall / Municipal Landmark',
         'desc'        => 'Palompon Municipal Hall and municipal landmark',
-        'defaultFile' => 'bg1_townhall.png',
+        'defaultFile' => 'bg1_townhall.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_1']),
     ],
     2 => [
         'name'        => 'Aerial Port & Sea Gateway',
         'desc'        => 'Palompon Port, ocean terminal and coastline',
-        'defaultFile' => 'bg2_aerial_port.png',
+        'defaultFile' => 'bg2_aerial_port.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_2']),
     ],
     3 => [
         'name'        => 'Aerial Townscape',
         'desc'        => 'Bird\'s eye view of Palompon municipality and streets',
-        'defaultFile' => 'bg3_aerial_town.png',
+        'defaultFile' => 'bg3_aerial_town.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_3']),
     ],
     4 => [
         'name'        => 'Terminal Exterior & Facade',
         'desc'        => 'Terminal building entrance, parking & drop-off zone',
-        'defaultFile' => 'bg4_terminal_exterior.png',
+        'defaultFile' => 'bg4_terminal_exterior.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_4']),
     ],
     5 => [
         'name'        => 'Terminal Bay & Vehicle Queue',
         'desc'        => 'Active transit passenger bays and vehicle fleet',
-        'defaultFile' => 'bg5_terminal_bay.png',
+        'defaultFile' => 'bg5_terminal_bay.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_5']),
     ],
 ];
@@ -1490,7 +1490,7 @@ $slotsMeta = [
             <div class="media-preview-card" id="logoPreviewCard">
                 <img src="<?= esc($logoUrl) ?>" alt="Current Logo" id="logoPreviewImg">
                 <div class="media-preview-info">
-                    <div class="filename" id="logoFilename"><?= $hasCustomLogo ? basename($s['app_logo']) : 'Default Seal (9HFScgVg_400x400.png)' ?></div>
+                    <div class="filename" id="logoFilename"><?= $hasCustomLogo ? basename($s['app_logo']) : 'Default Seal (logo.webp)' ?></div>
                     <div class="filemeta">
                         <span class="status-chip <?= $hasCustomLogo ? 'custom' : 'default' ?>" id="logoStatusChip">
                             <i class="fas <?= $hasCustomLogo ? 'fa-check-circle' : 'fa-circle-info' ?>"></i>
@@ -1644,7 +1644,7 @@ $slotsMeta = [
                 <div class="media-preview-card bg-type" id="singleBgPreviewCard">
                     <img src="<?= esc($bgUrl) ?>" alt="Single Background" id="bgPreviewImg">
                     <div class="media-preview-info">
-                        <div class="filename" id="bgFilename"><?= $hasCustomBg ? basename($s['app_background_image']) : 'Default Artwork (system bg image.png)' ?></div>
+                        <div class="filename" id="bgFilename"><?= $hasCustomBg ? basename($s['app_background_image']) : 'Default Background (logo.webp)' ?></div>
                         <div class="filemeta">
                             <span class="status-chip <?= $hasCustomBg ? 'custom' : 'default' ?>" id="bgStatusChip">
                                 <i class="fas <?= $hasCustomBg ? 'fa-check-circle' : 'fa-circle-info' ?>"></i>
@@ -1680,7 +1680,7 @@ $slotsMeta = [
             <div class="media-preview-card bg-type" id="loginCardPreviewCard" style="margin-top: 14px;">
                 <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #0f172a; padding: 6px; border-radius: 10px;">
                 <div class="media-preview-info">
-                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'Default Artwork (system bg image.png)' ?></div>
+                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'Default Illustration (logo.webp)' ?></div>
                     <div class="filemeta">
                         <span class="status-chip <?= $hasCustomLoginCard ? 'custom' : 'default' ?>" id="loginCardStatusChip">
                             <i class="fas <?= $hasCustomLoginCard ? 'fa-check-circle' : 'fa-circle-info' ?>"></i>
@@ -2373,19 +2373,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                if (previewRole === 'Admin') {
-                    if (previewProp === 'bg') {
-                        try {
-                            document.documentElement.style.setProperty('--nav-bg', hex, 'important');
-                            document.body.style.setProperty('--nav-bg', hex, 'important');
-                        } catch(e) {}
-                    } else if (previewProp === 'text') {
-                        try {
-                            document.documentElement.style.setProperty('--nav-text', hex, 'important');
-                            document.body.style.setProperty('--nav-text', hex, 'important');
-                        } catch(e) {}
-                    }
-                }
+                // Admin bg/text preview is handled by the preview cards above — do NOT
+                // write --nav-bg / --nav-text to the live page here; they should only
+                // persist after the user clicks Save.
 
                 if (previewProp === 'primary') {
                     var dot = document.getElementById('dot' + previewRole);
@@ -2400,16 +2390,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.querySelectorAll('.preview-btn-admin i').forEach(function(icon) {
                             icon.style.color = hex;
                         });
-                        try {
-                            document.documentElement.style.setProperty('--primary-color', hex, 'important');
-                            document.documentElement.style.setProperty('--admin-primary', hex, 'important');
-                            document.documentElement.style.setProperty('--primary', hex, 'important');
-                            document.documentElement.style.setProperty('--sb-primary', hex, 'important');
-                            document.body.style.setProperty('--primary-color', hex, 'important');
-                            document.body.style.setProperty('--admin-primary', hex, 'important');
-                            document.body.style.setProperty('--primary', hex, 'important');
-                            document.body.style.setProperty('--sb-primary', hex, 'important');
-                        } catch(e) {}
+                        // Live-page --primary/--admin-primary/--sb-primary writes removed;
+                        // these should only change after the user clicks Save.
                     } else if (previewRole === 'Staff') {
                         document.querySelectorAll('.preview-btn-staff i').forEach(function(icon) {
                             icon.style.color = hex;
@@ -2766,7 +2748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
                             if (logoPreviewImg) logoPreviewImg.src = newUrl;
                             document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
-                            if (logoFilename) logoFilename.textContent = 'Default Seal (9HFScgVg_400x400.png)';
+                            if (logoFilename) logoFilename.textContent = 'Default Seal (logo.webp)';
                             if (logoStatusChip) {
                                 logoStatusChip.className = 'status-chip default';
                                 logoStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Seal';
@@ -2844,7 +2826,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.success) {
                             showToast(data.message, true);
                             if (bgPreviewImg) bgPreviewImg.src = data.image_url;
-                            if (bgFilename) bgFilename.textContent = 'Default Artwork (system bg image.png)';
+                            if (bgFilename) bgFilename.textContent = 'Default Background (logo.webp)';
                             if (bgStatusChip) {
                                 bgStatusChip.className = 'status-chip default';
                                 bgStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';
@@ -2977,7 +2959,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             showToast(data.message, true);
                             var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
                             if (loginCardActiveImg) loginCardActiveImg.src = newUrl;
-                            if (loginCardFilename) loginCardFilename.textContent = 'Default Artwork (system bg image.png)';
+                            if (loginCardFilename) loginCardFilename.textContent = 'Default Illustration (logo.webp)';
                             if (loginCardStatusChip) {
                                 loginCardStatusChip.className = 'status-chip default';
                                 loginCardStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';

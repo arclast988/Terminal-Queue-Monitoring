@@ -320,8 +320,27 @@
     function applyLiveBranding(data) {
         if (!data) return;
 
+        // Guest pages use inline <style> blocks that don't re-render when CSS
+        // variables change via JS.  A page reload is the only reliable way to
+        // pick up new branding.  Branding changes are rare admin actions, so
+        // a quick reload is perfectly acceptable.
+        var category = data.category || null;
+        var isGuestPage = document.body && !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme') && !document.body.classList.contains('auth-page');
+        if (isGuestPage && category) {
+            window.location.reload();
+            return;
+        }
+
+        if (!category) category = data.category || null;
+        var affectsAll = !category;
+        var affectsIdentity = affectsAll || category === 'identity';
+        var affectsLogo = affectsAll || category === 'logo';
+        var affectsTheme = affectsAll || category === 'theme';
+        var affectsBackground = affectsAll || category === 'background';
+        var affectsFooter = affectsAll || category === 'footer';
+
         // 1. Update App Name
-        if (data.app_name) {
+        if (affectsIdentity && data.app_name) {
             document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .guest-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title, .previewNameEl').forEach(function(el) {
                 el.textContent = data.app_name;
             });
@@ -341,28 +360,28 @@
         }
 
         // 2. Update Subtitle
-        if (data.app_subtitle) {
+        if (affectsIdentity && data.app_subtitle) {
             document.querySelectorAll('#site-header .logo-text p, .site-header .logo-text p, .guest-header .logo-text p, .drawer-brand-subtitle, .header-brand-subtitle, .previewSubEl').forEach(function(el) {
                 el.textContent = data.app_subtitle;
             });
         }
 
         // 3. Update System Title
-        if (data.system_title) {
+        if (affectsIdentity && data.system_title) {
             document.querySelectorAll('.app-system-title, .footer-system-title, .guest-footer-subtitle, #previewSysTitleCard').forEach(function(el) {
                 el.textContent = data.system_title;
             });
         }
 
         // 3b. Update Acronym
-        if (data.acronym) {
+        if (affectsIdentity && data.acronym) {
             document.querySelectorAll('.app-acronym, #previewAcronymCard').forEach(function(el) {
                 el.textContent = data.acronym;
             });
         }
 
         // 4. Update Logo Image
-        if (data.app_logo) {
+        if (affectsLogo && data.app_logo) {
             var logoUrl = data.app_logo + (data.app_logo.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
             document.querySelectorAll('#site-header img.logo, .site-header img.logo, .guest-header img.logo, .guest-header .logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg, img.logo').forEach(function(img) {
                 img.src = logoUrl;
@@ -373,7 +392,7 @@
         }
 
         // 4b. Update Login Card Image
-        if (data.app_login_card_image) {
+        if (affectsIdentity && data.app_login_card_image) {
             var loginCardUrl = data.app_login_card_image + (data.app_login_card_image.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
             var loginImg = document.getElementById('loginHeroImg');
             if (loginImg) {
@@ -385,10 +404,10 @@
             }
         }
 
-        // 5. Update Dynamic Theme Colors & Live Injected Styles
-        var liveRules = '';
+        // 5. Update Dynamic Theme Colors & Live Injected Styles (ONLY if theme category or full sync)
+        var liveThemeRules = '';
 
-        if (data.theme_guest_primary || data.theme_guest_nav_bg || data.theme_guest_nav_text) {
+        if (affectsTheme && (data.theme_guest_primary || data.theme_guest_nav_bg || data.theme_guest_nav_text)) {
             var gp_hex = data.theme_guest_primary || getComputedStyle(document.documentElement).getPropertyValue('--guest-primary').trim() || '#C62828';
             var gp_dark = colorDarken(gp_hex, 0.20);
             var gp_soft = colorSoft(gp_hex, 0.12);
@@ -396,6 +415,12 @@
             var gn_hex = data.theme_guest_nav_bg || '#ffffff';
             var gt_hex = data.theme_guest_nav_text || '#1c2430';
             var gn_bright = colorBrightness(gn_hex);
+            // Ensure proper contrast: if navbar is dark, text MUST be light; if navbar is light, text MUST be dark
+            if (gn_bright < 135 && colorBrightness(gt_hex) < 135) {
+                gt_hex = '#ffffff';
+            } else if (gn_bright >= 135 && colorBrightness(gt_hex) >= 135) {
+                gt_hex = '#1c2430';
+            }
             var gn_chipBg = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var gn_divider = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
             var gt_soft = (colorBrightness(gt_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
@@ -427,9 +452,51 @@
                         document.body.style.setProperty(gk, guestVars[gk], 'important');
                     } catch(e) {}
                 }
+
+                // Force direct element style updates for elements that don't
+                // re-evaluate CSS variables (e.g., gradients, computed backgrounds).
+                var advBar = document.querySelector('.advisory-bar');
+                if (advBar) {
+                    advBar.style.setProperty('background', 'linear-gradient(135deg, ' + gp_hex + ' 0%, ' + gp_dark + ' 100%)', 'important');
+                }
+                document.querySelectorAll('.advisory-icon').forEach(function(el) {
+                    el.style.setProperty('color', gp_hex, 'important');
+                });
+                document.querySelectorAll('.nav-menu a.login-btn').forEach(function(el) {
+                    el.style.setProperty('background', gp_hex, 'important');
+                    el.style.setProperty('color', gp_on, 'important');
+                });
+                document.querySelectorAll('.nav-menu a.login-btn i').forEach(function(el) {
+                    el.style.setProperty('color', gp_on, 'important');
+                });
+                document.querySelectorAll('.nav-menu a::after, .nav-menu a.active, .nav-menu a:hover').forEach(function(el) {
+                    el.style.setProperty('color', gp_hex, 'important');
+                });
+                // Hero section buttons (SEARCH, Apply Filters, etc.)
+                document.querySelectorAll('.search-bar button, .filter-btn, .search-btn, .btn-primary, .apply-btn').forEach(function(el) {
+                    el.style.setProperty('background', gp_hex, 'important');
+                    el.style.setProperty('color', gp_on, 'important');
+                });
+                // Route filter chips active state
+                document.querySelectorAll('.route-chip.active, .route-filter-chip.active').forEach(function(el) {
+                    el.style.setProperty('background', gp_hex, 'important');
+                });
+                // Mobile toggle
+                document.querySelectorAll('.mobile-toggle').forEach(function(el) {
+                    el.style.setProperty('color', gp_hex, 'important');
+                });
+                // Breadcrumb active link
+                document.querySelectorAll('.breadcrumb-section a').forEach(function(el) {
+                    el.style.setProperty('color', gp_hex, 'important');
+                });
+
+                // Force browser repaint by reading layout
+                void document.body.offsetHeight;
+
+                console.log('[applyLiveBranding] Guest CSS vars SET. --primary =', guestVars['--primary'], 'isGuestPage:', isGuestPage);
             }
 
-            liveRules += `
+            liveThemeRules += `
                 :root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
                     --primary: ${gp_hex} !important;
                     --primary-dark: ${gp_dark} !important;
@@ -447,7 +514,8 @@
                     --nav-chip-bg: ${gn_chipBg} !important;
                     --nav-divider: ${gn_divider} !important;
                 }
-                .guest-header, body.guest-theme header#site-header, body:not(.admin-theme):not(.staff-theme) header#site-header {
+                .guest-header, body.guest-theme header#site-header,
+                body:not(.admin-theme):not(.staff-theme) header#site-header {
                     background: ${gn_hex} !important;
                     border-bottom: 1px solid ${gn_divider} !important;
                 }
@@ -456,8 +524,7 @@
                 body.guest-theme .logo-section .logo-text h1,
                 body.guest-theme .logo-text h1,
                 body:not(.admin-theme):not(.staff-theme) #site-header .logo-text h1,
-                body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text h1,
-                body:not(.admin-theme):not(.staff-theme) .logo-text h1 {
+                body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text h1 {
                     color: ${gt_hex} !important;
                     -webkit-text-fill-color: ${gt_hex} !important;
                 }
@@ -466,8 +533,7 @@
                 body.guest-theme .logo-section .logo-text p,
                 body.guest-theme .logo-text p,
                 body:not(.admin-theme):not(.staff-theme) #site-header .logo-text p,
-                body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text p,
-                body:not(.admin-theme):not(.staff-theme) .logo-text p {
+                body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text p {
                     color: ${gt_soft} !important;
                     -webkit-text-fill-color: ${gt_soft} !important;
                     opacity: 0.90 !important;
@@ -654,7 +720,7 @@
             `;
         }
 
-        if (data.theme_staff_primary || data.theme_staff_nav_bg || data.theme_staff_nav_text) {
+        if (affectsTheme && (data.theme_staff_primary || data.theme_staff_nav_bg || data.theme_staff_nav_text)) {
             var sp_hex = data.theme_staff_primary || getComputedStyle(document.documentElement).getPropertyValue('--staff-primary').trim() || '#15803d';
             var sp_dark = colorDarken(sp_hex, 0.20);
             var sp_soft = colorSoft(sp_hex, 0.12);
@@ -695,7 +761,7 @@
                 }
             }
 
-            liveRules += `
+            liveThemeRules += `
                 body.staff-theme, html body.staff-theme {
                     --primary: ${sp_hex} !important;
                     --primary-dark: ${sp_dark} !important;
@@ -841,7 +907,7 @@
             `;
         }
 
-        if (data.theme_admin_primary || data.theme_admin_nav_bg || data.theme_admin_nav_text) {
+        if (affectsTheme && (data.theme_admin_primary || data.theme_admin_nav_bg || data.theme_admin_nav_text)) {
             var ap_hex = data.theme_admin_primary || getComputedStyle(document.documentElement).getPropertyValue('--admin-primary').trim() || '#B71C1C';
             var ap_dark = colorDarken(ap_hex, 0.20);
             var ap_soft = colorSoft(ap_hex, 0.12);
@@ -884,7 +950,7 @@
                 }
             }
 
-            liveRules += `
+            liveThemeRules += `
                 body.admin-theme, html body.admin-theme {
                     --primary: ${ap_hex} !important;
                     --primary-dark: ${ap_dark} !important;
@@ -1041,8 +1107,20 @@
             `;
         }
 
-        // 5b. Update Universal Background Picture & Mode in Real-Time
-        if (data.app_background_image || data.app_bg_mode || data.app_bg_slideshow) {
+        // Apply theme rules if updated
+        if (affectsTheme && liveThemeRules) {
+            var liveThemeStyle = document.getElementById('app-live-theme-overrides');
+            if (!liveThemeStyle) {
+                liveThemeStyle = document.createElement('style');
+                liveThemeStyle.id = 'app-live-theme-overrides';
+                document.head.appendChild(liveThemeStyle);
+            }
+            liveThemeStyle.textContent = liveThemeRules;
+        }
+
+        // 5b. Update Universal Background Picture & Mode in Real-Time (ONLY if background category or full sync)
+        var liveBgRules = '';
+        if (affectsBackground && (data.app_background_image || data.app_bg_mode || data.app_bg_slideshow)) {
             var bgUrl = data.app_background_image || '';
             var bgMode = data.app_bg_mode || 'slideshow';
             var slides = Array.isArray(data.app_bg_slideshow) ? data.app_bg_slideshow : [];
@@ -1052,7 +1130,7 @@
 
             if (bgMode === 'single' || slides.length <= 1) {
                 var singleTarget = bgUrl || (slides.length > 0 ? slides[0] : '');
-                liveRules += `
+                liveBgRules += `
                     body:not(.auth-page)::before {
                         content: "" !important;
                         position: fixed !important;
@@ -1105,7 +1183,7 @@
                 kfAuth   += `    100% { opacity: 0.22; }\n`;
                 kfAuth   += `}\n`;
 
-                liveRules += `
+                liveBgRules += `
                     ${kfNormal}
                     ${kfAuth}
                     body:not(.auth-page)::before {
@@ -1143,31 +1221,33 @@
             }
         }
 
-        if (liveRules) {
-            var liveStyle = document.getElementById('app-live-branding-overrides');
-            if (!liveStyle) {
-                liveStyle = document.createElement('style');
-                liveStyle.id = 'app-live-branding-overrides';
-                document.head.appendChild(liveStyle);
+        if (affectsBackground && liveBgRules) {
+            var liveBgStyle = document.getElementById('app-live-bg-overrides');
+            if (!liveBgStyle) {
+                liveBgStyle = document.createElement('style');
+                liveBgStyle.id = 'app-live-bg-overrides';
+                document.head.appendChild(liveBgStyle);
             }
-            liveStyle.textContent = liveRules;
+            liveBgStyle.textContent = liveBgRules;
         }
 
         // 6. Update Footer Text
-        if (data.footer_about_title) {
-            document.querySelectorAll('.footer-about-title').forEach(function(el) {
-                el.textContent = data.footer_about_title;
-            });
-        }
-        if (data.footer_about_desc) {
-            document.querySelectorAll('.footer-about-desc').forEach(function(el) {
-                el.textContent = data.footer_about_desc;
-            });
-        }
-        if (data.footer_credit) {
-            document.querySelectorAll('.footer-credit').forEach(function(el) {
-                el.textContent = data.footer_credit;
-            });
+        if (affectsFooter) {
+            if (data.footer_about_title) {
+                document.querySelectorAll('.footer-about-title').forEach(function(el) {
+                    el.textContent = data.footer_about_title;
+                });
+            }
+            if (data.footer_about_desc) {
+                document.querySelectorAll('.footer-about-desc').forEach(function(el) {
+                    el.textContent = data.footer_about_desc;
+                });
+            }
+            if (data.footer_credit) {
+                document.querySelectorAll('.footer-credit').forEach(function(el) {
+                    el.textContent = data.footer_credit;
+                });
+            }
         }
 
         // 7. Broadcast event for page-specific custom listeners

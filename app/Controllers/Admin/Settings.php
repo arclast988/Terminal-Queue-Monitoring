@@ -89,7 +89,7 @@ class Settings extends BaseController
 
         $model->setMultiple($fields);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('identity');
 
         $this->logActivity('System Settings', 'Updated system themes & identity (name: ' . $fields['app_name'] . ')');
 
@@ -99,7 +99,7 @@ class Settings extends BaseController
                 'message'    => 'System identity & themes updated successfully.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
-                'data'       => app_full_branding_payload(),
+                'data'       => app_full_branding_payload('identity'),
             ]);
         }
 
@@ -158,7 +158,7 @@ class Settings extends BaseController
 
         $model->setMultiple($updates);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('theme');
         $this->logActivity('System Settings', 'Updated role theme colours (' . count($updates) . ' settings)');
 
         if ($this->request->isAJAX()) {
@@ -168,7 +168,7 @@ class Settings extends BaseController
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'updates'    => $updates,
-                'data'       => app_full_branding_payload(),
+                'data'       => app_full_branding_payload('theme'),
             ]);
         }
 
@@ -218,7 +218,7 @@ class Settings extends BaseController
 
         $model->setMultiple($fields);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('footer');
 
         $this->logActivity('System Settings', 'Updated footer and public information');
 
@@ -226,7 +226,7 @@ class Settings extends BaseController
             return $this->response->setJSON([
                 'success'    => true,
                 'message'    => 'Footer & public attribution updated successfully.',
-                'data'       => app_full_branding_payload(),
+                'data'       => app_full_branding_payload('footer'),
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
@@ -449,7 +449,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_logo', $relPath);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('logo');
 
         $this->logActivity('System Settings', 'Uploaded new system logo: ' . $newFilename);
 
@@ -457,7 +457,7 @@ class Settings extends BaseController
             'success'    => true,
             'message'    => 'System logo updated successfully.',
             'image_url'  => base_url($relPath) . '?v=' . time(),
-            'data'       => app_full_branding_payload(),
+            'data'       => app_full_branding_payload('logo'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -478,15 +478,15 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_logo', null);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('logo');
 
         $this->logActivity('System Settings', 'Reset system logo to default');
 
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'Logo reset to default seal.',
-            'image_url'  => base_url('images/9HFScgVg_400x400.png'),
-            'data'       => app_full_branding_payload(),
+            'image_url'  => base_url('images/logo.webp'),
+            'data'       => app_full_branding_payload('logo'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -575,7 +575,7 @@ class Settings extends BaseController
         }
 
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', 'Uploaded new system background picture: ' . $newFilename);
 
@@ -586,7 +586,7 @@ class Settings extends BaseController
             'app_bg_mode'          => $mode ?: get_setting('app_bg_mode', 'slideshow'),
             'app_background_image' => base_url($relPath) . '?v=' . time(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
-            'data'                 => app_full_branding_payload(),
+            'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
             'csrf_hash'            => csrf_hash(),
         ]);
@@ -607,18 +607,18 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_background_image', null);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', 'Reset system background to default');
 
         return $this->response->setJSON([
             'success'              => true,
             'message'              => 'Background picture reset to default.',
-            'image_url'            => base_url('images/system bg image.png'),
+            'image_url'            => base_url('images/logo.webp'),
             'app_bg_mode'          => get_setting('app_bg_mode', 'slideshow'),
-            'app_background_image' => base_url('images/system bg image.png'),
+            'app_background_image' => base_url('images/logo.webp'),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
-            'data'                 => app_full_branding_payload(),
+            'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
             'csrf_hash'            => csrf_hash(),
         ]);
@@ -641,7 +641,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_bg_mode', $mode);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', 'Switched background display mode to: ' . $mode);
 
@@ -652,7 +652,7 @@ class Settings extends BaseController
             'app_background_image' => app_bg_image(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
             'message'              => 'Background mode switched to ' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . '.',
-            'data'                 => app_full_branding_payload(),
+            'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
             'csrf_hash'            => csrf_hash(),
         ]);
@@ -675,7 +675,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_bg_mode', $mode);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', 'Saved background display mode to: ' . $mode);
 
@@ -686,7 +686,7 @@ class Settings extends BaseController
             'app_background_image' => app_bg_image(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
             'message'              => 'Background display mode (' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . ') saved successfully.',
-            'data'                 => app_full_branding_payload(),
+            'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
             'csrf_hash'            => csrf_hash(),
         ]);
@@ -756,7 +756,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_login_card_image', $relPath);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('identity');
 
         $this->logActivity('System Settings', 'Uploaded new login page hero illustration: ' . $newFilename);
 
@@ -765,7 +765,7 @@ class Settings extends BaseController
             'message'    => 'Login page hero illustration updated successfully.',
             'image_url'  => base_url($relPath) . '?v=' . time(),
             'filename'   => $newFilename,
-            'data'       => app_full_branding_payload(),
+            'data'       => app_full_branding_payload('identity'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -786,15 +786,15 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting('app_login_card_image', null);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('identity');
 
         $this->logActivity('System Settings', 'Reset login page hero illustration to default artwork');
 
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'Login hero illustration restored to default artwork.',
-            'image_url'  => base_url('images/system bg image.png'),
-            'data'       => app_full_branding_payload(),
+            'image_url'  => base_url('images/logo.webp'),
+            'data'       => app_full_branding_payload('identity'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -886,7 +886,7 @@ class Settings extends BaseController
         $model = new SystemSettingModel();
         $model->setSetting($settingKey, $relPath);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', "Uploaded new slideshow background picture for slot {$slot}: {$newFilename}");
 
@@ -1000,7 +1000,7 @@ class Settings extends BaseController
         $model->setSetting('app_bg_slideshow_slots', implode(',', $activeSlots));
 
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', "Added new slideshow slot {$nextSlot}: {$newFilename}");
 
@@ -1086,7 +1086,7 @@ class Settings extends BaseController
         }
 
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $remainingCount = count($activeSlots);
         $this->logActivity('System Settings', "Deleted slideshow slot {$slot}. Active slots remaining: " . implode(',', $activeSlots));
@@ -1132,7 +1132,7 @@ class Settings extends BaseController
                 $db->table('system_settings')->where('setting_key', $settingKey)->delete();
             }
             get_all_system_settings(true);
-            $this->broadcastBrandingChange();
+            $this->broadcastBrandingChange('background');
 
             return $this->response->setJSON([
                 'success'    => true,
@@ -1146,14 +1146,14 @@ class Settings extends BaseController
 
         $model->setSetting($settingKey, null);
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $defaultFiles = [
-            1 => 'images/bg/bg1_townhall.png',
-            2 => 'images/bg/bg2_aerial_port.png',
-            3 => 'images/bg/bg3_aerial_town.png',
-            4 => 'images/bg/bg4_terminal_exterior.png',
-            5 => 'images/bg/bg5_terminal_bay.png',
+            1 => 'images/bg/bg1_townhall.webp',
+            2 => 'images/bg/bg2_aerial_port.webp',
+            3 => 'images/bg/bg3_aerial_town.webp',
+            4 => 'images/bg/bg4_terminal_exterior.webp',
+            5 => 'images/bg/bg5_terminal_bay.webp',
         ];
 
         $this->logActivity('System Settings', "Reset slideshow background picture for slot {$slot} to default");
@@ -1183,11 +1183,11 @@ class Settings extends BaseController
         $allSettings = get_all_system_settings(true);
 
         $defaultFiles = [
-            1 => 'images/bg/bg1_townhall.png',
-            2 => 'images/bg/bg2_aerial_port.png',
-            3 => 'images/bg/bg3_aerial_town.png',
-            4 => 'images/bg/bg4_terminal_exterior.png',
-            5 => 'images/bg/bg5_terminal_bay.png',
+            1 => 'images/bg/bg1_townhall.webp',
+            2 => 'images/bg/bg2_aerial_port.webp',
+            3 => 'images/bg/bg3_aerial_town.webp',
+            4 => 'images/bg/bg4_terminal_exterior.webp',
+            5 => 'images/bg/bg5_terminal_bay.webp',
         ];
 
         for ($i = 1; $i <= 5; $i++) {
@@ -1210,7 +1210,7 @@ class Settings extends BaseController
         $model->setSetting('app_bg_slideshow_slots', '1,2,3,4,5');
 
         get_all_system_settings(true);
-        $this->broadcastBrandingChange();
+        $this->broadcastBrandingChange('background');
 
         $this->logActivity('System Settings', 'Reset all slideshow background pictures to defaults');
 
@@ -1240,10 +1240,10 @@ class Settings extends BaseController
     /**
      * Broadcast branding changes across WebSocket to all connected clients in real time.
      */
-    protected function broadcastBrandingChange(): void
+    protected function broadcastBrandingChange(?string $category = null): void
     {
         try {
-            $payload = app_full_branding_payload();
+            $payload = app_full_branding_payload($category);
             $this->broadcastUpdate('branding_updated', $payload);
         } catch (\Throwable $e) {
             // Silently continue if daemon offline

@@ -129,19 +129,19 @@
         .brand {
             display: inline-flex;
             align-items: center;
-            gap: var(--space-3);
+            gap: 14px;
             margin-bottom: clamp(var(--space-5), 4vh, var(--space-8));
             animation: fadeDown .6s ease .1s both;
             width: fit-content;
         }
         .brand-mark {
-            width: 44px;
-            height: 44px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            padding: 2px;
+            padding: 3px;
             background: var(--white);
-            border: 1.5px solid var(--border);
-            box-shadow: 0 4px 12px -4px rgba(15, 23, 42, .18);
+            border: 2px solid var(--border);
+            box-shadow: 0 4px 14px -3px rgba(15, 23, 42, .20);
             display: grid;
             place-items: center;
             overflow: hidden;
@@ -154,8 +154,8 @@
             border-radius: 50%;
             object-fit: cover;
         }
-        .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
-        .brand-sub { display: block; font-size: 12px; font-weight: 800; color: #000000 !important; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .brand-name { font-size: 21px; font-weight: 800; letter-spacing: -.015em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .brand-sub { display: block; font-size: 13.5px; font-weight: 800; color: #000000 !important; margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
         /* ---- Main grid: hero (left) / card (right) ---- */
         .login-layout {
@@ -749,7 +749,7 @@
 
     <script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260918') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
     <script>
     // Listen for branding and background updates in real-time
     document.addEventListener('pttm:ws-branding_updated', function (e) {

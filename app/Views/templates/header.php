@@ -403,19 +403,20 @@
         /* Mobile responsive main content padding */
         @media (max-width: 768px) {
             :root {
-                --site-header-height: 72px;
+                --site-header-height: 60px;
             }
 
             body.layout-lock header#site-header {
                 padding-left: 16px !important;
                 padding-right: 16px !important;
+                max-height: 64px !important;
             }
 
             .main-content {
-                padding-top: calc(var(--site-header-height, 72px) + 12px) !important;
-                padding-right: 16px !important;
+                padding-top: calc(var(--site-header-height, 60px) + 10px) !important;
+                padding-right: 14px !important;
                 padding-bottom: 24px !important;
-                padding-left: 16px !important;
+                padding-left: 14px !important;
             }
 
             footer,
@@ -441,16 +442,17 @@
 
         @media (max-width: 480px) {
             :root {
-                --site-header-height: 52px;
+                --site-header-height: 56px;
             }
 
             body.layout-lock header#site-header {
                 padding-left: 10px !important;
                 padding-right: 10px !important;
+                max-height: 60px !important;
             }
 
             .main-content {
-                padding-top: calc(var(--site-header-height, 52px) + 12px) !important;
+                padding-top: calc(var(--site-header-height, 56px) + 8px) !important;
                 padding-right: 10px !important;
                 padding-bottom: 20px !important;
                 padding-left: 10px !important;
@@ -529,7 +531,10 @@
             function syncHeaderHeight() {
                 var hdr = document.getElementById('site-header');
                 if (hdr && hdr.offsetHeight > 0) {
-                    document.documentElement.style.setProperty('--site-header-height', hdr.offsetHeight + 'px');
+                    var isMobile = window.innerWidth <= 768;
+                    var maxCap = isMobile ? 64 : 84;
+                    var h = Math.min(Math.max(hdr.offsetHeight || 52, 48), maxCap);
+                    document.documentElement.style.setProperty('--site-header-height', h + 'px');
                 }
             }
             syncHeaderHeight();

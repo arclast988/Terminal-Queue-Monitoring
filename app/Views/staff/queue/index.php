@@ -688,9 +688,9 @@
                 <div class="mx-3 mb-2 p-2 rounded-2 bg-light d-flex align-items-center gap-2">
                     <span class="text-muted small flex-shrink-0">Passengers</span>
                     <div class="d-flex align-items-center gap-2 ms-auto">
-                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'decrement')"
+                        <button type="button"
                             data-action="passenger-decrement" data-id="<?= $item['id'] ?>"
-                            class="btn-counter btn-counter-minus">
+                            class="btn-counter btn-counter-minus" aria-label="Decrease passenger count">
                             &minus;
                         </button>
                         <span id="passenger-count-<?= $item['id'] ?>"
@@ -699,12 +699,12 @@
                             <strong class="passenger-count-num <?= passenger_color_class((int)$item['current_passengers'], (int)$item['capacity']) ?>"><?= $item['current_passengers'] ?></strong> / <?= $item['capacity'] ?>
                             <span id="full-badge-<?= $item['id'] ?>" class="full-badge-wrap" style="<?= $isFull ? 'display:block;' : 'display:none;' ?>"><span class="badge-modern badge-modern-danger full-badge" style="font-size:12px; font-weight:800; padding:2px 8px;">FULL</span></span>
                         </span>
-                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'increment')"
+                        <button type="button"
                             data-action="passenger-increment" data-id="<?= $item['id'] ?>"
-                            class="btn-counter btn-counter-plus">
+                            class="btn-counter btn-counter-plus" aria-label="Increase passenger count">
                             &#43;
                         </button>
-                        <button onclick="updatePassengers(<?= $item['id'] ?>, 'max')"
+                        <button type="button"
                             data-action="passenger-max" data-id="<?= $item['id'] ?>"
                             class="btn-counter-max">MAX</button>
                     </div>
@@ -713,14 +713,19 @@
                 <!-- Action buttons -->
                 <div class="d-flex gap-2 px-3 pb-3">
                     <?php if ($isWaiting): ?>
-                        <button onclick="updateStatus(<?= $item['id'] ?>, 'boarding', null, this)"
+                        <button type="button"
                             data-action="update-status" data-id="<?= $item['id'] ?>" data-status="boarding"
                             class="btn-modern btn-modern-primary flex-fill" style="white-space:nowrap;">
                             Start Boarding
                         </button>
                     <?php elseif ($isBoarding): ?>
                         <button type="button" class="btn-modern btn-modern-success flex-fill" style="white-space:nowrap;"
-                            data-bs-toggle="modal" data-bs-target="#confirmDepartModal<?= $item['id'] ?>">
+                            data-action="open-depart-modal"
+                            data-id="<?= $item['id'] ?>"
+                            data-plate="<?= esc($item['plate_number'], 'attr') ?>"
+                            data-passengers="<?= (int)$item['current_passengers'] ?>"
+                            data-capacity="<?= (int)$item['capacity'] ?>"
+                            data-type="<?= esc(vehicle_type_label($item['vehicle_type'] ?? ''), 'attr') ?>">
                             Depart
                         </button>
                     <?php endif; ?>
@@ -744,41 +749,32 @@
     <?php endif; ?>
 </div>
 
-<!-- Depart Confirmation Modals - Placed at page level for proper positioning -->
-<?php if (!empty($queue) && is_array($queue)): ?>
-    <?php foreach ($queue as $item): ?>
-        <?php if ($item['status'] == 'boarding'): ?>
-            <!-- Depart Confirmation Modal for <?= esc($item['plate_number']) ?> -->
-            <div class="modal fade" id="confirmDepartModal<?= $item['id'] ?>" tabindex="-1" aria-labelledby="confirmDepartModalLabel<?= $item['id'] ?>" aria-hidden="true" data-bs-backdrop="static">
-                <div class="modal-dialog modal-dialog-centered modal-sm">
-                    <div class="modal-content">
-                        <div class="modal-body p-4 text-center">
-                            <h5 class="fw-bold mb-3" id="confirmDepartModalLabel<?= $item['id'] ?>" style="color: #dc3545;">
-                                Confirm Departure
-                            </h5>
-                            <p class="text-muted mb-3">
-                                <strong><?= esc($item['plate_number']) ?></strong>
-                            </p>
-                            <p class="text-muted small mb-3">
-                                This action cannot be undone.
-                            </p>
-                            <div class="d-flex gap-2 justify-content-center mt-3">
-                                <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" data-bs-dismiss="modal">
-                                    Cancel
-                                </button>
-                                <button onclick="updateStatus(<?= $item['id'] ?>, 'departed', 'confirmDepartModal<?= $item['id'] ?>', this)" 
-                                   id="confirmDepartBtn<?= $item['id'] ?>" 
-                                   class="btn-modern btn-modern-sm btn-modern-danger">
-                                    Depart
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+<!-- Depart Confirmation Modal -->
+<div class="modal fade" id="confirmDepartModal" tabindex="-1" aria-labelledby="confirmDepartModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content shadow-lg">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-2" style="font-size: 2.5rem; line-height: 1;">🚀</div>
+                <h5 class="fw-bold mb-2 text-dark" id="confirmDepartModalLabel">
+                    Confirm Departure
+                </h5>
+                <p class="text-dark fw-bold mb-1" id="confirmDepartVehiclePlate" style="font-size: 1.15rem;"></p>
+                <p class="text-muted small mb-2" id="confirmDepartVehicleDetails"></p>
+                <p class="text-muted small mb-3">
+                    This action cannot be undone.
+                </p>
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                    <button type="button" class="btn-modern btn-modern-outline btn-modern-sm flex-fill" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="button" id="confirmDepartSubmitBtn" class="btn-modern btn-modern-sm btn-modern-danger flex-fill">
+                        Depart
+                    </button>
                 </div>
             </div>
-        <?php endif; ?>
-    <?php endforeach; ?>
-<?php endif; ?>
+        </div>
+    </div>
+</div>
 
 <!-- Cancel Trip Confirmation Modal -->
 <div class="modal fade" id="cancelTripModal" tabindex="-1" aria-labelledby="cancelTripModalLabel" aria-hidden="true" data-bs-backdrop="static">
@@ -1307,7 +1303,7 @@
 
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20260906') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
 <script src="<?= base_url('js/debounce-passengers.js') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js?v=20260906') ?>"></script>
 <script>
@@ -1355,7 +1351,11 @@
         fetch(updateUrl, { method: 'POST', headers: headers })
         .then(function(response) {
             if (!response.ok) {
-                throw new Error('Status update failed');
+                return response.text().then(function(body) {
+                    var msg = 'Status update failed (HTTP ' + response.status + ')';
+                    try { var j = JSON.parse(body); if (j.message) msg = j.message; } catch(e) {}
+                    throw new Error(msg);
+                });
             }
             return response.json();
         })
@@ -1371,26 +1371,71 @@
         })
         .catch(function(error) {
             console.error('[Queue] Status update error:', error);
-            window.location.reload();
+            // Show visible error to user
+            var alertHtml = '<div class="alert-modern alert-modern-danger fade-in" style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;max-width:500px;box-shadow:0 4px 20px rgba(0,0,0,0.2);">' +
+                '<i class="bi bi-x-circle-fill alert-modern-icon"></i>' +
+                '<div><strong>Error:</strong> ' + (error.message || 'Failed to update status') + '</div></div>';
+            document.body.insertAdjacentHTML('beforeend', alertHtml);
+            setTimeout(function() { window.location.reload(); }, 3000);
         });
     }
-
-    document.addEventListener('click', function(e) {
-        var btn = e.target.closest('[data-action="update-status"]');
-        if (btn) {
-            var id = btn.getAttribute('data-id');
-            var status = btn.getAttribute('data-status');
-            var modalId = btn.getAttribute('data-modal-id');
-            if (id && status) {
-                updateStatus(id, status, modalId, btn);
-            }
-        }
-    });
 
     function escHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str).replace(/[&<>"']/g, function(c){
             return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        });
+    }
+
+    // Depart Confirmation Modal Logic
+    var confirmDepartModalEl = document.getElementById('confirmDepartModal');
+    var currentDepartQueueId = null;
+
+    function openDepartModal(id, plate, passengers, capacity, type) {
+        currentDepartQueueId = id;
+        var plateEl = document.getElementById('confirmDepartVehiclePlate');
+        if (plateEl) plateEl.textContent = plate || ('Queue #' + id);
+
+        var detailsEl = document.getElementById('confirmDepartVehicleDetails');
+        if (detailsEl) {
+            var detailsText = '';
+            if (type) detailsText += type;
+            if (passengers !== undefined && capacity !== undefined && parseInt(capacity, 10) > 0) {
+                detailsText += (detailsText ? ' • ' : '') + passengers + ' / ' + capacity + ' passengers';
+            }
+            detailsEl.textContent = detailsText;
+        }
+
+        var btn = document.getElementById('confirmDepartSubmitBtn');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = 'Depart';
+        }
+
+        if (confirmDepartModalEl && typeof bootstrap !== 'undefined') {
+            var modal = bootstrap.Modal.getInstance(confirmDepartModalEl) || bootstrap.Modal.getOrCreateInstance(confirmDepartModalEl);
+            modal.show();
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-action="open-depart-modal"]');
+        if (btn) {
+            e.preventDefault();
+            var id = btn.getAttribute('data-id');
+            var plate = btn.getAttribute('data-plate') || '';
+            var passengers = btn.getAttribute('data-passengers') || '0';
+            var capacity = btn.getAttribute('data-capacity') || '0';
+            var type = btn.getAttribute('data-type') || '';
+            openDepartModal(id, plate, passengers, capacity, type);
+        }
+    });
+
+    var confirmDepartSubmitBtn = document.getElementById('confirmDepartSubmitBtn');
+    if (confirmDepartSubmitBtn) {
+        confirmDepartSubmitBtn.addEventListener('click', function() {
+            if (!currentDepartQueueId) return;
+            updateStatus(currentDepartQueueId, 'departed', 'confirmDepartModal', confirmDepartSubmitBtn);
         });
     }
 
@@ -1777,7 +1822,7 @@
         pollInterval:  3000,
         refreshUrl:    '<?= base_url('staff/queue') ?>',
         tableSelector: '#queue-list',
-        modalSelector: '[id^="confirmDepartModal"]',
+        modalSelector: null,
         extraRefresh: function() {
             // New queue cards carry fresh countdown targets — repaint immediately.
             updateCountdowns();

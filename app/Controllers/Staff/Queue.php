@@ -394,6 +394,9 @@ class Queue extends BaseController
         // Server-side route authorization check
         if (!$this->hasQueueAccess((int) $id)) {
             $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to update status of queue #' . $id . ' on an unassigned route.');
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
+            }
             return redirect()->back()->with('error', "You don't have access to this route.");
         }
 
@@ -406,10 +409,16 @@ class Queue extends BaseController
         $validStatuses = ['waiting', 'boarding', 'departed', 'canceled'];
 
         if (!in_array($status, $validStatuses)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Invalid status.']);
+            }
             return redirect()->back()->with('error', 'Invalid status.');
         }
 
         if (! $this->queueModel->find($id)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Queue item not found.']);
+            }
             return redirect()->back()->with('error', 'Queue item not found.');
         }
 
@@ -461,6 +470,13 @@ class Queue extends BaseController
         $this->queueModel->reorderByDeparture();
 
         $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'Failed to update queue status.']);
+            }
+            return redirect()->back()->with('error', 'Failed to update queue status.');
+        }
 
 
         $item = $this->queueModel->select('vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, terminals.name as origin, routes.destination')

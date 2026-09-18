@@ -101,7 +101,7 @@ body {
   flex-direction: column;
 }
 
-body > * {
+body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.sidebar-drawer-overlay):not(#sidebarDrawerOverlay):not(.sidebar-drawer):not(#siteSidebarDrawer) {
   position: relative;
   z-index: 1;
 }
