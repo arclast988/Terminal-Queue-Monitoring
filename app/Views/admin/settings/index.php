@@ -6,9 +6,11 @@ $logoUrl        = app_logo();
 $bgUrl          = app_bg_image();
 $bgMode         = app_bg_mode();
 $slideshowUrls  = app_bg_slideshow();
+$loginCardUrl   = app_login_card_image();
 
 $hasCustomLogo  = !empty($s['app_logo']);
 $hasCustomBg    = !empty($s['app_background_image']);
+$hasCustomLoginCard = app_has_custom_login_card();
 
 // Slot metadata definitions
 $slotsMeta = [
@@ -47,7 +49,7 @@ $slotsMeta = [
 
 <style>
 /* ==========================================================================
-   Superadmin Branding & Customization Modern Styles
+   Superadmin System Themes & Customization Modern Styles
    ========================================================================== */
 
 :root {
@@ -429,22 +431,22 @@ $slotsMeta = [
     align-items: center;
     gap: 8px;
     padding: 11px 26px;
-    background: #C62828;
-    color: #ffffff !important;
+    background: var(--sb-primary, var(--primary, #B71C1C));
+    color: var(--on-primary, #ffffff) !important;
     border: none;
     border-radius: var(--sb-radius-sm, 8px);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-save:hover {
-    background: #B71C1C;
-    color: #ffffff !important;
+    background: var(--sb-primary-hover, var(--primary-dark, #8E0000));
+    color: var(--on-primary, #ffffff) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(183, 28, 28, 0.45);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
 .btn-save:active {
@@ -1251,7 +1253,7 @@ $slotsMeta = [
                 <i class="fas fa-palette"></i>
             </div>
             <div>
-                <h1>System Branding & Themes</h1>
+                <h1>System Themes</h1>
                 <p>Configure public identity, visual role themes, high-resolution media assets, and footer attribution for the Transit network.</p>
             </div>
         </div>
@@ -1501,6 +1503,19 @@ $slotsMeta = [
                     <i class="fas fa-undo"></i> Reset to Default Seal
                 </button>
             </div>
+
+            <!-- Explicit Save Button for Logo -->
+            <div class="media-save-bar" style="display: flex; align-items: center; justify-content: flex-end; margin-top: 14px; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-md); flex-wrap: wrap; gap: 10px;">
+                <span id="logoPendingNotice" style="font-size: 12.5px; color: #b45309; font-weight: 600; margin-right: auto; display: none;">
+                    <i class="fas fa-clock"></i> New logo staged. Click "Save Logo" to apply changes across the system.
+                </span>
+                <span id="logoIdleNotice" style="font-size: 12.5px; color: var(--sb-text-muted); margin-right: auto;">
+                    <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i> Select or drop a new seal image above, then click Save Logo.
+                </span>
+                <button type="button" id="btnSaveLogo" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25); opacity: 0.65;" disabled>
+                    <i class="fas fa-save"></i> Save Logo
+                </button>
+            </div>
         </div>
 
         <!-- 2. Background Pictures Manager -->
@@ -1529,6 +1544,20 @@ $slotsMeta = [
                         <p>Shows one static high-resolution artwork or custom terminal hero photo behind sign-in screens.</p>
                     </div>
                 </label>
+            </div>
+
+            <!-- Explicit Save Button for Background & Display Mode -->
+            <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 18px; margin-bottom: 24px; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-md); flex-wrap: wrap; gap: 10px;">
+                <span id="bgPendingNotice" style="font-size: 12.5px; color: #b45309; font-weight: 600; margin-right: auto; display: none;">
+                    <i class="fas fa-clock"></i> Background changes staged. Click "Save Background & Display Mode" to apply.
+                </span>
+                <span id="bgIdleNotice" style="font-size: 13px; color: var(--sb-text-muted); margin-right: auto;">
+                    <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i>
+                    Click to persist your background mode and broadcast live to all active screens.
+                </span>
+                <button type="button" id="btnSaveBgSettings" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25);">
+                    <i class="fas fa-save"></i> Save Background & Display Mode
+                </button>
             </div>
 
             <!-- SLIDESHOW MANAGER SECTION -->
@@ -1628,6 +1657,54 @@ $slotsMeta = [
                         <i class="fas fa-undo"></i> Reset to Default
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 3. Login Page Hero Illustration Card -->
+        <div class="settings-card" style="margin-top: 24px;">
+            <div class="settings-card-header">
+                <div class="card-icon"><i class="fas fa-truck-front"></i></div>
+                <div>
+                    <h3>Login Page Hero Illustration</h3>
+                    <p>Customize the 3-vehicle terminal hero illustration displayed on the login page (<code>/login</code>). Superadmins can upload a custom illustration/artwork or reset to the system default.</p>
+                </div>
+            </div>
+
+            <div class="upload-zone" id="loginCardUploadZone">
+                <input type="file" id="loginCardFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;">
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <div class="upload-text"><strong>Click to upload</strong> or drag and drop login hero illustration</div>
+                <div class="upload-hint">PNG, JPG, or WEBP &bull; Max 8 MB &bull; High resolution artwork recommended</div>
+            </div>
+
+            <div class="media-preview-card bg-type" id="loginCardPreviewCard" style="margin-top: 14px;">
+                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #0f172a; padding: 6px; border-radius: 10px;">
+                <div class="media-preview-info">
+                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'Default Artwork (system bg image.png)' ?></div>
+                    <div class="filemeta">
+                        <span class="status-chip <?= $hasCustomLoginCard ? 'custom' : 'default' ?>" id="loginCardStatusChip">
+                            <i class="fas <?= $hasCustomLoginCard ? 'fa-check-circle' : 'fa-circle-info' ?>"></i>
+                            <?= $hasCustomLoginCard ? 'Custom Artwork Active' : 'System Default Artwork' ?>
+                        </span>
+                        <span>Displayed on /login hero presentation card</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-reset-media" id="btnResetLoginCard" style="<?= $hasCustomLoginCard ? '' : 'display:none;' ?>">
+                    <i class="fas fa-undo"></i> Reset to Default
+                </button>
+            </div>
+
+            <!-- Explicit Save Button for Login Hero Illustration -->
+            <div class="media-save-bar" style="display: flex; align-items: center; justify-content: flex-end; margin-top: 14px; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-md); flex-wrap: wrap; gap: 10px;">
+                <span id="loginCardPendingNotice" style="font-size: 12.5px; color: #b45309; font-weight: 600; margin-right: auto; display: none;">
+                    <i class="fas fa-clock"></i> New hero illustration staged. Click "Save Login Hero Illustration" to apply changes.
+                </span>
+                <span id="loginCardIdleNotice" style="font-size: 12.5px; color: var(--sb-text-muted); margin-right: auto;">
+                    <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i> Select or drop a new 3-vehicle hero illustration above, then click Save Login Hero Illustration.
+                </span>
+                <button type="button" id="btnSaveLoginCard" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25); opacity: 0.65;" disabled>
+                    <i class="fas fa-save"></i> Save Login Hero Illustration
+                </button>
             </div>
         </div>
     </div>
@@ -2296,6 +2373,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
+                if (previewRole === 'Admin') {
+                    if (previewProp === 'bg') {
+                        try {
+                            document.documentElement.style.setProperty('--nav-bg', hex, 'important');
+                            document.body.style.setProperty('--nav-bg', hex, 'important');
+                        } catch(e) {}
+                    } else if (previewProp === 'text') {
+                        try {
+                            document.documentElement.style.setProperty('--nav-text', hex, 'important');
+                            document.body.style.setProperty('--nav-text', hex, 'important');
+                        } catch(e) {}
+                    }
+                }
+
                 if (previewProp === 'primary') {
                     var dot = document.getElementById('dot' + previewRole);
                     if (dot) dot.style.backgroundColor = hex;
@@ -2309,10 +2400,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         document.querySelectorAll('.preview-btn-admin i').forEach(function(icon) {
                             icon.style.color = hex;
                         });
-                        document.documentElement.style.setProperty('--primary-color', hex);
-                        document.documentElement.style.setProperty('--admin-primary', hex);
-                        document.documentElement.style.setProperty('--primary', hex);
-                        document.documentElement.style.setProperty('--sb-primary', hex);
+                        try {
+                            document.documentElement.style.setProperty('--primary-color', hex, 'important');
+                            document.documentElement.style.setProperty('--admin-primary', hex, 'important');
+                            document.documentElement.style.setProperty('--primary', hex, 'important');
+                            document.documentElement.style.setProperty('--sb-primary', hex, 'important');
+                            document.body.style.setProperty('--primary-color', hex, 'important');
+                            document.body.style.setProperty('--admin-primary', hex, 'important');
+                            document.body.style.setProperty('--primary', hex, 'important');
+                            document.body.style.setProperty('--sb-primary', hex, 'important');
+                        } catch(e) {}
                     } else if (previewRole === 'Staff') {
                         document.querySelectorAll('.preview-btn-staff i').forEach(function(icon) {
                             icon.style.color = hex;
@@ -2384,13 +2481,33 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // =========================================================================
-    // 5. Background Mode Switcher (Slideshow vs Single)
+    // 5. Background Mode Switcher (Slideshow vs Single) & Save
     // =========================================================================
-    var modeRadios = document.querySelectorAll('input[name="bg_display_mode"]');
-    var secSlideshow = document.getElementById('sectionSlideshowManager');
-    var secSingle    = document.getElementById('sectionSingleBgManager');
+    var modeRadios    = document.querySelectorAll('input[name="bg_display_mode"]');
+    var secSlideshow  = document.getElementById('sectionSlideshowManager');
+    var secSingle     = document.getElementById('sectionSingleBgManager');
     var cardSlideshow = document.getElementById('modeCardSlideshow');
     var cardSingle    = document.getElementById('modeCardSingle');
+    var bgPendingNotice = document.getElementById('bgPendingNotice');
+    var bgIdleNotice    = document.getElementById('bgIdleNotice');
+    var initialBgMode   = '<?= esc($bgMode) ?>';
+    var stagedBgFile    = null;
+
+    function updateBgPendingState() {
+        var selectedRadio = document.querySelector('input[name="bg_display_mode"]:checked');
+        var currentMode = selectedRadio ? selectedRadio.value : 'slideshow';
+        var hasPending = (stagedBgFile !== null) || (currentMode !== initialBgMode);
+
+        if (bgPendingNotice && bgIdleNotice) {
+            if (hasPending) {
+                bgPendingNotice.style.display = 'inline-flex';
+                bgIdleNotice.style.display    = 'none';
+            } else {
+                bgPendingNotice.style.display = 'none';
+                bgIdleNotice.style.display    = 'inline-flex';
+            }
+        }
+    }
 
     modeRadios.forEach(function(radio) {
         radio.addEventListener('change', function() {
@@ -2407,24 +2524,85 @@ document.addEventListener('DOMContentLoaded', function() {
                 cardSlideshow.classList.remove('active');
             }
 
-            // Send AJAX update to save mode instantly
-            var fd = new FormData();
-            fd.append('mode', mode);
-            fd.append(currentCsrfToken, currentCsrfHash);
-
-            fetch('<?= base_url("admin/settings/update-bg-mode") ?>', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
-                    if (data.success) {
-                        showToast(data.message || 'Mode updated', true);
-                    }
-                })
-                .catch(function() {
-                    showToast('Failed to switch mode.', false);
-                });
+            // Do NOT upload or apply globally until Save Background & Display Mode is clicked!
+            updateBgPendingState();
         });
     });
+
+    var btnSaveBgSettings = document.getElementById('btnSaveBgSettings');
+    if (btnSaveBgSettings) {
+        btnSaveBgSettings.addEventListener('click', function() {
+            var selectedRadio = document.querySelector('input[name="bg_display_mode"]:checked');
+            var mode = selectedRadio ? selectedRadio.value : 'slideshow';
+            var originalHtml = btnSaveBgSettings.innerHTML;
+            btnSaveBgSettings.disabled = true;
+            btnSaveBgSettings.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            if (stagedBgFile) {
+                // Upload staged background file together with the selected display mode
+                uploadMedia('<?= base_url("admin/settings/upload-background") ?>', 'background', stagedBgFile, { mode: mode }, function(data) {
+                    var fileSaved = stagedBgFile;
+                    stagedBgFile = null;
+                    initialBgMode = mode;
+                    updateBgPendingState();
+                    btnSaveBgSettings.disabled = false;
+                    btnSaveBgSettings.innerHTML = originalHtml;
+
+                    showToast(data.message || 'Background settings saved successfully!', true);
+                    if (bgPreviewImg) bgPreviewImg.src = data.image_url;
+                    if (bgFilename) bgFilename.textContent = fileSaved ? fileSaved.name : (data.filename || 'Custom Artwork');
+                    if (bgStatusChip) {
+                        bgStatusChip.className = 'status-chip custom';
+                        bgStatusChip.innerHTML = '<i class="fas fa-check-circle"></i> Custom Artwork Active';
+                    }
+                    if (btnResetBg) btnResetBg.style.display = 'inline-flex';
+                    if (data.data && typeof window.broadcastLiveBranding === 'function') {
+                        window.broadcastLiveBranding(data.data);
+                    }
+                    if (typeof window.applyLiveBgMode === 'function') {
+                        window.applyLiveBgMode(data.app_bg_mode || mode, data.image_url, data.app_bg_slideshow);
+                    }
+                }, function(err) {
+                    btnSaveBgSettings.disabled = false;
+                    btnSaveBgSettings.innerHTML = originalHtml;
+                    showToast(err, false);
+                });
+            } else {
+                // Save mode only
+                var fd = new FormData();
+                fd.append('mode', mode);
+                fd.append(currentCsrfToken, currentCsrfHash);
+
+                fetch('<?= base_url("admin/settings/save-bg-mode") ?>', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        btnSaveBgSettings.disabled = false;
+                        btnSaveBgSettings.innerHTML = originalHtml;
+                        if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                        if (data.success) {
+                            initialBgMode = mode;
+                            updateBgPendingState();
+                            showToast(data.message || 'Background display mode saved successfully!', 'success');
+                            if (data.data) {
+                                if (typeof window.broadcastLiveBranding === 'function') {
+                                    window.broadcastLiveBranding(data.data);
+                                }
+                                if (typeof window.applyLiveBgMode === 'function') {
+                                    window.applyLiveBgMode(data.data.app_bg_mode || mode, data.data.app_background_image, data.data.app_bg_slideshow);
+                                }
+                            }
+                        } else {
+                            showToast(data.message || 'Failed to save background mode.', 'error');
+                        }
+                    })
+                    .catch(function() {
+                        btnSaveBgSettings.disabled = false;
+                        btnSaveBgSettings.innerHTML = originalHtml;
+                        showToast('Failed to save background mode.', 'error');
+                    });
+            }
+        });
+    }
 
     // =========================================================================
     // 6. Generic AJAX File Uploader Helper
@@ -2486,12 +2664,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
     // 7. System Logo Upload & Reset
     // =========================================================================
-    var logoZone  = document.getElementById('logoUploadZone');
-    var logoInput = document.getElementById('logoFileInput');
-    var logoPreviewImg = document.getElementById('logoPreviewImg');
-    var logoFilename   = document.getElementById('logoFilename');
-    var logoStatusChip = document.getElementById('logoStatusChip');
-    var btnResetLogo   = document.getElementById('btnResetLogo');
+    var logoZone          = document.getElementById('logoUploadZone');
+    var logoInput         = document.getElementById('logoFileInput');
+    var logoPreviewImg    = document.getElementById('logoPreviewImg');
+    var logoFilename      = document.getElementById('logoFilename');
+    var logoStatusChip    = document.getElementById('logoStatusChip');
+    var btnResetLogo      = document.getElementById('btnResetLogo');
+    var btnSaveLogo       = document.getElementById('btnSaveLogo');
+    var logoPendingNotice = document.getElementById('logoPendingNotice');
+    var logoIdleNotice    = document.getElementById('logoIdleNotice');
+    var stagedLogoFile    = null;
 
     if (logoZone && logoInput) {
         logoZone.addEventListener('click', function() { logoInput.click(); });
@@ -2500,34 +2682,79 @@ document.addEventListener('DOMContentLoaded', function() {
         logoZone.addEventListener('drop', function(e) {
             e.preventDefault();
             logoZone.classList.remove('drag-over');
-            if (e.dataTransfer.files.length > 0) handleLogoFile(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files.length > 0) stageLogoFile(e.dataTransfer.files[0]);
         });
         logoInput.addEventListener('change', function() {
-            if (logoInput.files.length > 0) handleLogoFile(logoInput.files[0]);
+            if (logoInput.files.length > 0) stageLogoFile(logoInput.files[0]);
         });
     }
 
-    function handleLogoFile(file) {
-        showToast('Uploading system logo...', true);
-        uploadMedia('<?= base_url("admin/settings/upload-logo") ?>', 'logo', file, {}, function(data) {
-            showToast(data.message || 'Logo updated!', true);
-            var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-            if (logoPreviewImg) logoPreviewImg.src = newUrl;
-            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
-            if (logoFilename) logoFilename.textContent = file.name;
-            if (logoStatusChip) {
-                logoStatusChip.className = 'status-chip custom';
-                logoStatusChip.innerHTML = '<i class="fas fa-check-circle"></i> Custom Upload Active';
-            }
-            if (btnResetLogo) btnResetLogo.style.display = 'inline-flex';
-        }, function(err) {
-            showToast(err, false);
+    function stageLogoFile(file) {
+        stagedLogoFile = file;
+        var objectUrl = URL.createObjectURL(file);
+        if (logoPreviewImg) logoPreviewImg.src = objectUrl;
+        if (logoFilename) logoFilename.textContent = file.name + ' (Pending Save)';
+        if (logoStatusChip) {
+            logoStatusChip.className = 'status-chip custom';
+            logoStatusChip.innerHTML = '<i class="fas fa-clock"></i> Pending Save (Unsaved Preview)';
+        }
+        if (btnSaveLogo) {
+            btnSaveLogo.disabled = false;
+            btnSaveLogo.style.opacity = '1';
+        }
+        if (logoPendingNotice) logoPendingNotice.style.display = 'inline-flex';
+        if (logoIdleNotice) logoIdleNotice.style.display = 'none';
+        showToast('Logo selected. Click "Save Logo" to apply changes.', 'warning');
+    }
+
+    if (btnSaveLogo) {
+        btnSaveLogo.addEventListener('click', function() {
+            if (!stagedLogoFile) return;
+            var originalHtml = btnSaveLogo.innerHTML;
+            btnSaveLogo.disabled = true;
+            btnSaveLogo.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Logo...';
+
+            uploadMedia('<?= base_url("admin/settings/upload-logo") ?>', 'logo', stagedLogoFile, {}, function(data) {
+                var fileSaved = stagedLogoFile;
+                stagedLogoFile = null;
+                btnSaveLogo.disabled = true;
+                btnSaveLogo.style.opacity = '0.65';
+                btnSaveLogo.innerHTML = originalHtml;
+                if (logoPendingNotice) logoPendingNotice.style.display = 'none';
+                if (logoIdleNotice) logoIdleNotice.style.display = 'inline-flex';
+
+                showToast(data.message || 'Logo saved successfully!', true);
+                var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+                if (logoPreviewImg) logoPreviewImg.src = newUrl;
+                document.querySelectorAll('#site-header img.logo, .site-header img.logo, .drawer-logo, img.previewLogoImg').forEach(function(el) { el.src = newUrl; });
+                if (logoFilename) logoFilename.textContent = fileSaved ? fileSaved.name : (data.filename || 'Custom Seal');
+                if (logoStatusChip) {
+                    logoStatusChip.className = 'status-chip custom';
+                    logoStatusChip.innerHTML = '<i class="fas fa-check-circle"></i> Custom Upload Active';
+                }
+                if (btnResetLogo) btnResetLogo.style.display = 'inline-flex';
+                if (data.data && typeof window.broadcastLiveBranding === 'function') {
+                    window.broadcastLiveBranding(data.data);
+                }
+            }, function(err) {
+                btnSaveLogo.disabled = false;
+                btnSaveLogo.innerHTML = originalHtml;
+                showToast(err, false);
+            });
         });
     }
 
     if (btnResetLogo) {
         btnResetLogo.addEventListener('click', function() {
             var doReset = function() {
+                stagedLogoFile = null;
+                if (btnSaveLogo) {
+                    btnSaveLogo.disabled = true;
+                    btnSaveLogo.style.opacity = '0.65';
+                }
+                if (logoPendingNotice) logoPendingNotice.style.display = 'none';
+                if (logoIdleNotice) logoIdleNotice.style.display = 'inline-flex';
+
                 var fd = new FormData();
                 fd.append(currentCsrfToken, currentCsrfHash);
                 fetch('<?= base_url("admin/settings/reset-logo") ?>', { method: 'POST', body: fd })
@@ -2545,6 +2772,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 logoStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Seal';
                             }
                             btnResetLogo.style.display = 'none';
+                            if (data.data && typeof window.broadcastLiveBranding === 'function') {
+                                window.broadcastLiveBranding(data.data);
+                            }
                         }
                     })
                     .catch(function() { showToast('Reset failed.', false); });
@@ -2566,12 +2796,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // =========================================================================
     // 8. Single Hero Background Upload & Reset
     // =========================================================================
-    var bgZone  = document.getElementById('bgUploadZone');
-    var bgInput = document.getElementById('bgFileInput');
-    var bgPreviewImg = document.getElementById('bgPreviewImg');
-    var bgFilename   = document.getElementById('bgFilename');
-    var bgStatusChip = document.getElementById('bgStatusChip');
-    var btnResetBg   = document.getElementById('btnResetBg');
+    var bgZone        = document.getElementById('bgUploadZone');
+    var bgInput       = document.getElementById('bgFileInput');
+    var bgPreviewImg  = document.getElementById('bgPreviewImg');
+    var bgFilename    = document.getElementById('bgFilename');
+    var bgStatusChip  = document.getElementById('bgStatusChip');
+    var btnResetBg    = document.getElementById('btnResetBg');
 
     if (bgZone && bgInput) {
         bgZone.addEventListener('click', function() { bgInput.click(); });
@@ -2580,32 +2810,31 @@ document.addEventListener('DOMContentLoaded', function() {
         bgZone.addEventListener('drop', function(e) {
             e.preventDefault();
             bgZone.classList.remove('drag-over');
-            if (e.dataTransfer.files.length > 0) handleBgFile(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files.length > 0) stageBgFile(e.dataTransfer.files[0]);
         });
         bgInput.addEventListener('change', function() {
-            if (bgInput.files.length > 0) handleBgFile(bgInput.files[0]);
+            if (bgInput.files.length > 0) stageBgFile(bgInput.files[0]);
         });
     }
 
-    function handleBgFile(file) {
-        showToast('Uploading hero background...', true);
-        uploadMedia('<?= base_url("admin/settings/upload-background") ?>', 'background', file, {}, function(data) {
-            showToast(data.message || 'Background updated!', true);
-            if (bgPreviewImg) bgPreviewImg.src = data.image_url;
-            if (bgFilename) bgFilename.textContent = file.name;
-            if (bgStatusChip) {
-                bgStatusChip.className = 'status-chip custom';
-                bgStatusChip.innerHTML = '<i class="fas fa-check-circle"></i> Custom Artwork Active';
-            }
-            if (btnResetBg) btnResetBg.style.display = 'inline-flex';
-        }, function(err) {
-            showToast(err, false);
-        });
+    function stageBgFile(file) {
+        stagedBgFile = file;
+        var objectUrl = URL.createObjectURL(file);
+        if (bgPreviewImg) bgPreviewImg.src = objectUrl;
+        if (bgFilename) bgFilename.textContent = file.name + ' (Pending Save)';
+        if (bgStatusChip) {
+            bgStatusChip.className = 'status-chip custom';
+            bgStatusChip.innerHTML = '<i class="fas fa-clock"></i> Pending Save (Unsaved Preview)';
+        }
+        updateBgPendingState();
+        showToast('Background selected. Click "Save Background & Display Mode" to apply.', 'warning');
     }
 
     if (btnResetBg) {
         btnResetBg.addEventListener('click', function() {
             var doResetBg = function() {
+                stagedBgFile = null;
+                updateBgPendingState();
                 var fd = new FormData();
                 fd.append(currentCsrfToken, currentCsrfHash);
                 fetch('<?= base_url("admin/settings/reset-background") ?>', { method: 'POST', body: fd })
@@ -2621,6 +2850,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 bgStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';
                             }
                             btnResetBg.style.display = 'none';
+                            if (data.data && typeof window.broadcastLiveBranding === 'function') {
+                                window.broadcastLiveBranding(data.data);
+                            }
+                            if (typeof window.applyLiveBgMode === 'function') {
+                                window.applyLiveBgMode(data.app_bg_mode || 'single', data.image_url, data.app_bg_slideshow);
+                            }
                         }
                     })
                     .catch(function() { showToast('Reset failed.', false); });
@@ -2635,6 +2870,138 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else if (confirm('Reset background back to system default artwork?')) {
                 doResetBg();
+            }
+        });
+    }
+
+    // =========================================================================
+    // 8b. Login Page Hero Illustration Upload & Reset
+    // =========================================================================
+    var loginCardZone          = document.getElementById('loginCardUploadZone');
+    var loginCardInput         = document.getElementById('loginCardFileInput');
+    var loginCardActiveImg     = document.getElementById('loginCardActiveImg');
+    var loginCardFilename      = document.getElementById('loginCardFilename');
+    var loginCardStatusChip    = document.getElementById('loginCardStatusChip');
+    var btnResetLoginCard      = document.getElementById('btnResetLoginCard');
+    var btnSaveLoginCard       = document.getElementById('btnSaveLoginCard');
+    var loginCardPendingNotice = document.getElementById('loginCardPendingNotice');
+    var loginCardIdleNotice    = document.getElementById('loginCardIdleNotice');
+    var stagedLoginCardFile    = null;
+
+    if (loginCardZone && loginCardInput) {
+        loginCardZone.addEventListener('click', function() { loginCardInput.click(); });
+        loginCardZone.addEventListener('dragover', function(e) { e.preventDefault(); loginCardZone.classList.add('drag-over'); });
+        loginCardZone.addEventListener('dragleave', function() { loginCardZone.classList.remove('drag-over'); });
+        loginCardZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            loginCardZone.classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) stageLoginCardFile(e.dataTransfer.files[0]);
+        });
+        loginCardInput.addEventListener('change', function() {
+            if (loginCardInput.files.length > 0) stageLoginCardFile(loginCardInput.files[0]);
+        });
+    }
+
+    function stageLoginCardFile(file) {
+        stagedLoginCardFile = file;
+        var objectUrl = URL.createObjectURL(file);
+        if (loginCardActiveImg) loginCardActiveImg.src = objectUrl;
+        if (loginCardFilename) loginCardFilename.textContent = file.name + ' (Pending Save)';
+        if (loginCardStatusChip) {
+            loginCardStatusChip.className = 'status-chip custom';
+            loginCardStatusChip.innerHTML = '<i class="fas fa-clock"></i> Pending Save (Unsaved Preview)';
+        }
+        if (btnSaveLoginCard) {
+            btnSaveLoginCard.disabled = false;
+            btnSaveLoginCard.style.opacity = '1';
+        }
+        if (loginCardPendingNotice) loginCardPendingNotice.style.display = 'inline-flex';
+        if (loginCardIdleNotice) loginCardIdleNotice.style.display = 'none';
+        showToast('Login hero illustration selected. Click "Save Login Hero Illustration" to apply changes.', 'warning');
+    }
+
+    if (btnSaveLoginCard) {
+        btnSaveLoginCard.addEventListener('click', function() {
+            if (!stagedLoginCardFile) return;
+            var originalHtml = btnSaveLoginCard.innerHTML;
+            btnSaveLoginCard.disabled = true;
+            btnSaveLoginCard.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Hero Illustration...';
+
+            uploadMedia('<?= base_url("admin/settings/upload-login-card") ?>', 'login_card', stagedLoginCardFile, {}, function(data) {
+                var fileSaved = stagedLoginCardFile;
+                stagedLoginCardFile = null;
+                btnSaveLoginCard.disabled = true;
+                btnSaveLoginCard.style.opacity = '0.65';
+                btnSaveLoginCard.innerHTML = originalHtml;
+                if (loginCardPendingNotice) loginCardPendingNotice.style.display = 'none';
+                if (loginCardIdleNotice) loginCardIdleNotice.style.display = 'inline-flex';
+
+                showToast(data.message || 'Login hero illustration saved successfully!', true);
+                var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+                if (loginCardActiveImg) loginCardActiveImg.src = newUrl;
+                if (loginCardFilename) loginCardFilename.textContent = fileSaved ? fileSaved.name : (data.filename || 'Custom Artwork');
+                if (loginCardStatusChip) {
+                    loginCardStatusChip.className = 'status-chip custom';
+                    loginCardStatusChip.innerHTML = '<i class="fas fa-check-circle"></i> Custom Artwork Active';
+                }
+                if (btnResetLoginCard) btnResetLoginCard.style.display = 'inline-flex';
+                if (data.data && typeof window.broadcastLiveBranding === 'function') {
+                    window.broadcastLiveBranding(data.data);
+                }
+            }, function(err) {
+                btnSaveLoginCard.disabled = false;
+                btnSaveLoginCard.innerHTML = originalHtml;
+                showToast(err, false);
+            });
+        });
+    }
+
+    if (btnResetLoginCard) {
+        btnResetLoginCard.addEventListener('click', function() {
+            var doResetLoginCard = function() {
+                stagedLoginCardFile = null;
+                if (btnSaveLoginCard) {
+                    btnSaveLoginCard.disabled = true;
+                    btnSaveLoginCard.style.opacity = '0.65';
+                }
+                if (loginCardPendingNotice) loginCardPendingNotice.style.display = 'none';
+                if (loginCardIdleNotice) loginCardIdleNotice.style.display = 'inline-flex';
+
+                var fd = new FormData();
+                fd.append(currentCsrfToken, currentCsrfHash);
+                fetch('<?= base_url("admin/settings/reset-login-card") ?>', { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
+                        if (data.success) {
+                            showToast(data.message, true);
+                            var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+                            if (loginCardActiveImg) loginCardActiveImg.src = newUrl;
+                            if (loginCardFilename) loginCardFilename.textContent = 'Default Artwork (system bg image.png)';
+                            if (loginCardStatusChip) {
+                                loginCardStatusChip.className = 'status-chip default';
+                                loginCardStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';
+                            }
+                            btnResetLoginCard.style.display = 'none';
+                            if (data.data && typeof window.broadcastLiveBranding === 'function') {
+                                window.broadcastLiveBranding(data.data);
+                            }
+                        } else {
+                            showToast(data.message || 'Reset failed.', false);
+                        }
+                    })
+                    .catch(function() { showToast('Reset failed.', false); });
+            };
+
+            if (typeof window.confirmAction === 'function') {
+                window.confirmAction({
+                    title: 'Reset Login Hero Artwork',
+                    message: 'Reset login hero illustration back to system default artwork?',
+                    confirmText: 'Reset Artwork',
+                    onConfirm: doResetLoginCard
+                });
+            } else if (confirm('Reset login hero illustration back to system default artwork?')) {
+                doResetLoginCard();
             }
         });
     }
@@ -2975,7 +3342,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    bindAjaxForm('formIdentity', 'Branding identity updated successfully.');
+    bindAjaxForm('formIdentity', 'System identity updated successfully.');
     bindAjaxForm('formThemes', 'Theme palettes updated successfully.');
     bindAjaxForm('formFooter', 'Footer settings updated successfully.');
     bindAjaxForm('formOperations', 'Retention & queue rules updated successfully.');

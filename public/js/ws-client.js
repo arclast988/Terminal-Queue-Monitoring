@@ -240,13 +240,13 @@
          */
         init: function(config) {
             if (_initialized) {
-                // Already connected — just update the callbacks
-                _config = config || {};
+                // Already connected — safely merge/update callbacks
+                _config = Object.assign(_config || {}, config || {});
                 logOk('WS', 'Config updated (connection already active)');
                 return;
             }
             _initialized = true;
-            _config = config || {};
+            _config = Object.assign(_config || {}, config || {});
             connect();
         },
 
@@ -256,7 +256,7 @@
          */
         updateConfig: function(config) {
             if (config) {
-                _config = config;
+                _config = Object.assign(_config || {}, config);
             }
         },
 
@@ -364,9 +364,25 @@
         // 4. Update Logo Image
         if (data.app_logo) {
             var logoUrl = data.app_logo + (data.app_logo.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .guest-header img.logo, .guest-header .logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg').forEach(function(img) {
+            document.querySelectorAll('#site-header img.logo, .site-header img.logo, .guest-header img.logo, .guest-header .logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg, img.logo').forEach(function(img) {
                 img.src = logoUrl;
             });
+            document.querySelectorAll("link[rel*='icon']").forEach(function(icon) {
+                icon.href = logoUrl;
+            });
+        }
+
+        // 4b. Update Login Card Image
+        if (data.app_login_card_image) {
+            var loginCardUrl = data.app_login_card_image + (data.app_login_card_image.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+            var loginImg = document.getElementById('loginHeroImg');
+            if (loginImg) {
+                loginImg.src = loginCardUrl;
+            }
+            var loginPreviewImg = document.getElementById('loginCardActiveImg');
+            if (loginPreviewImg) {
+                loginPreviewImg.src = loginCardUrl;
+            }
         }
 
         // 5. Update Dynamic Theme Colors & Live Injected Styles
@@ -379,13 +395,39 @@
             var gp_on = contrastText(gp_hex);
             var gn_hex = data.theme_guest_nav_bg || '#ffffff';
             var gt_hex = data.theme_guest_nav_text || '#1c2430';
+            var gn_bright = colorBrightness(gn_hex);
+            var gn_chipBg = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
+            var gn_divider = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
+            var gt_soft = (colorBrightness(gt_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
 
-            document.documentElement.style.setProperty('--primary', gp_hex);
-            document.documentElement.style.setProperty('--primary-color', gp_hex);
-            document.documentElement.style.setProperty('--primary-dark', gp_dark);
-            document.documentElement.style.setProperty('--primary-soft', gp_soft);
-            document.documentElement.style.setProperty('--on-primary', gp_on);
-            document.documentElement.style.setProperty('--guest-primary', gp_hex);
+            var isGuestPage = !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme');
+            if (isGuestPage) {
+                var guestVars = {
+                    '--primary': gp_hex,
+                    '--primary-color': gp_hex,
+                    '--primary-dark': gp_dark,
+                    '--primary-soft': gp_soft,
+                    '--primary-red': gp_hex,
+                    '--primary-red-dark': gp_dark,
+                    '--primary-red-light': gp_soft,
+                    '--on-primary': gp_on,
+                    '--guest-primary': gp_hex,
+                    '--nav-bg': gn_hex,
+                    '--nav-text': gt_hex,
+                    '--nav-text-soft': gt_soft,
+                    '--nav-accent': gp_hex,
+                    '--nav-cta-bg': gp_hex,
+                    '--nav-cta-text': gp_on,
+                    '--nav-chip-bg': gn_chipBg,
+                    '--nav-divider': gn_divider
+                };
+                for (var gk in guestVars) {
+                    try {
+                        document.documentElement.style.setProperty(gk, guestVars[gk], 'important');
+                        document.body.style.setProperty(gk, guestVars[gk], 'important');
+                    } catch(e) {}
+                }
+            }
 
             liveRules += `
                 :root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
@@ -398,24 +440,116 @@
                     --on-primary: ${gp_on} !important;
                     --nav-bg: ${gn_hex} !important;
                     --nav-text: ${gt_hex} !important;
+                    --nav-text-soft: ${gt_soft} !important;
+                    --nav-accent: ${gp_hex} !important;
+                    --nav-cta-bg: ${gp_hex} !important;
+                    --nav-cta-text: ${gp_on} !important;
+                    --nav-chip-bg: ${gn_chipBg} !important;
+                    --nav-divider: ${gn_divider} !important;
                 }
-                body.guest-theme .guest-header, body:not(.admin-theme):not(.staff-theme) .guest-header {
+                .guest-header, body.guest-theme header#site-header, body:not(.admin-theme):not(.staff-theme) header#site-header {
                     background: ${gn_hex} !important;
+                    border-bottom: 1px solid ${gn_divider} !important;
                 }
-                body.guest-theme .guest-header .logo-text h1, body:not(.admin-theme):not(.staff-theme) .guest-header .logo-text h1 {
+                .guest-header .logo-text h1,
+                body.guest-theme #site-header .logo-text h1,
+                body.guest-theme .logo-section .logo-text h1,
+                body.guest-theme .logo-text h1,
+                body:not(.admin-theme):not(.staff-theme) #site-header .logo-text h1,
+                body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text h1,
+                body:not(.admin-theme):not(.staff-theme) .logo-text h1 {
                     color: ${gt_hex} !important;
                     -webkit-text-fill-color: ${gt_hex} !important;
                 }
-                body.guest-theme .guest-header .nav-menu > a:not(.login-btn), body:not(.admin-theme):not(.staff-theme) .guest-header .nav-menu > a:not(.login-btn) {
+                .guest-header .logo-text p,
+                body.guest-theme #site-header .logo-text p,
+                body.guest-theme .logo-section .logo-text p,
+                body.guest-theme .logo-text p,
+                body:not(.admin-theme):not(.staff-theme) #site-header .logo-text p,
+                body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text p,
+                body:not(.admin-theme):not(.staff-theme) .logo-text p {
+                    color: ${gt_soft} !important;
+                    -webkit-text-fill-color: ${gt_soft} !important;
+                    opacity: 0.90 !important;
+                }
+                .guest-header .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                .guest-header .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item),
+                body.guest-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                body.guest-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item),
+                body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                body:not(.admin-theme):not(.staff-theme) .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) {
                     color: ${gt_hex} !important;
                     -webkit-text-fill-color: ${gt_hex} !important;
                 }
-                body.guest-theme .guest-header .nav-menu a.login-btn, body:not(.admin-theme):not(.staff-theme) .guest-header .nav-menu a.login-btn {
+                .guest-header .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                .guest-header .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i,
+                body.guest-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                body.guest-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i {
+                    color: ${gt_soft} !important;
+                    -webkit-text-fill-color: ${gt_soft} !important;
+                }
+                .guest-header .nav-menu > a:not(.login-btn):hover,
+                body.guest-theme .nav-menu > a:not(.login-btn):hover,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover {
+                    color: ${gp_hex} !important;
+                    -webkit-text-fill-color: ${gp_hex} !important;
+                    background: ${gp_soft} !important;
+                }
+                .guest-header .nav-menu > a:not(.login-btn):hover i,
+                body.guest-theme .nav-menu > a:not(.login-btn):hover i,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover i {
+                    color: ${gp_hex} !important;
+                    -webkit-text-fill-color: ${gp_hex} !important;
+                }
+                .guest-header .nav-menu > a:not(.login-btn).active,
+                body.guest-theme .nav-menu > a:not(.login-btn).active,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active {
+                    color: ${gp_hex} !important;
+                    -webkit-text-fill-color: ${gp_hex} !important;
+                    background: ${gp_soft} !important;
+                }
+                .guest-header .nav-menu > a:not(.login-btn).active i,
+                body.guest-theme .nav-menu > a:not(.login-btn).active i,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active i {
+                    color: ${gp_hex} !important;
+                    -webkit-text-fill-color: ${gp_hex} !important;
+                }
+                .guest-header .mobile-toggle,
+                body.guest-theme .nav-hamburger-btn,
+                body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn {
+                    color: ${gt_hex} !important;
+                }
+                .guest-header .mobile-toggle i,
+                body.guest-theme .nav-hamburger-btn i,
+                body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn i {
+                    color: ${gt_hex} !important;
+                    -webkit-text-fill-color: ${gt_hex} !important;
+                }
+                .guest-header .header-clock-pill,
+                .header-clock-pill,
+                .header-clock-pill span {
+                    color: ${gt_hex} !important;
+                    -webkit-text-fill-color: ${gt_hex} !important;
+                }
+                .guest-header .header-clock-pill i,
+                .header-clock-pill i {
+                    color: ${gp_hex} !important;
+                    -webkit-text-fill-color: ${gp_hex} !important;
+                }
+                body.guest-theme .guest-header .nav-menu a.login-btn,
+                body.guest-theme .nav-menu a.login-btn,
+                body:not(.admin-theme):not(.staff-theme) .guest-header .nav-menu a.login-btn,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn {
                     background: ${gp_hex} !important;
                     color: ${gp_on} !important;
                     -webkit-text-fill-color: ${gp_on} !important;
                 }
-                body.guest-theme .guest-header .nav-menu a.login-btn:hover, body:not(.admin-theme):not(.staff-theme) .guest-header .nav-menu a.login-btn:hover {
+                body.guest-theme .guest-header .nav-menu a.login-btn:hover,
+                body.guest-theme .nav-menu a.login-btn:hover,
+                body:not(.admin-theme):not(.staff-theme) .guest-header .nav-menu a.login-btn:hover,
+                body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn:hover {
                     background: ${gp_dark} !important;
                 }
                 body.guest-theme .search-bar button:not(.guest-clear-search-btn),
@@ -532,14 +666,42 @@
             var sn_divider = (sn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
             var st_soft = (colorBrightness(st_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
 
-            document.documentElement.style.setProperty('--staff-primary', sp_hex);
+            var isStaffPage = document.body.classList.contains('staff-theme');
+            if (isStaffPage) {
+                var staffVars = {
+                    '--primary': sp_hex,
+                    '--primary-dark': sp_dark,
+                    '--primary-soft': sp_soft,
+                    '--primary-red': sp_hex,
+                    '--primary-red-dark': sp_dark,
+                    '--primary-red-light': sp_soft,
+                    '--on-primary': sp_on,
+                    '--staff-primary': sp_hex,
+                    '--nav-bg': sn_hex,
+                    '--nav-text': st_hex,
+                    '--nav-text-soft': st_soft,
+                    '--nav-accent': st_hex,
+                    '--nav-chip-bg': sn_chipBg,
+                    '--nav-divider': sn_divider,
+                    '--nav-drawer-bg': sp_dark,
+                    '--nav-cta-bg': sp_on,
+                    '--nav-cta-text': sp_hex
+                };
+                for (var sk in staffVars) {
+                    try {
+                        document.documentElement.style.setProperty(sk, staffVars[sk], 'important');
+                        document.body.style.setProperty(sk, staffVars[sk], 'important');
+                    } catch(e) {}
+                }
+            }
 
             liveRules += `
-                body.staff-theme {
+                body.staff-theme, html body.staff-theme {
                     --primary: ${sp_hex} !important;
                     --primary-dark: ${sp_dark} !important;
                     --primary-soft: ${sp_soft} !important;
                     --on-primary: ${sp_on} !important;
+                    --staff-primary: ${sp_hex} !important;
                     --nav-bg: ${sn_hex} !important;
                     --nav-text: ${st_hex} !important;
                     --nav-text-soft: ${st_soft} !important;
@@ -547,7 +709,7 @@
                     --nav-chip-bg: ${sn_chipBg} !important;
                     --nav-divider: ${sn_divider} !important;
                 }
-                body.staff-theme header#site-header {
+                body.staff-theme header#site-header, html body.staff-theme header#site-header {
                     background: ${sn_hex} !important;
                     border-bottom: 1px solid ${sn_divider} !important;
                 }
@@ -564,11 +726,19 @@
                     -webkit-text-fill-color: ${st_hex} !important;
                     opacity: 0.88;
                 }
+                html body.staff-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                html body.staff-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item),
+                body.staff-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                body.staff-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item),
                 body.staff-theme .nav-menu > a:not(.profile-dropdown-item),
                 body.staff-theme .nav-menu > .dropdown > .dropbtn {
                     color: ${st_hex} !important;
                     -webkit-text-fill-color: ${st_hex} !important;
                 }
+                html body.staff-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                html body.staff-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i,
+                body.staff-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                body.staff-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i,
                 body.staff-theme .nav-menu > a:not(.profile-dropdown-item) i,
                 body.staff-theme .nav-menu > .dropdown > .dropbtn i {
                     color: ${st_hex} !important;
@@ -630,6 +800,34 @@
                     border-color: ${sp_hex} !important;
                     color: ${sp_on} !important;
                 }
+                body.staff-theme .nav-hamburger-btn,
+                body.staff-theme .nav-hamburger-btn i {
+                    color: ${st_hex} !important;
+                    -webkit-text-fill-color: ${st_hex} !important;
+                }
+                body.staff-theme .drawer-brand-subtitle {
+                    color: ${sp_hex} !important;
+                }
+                body.staff-theme .drawer-nav-item:hover {
+                    background: ${sp_soft} !important;
+                    color: ${sp_hex} !important;
+                }
+                body.staff-theme .drawer-nav-item:hover i {
+                    color: ${sp_hex} !important;
+                }
+                body.staff-theme .drawer-nav-item.active {
+                    background: ${sp_soft} !important;
+                    color: ${sp_hex} !important;
+                }
+                body.staff-theme .drawer-nav-item.active i {
+                    color: ${sp_hex} !important;
+                }
+                body.staff-theme .logout-stripe {
+                    background: linear-gradient(90deg, ${sp_hex} 0%, ${sp_dark} 100%) !important;
+                }
+                body.staff-theme .logout-btn-confirm {
+                    background: linear-gradient(135deg, ${sp_hex} 0%, ${sp_dark} 100%) !important;
+                }
                 body.staff-theme .autocomplete-item:hover,
                 body.staff-theme .autocomplete-item.active-item {
                     background-color: ${sp_soft} !important;
@@ -655,14 +853,45 @@
             var an_divider = (an_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
             var at_soft = (colorBrightness(at_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
 
-            document.documentElement.style.setProperty('--admin-primary', ap_hex);
+            var isAdminPage = document.body.classList.contains('admin-theme');
+            if (isAdminPage) {
+                var adminVars = {
+                    '--primary': ap_hex,
+                    '--primary-dark': ap_dark,
+                    '--primary-soft': ap_soft,
+                    '--primary-red': ap_hex,
+                    '--primary-red-dark': ap_dark,
+                    '--primary-red-light': ap_soft,
+                    '--on-primary': ap_on,
+                    '--admin-primary': ap_hex,
+                    '--sb-primary': ap_hex,
+                    '--sb-primary-hover': ap_dark,
+                    '--nav-bg': an_hex,
+                    '--nav-text': at_hex,
+                    '--nav-text-soft': at_soft,
+                    '--nav-accent': at_hex,
+                    '--nav-chip-bg': an_chipBg,
+                    '--nav-divider': an_divider,
+                    '--nav-drawer-bg': ap_dark,
+                    '--nav-cta-bg': ap_on,
+                    '--nav-cta-text': ap_hex
+                };
+                for (var ak in adminVars) {
+                    try {
+                        document.documentElement.style.setProperty(ak, adminVars[ak], 'important');
+                        document.body.style.setProperty(ak, adminVars[ak], 'important');
+                    } catch(e) {}
+                }
+            }
 
             liveRules += `
-                body.admin-theme {
+                body.admin-theme, html body.admin-theme {
                     --primary: ${ap_hex} !important;
                     --primary-dark: ${ap_dark} !important;
                     --primary-soft: ${ap_soft} !important;
                     --sb-primary: ${ap_hex} !important;
+                    --sb-primary-hover: ${ap_dark} !important;
+                    --admin-primary: ${ap_hex} !important;
                     --on-primary: ${ap_on} !important;
                     --nav-bg: ${an_hex} !important;
                     --nav-text: ${at_hex} !important;
@@ -671,7 +900,7 @@
                     --nav-chip-bg: ${an_chipBg} !important;
                     --nav-divider: ${an_divider} !important;
                 }
-                body.admin-theme header#site-header {
+                body.admin-theme header#site-header, html body.admin-theme header#site-header {
                     background: ${an_hex} !important;
                     border-bottom: 1px solid ${an_divider} !important;
                 }
@@ -688,11 +917,19 @@
                     -webkit-text-fill-color: ${at_hex} !important;
                     opacity: 0.88;
                 }
+                html body.admin-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                html body.admin-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item),
+                body.admin-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item),
+                body.admin-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item),
                 body.admin-theme .nav-menu > a:not(.profile-dropdown-item),
                 body.admin-theme .nav-menu > .dropdown > .dropbtn {
                     color: ${at_hex} !important;
                     -webkit-text-fill-color: ${at_hex} !important;
                 }
+                html body.admin-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                html body.admin-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i,
+                body.admin-theme .nav-menu > a:not(.btn):not(.profile-dropdown-item) i,
+                body.admin-theme .nav-menu a:not(.btn):not(.profile-dropdown-item):not(.dropdown-content a):not(.dropdown-item) i,
                 body.admin-theme .nav-menu > a:not(.profile-dropdown-item) i,
                 body.admin-theme .nav-menu > .dropdown > .dropbtn i {
                     color: ${at_hex} !important;
@@ -754,6 +991,43 @@
                     border-color: ${ap_hex} !important;
                     color: ${ap_on} !important;
                 }
+                body.admin-theme .nav-hamburger-btn,
+                body.admin-theme .nav-hamburger-btn i {
+                    color: ${at_hex} !important;
+                    -webkit-text-fill-color: ${at_hex} !important;
+                }
+                body.admin-theme .drawer-brand-subtitle {
+                    color: ${ap_hex} !important;
+                }
+                body.admin-theme .drawer-nav-item:hover {
+                    background: ${ap_soft} !important;
+                    color: ${ap_hex} !important;
+                }
+                body.admin-theme .drawer-nav-item:hover i {
+                    color: ${ap_hex} !important;
+                }
+                body.admin-theme .drawer-nav-item.active {
+                    background: ${ap_soft} !important;
+                    color: ${ap_hex} !important;
+                }
+                body.admin-theme .drawer-nav-item.active i {
+                    color: ${ap_hex} !important;
+                }
+                body.admin-theme .logout-stripe {
+                    background: linear-gradient(90deg, ${ap_hex} 0%, ${ap_dark} 100%) !important;
+                }
+                body.admin-theme .logout-btn-confirm {
+                    background: linear-gradient(135deg, ${ap_hex} 0%, ${ap_dark} 100%) !important;
+                }
+                body.admin-theme .nav-tabs .nav-link.active,
+                body.admin-theme .nav-pills .nav-link.active,
+                body.admin-theme .settings-tab-btn.active,
+                body.admin-theme .tab-pill.active {
+                    background-color: ${ap_hex} !important;
+                    border-color: ${ap_hex} !important;
+                    color: ${ap_on} !important;
+                    -webkit-text-fill-color: ${ap_on} !important;
+                }
                 body.admin-theme .autocomplete-item:hover,
                 body.admin-theme .autocomplete-item.active-item {
                     background-color: ${ap_soft} !important;
@@ -768,23 +1042,104 @@
         }
 
         // 5b. Update Universal Background Picture & Mode in Real-Time
-        if (data.app_background_image || data.app_bg_mode) {
+        if (data.app_background_image || data.app_bg_mode || data.app_bg_slideshow) {
             var bgUrl = data.app_background_image || '';
             var bgMode = data.app_bg_mode || 'slideshow';
-            var bgOpacity = (bgMode === 'single') ? '0.12' : '0.07';
-            if (bgUrl) {
+            var slides = Array.isArray(data.app_bg_slideshow) ? data.app_bg_slideshow : [];
+            if (slides.length === 0 && bgUrl) {
+                slides = [bgUrl];
+            }
+
+            if (bgMode === 'single' || slides.length <= 1) {
+                var singleTarget = bgUrl || (slides.length > 0 ? slides[0] : '');
                 liveRules += `
                     body:not(.auth-page)::before {
-                        background-image: url('${bgUrl}') !important;
-                        opacity: ${bgOpacity} !important;
+                        content: "" !important;
+                        position: fixed !important;
+                        inset: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        background-repeat: no-repeat !important;
+                        background-position: center center !important;
+                        background-size: cover !important;
+                        background-image: url('${singleTarget}') !important;
+                        opacity: 0.12 !important;
+                        animation: none !important;
+                        z-index: 0 !important;
+                        pointer-events: none !important;
+                    }
+                    body::after {
+                        content: "" !important;
+                        position: fixed !important;
+                        inset: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        background-repeat: no-repeat !important;
+                        background-position: center center !important;
+                        background-size: cover !important;
+                        background-image: url('${singleTarget}') !important;
+                        opacity: 0.28 !important;
+                        animation: none !important;
+                        z-index: 0 !important;
+                        pointer-events: none !important;
                     }
                 `;
             } else {
+                var count = slides.length;
+                var duration = count * 6;
+                var kfNormal = `@keyframes palomponBgSlideshowLive {\n`;
+                var kfAuth   = `@keyframes palomponBgSlideshowAuthLive {\n`;
+                for (var i = 0; i < count; i++) {
+                    var sUrl = slides[i];
+                    var startPct = Math.round((i / count) * 1000) / 10;
+                    var holdPct  = Math.round(((i + 0.85) / count) * 1000) / 10;
+                    var fadePct  = Math.round(((i + 0.95) / count) * 1000) / 10;
+                    // NOTE: NEVER use !important inside @keyframes blocks as browsers discard it as invalid CSS!
+                    kfNormal += `    ${startPct}%, ${holdPct}% { background-image: url('${sUrl}'); opacity: 0.12; }\n`;
+                    kfNormal += `    ${fadePct}% { opacity: 0.03; }\n`;
+                    kfAuth   += `    ${startPct}%, ${holdPct}% { background-image: url('${sUrl}'); opacity: 0.22; }\n`;
+                    kfAuth   += `    ${fadePct}% { opacity: 0.03; }\n`;
+                }
+                kfNormal += `    100% { opacity: 0.12; }\n`;
+                kfNormal += `}\n`;
+                kfAuth   += `    100% { opacity: 0.22; }\n`;
+                kfAuth   += `}\n`;
+
                 liveRules += `
+                    ${kfNormal}
+                    ${kfAuth}
                     body:not(.auth-page)::before {
-                        opacity: ${bgOpacity} !important;
+                        content: "" !important;
+                        position: fixed !important;
+                        inset: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        background-repeat: no-repeat !important;
+                        background-position: center center !important;
+                        background-size: cover !important;
+                        opacity: 0.12 !important;
+                        animation: palomponBgSlideshowLive ${duration}s infinite ease-in-out !important;
+                        z-index: 0 !important;
+                        pointer-events: none !important;
+                    }
+                    body::after {
+                        content: "" !important;
+                        position: fixed !important;
+                        inset: 0 !important;
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        background-repeat: no-repeat !important;
+                        background-position: center center !important;
+                        background-size: cover !important;
+                        opacity: 0.22 !important;
+                        animation: palomponBgSlideshowAuthLive ${duration}s infinite ease-in-out !important;
+                        z-index: 0 !important;
+                        pointer-events: none !important;
                     }
                 `;
+            }
+            if (typeof window.applyLiveBgMode === 'function') {
+                window.applyLiveBgMode(bgMode, bgUrl, slides);
             }
         }
 

@@ -486,6 +486,7 @@ if (! function_exists('get_all_system_settings')) {
             'system_title'           => 'Palompon Transit Terminal Management System',
             'app_logo'               => null,
             'app_background_image'   => null,
+            'app_login_card_image'   => null,
             'theme_guest_primary'    => '#C62828',
             'theme_guest_nav_bg'     => '#ffffff',
             'theme_guest_nav_text'   => '#1c2430',
@@ -718,6 +719,78 @@ if (! function_exists('app_bg_image')) {
     }
 }
 
+if (! function_exists('app_login_card_image')) {
+    /**
+     * URL to the active login card hero illustration (custom uploaded or default artwork).
+     */
+    function app_login_card_image(): string
+    {
+        $customCard = get_system_setting('app_login_card_image');
+        if (! empty($customCard)) {
+            $relPath = ltrim(str_replace(['\\'], '/', $customCard), '/');
+            if (is_file(FCPATH . $relPath)) {
+                $mtime = @filemtime(FCPATH . $relPath);
+                return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+            }
+        }
+        return base_url('images/system bg image.png');
+    }
+}
+
+if (! function_exists('app_has_custom_login_card')) {
+    /**
+     * True if a custom login card illustration exists on disk.
+     */
+    function app_has_custom_login_card(): bool
+    {
+        $customCard = get_system_setting('app_login_card_image');
+        if (! empty($customCard)) {
+            $relPath = ltrim(str_replace(['\\'], '/', $customCard), '/');
+            return is_file(FCPATH . $relPath);
+        }
+        return false;
+    }
+}
+
+if (! function_exists('app_full_branding_payload')) {
+    /**
+     * Unified, full branding payload for WebSocket broadcast and AJAX settings responses.
+     */
+    function app_full_branding_payload(): array
+    {
+        return [
+            'app_name'              => app_name(),
+            'app_subtitle'          => app_subtitle(),
+            'acronym'               => app_acronym(),
+            'system_title'          => app_system_title(),
+            'app_logo'              => app_logo(),
+            'app_background_image'  => app_bg_image(),
+            'app_login_card_image'  => app_login_card_image(),
+            'has_custom_login_card' => app_has_custom_login_card(),
+            'app_bg_mode'           => app_bg_mode(),
+            'app_bg_slideshow'      => array_values(app_bg_slideshow()),
+            'theme_guest_primary'   => get_system_setting('theme_guest_primary', '#C62828'),
+            'theme_guest_nav_bg'    => get_system_setting('theme_guest_nav_bg', '#ffffff'),
+            'theme_guest_nav_text'  => get_system_setting('theme_guest_nav_text', '#1c2430'),
+            'theme_staff_primary'   => get_system_setting('theme_staff_primary', '#15803d'),
+            'theme_staff_nav_bg'    => get_system_setting('theme_staff_nav_bg', '#15803d'),
+            'theme_staff_nav_text'  => get_system_setting('theme_staff_nav_text', '#ffffff'),
+            'theme_admin_primary'   => get_system_setting('theme_admin_primary', '#B71C1C'),
+            'theme_admin_nav_bg'    => get_system_setting('theme_admin_nav_bg', '#B71C1C'),
+            'theme_admin_nav_text'  => get_system_setting('theme_admin_nav_text', '#ffffff'),
+            'contact_phone'         => app_contact_phone(),
+            'contact_address'       => app_contact_address(),
+            'contact_email'         => app_contact_email(),
+            'footer_about_title'    => app_footer_about_title(),
+            'footer_about_desc'     => app_footer_about_text(),
+            'footer_credit'         => app_footer_credit(),
+            'login_headline'        => login_headline(),
+            'login_subheadline'     => login_subheadline(),
+            'login_kicker'          => login_kicker(),
+        ];
+    }
+}
+
 if (! function_exists('app_acronym')) {
     /**
      * Short system code / acronym (e.g., 'PTTM').
@@ -875,7 +948,7 @@ if (! function_exists('app_bg_slideshow_css')) {
     /**
      * Dynamically generate CSS animation and background rules for ANY number of slideshow images (1, 2, 3, 4, 5, or more).
      */
-    function app_bg_slideshow_css(?array $slides = null, float $targetOpacity = 0.22): string
+    function app_bg_slideshow_css(?array $slides = null, float $targetOpacity = 0.22, string $selector = 'body::after'): string
     {
         if ($slides === null) {
             $slides = app_bg_slideshow();
@@ -885,12 +958,12 @@ if (! function_exists('app_bg_slideshow_css')) {
 
         if ($count <= 0) {
             $bg = app_bg_image();
-            return "body::after { content: ''; position: fixed; inset: 0; width: 100vw; height: 100vh; background-repeat: no-repeat; background-position: center center; background-size: cover; background-image: url('{$bg}'); opacity: {$targetOpacity}; z-index: 0; pointer-events: none; }";
+            return "{$selector} { content: ''; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('{$bg}') !important; opacity: {$targetOpacity} !important; z-index: 0 !important; pointer-events: none !important; }";
         }
 
         if ($count === 1) {
             $url = esc($slideList[0]);
-            return "body::after { content: ''; position: fixed; inset: 0; width: 100vw; height: 100vh; background-repeat: no-repeat; background-position: center center; background-size: cover; background-image: url('{$url}'); opacity: {$targetOpacity}; z-index: 0; pointer-events: none; }";
+            return "{$selector} { content: ''; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('{$url}') !important; opacity: {$targetOpacity} !important; z-index: 0 !important; pointer-events: none !important; }";
         }
 
         $duration = $count * 6; // 6 seconds per slide
@@ -903,24 +976,24 @@ if (! function_exists('app_bg_slideshow_css')) {
             $fadePct  = round((($i + 0.95) / $count) * 100, 1);
 
             $keyframes .= "    {$startPct}%, {$holdPct}% { background-image: url('{$url}'); opacity: {$targetOpacity}; }\n";
-            $keyframes .= "    {$fadePct}% { opacity: 0.04; }\n";
+            $keyframes .= "    {$fadePct}% { opacity: 0.03; }\n";
         }
         $keyframes .= "    100% { opacity: {$targetOpacity}; }\n";
         $keyframes .= "}\n";
 
-        $css = "body::after {\n";
+        $css = "{$selector} {\n";
         $css .= "    content: '';\n";
-        $css .= "    position: fixed;\n";
-        $css .= "    inset: 0;\n";
-        $css .= "    width: 100vw;\n";
-        $css .= "    height: 100vh;\n";
-        $css .= "    background-repeat: no-repeat;\n";
-        $css .= "    background-position: center center;\n";
-        $css .= "    background-size: cover;\n";
-        $css .= "    opacity: {$targetOpacity};\n";
-        $css .= "    z-index: 0;\n";
-        $css .= "    pointer-events: none;\n";
-        $css .= "    animation: palomponBgSlideshow {$duration}s infinite ease-in-out;\n";
+        $css .= "    position: fixed !important;\n";
+        $css .= "    inset: 0 !important;\n";
+        $css .= "    width: 100vw !important;\n";
+        $css .= "    height: 100vh !important;\n";
+        $css .= "    background-repeat: no-repeat !important;\n";
+        $css .= "    background-position: center center !important;\n";
+        $css .= "    background-size: cover !important;\n";
+        $css .= "    opacity: {$targetOpacity} !important;\n";
+        $css .= "    z-index: 0 !important;\n";
+        $css .= "    pointer-events: none !important;\n";
+        $css .= "    animation: palomponBgSlideshow {$duration}s infinite ease-in-out !important;\n";
         $css .= "}\n";
         $css .= $keyframes;
 
@@ -1021,29 +1094,40 @@ if (! function_exists('app_theme_css')) {
 
         $bgMode = app_bg_mode();
         $bgImg = app_bg_image();
-        $bgOpacity = ($bgMode === 'single') ? '0.12' : '0.07';
+        $slides = array_values(app_bg_slideshow());
+        $slidesJson = json_encode($slides);
+
+        if ($bgMode === 'single' || count($slides) <= 1) {
+            $singleTarget = $bgImg ?: ($slides[0] ?? '');
+            $bgLayerCss = <<<BGCSS
+/* --- Universal Single/System Background Layer across all pages --- */
+body:not(.auth-page)::before {
+    content: "" !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background-repeat: no-repeat !important;
+    background-position: center center !important;
+    background-size: cover !important;
+    background-image: url('{$singleTarget}') !important;
+    opacity: 0.12 !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+    animation: none !important;
+}
+BGCSS;
+        } else {
+            $bgLayerCss = "/* --- Universal Dynamic Rotating Slideshow Layer across all pages --- */\n" . app_bg_slideshow_css($slides, 0.12, 'body:not(.auth-page)::before');
+        }
 
         $css = <<<CSS
 <style id="app-dynamic-themes">
-/* --- Universal Single/System Background Layer across all pages --- */
-body:not(.auth-page)::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    background-repeat: no-repeat;
-    background-position: center center;
-    background-size: cover;
-    background-image: url('{$bgImg}');
-    opacity: {$bgOpacity};
-    z-index: 0;
-    pointer-events: none;
-}
-body:not(.auth-page) > *:not(.modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay):not(.scenery):not(.global-progress-bar):not(#global-progress-bar):not(.footer):not(footer) {
+{$bgLayerCss}
+body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay):not(.scenery):not(.global-progress-bar):not(#global-progress-bar):not(.footer):not(footer) {
     position: relative;
     z-index: 1;
 }
@@ -1068,7 +1152,9 @@ body:not(.auth-page) > *:not(.modal):not(.dropdown-content):not(.sticky-top-wrap
 }
 
 /* Guest Header elements responsive to dynamic theme settings */
-.guest-header {
+.guest-header,
+body.guest-theme header#site-header,
+body:not(.admin-theme):not(.staff-theme) header#site-header {
     background: {$gn['hex']} !important;
     border-bottom: 1px solid {$gn['divider']} !important;
 }
@@ -2143,6 +2229,61 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
     border: 1px solid #fde68a;
 }
 </style>
+<script id="app-dynamic-slideshow-script">
+(function() {
+    window.applyLiveBgMode = function(mode, bgUrl, slides) {
+        mode = mode || 'slideshow';
+        bgUrl = bgUrl || '{$bgImg}';
+        slides = (Array.isArray(slides) && slides.length) ? slides : {$slidesJson};
+        if (!slides || !slides.length) {
+            if (bgUrl) slides = [bgUrl];
+        }
+
+        var bgStyle = document.getElementById('app-live-bg-overrides');
+        if (!bgStyle) {
+            bgStyle = document.createElement('style');
+            bgStyle.id = 'app-live-bg-overrides';
+            document.head.appendChild(bgStyle);
+        }
+
+        if (mode === 'single' || slides.length <= 1) {
+            var target = bgUrl || (slides.length ? slides[0] : '');
+            var rule = "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.12 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; }\n" +
+                       "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.28 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; }";
+            bgStyle.textContent = rule;
+        } else {
+            var count = slides.length;
+            var duration = count * 6;
+            var kf = "@keyframes palomponBgSlideshowLive {\n";
+            var kfAuth = "@keyframes palomponBgSlideshowAuthLive {\n";
+            for (var i = 0; i < count; i++) {
+                var sUrl = slides[i];
+                var sPct = Math.round((i / count) * 1000) / 10;
+                var hPct = Math.round(((i + 0.85) / count) * 1000) / 10;
+                var fPct = Math.round(((i + 0.95) / count) * 1000) / 10;
+                // NOTE: NEVER use !important inside @keyframes blocks as browsers discard it as invalid CSS!
+                kf     += "    " + sPct + "%, " + hPct + "% { background-image: url('" + sUrl + "'); opacity: 0.12; }\n";
+                kf     += "    " + fPct + "% { opacity: 0.03; }\n";
+                kfAuth += "    " + sPct + "%, " + hPct + "% { background-image: url('" + sUrl + "'); opacity: 0.22; }\n";
+                kfAuth += "    " + fPct + "% { opacity: 0.03; }\n";
+            }
+            kf     += "    100% { opacity: 0.12; }\n}\n";
+            kfAuth += "    100% { opacity: 0.22; }\n}\n";
+
+            var rule = kf + kfAuth +
+                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.12 !important; animation: palomponBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }\n" +
+                       "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.22 !important; animation: palomponBgSlideshowAuthLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }";
+            bgStyle.textContent = rule;
+        }
+    };
+
+    window._appSlideshowEngine = {
+        setMode: function(m, u, s) {
+            window.applyLiveBgMode(m, u, s);
+        }
+    };
+})();
+</script>
 CSS;
         return $css;
     }

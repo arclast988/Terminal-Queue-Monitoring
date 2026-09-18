@@ -543,7 +543,7 @@
     }
 </style>
 
-<div class="page-header-modern fade-in">
+<div class="page-header-modern">
     <h1 class="page-title-modern">
         <i class="bi bi-clock-history"></i>
         Queue Operations
@@ -597,7 +597,7 @@
                 $isBoarding = $item['status'] === 'boarding';
                 $isWaiting  = $item['status'] === 'waiting';
             ?>
-            <div class="q-card mb-3 fade-in" id="card-<?= $item['id'] ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
+            <div class="q-card mb-3" id="card-<?= $item['id'] ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
 
                 <!-- Header row: position badge + plate + status -->
                 <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
@@ -1786,6 +1786,19 @@
 
     // Universal WebSocket document event listeners for full real-time reactivity
     document.addEventListener('pttm:ws-queue_update', function(e) {
+        var detail = (e && e.detail) ? e.detail : {};
+        var data = detail.data || detail;
+        if (data && (data.action === 'passenger_change' || data.type === 'passenger_change')) {
+            if (window.QueueSync && window.QueueSync.updatePassengerUI) {
+                var id = data.id;
+                var newCount = parseInt(data.new_count, 10);
+                var capacity = parseInt(data.capacity, 10);
+                if (id && !isNaN(newCount) && !isNaN(capacity)) {
+                    window.QueueSync.updatePassengerUI(id, newCount, capacity);
+                }
+            }
+            return;
+        }
         if (window.QueueSync && window.QueueSync.refresh) {
             window.QueueSync.refresh();
         }

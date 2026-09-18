@@ -480,26 +480,27 @@
 
 
         .route-average-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
+            position: fixed !important;
+            inset: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
             background: rgba(15, 23, 42, 0);
-            z-index: 99999 !important;
+            z-index: 100005 !important;
             transition: background 0.3s ease-out;
             box-sizing: border-box;
         }
 
         .route-average-modal.is-open {
             display: flex !important;
-            background: rgba(15, 23, 42, 0.65);
+            background: rgba(15, 23, 42, 0.65) !important;
             backdrop-filter: blur(6px);
             -webkit-backdrop-filter: blur(6px);
         }
@@ -2112,7 +2113,7 @@
                     <span class="label">Operating Routes</span>
                 </div>
             </a>
-            <button type="button" class="stat-card stat-card-button" id="routeAverageCard" aria-haspopup="dialog" aria-controls="routeAverageModal">
+            <button type="button" class="stat-card stat-card-button" id="routeAverageCard" onclick="openRouteAverageModal()" aria-haspopup="dialog" aria-controls="routeAverageModal">
                 <div class="stat-icon-wrapper si-purple"><i class="fas fa-clock"></i></div>
                 <div class="stat-info">
                     <span class="value">View</span>
@@ -2316,14 +2317,14 @@
     </div>
 
     <!-- Departure Time Rules Modal (root-level for proper viewport centering & stacking) -->
-    <div class="route-average-modal" id="routeAverageModal" aria-hidden="true">
+    <div class="route-average-modal modal" id="routeAverageModal" aria-hidden="true">
         <div class="route-average-dialog" role="dialog" aria-modal="true" aria-labelledby="routeAverageTitle">
             <div class="route-average-header">
                 <div>
                     <h3 class="route-average-title" id="routeAverageTitle">Departure Time Rules</h3>
                     <p class="route-average-subtitle">Scheduled departure intervals configured for <?= esc(app_name()) ?> Terminal.</p>
                 </div>
-                <button type="button" class="route-average-close" id="routeAverageClose" aria-label="Close departure rules modal">
+                <button type="button" class="route-average-close" id="routeAverageClose" onclick="closeRouteAverageModal()" aria-label="Close departure rules modal">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -2433,6 +2434,30 @@
     </div>
 
     <script>
+    // Global modal openers for Departure Rules
+    window.openRouteAverageModal = function() {
+        var modal = document.getElementById('routeAverageModal');
+        if (!modal) return;
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+        document.body.classList.add('modal-open');
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeRouteAverageModal = function() {
+        var modal = document.getElementById('routeAverageModal');
+        if (!modal) return;
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+    };
+    var openRouteAverageModal = window.openRouteAverageModal;
+    var closeRouteAverageModal = window.closeRouteAverageModal;
+
     // Departure Rules route filter
     var activeRulesFilter = 'all';
 
@@ -2701,21 +2726,6 @@
             }
         }
 
-        function openRouteAverageModal() {
-            var modal = document.getElementById('routeAverageModal');
-            if (!modal) return;
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeRouteAverageModal() {
-            var modal = document.getElementById('routeAverageModal');
-            if (!modal) return;
-            modal.classList.remove('is-open');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
-        }
 
         function getContrastTextColor(hex) {
             if (!hex) return '#ffffff';
@@ -3320,7 +3330,15 @@
         });
 
         // Universal WebSocket document event listeners for full real-time reactivity
-        document.addEventListener('pttm:ws-queue_update', function() { scheduleFetchStatus(300); });
+        document.addEventListener('pttm:ws-queue_update', function(e) {
+            var detail = (e && e.detail) ? e.detail : {};
+            var data = detail.data || detail;
+            if (data && (data.action === 'passenger_change' || data.type === 'passenger_change')) {
+                handleRealtimePassengerChange(data);
+                return;
+            }
+            scheduleFetchStatus(300);
+        });
         document.addEventListener('pttm:ws-vehicle_type_update', function() { scheduleFetchStatus(300); });
         document.addEventListener('pttm:ws-fare_update', function() { scheduleFetchStatus(300); });
         document.addEventListener('pttm:ws-operational_settings_updated', function() { scheduleFetchStatus(300); });

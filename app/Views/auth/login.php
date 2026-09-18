@@ -647,8 +647,9 @@
                         <circle cx="204" cy="24" r="4" fill="#FFFFFF" fill-opacity="0.35"/>
                         <circle cx="6" cy="96" r="4" fill="#FFFFFF" fill-opacity="0.30"/>
                     </svg>
-                    <img src="<?= base_url('images/system bg image.png') ?>"
-                         alt="Illustration of a jeepney, minibus, and van at the Palompon terminal"
+                    <img src="<?= esc(app_login_card_image()) ?>"
+                         id="loginHeroImg"
+                         alt="Terminal Hero Artwork"
                          width="1536" height="1024" loading="eager">
                 </figure>
             </section>
@@ -748,6 +749,15 @@
 
     <script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260918') ?>"></script>
+    <script>
+    // Listen for branding and background updates in real-time
+    document.addEventListener('pttm:ws-branding_updated', function (e) {
+        if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {
+            window.applyLiveBranding(e.detail.data);
+        }
+    });
+    </script>
     <script>
         (function () {
             // --- Show / hide password ---

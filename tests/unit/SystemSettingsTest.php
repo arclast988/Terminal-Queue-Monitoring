@@ -62,7 +62,7 @@ final class SystemSettingsTest extends CIUnitTestCase
         $html = view('partials/nav-admin');
 
         $this->assertStringContainsString('admin/settings', $html);
-        $this->assertStringContainsString('Branding', $html);
+        $this->assertStringContainsString('System Themes', $html);
     }
 
     public function testRegularAdminNavExcludesBrandingLink(): void
@@ -78,7 +78,7 @@ final class SystemSettingsTest extends CIUnitTestCase
         $html = view('partials/nav-admin');
 
         $this->assertStringNotContainsString('admin/settings', $html);
-        $this->assertStringNotContainsString('Branding', $html);
+        $this->assertStringNotContainsString('System Themes', $html);
     }
 
     public function testSuperAdminHeaderDrawerIncludesBrandingLink(): void
@@ -94,7 +94,7 @@ final class SystemSettingsTest extends CIUnitTestCase
         $html = view('partials/header');
 
         $this->assertStringContainsString('admin/settings', $html);
-        $this->assertStringContainsString('Branding & Themes', $html);
+        $this->assertStringContainsString('System Themes', $html);
     }
 
     public function testRegularAdminHeaderDrawerExcludesBrandingLink(): void
@@ -110,7 +110,7 @@ final class SystemSettingsTest extends CIUnitTestCase
         $html = view('partials/header');
 
         $this->assertStringNotContainsString('admin/settings', $html);
-        $this->assertStringNotContainsString('Branding & Themes', $html);
+        $this->assertStringNotContainsString('System Themes', $html);
     }
 
     public function testSettingsViewRendersTabsAndForms(): void
@@ -201,13 +201,13 @@ final class SystemSettingsTest extends CIUnitTestCase
 
         $profileHtml = view('partials/nav-profile');
         $this->assertStringContainsString('admin/settings', $profileHtml);
-        $this->assertStringContainsString('Branding & Themes', $profileHtml);
+        $this->assertStringContainsString('System Themes', $profileHtml);
 
         // Test regular admin does not see branding in profile dropdown
         $session->set(['role' => 'admin']);
         $adminProfileHtml = view('partials/nav-profile');
         $this->assertStringNotContainsString('admin/settings', $adminProfileHtml);
-        $this->assertStringNotContainsString('Branding & Themes', $adminProfileHtml);
+        $this->assertStringNotContainsString('System Themes', $adminProfileHtml);
     }
 
     public function testVehicleTypeModelContainsPhotoField(): void
@@ -296,7 +296,6 @@ final class SystemSettingsTest extends CIUnitTestCase
         $html = view('admin/settings/index', [
             'settings' => get_all_system_settings(),
         ]);
-
         $this->assertStringContainsString('tabBtn-operations', $html);
         $this->assertStringContainsString('tab-operations', $html);
         $this->assertStringContainsString('vehicle_cooldown_minutes', $html);
@@ -304,5 +303,119 @@ final class SystemSettingsTest extends CIUnitTestCase
         $this->assertStringContainsString('departure_retention_days', $html);
         $this->assertStringContainsString('admin/settings/update-operations', $html);
     }
+
+    public function testLoginCardHelpersAndDefaults(): void
+    {
+        $defaultImg = app_login_card_image();
+        $this->assertIsString($defaultImg);
+        $this->assertStringContainsString('system bg image.png', rawurldecode($defaultImg));
+        $this->assertFalse(app_has_custom_login_card());
+
+        $testFile = FCPATH . 'uploads/settings/custom_card.png';
+        if (!is_dir(dirname($testFile))) {
+            @mkdir(dirname($testFile), 0755, true);
+        }
+        file_put_contents($testFile, 'dummy content');
+
+        $model = new \App\Models\SystemSettingModel();
+        $model->setSetting('app_login_card_image', 'uploads/settings/custom_card.png');
+        get_all_system_settings(true);
+
+        $this->assertTrue(app_has_custom_login_card());
+        $this->assertStringContainsString('custom_card.png', app_login_card_image());
+
+        // Restore default & clean up test file
+        $model->setSetting('app_login_card_image', null);
+        get_all_system_settings(true);
+        if (file_exists($testFile)) {
+            @unlink($testFile);
+        }
+
+        $this->assertFalse(app_has_custom_login_card());
+        $this->assertStringContainsString('system bg image.png', rawurldecode(app_login_card_image()));
+    }
+
+    public function testFullBrandingPayloadContainsAllKeys(): void
+    {
+        $payload = app_full_branding_payload();
+        $this->assertIsArray($payload);
+
+        $expectedKeys = [
+            'app_name',
+            'app_subtitle',
+            'system_title',
+            'acronym',
+            'app_logo',
+            'app_background_image',
+            'app_bg_mode',
+            'app_bg_slideshow',
+            'app_login_card_image',
+            'theme_guest_primary',
+            'theme_guest_nav_bg',
+            'theme_guest_nav_text',
+            'theme_staff_primary',
+            'theme_staff_nav_bg',
+            'theme_staff_nav_text',
+            'theme_admin_primary',
+            'theme_admin_nav_bg',
+            'theme_admin_nav_text',
+            'footer_about_title',
+            'footer_about_desc',
+            'footer_credit',
+        ];
+
+        foreach ($expectedKeys as $key) {
+            $this->assertArrayHasKey($key, $payload, "Payload missing key: {$key}");
+        }
+    }
+
+    public function testAdminSettingsViewContainsSaveBgButtonAndLoginCardManager(): void
+    {
+        $html = view('admin/settings/index', [
+            'settings' => get_all_system_settings(),
+        ]);
+
+        $this->assertStringContainsString('btnSaveLogo', $html);
+        $this->assertStringContainsString('Save Logo', $html);
+        $this->assertStringContainsString('btnSaveBgSettings', $html);
+        $this->assertStringContainsString('Save Background & Display Mode', $html);
+        $this->assertStringContainsString('loginCardUploadZone', $html);
+        $this->assertStringContainsString('loginCardActiveImg', $html);
+        $this->assertStringContainsString('btnSaveLoginCard', $html);
+        $this->assertStringContainsString('Save Login Hero Illustration', $html);
+        $this->assertStringContainsString('btnResetLoginCard', $html);
+        $this->assertStringContainsString('admin/settings/save-bg-mode', $html);
+        $this->assertStringContainsString('admin/settings/upload-login-card', $html);
+        $this->assertStringContainsString('admin/settings/reset-login-card', $html);
+    }
+
+    public function testLoginViewRendersDynamicLoginCardImage(): void
+    {
+        $html = view('auth/login');
+
+        $this->assertStringContainsString('id="loginHeroImg"', $html);
+        $this->assertStringContainsString(app_login_card_image(), $html);
+    }
+
+    public function testGuestEnhancedDashboardContainsDepartureRulesModalWithCorrectAttributes(): void
+    {
+        $html = view('public/enhanced_dashboard', [
+            'departure_rules' => [],
+            'active_queue'    => [],
+            'routes'          => [],
+            'announcements'   => [],
+        ]);
+
+        $this->assertStringContainsString('id="routeAverageCard"', $html);
+        $this->assertStringContainsString('onclick="openRouteAverageModal()"', $html);
+        $this->assertStringContainsString('id="routeAverageModal"', $html);
+        $this->assertStringContainsString('route-average-modal modal', $html);
+        $this->assertStringContainsString('id="routeAverageClose"', $html);
+        $this->assertStringContainsString('onclick="closeRouteAverageModal()"', $html);
+        $this->assertStringContainsString('window.openRouteAverageModal', $html);
+        $this->assertStringContainsString('window.closeRouteAverageModal', $html);
+        $this->assertStringContainsString('z-index: 100005 !important;', $html);
+    }
 }
+
 

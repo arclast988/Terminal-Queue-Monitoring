@@ -19,7 +19,7 @@ class Settings extends BaseController
         $settings = get_all_system_settings(true);
 
         return view('admin/settings/index', [
-            'title'    => 'System Branding & Themes',
+            'title'    => 'System Themes',
             'settings' => $settings,
         ]);
     }
@@ -91,35 +91,19 @@ class Settings extends BaseController
         get_all_system_settings(true);
         $this->broadcastBrandingChange();
 
-        $this->logActivity('System Settings', 'Updated system branding identity (name: ' . $fields['app_name'] . ')');
+        $this->logActivity('System Settings', 'Updated system themes & identity (name: ' . $fields['app_name'] . ')');
 
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success'    => true,
-                'message'    => 'System branding updated successfully.',
+                'message'    => 'System identity & themes updated successfully.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
-                'data'       => [
-                    'app_name'              => app_name(),
-                    'app_subtitle'          => app_subtitle(),
-                    'acronym'               => app_acronym(),
-                    'system_title'          => app_system_title(),
-                    'contact_phone'         => app_contact_phone(),
-                    'contact_address'       => app_contact_address(),
-                    'contact_email'         => app_contact_email(),
-                    'app_logo'              => app_logo(),
-                    'login_headline'        => login_headline(),
-                    'login_subheadline'     => login_subheadline(),
-                    'login_kicker'          => login_kicker(),
-                    'login_feature1_title'  => login_feature1_title(),
-                    'login_feature1_desc'   => login_feature1_desc(),
-                    'login_feature2_title'  => login_feature2_title(),
-                    'login_feature2_desc'   => login_feature2_desc(),
-                ],
+                'data'       => app_full_branding_payload(),
             ]);
         }
 
-        return redirect()->to('/admin/settings#identity')->with('success', 'System branding updated successfully.');
+        return redirect()->to('/admin/settings#identity')->with('success', 'System identity & themes updated successfully.');
     }
 
     /**
@@ -184,17 +168,7 @@ class Settings extends BaseController
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'updates'    => $updates,
-                'data'       => [
-                    'theme_guest_primary'  => get_system_setting('theme_guest_primary', '#C62828'),
-                    'theme_guest_nav_bg'   => get_system_setting('theme_guest_nav_bg', '#ffffff'),
-                    'theme_guest_nav_text' => get_system_setting('theme_guest_nav_text', '#1c2430'),
-                    'theme_staff_primary'  => get_system_setting('theme_staff_primary', '#15803d'),
-                    'theme_staff_nav_bg'   => get_system_setting('theme_staff_nav_bg', '#15803d'),
-                    'theme_staff_nav_text' => get_system_setting('theme_staff_nav_text', '#ffffff'),
-                    'theme_admin_primary'  => get_system_setting('theme_admin_primary', '#B71C1C'),
-                    'theme_admin_nav_bg'   => get_system_setting('theme_admin_nav_bg', '#B71C1C'),
-                    'theme_admin_nav_text' => get_system_setting('theme_admin_nav_text', '#ffffff'),
-                ],
+                'data'       => app_full_branding_payload(),
             ]);
         }
 
@@ -252,6 +226,7 @@ class Settings extends BaseController
             return $this->response->setJSON([
                 'success'    => true,
                 'message'    => 'Footer & public attribution updated successfully.',
+                'data'       => app_full_branding_payload(),
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
@@ -482,6 +457,7 @@ class Settings extends BaseController
             'success'    => true,
             'message'    => 'System logo updated successfully.',
             'image_url'  => base_url($relPath) . '?v=' . time(),
+            'data'       => app_full_branding_payload(),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -510,6 +486,7 @@ class Settings extends BaseController
             'success'    => true,
             'message'    => 'Logo reset to default seal.',
             'image_url'  => base_url('images/9HFScgVg_400x400.png'),
+            'data'       => app_full_branding_payload(),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -591,17 +568,27 @@ class Settings extends BaseController
         $relPath = 'uploads/settings/' . $newFilename;
         $model = new SystemSettingModel();
         $model->setSetting('app_background_image', $relPath);
+
+        $mode = $this->request->getPost('mode');
+        if ($mode && in_array($mode, ['slideshow', 'single'], true)) {
+            $model->setSetting('app_bg_mode', $mode);
+        }
+
         get_all_system_settings(true);
         $this->broadcastBrandingChange();
 
         $this->logActivity('System Settings', 'Uploaded new system background picture: ' . $newFilename);
 
         return $this->response->setJSON([
-            'success'    => true,
-            'message'    => 'System background picture updated successfully.',
-            'image_url'  => base_url($relPath) . '?v=' . time(),
-            'csrf_token' => csrf_token(),
-            'csrf_hash'  => csrf_hash(),
+            'success'              => true,
+            'message'              => 'System background picture updated successfully.',
+            'image_url'            => base_url($relPath) . '?v=' . time(),
+            'app_bg_mode'          => $mode ?: get_setting('app_bg_mode', 'slideshow'),
+            'app_background_image' => base_url($relPath) . '?v=' . time(),
+            'app_bg_slideshow'     => array_values(app_bg_slideshow()),
+            'data'                 => app_full_branding_payload(),
+            'csrf_token'           => csrf_token(),
+            'csrf_hash'            => csrf_hash(),
         ]);
     }
 
@@ -625,11 +612,15 @@ class Settings extends BaseController
         $this->logActivity('System Settings', 'Reset system background to default');
 
         return $this->response->setJSON([
-            'success'    => true,
-            'message'    => 'Background picture reset to default.',
-            'image_url'  => base_url('images/system bg image.png'),
-            'csrf_token' => csrf_token(),
-            'csrf_hash'  => csrf_hash(),
+            'success'              => true,
+            'message'              => 'Background picture reset to default.',
+            'image_url'            => base_url('images/system bg image.png'),
+            'app_bg_mode'          => get_setting('app_bg_mode', 'slideshow'),
+            'app_background_image' => base_url('images/system bg image.png'),
+            'app_bg_slideshow'     => array_values(app_bg_slideshow()),
+            'data'                 => app_full_branding_payload(),
+            'csrf_token'           => csrf_token(),
+            'csrf_hash'            => csrf_hash(),
         ]);
     }
 
@@ -655,9 +646,155 @@ class Settings extends BaseController
         $this->logActivity('System Settings', 'Switched background display mode to: ' . $mode);
 
         return $this->response->setJSON([
+            'success'              => true,
+            'mode'                 => $mode,
+            'app_bg_mode'          => $mode,
+            'app_background_image' => app_bg_image(),
+            'app_bg_slideshow'     => array_values(app_bg_slideshow()),
+            'message'              => 'Background mode switched to ' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . '.',
+            'data'                 => app_full_branding_payload(),
+            'csrf_token'           => csrf_token(),
+            'csrf_hash'            => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Save background display mode via explicit Save button.
+     */
+    public function saveBgMode()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+        }
+
+        $mode = $this->request->getPost('mode');
+        if (! in_array($mode, ['slideshow', 'single'], true)) {
+            $mode = 'slideshow';
+        }
+
+        $model = new SystemSettingModel();
+        $model->setSetting('app_bg_mode', $mode);
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+
+        $this->logActivity('System Settings', 'Saved background display mode to: ' . $mode);
+
+        return $this->response->setJSON([
+            'success'              => true,
+            'mode'                 => $mode,
+            'app_bg_mode'          => $mode,
+            'app_background_image' => app_bg_image(),
+            'app_bg_slideshow'     => array_values(app_bg_slideshow()),
+            'message'              => 'Background display mode (' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . ') saved successfully.',
+            'data'                 => app_full_branding_payload(),
+            'csrf_token'           => csrf_token(),
+            'csrf_hash'            => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Upload custom login page hero illustration.
+     */
+    public function uploadLoginCard()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+        }
+
+        $file = $this->request->getFile('login_card');
+        if (! $file || ! $file->isValid()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'No valid image file was uploaded.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        if (! in_array($file->getMimeType(), $allowedMimes, true)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Only PNG, JPG, and WEBP image formats are supported.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        if ($file->getSizeByUnit('mb') > 8) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success'    => false,
+                'message'    => 'Login hero image file size must be less than 8 MB.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
+        if (! is_dir($uploadDir)) {
+            @mkdir($uploadDir, 0755, true);
+        }
+
+        // Delete old custom login card if one was previously uploaded
+        $this->deleteOldMedia('app_login_card_image', $uploadDir);
+
+        $ext = $file->getClientExtension() ?: 'png';
+        $newFilename = 'login_card_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+
+        try {
+            $file->move($uploadDir, $newFilename);
+        } catch (\Throwable $e) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success'    => false,
+                'message'    => 'Failed to save uploaded file: ' . $e->getMessage(),
+                'csrf_token' => csrf_token(),
+                'csrf_hash'  => csrf_hash(),
+            ]);
+        }
+
+        $relPath = 'uploads/settings/' . $newFilename;
+        $model = new SystemSettingModel();
+        $model->setSetting('app_login_card_image', $relPath);
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+
+        $this->logActivity('System Settings', 'Uploaded new login page hero illustration: ' . $newFilename);
+
+        return $this->response->setJSON([
             'success'    => true,
-            'mode'       => $mode,
-            'message'    => 'Background mode switched to ' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . '.',
+            'message'    => 'Login page hero illustration updated successfully.',
+            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'filename'   => $newFilename,
+            'data'       => app_full_branding_payload(),
+            'csrf_token' => csrf_token(),
+            'csrf_hash'  => csrf_hash(),
+        ]);
+    }
+
+    /**
+     * Reset login page hero illustration to default 3-vehicle artwork.
+     */
+    public function resetLoginCard()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'Unauthorized.']);
+        }
+
+        $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
+        $this->deleteOldMedia('app_login_card_image', $uploadDir);
+
+        $model = new SystemSettingModel();
+        $model->setSetting('app_login_card_image', null);
+        get_all_system_settings(true);
+        $this->broadcastBrandingChange();
+
+        $this->logActivity('System Settings', 'Reset login page hero illustration to default artwork');
+
+        return $this->response->setJSON([
+            'success'    => true,
+            'message'    => 'Login hero illustration restored to default artwork.',
+            'image_url'  => base_url('images/system bg image.png'),
+            'data'       => app_full_branding_payload(),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
         ]);
@@ -1106,27 +1243,7 @@ class Settings extends BaseController
     protected function broadcastBrandingChange(): void
     {
         try {
-            $payload = [
-                'app_name'             => app_name(),
-                'app_subtitle'         => app_subtitle(),
-                'acronym'              => app_acronym(),
-                'system_title'         => app_system_title(),
-                'app_logo'             => app_logo(),
-                'app_background_image' => app_bg_image(),
-                'theme_guest_primary'  => get_system_setting('theme_guest_primary', '#C62828'),
-                'theme_guest_nav_bg'   => get_system_setting('theme_guest_nav_bg', '#ffffff'),
-                'theme_guest_nav_text' => get_system_setting('theme_guest_nav_text', '#1c2430'),
-                'theme_staff_primary'  => get_system_setting('theme_staff_primary', '#15803d'),
-                'theme_staff_nav_bg'   => get_system_setting('theme_staff_nav_bg', '#15803d'),
-                'theme_staff_nav_text' => get_system_setting('theme_staff_nav_text', '#ffffff'),
-                'theme_admin_primary'  => get_system_setting('theme_admin_primary', '#B71C1C'),
-                'theme_admin_nav_bg'   => get_system_setting('theme_admin_nav_bg', '#B71C1C'),
-                'theme_admin_nav_text' => get_system_setting('theme_admin_nav_text', '#ffffff'),
-                'app_bg_mode'          => app_bg_mode(),
-                'contact_phone'        => app_contact_phone(),
-                'contact_address'      => app_contact_address(),
-                'contact_email'        => app_contact_email(),
-            ];
+            $payload = app_full_branding_payload();
             $this->broadcastUpdate('branding_updated', $payload);
         } catch (\Throwable $e) {
             // Silently continue if daemon offline

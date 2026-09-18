@@ -126,7 +126,7 @@ SVG;
             <div class="profile-section-label">System Settings</div>
             <a href="<?= base_url('admin/settings') ?>" class="profile-dropdown-item" role="menuitem">
                 <i class="fas fa-palette"></i>
-                <span class="item-text">Branding & Themes</span>
+                <span class="item-text">System Themes</span>
                 <span class="profile-badge-chip chip-amber">Super Admin</span>
             </a>
         </div>
