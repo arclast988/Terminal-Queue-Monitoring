@@ -65,8 +65,9 @@ final class QueueConcurrencyTest extends CIUnitTestCase
         $this->assertStringContainsString('$db->transStart()', $content);
         $this->assertStringContainsString('$db->transComplete()', $content);
 
-        // Verify batch updating is used instead of single-row loop updates
-        $this->assertStringContainsString('$this->updateBatch($batchUpdates, \'id\')', $content);
+        // Verify individual-row updates are used (updateBatch generates invalid
+        // SQL on PostgreSQL when columns differ across rows)
+        $this->assertStringContainsString('$this->update($uid, $upd)', $content);
 
         // Verify pre-loaded rules resolution
         $this->assertStringContainsString('resolveGroupIntervalFromRules', $content);

@@ -72,7 +72,7 @@ class VehiclePhotoAndHeaderTruncationTest extends CIUnitTestCase
 
         $jsContent = file_get_contents(FCPATH . 'assets/js/autocomplete-search.js');
         $this->assertStringContainsString('dropdown-flipped', $jsContent);
-        $this->assertStringContainsString('spaceBelow < 220', $jsContent);
+        $this->assertStringContainsString('spaceBelow < 200', $jsContent);
     }
 
     public function testVehPhotoClearButtonsAndTheming(): void
