@@ -74,7 +74,9 @@ class Filters extends BaseFilters
             // 'invalidchars',
         ],
         'after' => [
-            'honeypot',
+            // 'honeypot' removed: the after-filter injects hidden HTML into
+            // responses which breaks inline <script> parsing.  The before-
+            // filter still validates honeypot fields on form submissions.
             'secureheaders',
         ],
     ];

@@ -273,7 +273,7 @@
             flex: 1;
             border: none;
             padding: 15px 25px;
-            padding-right: 185px !important;
+            padding-right: 40px !important;
             font-size: 16px;
             outline: none;
             background: transparent;
@@ -296,14 +296,23 @@
         }
 
         #guest-fare-clear-btn {
-            right: 155px !important;
+            position: relative !important;
+            right: auto !important;
+            top: auto !important;
+            transform: none !important;
+            flex-shrink: 0;
+            align-self: center;
+            z-index: 5;
+            background: none !important;
+            border: none !important;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0 4px !important;
+            display: none;
+            align-items: center;
         }
         @media (max-width: 768px) {
-            .search-bar input {
-                padding-right: 125px !important;
-            }
             #guest-fare-clear-btn {
-                right: 98px !important;
             }
         }
 
@@ -627,6 +636,7 @@
             }
             .search-bar input {
                 padding: 10px 14px;
+                padding-right: 14px !important;
                 font-size: 13.5px;
                 text-align: left;
                 min-width: 0;

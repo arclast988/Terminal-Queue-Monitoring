@@ -2244,30 +2244,30 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
 
         if (mode === 'single' || slides.length <= 1) {
             var target = bgUrl || (slides.length ? slides[0] : '');
-            var rule = "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.12 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; }\n" +
+            var rule = "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.12 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; } " +
                        "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.28 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; }";
             bgStyle.textContent = rule;
         } else {
             var count = slides.length;
             var duration = count * 6;
-            var kf = "@keyframes palomponBgSlideshowLive {\n";
-            var kfAuth = "@keyframes palomponBgSlideshowAuthLive {\n";
+            var kf = "@keyframes palomponBgSlideshowLive { ";
+            var kfAuth = "@keyframes palomponBgSlideshowAuthLive { ";
             for (var i = 0; i < count; i++) {
                 var sUrl = slides[i];
                 var sPct = Math.round((i / count) * 1000) / 10;
                 var hPct = Math.round(((i + 0.85) / count) * 1000) / 10;
                 var fPct = Math.round(((i + 0.95) / count) * 1000) / 10;
                 // NOTE: NEVER use !important inside @keyframes blocks as browsers discard it as invalid CSS!
-                kf     += "    " + sPct + "%, " + hPct + "% { background-image: url('" + sUrl + "'); opacity: 0.12; }\n";
-                kf     += "    " + fPct + "% { opacity: 0.03; }\n";
-                kfAuth += "    " + sPct + "%, " + hPct + "% { background-image: url('" + sUrl + "'); opacity: 0.22; }\n";
-                kfAuth += "    " + fPct + "% { opacity: 0.03; }\n";
+                kf     += sPct + "%, " + hPct + "% { background-image: url('" + sUrl + "'); opacity: 0.12; } ";
+                kf     += fPct + "% { opacity: 0.03; } ";
+                kfAuth += sPct + "%, " + hPct + "% { background-image: url('" + sUrl + "'); opacity: 0.22; } ";
+                kfAuth += fPct + "% { opacity: 0.03; } ";
             }
-            kf     += "    100% { opacity: 0.12; }\n}\n";
-            kfAuth += "    100% { opacity: 0.22; }\n}\n";
+            kf     += "100% { opacity: 0.12; } } ";
+            kfAuth += "100% { opacity: 0.22; } } ";
 
             var rule = kf + kfAuth +
-                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.12 !important; animation: palomponBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }\n" +
+                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.12 !important; animation: palomponBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; } " +
                        "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.22 !important; animation: palomponBgSlideshowAuthLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }";
             bgStyle.textContent = rule;
         }

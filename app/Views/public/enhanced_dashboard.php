@@ -255,7 +255,7 @@
             flex: 1;
             border: none;
             padding: 15px 25px;
-            padding-right: 185px !important;
+            padding-right: 40px !important;
             font-size: 16px;
             outline: none;
             background: transparent;
@@ -263,7 +263,21 @@
         }
 
         #guest-hero-clear-btn {
-            right: 155px !important;
+            position: relative !important;
+            right: auto !important;
+            top: auto !important;
+            transform: none !important;
+            flex-shrink: 0;
+            align-self: center;
+            margin-right: 4px;
+            z-index: 5;
+            background: none !important;
+            border: none !important;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 0 4px !important;
+            display: none;
+            align-items: center;
         }
 
         .search-bar button:not(.guest-clear-search-btn) {
@@ -335,16 +349,14 @@
             }
             .search-bar input {
                 padding: 10px 14px;
-                padding-right: 140px !important;
+                padding-right: 14px !important;
                 font-size: 13.5px;
                 text-align: left;
                 min-width: 0;
                 flex: 1;
                 width: auto;
             }
-            #guest-hero-clear-btn {
-                right: 110px !important;
-            }
+
             .search-bar button:not(.guest-clear-search-btn) {
                 padding: 0 18px;
                 height: 42px;
@@ -359,10 +371,9 @@
 
         @media (max-width: 480px) {
             .search-bar input {
-                padding-right: 120px !important;
+                padding-right: 14px !important;
             }
             #guest-hero-clear-btn {
-                right: 95px !important;
             }
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(220px, max-content));
