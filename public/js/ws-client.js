@@ -39,6 +39,19 @@
     var _config = null;
     var _initialized = false;
     var _tabHidden = false;
+    var _sharedBc = null;
+
+    function getSharedBroadcastChannel() {
+        if (!window.BroadcastChannel) return null;
+        if (!_sharedBc) {
+            try {
+                _sharedBc = new BroadcastChannel('pttm_queue_channel');
+            } catch (e) {
+                _sharedBc = null;
+            }
+        }
+        return _sharedBc;
+    }
 
     // Logging helpers
     function logOk(label, msg) {
@@ -127,9 +140,14 @@
                     if (message.type) {
                         document.dispatchEvent(new CustomEvent('pttm:ws-' + message.type, { detail: message }));
                     }
-                    if (window.BroadcastChannel) {
-                        var _bc = new BroadcastChannel('pttm_queue_channel');
-                        _bc.postMessage(message);
+                    var _bc = getSharedBroadcastChannel();
+                    if (_bc) {
+                        try {
+                            var _bcPayload = (typeof message === 'object' && message !== null)
+                                ? Object.assign({}, message, { _fromWs: true })
+                                : message;
+                            _bc.postMessage(_bcPayload);
+                        } catch (bcErr) { /* ignore postMessage error */ }
                     }
                 } catch (e) { /* ignore event dispatch error */ }
 
@@ -259,6 +277,10 @@
             _connected = false;
             _initialized = false;
             _config = null;
+            if (_sharedBc) {
+                try { _sharedBc.close(); } catch (e) {}
+                _sharedBc = null;
+            }
         }
     };
 

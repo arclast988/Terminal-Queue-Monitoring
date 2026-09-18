@@ -73,7 +73,7 @@
         style.textContent = [
             '/* Global Progress Bar (4px Vibrant Glow) */',
             '.global-progress-bar {',
-            '  position: fixed; top: 0; left: 0; width: 100%; height: 4px; z-index: 999999;',
+            '  position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 4px !important; z-index: 999999 !important;',
             '  pointer-events: none !important; user-select: none !important; -webkit-user-select: none !important;',
             '  opacity: 0; transition: opacity 0.25s ease;',
             '}',

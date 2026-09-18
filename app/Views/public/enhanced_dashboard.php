@@ -2488,7 +2488,6 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/ws-client.js?v=20260905') ?>"></script>
     <script src="<?= base_url('js/queue-sync.js?v=20260906') ?>"></script>
     <script>
         var _fetchPending = false;
@@ -3015,7 +3014,17 @@
             }
         }
 
-        // Fetch status for real-time sync
+        // Fetch status for real-time sync (debounced to avoid server/browser spam)
+        var _fetchTimer = null;
+        function scheduleFetchStatus(delay) {
+            delay = typeof delay === 'number' ? delay : 300;
+            if (_fetchTimer) clearTimeout(_fetchTimer);
+            _fetchTimer = setTimeout(function() {
+                _fetchTimer = null;
+                fetchStatus();
+            }, delay);
+        }
+
         function fetchStatus() {
             if (_fetchPending) {
                 _fetchQueued = true;
@@ -3311,23 +3320,24 @@
         });
 
         // Universal WebSocket document event listeners for full real-time reactivity
-        document.addEventListener('pttm:ws-queue_update', function() { fetchStatus(); });
-        document.addEventListener('pttm:ws-vehicle_type_update', function() { fetchStatus(); });
-        document.addEventListener('pttm:ws-fare_update', function() { fetchStatus(); });
-        document.addEventListener('pttm:ws-operational_settings_updated', function() { fetchStatus(); });
-        document.addEventListener('pttm:ws-announcement_update', function() { fetchStatus(); });
-        document.addEventListener('pttm:ws-branding_updated', function() { fetchStatus(); });
+        document.addEventListener('pttm:ws-queue_update', function() { scheduleFetchStatus(300); });
+        document.addEventListener('pttm:ws-vehicle_type_update', function() { scheduleFetchStatus(300); });
+        document.addEventListener('pttm:ws-fare_update', function() { scheduleFetchStatus(300); });
+        document.addEventListener('pttm:ws-operational_settings_updated', function() { scheduleFetchStatus(300); });
+        document.addEventListener('pttm:ws-announcement_update', function() { scheduleFetchStatus(300); });
+        document.addEventListener('pttm:ws-branding_updated', function() { scheduleFetchStatus(300); });
 
         // Cross-tab broadcast sync for instant passenger updates across open windows
+        var _pttmQueueChannel = null;
         try {
             if (window.BroadcastChannel) {
-                var _pttmQueueChannel = new BroadcastChannel('pttm_queue_channel');
+                _pttmQueueChannel = new BroadcastChannel('pttm_queue_channel');
                 _pttmQueueChannel.onmessage = function(e) {
                     if (e.data && (e.data.action === 'passenger_change' || (e.data.data && e.data.data.action === 'passenger_change'))) {
                         var pData = e.data.action === 'passenger_change' ? e.data : e.data.data;
                         handleRealtimePassengerChange(pData);
                     } else {
-                        fetchStatus();
+                        scheduleFetchStatus(300);
                     }
                 };
             }
@@ -3339,8 +3349,21 @@
                     var parsed = JSON.parse(e.newValue);
                     if (parsed && parsed.action === 'passenger_change') {
                         handleRealtimePassengerChange(parsed);
+                    } else {
+                        scheduleFetchStatus(300);
                     }
                 } catch(err) {}
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (_pttmQueueChannel) {
+                try { _pttmQueueChannel.close(); } catch(err) {}
+                _pttmQueueChannel = null;
+            }
+            if (_fetchTimer) {
+                clearTimeout(_fetchTimer);
+                _fetchTimer = null;
             }
         });
 

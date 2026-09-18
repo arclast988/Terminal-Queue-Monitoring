@@ -43,6 +43,14 @@
     // Tracks the last time a WS passenger_change was received for each ID
     // so that stale poll data does not overwrite a fresh WS update.
     var _wsUpdatedAt = {};
+
+    // In-flight refresh guards and debounce to prevent concurrent DOMParser/HTML memory bloat
+    var _refreshPending = false;
+    var _refreshQueued = false;
+    var _lastRefreshTime = 0;
+    var _refreshTimer = null;
+    var _queueSyncBc = null;
+    var REFRESH_DEBOUNCE_MS = 500;
     var WS_COOLDOWN_MS = 2000;
     var _lastPollTimestamp = 0;
     var WS_CONNECTED_HEARTBEAT_INTERVAL = 30000; // 30s background sync safety poll when WS connected
@@ -385,6 +393,27 @@
         }
         if (!_config || !_config.refreshUrl) return;
 
+        // In-flight lock: coalesce overlapping requests
+        if (_refreshPending) {
+            _refreshQueued = true;
+            return;
+        }
+
+        // Debounce guard: throttle rapid successive refreshes
+        var now = Date.now();
+        var timeSinceLast = now - _lastRefreshTime;
+        if (timeSinceLast < REFRESH_DEBOUNCE_MS) {
+            if (!_refreshTimer) {
+                _refreshTimer = setTimeout(function() {
+                    _refreshTimer = null;
+                    ajaxRefresh();
+                }, REFRESH_DEBOUNCE_MS - timeSinceLast);
+            }
+            return;
+        }
+
+        _refreshPending = true;
+
         fetch(_config.refreshUrl, {
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
@@ -438,6 +467,14 @@
         })
         .catch(function(err) {
             console.error('[QueueSync] Refresh error:', err);
+        })
+        .finally(function() {
+            _refreshPending = false;
+            _lastRefreshTime = Date.now();
+            if (_refreshQueued) {
+                _refreshQueued = false;
+                ajaxRefresh();
+            }
         });
     }
 
@@ -789,9 +826,9 @@
 
             // Listen to cross-tab BroadcastChannel for instant queue updates
             try {
-                if (window.BroadcastChannel) {
-                    var _bc = new BroadcastChannel('pttm_queue_channel');
-                    _bc.onmessage = function(e) {
+                if (window.BroadcastChannel && !_queueSyncBc) {
+                    _queueSyncBc = new BroadcastChannel('pttm_queue_channel');
+                    _queueSyncBc.onmessage = function(e) {
                         if (e.data && e.data.type === 'queue_update') {
                             handleWSMessage(e.data);
                         }
@@ -868,6 +905,11 @@
         /** Stop all polling and listeners */
         destroy: function() {
             stopPolling();
+            if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
+            if (_queueSyncBc) {
+                try { _queueSyncBc.close(); } catch(e) {}
+                _queueSyncBc = null;
+            }
             document.removeEventListener('visibilitychange', onVisibilityChange);
             _config = null;
             _lastIds = {};

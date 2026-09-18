@@ -310,7 +310,7 @@
             max-width: 100% !important;
             padding-top: calc(var(--site-header-height, 80px) + 10px) !important;
             padding-right: 24px !important;
-            padding-bottom: 30px !important;
+            padding-bottom: 24px !important;
             padding-left: 24px !important;
             background-color: transparent !important;
             box-sizing: border-box !important;

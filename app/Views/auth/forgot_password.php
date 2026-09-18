@@ -39,12 +39,13 @@
             --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { -webkit-text-size-adjust: 100%; }        body {
+        html { -webkit-text-size-adjust: 100%; }
+        body {
             font-family: var(--font);
             background: transparent;
             color: var(--text);
             min-height: 100vh; min-height: 100dvh;
-            display: grid; place-items: center;
+            display: flex; align-items: center; justify-content: center;
             padding: var(--space-6);
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
@@ -74,7 +75,7 @@
         <?= app_bg_slideshow_css(null, 0.22) ?>
         <?php endif; ?>
 
-        .scenery { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .scenery { position: fixed !important; inset: 0 !important; z-index: 0 !important; pointer-events: none !important; overflow: hidden !important; }
         .scenery svg { position: absolute; display: block; }
         .scenery .routes { top: -60px; right: -80px; width: 640px; height: 640px; }
         .scenery .skyline { bottom: -2px; left: 0; width: 100%; height: 150px; }
@@ -84,6 +85,7 @@
             z-index: 1;
             width: 100%;
             max-width: 420px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -102,8 +104,8 @@
             display: block; width: 100%; height: 100%;
             border-radius: 9px; object-fit: cover;
         }
-        .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; color: var(--text); line-height: 1.2; }
-        .brand-sub { display: block; font-size: 12.5px; font-weight: 500; color: var(--text-2); margin-top: 2px; }
+        .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .brand-sub { display: block; font-size: 12px; font-weight: 800; color: #000000 !important; margin-top: 1px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
         .card {
             width: 100%;
@@ -190,7 +192,7 @@
         }
     </style>
 </head>
-<body>
+<body class="auth-page">
     <div class="scenery" aria-hidden="true">
         <svg class="routes" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M40 470C170 350 300 500 470 350S640 170 610 60" stroke="#D62828" stroke-opacity="0.10" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>

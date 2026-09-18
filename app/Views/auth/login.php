@@ -100,11 +100,11 @@
 
         /* ---- Subtle transportation scenery (route lines, nodes, faint skyline) ---- */
         .scenery {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 0 !important;
+            pointer-events: none !important;
+            overflow: hidden !important;
         }
         .scenery svg { position: absolute; display: block; }
         .scenery .routes { top: -60px; right: -80px; width: 640px; height: 640px; }
@@ -567,7 +567,7 @@
         }
     </style>
 </head>
-<body>
+<body class="auth-page">
 
     <!-- Subtle transportation scenery -->
     <div class="scenery" aria-hidden="true">

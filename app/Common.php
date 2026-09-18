@@ -1043,7 +1043,7 @@ body:not(.auth-page)::before {
     z-index: 0;
     pointer-events: none;
 }
-body:not(.auth-page) > *:not(.modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay) {
+body:not(.auth-page) > *:not(.modal):not(.dropdown-content):not(.sticky-top-wrapper):not(#site-header):not(.ann-modal-overlay):not(.mobile-nav-overlay):not(.scenery):not(.global-progress-bar):not(#global-progress-bar):not(.footer):not(footer) {
     position: relative;
     z-index: 1;
 }
@@ -2035,7 +2035,9 @@ body.admin-theme .pagination .page-item.active .page-link {
 
 /* --- Common Dropdown Menus (Management, Records, etc.) --- */
 body.admin-theme .dropdown-content,
-body.staff-theme .dropdown-content {
+body.staff-theme .dropdown-content,
+body.admin-theme .nav-menu .dropdown-content,
+body.staff-theme .nav-menu .dropdown-content {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15) !important;
@@ -2045,7 +2047,9 @@ body.staff-theme .dropdown-content {
     min-width: 200px !important;
 }
 body.admin-theme .dropdown-content a,
-body.staff-theme .dropdown-content a {
+body.staff-theme .dropdown-content a,
+body.admin-theme .nav-menu .dropdown-content a,
+body.staff-theme .nav-menu .dropdown-content a {
     color: #1e293b !important;
     -webkit-text-fill-color: #1e293b !important;
     font-size: 13.5px !important;
@@ -2059,7 +2063,9 @@ body.staff-theme .dropdown-content a {
     transition: background 0.15s ease, color 0.15s ease !important;
 }
 body.admin-theme .dropdown-content a i,
-body.staff-theme .dropdown-content a i {
+body.staff-theme .dropdown-content a i,
+body.admin-theme .nav-menu .dropdown-content a i,
+body.staff-theme .nav-menu .dropdown-content a i {
     color: #64748b !important;
     -webkit-text-fill-color: #64748b !important;
     font-size: 14px !important;
@@ -2067,41 +2073,49 @@ body.staff-theme .dropdown-content a i {
     text-align: center !important;
     opacity: 1 !important;
 }
-body.admin-theme .dropdown-content a:hover {
+body.admin-theme .dropdown-content a:hover,
+body.admin-theme .nav-menu .dropdown-content a:hover {
     background: #f1f5f9 !important;
     color: {$ap['hex']} !important;
     -webkit-text-fill-color: {$ap['hex']} !important;
 }
-body.admin-theme .dropdown-content a:hover i {
+body.admin-theme .dropdown-content a:hover i,
+body.admin-theme .nav-menu .dropdown-content a:hover i {
     color: {$ap['hex']} !important;
     -webkit-text-fill-color: {$ap['hex']} !important;
 }
-body.admin-theme .dropdown-content a.active {
+body.admin-theme .dropdown-content a.active,
+body.admin-theme .nav-menu .dropdown-content a.active {
     background: {$ap['soft']} !important;
     color: {$ap['hex']} !important;
     -webkit-text-fill-color: {$ap['hex']} !important;
     font-weight: 700 !important;
 }
-body.admin-theme .dropdown-content a.active i {
+body.admin-theme .dropdown-content a.active i,
+body.admin-theme .nav-menu .dropdown-content a.active i {
     color: {$ap['hex']} !important;
     -webkit-text-fill-color: {$ap['hex']} !important;
 }
-body.staff-theme .dropdown-content a:hover {
+body.staff-theme .dropdown-content a:hover,
+body.staff-theme .nav-menu .dropdown-content a:hover {
     background: #f1f5f9 !important;
     color: {$sp['hex']} !important;
     -webkit-text-fill-color: {$sp['hex']} !important;
 }
-body.staff-theme .dropdown-content a:hover i {
+body.staff-theme .dropdown-content a:hover i,
+body.staff-theme .nav-menu .dropdown-content a:hover i {
     color: {$sp['hex']} !important;
     -webkit-text-fill-color: {$sp['hex']} !important;
 }
-body.staff-theme .dropdown-content a.active {
+body.staff-theme .dropdown-content a.active,
+body.staff-theme .nav-menu .dropdown-content a.active {
     background: {$sp['soft']} !important;
     color: {$sp['hex']} !important;
     -webkit-text-fill-color: {$sp['hex']} !important;
     font-weight: 700 !important;
 }
-body.staff-theme .dropdown-content a.active i {
+body.staff-theme .dropdown-content a.active i,
+body.staff-theme .nav-menu .dropdown-content a.active i {
     color: {$sp['hex']} !important;
     -webkit-text-fill-color: {$sp['hex']} !important;
 }

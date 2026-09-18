@@ -539,7 +539,6 @@ if (!empty($recent_departures)) {
 
 <?= $this->include('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20260907') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js?v=20260907') ?>"></script>
 <script>
     let currentVehicleTypeFilter = 'all';
