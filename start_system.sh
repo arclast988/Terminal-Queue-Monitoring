@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Palompon Transit System - WSL Launcher (native bash)
+# Terminal Queue Monitoring System - WSL Launcher (native bash)
 #
 # Mirror of start_system.bat for users working directly inside a WSL/Ubuntu
 # terminal. Auto-detects its own location, self-elevates with sudo, then hands
@@ -13,7 +13,7 @@
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "====================================================================="
-echo "  Palompon Transit Management System - WSL Launcher"
+echo "  Terminal Queue Monitoring System - WSL Launcher"
 echo "====================================================================="
 echo
 

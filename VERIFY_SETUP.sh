@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verification script for Jeepney nVans setup
+# Verification script for Terminal Queue Monitoring System setup
 # Run this after installation to verify everything is working
 # Usage: bash VERIFY_SETUP.sh
 
@@ -20,7 +20,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo ""
 echo "╔════════════════════════════════════════════════════════════════════╗"
-echo "║  Jeepney nVans - Setup Verification                               ║"
+echo "║  Terminal Queue Monitoring System - Setup Verification                               ║"
 echo "╚════════════════════════════════════════════════════════════════════╝"
 echo ""
 

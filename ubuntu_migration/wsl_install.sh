@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local WSL stack installer for the Palompon Transit Management System.
+# Local WSL stack installer for the Terminal Queue Monitoring System.
 # Installs PostgreSQL, PHP 8.2+ (auto-detected), Nginx, Composer, and the project's PHP
 # dependencies inside WSL Ubuntu. Invoked by install_system.bat.
 # Idempotent - safe to re-run. Invoked by install_system.bat as root inside WSL.
@@ -11,7 +11,7 @@ set -e
 PROJECT_ROOT="${1:-/mnt/c/xampp2/htdocs/jeepneynvans}"
 
 echo "====================================================================="
-echo "  Palompon Transit Management System - WSL Stack Installer"
+echo "  Terminal Queue Monitoring System - WSL Stack Installer"
 echo "====================================================================="
 
 # --- 1. Apt index + core utilities ---

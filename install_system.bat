@@ -1,5 +1,5 @@
 @echo off
-title Palompon Transit System - First-time Installer
+title Terminal Queue Monitoring System - First-time Installer
 setlocal enableextensions
 
 REM Emit UTF-8 from wsl so FOR /F and findstr can parse output cleanly
@@ -16,7 +16,7 @@ if errorlevel 1 if "%ELEVATED%"=="0" (
 )
 
 echo =====================================================================
-echo   Palompon Transit Management System - First-time Installer
+echo   Terminal Queue Monitoring System - First-time Installer
 echo =====================================================================
 echo.
 echo This will install:  WSL 2 (if missing), Ubuntu, PostgreSQL, PHP 8.2-FPM,

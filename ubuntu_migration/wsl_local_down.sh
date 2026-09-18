@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local WSL teardown for the Palompon Transit Management System.
+# Local WSL teardown for the Terminal Queue Monitoring System.
 # Stops the WebSocket server, Nginx, PHP-FPM, and PostgreSQL that were started by
 # wsl_local_up.sh. Database data files on disk are preserved so a stop/start
 # round-trip is non-destructive. Invoked by stop_system.bat (run as root in WSL).
@@ -9,7 +9,7 @@
 PROJECT_ROOT="${1:-/mnt/c/xampp2/htdocs/jeepneynvans}"
 
 echo "====================================================================="
-echo "  Palompon Transit Management System - WSL Shutdown"
+echo "  Terminal Queue Monitoring System - WSL Shutdown"
 echo "====================================================================="
 
 # --- 1. Detect installed PHP version so we stop the right php-fpm service ---

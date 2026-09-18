@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# Jeepney NVans - Ubuntu + Nginx Server Provisioning & Deployment Script
+# Terminal Queue Monitoring System - Ubuntu + Nginx Server Provisioning & Deployment Script
 # ─────────────────────────────────────────────────────────────────────────────
 # This script automates setting up a fresh Ubuntu server (22.04 LTS or 24.04 LTS)
-# to host the Jeepney NVans Capstone Project without XAMPP.
+# to host the Terminal Queue Monitoring System without XAMPP.
 # 
 # Usage:
 #   1. Copy this script to your Ubuntu server.

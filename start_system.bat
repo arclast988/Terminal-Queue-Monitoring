@@ -1,5 +1,5 @@
 @echo off
-title Palompon Transit System - WSL Launcher
+title Terminal Queue Monitoring System - WSL Launcher
 setlocal enabledelayedexpansion
 
 REM Emit UTF-8 from wsl so FOR /F captures the path cleanly
@@ -19,7 +19,7 @@ set "WSL_USER=root"
 set "WSL=wsl -d %UBUNTU_DISTRO% -u %WSL_USER%"
 
 echo =====================================================================
-echo   Palompon Transit Management System - WSL Launcher
+echo   Terminal Queue Monitoring System - WSL Launcher
 echo =====================================================================
 echo.
 echo Starting services: Nginx, PHP-FPM, PostgreSQL, WebSocket Server...

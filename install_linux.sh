@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# install_linux.sh — Palompon Transit Management System
+# install_linux.sh — Terminal Queue Monitoring System
 # ─────────────────────────────────────────────────────────────────────────────
 # One-shot installer for a NATIVE Ubuntu/Debian machine (no WSL, no XAMPP).
 #
@@ -62,7 +62,7 @@ DB_PASS="12345678"
 NGINX_SITE="jeepneynvans"
 
 echo "====================================================================="
-echo "  Palompon Transit Management System — Linux Installer"
+echo "  Terminal Queue Monitoring System — Linux Installer"
 echo "  Project : $PROJECT_ROOT"
 echo "  Run as  : $RUN_USER:$RUN_GROUP"
 echo "====================================================================="
@@ -289,7 +289,7 @@ say "Installing the WebSocket systemd service…"
 PHP_BIN="$(command -v "php${PHP_VER}" || command -v php)"
 cat > /etc/systemd/system/jeepney-websocket.service <<EOF
 [Unit]
-Description=Jeepney nVans WebSocket Server
+Description=Terminal Queue Monitoring System WebSocket Server
 After=network.target postgresql.service
 Wants=postgresql.service
 

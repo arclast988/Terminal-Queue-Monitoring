@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local WSL bring-up for the Palompon Transit Management System.
+# Local WSL bring-up for the Terminal Queue Monitoring System.
 # Starts Nginx + PHP-FPM + PostgreSQL + the WebSocket server, adapting to whatever
 # PHP version is installed. Invoked by start_system.bat (run as root inside WSL).
 
@@ -11,7 +11,7 @@ DB_USER="jeepney_user"
 DB_PASS="12345678"
 
 echo "====================================================================="
-echo "  Palompon Transit Management System - WSL Launcher"
+echo "  Terminal Queue Monitoring System - WSL Launcher"
 echo "====================================================================="
 
 cd "$PROJECT_ROOT" || { echo "[ERROR] Project not found at $PROJECT_ROOT"; exit 1; }
@@ -136,7 +136,7 @@ done
 echo "====================================================================="
 case "$CODE" in
     2*|3*|4*)
-        echo "  ALL SERVICES ARE UP (HTTP ${CODE}) - NO XAMPP NEEDED"
+        echo "  ALL SERVICES ARE UP (HTTP ${CODE})"
         ;;
     5*)
         echo "  [WARN] Nginx returned HTTP ${CODE} (likely 502: PHP-FPM socket mismatch)."

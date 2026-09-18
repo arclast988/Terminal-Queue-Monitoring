@@ -1,5 +1,5 @@
 @echo off
-REM Palompon Transit - Windows/WSL Diagnostic Tool
+REM Terminal Queue Monitoring System - Windows/WSL Diagnostic Tool
 REM Run this to diagnose setup issues
 
 setlocal enabledelayedexpansion
@@ -7,7 +7,7 @@ set "WSL_UTF8=1"
 
 echo.
 echo =====================================================================
-echo   Palompon Transit Management System - WSL Diagnostic Tool
+echo   Terminal Queue Monitoring System - WSL Diagnostic Tool
 echo =====================================================================
 echo.
 

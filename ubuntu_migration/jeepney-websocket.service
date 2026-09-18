@@ -1,5 +1,5 @@
 [Unit]
-Description=Jeepney nVans WebSocket Server
+Description=Terminal Queue Monitoring System WebSocket Server
 After=network.target postgresql.service
 Wants=postgresql.service
 

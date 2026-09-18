@@ -1,5 +1,5 @@
 @echo off
-REM Verification script for Jeepney nVans setup (Windows WSL)
+REM Verification script for Terminal Queue Monitoring System setup (Windows WSL)
 REM Run this after install_system.bat and start_system.bat to verify everything works
 
 setlocal enableextensions
@@ -15,7 +15,7 @@ set "WSL=wsl -d %UBUNTU_DISTRO% -u root"
 
 echo.
 echo ======================================================================
-echo   Jeepney nVans - Setup Verification (Windows WSL)
+echo   Terminal Queue Monitoring System - Setup Verification (Windows WSL)
 echo ======================================================================
 echo.
 

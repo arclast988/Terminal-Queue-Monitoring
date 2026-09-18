@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Palompon Transit System - WSL Shutdown (native bash)
+# Terminal Queue Monitoring System - WSL Shutdown (native bash)
 #
 # Mirror of stop_system.bat for users working directly inside a WSL/Ubuntu
 # terminal. Auto-detects its own location, self-elevates with sudo, then hands
@@ -14,7 +14,7 @@
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "====================================================================="
-echo "  Palompon Transit Management System - WSL Shutdown"
+echo "  Terminal Queue Monitoring System - WSL Shutdown"
 echo "====================================================================="
 echo
 

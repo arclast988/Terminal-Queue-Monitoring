@@ -1,5 +1,5 @@
 @echo off
-title Palompon Transit System - WSL Shutdown
+title Terminal Queue Monitoring System - WSL Shutdown
 setlocal
 
 REM Emit UTF-8 from wsl so FOR /F captures the path cleanly
@@ -18,7 +18,7 @@ set "WSL_USER=root"
 set "WSL=wsl -d %UBUNTU_DISTRO% -u %WSL_USER%"
 
 echo =====================================================================
-echo   Palompon Transit Management System - WSL Shutdown
+echo   Terminal Queue Monitoring System - WSL Shutdown
 echo =====================================================================
 echo.
 
