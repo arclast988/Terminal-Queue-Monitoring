@@ -171,7 +171,7 @@
         if (source && typeof source === 'object' && source.nodeType) {
             var frag = document.createDocumentFragment();
             while (source.firstChild) {
-                frag.appendChild(document.importNode(source.firstChild, true));
+                frag.appendChild(source.firstChild);
             }
             if (typeof targetEl.replaceChildren === 'function') {
                 targetEl.replaceChildren(frag);
@@ -277,32 +277,14 @@
     }
 
     function refreshQueueCards(newDoc) {
-        // Staff queue uses card divs (#queue-list), not a <table>. Always try
-        // both the configured selector and the known card container so admin
-        // vehicle edits appear without a manual page reload.
-        var selectors = [];
-        if (_config && _config.tableSelector) selectors.push(_config.tableSelector);
-        if (selectors.indexOf('#queue-list') === -1) selectors.push('#queue-list');
-
-        selectors.forEach(function(sel) {
-            if (!sel || sel === 'table tbody') return; // legacy default: no table on card pages
+        // Staff queue uses card divs (#queue-list), not a <table>.
+        // If the configured tableSelector is already handled or not #queue-list,
+        // only sync #queue-list here to prevent clearing already-updated tables.
+        var curEl = document.getElementById('queue-list');
+        var newEl = newDoc.getElementById('queue-list');
+        if (newEl && curEl) {
             try {
-                var newEl = newDoc.querySelector(sel);
-                var curEl = document.querySelector(sel);
-                if (newEl && curEl) {
-                    updateTableElement(curEl, newEl);
-                }
-            } catch (e) { /* ignore bad selector */ }
-        });
-
-        // Legacy table pages (admin dashboard, history): keep original behaviour.
-        if (_config && _config.tableSelector === 'table tbody') {
-            try {
-                var newTbody = newDoc.querySelector('table tbody');
-                var curTbody = document.querySelector('table tbody');
-                if (newTbody && curTbody) {
-                    updateTableElement(curTbody, newTbody);
-                }
+                updateTableElement(curEl, newEl);
             } catch (e) { /* ignore */ }
         }
     }
