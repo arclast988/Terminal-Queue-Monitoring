@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260919">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260919b">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -179,6 +179,9 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     </div>
 
     <div class="nav-menu" id="navMenu">
+        <button type="button" class="mobile-nav-close" onclick="closeMenu()" aria-label="Close navigation menu">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
         <a href="<?= base_url('guest') ?>" class="<?= current_url() == base_url('guest') ? 'active' : '' ?>"><i
                 class="fas fa-home"></i> Home</a>
         <a href="<?= base_url('schedules') ?>"
@@ -211,12 +214,12 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         <?php endif; ?>
     </div>
 
-    <div class="mobile-toggle" onclick="toggleMenu()">
-        <i class="fas fa-bars" id="mobileMenuIcon"></i>
-    </div>
+    <button type="button" class="mobile-toggle" onclick="toggleMenu()" aria-label="Open navigation menu" aria-controls="navMenu" aria-expanded="false">
+        <i class="fas fa-bars" id="mobileMenuIcon" aria-hidden="true"></i>
+    </button>
 
     <!-- Mobile overlay backdrop -->
-    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMenu()"></div>
+    <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMenu()"></div>
 </header>
 </div><!-- /.sticky-top-wrapper -->
 
@@ -355,13 +358,15 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         scheduleAnnouncementPoll();
     })();
 
-    function toggleMenu() {
+    function setMenuOpen(shouldOpen) {
         var m = document.getElementById('navMenu');
         var overlay = document.getElementById('mobileNavOverlay');
         var icon = document.getElementById('mobileMenuIcon');
+        var toggle = document.querySelector('.guest-header .mobile-toggle');
         if (!m) return;
-        m.classList.toggle('open');
-        var isOpen = m.classList.contains('open');
+
+        var isOpen = !!shouldOpen;
+        m.classList.toggle('open', isOpen);
         if (overlay) {
             if (isOpen) overlay.classList.add('active');
             else overlay.classList.remove('active');
@@ -370,8 +375,29 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         if (icon) {
             icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
         }
+        if (toggle) {
+            toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+        }
         document.body.style.overflow = isOpen ? 'hidden' : '';
     }
+
+    function toggleMenu() {
+        var menu = document.getElementById('navMenu');
+        setMenuOpen(!(menu && menu.classList.contains('open')));
+    }
+
+    function closeMenu() {
+        setMenuOpen(false);
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closeMenu();
+    });
+
+    window.addEventListener('resize', function () {
+        if (window.innerWidth > 1200) closeMenu();
+    });
 
     // Keep body padding-top in sync with the fixed header height so content
     // never hides under it. Runs once on load and again on every resize.

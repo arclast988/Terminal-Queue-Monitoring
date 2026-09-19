@@ -691,6 +691,66 @@
 
 
         /* --- Responsive Queries --- */
+        @media (max-width: 1200px) {
+            .schedule-card {
+                overflow-x: hidden;
+            }
+
+            .schedule-table thead {
+                display: none;
+            }
+
+            .schedule-table,
+            .schedule-table tbody,
+            .schedule-table tr,
+            .schedule-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .schedule-table tbody {
+                padding: 16px;
+            }
+
+            .schedule-table tr {
+                padding: 15px;
+                border: 1px solid #edf2f7;
+                border-radius: 15px;
+                margin-bottom: 15px;
+                background: white;
+                transition: var(--transition);
+            }
+
+            .schedule-table tr:last-child {
+                margin-bottom: 0;
+            }
+
+            .schedule-table td {
+                padding: 10px 0;
+                border: none;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 20px;
+                text-align: right;
+            }
+
+            .schedule-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                color: var(--text-muted);
+                font-size: 12px;
+                text-transform: uppercase;
+                text-align: left;
+                flex: 0 0 auto;
+            }
+
+            .schedule-table td > * {
+                min-width: 0;
+                max-width: 70%;
+            }
+        }
+
         @media (max-width: 768px) {
             header { padding: 10px 5%; min-height: 65px; border-bottom: 1px solid #eee; }
             .logo { width: 48px; height: 48px; min-width: 48px; border-radius: 10px; flex-shrink: 0; }
