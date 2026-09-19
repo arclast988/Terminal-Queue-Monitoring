@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "=========================================="
 echo "  Jeepney nVans - Railway Startup"
@@ -12,22 +11,15 @@ PORT="${PORT:-8080}"
 # Format: postgresql://user:password@host:port/database
 if [ -n "$DATABASE_URL" ]; then
     echo "[DB] Parsing DATABASE_URL..."
-    # Remove the protocol prefix
     DB_CONN="${DATABASE_URL#*://}"
-    # Extract user
     DB_USER="${DB_CONN%%:*}"
     DB_CONN="${DB_CONN#*:}"
-    # Extract password
     DB_PASS="${DB_CONN%%@*}"
     DB_CONN="${DB_CONN#*@}"
-    # Extract host
     DB_HOST="${DB_CONN%%:*}"
     DB_CONN="${DB_CONN#*:}"
-    # Extract port
     DB_PORT="${DB_CONN%%/*}"
-    # Extract database name
     DB_NAME="${DB_CONN#*/}"
-    
     echo "[DB] Host=$DB_HOST Port=$DB_PORT Database=$DB_NAME User=$DB_USER"
 else
     echo "[DB] WARNING: No DATABASE_URL found, using defaults"
@@ -67,20 +59,9 @@ websocket.broadcastPort = ${WEBSOCKET_BROADCAST_PORT:-8082}
 ENVFILE
 echo "[ENV] .env file generated!"
 
-# Import PostgreSQL schema if DATABASE_URL is available
-if [ -n "$DATABASE_URL" ]; then
-    echo "[DB] Checking if database tables exist..."
-    
-    TABLE_EXISTS=$(psql "$DATABASE_URL" -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users');" 2>/dev/null || echo "false")
-    
-    if [ "$TABLE_EXISTS" != "t" ]; then
-        echo "[DB] Importing PostgreSQL schema..."
-        psql "$DATABASE_URL" -f app/Database/postgres_schema.sql
-        echo "[DB] Schema imported successfully!"
-    else
-        echo "[DB] Tables already exist, skipping import."
-    fi
-fi
+# Import schema using PHP (psql is not available in Nixpacks PHP container)
+echo "[DB] Importing schema via PHP..."
+php import_schema.php app/Database/postgres_schema.sql || echo "[DB] Schema import skipped or failed (non-fatal)"
 
 # Create writable directories
 mkdir -p writable/cache writable/logs writable/session writable/uploads writable/debugbar
