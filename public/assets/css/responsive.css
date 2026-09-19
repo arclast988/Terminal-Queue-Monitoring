@@ -1569,15 +1569,35 @@ body.staff-theme .logout-btn-custom {
         align-self: flex-start !important;
     }
 
-    /* Page-header action buttons go full width on phones */
+    /* Keep phone header actions easy to tap without turning them into oversized tiles. */
     .page-header-modern > div,
-    .page-header-modern > a.btn-modern {
+    .page-header-modern > .page-header-actions {
         width: 100%;
     }
 
+    .page-header-modern > a.btn-modern,
     .page-header-modern .btn-modern {
-        width: 100%;
+        width: auto;
+        max-width: 100%;
+        min-height: 40px;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
         justify-content: center;
+        white-space: nowrap;
+    }
+
+    .page-header-modern > .d-flex,
+    .page-header-modern > .page-header-actions {
+        flex-wrap: wrap;
+    }
+
+    .page-header-modern .vehicle-header-actions {
+        width: auto !important;
+        max-width: 100%;
+    }
+
+    .page-header-modern .vehicle-header-actions .btn-modern {
+        flex: 0 1 auto;
     }
 }
 

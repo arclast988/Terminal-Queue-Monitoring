@@ -8,7 +8,7 @@
         <i class="bi bi-truck"></i>
         Vehicle Register
     </h1>
-    <div class="d-flex gap-2">
+    <div class="page-header-actions vehicle-header-actions d-flex gap-2">
         <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageVehicleTypesModal">
             <i class="bi bi-gear-fill me-1"></i> Manage Types
         </button>
