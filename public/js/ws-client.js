@@ -4,7 +4,7 @@
  * Provides a consistent, reusable WebSocket connection for all
  * pages in the application. Features:
  *   • Exponential backoff reconnect (max 15s)
- *   • Polling fallback when WS is disconnected
+ *   • Optional polling fallback when WS is disconnected
  *   • Event callback registration (updateable)
  *   • Tab-visibility awareness (pauses reconnect when hidden)
  *   • Consistent console logging
@@ -320,18 +320,7 @@
     function applyLiveBranding(data) {
         if (!data) return;
 
-        // Guest pages use inline <style> blocks that don't re-render when CSS
-        // variables change via JS.  A page reload is the only reliable way to
-        // pick up new branding.  Branding changes are rare admin actions, so
-        // a quick reload is perfectly acceptable.
         var category = data.category || null;
-        var isGuestPage = document.body && !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme') && !document.body.classList.contains('auth-page');
-        if (isGuestPage && category) {
-            window.location.reload();
-            return;
-        }
-
-        if (!category) category = data.category || null;
         var affectsAll = !category;
         var affectsIdentity = affectsAll || category === 'identity';
         var affectsLogo = affectsAll || category === 'logo';

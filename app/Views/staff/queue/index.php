@@ -1303,9 +1303,9 @@
 
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20260919') ?>"></script>
 <script src="<?= base_url('js/debounce-passengers.js') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js?v=20260906') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260919') ?>"></script>
 <script>
     // Initialize debounced passenger controls
     PassengerDebounce.init({

@@ -15,9 +15,10 @@ node_modules/
 vendor/
 venv/
 .venv/
-#.env
-#.env.local
-#.env.*
+.env
+.env.local
+.env.*
+!.env.example
 
 # Build directories
 dist/

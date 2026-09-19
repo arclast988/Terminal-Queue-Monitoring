@@ -12,7 +12,7 @@
  *   • Visibility-aware: pauses polling when tab is hidden
  *   • Modal re-mounting after table refresh
  *   • Integrates with QueueWS for instant WebSocket updates
- *   • ALWAYS polls as fallback — WebSocket is the fast-path
+ *   • Adaptive safety polling — WebSocket is the fast-path
  *
  * Usage:
  *   QueueSync.init({
@@ -22,7 +22,7 @@
  *       tableSelector:    '#adminQueueTable tbody',
  *       modalSelector:    '[id^="confirmDepartModal"]',
  *       extraRefresh:     function(newDoc) { ... },  // optional
- *       onlyWS:           false,                     // ignored — polling always runs
+ *       onlyWS:           false,                     // legacy option; polling remains a safety path
  *       customRefresh:    function() { ... },         // optional override
  *       customWSHandler:  function(msg) { ... }       // optional override
  *   });
@@ -53,7 +53,10 @@
     var REFRESH_DEBOUNCE_MS = 500;
     var WS_COOLDOWN_MS = 2000;
     var _lastPollTimestamp = 0;
-    var WS_CONNECTED_HEARTBEAT_INTERVAL = 30000; // 30s background sync safety poll when WS connected
+    // WebSocket messages are the fast path. A low-frequency safety poll catches
+    // a rare missed message without making every connected browser hit PHP and
+    // PostgreSQL every few seconds.
+    var WS_CONNECTED_HEARTBEAT_INTERVAL = 120000;
 
     /* ── Passenger UI helpers ── */
 
@@ -571,8 +574,7 @@
                 var isWSConnected = (typeof QueueWS !== 'undefined' && QueueWS.isConnected && QueueWS.isConnected());
                 var now = Date.now();
                 if (isWSConnected) {
-                    // WebSocket is active: keep a guaranteed 10s background safety poll
-                    // to prevent any dropped messages or half-open socket stalls
+                    // WebSocket is active: retain only a low-frequency safety poll.
                     if ((now - _lastPollTimestamp) < WS_CONNECTED_HEARTBEAT_INTERVAL) {
                         return;
                     }
@@ -833,7 +835,8 @@
                 }
             });
 
-            // ALWAYS start polling — this is the guaranteed fallback
+            // Polling is the recovery path. While WebSocket is connected the
+            // loop automatically drops to the low-frequency safety interval.
             startPolling();
 
             // Initialize WebSocket (fast-path for instant updates)
@@ -854,11 +857,7 @@
                         onConnected: function() {
                             // Immediately fetch fresh data on WS connect
                             doRefresh();
-                        },
-                        pollingFallback: function() {
-                            doRefresh();
-                        },
-                        pollingInterval: 30000
+                        }
                     });
                 } catch(e) {
                     // WebSocket not available — polling handles it

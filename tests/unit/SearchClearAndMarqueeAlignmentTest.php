@@ -11,14 +11,16 @@ class SearchClearAndMarqueeAlignmentTest extends CIUnitTestCase
         $html = view('templates/guest_header', [
             'title' => 'Home',
         ]);
+        $css = file_get_contents(FCPATH . 'assets/css/guest-shell.css');
 
-        $this->assertStringContainsString('display: inline-flex;', $html);
-        $this->assertStringContainsString('align-items: center;', $html);
-        $this->assertStringContainsString('line-height: 42px !important;', $html);
-        $this->assertStringContainsString('white-space: nowrap !important;', $html);
-        $this->assertStringContainsString('font-weight: 800 !important;', $html);
-        $this->assertStringContainsString('min-height: 42px;', $html);
-        $this->assertStringContainsString('color: #ffffff !important;', $html);
+        $this->assertStringContainsString('assets/css/guest-shell.css', $html);
+        $this->assertStringContainsString('display: inline-flex;', $css);
+        $this->assertStringContainsString('align-items: center;', $css);
+        $this->assertStringContainsString('line-height: 42px !important;', $css);
+        $this->assertStringContainsString('white-space: nowrap !important;', $css);
+        $this->assertStringContainsString('font-weight: 800 !important;', $css);
+        $this->assertStringContainsString('min-height: 42px;', $css);
+        $this->assertStringContainsString('color: #ffffff !important;', $css);
     }
 
     public function testSharedFaresClearButtonHiddenWhenEmpty(): void

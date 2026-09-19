@@ -1192,8 +1192,8 @@
     <?= $this->include('templates/guestfooter') ?>
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
-        <script src="<?= base_url('js/ws-client.js?v=20260918b') ?>"></script>
-        <script src="<?= base_url('js/queue-sync.js?v=20260906') ?>"></script>
+        <script src="<?= base_url('js/ws-client.js?v=20260919') ?>"></script>
+        <script src="<?= base_url('js/queue-sync.js?v=20260919') ?>"></script>
         <script>
         var currentType = '<?= esc($vehicle_type) ?>';
         var currentDest = '<?= esc($destination) ?>';

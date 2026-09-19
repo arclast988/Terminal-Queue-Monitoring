@@ -1381,10 +1381,26 @@
         .finally(function() { _fareFetchPending = false; });
     }
 
-    // Auto-refresh fare rates + colors: initial load, every 10s, and
-    // immediately when vehicle-type colors change or a real-time fare update occurs.
+    // WebSocket events refresh fares immediately. The adaptive poll is only a
+    // recovery/safety path and pauses while the tab is hidden.
     fetchFareData();
-    setInterval(fetchFareData, 10000);
+    var _farePollTimer = null;
+    function scheduleFarePoll() {
+        if (_farePollTimer) clearTimeout(_farePollTimer);
+        var wsConnected = window.QueueWS && window.QueueWS.isConnected && window.QueueWS.isConnected();
+        var delay = wsConnected ? 120000 : 30000;
+        _farePollTimer = setTimeout(function() {
+            if (!document.hidden) fetchFareData();
+            scheduleFarePoll();
+        }, delay);
+    }
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            fetchFareData();
+            scheduleFarePoll();
+        }
+    });
+    scheduleFarePoll();
     document.addEventListener('vt-colors-updated', function() { fetchFareData(); });
     document.addEventListener('pttm:ws-vehicle_type_update', function() { fetchFareData(); });
     document.addEventListener('pttm:ws-fare_update', function() { fetchFareData(); });

@@ -43,11 +43,13 @@ class VehiclePhotoAndHeaderTruncationTest extends CIUnitTestCase
     public function testGuestHeaderTruncationStyles(): void
     {
         $guestHeaderContent = file_get_contents(APPPATH . 'Views/templates/guest_header.php');
-        $this->assertStringContainsString('text-overflow: ellipsis !important;', $guestHeaderContent);
-        $this->assertStringContainsString('word-break: break-word !important;', $guestHeaderContent);
-        $this->assertStringContainsString('.guest-header .logo-text h1', $guestHeaderContent);
-        $this->assertStringContainsString('clamp(260px, 38vw, 560px)', $guestHeaderContent);
-        $this->assertStringContainsString('clamp(150px, 56vw, 270px)', $guestHeaderContent);
+        $guestShellCss = file_get_contents(FCPATH . 'assets/css/guest-shell.css');
+        $this->assertStringContainsString('assets/css/guest-shell.css', $guestHeaderContent);
+        $this->assertStringContainsString('text-overflow: ellipsis !important;', $guestShellCss);
+        $this->assertStringContainsString('word-break: break-word !important;', $guestShellCss);
+        $this->assertStringContainsString('.guest-header .logo-text h1', $guestShellCss);
+        $this->assertStringContainsString('clamp(260px, 38vw, 560px)', $guestShellCss);
+        $this->assertStringContainsString('clamp(150px, 56vw, 270px)', $guestShellCss);
     }
 
     public function testNavigationCssHeaderTruncation(): void
@@ -212,6 +214,5 @@ class VehiclePhotoAndHeaderTruncationTest extends CIUnitTestCase
         $this->assertStringContainsString('item.has_custom_photo ? \'custom\' : \'default\'', $queueSyncContent);
     }
 }
-
 
 

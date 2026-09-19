@@ -197,13 +197,15 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $html = view('templates/guest_header', [
             'title' => 'Home',
         ]);
+        $css = file_get_contents(FCPATH . 'assets/css/guest-shell.css');
 
         // Verify enlarged, bold marquee advisory bar
-        $this->assertStringContainsString('min-height: 42px', $html);
-        $this->assertStringContainsString('font-weight: 700', $html);
-        $this->assertStringContainsString('font-size: 16px', $html);
-        $this->assertStringContainsString('width: 28px;', $html);
-        $this->assertStringContainsString('height: 28px;', $html);
+        $this->assertStringContainsString('assets/css/guest-shell.css', $html);
+        $this->assertStringContainsString('min-height: 42px', $css);
+        $this->assertStringContainsString('font-weight: 700', $css);
+        $this->assertStringContainsString('font-size: 16px', $css);
+        $this->assertStringContainsString('width: 28px;', $css);
+        $this->assertStringContainsString('height: 28px;', $css);
     }
 
     public function testAutoRetentionPillInLogsAndHistory(): void
@@ -456,4 +458,3 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $this->assertStringContainsString('window.updateAvatarDom', $html);
     }
 }
-
