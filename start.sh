@@ -11,7 +11,7 @@ PORT="${PORT:-8080}"
 # Generate .env file from Railway environment variables
 echo "[ENV] Generating .env file from Railway variables..."
 cat > .env << ENVFILE
-CI_ENVIRONMENT = production
+CI_ENVIRONMENT = development
 
 app.baseURL = '${RAILWAY_PUBLIC_DOMAIN:+https://$RAILWAY_PUBLIC_DOMAIN/}'
 
