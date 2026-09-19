@@ -2754,6 +2754,7 @@
 
         // Passenger state tracking for floating ghost popups (+1 / -1)
         var _prevPassengerMap = {};
+        var _lastPassengerPopByKey = {};
 
         function initPassengerTracking() {
             document.querySelectorAll('#queueList .queue-card').forEach(function(card) {
@@ -2766,8 +2767,27 @@
         }
         initPassengerTracking();
 
-        function triggerPassengerPop(anchorEl, diff) {
+        function triggerPassengerPop(anchorEl, diff, passengerKey, targetCount) {
             if (!anchorEl || diff === 0) return;
+
+            var popKey = String(passengerKey || anchorEl.getAttribute('data-pop-id') || anchorEl.getAttribute('data-pop-plate') || '');
+            var normalizedTarget = parseInt(targetCount, 10);
+            var now = Date.now();
+            var lastPop = popKey ? _lastPassengerPopByKey[popKey] : null;
+
+            // The same passenger change can arrive through WebSocket, document events,
+            // BroadcastChannel, storage, and polling. Show it only once per final count.
+            if (lastPop && !isNaN(normalizedTarget) && lastPop.count === normalizedTarget && (now - lastPop.time) < 2500) {
+                return;
+            }
+            if (popKey && !isNaN(normalizedTarget)) {
+                _lastPassengerPopByKey[popKey] = { count: normalizedTarget, time: now };
+            }
+
+            anchorEl.querySelectorAll('.passenger-delta-badge').forEach(function(existingBadge) {
+                existingBadge.remove();
+            });
+
             var badge = document.createElement('div');
             var isPositive = diff > 0;
             badge.className = 'passenger-delta-badge ' + (isPositive ? 'pop-increment' : 'pop-decrement');
@@ -3259,7 +3279,7 @@
                                 var diff = passengerDeltas[key];
                                 var anchor = document.querySelector('.passenger-pop-anchor[data-pop-id="' + key + '"], .passenger-pop-anchor[data-pop-plate="' + key + '"]');
                                 if (anchor) {
-                                    triggerPassengerPop(anchor, diff);
+                                    triggerPassengerPop(anchor, diff, key, _prevPassengerMap[key]);
                                 }
                             });
 
@@ -3364,7 +3384,7 @@
 
                 if (previousCount !== undefined && previousCount !== pCount) {
                     var anchor = card.querySelector('.passenger-pop-anchor');
-                    triggerPassengerPop(anchor, pCount - previousCount);
+                    triggerPassengerPop(anchor, pCount - previousCount, passengerKey, pCount);
                 }
             } else {
                 fetchStatus();

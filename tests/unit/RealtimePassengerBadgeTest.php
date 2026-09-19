@@ -65,4 +65,16 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         $this->assertStringContainsString('updateQueueCardPassengerOnly(card, itemStub.current_passengers, itemStub.capacity)', $handler);
         $this->assertStringNotContainsString('updateQueueCardInPlace(card, itemStub', $handler);
     }
+
+    public function testGuestPassengerPopupDeduplicatesRepeatedRealtimeDelivery(): void
+    {
+        $viewFile = APPPATH . 'Views/public/enhanced_dashboard.php';
+        $content = file_get_contents($viewFile);
+
+        $this->assertStringContainsString('var _lastPassengerPopByKey = {};', $content);
+        $this->assertStringContainsString('lastPop.count === normalizedTarget', $content);
+        $this->assertStringContainsString("anchorEl.querySelectorAll('.passenger-delta-badge')", $content);
+        $this->assertStringContainsString('triggerPassengerPop(anchor, pCount - previousCount, passengerKey, pCount)', $content);
+        $this->assertStringContainsString('triggerPassengerPop(anchor, diff, key, _prevPassengerMap[key])', $content);
+    }
 }

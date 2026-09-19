@@ -1,44 +1,25 @@
 <!-- Report Filter Modal (Reusable Partial) -->
-<style>
-    /* Keep vehicle-type autocomplete visible above the modal footer. */
-    #reportFilterModal .modal-dialog,
-    #reportFilterModal .modal-content,
-    #reportFilterModal form,
-    #reportFilterModal .modal-body,
-    #reportFilterModal .mb-3 {
-        overflow: visible !important;
-    }
-
-    #reportFilterModal .autocomplete-wrapper.is-open {
-        position: relative !important;
-        z-index: 3000 !important;
-    }
-
-    #reportFilterModal .autocomplete-dropdown {
-        z-index: 3001 !important;
-    }
-</style>
-<div class="modal fade" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header text-white p-3" style="background: linear-gradient(135deg, #C62828 0%, #B71C1C 100%) !important; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+<div class="modal fade report-filter-modal" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered report-filter-dialog">
+        <div class="modal-content border-0 shadow report-filter-content">
+            <div class="modal-header text-white p-3 report-filter-header" style="background: linear-gradient(135deg, #C62828 0%, #B71C1C 100%) !important; border-top-left-radius: 8px; border-top-right-radius: 8px;">
                 <h5 class="modal-title fw-bold" id="reportFilterModalLabel" style="color: #ffffff !important; display: flex; align-items: center; font-size: 1.15rem;">
                     <i class="fas fa-clock-rotate-left me-2" style="color: #ffffff !important;"></i> Departure Report Configuration
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: brightness(0) invert(1) !important; opacity: 0.9 !important;"></button>
             </div>
-            <form id="reportForm" method="get" target="_blank" action="<?= base_url('admin/history/print') ?>">
-                <div class="modal-body p-4">
+            <form id="reportForm" class="report-filter-form" method="get" target="_blank" action="<?= base_url('admin/history/print') ?>">
+                <div class="modal-body p-4 report-filter-body">
                     <!-- Date Presets -->
                     <label class="form-label small fw-bold text-muted text-uppercase mb-3">Quick Date Selection</label>
-                    <div class="d-flex flex-wrap gap-2 mb-4">
+                    <div class="report-filter-presets mb-4">
                         <button type="button" class="btn btn-sm btn-outline-secondary date-preset" data-range="today">Today</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary date-preset" data-range="week">Last 7 Days</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary date-preset" data-range="month">This Month</button>
                         <button type="button" class="btn btn-sm btn-outline-secondary date-preset" data-range="all">Clear</button>
                     </div>
 
-                    <div class="row g-3 mb-4">
+                    <div class="row g-3 mb-4 report-filter-dates">
                         <div class="col-6">
                             <label class="form-label small fw-bold text-muted text-uppercase">From Date</label>
                             <input type="date" class="form-control" name="from_date" id="modal_from_date">
@@ -88,8 +69,8 @@
                         Please select a date range to generate a departure report.
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-top-0 p-4">
-                    <button type="button" id="btn-pdf" class="btn btn-danger w-100 action-btn" data-action="print" disabled>
+                <div class="modal-footer bg-light p-4 report-filter-footer">
+                    <button type="button" id="btn-pdf" class="btn btn-danger w-100 action-btn report-filter-submit" data-action="print" disabled>
                         <i class="fas fa-file-pdf me-1"></i> Generate Departure Report
                     </button>
                 </div>
