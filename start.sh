@@ -59,6 +59,10 @@ websocket.broadcastPort = ${WEBSOCKET_BROADCAST_PORT:-8082}
 ENVFILE
 echo "[ENV] .env file generated!"
 
+# Reset database if it's in a broken state (tables exist without migrations)
+echo "[DB] Checking database state..."
+php import_schema.php || echo "[DB] Reset check skipped"
+
 # Run migrations to ensure database schema is up to date
 echo "[DB] Running migrations..."
 php spark migrate --all 2>&1 || echo "[DB] Migration completed (or already up to date)"
