@@ -3035,6 +3035,44 @@
             }
         }
 
+        // WebSocket passenger_change messages intentionally contain only the
+        // queue ID, count and capacity. Keep this updater strictly scoped to
+        // passenger UI so missing structural fields can never flash as
+        // "undefined", "N/A" or "TBA" on the guest card.
+        function updateQueueCardPassengerOnly(card, count, capacity) {
+            count = parseInt(count, 10);
+            capacity = parseInt(capacity, 10);
+            if (!card || isNaN(count) || isNaN(capacity) || capacity <= 0) return;
+
+            var percent = Math.min(100, Math.max(0, (count / capacity) * 100));
+            var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
+            var pColorClass = typeof getPassengerColorClass === 'function'
+                ? getPassengerColorClass(count, capacity)
+                : (percent >= 90 ? 'passenger-color-red' : (percent >= 70 ? 'passenger-color-orange' : (percent >= 50 ? 'passenger-color-yellow' : 'passenger-color-green')));
+
+            var countText = card.querySelector('.passenger-count-text');
+            if (countText) {
+                countText.innerHTML = '<strong class="passenger-count-num ' + pColorClass + '">' + count + '</strong> / ' + capacity + ' Onboard';
+            }
+
+            var countRow = card.querySelector('.passenger-count-row');
+            var fullBadge = card.querySelector('.badge-full-tag');
+            if (count >= capacity && !fullBadge && countRow) {
+                fullBadge = document.createElement('span');
+                fullBadge.className = 'badge-full-tag';
+                fullBadge.textContent = 'FULL';
+                countRow.appendChild(fullBadge);
+            } else if (count < capacity && fullBadge) {
+                fullBadge.remove();
+            }
+
+            var progressBar = card.querySelector('.progress-modern .progress-bar, .progress-bar');
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                progressBar.style.background = barColor;
+            }
+        }
+
         // Fetch status for real-time sync (debounced to avoid server/browser spam)
         var _fetchTimer = null;
         function scheduleFetchStatus(delay) {
@@ -3319,7 +3357,15 @@
                     capacity: cap || 14,
                     status: card.classList.contains('queue-card-boarding') ? 'boarding' : 'waiting'
                 };
-                updateQueueCardInPlace(card, itemStub, {});
+                var passengerKey = String(pId);
+                var previousCount = _prevPassengerMap[passengerKey];
+                updateQueueCardPassengerOnly(card, itemStub.current_passengers, itemStub.capacity);
+                _prevPassengerMap[passengerKey] = pCount;
+
+                if (previousCount !== undefined && previousCount !== pCount) {
+                    var anchor = card.querySelector('.passenger-pop-anchor');
+                    triggerPassengerPop(anchor, pCount - previousCount);
+                }
             } else {
                 fetchStatus();
             }

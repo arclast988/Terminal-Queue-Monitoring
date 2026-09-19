@@ -48,4 +48,21 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         // Ensure updatePassengerUI toggles display based on capacity
         $this->assertStringContainsString("badge.style.display = isFull ? 'block' : 'none'", $content);
     }
+
+    public function testGuestPassengerMessageUsesPassengerOnlyUpdater(): void
+    {
+        $viewFile = APPPATH . 'Views/public/enhanced_dashboard.php';
+        $content = file_get_contents($viewFile);
+
+        $this->assertStringContainsString('function updateQueueCardPassengerOnly(card, count, capacity)', $content);
+
+        $handlerStart = strpos($content, 'function handleRealtimePassengerChange(data)');
+        $handlerEnd = strpos($content, '// Initialize real-time sync.', $handlerStart);
+        $this->assertNotFalse($handlerStart);
+        $this->assertNotFalse($handlerEnd);
+
+        $handler = substr($content, $handlerStart, $handlerEnd - $handlerStart);
+        $this->assertStringContainsString('updateQueueCardPassengerOnly(card, itemStub.current_passengers, itemStub.capacity)', $handler);
+        $this->assertStringNotContainsString('updateQueueCardInPlace(card, itemStub', $handler);
+    }
 }
