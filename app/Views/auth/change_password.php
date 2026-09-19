@@ -253,7 +253,7 @@ SVG;
                         </div>
 
                         <!-- Form Actions -->
-                        <div class="d-flex align-items-center justify-content-end gap-2 pt-3" style="border-top: 1px solid #f1f5f9;">
+                        <div class="change-password-actions d-flex align-items-center justify-content-end gap-2 pt-3" style="border-top: 1px solid #f1f5f9;">
                             <a href="<?= $backUrl ?>" class="btn-modern btn-modern-outline">
                                 Cancel
                             </a>
@@ -455,6 +455,25 @@ SVG;
     color: #ffffff !important;
     box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45) !important;
     transform: translateY(-2px);
+}
+
+@media (max-width: 575.98px) {
+    .change-password-actions {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    .change-password-actions > .btn-modern {
+        flex: 1 1 0 !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 42px !important;
+        padding: 8px 10px !important;
+        font-size: 12.5px !important;
+        white-space: nowrap !important;
+    }
 }
 </style>
 

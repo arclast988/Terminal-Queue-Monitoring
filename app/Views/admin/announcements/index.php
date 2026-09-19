@@ -34,9 +34,15 @@
     font-weight: 600 !important;
 }
 @media (max-width: 768px) {
+    .table-modern td.actions-col {
+        justify-content: space-between !important;
+    }
+
     .announcement-actions-wrap {
-        width: 100%;
-        justify-content: flex-end;
+        width: auto !important;
+        margin-left: auto !important;
+        flex: 0 0 auto !important;
+        justify-content: flex-end !important;
     }
 }
 </style>

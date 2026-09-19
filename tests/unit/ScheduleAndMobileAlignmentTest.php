@@ -90,4 +90,16 @@ class ScheduleAndMobileAlignmentTest extends CIUnitTestCase
         $this->assertStringContainsString('cd-orange', $contentDashboard);
         $this->assertStringContainsString('cd-red', $contentDashboard);
     }
+
+    public function testGuestMobileStatsUseTwoCardsThenCenteredThirdCard(): void
+    {
+        $dashboardFile = APPPATH . 'Views/public/enhanced_dashboard.php';
+        $content = file_get_contents($dashboardFile);
+
+        $this->assertStringContainsString('stats-grid guest-stats-grid', $content);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr)) !important;', $content);
+        $this->assertStringContainsString('.guest-stats-grid .stat-card:nth-child(3)', $content);
+        $this->assertStringContainsString('grid-column: 1 / -1;', $content);
+        $this->assertStringContainsString('width: calc(50% - 4px) !important;', $content);
+    }
 }

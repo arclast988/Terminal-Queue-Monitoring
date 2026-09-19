@@ -13,6 +13,8 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
 
         $this->assertStringContainsString('page-header-actions vehicle-header-actions', $view);
         $this->assertStringContainsString('.page-header-modern .vehicle-header-actions', $css);
+        $this->assertStringContainsString('flex-wrap: nowrap !important;', $css);
+        $this->assertStringContainsString('flex: 1 1 0 !important;', $css);
         $this->assertStringContainsString('min-height: 40px;', $css);
         $this->assertStringContainsString('white-space: nowrap;', $css);
         $this->assertStringNotContainsString(".page-header-modern .btn-modern {\n        width: 100%;", $css);
@@ -38,7 +40,21 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $header = file_get_contents(APPPATH . 'Views/templates/header.php');
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
-        $this->assertStringContainsString('responsive.css?v=20260919_2', $header);
+        $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
         $this->assertStringContainsString('navigation.css?v=20260920_1', $navbar);
+    }
+
+    public function testRequestedMobileActionGroupsKeepTheirAlignment(): void
+    {
+        $passwordView = file_get_contents(APPPATH . 'Views/auth/change_password.php');
+        $announcementView = file_get_contents(APPPATH . 'Views/admin/announcements/index.php');
+
+        $this->assertStringContainsString('change-password-actions d-flex', $passwordView);
+        $this->assertStringContainsString('.change-password-actions > .btn-modern', $passwordView);
+        $this->assertStringContainsString('flex-direction: row !important;', $passwordView);
+
+        $this->assertStringContainsString('.announcement-actions-wrap', $announcementView);
+        $this->assertStringContainsString('margin-left: auto !important;', $announcementView);
+        $this->assertStringContainsString('width: auto !important;', $announcementView);
     }
 }

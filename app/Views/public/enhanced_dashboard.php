@@ -2062,6 +2062,40 @@
 
 
         @media (max-width: 530px) {
+            .guest-stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+                width: 100% !important;
+                gap: 8px !important;
+            }
+
+            .guest-stats-grid .stat-card {
+                width: 100% !important;
+                min-width: 0 !important;
+                padding: 10px 8px !important;
+                gap: 8px !important;
+            }
+
+            .guest-stats-grid .stat-card:nth-child(3) {
+                grid-column: 1 / -1;
+                justify-self: center;
+                width: calc(50% - 4px) !important;
+            }
+
+            .guest-stats-grid .stat-icon-wrapper {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 15px !important;
+            }
+
+            .guest-stats-grid .stat-info .value {
+                font-size: 1.05rem !important;
+            }
+
+            .guest-stats-grid .stat-info .label {
+                font-size: 10px !important;
+                line-height: 1.2 !important;
+            }
+
             .support-widget-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 10px;
@@ -2109,7 +2143,7 @@
 
     <div class="container">
         <!-- Stats Summary -->
-        <div class="stats-grid">
+        <div class="stats-grid guest-stats-grid">
             <div class="stat-card">
                 <div class="stat-icon-wrapper si-blue"><i class="fas fa-car-side"></i></div>
                 <div class="stat-info">
