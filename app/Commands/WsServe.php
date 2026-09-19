@@ -21,7 +21,7 @@ class WsServe extends BaseCommand
 
     public function run(array $params)
     {
-        $address = env('websocket.bindAddress', '127.0.0.1');
+        $address = env('websocket.bindAddress', '0.0.0.0');
         $wsPort = (int) env('websocket.clientPort', 8081);
         $broadcastPort = (int) env('websocket.broadcastPort', 8082);
 
