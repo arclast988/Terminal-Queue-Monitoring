@@ -87,6 +87,7 @@ CREATE TABLE vehicles (
     type VARCHAR(50) NOT NULL,
     capacity INT NOT NULL DEFAULT 14,
     owner_name VARCHAR(100) NOT NULL DEFAULT '',
+    photo VARCHAR(255) NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'active',
     route_id INT NULL REFERENCES routes(id) ON DELETE SET NULL,
     default_route_id INT NULL REFERENCES routes(id) ON DELETE SET NULL,
