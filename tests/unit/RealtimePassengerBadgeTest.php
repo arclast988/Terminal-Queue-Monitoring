@@ -71,7 +71,8 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         $viewFile = APPPATH . 'Views/public/enhanced_dashboard.php';
         $content = file_get_contents($viewFile);
 
-        $this->assertStringContainsString('var _lastPassengerPopByKey = {};', $content);
+        $this->assertStringContainsString('window.__pttmPassengerPopByKey || {}', $content);
+        $this->assertStringContainsString('window.__pttmPassengerPopByKey = _lastPassengerPopByKey;', $content);
         $this->assertStringContainsString('lastPop.count === normalizedTarget', $content);
         $this->assertStringContainsString("anchorEl.querySelectorAll('.passenger-delta-badge')", $content);
         $this->assertStringContainsString('triggerPassengerPop(anchor, pCount - previousCount, passengerKey, pCount)', $content);
@@ -79,6 +80,8 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         $this->assertStringNotContainsString('var passengerDeltas = {};', $content, 'Polling should reconcile counts without replaying the popup');
         $this->assertStringNotContainsString('var _pttmQueueChannel = null;', $content, 'QueueSync should be the single owner of cross-tab queue delivery');
         $this->assertStringContainsString('var _lastRealtimePassengerAt = {};', $content);
+        $this->assertStringContainsString('function placeQueueCardAt(card, desiredIndex)', $content);
+        $this->assertStringNotContainsString('queueList.appendChild(existingCard);', $content, 'Stable cards must not be detached because that restarts the active popup animation');
     }
 
     public function testSharedPassengerUpdaterDoesNotInjectFullBadgeIntoNumberSpan(): void
@@ -89,5 +92,21 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         $guard = "span && !span.classList.contains('passenger-count-num')";
         $this->assertStringContainsString($guard, $queueSync);
         $this->assertStringContainsString($guard, $debounce);
+    }
+
+    public function testDepartureRulesModalRestoresFocusBeforeBeingHidden(): void
+    {
+        $content = file_get_contents(APPPATH . 'Views/public/enhanced_dashboard.php');
+
+        $this->assertStringContainsString('aria-hidden="true" inert', $content);
+        $this->assertStringContainsString('var routeAverageReturnFocus = null;', $content);
+        $this->assertStringContainsString("modal.removeAttribute('inert')", $content);
+        $this->assertStringContainsString("modal.setAttribute('inert', '')", $content);
+
+        $focusRestore = strpos($content, "focusTarget.focus({ preventScroll: true })");
+        $hideModal = strpos($content, "modal.setAttribute('aria-hidden', 'true')");
+        $this->assertNotFalse($focusRestore);
+        $this->assertNotFalse($hideModal);
+        $this->assertLessThan($hideModal, $focusRestore, 'Focus must be restored before the modal is hidden from assistive technology');
     }
 }

@@ -2362,7 +2362,7 @@
     </div>
 
     <!-- Departure Time Rules Modal (root-level for proper viewport centering & stacking) -->
-    <div class="route-average-modal modal" id="routeAverageModal" aria-hidden="true">
+    <div class="route-average-modal modal" id="routeAverageModal" aria-hidden="true" inert>
         <div class="route-average-dialog" role="dialog" aria-modal="true" aria-labelledby="routeAverageTitle">
             <div class="route-average-header">
                 <div>
@@ -2480,25 +2480,62 @@
 
     <script>
     // Global modal openers for Departure Rules
+    var routeAverageReturnFocus = null;
+
     window.openRouteAverageModal = function() {
         var modal = document.getElementById('routeAverageModal');
         if (!modal) return;
+        var activeElement = document.activeElement;
+        routeAverageReturnFocus = activeElement && activeElement !== document.body
+            ? activeElement
+            : document.getElementById('routeAverageCard');
         if (modal.parentElement !== document.body) {
             document.body.appendChild(modal);
         }
+        modal.removeAttribute('inert');
         document.body.classList.add('modal-open');
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
+
+        window.requestAnimationFrame(function() {
+            var closeButton = document.getElementById('routeAverageClose');
+            if (closeButton) {
+                try {
+                    closeButton.focus({ preventScroll: true });
+                } catch (e) {
+                    closeButton.focus();
+                }
+            }
+        });
     };
 
     window.closeRouteAverageModal = function() {
         var modal = document.getElementById('routeAverageModal');
         if (!modal) return;
+
+        // Focus must leave the dialog before it becomes aria-hidden. Otherwise
+        // browsers correctly report that assistive technology would lose focus.
+        var focusTarget = routeAverageReturnFocus;
+        if (!focusTarget || !document.documentElement.contains(focusTarget)) {
+            focusTarget = document.getElementById('routeAverageCard');
+        }
+        if (focusTarget && typeof focusTarget.focus === 'function') {
+            try {
+                focusTarget.focus({ preventScroll: true });
+            } catch (e) {
+                focusTarget.focus();
+            }
+        } else if (document.activeElement && modal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+
         modal.classList.remove('is-open');
+        modal.setAttribute('inert', '');
         modal.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
+        routeAverageReturnFocus = null;
     };
     var openRouteAverageModal = window.openRouteAverageModal;
     var closeRouteAverageModal = window.closeRouteAverageModal;
@@ -2788,7 +2825,8 @@
 
         // Passenger state tracking for floating ghost popups (+1 / -1)
         var _prevPassengerMap = {};
-        var _lastPassengerPopByKey = {};
+        var _lastPassengerPopByKey = window.__pttmPassengerPopByKey || {};
+        window.__pttmPassengerPopByKey = _lastPassengerPopByKey;
         var _lastRealtimePassengerAt = {};
 
         function initPassengerTracking() {
@@ -3275,8 +3313,31 @@
                                     if (key) existingCardMap[key] = card;
                                 });
 
+                                // Keep cards in server order without detaching cards that are
+                                // already in the correct position. Re-appending every card
+                                // restarts descendant CSS animations, which made one passenger
+                                // popup appear to run twice.
+                                function placeQueueCardAt(card, desiredIndex) {
+                                    var queueCardIndex = 0;
+                                    var cardAtIndex = null;
+                                    var child = queueList.firstElementChild;
+                                    while (child) {
+                                        if (child.classList.contains('queue-card')) {
+                                            if (queueCardIndex === desiredIndex) {
+                                                cardAtIndex = child;
+                                                break;
+                                            }
+                                            queueCardIndex++;
+                                        }
+                                        child = child.nextElementSibling;
+                                    }
+                                    if (cardAtIndex !== card) {
+                                        queueList.insertBefore(card, cardAtIndex);
+                                    }
+                                }
+
                                 var activeKeys = {};
-                                data.active_queue.forEach(function(item) {
+                                data.active_queue.forEach(function(item, desiredIndex) {
                                     var key = item.id ? String(item.id) : (item.plate_number || '');
                                     activeKeys[key] = true;
 
@@ -3286,15 +3347,14 @@
                                         existingCard.classList.remove('card-leave');
                                         // IN-PLACE TARGETED UPDATE: Never destroy card, smoothly update numbers & progress
                                         updateQueueCardInPlace(existingCard, item);
-                                        // Re-appending moves/preserves order without re-rendering or losing state
-                                        queueList.appendChild(existingCard);
+                                        placeQueueCardAt(existingCard, desiredIndex);
                                     } else {
                                         // Newly arriving vehicle: build element with smooth card-enter animation
                                         var tempDiv = document.createElement('div');
                                         tempDiv.innerHTML = buildQueueCardHtml(item, true);
                                         var newCard = tempDiv.firstElementChild;
                                         if (newCard) {
-                                            queueList.appendChild(newCard);
+                                            placeQueueCardAt(newCard, desiredIndex);
                                             setTimeout(function() {
                                                 if (newCard) newCard.classList.remove('card-enter');
                                             }, 400);
@@ -3363,17 +3423,7 @@
         // Wire up quick filter chips
         initFilterChips();
 
-        var routeAverageCard = document.getElementById('routeAverageCard');
         var routeAverageModal = document.getElementById('routeAverageModal');
-        var routeAverageClose = document.getElementById('routeAverageClose');
-
-        if (routeAverageCard) {
-            routeAverageCard.addEventListener('click', openRouteAverageModal);
-        }
-
-        if (routeAverageClose) {
-            routeAverageClose.addEventListener('click', closeRouteAverageModal);
-        }
 
         if (routeAverageModal) {
             routeAverageModal.addEventListener('click', function (event) {
@@ -3384,7 +3434,7 @@
         }
 
         document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
+            if (event.key === 'Escape' && routeAverageModal && routeAverageModal.classList.contains('is-open')) {
                 closeRouteAverageModal();
             }
         });
