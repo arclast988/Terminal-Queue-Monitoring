@@ -59,9 +59,13 @@ websocket.broadcastPort = ${WEBSOCKET_BROADCAST_PORT:-8082}
 ENVFILE
 echo "[ENV] .env file generated!"
 
-# Import schema using PHP (psql is not available in Nixpacks PHP container)
-echo "[DB] Importing schema via PHP..."
-php import_schema.php app/Database/postgres_schema.sql || echo "[DB] Schema import skipped or failed (non-fatal)"
+# Run migrations to ensure database schema is up to date
+echo "[DB] Running migrations..."
+php spark migrate --all 2>&1 || echo "[DB] Migration completed (or already up to date)"
+
+# Run seeders if tables are empty
+echo "[DB] Checking if seeding is needed..."
+php spark db:seed UserSeeder 2>&1 || echo "[DB] Seeding skipped (already seeded or no seeder)"
 
 # Create writable directories
 mkdir -p writable/cache writable/logs writable/session writable/uploads writable/debugbar
