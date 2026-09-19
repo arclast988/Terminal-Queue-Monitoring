@@ -8,8 +8,38 @@ echo "=========================================="
 # Use Railway's PORT or default to 8080
 PORT="${PORT:-8080}"
 
-# Generate .env file from Railway environment variables
-echo "[ENV] Generating .env file from Railway variables..."
+# Parse DATABASE_URL into individual components
+# Format: postgresql://user:password@host:port/database
+if [ -n "$DATABASE_URL" ]; then
+    echo "[DB] Parsing DATABASE_URL..."
+    # Remove the protocol prefix
+    DB_CONN="${DATABASE_URL#*://}"
+    # Extract user
+    DB_USER="${DB_CONN%%:*}"
+    DB_CONN="${DB_CONN#*:}"
+    # Extract password
+    DB_PASS="${DB_CONN%%@*}"
+    DB_CONN="${DB_CONN#*@}"
+    # Extract host
+    DB_HOST="${DB_CONN%%:*}"
+    DB_CONN="${DB_CONN#*:}"
+    # Extract port
+    DB_PORT="${DB_CONN%%/*}"
+    # Extract database name
+    DB_NAME="${DB_CONN#*/}"
+    
+    echo "[DB] Host=$DB_HOST Port=$DB_PORT Database=$DB_NAME User=$DB_USER"
+else
+    echo "[DB] WARNING: No DATABASE_URL found, using defaults"
+    DB_HOST="127.0.0.1"
+    DB_PORT="5432"
+    DB_NAME="jeepneynvans"
+    DB_USER="jeepney_user"
+    DB_PASS="12345678"
+fi
+
+# Generate .env file
+echo "[ENV] Generating .env file..."
 cat > .env << ENVFILE
 CI_ENVIRONMENT = development
 
@@ -17,13 +47,13 @@ app.baseURL = '${RAILWAY_PUBLIC_DOMAIN:+https://$RAILWAY_PUBLIC_DOMAIN/}'
 
 encryption.key = ${ENCRYPTION_KEY:-hex2bin:f6c5b4d3e2f1a09876543210fedcba9876543210fedcba9876543210fedcba98}
 
-database.default.hostname = ${PGHOST:-127.0.0.1}
-database.default.database = ${PGDATABASE:-jeepneynvans}
-database.default.username = ${PGUSER:-jeepney_user}
-database.default.password = ${PGPASSWORD:-12345678}
+database.default.hostname = $DB_HOST
+database.default.database = $DB_NAME
+database.default.username = $DB_USER
+database.default.password = $DB_PASS
 database.default.DBDriver = Postgre
 database.default.DBPrefix =
-database.default.port = ${PGPORT:-5432}
+database.default.port = $DB_PORT
 
 email.fromEmail  = "${EMAIL_FROM:-arclast988@gmail.com}"
 email.fromName   = "${EMAIL_FROM_NAME:-System Feedback}"
@@ -50,11 +80,9 @@ if [ -n "$DATABASE_URL" ]; then
     else
         echo "[DB] Tables already exist, skipping import."
     fi
-else
-    echo "[DB] WARNING: No DATABASE_URL found, skipping schema import."
 fi
 
-# Create writable directories if they don't exist
+# Create writable directories
 mkdir -p writable/cache writable/logs writable/session writable/uploads writable/debugbar
 chmod -R 777 writable/
 
