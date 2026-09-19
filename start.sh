@@ -59,9 +59,9 @@ websocket.broadcastPort = ${WEBSOCKET_BROADCAST_PORT:-8082}
 ENVFILE
 echo "[ENV] .env file generated!"
 
-# Reset database if it's in a broken state (tables exist without migrations)
+# Ensure database schema is imported and up to date
 echo "[DB] Checking database state..."
-php import_schema.php || echo "[DB] Reset check skipped"
+php import_schema.php || echo "[DB] Schema check skipped or failed"
 
 # Run migrations to ensure database schema is up to date
 echo "[DB] Running migrations..."
