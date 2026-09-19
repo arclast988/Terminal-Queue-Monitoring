@@ -121,7 +121,7 @@
         }
         if (badge) {
             badge.style.display = isFull ? 'block' : 'none';
-        } else if (span) {
+        } else if (span && !span.classList.contains('passenger-count-num')) {
             if (isFull) {
                 var wrap = document.createElement('span');
                 wrap.id = 'full-badge-' + id;

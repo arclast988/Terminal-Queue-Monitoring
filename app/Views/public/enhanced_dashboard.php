@@ -2558,7 +2558,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/queue-sync.js?v=20260919') ?>"></script>
+    <script src="<?= base_url('js/queue-sync.js?v=20260920_2') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;
@@ -2789,6 +2789,7 @@
         // Passenger state tracking for floating ghost popups (+1 / -1)
         var _prevPassengerMap = {};
         var _lastPassengerPopByKey = {};
+        var _lastRealtimePassengerAt = {};
 
         function initPassengerTracking() {
             document.querySelectorAll('#queueList .queue-card').forEach(function(card) {
@@ -2809,9 +2810,9 @@
             var now = Date.now();
             var lastPop = popKey ? _lastPassengerPopByKey[popKey] : null;
 
-            // The same passenger change can arrive through WebSocket, document events,
-            // BroadcastChannel, storage, and polling. Show it only once per final count.
-            if (lastPop && !isNaN(normalizedTarget) && lastPop.count === normalizedTarget && (now - lastPop.time) < 2500) {
+            // A server retry may repeat the same final count. Keep the visual event
+            // idempotent so one passenger change produces one floating badge.
+            if (lastPop && !isNaN(normalizedTarget) && lastPop.count === normalizedTarget && (now - lastPop.time) < 10000) {
                 return;
             }
             if (popKey && !isNaN(normalizedTarget)) {
@@ -2928,7 +2929,7 @@
                 + '</div>';
         }
 
-        function updateQueueCardInPlace(card, item, passengerDeltas) {
+        function updateQueueCardInPlace(card, item) {
             var percent = Math.min(100, (Number(item.current_passengers) / Math.max(1, Number(item.capacity))) * 100);
             var barColor = percent >= 90 ? '#ef4444' : (percent >= 70 ? '#f97316' : (percent >= 50 ? '#eab308' : '#22c55e'));
             var isFull = Number(item.current_passengers) >= Number(item.capacity);
@@ -3226,19 +3227,28 @@
                         });
                     }
 
-                    // Track passenger changes for ghost float animation
-                    var passengerDeltas = {};
+                    // Polling reconciles state silently. A response that started before
+                    // a real-time update must not roll the card back and replay the same
+                    // passenger change a moment later.
                     if (data.active_queue) {
                         data.active_queue.forEach(function(item) {
                             var key = item.id ? String(item.id) : (item.plate_number || '');
                             var curr = parseInt(item.current_passengers, 10) || 0;
-                            if (key && _prevPassengerMap[key] !== undefined && _prevPassengerMap[key] !== curr) {
-                                var diff = curr - _prevPassengerMap[key];
-                                if (diff !== 0) {
-                                    passengerDeltas[key] = diff;
+                            var lastRealtimeAt = key ? _lastRealtimePassengerAt[key] : null;
+                            var trackedCount = key ? _prevPassengerMap[key] : undefined;
+                            var isRecentRealtime = lastRealtimeAt && (Date.now() - lastRealtimeAt) < 10000;
+
+                            if (isRecentRealtime && trackedCount !== undefined && trackedCount !== curr) {
+                                item.current_passengers = trackedCount;
+                                return;
+                            }
+
+                            if (key) {
+                                _prevPassengerMap[key] = curr;
+                                if (isRecentRealtime && trackedCount === curr) {
+                                    delete _lastRealtimePassengerAt[key];
                                 }
                             }
-                            _prevPassengerMap[key] = curr;
                         });
                     }
 
@@ -3275,7 +3285,7 @@
                                         // If card was transitioning out and restored, clear card-leave
                                         existingCard.classList.remove('card-leave');
                                         // IN-PLACE TARGETED UPDATE: Never destroy card, smoothly update numbers & progress
-                                        updateQueueCardInPlace(existingCard, item, passengerDeltas);
+                                        updateQueueCardInPlace(existingCard, item);
                                         // Re-appending moves/preserves order without re-rendering or losing state
                                         queueList.appendChild(existingCard);
                                     } else {
@@ -3307,15 +3317,6 @@
                                     }
                                 });
                             }
-
-                            // Trigger ghost float animation for passenger updates
-                            Object.keys(passengerDeltas).forEach(function(key) {
-                                var diff = passengerDeltas[key];
-                                var anchor = document.querySelector('.passenger-pop-anchor[data-pop-id="' + key + '"], .passenger-pop-anchor[data-pop-plate="' + key + '"]');
-                                if (anchor) {
-                                    triggerPassengerPop(anchor, diff, key, _prevPassengerMap[key]);
-                                }
-                            });
 
                             // Destination quick-filter chips: update counts without losing button state
                             var destGroup = document.getElementById('filterDestGroup');
@@ -3413,6 +3414,7 @@
                 };
                 var passengerKey = String(pId);
                 var previousCount = _prevPassengerMap[passengerKey];
+                _lastRealtimePassengerAt[passengerKey] = Date.now();
                 updateQueueCardPassengerOnly(card, itemStub.current_passengers, itemStub.capacity);
                 _prevPassengerMap[passengerKey] = pCount;
 
@@ -3440,12 +3442,13 @@
             }
         });
 
-        // Universal WebSocket document event listeners for full real-time reactivity
+        // QueueSync owns passenger delivery. The document event is intentionally
+        // ignored for passenger changes because QueueWS also invokes QueueSync's
+        // callback for the same message.
         document.addEventListener('pttm:ws-queue_update', function(e) {
             var detail = (e && e.detail) ? e.detail : {};
             var data = detail.data || detail;
             if (data && (data.action === 'passenger_change' || data.type === 'passenger_change')) {
-                handleRealtimePassengerChange(data);
                 return;
             }
             scheduleFetchStatus(300);
@@ -3456,40 +3459,7 @@
         document.addEventListener('pttm:ws-announcement_update', function() { scheduleFetchStatus(300); });
         document.addEventListener('pttm:ws-branding_updated', function() { scheduleFetchStatus(300); });
 
-        // Cross-tab broadcast sync for instant passenger updates across open windows
-        var _pttmQueueChannel = null;
-        try {
-            if (window.BroadcastChannel) {
-                _pttmQueueChannel = new BroadcastChannel('pttm_queue_channel');
-                _pttmQueueChannel.onmessage = function(e) {
-                    if (e.data && (e.data.action === 'passenger_change' || (e.data.data && e.data.data.action === 'passenger_change'))) {
-                        var pData = e.data.action === 'passenger_change' ? e.data : e.data.data;
-                        handleRealtimePassengerChange(pData);
-                    } else {
-                        scheduleFetchStatus(300);
-                    }
-                };
-            }
-        } catch(e) {}
-
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'pttm_queue_sync' && e.newValue) {
-                try {
-                    var parsed = JSON.parse(e.newValue);
-                    if (parsed && parsed.action === 'passenger_change') {
-                        handleRealtimePassengerChange(parsed);
-                    } else {
-                        scheduleFetchStatus(300);
-                    }
-                } catch(err) {}
-            }
-        });
-
         window.addEventListener('beforeunload', function() {
-            if (_pttmQueueChannel) {
-                try { _pttmQueueChannel.close(); } catch(err) {}
-                _pttmQueueChannel = null;
-            }
             if (_fetchTimer) {
                 clearTimeout(_fetchTimer);
                 _fetchTimer = null;

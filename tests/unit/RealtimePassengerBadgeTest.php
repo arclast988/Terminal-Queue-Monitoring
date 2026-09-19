@@ -75,6 +75,19 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         $this->assertStringContainsString('lastPop.count === normalizedTarget', $content);
         $this->assertStringContainsString("anchorEl.querySelectorAll('.passenger-delta-badge')", $content);
         $this->assertStringContainsString('triggerPassengerPop(anchor, pCount - previousCount, passengerKey, pCount)', $content);
-        $this->assertStringContainsString('triggerPassengerPop(anchor, diff, key, _prevPassengerMap[key])', $content);
+        $this->assertSame(1, substr_count($content, 'triggerPassengerPop(anchor,'), 'Only the real-time handler should display the passenger delta popup');
+        $this->assertStringNotContainsString('var passengerDeltas = {};', $content, 'Polling should reconcile counts without replaying the popup');
+        $this->assertStringNotContainsString('var _pttmQueueChannel = null;', $content, 'QueueSync should be the single owner of cross-tab queue delivery');
+        $this->assertStringContainsString('var _lastRealtimePassengerAt = {};', $content);
+    }
+
+    public function testSharedPassengerUpdaterDoesNotInjectFullBadgeIntoNumberSpan(): void
+    {
+        $queueSync = file_get_contents(FCPATH . 'js/queue-sync.js');
+        $debounce = file_get_contents(FCPATH . 'js/debounce-passengers.js');
+
+        $guard = "span && !span.classList.contains('passenger-count-num')";
+        $this->assertStringContainsString($guard, $queueSync);
+        $this->assertStringContainsString($guard, $debounce);
     }
 }

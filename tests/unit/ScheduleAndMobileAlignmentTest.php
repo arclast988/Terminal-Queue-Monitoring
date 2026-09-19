@@ -20,6 +20,8 @@ class ScheduleAndMobileAlignmentTest extends CIUnitTestCase
         $this->assertStringNotContainsString('full-badge', $content, 'Shared schedules view should not contain full-badge elements');
         $this->assertStringContainsString('shared-dep-time-', $content);
         $this->assertStringContainsString('shared-passengers-text-', $content);
+        $this->assertStringContainsString('class="sched-passengers-text text-muted"', $content);
+        $this->assertStringContainsString('white-space: nowrap;', $content);
         $this->assertStringNotContainsString("s['is_full'] ? 'display:none;' : ''", $content, 'Departure time and passenger count should not be hidden when full');
     }
 

@@ -35,6 +35,20 @@
     .vehicle-type-icon img, .badge-modern {
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    .sched-dep-cell {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        min-width: 112px;
+    }
+    .sched-passengers-text {
+        display: inline-flex;
+        align-items: baseline;
+        margin-top: 0;
+        line-height: 1.25;
+        white-space: nowrap;
+    }
     .plate-number {
         font-weight: 700;
         font-family: 'Courier New', monospace;
@@ -377,7 +391,7 @@
                                             <span class="badge-modern badge-modern-primary" id="shared-dep-time-<?= $qid ?>">
                                                 <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'TBA' ?>
                                             </span>
-                                            <small class="text-muted d-block mt-1" id="shared-passengers-text-<?= $qid ?>">
+                                            <small class="sched-passengers-text text-muted" id="shared-passengers-text-<?= $qid ?>">
                                                 <span id="passenger-count-<?= $qid ?>" class="passenger-count-num <?= passenger_color_class((int)$s['current_passengers'], (int)$s['capacity']) ?>"><?= $s['current_passengers'] ?></span>/<?= $s['capacity'] ?> passengers
                                             </small>
                                         </div>
@@ -431,7 +445,7 @@
 <?= $this->include('templates/footer') ?>
 
 <script src="<?= base_url('js/ws-client.js?v=20260919') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js?v=20260919') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260920_2') ?>"></script>
 <script>
     var currentSharedDestFilter = '<?= esc(strtolower($destination ?? 'all')) ?>';
 
@@ -548,7 +562,4 @@
         }
     });
 
-    document.addEventListener('pttm:ws-queue_update', function(e) {
-        handleSharedLiveQueueUpdate(e.detail);
-    });
 </script>

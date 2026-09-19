@@ -50,8 +50,8 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $announcementView = file_get_contents(APPPATH . 'Views/admin/announcements/index.php');
 
         $this->assertStringContainsString('change-password-actions d-flex', $passwordView);
-        $this->assertStringContainsString('.change-password-actions > .btn-modern', $passwordView);
-        $this->assertStringContainsString('flex-direction: row !important;', $passwordView);
+        $this->assertStringContainsString('.change-password-actions.d-flex.justify-content-end.gap-2:last-child', $passwordView);
+        $this->assertStringContainsString('grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important;', $passwordView);
 
         $this->assertStringContainsString('.announcement-actions-wrap', $announcementView);
         $this->assertStringContainsString('margin-left: auto !important;', $announcementView);

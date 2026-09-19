@@ -457,22 +457,24 @@ SVG;
     transform: translateY(-2px);
 }
 
-@media (max-width: 575.98px) {
-    .change-password-actions {
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
+@media (max-width: 768px) {
+    .change-password-page form > .change-password-actions.d-flex.justify-content-end.gap-2:last-child {
+        display: grid !important;
+        grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important;
         width: 100% !important;
         gap: 8px !important;
+        margin-top: 0 !important;
     }
 
-    .change-password-actions > .btn-modern {
-        flex: 1 1 0 !important;
-        width: auto !important;
+    .change-password-page form > .change-password-actions.d-flex.justify-content-end.gap-2:last-child > .btn-modern {
+        width: 100% !important;
         min-width: 0 !important;
         min-height: 42px !important;
-        padding: 8px 10px !important;
-        font-size: 12.5px !important;
+        margin: 0 !important;
+        padding: 8px 6px !important;
+        font-size: 11.5px !important;
         white-space: nowrap !important;
+        justify-content: center !important;
     }
 }
 </style>
