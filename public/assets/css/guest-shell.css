@@ -577,10 +577,6 @@
         outline: 2px solid var(--primary, #D62828);
         outline-offset: 2px;
     }
-    .guest-header .mobile-nav-close {
-        display: none;
-    }
-
     /* --- Breadcrumb --- */
     .breadcrumb-section {
         background: white;
@@ -768,32 +764,12 @@
         }
         .guest-header .mobile-toggle {
             display: inline-flex;
+            position: relative;
+            z-index: 1004;
         }
         .guest-header .mobile-toggle[aria-expanded="true"] {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .guest-header .mobile-nav-close {
-            display: grid;
-            place-items: center;
-            position: absolute;
-            top: max(16px, env(safe-area-inset-top));
-            right: 16px;
-            width: 42px;
-            height: 42px;
-            padding: 0;
-            border: 0;
-            border-radius: 12px;
             background: var(--nav-chip-bg, #f1f5f9);
             color: var(--nav-text, #1e293b);
-            font-size: 22px;
-            cursor: pointer;
-            z-index: 2;
-        }
-        .guest-header .mobile-nav-close:focus-visible {
-            outline: 2px solid var(--primary, #D62828);
-            outline-offset: 2px;
         }
     }
 

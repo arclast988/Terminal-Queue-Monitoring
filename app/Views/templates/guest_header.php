@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260920a">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260920b">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -179,9 +179,6 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     </div>
 
     <div class="nav-menu" id="navMenu">
-        <button type="button" class="mobile-nav-close" onclick="closeMenu()" aria-label="Close navigation menu">
-            <i class="fas fa-times" aria-hidden="true"></i>
-        </button>
         <a href="<?= base_url('guest') ?>" class="<?= current_url() == base_url('guest') ? 'active' : '' ?>"><i
                 class="fas fa-home"></i> Home</a>
         <a href="<?= base_url('schedules') ?>"
@@ -371,10 +368,10 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
             if (isOpen) overlay.classList.add('active');
             else overlay.classList.remove('active');
         }
-        // Keep the header control as a hamburger. It is hidden while the drawer
-        // is open so the drawer's own close button remains the only visible X.
+        // Reuse the header hamburger as the single close control so the X stays
+        // in exactly the same position when the drawer opens.
         if (icon) {
-            icon.className = 'fas fa-bars';
+            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
         }
         if (toggle) {
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');

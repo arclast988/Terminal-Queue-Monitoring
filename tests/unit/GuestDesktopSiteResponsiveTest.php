@@ -7,21 +7,20 @@ use CodeIgniter\Test\CIUnitTestCase;
  */
 final class GuestDesktopSiteResponsiveTest extends CIUnitTestCase
 {
-    public function testGuestDrawerHasItsOwnVisibleCloseControl(): void
+    public function testGuestDrawerReusesHeaderToggleAsItsOnlyCloseControl(): void
     {
         $header = file_get_contents(APPPATH . 'Views/templates/guest_header.php');
         $css = file_get_contents(FCPATH . 'assets/css/guest-shell.css');
 
-        $this->assertStringContainsString('class="mobile-nav-close"', $header);
-        $this->assertStringContainsString('onclick="closeMenu()"', $header);
+        $this->assertStringNotContainsString('class="mobile-nav-close"', $header);
         $this->assertStringContainsString('function setMenuOpen(shouldOpen)', $header);
         $this->assertStringContainsString('aria-expanded="false"', $header);
-        $this->assertStringContainsString("icon.className = 'fas fa-bars';", $header);
-        $this->assertStringNotContainsString("isOpen ? 'fas fa-times' : 'fas fa-bars'", $header);
+        $this->assertStringContainsString("isOpen ? 'fas fa-times' : 'fas fa-bars'", $header);
         $this->assertStringContainsString('width: min(340px, 86vw);', $css);
         $this->assertStringContainsString('height: 100dvh;', $css);
-        $this->assertStringContainsString('.guest-header .mobile-nav-close', $css);
+        $this->assertStringNotContainsString('.guest-header .mobile-nav-close', $css);
         $this->assertStringContainsString('.guest-header .mobile-toggle[aria-expanded="true"]', $css);
+        $this->assertStringContainsString('z-index: 1004;', $css);
         $this->assertStringContainsString('padding: max(92px, calc(env(safe-area-inset-top) + 78px))', $css);
     }
 
