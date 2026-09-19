@@ -83,4 +83,4 @@ echo "[WS] WebSocket server started (PID: $WS_PID)"
 
 # Start PHP built-in server
 echo "[WEB] Starting PHP server on port $PORT..."
-php -S 0.0.0.0:$PORT -t public/ public/index.php
+php -S 0.0.0.0:$PORT -t public/ public/router.php
