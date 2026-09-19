@@ -32,21 +32,27 @@ class AuthFilter implements FilterInterface
         if ($arguments) {
             $role = session()->get('role');
 
-            // Super admin bypasses all role gates
-            if ($role === 'super_admin') {
+            $hasDirectAccess = in_array($role, $arguments, true);
+            $inheritsAdminAccess = $role === 'super_admin' && in_array('admin', $arguments, true);
+
+            // Super Admin inherits Admin access, but staff-only routes remain
+            // dispatcher-only. This prevents accidental queue operations.
+            if ($hasDirectAccess || $inheritsAdminAccess) {
                 return;
             }
 
-            if (!in_array($role, $arguments)) {
-                // Unauthorized access for this role
-                $previous = previous_url();
-                $current  = current_url();
-                if (empty($previous) || $previous === $current) {
-                    $defaultUrl = ($role === 'staff') ? '/staff/queue' : '/admin/dashboard';
-                    return redirect()->to($defaultUrl)->with('error', 'You do not have access to this page.');
-                }
-                return redirect()->back()->with('error', 'You do not have access to this page.');
+            // Unauthorized access for this role
+            if ($role === 'super_admin') {
+                return redirect()->to('/admin/dashboard')->with('error', 'Dispatcher-only pages are restricted to dispatchers.');
             }
+
+            $previous = previous_url();
+            $current  = current_url();
+            if (empty($previous) || $previous === $current) {
+                $defaultUrl = ($role === 'staff') ? '/staff/queue' : '/admin/dashboard';
+                return redirect()->to($defaultUrl)->with('error', 'You do not have access to this page.');
+            }
+            return redirect()->back()->with('error', 'You do not have access to this page.');
         }
     }
 
