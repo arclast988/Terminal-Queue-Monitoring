@@ -16,9 +16,13 @@ final class GuestDesktopSiteResponsiveTest extends CIUnitTestCase
         $this->assertStringContainsString('onclick="closeMenu()"', $header);
         $this->assertStringContainsString('function setMenuOpen(shouldOpen)', $header);
         $this->assertStringContainsString('aria-expanded="false"', $header);
+        $this->assertStringContainsString("icon.className = 'fas fa-bars';", $header);
+        $this->assertStringNotContainsString("isOpen ? 'fas fa-times' : 'fas fa-bars'", $header);
         $this->assertStringContainsString('width: min(340px, 86vw);', $css);
         $this->assertStringContainsString('height: 100dvh;', $css);
         $this->assertStringContainsString('.guest-header .mobile-nav-close', $css);
+        $this->assertStringContainsString('.guest-header .mobile-toggle[aria-expanded="true"]', $css);
+        $this->assertStringContainsString('padding: max(92px, calc(env(safe-area-inset-top) + 78px))', $css);
     }
 
     public function testGuestFooterAdaptsToDesktopSitePhoneWidths(): void

@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260919b">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260920a">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -371,9 +371,10 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
             if (isOpen) overlay.classList.add('active');
             else overlay.classList.remove('active');
         }
-        // Morph the hamburger to an X while open — it is the single close control.
+        // Keep the header control as a hamburger. It is hidden while the drawer
+        // is open so the drawer's own close button remains the only visible X.
         if (icon) {
-            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+            icon.className = 'fas fa-bars';
         }
         if (toggle) {
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
