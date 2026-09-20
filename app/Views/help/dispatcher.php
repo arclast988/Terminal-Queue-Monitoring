@@ -1,3 +1,10 @@
+<?php
+$dispatcherManagedKeys = array_values(array_filter(
+    array_keys(\Config\ContentManagement::fields()),
+    static fn (string $key): bool => str_starts_with($key, 'content_dispatcher_')
+));
+$dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
+?>
 <?= view('templates/header', ['title' => $title]) ?>
 
 <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
@@ -455,7 +462,17 @@
     </div>
 </div>
 
+<script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
+<script type="application/json" id="dispatcherManagedContent"><?= json_encode($dispatcherManagedContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
+    if (window.ManagedContent) {
+        window.ManagedContent.applyGuide(window.ManagedContent.readPayload('dispatcherManagedContent'), {
+            root: '.help-card-container .accordion-list',
+            title: '.help-header-title',
+            prefix: 'content_dispatcher'
+        });
+    }
+
     function toggleHelpAccordion(headerEl) {
         var item = headerEl.closest('.accordion-item');
         if (!item) return;

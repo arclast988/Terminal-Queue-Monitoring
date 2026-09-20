@@ -562,6 +562,52 @@ if (! function_exists('get_system_setting')) {
     }
 }
 
+if (! function_exists('managed_content_override')) {
+    /**
+     * Return a non-empty Superadmin content override, or null to use built-in copy.
+     */
+    function managed_content_override(string $key): ?string
+    {
+        $value = get_system_setting($key);
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+
+        return trim($value);
+    }
+}
+
+if (! function_exists('managed_content_value')) {
+    /**
+     * Return a content override while retaining the supplied version-controlled fallback.
+     */
+    function managed_content_value(string $key, string $fallback): string
+    {
+        return managed_content_override($key) ?? $fallback;
+    }
+}
+
+if (! function_exists('managed_content_overrides')) {
+    /**
+     * Build a safe JSON-ready map containing only configured overrides.
+     *
+     * @param list<string> $keys
+     * @return array<string, string>
+     */
+    function managed_content_overrides(array $keys): array
+    {
+        $values = [];
+        foreach ($keys as $key) {
+            $value = managed_content_override($key);
+            if ($value !== null) {
+                $values[$key] = $value;
+            }
+        }
+
+        return $values;
+    }
+}
+
 if (! function_exists('vehicle_cooldown_minutes')) {
     /**
      * Vehicle cooldown interval before being visible / eligible back in queue management.

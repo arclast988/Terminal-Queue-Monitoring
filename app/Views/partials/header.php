@@ -145,9 +145,13 @@ SVG;
 
                 <?php if (session()->get('role') === 'super_admin'): ?>
                 <div class="drawer-section-title">System Settings</div>
-                <a href="<?= base_url('admin/settings') ?>" class="drawer-nav-item <?= $isActive('admin/settings*') ?>">
+                <a href="<?= base_url('admin/settings') ?>" class="drawer-nav-item <?= $isActive('admin/settings') ?>">
                     <i class="fas fa-palette"></i>
                     <span>System Themes</span>
+                </a>
+                <a href="<?= base_url('admin/settings/content') ?>" class="drawer-nav-item <?= $isActive('admin/settings/content*') ?>">
+                    <i class="fas fa-pen-to-square"></i>
+                    <span>Content Manager</span>
                 </a>
                 <?php endif; ?>
 

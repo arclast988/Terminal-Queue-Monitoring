@@ -114,6 +114,8 @@ $routes->group('admin/settings', ['filter' => 'auth:super_admin'], function ($ro
     $routes->post('upload-login-card', 'Admin\Settings::uploadLoginCard');
     $routes->post('reset-login-card', 'Admin\Settings::resetLoginCard');
     $routes->post('update-operations', 'Admin\Settings::updateOperations');
+    $routes->get('content', 'Admin\Settings::content');
+    $routes->post('content', 'Admin\Settings::updateContent');
 });
 
 // Protected Routes

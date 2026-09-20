@@ -1303,16 +1303,39 @@ body.staff-theme .drawer-nav-item.active i {
 }
 
 @media (max-width: 768px) {
+  body.admin-theme,
+  body.staff-theme {
+    --site-header-height: 92px;
+  }
+
   header#site-header {
     max-height: 64px !important;
+    overflow: visible !important;
+  }
+
+  #site-header .logo {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
   }
 
   .operations-header-time {
-    height: 22px;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 28px;
+    justify-content: center;
     gap: 4px;
-    padding-left: 8px;
+    padding: 0 12px;
+    border-left: 0;
+    border-top: 1px solid var(--nav-divider, rgba(255, 255, 255, 0.2));
+    background: var(--nav-bg, #15803d);
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
     font-size: 11.5px;
     letter-spacing: 0;
+    z-index: 2;
   }
 
   .operations-header-time i {
@@ -1388,7 +1411,7 @@ body.staff-theme .drawer-nav-item.active i {
 
   .profile-dropdown-card {
     position: fixed !important;
-    top: 56px !important;
+    top: calc(var(--site-header-height, 92px) + 4px) !important;
     right: 12px !important;
     width: min(330px, calc(100vw - 24px)) !important;
     max-width: calc(100vw - 24px) !important;
@@ -1396,6 +1419,11 @@ body.staff-theme .drawer-nav-item.active i {
 }
 
 @media (max-width: 480px) {
+  body.admin-theme,
+  body.staff-theme {
+    --site-header-height: 88px;
+  }
+
   .sidebar-drawer {
     width: min(288px, 86vw);
     max-width: 86vw;
@@ -1471,8 +1499,7 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .operations-header-time {
-    padding-left: 6px;
-    font-size: 10.5px;
+    font-size: 11px;
   }
 
   .nav-hamburger-btn {

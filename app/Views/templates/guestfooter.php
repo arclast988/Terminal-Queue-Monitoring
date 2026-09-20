@@ -1,3 +1,14 @@
+<?php
+$guestManagedKeys = array_values(array_filter(
+    array_keys(\Config\ContentManagement::fields()),
+    static fn (string $key): bool => preg_match('/^content_(contact|faq|terms|commuter)_/', $key) === 1
+));
+$guestManagedContent = managed_content_overrides($guestManagedKeys);
+$termsUpdatedRaw = get_system_setting('content_terms_updated_at');
+$termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
+    ? date('F Y', strtotime($termsUpdatedRaw))
+    : 'September 2026';
+?>
 <!-- ===== Footer ===== -->
 <footer>
     <div class="footer-container">
@@ -328,7 +339,7 @@
         <button class="close-modal" onclick="closeSupportModal('termsModal')">&times;</button>
         <h3><i class="fas fa-file-contract" style="color:#6366f1;"></i> Terms of Service</h3>
         <div style="font-size: 14px; color: #4b5563; line-height: 1.6; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-            <p><strong>Last updated: September 2026</strong></p>
+            <p><strong>Last updated: <?= esc($termsUpdatedLabel) ?></strong></p>
             <h4 style="color: #1f2937; margin: 15px 0 5px;">1. Acceptance of Terms</h4>
             <p>By accessing and using the <?= esc(app_system_title()) ?> ("<?= esc(app_acronym()) ?> System"), you agree to be bound by these Terms of Service and all applicable municipal guidelines. If you do not agree with any portion of these terms, please discontinue use of this service.</p>
 
@@ -368,8 +379,14 @@
 <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= base_url('js/ws-client.js?v=20260920_2') ?>"></script>
 <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
+<script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
+<script type="application/json" id="guestManagedContent"><?= json_encode($guestManagedContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
 let savedSupportScrollY = 0;
+
+if (window.ManagedContent) {
+    window.ManagedContent.applyGuest(window.ManagedContent.readPayload('guestManagedContent'));
+}
 
 function openSupportModal(modalId){
     const modal = document.getElementById(modalId);

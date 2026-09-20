@@ -39,9 +39,10 @@ class Manual extends BaseController
      */
     public function adminHelp()
     {
+        $role = session()->get('role') ?? 'admin';
         $data = [
-            'title' => 'Administrator Quick Help Guide',
-            'role'  => session()->get('role') ?? 'admin',
+            'title' => $role === 'super_admin' ? 'Super Administrator Help Guide' : 'Administrator Quick Help Guide',
+            'role'  => $role,
         ];
 
         return view('help/admin', $data);

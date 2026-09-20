@@ -370,6 +370,90 @@ class Settings extends BaseController
     }
 
     /**
+     * Display the Superadmin-only editor for public support and role help copy.
+     */
+    public function content()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return redirect()->back()->with('error', 'You do not have access to this page.');
+        }
+
+        return view('admin/settings/content', [
+            'title'    => 'Content Manager',
+            'groups'   => \Config\ContentManagement::groups(),
+            'settings' => get_all_system_settings(true),
+        ]);
+    }
+
+    /**
+     * Save plain-text content overrides. Blank fields restore built-in copy.
+     */
+    public function updateContent()
+    {
+        if (session()->get('role') !== 'super_admin') {
+            return redirect()->back()->with('error', 'Unauthorized.');
+        }
+
+        $definitions = \Config\ContentManagement::fields();
+        $current      = get_all_system_settings();
+        $updates      = [];
+        $termsChanged = false;
+        $totalLength  = 0;
+
+        foreach ($definitions as $key => $definition) {
+            $rawValue = $this->request->getPost($key);
+            $value = is_string($rawValue)
+                ? str_replace(["\r\n", "\r"], "\n", trim($rawValue))
+                : '';
+            $limit = $definition['type'] === 'textarea' ? 5000 : 180;
+            if (mb_strlen($value) > $limit) {
+                return redirect()->back()->withInput()->with(
+                    'error',
+                    $definition['label'] . " is too long. The maximum is {$limit} characters."
+                );
+            }
+
+            $totalLength += mb_strlen($value);
+            $storedValue = $value === '' ? null : $value;
+            $oldValue    = isset($current[$key]) && trim((string) $current[$key]) !== ''
+                ? trim((string) $current[$key])
+                : null;
+
+            if ($oldValue !== $storedValue) {
+                $updates[$key] = $storedValue;
+                if (str_starts_with($key, 'content_terms_')) {
+                    $termsChanged = true;
+                }
+            }
+        }
+
+        if ($totalLength > 120000) {
+            return redirect()->back()->withInput()->with('error', 'The combined content is too large. Please shorten the guide text.');
+        }
+
+        if ($updates === []) {
+            return redirect()->to('/admin/settings/content')->with('info', 'No content changes were detected.');
+        }
+
+        if ($termsChanged) {
+            $updates['content_terms_updated_at'] = date('Y-m-d');
+        }
+
+        (new SystemSettingModel())->setMultiple($updates);
+        get_all_system_settings(true);
+
+        $groups = [];
+        foreach (array_keys($updates) as $key) {
+            if (preg_match('/^content_([^_]+)/', $key, $matches)) {
+                $groups[$matches[1]] = true;
+            }
+        }
+        $this->logActivity('Content Manager', 'Updated managed content: ' . implode(', ', array_keys($groups)));
+
+        return redirect()->to('/admin/settings/content')->with('success', 'Content updated successfully. Blank fields continue using the built-in copy.');
+    }
+
+    /**
      * Upload a custom system logo.
      */
     public function uploadLogo()

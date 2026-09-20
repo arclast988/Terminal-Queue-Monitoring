@@ -129,6 +129,11 @@ SVG;
                 <span class="item-text">System Themes</span>
                 <span class="profile-badge-chip chip-amber">Super Admin</span>
             </a>
+            <a href="<?= base_url('admin/settings/content') ?>" class="profile-dropdown-item" role="menuitem">
+                <i class="fas fa-pen-to-square"></i>
+                <span class="item-text">Content Manager</span>
+                <span class="profile-badge-chip chip-amber">Super Admin</span>
+            </a>
         </div>
 
         <div class="profile-dropdown-divider"></div>

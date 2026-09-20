@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260920_2', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260920_3', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -58,6 +58,11 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('document.hidden', $header);
         $this->assertStringContainsString('.operations-header-time {', $css);
         $this->assertStringContainsString('font-variant-numeric: tabular-nums;', $css);
+        $this->assertStringContainsString('--site-header-height: 92px;', $css);
+        $this->assertStringContainsString('--site-header-height: 88px;', $css);
+        $this->assertStringContainsString('top: 100%;', $css);
+        $this->assertStringContainsString('justify-content: center;', $css);
+        $this->assertStringContainsString('top: calc(var(--site-header-height, 92px) + 4px) !important;', $css);
     }
 
     public function testRequestedMobileActionGroupsKeepTheirAlignment(): void
