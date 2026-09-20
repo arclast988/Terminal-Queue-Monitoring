@@ -259,7 +259,7 @@
 
         <div class="accordion-list">
             <!-- Step 1 -->
-            <div class="accordion-item active">
+            <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
                     <h3 class="accordion-header-text">
                         1. Shift Start & Terminal Assignment

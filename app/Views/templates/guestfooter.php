@@ -69,7 +69,7 @@
 
         <div class="accordion-list">
             <!-- Item 1: Live Terminal Queue & Boarding -->
-            <div class="accordion-item active">
+            <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
                     <h4 class="accordion-header-text"><i class="fas fa-tv" style="color:#0284c7;"></i> 1. Live Terminal Queue & Boarding Badges</h4>
                     <i class="fas fa-chevron-down accordion-header-icon"></i>

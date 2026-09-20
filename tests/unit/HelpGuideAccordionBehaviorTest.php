@@ -17,6 +17,7 @@ final class HelpGuideAccordionBehaviorTest extends CIUnitTestCase
         foreach ($guideFiles as $guideFile) {
             $guide = file_get_contents($guideFile);
 
+            $this->assertStringNotContainsString('class="accordion-item active"', $guide, $guideFile);
             $this->assertStringContainsString("closest('.accordion-list')", $guide, $guideFile);
             $this->assertStringContainsString("querySelectorAll('.accordion-item.active')", $guide, $guideFile);
             $this->assertStringContainsString("openItem !== item", $guide, $guideFile);
