@@ -9,6 +9,17 @@
     var MAX_DROPDOWN_ITEMS = 50;
     var INPUT_DEBOUNCE_MS = 150;
 
+    function getDefaultDropdownMaxHeight(dropdown) {
+        if (!dropdown) return 240;
+
+        if (!dropdown.dataset.defaultMaxHeight) {
+            var configuredHeight = parseInt(dropdown.style.maxHeight || '', 10);
+            dropdown.dataset.defaultMaxHeight = String(Number.isFinite(configuredHeight) && configuredHeight > 0 ? configuredHeight : 240);
+        }
+
+        return parseInt(dropdown.dataset.defaultMaxHeight, 10) || 240;
+    }
+
     function debounce(fn, wait) {
         var t = null;
         return function () {
@@ -35,7 +46,7 @@
             var parentContainer = w.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
             if (parentContainer) {
                 parentContainer.classList.remove('autocomplete-parent-active');
-                parentContainer.style.zIndex = '';
+                parentContainer.style.removeProperty('z-index');
             }
         });
     }
@@ -48,6 +59,7 @@
         var isInModal = Boolean(modalEl);
         wrapper.style.zIndex = isInModal ? '1065' : '100';
         dropdown.style.display = 'block';
+        var defaultMaxHeight = getDefaultDropdownMaxHeight(dropdown);
 
         // Dynamic smart placement: flip upward if space below is limited and space above has more room
         try {
@@ -73,19 +85,21 @@
             var spaceBelow = boundaryBottom - rect.bottom;
             var spaceAbove = rect.top - boundaryTop;
 
-            if (spaceBelow < 200 && spaceAbove > spaceBelow) {
+            if (spaceBelow < defaultMaxHeight && spaceAbove > spaceBelow) {
                 dropdown.style.top = 'auto';
                 dropdown.style.bottom = 'calc(100% + 6px)';
                 dropdown.classList.add('dropdown-flipped');
-                dropdown.style.maxHeight = Math.min(220, Math.max(120, spaceAbove - 15)) + 'px';
+                dropdown.style.maxHeight = Math.min(defaultMaxHeight, Math.max(120, spaceAbove - 15)) + 'px';
             } else {
                 dropdown.style.top = 'calc(100% + 6px)';
                 dropdown.style.bottom = 'auto';
                 dropdown.classList.remove('dropdown-flipped');
-                if (spaceBelow < 250) {
-                    dropdown.style.maxHeight = Math.max(120, spaceBelow - 15) + 'px';
+                if (spaceBelow < defaultMaxHeight + 10) {
+                    dropdown.style.maxHeight = Math.min(defaultMaxHeight, Math.max(120, spaceBelow - 15)) + 'px';
                 } else {
-                    dropdown.style.maxHeight = '';
+                    // Keep the component's configured cap. Clearing this value
+                    // made short mobile select menus expand across the page.
+                    dropdown.style.maxHeight = defaultMaxHeight + 'px';
                 }
             }
         } catch (err) {}
@@ -94,7 +108,9 @@
         if (parentContainer) {
             parentContainer.classList.add('autocomplete-parent-active');
             parentContainer.style.position = 'relative';
-            parentContainer.style.zIndex = isInModal ? '1060' : '40';
+            // The active field must rise above later sibling fields. Several
+            // filter layouts use z-index:100 on every form group.
+            parentContainer.style.setProperty('z-index', isInModal ? '1060' : '200', 'important');
         }
     }
 
@@ -104,12 +120,12 @@
         wrapper.style.zIndex = '';
         dropdown.style.display = 'none';
         dropdown.classList.remove('dropdown-flipped');
-        dropdown.style.maxHeight = '';
+        dropdown.style.maxHeight = getDefaultDropdownMaxHeight(dropdown) + 'px';
 
         const parentContainer = wrapper.closest('.col, .col-12, .col-sm-6, .col-md-6, .col-lg-4, .col-xl-2, .col-xl-3, .mb-3, .mb-4, .row, .form-group, fieldset');
         if (parentContainer) {
             parentContainer.classList.remove('autocomplete-parent-active');
-            parentContainer.style.zIndex = '';
+            parentContainer.style.removeProperty('z-index');
         }
     }
 
@@ -134,7 +150,7 @@
                 z-index: 1065 !important;
             }
             .autocomplete-parent-active {
-                z-index: 40 !important;
+                z-index: 200 !important;
                 position: relative !important;
             }
             .modal .autocomplete-parent-active {
