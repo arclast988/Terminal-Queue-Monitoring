@@ -63,5 +63,10 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'canceled');", $view);
         $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'waiting');", $view);
         $this->assertStringContainsString('window.QueueOrderManager.setStatus(id, data.status || status);', $view);
+        $this->assertStringContainsString('data-queue-drag-handle', $view);
+        $this->assertStringContainsString("modalEl.addEventListener('dragstart'", $view);
+        $this->assertStringContainsString("modalEl.addEventListener('pointerdown'", $view);
+        $this->assertStringContainsString('moveDraggedItem(draggedItem, event.clientY);', $view);
+        $this->assertStringContainsString("item.getAttribute('data-status') !== 'waiting'", $view);
     }
 }

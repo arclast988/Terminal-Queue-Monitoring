@@ -507,16 +507,16 @@
         var item = headerEl.closest('.accordion-item');
         if (!item) return;
 
+        var accordionList = item.closest('.accordion-list');
         var isActive = item.classList.contains('active');
-        
-        // Optional: close other open accordions for clean single view
-        // document.querySelectorAll('.accordion-item').forEach(function(i) { i.classList.remove('active'); });
 
-        if (isActive) {
-            item.classList.remove('active');
-        } else {
-            item.classList.add('active');
+        if (accordionList) {
+            accordionList.querySelectorAll('.accordion-item.active').forEach(function(openItem) {
+                if (openItem !== item) openItem.classList.remove('active');
+            });
         }
+
+        item.classList.toggle('active', !isActive);
     }
 </script>
 

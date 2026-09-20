@@ -429,7 +429,17 @@ function toggleFaq(btn){
 function toggleHelpAccordion(headerEl) {
     const item = headerEl.closest('.accordion-item');
     if (!item) return;
-    item.classList.toggle('active');
+
+    const accordionList = item.closest('.accordion-list');
+    const isActive = item.classList.contains('active');
+
+    if (accordionList) {
+        accordionList.querySelectorAll('.accordion-item.active').forEach(openItem => {
+            if (openItem !== item) openItem.classList.remove('active');
+        });
+    }
+
+    item.classList.toggle('active', !isActive);
 }
 
 // Auto-open support modal if query parameter exists (e.g. redirected from /manual)

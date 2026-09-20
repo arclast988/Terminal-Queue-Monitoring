@@ -619,6 +619,18 @@
         background: var(--surface, #fff);
     }
 
+    .queue-order-item[data-status="waiting"] {
+        cursor: grab;
+    }
+
+    .queue-order-item.is-dragging {
+        cursor: grabbing;
+        opacity: 0.78;
+        border-color: #22c55e;
+        box-shadow: 0 10px 24px rgba(21, 128, 61, 0.18);
+        background: #f0fdf4;
+    }
+
     .queue-order-position {
         width: 38px;
         height: 38px;
@@ -643,6 +655,32 @@
         display: flex;
         gap: 0.4rem;
         margin-left: auto;
+    }
+
+    .queue-order-drag-handle {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        border: 1px dashed #86efac;
+        color: #15803d;
+        background: #f0fdf4;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .queue-order-drag-handle:active,
+    .queue-order-item.is-dragging .queue-order-drag-handle {
+        cursor: grabbing;
+    }
+
+    .queue-order-item[data-status="boarding"] .queue-order-drag-handle {
+        opacity: 0.35;
+        pointer-events: none;
     }
 
     .queue-order-move {
@@ -696,6 +734,7 @@
             flex-basis: 34px;
         }
 
+        .queue-order-drag-handle,
         .queue-order-move {
             width: 36px;
             height: 36px;
@@ -941,7 +980,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     <h5 class="modal-title fw-bold mb-1" id="manageQueueModalLabel">
                         <i class="bi bi-list-ol me-2"></i>Manage Queue Order
                     </h5>
-                    <div class="small queue-order-subtitle">Move waiting vehicles up or down in their destination line.</div>
+                    <div class="small queue-order-subtitle">Hold and drag waiting vehicles, or use the arrows, to change their order.</div>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -980,7 +1019,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <div class="queue-order-list" data-original-order="<?= esc($originalOrder, 'attr') ?>">
                             <?php foreach ($queueOrderGroup['items'] as $queueOrderItem): ?>
                                 <?php $isOrderLocked = ($queueOrderItem['status'] ?? '') === 'boarding'; ?>
-                                <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>">
+                                <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>" draggable="<?= $isOrderLocked ? 'false' : 'true' ?>">
                                     <span class="queue-order-position">#<?= (int) $queueOrderItem['position'] ?></span>
                                     <div class="min-w-0 flex-grow-1">
                                         <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?></div>
@@ -994,6 +1033,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         </div>
                                     </div>
                                     <div class="queue-order-moves">
+                                        <span class="queue-order-drag-handle" data-queue-drag-handle role="button" aria-label="Hold and drag <?= esc($queueOrderItem['plate_number'] ?? 'vehicle', 'attr') ?> to change its queue position" aria-disabled="<?= $isOrderLocked ? 'true' : 'false' ?>" title="Hold and drag to reorder">
+                                            <i class="bi bi-grip-vertical"></i>
+                                        </span>
                                         <button type="button" class="queue-order-move" data-queue-move="up" aria-label="Move <?= esc($queueOrderItem['plate_number'] ?? 'vehicle', 'attr') ?> up" <?= $isOrderLocked ? 'disabled' : '' ?>>
                                             <i class="bi bi-arrow-up"></i>
                                         </button>
@@ -1617,6 +1659,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
             allItems.forEach(function(item, index) {
                 var position = item.querySelector('.queue-order-position');
                 if (position) position.textContent = '#' + (index + 1);
+
+                var isWaiting = item.getAttribute('data-status') === 'waiting';
+                item.setAttribute('draggable', isWaiting ? 'true' : 'false');
+                var dragHandle = item.querySelector('[data-queue-drag-handle]');
+                if (dragHandle) dragHandle.setAttribute('aria-disabled', isWaiting ? 'false' : 'true');
             });
 
             allItems.filter(function(item) {
@@ -1752,6 +1799,104 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
             clearFeedback();
             refreshPanel(item.closest('.queue-order-panel'));
+        });
+
+        var draggedItem = null;
+        var pointerDrag = null;
+
+        function moveDraggedItem(item, clientY) {
+            if (!item || item.getAttribute('data-status') !== 'waiting') return;
+            var list = item.closest('.queue-order-list');
+            if (!list) return;
+
+            var target = document.elementFromPoint(window.innerWidth / 2, clientY);
+            target = target ? target.closest('.queue-order-item[data-status="waiting"]') : null;
+            if (!target || target === item || target.closest('.queue-order-list') !== list || target.classList.contains('d-none')) return;
+
+            var targetRect = target.getBoundingClientRect();
+            if (clientY < targetRect.top + (targetRect.height / 2)) {
+                list.insertBefore(item, target);
+            } else {
+                list.insertBefore(item, target.nextElementSibling);
+            }
+
+            clearFeedback();
+            refreshPanel(item.closest('.queue-order-panel'));
+        }
+
+        function finishDragging() {
+            if (draggedItem) draggedItem.classList.remove('is-dragging');
+            if (pointerDrag && pointerDrag.item) pointerDrag.item.classList.remove('is-dragging');
+            draggedItem = null;
+            pointerDrag = null;
+        }
+
+        modalEl.addEventListener('dragstart', function(event) {
+            var item = event.target.closest('.queue-order-item');
+            if (!item || item.getAttribute('data-status') !== 'waiting') {
+                event.preventDefault();
+                return;
+            }
+
+            draggedItem = item;
+            item.classList.add('is-dragging');
+            if (event.dataTransfer) {
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', item.getAttribute('data-queue-id') || '');
+            }
+        });
+
+        modalEl.addEventListener('dragover', function(event) {
+            if (!draggedItem) return;
+            event.preventDefault();
+            if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+            moveDraggedItem(draggedItem, event.clientY);
+        });
+
+        modalEl.addEventListener('drop', function(event) {
+            if (!draggedItem) return;
+            event.preventDefault();
+            moveDraggedItem(draggedItem, event.clientY);
+            finishDragging();
+        });
+
+        modalEl.addEventListener('dragend', finishDragging);
+
+        modalEl.addEventListener('pointerdown', function(event) {
+            if (event.pointerType === 'mouse') return;
+            var handle = event.target.closest('[data-queue-drag-handle]');
+            if (!handle) return;
+
+            var item = handle.closest('.queue-order-item');
+            if (!item || item.getAttribute('data-status') !== 'waiting') return;
+
+            pointerDrag = { item: item, pointerId: event.pointerId, handle: handle };
+            item.classList.add('is-dragging');
+            if (handle.setPointerCapture) handle.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+
+        modalEl.addEventListener('pointermove', function(event) {
+            if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+            event.preventDefault();
+            moveDraggedItem(pointerDrag.item, event.clientY);
+
+            var modalBody = modalEl.querySelector('.modal-body');
+            if (modalBody) {
+                var bodyRect = modalBody.getBoundingClientRect();
+                if (event.clientY < bodyRect.top + 48) modalBody.scrollTop -= 16;
+                if (event.clientY > bodyRect.bottom - 48) modalBody.scrollTop += 16;
+            }
+        });
+
+        modalEl.addEventListener('pointerup', function(event) {
+            if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+            finishDragging();
+        });
+
+        modalEl.addEventListener('pointercancel', function(event) {
+            if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+            finishDragging();
         });
 
         if (saveBtn) {
