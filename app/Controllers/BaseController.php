@@ -235,4 +235,140 @@ abstract class BaseController extends Controller
         $emailSvc->setFrom($fromEmail, $fromName);
         return $emailSvc;
     }
+
+    /**
+     * Send HTML mail through the configured transport. Railway production uses
+     * an HTTPS email API because outbound SMTP is unavailable on lower plans.
+     * Local installations and SMTP-enabled hosts can continue using SMTP.
+     *
+     * @param string|string[] $to
+     */
+    protected function sendConfiguredHtmlEmail(
+        string|array $to,
+        string $subject,
+        string $html,
+        ?string $replyToEmail = null,
+        ?string $replyToName = null
+    ): bool {
+        /** @var \Config\Email $config */
+        $config = clone config('Email');
+        $provider = strtolower(trim($config->deliveryProvider));
+        $recipients = $this->normalizeEmailRecipients($to);
+
+        if ($recipients === []) {
+            log_message('error', 'Email delivery aborted: no valid recipients were configured.');
+            return false;
+        }
+
+        if ($provider === 'brevo') {
+            return $this->sendViaBrevo($config, $recipients, $subject, $html, $replyToEmail, $replyToName);
+        }
+
+        if ($provider !== '' && $provider !== 'smtp') {
+            log_message('error', 'Email delivery aborted: unsupported provider "' . $provider . '".');
+            return false;
+        }
+
+        try {
+            $emailSvc = $this->getConfiguredEmailService();
+            $emailSvc->setTo($recipients);
+            $emailSvc->setSubject($subject);
+            $emailSvc->setMessage($html);
+            if ($replyToEmail !== null && filter_var($replyToEmail, FILTER_VALIDATE_EMAIL)) {
+                $emailSvc->setReplyTo($replyToEmail, $replyToName ?? '');
+            }
+
+            if ($emailSvc->send()) {
+                return true;
+            }
+
+            log_message('error', 'SMTP email delivery failed: ' . $emailSvc->printDebugger(['headers']));
+        } catch (\Throwable $exception) {
+            log_message('error', 'SMTP email delivery threw an exception: ' . $exception->getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string[] $recipients
+     */
+    protected function sendViaBrevo(
+        \Config\Email $config,
+        array $recipients,
+        string $subject,
+        string $html,
+        ?string $replyToEmail,
+        ?string $replyToName
+    ): bool {
+        $apiKey = trim($config->brevoApiKey);
+        $fromEmail = trim($config->fromEmail ?: $config->SMTPUser);
+
+        if ($apiKey === '' || !filter_var($fromEmail, FILTER_VALIDATE_EMAIL)) {
+            log_message('error', 'Brevo email delivery is not configured. Set BREVO_API_KEY and a valid EMAIL_FROM.');
+            return false;
+        }
+
+        $payload = [
+            'sender' => [
+                'email' => $fromEmail,
+                'name' => trim($config->fromName ?: app_name()),
+            ],
+            'to' => array_map(static fn(string $email): array => ['email' => $email], $recipients),
+            'subject' => $subject,
+            'htmlContent' => $html,
+        ];
+
+        if ($replyToEmail !== null && filter_var($replyToEmail, FILTER_VALIDATE_EMAIL)) {
+            $payload['replyTo'] = [
+                'email' => $replyToEmail,
+                'name' => trim($replyToName ?? ''),
+            ];
+        }
+
+        try {
+            $response = \Config\Services::curlrequest()->post($config->brevoApiUrl, [
+                'headers' => [
+                    'accept' => 'application/json',
+                    'api-key' => $apiKey,
+                    'content-type' => 'application/json',
+                ],
+                'json' => $payload,
+                'timeout' => max(2, $config->apiTimeout),
+                'http_errors' => false,
+            ]);
+            $statusCode = $response->getStatusCode();
+            if ($statusCode >= 200 && $statusCode < 300) {
+                return true;
+            }
+
+            log_message('error', 'Brevo email delivery failed with HTTP status ' . $statusCode . '.');
+        } catch (\Throwable $exception) {
+            log_message('error', 'Brevo email delivery threw an exception: ' . $exception->getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string|string[] $to
+     * @return string[]
+     */
+    private function normalizeEmailRecipients(string|array $to): array
+    {
+        $values = is_array($to) ? $to : preg_split('/[,;]+/', $to);
+        if (!is_array($values)) {
+            return [];
+        }
+
+        $valid = [];
+        foreach ($values as $value) {
+            $email = trim((string) $value);
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $valid[$email] = $email;
+            }
+        }
+
+        return array_values($valid);
+    }
 }

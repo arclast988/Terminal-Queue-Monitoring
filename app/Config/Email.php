@@ -11,6 +11,16 @@ class Email extends BaseConfig
     public string $recipients = '';
 
     /**
+     * Delivery transport: smtp for local/Pro hosts, brevo for Railway plans
+     * where outbound SMTP is unavailable.
+     */
+    public string $deliveryProvider = 'smtp';
+
+    public string $brevoApiKey = '';
+    public string $brevoApiUrl = 'https://api.brevo.com/v3/smtp/email';
+    public int $apiTimeout = 8;
+
+    /**
      * The "user agent"
      */
     public string $userAgent = 'CodeIgniter';

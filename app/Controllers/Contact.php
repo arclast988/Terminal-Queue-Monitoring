@@ -50,14 +50,7 @@ class Contact extends BaseController
             $body = "Name: {$name}\nEmail: {$email}\nSubject: {$topic}\n\nMessage:\n{$message}";
         }
 
-        // Use CodeIgniter Email library
-        $emailSvc = $this->getConfiguredEmailService();
-        $emailSvc->setReplyTo($email, $name); // Important: Guest's email goes here
-        $emailSvc->setTo($toEmail);
-        $emailSvc->setSubject($subjectLine);
-        $emailSvc->setMessage(nl2br(esc($body)));
-
-        if ($emailSvc->send()) {
+        if ($this->sendConfiguredHtmlEmail($toEmail, $subjectLine, nl2br(esc($body)), $email, $name)) {
             $cache->save($cacheKey, $attempts + 1, 300); // 5 minutes TTL
             return redirect()->to(base_url('guest') . '#support-section')
                 ->with('contact_success', 'Your message has been sent! We will respond shortly.');

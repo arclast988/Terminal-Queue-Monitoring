@@ -89,6 +89,10 @@ database.default.port = "$(escape_dotenv "$DB_PORT")"
 email.fromEmail = "$(escape_dotenv "${EMAIL_FROM:-}")"
 email.fromName = "$(escape_dotenv "${EMAIL_FROM_NAME:-Jeepney nVans}")"
 email.recipients = "$(escape_dotenv "${EMAIL_RECIPIENTS:-}")"
+email.deliveryProvider = "$(escape_dotenv "${EMAIL_DELIVERY_PROVIDER:-brevo}")"
+email.brevoApiKey = "$(escape_dotenv "${BREVO_API_KEY:-}")"
+email.brevoApiUrl = "$(escape_dotenv "${BREVO_API_URL:-https://api.brevo.com/v3/smtp/email}")"
+email.apiTimeout = "$(escape_dotenv "${EMAIL_API_TIMEOUT:-8}")"
 email.protocol = "$(escape_dotenv "${EMAIL_PROTOCOL:-smtp}")"
 email.SMTPHost = "$(escape_dotenv "${EMAIL_SMTP_HOST:-smtp.gmail.com}")"
 email.SMTPUser = "$(escape_dotenv "${EMAIL_SMTP_USER:-}")"
@@ -108,8 +112,12 @@ chown www-data:www-data "$APP_ROOT/.env"
 chmod 640 "$APP_ROOT/.env"
 
 echo "[ENV] Production configuration generated."
-if [ -z "${EMAIL_SMTP_USER:-}" ] || [ -z "${EMAIL_SMTP_PASS:-}" ]; then
-    echo "[WARN] EMAIL_SMTP_USER or EMAIL_SMTP_PASS is empty; password-reset and contact email delivery will be unavailable."
+if [ "${EMAIL_DELIVERY_PROVIDER:-brevo}" = "brevo" ]; then
+    if [ -z "${BREVO_API_KEY:-}" ] || [ -z "${EMAIL_FROM:-}" ]; then
+        echo "[WARN] BREVO_API_KEY or EMAIL_FROM is empty; password-reset and contact email delivery will fail fast until configured."
+    fi
+elif [ -z "${EMAIL_SMTP_USER:-}" ] || [ -z "${EMAIL_SMTP_PASS:-}" ]; then
+    echo "[WARN] EMAIL_SMTP_USER or EMAIL_SMTP_PASS is empty; SMTP email delivery will be unavailable."
 fi
 
 mkdir -p \

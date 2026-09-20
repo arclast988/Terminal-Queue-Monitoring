@@ -47,6 +47,10 @@ final class RailwayProductionRealtimeTest extends CIUnitTestCase
         $this->assertStringContainsString('${EMAIL_SMTP_PORT:-587}', $start);
         $this->assertStringContainsString('${EMAIL_SMTP_CRYPTO:-tls}', $start);
         $this->assertStringContainsString('${EMAIL_SMTP_TIMEOUT:-5}', $start);
+        $this->assertStringContainsString('${EMAIL_DELIVERY_PROVIDER:-brevo}', $start);
+        $this->assertStringContainsString('${BREVO_API_KEY:-}', $start);
+        $this->assertStringContainsString('https://api.brevo.com/v3/smtp/email', $start);
+        $this->assertStringContainsString('${EMAIL_API_TIMEOUT:-8}', $start);
         $this->assertStringContainsString('encryption.key = "$(escape_dotenv "$ENCRYPTION_KEY")"', $start);
     }
 

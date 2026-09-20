@@ -274,15 +274,13 @@ class Auth extends BaseController
         $cache = \Config\Services::cache();
         $cache->save('otp_resend_' . $token, true, 60);
 
-        // Load Email Service
-        $emailSvc = $this->getConfiguredEmailService();
-        $emailSvc->setTo($email);
-        $emailSvc->setSubject('[' . app_name() . '] Password Reset Verification Code');
-        $emailSvc->setMessage($this->buildOtpEmailHtml($accountUsername, $resetCode, false));
-
         $devMsg = '';
-        if (!$emailSvc->send()) {
-            log_message('error', 'Failed to send OTP verification email: ' . $emailSvc->printDebugger(['headers']));
+        if (!$this->sendConfiguredHtmlEmail(
+            $email,
+            '[' . app_name() . '] Password Reset Verification Code',
+            $this->buildOtpEmailHtml($accountUsername, $resetCode, false)
+        )) {
+            log_message('error', 'Failed to send OTP verification email.');
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
@@ -431,15 +429,13 @@ class Auth extends BaseController
 
         $cache->save($cacheKey, true, 60);
 
-        // Load Email Service
-        $emailSvc = $this->getConfiguredEmailService();
-        $emailSvc->setTo($record->email);
-        $emailSvc->setSubject('[' . app_name() . '] New Password Reset Verification Code');
-        $emailSvc->setMessage($this->buildOtpEmailHtml($record->username, $resetCode, true));
-
         $devMsg = '';
-        if (!$emailSvc->send()) {
-            log_message('error', 'Failed to resend OTP verification email: ' . $emailSvc->printDebugger(['headers']));
+        if (!$this->sendConfiguredHtmlEmail(
+            $record->email,
+            '[' . app_name() . '] New Password Reset Verification Code',
+            $this->buildOtpEmailHtml($record->username, $resetCode, true)
+        )) {
+            log_message('error', 'Failed to resend OTP verification email.');
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
@@ -713,15 +709,13 @@ class Auth extends BaseController
         $cache = \Config\Services::cache();
         $cache->save('otp_resend_cp_' . $user['id'], true, 60);
 
-        // Load Email Service
-        $emailSvc = $this->getConfiguredEmailService();
-        $emailSvc->setTo($email);
-        $emailSvc->setSubject('[' . app_name() . '] Password Change Verification Code');
-        $emailSvc->setMessage($this->buildChangePasswordEmailHtml($user['full_name'] ?: $user['username'], $resetCode));
-
         $devMsg = '';
-        if (!$emailSvc->send()) {
-            log_message('error', 'Failed to send OTP verification email for password change: ' . $emailSvc->printDebugger(['headers']));
+        if (!$this->sendConfiguredHtmlEmail(
+            $email,
+            '[' . app_name() . '] Password Change Verification Code',
+            $this->buildChangePasswordEmailHtml($user['full_name'] ?: $user['username'], $resetCode)
+        )) {
+            log_message('error', 'Failed to send OTP verification email for password change.');
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
