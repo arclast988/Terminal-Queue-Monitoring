@@ -319,6 +319,12 @@ body.staff-theme .logo-text p {
   .dropdown:hover .dropdown-content { display: block; }
 }
 
+/* Dropdowns also open on click/tap (toggled via JS .mobile-open) */
+.dropdown.mobile-open .dropdown-content,
+.nav-menu .dropdown.mobile-open .dropdown-content {
+  display: block;
+}
+
 .dropbtn {
   background: none;
   border: none;

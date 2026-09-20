@@ -352,15 +352,26 @@ SVG;
         });
 
 
-        // Mobile: dropdowns open on tap instead of hover
+        // Dropdowns open on tap/click at all viewports (hover still works via CSS)
         document.querySelectorAll('.nav-menu .dropdown .dropbtn').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
-                if (window.innerWidth <= 1280) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    var dropdown = this.closest('.dropdown');
-                    if (dropdown) dropdown.classList.toggle('mobile-open');
-                }
+                e.preventDefault();
+                e.stopPropagation();
+                var dropdown = this.closest('.dropdown');
+                if (!dropdown) return;
+                var willOpen = !dropdown.classList.contains('mobile-open');
+                document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
+                    if (d !== dropdown) d.classList.remove('mobile-open');
+                });
+                dropdown.classList.toggle('mobile-open', willOpen);
+            });
+        });
+
+        // Close nav dropdowns when clicking outside one of them
+        document.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('.nav-menu .dropdown')) return;
+            document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
+                d.classList.remove('mobile-open');
             });
         });
 
