@@ -365,6 +365,19 @@ SVG;
         toggleSidebarDrawer();
     }
 
+    function setNavDropdownState(dropdown, isOpen) {
+        if (!dropdown) return;
+        dropdown.classList.toggle('mobile-open', isOpen);
+        var trigger = dropdown.querySelector('.dropbtn');
+        if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    function closeNavDropdowns(exceptDropdown) {
+        document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (dropdown) {
+            if (dropdown !== exceptDropdown) setNavDropdownState(dropdown, false);
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var hamburgerBtn   = document.getElementById('siteNavHamburgerBtn');
         var drawerCloseBtn = document.getElementById('drawerCloseBtn');
@@ -415,20 +428,6 @@ SVG;
                 closeSidebarDrawer();
             });
         });
-
-
-        function setNavDropdownState(dropdown, isOpen) {
-            if (!dropdown) return;
-            dropdown.classList.toggle('mobile-open', isOpen);
-            var trigger = dropdown.querySelector('.dropbtn');
-            if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        function closeNavDropdowns(exceptDropdown) {
-            document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (dropdown) {
-                if (dropdown !== exceptDropdown) setNavDropdownState(dropdown, false);
-            });
-        }
 
         // Dropdowns open on tap/click at all viewports (hover still works via CSS)
         document.querySelectorAll('.nav-menu .dropdown .dropbtn').forEach(function (btn) {

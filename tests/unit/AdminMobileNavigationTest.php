@@ -118,6 +118,10 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString("e.target.closest('.nav-menu .dropdown')", $header);
         $this->assertStringContainsString("trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false')", $header);
         $this->assertStringContainsString('if (isOpen) closeNavDropdowns();', $header);
+        $this->assertLessThan(
+            strpos($header, "document.addEventListener('DOMContentLoaded'"),
+            strpos($header, 'function closeNavDropdowns(exceptDropdown)')
+        );
         $this->assertStringContainsString('.dropdown.mobile-open .dropdown-content', $css);
         $this->assertStringContainsString('.nav-menu .dropdown.mobile-open .dropdown-content', $css);
 
