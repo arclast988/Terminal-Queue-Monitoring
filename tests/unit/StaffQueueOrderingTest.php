@@ -58,5 +58,10 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString('queue-order-note', $view);
         $this->assertStringContainsString('queue-order-boarding-badge', $view);
         $this->assertStringContainsString('-webkit-text-fill-color: #ffffff !important;', $view);
+        $this->assertStringContainsString('window.QueueOrderManager', $view);
+        $this->assertStringContainsString('syncFromDocument: syncFromDocument', $view);
+        $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'canceled');", $view);
+        $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'waiting');", $view);
+        $this->assertStringContainsString('window.QueueOrderManager.setStatus(id, data.status || status);', $view);
     }
 }

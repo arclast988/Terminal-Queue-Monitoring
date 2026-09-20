@@ -975,7 +975,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                             <h6 class="fw-bold mb-0">
                                 <?= esc(strtoupper($queueOrderGroup['origin'])) ?> &rarr; <?= esc(strtoupper($queueOrderGroup['destination'])) ?>
                             </h6>
-                            <span class="badge bg-success-subtle text-success-emphasis"><?= count($queueOrderGroup['items']) ?> vehicles</span>
+                            <span class="badge bg-success-subtle text-success-emphasis" data-queue-order-count><?= count($queueOrderGroup['items']) ?> vehicles</span>
                         </div>
                         <div class="queue-order-list" data-original-order="<?= esc($originalOrder, 'attr') ?>">
                             <?php foreach ($queueOrderGroup['items'] as $queueOrderItem): ?>
@@ -987,9 +987,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         <div class="small text-muted text-truncate">
                                             <?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?>
                                             <?php if ($isOrderLocked): ?>
-                                                <span class="badge bg-success ms-1 queue-order-boarding-badge"><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
+                                                <span class="badge bg-success ms-1 queue-order-boarding-badge" data-queue-status-badge><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
                                             <?php else: ?>
-                                                <span class="badge bg-warning-subtle text-warning-emphasis ms-1">WAITING</span>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis ms-1" data-queue-status-badge>WAITING</span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -1585,7 +1585,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
         var modalEl = document.getElementById('manageQueueModal');
         if (!modalEl) return;
 
-        var groupSelect = document.getElementById('queueOrderGroupSelect');
         var saveBtn = document.getElementById('saveQueueOrderBtn');
         var feedback = document.getElementById('queueOrderFeedback');
 
@@ -1607,7 +1606,10 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         function refreshPanel(panel) {
             if (!panel) return;
-            var allItems = Array.prototype.slice.call(panel.querySelectorAll('.queue-order-item'));
+            var allItems = Array.prototype.slice.call(panel.querySelectorAll('.queue-order-item')).filter(function(item) {
+                var status = item.getAttribute('data-status');
+                return !item.classList.contains('d-none') && (status === 'waiting' || status === 'boarding');
+            });
             var waitingItems = allItems.filter(function(item) {
                 return item.getAttribute('data-status') === 'waiting';
             });
@@ -1617,12 +1619,83 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 if (position) position.textContent = '#' + (index + 1);
             });
 
+            allItems.filter(function(item) {
+                return item.getAttribute('data-status') === 'boarding';
+            }).forEach(function(item) {
+                item.querySelectorAll('[data-queue-move]').forEach(function(button) {
+                    button.disabled = true;
+                });
+            });
+
             waitingItems.forEach(function(item, index) {
                 var up = item.querySelector('[data-queue-move="up"]');
                 var down = item.querySelector('[data-queue-move="down"]');
                 if (up) up.disabled = index === 0;
                 if (down) down.disabled = index === waitingItems.length - 1;
             });
+
+            var countBadge = panel.querySelector('[data-queue-order-count]');
+            if (countBadge) countBadge.textContent = allItems.length + (allItems.length === 1 ? ' vehicle' : ' vehicles');
+        }
+
+        function setItemStatus(queueId, status) {
+            var item = modalEl.querySelector('.queue-order-item[data-queue-id="' + queueId + '"]');
+            if (!item) return false;
+
+            var list = item.closest('.queue-order-list');
+            var badge = item.querySelector('[data-queue-status-badge]');
+            item.setAttribute('data-status', status);
+
+            if (status === 'boarding') {
+                item.classList.remove('d-none');
+                if (badge) {
+                    badge.className = 'badge bg-success ms-1 queue-order-boarding-badge';
+                    badge.innerHTML = '<i class="bi bi-lock-fill me-1"></i>BOARDING';
+                    badge.setAttribute('data-queue-status-badge', '');
+                }
+                if (list) list.insertBefore(item, list.firstElementChild);
+            } else if (status === 'waiting') {
+                item.classList.remove('d-none');
+                if (badge) {
+                    badge.className = 'badge bg-warning-subtle text-warning-emphasis ms-1';
+                    badge.textContent = 'WAITING';
+                    badge.setAttribute('data-queue-status-badge', '');
+                }
+            } else {
+                item.classList.add('d-none');
+            }
+
+            refreshPanel(item.closest('.queue-order-panel'));
+            return true;
+        }
+
+        function syncFromDocument(newDoc) {
+            if (!newDoc || !newDoc.getElementById) return;
+            var freshModal = newDoc.getElementById('manageQueueModal');
+
+            if (!freshModal) {
+                modalEl.querySelectorAll('.queue-order-item').forEach(function(item) {
+                    item.classList.add('d-none');
+                });
+                modalEl.querySelectorAll('.queue-order-panel').forEach(refreshPanel);
+                return;
+            }
+
+            if (modalEl.classList.contains('show') || modalEl.querySelector(':focus')) {
+                modalEl.setAttribute('data-queue-order-refresh-pending', 'true');
+                return;
+            }
+
+            var currentBody = modalEl.querySelector('.modal-body');
+            var freshBody = freshModal.querySelector('.modal-body');
+            if (!currentBody || !freshBody) return;
+
+            var replacementNodes = Array.prototype.slice.call(freshBody.childNodes).map(function(node) {
+                return node.cloneNode(true);
+            });
+            currentBody.replaceChildren.apply(currentBody, replacementNodes);
+            feedback = document.getElementById('queueOrderFeedback');
+            modalEl.querySelectorAll('.queue-order-panel').forEach(refreshPanel);
         }
 
         function restoreOriginalOrders() {
@@ -1637,15 +1710,15 @@ $queueOrderGroups = array_values($queueOrderGroups);
             clearFeedback();
         }
 
-        if (groupSelect) {
-            groupSelect.addEventListener('change', function() {
-                modalEl.querySelectorAll('.queue-order-panel').forEach(function(panel) {
-                    panel.classList.toggle('d-none', panel.id !== groupSelect.value);
-                });
-                clearFeedback();
-                refreshPanel(activePanel());
+        modalEl.addEventListener('change', function(event) {
+            if (!event.target || event.target.id !== 'queueOrderGroupSelect') return;
+            var groupSelect = event.target;
+            modalEl.querySelectorAll('.queue-order-panel').forEach(function(panel) {
+                panel.classList.toggle('d-none', panel.id !== groupSelect.value);
             });
-        }
+            clearFeedback();
+            refreshPanel(activePanel());
+        });
 
         modalEl.addEventListener('shown.bs.modal', function() {
             refreshPanel(activePanel());
@@ -1653,6 +1726,10 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         modalEl.addEventListener('hidden.bs.modal', function() {
             restoreOriginalOrders();
+            if (modalEl.getAttribute('data-queue-order-refresh-pending') === 'true') {
+                modalEl.removeAttribute('data-queue-order-refresh-pending');
+                if (window.QueueSync && window.QueueSync.refresh) window.QueueSync.refresh(true);
+            }
         });
 
         modalEl.addEventListener('click', function(event) {
@@ -1682,7 +1759,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 var panel = activePanel();
                 if (!panel) return;
 
-                var queueIds = Array.prototype.slice.call(panel.querySelectorAll('.queue-order-item')).map(function(item) {
+                var queueIds = Array.prototype.slice.call(panel.querySelectorAll('.queue-order-item[data-status="waiting"], .queue-order-item[data-status="boarding"]')).map(function(item) {
                     return parseInt(item.getAttribute('data-queue-id'), 10);
                 }).filter(function(id) {
                     return Number.isInteger(id) && id > 0;
@@ -1729,6 +1806,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 });
             });
         }
+
+        window.QueueOrderManager = {
+            setStatus: setItemStatus,
+            syncFromDocument: syncFromDocument
+        };
 
         modalEl.querySelectorAll('.queue-order-panel').forEach(refreshPanel);
     })();
@@ -1783,6 +1865,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
         .then(function(data) {
             if (!data.success) {
                 throw new Error(data.message || 'Status update failed');
+            }
+            if (window.QueueOrderManager) {
+                window.QueueOrderManager.setStatus(id, data.status || status);
             }
             if (window.QueueSync) {
                 window.QueueSync.refresh();
@@ -1939,6 +2024,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 if (!data.success) {
                     throw new Error(data.message || 'Trip cancellation failed');
                 }
+                if (window.QueueOrderManager) {
+                    window.QueueOrderManager.setStatus(queueId, 'canceled');
+                }
                 if (window.QueueSync) {
                     window.QueueSync.refresh();
                 }
@@ -2087,6 +2175,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
             try { sessionStorage.removeItem('pendingUndoTrip'); } catch(e) {}
 
             if (data.success) {
+                if (window.QueueOrderManager) {
+                    window.QueueOrderManager.setStatus(queueId, 'waiting');
+                }
                 var bannerContainer = document.getElementById('undoBannerContainer');
                 if (bannerContainer) {
                     bannerContainer.innerHTML =
@@ -2244,9 +2335,12 @@ $queueOrderGroups = array_values($queueOrderGroups);
         refreshUrl:    '<?= base_url('staff/queue') ?>',
         tableSelector: '#queue-list',
         modalSelector: null,
-        extraRefresh: function() {
+        extraRefresh: function(newDoc) {
             // New queue cards carry fresh countdown targets — repaint immediately.
             updateCountdowns();
+            if (window.QueueOrderManager && window.QueueOrderManager.syncFromDocument) {
+                window.QueueOrderManager.syncFromDocument(newDoc);
+            }
         }
     });
 
@@ -2254,6 +2348,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
     document.addEventListener('pttm:ws-queue_update', function(e) {
         var detail = (e && e.detail) ? e.detail : {};
         var data = detail.data || detail;
+        if (data && data.action === 'status_change' && data.id && data.status && window.QueueOrderManager) {
+            window.QueueOrderManager.setStatus(data.id, data.status);
+        }
         if (data && (data.action === 'passenger_change' || data.type === 'passenger_change')) {
             if (window.QueueSync && window.QueueSync.updatePassengerUI) {
                 var id = data.id;
