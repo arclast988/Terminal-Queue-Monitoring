@@ -269,6 +269,13 @@ class Users extends BaseController
         $role = $this->request->getPost('role');
         $selectedRoutes = $this->parseRouteIds();
 
+        // A second super administrator must never be created by editing an
+        // existing account. Use the transfer command so the former holder is
+        // demoted in the same transaction.
+        if ($role === 'super_admin' && $targetUser['role'] !== 'super_admin') {
+            return redirect()->back()->withInput()->with('error', 'Only one super admin is allowed. Transfer the role instead of promoting another account.');
+        }
+
         // Regular admin cannot change user roles
         if ($currentRole !== 'super_admin' && $role !== $targetUser['role']) {
             return redirect()->back()->withInput()->with('error', 'Only a super admin can change user roles.');

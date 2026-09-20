@@ -8,11 +8,14 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
+        $users = $this->db->table('users');
+        $hasSuperAdmin = $users->where('role', 'super_admin')->countAllResults() > 0;
+
         $data = [
             [
                 'username' => 'admin@ttm.local',
                 'password_hash' => password_hash('admin123', PASSWORD_DEFAULT),
-                'role' => 'super_admin',
+                'role' => $hasSuperAdmin ? 'admin' : 'super_admin',
                 'full_name' => 'System Administrator',
                 'email' => 'admin@ttm.local',
                 'created_at' => date('Y-m-d H:i:s'),
@@ -35,8 +38,19 @@ class UserSeeder extends Seeder
             ]
         ];
 
-        // Clean up existing seeded users before re-inserting
-        $this->db->table('users')->whereIn('username', ['admin', 'staff', 'staff2', 'admin@ttm.local', 'staff@ttm.local', 'staff2@ttm.local'])->delete();
-        $this->db->table('users')->insertBatch($data);
+        // Seed only missing demo accounts. Never delete or reset an existing
+        // account, password, role, or route assignment when this seeder reruns.
+        foreach ($data as $user) {
+            $exists = $this->db->table('users')
+                ->groupStart()
+                    ->where('username', $user['username'])
+                    ->orWhere('email', $user['email'])
+                ->groupEnd()
+                ->countAllResults() > 0;
+
+            if (!$exists) {
+                $this->db->table('users')->insert($user);
+            }
+        }
     }
 }

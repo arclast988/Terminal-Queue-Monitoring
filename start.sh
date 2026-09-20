@@ -140,7 +140,11 @@ chmod -R u=rwX,g=rwX,o=rX "$APP_ROOT/writable" "$APP_ROOT/public/uploads"
 echo "[DB] Checking schema and migrations..."
 php "$APP_ROOT/import_schema.php" || echo "[DB] Schema import check skipped or already complete."
 php "$APP_ROOT/spark" migrate --all 2>&1 || echo "[DB] Migrations already complete or unavailable."
-php "$APP_ROOT/spark" db:seed UserSeeder 2>&1 || echo "[DB] Initial seed not required."
+if [ "${RUN_DEFAULT_SEEDERS:-false}" = "true" ]; then
+    php "$APP_ROOT/spark" db:seed UserSeeder 2>&1 || echo "[DB] Initial seed not required."
+else
+    echo "[DB] Default demo users skipped. Set RUN_DEFAULT_SEEDERS=true only for a new development database."
+fi
 
 PHP_FPM_BIN="$(command -v php-fpm || command -v php-fpm8.2 || command -v php-fpm82 || true)"
 if [ -z "$PHP_FPM_BIN" ]; then

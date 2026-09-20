@@ -38,12 +38,15 @@ class TransferSuperAdmin extends BaseCommand
             return;
         }
 
-        // Find the current super admin
-        $currentSuperAdmin = $model->where('role', 'super_admin')->first();
-        if (!$currentSuperAdmin) {
+        // Find every current super admin. Older deployments could contain a
+        // legacy seeded account in addition to the real administrator.
+        $currentSuperAdmins = $model->where('role', 'super_admin')->findAll();
+        if ($currentSuperAdmins === []) {
             CLI::error('No super admin account found. Run the AddSuperAdminRole migration first.');
             return;
         }
+
+        $currentSuperAdmin = $currentSuperAdmins[0];
 
         CLI::write('Current super admin: ' . $currentSuperAdmin['username'] . ' (ID: ' . $currentSuperAdmin['id'] . ')', 'yellow');
         CLI::write('Target user:         ' . $targetUser['username'] . ' (ID: ' . $targetUser['id'] . ', role: ' . $targetUser['role'] . ')', 'yellow');
@@ -58,8 +61,13 @@ class TransferSuperAdmin extends BaseCommand
         $db = \Config\Database::connect();
         $db->transStart();
 
-        // Demote current super admin to admin
-        $model->update($currentSuperAdmin['id'], ['role' => 'admin']);
+        // Demote every existing holder so the transfer always restores the
+        // single-super-admin invariant, including legacy duplicate accounts.
+        foreach ($currentSuperAdmins as $existingSuperAdmin) {
+            if ((int) $existingSuperAdmin['id'] !== $userId) {
+                $model->update($existingSuperAdmin['id'], ['role' => 'admin']);
+            }
+        }
 
         // Promote target user to super_admin
         $model->update($userId, ['role' => 'super_admin']);
