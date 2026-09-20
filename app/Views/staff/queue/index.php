@@ -541,15 +541,146 @@
             min-height: 44px !important;
         }
     }
+
+    .queue-header-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    #manageQueueModal .modal-content {
+        border: 0;
+        border-radius: 18px;
+        overflow: hidden;
+        max-height: min(90vh, 760px);
+    }
+
+    #manageQueueModal .modal-body {
+        overflow-y: auto;
+        min-height: 0;
+    }
+
+    .queue-order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .queue-order-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.8rem;
+        border: 1px solid var(--border, #dbe3ec);
+        border-radius: 12px;
+        background: var(--surface, #fff);
+    }
+
+    .queue-order-position {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 38px;
+        font-weight: 800;
+        color: #166534;
+        background: #dcfce7;
+        border: 1px solid #86efac;
+    }
+
+    .queue-order-moves {
+        display: flex;
+        gap: 0.4rem;
+        margin-left: auto;
+    }
+
+    .queue-order-move {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        border: 1px solid var(--border-strong, #cbd5e1);
+        color: var(--text-main, #1e293b);
+        background: var(--surface, #fff);
+    }
+
+    .queue-order-move:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 575.98px) {
+        .queue-header-actions {
+            width: 100%;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+
+        .queue-header-actions .btn-modern {
+            width: 100%;
+            min-width: 0;
+            justify-content: center;
+            padding-inline: 0.65rem;
+            font-size: 0.78rem;
+        }
+
+        #manageQueueModal .modal-dialog {
+            margin: 0.6rem;
+        }
+
+        #manageQueueModal .modal-content {
+            max-height: calc(100dvh - 1.2rem);
+        }
+
+        .queue-order-item {
+            gap: 0.55rem;
+            padding: 0.7rem;
+        }
+
+        .queue-order-position {
+            width: 34px;
+            height: 34px;
+            flex-basis: 34px;
+        }
+
+        .queue-order-move {
+            width: 36px;
+            height: 36px;
+        }
+    }
 </style>
+
+<?php
+$queueOrderGroups = [];
+foreach (($queue ?? []) as $queueOrderItem) {
+    $queueGroupKey = (string) ($queueOrderItem['terminal_id'] ?? 0) . '|' . (string) ($queueOrderItem['destination'] ?? '');
+    if (!isset($queueOrderGroups[$queueGroupKey])) {
+        $queueOrderGroups[$queueGroupKey] = [
+            'panel_id' => 'queue-order-' . substr(sha1($queueGroupKey), 0, 10),
+            'origin' => (string) ($queueOrderItem['origin'] ?? ''),
+            'destination' => (string) ($queueOrderItem['destination'] ?? ''),
+            'items' => [],
+        ];
+    }
+    $queueOrderGroups[$queueGroupKey]['items'][] = $queueOrderItem;
+}
+?>
 
 <div class="page-header-modern">
     <h1 class="page-title-modern">
         <i class="bi bi-clock-history"></i>
         Queue Operations
     </h1>
-    <div class="d-flex gap-2">
+    <div class="d-flex gap-2 queue-header-actions">
         <?php if (empty($noRoutesAssigned)): ?>
+        <?php if (!empty($queueOrderGroups)): ?>
+        <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageQueueModal">
+            <i class="bi bi-list-ol"></i> Manage Queue
+        </button>
+        <?php endif; ?>
         <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
             <i class="bi bi-plus-lg"></i> Add Vehicle to Queue
         </button>
@@ -748,6 +879,93 @@
         </div>
     <?php endif; ?>
 </div>
+
+<?php if (!empty($queueOrderGroups)): ?>
+<!-- Dispatcher Queue Order Modal -->
+<div class="modal fade" id="manageQueueModal" tabindex="-1" aria-labelledby="manageQueueModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <div>
+                    <h5 class="modal-title fw-bold mb-1" id="manageQueueModalLabel">
+                        <i class="bi bi-list-ol me-2"></i>Manage Queue Order
+                    </h5>
+                    <div class="small text-white-50">Move waiting vehicles up or down in their destination line.</div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 p-md-4">
+                <?php if (count($queueOrderGroups) > 1): ?>
+                    <div class="mb-3">
+                        <label for="queueOrderGroupSelect" class="form-label fw-bold">Queue destination</label>
+                        <select id="queueOrderGroupSelect" class="form-select">
+                            <?php foreach ($queueOrderGroups as $queueOrderGroup): ?>
+                                <option value="<?= esc($queueOrderGroup['panel_id'], 'attr') ?>">
+                                    <?= esc(strtoupper($queueOrderGroup['origin'])) ?> &rarr; <?= esc(strtoupper($queueOrderGroup['destination'])) ?> (<?= count($queueOrderGroup['items']) ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
+
+                <div class="alert alert-light border small d-flex gap-2 align-items-start mb-3">
+                    <i class="bi bi-info-circle-fill text-primary mt-1"></i>
+                    <span>A boarding vehicle is locked at the front because its dispatch is already in progress. Save each destination separately.</span>
+                </div>
+
+                <div id="queueOrderFeedback" class="alert d-none" role="alert"></div>
+
+                <?php foreach ($queueOrderGroups as $groupIndex => $queueOrderGroup): ?>
+                    <?php
+                    $originalOrder = implode(',', array_map(static fn(array $item): int => (int) $item['id'], $queueOrderGroup['items']));
+                    ?>
+                    <section class="queue-order-panel <?= $groupIndex > 0 ? 'd-none' : '' ?>" id="<?= esc($queueOrderGroup['panel_id'], 'attr') ?>">
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                            <h6 class="fw-bold mb-0">
+                                <?= esc(strtoupper($queueOrderGroup['origin'])) ?> &rarr; <?= esc(strtoupper($queueOrderGroup['destination'])) ?>
+                            </h6>
+                            <span class="badge bg-success-subtle text-success-emphasis"><?= count($queueOrderGroup['items']) ?> vehicles</span>
+                        </div>
+                        <div class="queue-order-list" data-original-order="<?= esc($originalOrder, 'attr') ?>">
+                            <?php foreach ($queueOrderGroup['items'] as $queueOrderItem): ?>
+                                <?php $isOrderLocked = ($queueOrderItem['status'] ?? '') === 'boarding'; ?>
+                                <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>">
+                                    <span class="queue-order-position">#<?= (int) $queueOrderItem['position'] ?></span>
+                                    <div class="min-w-0 flex-grow-1">
+                                        <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?></div>
+                                        <div class="small text-muted text-truncate">
+                                            <?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?>
+                                            <?php if ($isOrderLocked): ?>
+                                                <span class="badge bg-success ms-1"><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis ms-1">WAITING</span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                    <div class="queue-order-moves">
+                                        <button type="button" class="queue-order-move" data-queue-move="up" aria-label="Move <?= esc($queueOrderItem['plate_number'] ?? 'vehicle', 'attr') ?> up" <?= $isOrderLocked ? 'disabled' : '' ?>>
+                                            <i class="bi bi-arrow-up"></i>
+                                        </button>
+                                        <button type="button" class="queue-order-move" data-queue-move="down" aria-label="Move <?= esc($queueOrderItem['plate_number'] ?? 'vehicle', 'attr') ?> down" <?= $isOrderLocked ? 'disabled' : '' ?>>
+                                            <i class="bi bi-arrow-down"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+                <?php endforeach; ?>
+            </div>
+            <div class="modal-footer flex-nowrap">
+                <button type="button" class="btn-modern btn-modern-outline flex-fill" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-modern btn-modern-primary flex-fill" id="saveQueueOrderBtn">
+                    <i class="bi bi-check-lg me-1"></i>Save Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Depart Confirmation Modal -->
 <div class="modal fade" id="confirmDepartModal" tabindex="-1" aria-labelledby="confirmDepartModalLabel" aria-hidden="true" data-bs-backdrop="static">
@@ -1311,6 +1529,158 @@
     PassengerDebounce.init({
         setUrl: '<?= base_url('staff/queue/setPassengers') ?>/{id}'
     });
+
+    (function initQueueOrderManager() {
+        var modalEl = document.getElementById('manageQueueModal');
+        if (!modalEl) return;
+
+        var groupSelect = document.getElementById('queueOrderGroupSelect');
+        var saveBtn = document.getElementById('saveQueueOrderBtn');
+        var feedback = document.getElementById('queueOrderFeedback');
+
+        function activePanel() {
+            return modalEl.querySelector('.queue-order-panel:not(.d-none)');
+        }
+
+        function showFeedback(message, variant) {
+            if (!feedback) return;
+            feedback.className = 'alert alert-' + (variant || 'danger');
+            feedback.textContent = message;
+        }
+
+        function clearFeedback() {
+            if (!feedback) return;
+            feedback.className = 'alert d-none';
+            feedback.textContent = '';
+        }
+
+        function refreshPanel(panel) {
+            if (!panel) return;
+            var allItems = Array.prototype.slice.call(panel.querySelectorAll('.queue-order-item'));
+            var waitingItems = allItems.filter(function(item) {
+                return item.getAttribute('data-status') === 'waiting';
+            });
+
+            allItems.forEach(function(item, index) {
+                var position = item.querySelector('.queue-order-position');
+                if (position) position.textContent = '#' + (index + 1);
+            });
+
+            waitingItems.forEach(function(item, index) {
+                var up = item.querySelector('[data-queue-move="up"]');
+                var down = item.querySelector('[data-queue-move="down"]');
+                if (up) up.disabled = index === 0;
+                if (down) down.disabled = index === waitingItems.length - 1;
+            });
+        }
+
+        function restoreOriginalOrders() {
+            modalEl.querySelectorAll('.queue-order-list').forEach(function(list) {
+                var originalIds = (list.getAttribute('data-original-order') || '').split(',').filter(Boolean);
+                originalIds.forEach(function(id) {
+                    var item = list.querySelector('.queue-order-item[data-queue-id="' + id + '"]');
+                    if (item) list.appendChild(item);
+                });
+                refreshPanel(list.closest('.queue-order-panel'));
+            });
+            clearFeedback();
+        }
+
+        if (groupSelect) {
+            groupSelect.addEventListener('change', function() {
+                modalEl.querySelectorAll('.queue-order-panel').forEach(function(panel) {
+                    panel.classList.toggle('d-none', panel.id !== groupSelect.value);
+                });
+                clearFeedback();
+                refreshPanel(activePanel());
+            });
+        }
+
+        modalEl.addEventListener('shown.bs.modal', function() {
+            refreshPanel(activePanel());
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            restoreOriginalOrders();
+        });
+
+        modalEl.addEventListener('click', function(event) {
+            var moveButton = event.target.closest('[data-queue-move]');
+            if (!moveButton || moveButton.disabled) return;
+
+            var item = moveButton.closest('.queue-order-item');
+            var list = item ? item.closest('.queue-order-list') : null;
+            if (!item || !list || item.getAttribute('data-status') !== 'waiting') return;
+
+            var waitingItems = Array.prototype.slice.call(list.querySelectorAll('.queue-order-item[data-status="waiting"]'));
+            var currentIndex = waitingItems.indexOf(item);
+            var direction = moveButton.getAttribute('data-queue-move');
+
+            if (direction === 'up' && currentIndex > 0) {
+                list.insertBefore(item, waitingItems[currentIndex - 1]);
+            } else if (direction === 'down' && currentIndex < waitingItems.length - 1) {
+                list.insertBefore(waitingItems[currentIndex + 1], item);
+            }
+
+            clearFeedback();
+            refreshPanel(item.closest('.queue-order-panel'));
+        });
+
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                var panel = activePanel();
+                if (!panel) return;
+
+                var queueIds = Array.prototype.slice.call(panel.querySelectorAll('.queue-order-item')).map(function(item) {
+                    return parseInt(item.getAttribute('data-queue-id'), 10);
+                }).filter(function(id) {
+                    return Number.isInteger(id) && id > 0;
+                });
+
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Saving...';
+                clearFeedback();
+
+                var headers = {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                };
+                var csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
+                var csrfHeaderMeta = document.querySelector('meta[name="csrf-header"]');
+                if (csrfTokenMeta) {
+                    headers[csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : 'X-CSRF-TOKEN'] = csrfTokenMeta.getAttribute('content');
+                }
+
+                fetch('<?= base_url('staff/queue/reorder') ?>', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ queue_ids: queueIds })
+                })
+                .then(function(response) {
+                    return response.json().then(function(data) {
+                        return { ok: response.ok, data: data };
+                    });
+                })
+                .then(function(result) {
+                    if (!result.ok || !result.data.success) {
+                        throw new Error(result.data.message || 'Failed to save the queue order.');
+                    }
+
+                    showFeedback(result.data.message || 'Queue order saved.', 'success');
+                    window.setTimeout(function() {
+                        window.location.reload();
+                    }, 350);
+                })
+                .catch(function(error) {
+                    showFeedback(error.message || 'Failed to save the queue order.', 'danger');
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Order';
+                });
+            });
+        }
+
+        modalEl.querySelectorAll('.queue-order-panel').forEach(refreshPanel);
+    })();
 
     function updatePassengers(id, action) {
         var countSpan = document.getElementById('passenger-count-' + id);

@@ -70,12 +70,13 @@ class QueueModel extends Model
 
     /**
      * Recalculate estimated departure times and positions for all active queue items.
-     * Items are grouped per route. For each route:
+     * Items are grouped per terminal and destination. For each queue line:
      *   - Boarding vehicles (if any) stay first. If already boarding, their existing
      *     estimated_departure serves as the base anchor for subsequent vehicles.
      *   - Waiting vehicles are assigned sequential departure slots calculated by adding
      *     the matching departure rule wait_minutes to the previous vehicle's departure slot.
-     * Also updates global position ranks so boarding vehicles are first, followed by waiting.
+     * Position is the canonical dispatcher-managed order. Boarding vehicles remain
+     * first, followed by waiting vehicles in their saved position order.
      */
     public function recalculateSchedule(?int $targetRouteId = null): void
     {
@@ -135,13 +136,25 @@ class QueueModel extends Model
             $batchUpdates = [];
 
             foreach ($grouped as $groupKey => $items) {
-                // Sort items for this destination: boarding first, then waiting by arrival/id
+                // Sort items for this destination: boarding first, then by the
+                // dispatcher-managed queue position. Arrival/id are deterministic
+                // fallbacks for legacy rows with no valid position or duplicate values.
                 usort($items, static function ($a, $b) {
                     $aBoarding = ($a['status'] === 'boarding');
                     $bBoarding = ($b['status'] === 'boarding');
                     if ($aBoarding !== $bBoarding) {
                         return $aBoarding ? -1 : 1;
                     }
+
+                    $aPosition = (int) ($a['position'] ?? 0);
+                    $bPosition = (int) ($b['position'] ?? 0);
+                    $aPosition = $aPosition > 0 ? $aPosition : PHP_INT_MAX;
+                    $bPosition = $bPosition > 0 ? $bPosition : PHP_INT_MAX;
+                    $positionCmp = $aPosition <=> $bPosition;
+                    if ($positionCmp !== 0) {
+                        return $positionCmp;
+                    }
+
                     $cmp = strcmp((string) ($a['arrival_time'] ?? ''), (string) ($b['arrival_time'] ?? ''));
                     return $cmp !== 0 ? $cmp : ((int) $a['id'] <=> (int) $b['id']);
                 });
@@ -175,7 +188,7 @@ class QueueModel extends Model
                         $updateData['estimated_departure'] = $estTime;
                     }
 
-                    // Assign sequential per-route position (1, 2, 3, ...) for this destination
+                    // Assign sequential position (1, 2, 3, ...) for this destination.
                     $routePosition = $index + 1;
                     if ((int) ($item['position'] ?? 0) !== $routePosition) {
                         $updateData['position'] = $routePosition;

@@ -60,6 +60,25 @@ class Queue extends BaseController
         return $this->hasRouteAccess((int) $item['route_id']);
     }
 
+    /**
+     * Serialize queue-order mutations on PostgreSQL. This uses the same global
+     * advisory-lock key as reorderByDeparture(), so add/cancel/restore/manual
+     * reorder operations cannot interleave and create duplicate positions.
+     */
+    private function acquireQueueOrderingLock($db): void
+    {
+        $driver = strtolower($db->DBDriver ?? '');
+        if (!str_contains($driver, 'postgre')) {
+            return;
+        }
+
+        $lockKey = crc32('queue_recalc_0');
+        if ($lockKey > 2147483647) {
+            $lockKey -= 4294967296;
+        }
+        $db->query('SELECT pg_advisory_xact_lock(?)', [(int) $lockKey]);
+    }
+
     public function index()
     {
         $assignedRouteIds = $this->getAssignedRouteIds();
@@ -74,7 +93,8 @@ class Queue extends BaseController
             vehicles.type as vehicle_type, 
             vehicles.photo as vehicle_photo, 
             terminals.name as origin, 
-            routes.destination, 
+            routes.destination,
+            routes.terminal_id,
             vehicles.capacity
         ')
             ->withFullJoins()
@@ -265,6 +285,7 @@ class Queue extends BaseController
 
         $db = \Config\Database::connect();
         $db->transStart();
+        $this->acquireQueueOrderingLock($db);
 
         $baseArrivalTimestamp = time();
         $selectionIndex = 0;
@@ -327,8 +348,17 @@ class Queue extends BaseController
                 }
             }
 
-            // Calculate next position for this route (temporary — reorderByDeparture() finalises it)
-            $lastPosition = $this->queueModel->where('route_id', $routeId)->whereIn('status', ['waiting', 'boarding'])->selectMax('position')->first();
+            // Positions are shared by every route with the same terminal and
+            // destination, so append to the end of that complete queue line.
+            $sameDestinationRouteIds = (new RouteModel())
+                ->where('terminal_id', $route['terminal_id'])
+                ->where('destination', $route['destination'])
+                ->findColumn('id') ?: [$routeId];
+            $lastPosition = $this->queueModel
+                ->whereIn('route_id', $sameDestinationRouteIds)
+                ->whereIn('status', ['waiting', 'boarding'])
+                ->selectMax('position')
+                ->first();
             $nextPosition = ($lastPosition['position'] ?? 0) + 1;
 
             $terminalId  = (int) ($route['terminal_id'] ?? 1);
@@ -436,7 +466,9 @@ class Queue extends BaseController
                 }
             }
         } elseif ($status == 'canceled') {
-            $data['position'] = 0; // Remove from active positions
+            // Keep the old position as the restore slot. Canceled rows are not
+            // included in active queue calculations, so this cannot occupy an
+            // active position while the trip is canceled.
             $data['estimated_departure'] = null;
         } elseif ($status == 'boarding') {
             // The departure interval starts NOW (when boarding begins), not when
@@ -462,6 +494,7 @@ class Queue extends BaseController
         // Use transaction to prevent race conditions during position reordering
         $db = \Config\Database::connect();
         $db->transStart();
+        $this->acquireQueueOrderingLock($db);
 
         $this->queueModel->update($id, $data);
 
@@ -633,6 +666,159 @@ class Queue extends BaseController
         ]);
     }
 
+    /**
+     * Save a dispatcher-selected order for one terminal/destination queue line.
+     * Boarding vehicles are kept at the front; only waiting vehicles are movable.
+     */
+    public function reorder()
+    {
+        $payload = $this->request->getJSON(true);
+        if (!is_array($payload)) {
+            $payload = $this->request->getPost();
+        }
+
+        $rawIds = $payload['queue_ids'] ?? [];
+        if (!is_array($rawIds) || empty($rawIds)) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Select a queue line to reorder.',
+            ]);
+        }
+
+        $queueIds = [];
+        foreach ($rawIds as $rawId) {
+            if (!is_numeric($rawId) || (int) $rawId <= 0) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success' => false,
+                    'message' => 'The queue order contains an invalid vehicle.',
+                ]);
+            }
+            $queueIds[] = (int) $rawId;
+        }
+
+        if (count($queueIds) !== count(array_unique($queueIds))) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'The queue order contains a duplicate vehicle.',
+            ]);
+        }
+
+        $submittedItems = (new QueueModel())
+            ->select('queue.*, routes.terminal_id, routes.destination')
+            ->join('routes', 'routes.id = queue.route_id')
+            ->whereIn('queue.id', $queueIds)
+            ->whereIn('queue.status', ['waiting', 'boarding'])
+            ->findAll();
+
+        if (count($submittedItems) !== count($queueIds)) {
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => 'The queue changed while it was being edited. Refresh and try again.',
+            ]);
+        }
+
+        $firstItem = $submittedItems[0];
+        $terminalId = (int) $firstItem['terminal_id'];
+        $destination = (string) $firstItem['destination'];
+
+        foreach ($submittedItems as $item) {
+            if ((int) $item['terminal_id'] !== $terminalId || (string) $item['destination'] !== $destination) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'success' => false,
+                    'message' => 'Vehicles from different queue lines cannot be reordered together.',
+                ]);
+            }
+            if (!$this->hasRouteAccess((int) $item['route_id'])) {
+                $this->logActivity('Unauthorized queue reorder attempt', 'Dispatcher "' . session()->get('username') . '" tried to reorder an unassigned route.');
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => "You don't have access to every vehicle in this queue line.",
+                ]);
+            }
+        }
+
+        $db = \Config\Database::connect();
+        $db->transStart();
+        $this->acquireQueueOrderingLock($db);
+
+        // Re-read the complete line after locking. Refuse a stale or partial
+        // request instead of silently moving vehicles the dispatcher did not see.
+        $currentItems = (new QueueModel())
+            ->select('queue.*, routes.terminal_id, routes.destination')
+            ->join('routes', 'routes.id = queue.route_id')
+            ->where('routes.terminal_id', $terminalId)
+            ->where('routes.destination', $destination)
+            ->whereIn('queue.status', ['waiting', 'boarding'])
+            ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+            ->orderBy('queue.position', 'ASC')
+            ->findAll();
+
+        $currentById = [];
+        foreach ($currentItems as $item) {
+            if (!$this->hasRouteAccess((int) $item['route_id'])) {
+                $db->transRollback();
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => "You don't have access to every vehicle in this queue line.",
+                ]);
+            }
+            $currentById[(int) $item['id']] = $item;
+        }
+
+        $currentIds = array_map(static fn(array $item): int => (int) $item['id'], $currentItems);
+        $submittedSet = $queueIds;
+        sort($currentIds);
+        sort($submittedSet);
+
+        if ($currentIds !== $submittedSet) {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => 'The queue changed while it was being edited. The latest order will be loaded.',
+            ]);
+        }
+
+        $boardingIds = [];
+        foreach ($currentItems as $item) {
+            if ($item['status'] === 'boarding') {
+                $boardingIds[] = (int) $item['id'];
+            }
+        }
+
+        $waitingIds = [];
+        foreach ($queueIds as $queueId) {
+            if (($currentById[$queueId]['status'] ?? '') === 'waiting') {
+                $waitingIds[] = $queueId;
+            }
+        }
+
+        $finalOrder = array_merge($boardingIds, $waitingIds);
+        foreach ($finalOrder as $index => $queueId) {
+            $this->queueModel->update($queueId, ['position' => $index + 1]);
+        }
+
+        $this->queueModel->reorderByDeparture();
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Failed to save the queue order.',
+            ]);
+        }
+
+        $this->logActivity('Reordered Queue', 'Changed the vehicle order for the ' . $destination . ' queue.');
+        $this->broadcastUpdate('queue_update', [
+            'action' => 'reorder',
+            'destination' => $destination,
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Queue order saved.',
+        ]);
+    }
+
     public function undoCancel($id)
     {
         // Server-side route authorization check
@@ -686,11 +872,48 @@ class Queue extends BaseController
         // Restore to waiting
         $db = \Config\Database::connect();
         $db->transStart();
+        $this->acquireQueueOrderingLock($db);
+
+        // Re-check after acquiring the queue lock so a concurrent add cannot
+        // activate the same vehicle between the earlier validation and restore.
+        $alreadyQueued = $this->queueModel->where('vehicle_id', $vehicleId)
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->first();
+        if ($alreadyQueued) {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => 'Vehicle ' . ($queueItem['plate_number'] ?? '') . ' is already active in the queue.',
+            ]);
+        }
+
+        $sameDestinationRouteIds = (new RouteModel())
+            ->where('terminal_id', $route['terminal_id'])
+            ->where('destination', $route['destination'])
+            ->findColumn('id') ?: [(int) $queueItem['route_id']];
+
+        $activeItems = (new QueueModel())
+            ->whereIn('route_id', $sameDestinationRouteIds)
+            ->whereIn('status', ['waiting', 'boarding'])
+            ->orderBy("CASE WHEN status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+            ->orderBy('position', 'ASC')
+            ->findAll();
+
+        $activeIds = array_map(static fn(array $item): int => (int) $item['id'], $activeItems);
+        $boardingCount = count(array_filter($activeItems, static fn(array $item): bool => $item['status'] === 'boarding'));
+        $savedPosition = (int) ($queueItem['position'] ?? 0);
+        $insertIndex = $savedPosition > 0 ? min($savedPosition - 1, count($activeIds)) : count($activeIds);
+        $insertIndex = max($boardingCount, $insertIndex);
+        array_splice($activeIds, $insertIndex, 0, [(int) $id]);
 
         $this->queueModel->update($id, [
             'status' => 'waiting',
             'arrival_time' => !empty($queueItem['arrival_time']) ? $queueItem['arrival_time'] : date('Y-m-d H:i:s'),
         ]);
+
+        foreach ($activeIds as $index => $queueId) {
+            $this->queueModel->update($queueId, ['position' => $index + 1]);
+        }
 
         // Recalculate queue positions and departure times
         $this->queueModel->reorderByDeparture();

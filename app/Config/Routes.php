@@ -172,6 +172,7 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->post('queue/setPassengers/(:num)', 'Staff\Queue::setPassengers/$1');
     $routes->post('queue/updateDriver/(:num)', 'Staff\Queue::updateDriver/$1');
     $routes->post('queue/undoCancel/(:num)', 'Staff\Queue::undoCancel/$1');
+    $routes->post('queue/reorder', 'Staff\Queue::reorder');
 
     // Departure Rules (staff view-only access)
     $routes->get('departure-rules', 'Admin\DepartureRules::index');
