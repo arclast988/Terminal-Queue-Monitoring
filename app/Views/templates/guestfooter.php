@@ -195,8 +195,8 @@
                 <div class="accordion-body">
                     <p>No App Store or Play Store download is required. For fast, one-tap access on your phone:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
-                        <li><strong>Android (Chrome):</strong> Tap the three-dot browser menu $\rightarrow$ tap <em>"Add to Home screen"</em> or <em>"Install app"</em>.</li>
-                        <li><strong>iPhone (Safari):</strong> Tap the Share button $\rightarrow$ scroll down and tap <em>"Add to Home Screen"</em>.</li>
+                        <li><strong>Android (Chrome):</strong> Tap the three-dot browser menu &rarr; tap <em>"Add to Home screen"</em> or <em>"Install app"</em>.</li>
+                        <li><strong>iPhone (Safari):</strong> Tap the Share button &rarr; scroll down and tap <em>"Add to Home Screen"</em>.</li>
                     </ol>
                     <div class="help-tip">
                         <i class="fas fa-check-circle"></i>
