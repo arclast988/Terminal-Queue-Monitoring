@@ -75,7 +75,7 @@ SVG;
 <!-- Google Classroom-Style Left Sidebar Drawer & Overlay (Universal Desktop & Mobile) -->
 <div class="sidebar-drawer-overlay mobile-nav-overlay" id="sidebarDrawerOverlay"></div>
 
-<aside class="sidebar-drawer" id="siteSidebarDrawer" aria-label="Navigation drawer" aria-hidden="true">
+<aside class="sidebar-drawer" id="siteSidebarDrawer" aria-label="Navigation drawer" aria-hidden="true" inert>
     <div class="sidebar-drawer-header">
         <a href="<?= base_url($homeUrl) ?>" class="drawer-brand-section">
             <img src="<?= esc(app_logo()) ?>" alt="<?= esc(app_name()) ?> Logo" class="drawer-logo">
@@ -303,6 +303,7 @@ SVG;
         var hamburgerBtn = document.getElementById('siteNavHamburgerBtn');
 
         if (drawer) {
+            drawer.removeAttribute('inert');
             drawer.classList.add('open');
             drawer.setAttribute('aria-hidden', 'false');
         }
@@ -325,8 +326,18 @@ SVG;
         var hamburgerBtn = document.getElementById('siteNavHamburgerBtn');
 
         if (drawer) {
+            // Move keyboard focus out before hiding the drawer. This prevents
+            // Chromium's "aria-hidden descendant retained focus" warning.
+            if (drawer.contains(document.activeElement)) {
+                if (hamburgerBtn) {
+                    hamburgerBtn.focus({ preventScroll: true });
+                } else if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
+            }
             drawer.classList.remove('open');
             drawer.setAttribute('aria-hidden', 'true');
+            drawer.setAttribute('inert', '');
         }
         if (overlay) {
             overlay.classList.remove('active');
@@ -394,6 +405,7 @@ SVG;
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape') {
                 closeSidebarDrawer();
+                closeNavDropdowns();
             }
         });
 
@@ -405,6 +417,19 @@ SVG;
         });
 
 
+        function setNavDropdownState(dropdown, isOpen) {
+            if (!dropdown) return;
+            dropdown.classList.toggle('mobile-open', isOpen);
+            var trigger = dropdown.querySelector('.dropbtn');
+            if (trigger) trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        function closeNavDropdowns(exceptDropdown) {
+            document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (dropdown) {
+                if (dropdown !== exceptDropdown) setNavDropdownState(dropdown, false);
+            });
+        }
+
         // Dropdowns open on tap/click at all viewports (hover still works via CSS)
         document.querySelectorAll('.nav-menu .dropdown .dropbtn').forEach(function (btn) {
             btn.addEventListener('click', function (e) {
@@ -413,19 +438,21 @@ SVG;
                 var dropdown = this.closest('.dropdown');
                 if (!dropdown) return;
                 var willOpen = !dropdown.classList.contains('mobile-open');
-                document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
-                    if (d !== dropdown) d.classList.remove('mobile-open');
-                });
-                dropdown.classList.toggle('mobile-open', willOpen);
+                closeNavDropdowns(dropdown);
+                setNavDropdownState(dropdown, willOpen);
+
+                // Navigation and profile menus must never overlap.
+                var openProfile = document.getElementById('userProfileDropdown');
+                var openProfileBtn = document.getElementById('userProfileBtn');
+                if (willOpen && openProfile) openProfile.classList.remove('open');
+                if (willOpen && openProfileBtn) openProfileBtn.setAttribute('aria-expanded', 'false');
             });
         });
 
         // Close nav dropdowns when clicking outside one of them
         document.addEventListener('click', function (e) {
             if (e.target.closest && e.target.closest('.nav-menu .dropdown')) return;
-            document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
-                d.classList.remove('mobile-open');
-            });
+            closeNavDropdowns();
         });
 
         // User profile dropdown toggle
@@ -435,7 +462,9 @@ SVG;
             profileBtn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                var isOpen = profileDropdown.classList.toggle('open');
+                var isOpen = !profileDropdown.classList.contains('open');
+                if (isOpen) closeNavDropdowns();
+                profileDropdown.classList.toggle('open', isOpen);
                 profileBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             });
 
@@ -884,9 +913,7 @@ SVG;
         if (window.innerWidth > 1024) {
             closeSidebarDrawer();
         }
-        document.querySelectorAll('.nav-menu .dropdown.mobile-open').forEach(function (d) {
-            d.classList.remove('mobile-open');
-        });
+        closeNavDropdowns();
     });
 
     // Ensure QueueWS WebSocket is connected for global real-time notifications

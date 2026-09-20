@@ -9,10 +9,10 @@ $isRecordsActive    = $isActive('admin/history*') || $isActive('admin/logs*');
 </a>
 
 <div class="dropdown">
-    <button class="dropbtn <?= $isManagementActive ? 'active' : '' ?>" type="button">
+    <button class="dropbtn <?= $isManagementActive ? 'active' : '' ?>" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="managementDropdownMenu">
         <i class="fas fa-sliders"></i> Management <i class="fas fa-caret-down"></i>
     </button>
-    <div class="dropdown-content">
+    <div class="dropdown-content" id="managementDropdownMenu" role="menu">
         <a href="<?= base_url('admin/terminals') ?>" class="<?= $isActive('admin/terminals*') ?>"><i class="fas fa-building"></i> Terminals</a>
         <a href="<?= base_url('admin/vehicles') ?>" class="<?= $isActive('admin/vehicles*') ?>"><i class="fas fa-bus"></i> Vehicle Register</a>
         <a href="<?= base_url('admin/routes') ?>" class="<?= $isActive('admin/routes*') ?>"><i class="fas fa-route"></i> Routes</a>
@@ -32,10 +32,10 @@ $isRecordsActive    = $isActive('admin/history*') || $isActive('admin/logs*');
 </a>
 
 <div class="dropdown">
-    <button class="dropbtn <?= $isRecordsActive ? 'active' : '' ?>" type="button">
+    <button class="dropbtn <?= $isRecordsActive ? 'active' : '' ?>" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="recordsDropdownMenu">
         <i class="fas fa-folder-open"></i> Records <i class="fas fa-caret-down"></i>
     </button>
-    <div class="dropdown-content">
+    <div class="dropdown-content" id="recordsDropdownMenu" role="menu">
         <a href="<?= base_url('admin/history') ?>" class="<?= $isActive('admin/history*') ?>">
             <i class="fas fa-history"></i> Departure History
             <span class="nav-badge-chip chip-purple">Records</span>

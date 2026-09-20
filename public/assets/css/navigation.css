@@ -1315,7 +1315,9 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   header#site-header {
-    max-height: 64px !important;
+    height: 92px !important;
+    max-height: 92px !important;
+    padding-top: 36px !important;
     overflow: visible !important;
   }
 
@@ -1327,7 +1329,7 @@ body.staff-theme .drawer-nav-item.active i {
 
   .operations-header-time {
     position: absolute;
-    top: 100%;
+    top: 0;
     left: 0;
     right: 0;
     width: 100%;
@@ -1336,9 +1338,10 @@ body.staff-theme .drawer-nav-item.active i {
     gap: 4px;
     padding: 0 12px;
     border-left: 0;
-    border-top: 1px solid var(--nav-divider, rgba(255, 255, 255, 0.2));
+    border-top: 0;
+    border-bottom: 1px solid var(--nav-divider, rgba(255, 255, 255, 0.2));
     background: var(--nav-bg, #15803d);
-    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 2px 5px rgba(15, 23, 42, 0.08);
     font-size: 11.5px;
     letter-spacing: 0;
     z-index: 2;
@@ -1491,7 +1494,9 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   header#site-header {
-    padding: 6px 12px !important;
+    height: 88px !important;
+    max-height: 88px !important;
+    padding: 34px 12px 6px !important;
     gap: 8px !important;
     justify-content: space-between !important;
     width: 100% !important;

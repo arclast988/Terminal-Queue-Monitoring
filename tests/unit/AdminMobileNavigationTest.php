@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260920_3', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_1', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -60,9 +60,31 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('font-variant-numeric: tabular-nums;', $css);
         $this->assertStringContainsString('--site-header-height: 92px;', $css);
         $this->assertStringContainsString('--site-header-height: 88px;', $css);
-        $this->assertStringContainsString('top: 100%;', $css);
+        $this->assertStringContainsString('height: 92px !important;', $css);
+        $this->assertStringContainsString('height: 88px !important;', $css);
+        $this->assertStringContainsString('padding-top: 36px !important;', $css);
+        $this->assertStringContainsString('padding: 34px 12px 6px !important;', $css);
+        $this->assertStringContainsString('top: 0;', $css);
         $this->assertStringContainsString('justify-content: center;', $css);
         $this->assertStringContainsString('top: calc(var(--site-header-height, 92px) + 4px) !important;', $css);
+    }
+
+    public function testClosingDrawerMovesFocusBeforeApplyingAriaHidden(): void
+    {
+        $header = file_get_contents(APPPATH . 'Views/partials/header.php');
+
+        $this->assertStringContainsString('aria-hidden="true" inert', $header);
+        $this->assertStringContainsString("drawer.removeAttribute('inert');", $header);
+        $this->assertStringContainsString('if (drawer.contains(document.activeElement))', $header);
+        $this->assertStringContainsString('hamburgerBtn.focus({ preventScroll: true });', $header);
+        $this->assertStringContainsString("drawer.setAttribute('aria-hidden', 'true');", $header);
+        $this->assertStringContainsString("drawer.setAttribute('inert', '');", $header);
+
+        $focusPosition = strpos($header, 'hamburgerBtn.focus({ preventScroll: true });');
+        $hiddenPosition = strpos($header, "drawer.setAttribute('aria-hidden', 'true');", $focusPosition);
+        $this->assertNotFalse($focusPosition);
+        $this->assertNotFalse($hiddenPosition);
+        $this->assertLessThan($hiddenPosition, $focusPosition);
     }
 
     public function testRequestedMobileActionGroupsKeepTheirAlignment(): void
@@ -86,9 +108,18 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
 
         $this->assertStringContainsString('Dropdowns open on tap/click at all viewports', $header);
         $this->assertStringContainsString("var willOpen = !dropdown.classList.contains('mobile-open');", $header);
-        $this->assertStringContainsString("document.querySelectorAll('.nav-menu .dropdown.mobile-open')", $header);
+        $this->assertStringContainsString('function closeNavDropdowns(exceptDropdown)', $header);
+        $this->assertStringContainsString('setNavDropdownState(dropdown, willOpen);', $header);
         $this->assertStringContainsString("e.target.closest('.nav-menu .dropdown')", $header);
+        $this->assertStringContainsString("trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false')", $header);
+        $this->assertStringContainsString('if (isOpen) closeNavDropdowns();', $header);
         $this->assertStringContainsString('.dropdown.mobile-open .dropdown-content', $css);
         $this->assertStringContainsString('.nav-menu .dropdown.mobile-open .dropdown-content', $css);
+
+        $adminNav = file_get_contents(APPPATH . 'Views/partials/nav-admin.php');
+        $this->assertSame(2, substr_count($adminNav, 'aria-haspopup="true"'));
+        $this->assertSame(2, substr_count($adminNav, 'aria-expanded="false"'));
+        $this->assertStringContainsString('id="managementDropdownMenu" role="menu"', $adminNav);
+        $this->assertStringContainsString('id="recordsDropdownMenu" role="menu"', $adminNav);
     }
 }
