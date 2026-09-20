@@ -64,7 +64,9 @@ final class ContentManagementTest extends CIUnitTestCase
         $this->assertStringContainsString('Super Admin Only', $view);
         $this->assertStringContainsString('Leave any field blank to keep the built-in wording', $view);
         $this->assertStringContainsString('Clear this field to restore the built-in version.', $view);
-        $this->assertStringContainsString('@media(max-width:720px)', $view);
+        $this->assertStringContainsString('@media (max-width: 720px)', $view);
+        $this->assertStringContainsString('var(--primary', $view);
+        $this->assertStringNotContainsString('position:sticky', $view);
         $this->assertStringContainsString('other.open = false;', $view);
     }
 }
