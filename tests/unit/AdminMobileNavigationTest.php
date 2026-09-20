@@ -78,4 +78,17 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('margin-left: auto !important;', $announcementView);
         $this->assertStringContainsString('width: auto !important;', $announcementView);
     }
+
+    public function testNavigationDropdownsSupportClickAndTapAtEveryViewport(): void
+    {
+        $header = file_get_contents(APPPATH . 'Views/partials/header.php');
+        $css = file_get_contents(FCPATH . 'assets/css/navigation.css');
+
+        $this->assertStringContainsString('Dropdowns open on tap/click at all viewports', $header);
+        $this->assertStringContainsString("var willOpen = !dropdown.classList.contains('mobile-open');", $header);
+        $this->assertStringContainsString("document.querySelectorAll('.nav-menu .dropdown.mobile-open')", $header);
+        $this->assertStringContainsString("e.target.closest('.nav-menu .dropdown')", $header);
+        $this->assertStringContainsString('.dropdown.mobile-open .dropdown-content', $css);
+        $this->assertStringContainsString('.nav-menu .dropdown.mobile-open .dropdown-content', $css);
+    }
 }
