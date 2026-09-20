@@ -290,7 +290,29 @@
             font-size: 11px;
             color: #64748b;
             text-transform: uppercase;
+        }
+
         /* Responsive Styles for Mobile & Tablets */
+        .report-table-wrapper {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .mobile-scroll-hint {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
         @media screen and (max-width: 860px) {
             body {
                 padding: 18px 16px 24px;
@@ -368,8 +390,36 @@
                 margin-bottom: 16px;
             }
 
+            .report-table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                background: #ffffff;
+                scrollbar-width: thin;
+                scrollbar-color: #cbd5e1 #f1f5f9;
+            }
+
+            .report-table-wrapper::-webkit-scrollbar {
+                height: 6px;
+            }
+            .report-table-wrapper::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+            .report-table-wrapper::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+
+            .mobile-scroll-hint {
+                display: flex;
+            }
+
             table {
-                font-size: 12px;
+                min-width: 760px;
+                table-layout: fixed;
             }
 
             th, td {
@@ -427,8 +477,19 @@
             body {
                 padding: 10mm 12mm;
             }
-            .print-toolbar {
+            .print-toolbar,
+            .mobile-scroll-hint {
                 display: none !important;
+            }
+            .report-table-wrapper {
+                overflow: visible !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin-bottom: 0 !important;
+            }
+            table {
+                min-width: 0 !important;
+                width: 100% !important;
             }
             .header {
                 display: flex !important;
@@ -494,7 +555,7 @@
             <button onclick="window.print()" class="btn-toolbar btn-toolbar-primary">
                 <i class="fas fa-print"></i> Print Report
             </button>
-            <button onclick="window.close()" class="btn-toolbar btn-toolbar-secondary">
+            <button type="button" onclick="closeReportPreview()" class="btn-toolbar btn-toolbar-secondary">
                 <i class="fas fa-times"></i> Close
             </button>
         </div>
@@ -576,7 +637,11 @@
     </div>
 
     <!-- Table Section -->
-    <table>
+    <div class="report-table-wrapper">
+        <div class="mobile-scroll-hint">
+            <i class="fas fa-arrows-left-right"></i> Swipe horizontally to view the full activity ledger
+        </div>
+        <table>
         <thead>
             <tr>
                 <th style="width: 8%;">Log ID</th>
@@ -634,7 +699,8 @@
                 </tr>
             <?php endif; ?>
         </tbody>
-    </table>
+        </table>
+    </div>
 
     <!-- Signatory Section -->
     <div class="signatory-section">
@@ -655,9 +721,23 @@
     </div>
 
     <script>
-        // ESC to close preview window
+        function closeReportPreview() {
+            if (window.opener && !window.opener.closed) {
+                window.close();
+                window.setTimeout(() => {
+                    if (!window.closed) {
+                        window.location.replace(<?= json_encode(base_url('admin/logs')) ?>);
+                    }
+                }, 150);
+                return;
+            }
+
+            window.location.replace(<?= json_encode(base_url('admin/logs')) ?>);
+        }
+
+        // ESC closes the preview or returns to the activity logs page on mobile.
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') window.close();
+            if (e.key === 'Escape') closeReportPreview();
         });
     </script>
 </body>

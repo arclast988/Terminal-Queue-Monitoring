@@ -115,7 +115,7 @@ SVG;
                                     <?php endif; ?>
                                 </select>
                             </div>
-                            <div class="form-text-modern">Admins can access all routes; dispatchers need assigned routes.</div>
+                            <div class="form-text-modern">Route access applies to dispatchers only; administrators do not perform queue operations.</div>
                         </div>
                     </div>
 
@@ -123,7 +123,7 @@ SVG;
                         <div class="route-section-header">
                             <div>
                                 <label class="form-label-modern fw-semibold mb-1">Assigned Routes <span class="text-danger">*</span></label>
-                                <p class="form-text-modern mt-0 mb-0">Select the routes this dispatcher can manage.</p>
+                                <p class="form-text-modern mt-0 mb-0">Select the routes where this dispatcher can perform queue operations.</p>
                             </div>
                         </div>
 

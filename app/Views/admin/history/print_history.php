@@ -588,7 +588,7 @@
             <button onclick="window.print()" class="btn-toolbar btn-toolbar-primary">
                 <i class="fas fa-print"></i> Print Report
             </button>
-            <button onclick="window.close()" class="btn-toolbar btn-toolbar-secondary">
+            <button type="button" onclick="closeReportPreview()" class="btn-toolbar btn-toolbar-secondary">
                 <i class="fas fa-times"></i> Close
             </button>
         </div>
@@ -751,9 +751,23 @@
     </div>
 
     <script>
-        // ESC to close preview window
+        function closeReportPreview() {
+            if (window.opener && !window.opener.closed) {
+                window.close();
+                window.setTimeout(() => {
+                    if (!window.closed) {
+                        window.location.replace(<?= json_encode(base_url('admin/history')) ?>);
+                    }
+                }, 150);
+                return;
+            }
+
+            window.location.replace(<?= json_encode(base_url('admin/history')) ?>);
+        }
+
+        // ESC closes the preview or returns to departure history on mobile.
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') window.close();
+            if (e.key === 'Escape') closeReportPreview();
         });
     </script>
 </body>

@@ -47,6 +47,12 @@ class SearchClearAndMarqueeAlignmentTest extends CIUnitTestCase
         $this->assertStringContainsString('toggleFareClearBtn', $html);
         // Verify fare-search-group has position: relative !important to keep clear button inside capsule
         $this->assertStringContainsString('position: relative !important;', $html);
+        $this->assertStringContainsString('placeholder="Search routes and fares..."', $html);
+        $this->assertStringContainsString('class="fare-filter-layout"', $html);
+        $this->assertStringContainsString('border-radius: 12px !important;', $html);
+        $this->assertStringContainsString('box-shadow: 0 0 0 2px', $html);
+        $this->assertStringContainsString('.discount-card-actions', $html);
+        $this->assertStringContainsString('justify-content: flex-end !important;', $html);
     }
 
     public function testPublicSchedulesHasClearSearchButton(): void

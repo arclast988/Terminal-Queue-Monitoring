@@ -336,6 +336,9 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $this->assertStringContainsString('id="createAvatarFileInput"', $createHtml);
         $this->assertStringContainsString('name="avatar"', $createHtml);
         $this->assertStringContainsString('profile-identicon-svg', $createHtml);
+        $this->assertStringContainsString('Route access applies to dispatchers only; administrators do not perform queue operations.', $createHtml);
+        $this->assertStringContainsString('Select the routes where this dispatcher can perform queue operations.', $createHtml);
+        $this->assertStringNotContainsString('Admins can access all routes', $createHtml);
 
         // 2. Verify Index users list uses default silhouette SVG when profile_image is null
         $session = service('session');
@@ -411,6 +414,9 @@ final class AdminUsersViewTest extends CIUnitTestCase
         $this->assertStringContainsString('Alice Dispatcher', $html);
         $this->assertStringContainsString('profile-identicon-svg', $html);
         $this->assertStringContainsString('admin/users/update/4', $html);
+        $this->assertStringContainsString('Route access applies to dispatchers only; administrators do not perform queue operations.', $html);
+        $this->assertStringContainsString('Select the routes where this dispatcher can perform queue operations.', $html);
+        $this->assertStringNotContainsString('Admins can access all routes', $html);
     }
 
     public function testAvatarDynamicSyncAttributesAndScript(): void
