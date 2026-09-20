@@ -3,7 +3,7 @@
  * ─────────────────────────────────────────────────────────────
  * Provides a consistent, reusable WebSocket connection for all
  * pages in the application. Features:
- *   • Exponential backoff reconnect (max 15s)
+ *   • Exponential backoff reconnect with jitter (max 15s base delay)
  *   • Optional polling fallback when WS is disconnected
  *   • Event callback registration (updateable)
  *   • Tab-visibility awareness (pauses reconnect when hidden)
@@ -29,6 +29,8 @@
     var MIN_RETRY = 1000;
     var MAX_RETRY = 15000;
     var RETRY_MULTIPLIER = 1.5;
+    var INITIAL_CONNECT_JITTER_MS = 750;
+    var MAX_RETRY_JITTER_MS = 2000;
 
     // Internal state
     var _socket = null;
@@ -38,6 +40,8 @@
     var _pollTimer = null;
     var _config = null;
     var _initialized = false;
+    var _initializedAt = 0;
+    var _hasConnectedBefore = false;
     var _tabHidden = false;
     var _sharedBc = null;
 
@@ -112,13 +116,18 @@
         }
 
         _socket.onopen = function() {
+            var connectionInfo = {
+                reconnected: _hasConnectedBefore,
+                connectedAfterMs: _initializedAt ? Math.max(0, Date.now() - _initializedAt) : 0
+            };
+            _hasConnectedBefore = true;
             _connected = true;
             _retryDelay = MIN_RETRY;
             stopPolling();
             logOk('WS', 'Connected to ' + url);
 
             if (_config && _config.onConnected) {
-                _config.onConnected();
+                _config.onConnected(connectionInfo);
             }
         };
 
@@ -188,7 +197,6 @@
         _socket.onclose = function() {
             _connected = false;
             _socket = null;
-            logWarn('WS', 'Disconnected. Retrying in ' + (_retryDelay / 1000).toFixed(1) + 's...');
             startPolling();
             scheduleReconnect();
         };
@@ -204,11 +212,25 @@
         if (_retryTimer) clearTimeout(_retryTimer);
         // Don't schedule reconnect if tab is hidden
         if (_tabHidden) return;
+        // Jitter prevents every connected phone from reconnecting and refreshing
+        // PHP/PostgreSQL in the same millisecond after a service restart.
+        var jitterWindow = Math.min(MAX_RETRY_JITTER_MS, Math.max(1, Math.round(_retryDelay * 0.25)));
+        var reconnectDelay = _retryDelay + Math.floor(Math.random() * jitterWindow);
+        logWarn('WS', 'Disconnected. Retrying in ' + (reconnectDelay / 1000).toFixed(1) + 's...');
         _retryTimer = setTimeout(function() {
             _retryTimer = null;
             connect();
-        }, _retryDelay);
+        }, reconnectDelay);
         _retryDelay = Math.min(_retryDelay * RETRY_MULTIPLIER, MAX_RETRY);
+    }
+
+    function scheduleInitialConnect() {
+        if (_retryTimer) clearTimeout(_retryTimer);
+        var initialDelay = Math.floor(Math.random() * (INITIAL_CONNECT_JITTER_MS + 1));
+        _retryTimer = setTimeout(function() {
+            _retryTimer = null;
+            connect();
+        }, initialDelay);
     }
 
     // Visibility change: pause reconnect when tab is hidden
@@ -246,8 +268,9 @@
                 return;
             }
             _initialized = true;
+            _initializedAt = Date.now();
             _config = Object.assign(_config || {}, config || {});
-            connect();
+            scheduleInitialConnect();
         },
 
         /**
@@ -276,6 +299,8 @@
             }
             _connected = false;
             _initialized = false;
+            _initializedAt = 0;
+            _hasConnectedBefore = false;
             _config = null;
             if (_sharedBc) {
                 try { _sharedBc.close(); } catch (e) {}

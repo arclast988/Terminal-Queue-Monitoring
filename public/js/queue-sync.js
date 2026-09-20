@@ -57,6 +57,8 @@
     // a rare missed message without making every connected browser hit PHP and
     // PostgreSQL every few seconds.
     var WS_CONNECTED_HEARTBEAT_INTERVAL = 120000;
+    var CONNECTED_REFRESH_JITTER_MS = 1000;
+    var _connectedRefreshTimer = null;
 
     /* ── Passenger UI helpers ── */
 
@@ -595,9 +597,30 @@
     // Reset the poll timer (called after a WS message to avoid
     // double-fetching — we just got fresh data via WS)
     function resetPollTimer() {
+        if (_connectedRefreshTimer) {
+            clearTimeout(_connectedRefreshTimer);
+            _connectedRefreshTimer = null;
+        }
         _lastPollTimestamp = Date.now();
         stopPolling();
         startPolling();
+    }
+
+    function scheduleConnectedRefresh(connectionInfo) {
+        _lastPollTimestamp = Date.now();
+
+        // Reconcile exactly once after each connection so a change that lands
+        // while the HTML is loading cannot be missed. First connections use a
+        // smaller window; reconnects get the full second to spread recovery load.
+        if (_connectedRefreshTimer) clearTimeout(_connectedRefreshTimer);
+        var jitterWindow = connectionInfo && !connectionInfo.reconnected
+            ? Math.floor(CONNECTED_REFRESH_JITTER_MS / 2)
+            : CONNECTED_REFRESH_JITTER_MS;
+        var delay = Math.floor(Math.random() * (jitterWindow + 1));
+        _connectedRefreshTimer = setTimeout(function() {
+            _connectedRefreshTimer = null;
+            doRefresh();
+        }, delay);
     }
 
     /* ── Visibility change handler ── */
@@ -854,9 +877,8 @@
                         onVehicleTypeUpdate: wsHandler,
                         onFareUpdate: wsHandler,
                         onAnnouncementUpdate: wsHandler,
-                        onConnected: function() {
-                            // Immediately fetch fresh data on WS connect
-                            doRefresh();
+                        onConnected: function(connectionInfo) {
+                            scheduleConnectedRefresh(connectionInfo);
                         }
                     });
                 } catch(e) {
@@ -886,6 +908,10 @@
         /** Stop all polling and listeners */
         destroy: function() {
             stopPolling();
+            if (_connectedRefreshTimer) {
+                clearTimeout(_connectedRefreshTimer);
+                _connectedRefreshTimer = null;
+            }
             if (_refreshTimer) { clearTimeout(_refreshTimer); _refreshTimer = null; }
             if (_queueSyncBc) {
                 try { _queueSyncBc.close(); } catch(e) {}

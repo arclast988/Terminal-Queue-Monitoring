@@ -273,7 +273,7 @@
     </main>
     <script src="<?= base_url('assets/js/global-loader.js?v=20260910') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260919') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260920_2') ?>"></script>
     <script>
     document.addEventListener('pttm:ws-branding_updated', function (e) {
         if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {

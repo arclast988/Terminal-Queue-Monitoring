@@ -2621,7 +2621,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/queue-sync.js?v=20260920_2') ?>"></script>
+    <script src="<?= base_url('js/queue-sync.js?v=20260920_3') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;
@@ -3542,7 +3542,8 @@
             }
         });
 
-        fetchStatus(); // Initial fetch
+        // The queue is server-rendered. QueueSync performs the single connection
+        // reconciliation, avoiding a separate duplicate request on every load.
         observeItems(); // Initial intersection observer
 
         // Countdown timer updater

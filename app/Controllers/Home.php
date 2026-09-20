@@ -68,42 +68,68 @@ class Home extends BaseController
         $syncTokenTime = (float) $syncToken;
 
         $payload = cache('rt_home_status');
-        if (is_array($payload) && isset($payload['cached_at']) && $syncTokenTime > 0 && $payload['cached_at'] < $syncTokenTime) {
+        if (! $this->isFreshStatusPayload($payload, $syncTokenTime)) {
             $payload = null;
         }
 
         if (! is_array($payload)) {
-            $queueModel = new QueueModel();
+            // Collapse simultaneous cache misses into one database rebuild.
+            // This uses the existing writable filesystem and adds no service,
+            // memory allocation, or Railway subscription cost.
+            $lockHandle = @fopen(WRITEPATH . 'cache/rt_home_status.lock', 'c');
+            $lockHeld = is_resource($lockHandle) && @flock($lockHandle, LOCK_EX);
 
-            $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
-                ->withFullJoins()
-                ->whereIn('queue.status', ['waiting', 'boarding'])
-                ->orderBy('routes.destination', 'ASC')
-                ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
-                ->orderBy('queue.position', 'ASC')
-                ->orderBy('queue.estimated_departure', 'ASC')
-                ->findAll();
+            try {
+                // Another worker may have filled the cache while this request
+                // waited for the lock, so always check it again before querying.
+                if ($lockHeld) {
+                    $payload = cache('rt_home_status');
+                    if (! $this->isFreshStatusPayload($payload, $syncTokenTime)) {
+                        $payload = null;
+                    }
+                }
 
-            foreach ($active_queue as &$item) {
-                $item['estimated_departure_formatted'] = !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A';
-                $item['percent'] = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
-                $item['photo_url'] = vehicle_resolved_photo($item, $item['vehicle_type'] ?? null);
-                $item['has_custom_photo'] = !empty($item['vehicle_photo'] ?? $item['photo'] ?? null);
+                if (! is_array($payload)) {
+                    $queueModel = new QueueModel();
+
+                    $active_queue = $queueModel->select('queue.*, queue.estimated_departure, vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, terminals.name as origin, routes.destination, queue.current_passengers, vehicles.capacity')
+                        ->withFullJoins()
+                        ->whereIn('queue.status', ['waiting', 'boarding'])
+                        ->orderBy('routes.destination', 'ASC')
+                        ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+                        ->orderBy('queue.position', 'ASC')
+                        ->orderBy('queue.estimated_departure', 'ASC')
+                        ->findAll();
+
+                    foreach ($active_queue as &$item) {
+                        $item['estimated_departure_formatted'] = !empty($item['estimated_departure']) ? date('h:i A', strtotime($item['estimated_departure'])) : 'N/A';
+                        $item['percent'] = min(100, ($item['current_passengers'] / max(1, $item['capacity'])) * 100);
+                        $item['photo_url'] = vehicle_resolved_photo($item, $item['vehicle_type'] ?? null);
+                        $item['has_custom_photo'] = !empty($item['vehicle_photo'] ?? $item['photo'] ?? null);
+                    }
+                    unset($item);
+
+                    $routeModel = new \App\Models\RouteModel();
+
+                    $payload = [
+                        'active_queue' => $active_queue,
+                        'departure_rules' => $this->getDepartureRules(),
+                        'route_average_departures' => $this->getRouteAverageDepartures(),
+                        'routes' => enrich_routes_with_discounts($routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll()),
+                        'db_vehicle_types' => get_db_vehicle_types(),
+                        'cached_at' => microtime(true),
+                    ];
+
+                    cache()->save('rt_home_status', $payload, 2);
+                }
+            } finally {
+                if ($lockHeld) {
+                    @flock($lockHandle, LOCK_UN);
+                }
+                if (is_resource($lockHandle)) {
+                    @fclose($lockHandle);
+                }
             }
-            unset($item);
-
-            $routeModel = new \App\Models\RouteModel();
-
-            $payload = [
-                'active_queue' => $active_queue,
-                'departure_rules' => $this->getDepartureRules(),
-                'route_average_departures' => $this->getRouteAverageDepartures(),
-                'routes' => enrich_routes_with_discounts($routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll()),
-                'db_vehicle_types' => get_db_vehicle_types(),
-                'cached_at' => microtime(true),
-            ];
-
-            cache()->save('rt_home_status', $payload, 2);
         }
 
         // Always read the sync token live so clients keep detecting changes.
@@ -114,6 +140,15 @@ class Home extends BaseController
             ->setHeader('Pragma', 'no-cache')
             ->setHeader('Expires', '0')
             ->setJSON($payload);
+    }
+
+    private function isFreshStatusPayload(mixed $payload, float $syncTokenTime): bool
+    {
+        if (! is_array($payload) || ! isset($payload['cached_at'])) {
+            return false;
+        }
+
+        return $syncTokenTime <= 0 || (float) $payload['cached_at'] >= $syncTokenTime;
     }
 
     private function getDepartureRules(): array

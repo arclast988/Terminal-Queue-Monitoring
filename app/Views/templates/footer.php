@@ -6,7 +6,7 @@
     <script src="<?= base_url('assets/js/autocomplete-search.js?v=20260920_2') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('assets/js/no-change-guard.js?v=20260909') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260919') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260920_2') ?>"></script>
     <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
 
     <script>

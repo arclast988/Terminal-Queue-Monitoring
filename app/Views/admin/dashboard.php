@@ -255,7 +255,7 @@
 
 <?= $this->include('templates/footer') ?>
 
-<script src="<?= base_url('js/queue-sync.js?v=20260920_2') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260920_3') ?>"></script>
 <script>
     QueueSync.init({
         pollInterval: 8000,

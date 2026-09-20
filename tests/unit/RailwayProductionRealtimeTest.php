@@ -64,6 +64,33 @@ final class RailwayProductionRealtimeTest extends CIUnitTestCase
         $this->assertStringContainsString('if (isWSConnected)', $queueSync);
     }
 
+    public function testRealtimeReconnectAndRefreshTrafficIsStaggered(): void
+    {
+        $client = file_get_contents(FCPATH . 'js/ws-client.js');
+        $queueSync = file_get_contents(FCPATH . 'js/queue-sync.js');
+
+        $this->assertStringContainsString('INITIAL_CONNECT_JITTER_MS = 750', $client);
+        $this->assertStringContainsString('MAX_RETRY_JITTER_MS = 2000', $client);
+        $this->assertStringContainsString('Math.random() * jitterWindow', $client);
+        $this->assertStringContainsString('reconnected: _hasConnectedBefore', $client);
+        $this->assertStringContainsString('CONNECTED_REFRESH_JITTER_MS = 1000', $queueSync);
+        $this->assertStringContainsString('scheduleConnectedRefresh(connectionInfo)', $queueSync);
+        $this->assertStringContainsString('Math.floor(CONNECTED_REFRESH_JITTER_MS / 2)', $queueSync);
+    }
+
+    public function testGuestStatusCacheCollapsesSimultaneousMisses(): void
+    {
+        $home = file_get_contents(APPPATH . 'Controllers/Home.php');
+        $dashboard = file_get_contents(APPPATH . 'Views/public/enhanced_dashboard.php');
+
+        $this->assertStringContainsString("cache('rt_home_status')", $home);
+        $this->assertStringContainsString("fopen(WRITEPATH . 'cache/rt_home_status.lock', 'c')", $home);
+        $this->assertStringContainsString('flock($lockHandle, LOCK_EX)', $home);
+        $this->assertGreaterThanOrEqual(2, substr_count($home, "cache('rt_home_status')"), 'Cache must be rechecked after acquiring the lock');
+        $this->assertStringContainsString('avoiding a separate duplicate request on every load', $dashboard);
+        $this->assertStringNotContainsString('fetchStatus(); // Initial fetch', $dashboard);
+    }
+
     public function testGuestShellCssIsSharedWithoutChangingPageSpecificStyles(): void
     {
         $header = file_get_contents(APPPATH . 'Views/templates/guest_header.php');

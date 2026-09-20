@@ -349,7 +349,7 @@
 <?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/queue-sync.js?v=20260920_2') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20260920_3') ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('historyFilterForm');
