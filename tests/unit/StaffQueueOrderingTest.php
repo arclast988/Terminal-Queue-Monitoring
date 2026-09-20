@@ -68,7 +68,11 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringNotContainsString("modalEl.addEventListener('dragstart'", $view);
         $this->assertStringContainsString("modalEl.addEventListener('pointerdown'", $view);
         $this->assertStringContainsString('moveDraggedItem(pointerDrag.item, event.clientY);', $view);
-        $this->assertStringContainsString("modalEl.addEventListener('lostpointercapture'", $view);
+        $this->assertStringContainsString("document.addEventListener('pointermove'", $view);
+        $this->assertStringContainsString("document.addEventListener('pointerup'", $view);
+        $this->assertStringNotContainsString('setPointerCapture(', $view);
+        $this->assertStringNotContainsString("modalEl.addEventListener('lostpointercapture'", $view);
+        $this->assertStringContainsString('visibleWaitingItems(list, item)', $view);
         $this->assertStringContainsString("window.addEventListener('blur', finishDragging);", $view);
         $this->assertStringContainsString('contain: layout paint;', $view);
         $this->assertStringContainsString("item.getAttribute('data-status') !== 'waiting'", $view);

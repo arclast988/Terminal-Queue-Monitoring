@@ -611,6 +611,12 @@
         overscroll-behavior: contain;
     }
 
+    .queue-order-list.is-reordering,
+    .queue-order-list.is-reordering * {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
     .queue-order-item {
         display: flex;
         align-items: center;
@@ -1810,21 +1816,44 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         var pointerDrag = null;
 
+        function visibleWaitingItems(list, exceptItem) {
+            return Array.prototype.slice.call(list.querySelectorAll('.queue-order-item[data-status="waiting"]')).filter(function(candidate) {
+                return candidate !== exceptItem && !candidate.classList.contains('d-none');
+            });
+        }
+
         function moveDraggedItem(item, clientY) {
             if (!item || item.getAttribute('data-status') !== 'waiting') return;
             var list = item.closest('.queue-order-list');
             if (!list) return;
 
-            var target = document.elementFromPoint(window.innerWidth / 2, clientY);
-            target = target ? target.closest('.queue-order-item[data-status="waiting"]') : null;
-            if (!target || target === item || target.closest('.queue-order-list') !== list || target.classList.contains('d-none')) return;
+            var waitingItems = visibleWaitingItems(list, item);
+            if (waitingItems.length === 0) return;
 
-            var targetRect = target.getBoundingClientRect();
-            if (clientY < targetRect.top + (targetRect.height / 2)) {
-                list.insertBefore(item, target);
-            } else {
-                list.insertBefore(item, target.nextElementSibling);
+            var orderBefore = Array.prototype.map.call(list.children, function(child) {
+                return child.getAttribute('data-queue-id') || '';
+            }).join(',');
+            var insertBeforeItem = null;
+
+            for (var index = 0; index < waitingItems.length; index++) {
+                var candidateRect = waitingItems[index].getBoundingClientRect();
+                if (clientY < candidateRect.top + (candidateRect.height / 2)) {
+                    insertBeforeItem = waitingItems[index];
+                    break;
+                }
             }
+
+            if (insertBeforeItem) {
+                list.insertBefore(item, insertBeforeItem);
+            } else {
+                var finalWaitingItem = waitingItems[waitingItems.length - 1];
+                list.insertBefore(item, finalWaitingItem.nextSibling);
+            }
+
+            var orderAfter = Array.prototype.map.call(list.children, function(child) {
+                return child.getAttribute('data-queue-id') || '';
+            }).join(',');
+            if (orderBefore === orderAfter) return;
 
             clearFeedback();
             refreshPanel(item.closest('.queue-order-panel'));
@@ -1835,40 +1864,26 @@ $queueOrderGroups = array_values($queueOrderGroups);
             if (activeDrag && activeDrag.item) activeDrag.item.classList.remove('is-dragging');
             if (activeDrag && activeDrag.list) activeDrag.list.classList.remove('is-reordering');
             pointerDrag = null;
-
-            if (activeDrag && activeDrag.handle && activeDrag.handle.hasPointerCapture && activeDrag.handle.hasPointerCapture(activeDrag.pointerId)) {
-                try {
-                    activeDrag.handle.releasePointerCapture(activeDrag.pointerId);
-                } catch (error) {
-                    // Capture may already be released by pointerup/pointercancel.
-                }
-            }
         }
 
         modalEl.addEventListener('pointerdown', function(event) {
             var handle = event.target.closest('[data-queue-drag-handle]');
-            if (!handle) return;
-
-            var item = handle.closest('.queue-order-item');
+            var item = event.target.closest('.queue-order-item[data-status="waiting"]');
+            if (!item || !modalEl.contains(item)) return;
+            if (event.pointerType !== 'mouse' && !handle) return;
+            if (!handle && event.target.closest('button, a, input, select, textarea')) return;
+            if (event.pointerType === 'mouse' && event.button !== 0) return;
             if (!item || item.getAttribute('data-status') !== 'waiting') return;
 
             finishDragging();
             var list = item.closest('.queue-order-list');
-            pointerDrag = { item: item, list: list, pointerId: event.pointerId, handle: handle };
+            pointerDrag = { item: item, list: list, pointerId: event.pointerId };
             item.classList.add('is-dragging');
             if (list) list.classList.add('is-reordering');
-            if (handle.setPointerCapture) {
-                try {
-                    handle.setPointerCapture(event.pointerId);
-                } catch (error) {
-                    finishDragging();
-                    return;
-                }
-            }
             event.preventDefault();
         });
 
-        modalEl.addEventListener('pointermove', function(event) {
+        document.addEventListener('pointermove', function(event) {
             if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
             event.preventDefault();
             moveDraggedItem(pointerDrag.item, event.clientY);
@@ -1879,22 +1894,17 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 if (event.clientY < bodyRect.top + 48) modalBody.scrollTop -= 16;
                 if (event.clientY > bodyRect.bottom - 48) modalBody.scrollTop += 16;
             }
-        });
+        }, { capture: true, passive: false });
 
-        modalEl.addEventListener('pointerup', function(event) {
+        document.addEventListener('pointerup', function(event) {
             if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
             finishDragging();
-        });
+        }, true);
 
-        modalEl.addEventListener('pointercancel', function(event) {
+        document.addEventListener('pointercancel', function(event) {
             if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
             finishDragging();
-        });
-
-        modalEl.addEventListener('lostpointercapture', function(event) {
-            if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
-            finishDragging();
-        });
+        }, true);
 
         window.addEventListener('blur', finishDragging);
         document.addEventListener('visibilitychange', function() {
