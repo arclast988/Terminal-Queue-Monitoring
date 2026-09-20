@@ -47,6 +47,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
     {
         $header = file_get_contents(APPPATH . 'Views/partials/header.php');
+        $template = file_get_contents(APPPATH . 'Views/templates/header.php');
         $css = file_get_contents(FCPATH . 'assets/css/navigation.css');
 
         $this->assertNotFalse($header);
@@ -67,6 +68,10 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('top: 0;', $css);
         $this->assertStringContainsString('justify-content: center;', $css);
         $this->assertStringContainsString('top: calc(var(--site-header-height, 92px) + 4px) !important;', $css);
+        $this->assertStringContainsString('max-height: 92px !important;', $template);
+        $this->assertStringContainsString('max-height: 88px !important;', $template);
+        $this->assertStringContainsString('var maxCap = isMobile ? 104 : 84;', $template);
+        $this->assertStringNotContainsString('max-height: 60px !important;', $template);
     }
 
     public function testClosingDrawerMovesFocusBeforeApplyingAriaHidden(): void
