@@ -15,9 +15,13 @@ final class GuestDesktopSiteResponsiveTest extends CIUnitTestCase
         $this->assertStringNotContainsString('class="mobile-nav-close"', $header);
         $this->assertStringContainsString('function setMenuOpen(shouldOpen)', $header);
         $this->assertStringContainsString('aria-expanded="false"', $header);
-        $this->assertStringContainsString("isOpen ? 'fas fa-times' : 'fas fa-bars'", $header);
+        $this->assertStringContainsString("if (icon) icon.className = 'fas fa-times';", $header);
+        $this->assertStringContainsString("if (icon) icon.className = 'fas fa-bars';", $header);
+        $this->assertStringContainsString("m.addEventListener('transitionend', finishClose, { once: true })", $header);
         $this->assertStringContainsString('width: min(340px, 86vw);', $css);
         $this->assertStringContainsString('height: 100dvh;', $css);
+        $this->assertStringContainsString('transform: translate3d(100%, 0, 0);', $css);
+        $this->assertStringContainsString('transform: translate3d(0, 0, 0);', $css);
         $this->assertStringNotContainsString('.guest-header .mobile-nav-close', $css);
         $this->assertStringContainsString('.guest-header .mobile-toggle[aria-expanded="true"]', $css);
         $this->assertStringContainsString('z-index: 1004;', $css);

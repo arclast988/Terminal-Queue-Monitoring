@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260920b">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260920c">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -355,6 +355,8 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         scheduleAnnouncementPoll();
     })();
 
+    var guestMenuCloseSequence = 0;
+
     function setMenuOpen(shouldOpen) {
         var m = document.getElementById('navMenu');
         var overlay = document.getElementById('mobileNavOverlay');
@@ -363,21 +365,43 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         if (!m) return;
 
         var isOpen = !!shouldOpen;
+        var closeSequence = ++guestMenuCloseSequence;
         m.classList.toggle('open', isOpen);
         if (overlay) {
             if (isOpen) overlay.classList.add('active');
             else overlay.classList.remove('active');
         }
-        // Reuse the header hamburger as the single close control so the X stays
-        // in exactly the same position when the drawer opens.
-        if (icon) {
-            icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
-        }
         if (toggle) {
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
             toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
         }
-        document.body.style.overflow = isOpen ? 'hidden' : '';
+
+        if (isOpen) {
+            // The header button is the drawer's only close control. Keep it in
+            // the burger's exact position and avoid Android's sticky tap color.
+            if (icon) icon.className = 'fas fa-times';
+            if (toggle) toggle.classList.remove('is-closing');
+            document.body.style.overflow = 'hidden';
+            return;
+        }
+
+        // Do not turn the X back into a hamburger while the panel is still
+        // sliding away. That was the blue hamburger seen inside the closing
+        // white drawer on slower phones and Messenger's embedded browser.
+        if (toggle) toggle.classList.add('is-closing');
+        var finishClose = function(event) {
+            if (event && event.target !== m) return;
+            if (event && event.propertyName !== 'transform') return;
+            if (closeSequence !== guestMenuCloseSequence || m.classList.contains('open')) return;
+            if (icon) icon.className = 'fas fa-bars';
+            if (toggle) {
+                toggle.classList.remove('is-closing');
+                toggle.blur();
+            }
+            document.body.style.overflow = '';
+        };
+        m.addEventListener('transitionend', finishClose, { once: true });
+        window.setTimeout(finishClose, 320);
     }
 
     function toggleMenu() {

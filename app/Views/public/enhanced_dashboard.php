@@ -1312,46 +1312,43 @@
             gap: 2px;
             white-space: nowrap;
             z-index: 30;
-            animation: ghostFloatUp 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: passengerDeltaFloat 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            will-change: transform, opacity;
+            contain: layout paint style;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .passenger-delta-badge.pop-increment {
             color: #15803d;
             background: #dcfce7;
             border: 1.5px solid #86efac;
-            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.4);
+            box-shadow: 0 2px 7px rgba(34, 197, 94, 0.24);
         }
 
         .passenger-delta-badge.pop-decrement {
             color: #b91c1c;
             background: #fee2e2;
             border: 1.5px solid #fca5a5;
-            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 2px 7px rgba(239, 68, 68, 0.24);
         }
 
-        @keyframes ghostFloatUp {
+        @keyframes passengerDeltaFloat {
             0% {
                 opacity: 0;
-                transform: translate3d(-50%, 8px, 0) scale(0.65);
-                filter: blur(2px);
+                transform: translate3d(-50%, 3px, 0) scale(0.88);
             }
-            15% {
+            22% {
                 opacity: 1;
-                transform: translate3d(-50%, -4px, 0) scale(1.15);
-                filter: blur(0);
+                transform: translate3d(-50%, -4px, 0) scale(1.04);
             }
-            32% {
-                transform: translate3d(-50%, -10px, 0) scale(1);
-            }
-            70% {
-                opacity: 0.95;
-                transform: translate3d(-50%, -24px, 0) scale(1);
-                filter: blur(0);
+            62% {
+                opacity: 1;
+                transform: translate3d(-50%, -13px, 0) scale(1);
             }
             100% {
                 opacity: 0;
-                transform: translate3d(-50%, -40px, 0) scale(0.85);
-                filter: blur(1.5px);
+                transform: translate3d(-50%, -24px, 0) scale(0.96);
             }
         }
 
@@ -1819,6 +1816,35 @@
                 align-items: flex-start;
                 flex-direction: column;
                 gap: 8px;
+            }
+
+            /* Skip layout/paint work for queue cards below the viewport. */
+            .queue-card {
+                content-visibility: auto;
+                contain-intrinsic-size: auto 300px;
+            }
+        }
+
+        @media (hover: none), (pointer: coarse) {
+            .queue-card:hover,
+            .queue-card:hover .vehicle-thumb-box {
+                transform: none;
+            }
+            .queue-card:hover {
+                box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+            }
+            .vehicle-thumb-img {
+                filter: none;
+            }
+            .active-pulse-dot,
+            .dot-pulse,
+            .countdown-timer.cd-red,
+            .countdown-timer.cd-overdue {
+                animation: none !important;
+            }
+            .progress-modern .progress-bar,
+            .progress-bar {
+                transition-duration: 0.2s;
             }
         }
 
@@ -2865,13 +2891,13 @@
             var isPositive = diff > 0;
             badge.className = 'passenger-delta-badge ' + (isPositive ? 'pop-increment' : 'pop-decrement');
             var sign = isPositive ? '+' : '';
-            badge.innerHTML = sign + diff;
+            badge.textContent = sign + diff;
             anchorEl.appendChild(badge);
-            setTimeout(function() {
+            badge.addEventListener('animationend', function() {
                 if (badge && badge.parentNode) {
                     badge.parentNode.removeChild(badge);
                 }
-            }, 1900);
+            }, { once: true });
         }
 
         function buildQueueCardHtml(item, isEnter) {

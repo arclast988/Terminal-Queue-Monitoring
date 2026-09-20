@@ -572,6 +572,18 @@
         justify-content: center;
         flex: 0 0 44px;
         font-family: inherit;
+        appearance: none;
+        -webkit-appearance: none;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+    .guest-header .mobile-toggle:hover,
+    .guest-header .mobile-toggle:focus,
+    .guest-header .mobile-toggle:active,
+    .guest-header .mobile-toggle[aria-expanded="true"] {
+        background: transparent !important;
+        box-shadow: none !important;
+        transform: none !important;
     }
     .guest-header .mobile-toggle:focus-visible {
         outline: 2px solid var(--primary, #D62828);
@@ -720,7 +732,7 @@
         .guest-header .nav-menu {
             position: fixed;
             top: 0;
-            right: -100%;
+            right: 0;
             width: min(340px, 86vw);
             max-width: 100%;
             height: 100vh;
@@ -730,16 +742,25 @@
             justify-content: flex-start;
             padding: max(92px, calc(env(safe-area-inset-top) + 78px)) 22px max(30px, env(safe-area-inset-bottom));
             box-shadow: -5px 0 25px rgba(0, 0, 0, 0.08);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translate3d(100%, 0, 0);
+            visibility: hidden;
+            pointer-events: none;
+            transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.26s;
             z-index: 1003;
             gap: 12px;
             box-sizing: border-box;
             overflow-x: hidden;
             overflow-y: auto;
             overscroll-behavior: contain;
+            contain: layout paint style;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
         .guest-header .nav-menu.open {
-            right: 0;
+            transform: translate3d(0, 0, 0);
+            visibility: visible;
+            pointer-events: auto;
+            transition-delay: 0s;
         }
         .guest-header .nav-menu a {
             width: 100%;
@@ -768,7 +789,6 @@
             z-index: 1004;
         }
         .guest-header .mobile-toggle[aria-expanded="true"] {
-            background: var(--nav-chip-bg, #f1f5f9);
             color: var(--nav-text, #1e293b);
         }
     }
@@ -866,18 +886,35 @@
 
     /* Mobile overlay backdrop */
     .mobile-nav-overlay {
-        display: none;
+        display: block;
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        inset: 0;
         background: rgba(0, 0, 0, 0.4);
         z-index: 1002;
         cursor: pointer;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+        -webkit-tap-highlight-color: transparent;
     }
     .mobile-nav-overlay.active {
-        display: block;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition-delay: 0s;
+    }
+
+    /* Keep touch scrolling cheap in Android and embedded social browsers. */
+    @media (hover: none), (pointer: coarse) {
+        .guest-header .logo,
+        .guest-header .logo-section:hover .logo {
+            filter: none;
+        }
+        footer {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
     }
 
 /* Footer styling */

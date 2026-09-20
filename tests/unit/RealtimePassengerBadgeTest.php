@@ -84,6 +84,24 @@ final class RealtimePassengerBadgeTest extends CIUnitTestCase
         $this->assertStringNotContainsString('queueList.appendChild(existingCard);', $content, 'Stable cards must not be detached because that restarts the active popup animation');
     }
 
+    public function testGuestPassengerPopupUsesCompositorFriendlyShortAnimation(): void
+    {
+        $content = file_get_contents(APPPATH . 'Views/public/enhanced_dashboard.php');
+
+        $this->assertStringContainsString('animation: passengerDeltaFloat 0.68s', $content);
+        $this->assertStringContainsString('will-change: transform, opacity;', $content);
+        $this->assertStringContainsString("badge.addEventListener('animationend'", $content);
+        $this->assertStringNotContainsString('@keyframes ghostFloatUp', $content);
+        $this->assertStringContainsString('content-visibility: auto;', $content);
+
+        $animationStart = strpos($content, '@keyframes passengerDeltaFloat');
+        $animationEnd = strpos($content, '.passenger-count-row', $animationStart);
+        $this->assertNotFalse($animationStart);
+        $this->assertNotFalse($animationEnd);
+        $animationCss = substr($content, $animationStart, $animationEnd - $animationStart);
+        $this->assertStringNotContainsString('filter: blur(', $animationCss);
+    }
+
     public function testSharedPassengerUpdaterDoesNotInjectFullBadgeIntoNumberSpan(): void
     {
         $queueSync = file_get_contents(FCPATH . 'js/queue-sync.js');
