@@ -7,5 +7,5 @@
  * automatically by body.guest-theme / .admin-theme / .staff-theme).
  */
 ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/navigation.css?v=20260920_1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/navigation.css?v=20260920_2') ?>">
 <?= view('partials/header') ?>

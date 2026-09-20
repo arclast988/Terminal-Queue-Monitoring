@@ -64,9 +64,13 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'waiting');", $view);
         $this->assertStringContainsString('window.QueueOrderManager.setStatus(id, data.status || status);', $view);
         $this->assertStringContainsString('data-queue-drag-handle', $view);
-        $this->assertStringContainsString("modalEl.addEventListener('dragstart'", $view);
+        $this->assertStringContainsString('draggable="false"', $view);
+        $this->assertStringNotContainsString("modalEl.addEventListener('dragstart'", $view);
         $this->assertStringContainsString("modalEl.addEventListener('pointerdown'", $view);
-        $this->assertStringContainsString('moveDraggedItem(draggedItem, event.clientY);', $view);
+        $this->assertStringContainsString('moveDraggedItem(pointerDrag.item, event.clientY);', $view);
+        $this->assertStringContainsString("modalEl.addEventListener('lostpointercapture'", $view);
+        $this->assertStringContainsString("window.addEventListener('blur', finishDragging);", $view);
+        $this->assertStringContainsString('contain: layout paint;', $view);
         $this->assertStringContainsString("item.getAttribute('data-status') !== 'waiting'", $view);
     }
 }

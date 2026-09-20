@@ -95,6 +95,31 @@ header#site-header {
 
 .logo-section:hover .logo { transform: scale(1.05); }
 
+/* --- Logged-in operational clock ----------------------------------------- */
+.operations-header-time {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 12px;
+  border-left: 1px solid var(--nav-divider, rgba(255, 255, 255, 0.26));
+  color: var(--nav-text, #ffffff) !important;
+  -webkit-text-fill-color: var(--nav-text, #ffffff) !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.operations-header-time i {
+  color: var(--nav-text-soft, var(--nav-text, #ffffff)) !important;
+  -webkit-text-fill-color: var(--nav-text-soft, var(--nav-text, #ffffff)) !important;
+  font-size: 12px;
+}
+
 /* Base logo text – dynamic token-driven for all themes (admin, staff, guest) */
 #site-header .logo-text h1,
 .logo-section .logo-text h1,
@@ -1282,6 +1307,18 @@ body.staff-theme .drawer-nav-item.active i {
     max-height: 64px !important;
   }
 
+  .operations-header-time {
+    height: 22px;
+    gap: 4px;
+    padding-left: 8px;
+    font-size: 11.5px;
+    letter-spacing: 0;
+  }
+
+  .operations-header-time i {
+    font-size: 11px;
+  }
+
   /* On mobile screens, hide the user text info and show a sleek circular avatar button */
   .profile-trigger-info {
     display: none !important;
@@ -1431,6 +1468,11 @@ body.staff-theme .drawer-nav-item.active i {
     gap: 8px !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
+  }
+
+  .operations-header-time {
+    padding-left: 6px;
+    font-size: 10.5px;
   }
 
   .nav-hamburger-btn {

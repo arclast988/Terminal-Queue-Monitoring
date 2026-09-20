@@ -53,6 +53,12 @@ SVG;
                 <p><?= esc(app_subtitle()) ?></p>
             </div>
         </a>
+        <?php if ($isAdmin || $role === 'staff'): ?>
+            <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('h:i:s A') ?></time>
+            </div>
+        <?php endif; ?>
     </div>
 
     <nav class="nav-menu" aria-label="Primary navigation">
@@ -243,6 +249,49 @@ SVG;
 <?php endif; ?>
 
 <script>
+    (function initOperationsHeaderClock() {
+        var clock = document.getElementById('operationsHeaderClock');
+        if (!clock) return;
+
+        var clockTimer = null;
+        var fullFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Manila',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+        });
+        var compactFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Manila',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+        var compactClockMedia = window.matchMedia('(max-width: 480px)');
+
+        function updateClock() {
+            var now = new Date();
+            clock.textContent = (compactClockMedia.matches ? compactFormatter : fullFormatter).format(now);
+            clock.dateTime = now.toISOString();
+        }
+
+        function startClock() {
+            if (clockTimer) window.clearInterval(clockTimer);
+            updateClock();
+            clockTimer = window.setInterval(updateClock, 1000);
+        }
+
+        startClock();
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                if (clockTimer) window.clearInterval(clockTimer);
+                clockTimer = null;
+                return;
+            }
+            startClock();
+        });
+    })();
+
     function openSidebarDrawer() {
         var drawer       = document.getElementById('siteSidebarDrawer');
         var overlay      = document.getElementById('sidebarDrawerOverlay');

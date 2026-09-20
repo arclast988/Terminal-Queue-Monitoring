@@ -607,6 +607,8 @@
         display: flex;
         flex-direction: column;
         gap: 0.65rem;
+        isolation: isolate;
+        overscroll-behavior: contain;
     }
 
     .queue-order-item {
@@ -617,6 +619,8 @@
         border: 1px solid var(--border, #dbe3ec);
         border-radius: 12px;
         background: var(--surface, #fff);
+        contain: layout paint;
+        isolation: isolate;
     }
 
     .queue-order-item[data-status="waiting"] {
@@ -625,7 +629,7 @@
 
     .queue-order-item.is-dragging {
         cursor: grabbing;
-        opacity: 0.78;
+        opacity: 1;
         border-color: #22c55e;
         box-shadow: 0 10px 24px rgba(21, 128, 61, 0.18);
         background: #f0fdf4;
@@ -1019,7 +1023,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <div class="queue-order-list" data-original-order="<?= esc($originalOrder, 'attr') ?>">
                             <?php foreach ($queueOrderGroup['items'] as $queueOrderItem): ?>
                                 <?php $isOrderLocked = ($queueOrderItem['status'] ?? '') === 'boarding'; ?>
-                                <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>" draggable="<?= $isOrderLocked ? 'false' : 'true' ?>">
+                                <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>" draggable="false">
                                     <span class="queue-order-position">#<?= (int) $queueOrderItem['position'] ?></span>
                                     <div class="min-w-0 flex-grow-1">
                                         <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?></div>
@@ -1661,7 +1665,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 if (position) position.textContent = '#' + (index + 1);
 
                 var isWaiting = item.getAttribute('data-status') === 'waiting';
-                item.setAttribute('draggable', isWaiting ? 'true' : 'false');
+                // Reordering uses one pointer-based implementation on every device.
+                // Native HTML dragging is disabled because its preview can leave paint ghosts in Chromium.
+                item.setAttribute('draggable', 'false');
                 var dragHandle = item.querySelector('[data-queue-drag-handle]');
                 if (dragHandle) dragHandle.setAttribute('aria-disabled', isWaiting ? 'false' : 'true');
             });
@@ -1772,6 +1778,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         });
 
         modalEl.addEventListener('hidden.bs.modal', function() {
+            finishDragging();
             restoreOriginalOrders();
             if (modalEl.getAttribute('data-queue-order-refresh-pending') === 'true') {
                 modalEl.removeAttribute('data-queue-order-refresh-pending');
@@ -1801,7 +1808,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
             refreshPanel(item.closest('.queue-order-panel'));
         });
 
-        var draggedItem = null;
         var pointerDrag = null;
 
         function moveDraggedItem(item, clientY) {
@@ -1825,54 +1831,40 @@ $queueOrderGroups = array_values($queueOrderGroups);
         }
 
         function finishDragging() {
-            if (draggedItem) draggedItem.classList.remove('is-dragging');
-            if (pointerDrag && pointerDrag.item) pointerDrag.item.classList.remove('is-dragging');
-            draggedItem = null;
+            var activeDrag = pointerDrag;
+            if (activeDrag && activeDrag.item) activeDrag.item.classList.remove('is-dragging');
+            if (activeDrag && activeDrag.list) activeDrag.list.classList.remove('is-reordering');
             pointerDrag = null;
+
+            if (activeDrag && activeDrag.handle && activeDrag.handle.hasPointerCapture && activeDrag.handle.hasPointerCapture(activeDrag.pointerId)) {
+                try {
+                    activeDrag.handle.releasePointerCapture(activeDrag.pointerId);
+                } catch (error) {
+                    // Capture may already be released by pointerup/pointercancel.
+                }
+            }
         }
 
-        modalEl.addEventListener('dragstart', function(event) {
-            var item = event.target.closest('.queue-order-item');
-            if (!item || item.getAttribute('data-status') !== 'waiting') {
-                event.preventDefault();
-                return;
-            }
-
-            draggedItem = item;
-            item.classList.add('is-dragging');
-            if (event.dataTransfer) {
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', item.getAttribute('data-queue-id') || '');
-            }
-        });
-
-        modalEl.addEventListener('dragover', function(event) {
-            if (!draggedItem) return;
-            event.preventDefault();
-            if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
-            moveDraggedItem(draggedItem, event.clientY);
-        });
-
-        modalEl.addEventListener('drop', function(event) {
-            if (!draggedItem) return;
-            event.preventDefault();
-            moveDraggedItem(draggedItem, event.clientY);
-            finishDragging();
-        });
-
-        modalEl.addEventListener('dragend', finishDragging);
-
         modalEl.addEventListener('pointerdown', function(event) {
-            if (event.pointerType === 'mouse') return;
             var handle = event.target.closest('[data-queue-drag-handle]');
             if (!handle) return;
 
             var item = handle.closest('.queue-order-item');
             if (!item || item.getAttribute('data-status') !== 'waiting') return;
 
-            pointerDrag = { item: item, pointerId: event.pointerId, handle: handle };
+            finishDragging();
+            var list = item.closest('.queue-order-list');
+            pointerDrag = { item: item, list: list, pointerId: event.pointerId, handle: handle };
             item.classList.add('is-dragging');
-            if (handle.setPointerCapture) handle.setPointerCapture(event.pointerId);
+            if (list) list.classList.add('is-reordering');
+            if (handle.setPointerCapture) {
+                try {
+                    handle.setPointerCapture(event.pointerId);
+                } catch (error) {
+                    finishDragging();
+                    return;
+                }
+            }
             event.preventDefault();
         });
 
@@ -1897,6 +1889,16 @@ $queueOrderGroups = array_values($queueOrderGroups);
         modalEl.addEventListener('pointercancel', function(event) {
             if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
             finishDragging();
+        });
+
+        modalEl.addEventListener('lostpointercapture', function(event) {
+            if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+            finishDragging();
+        });
+
+        window.addEventListener('blur', finishDragging);
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) finishDragging();
         });
 
         if (saveBtn) {

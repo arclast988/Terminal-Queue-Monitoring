@@ -41,7 +41,23 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260920_1', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260920_2', $navbar);
+    }
+
+    public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
+    {
+        $header = file_get_contents(APPPATH . 'Views/partials/header.php');
+        $css = file_get_contents(FCPATH . 'assets/css/navigation.css');
+
+        $this->assertNotFalse($header);
+        $this->assertNotFalse($css);
+        $this->assertStringContainsString("\$isAdmin || \$role === 'staff'", $header);
+        $this->assertStringContainsString('id="operationsHeaderClock"', $header);
+        $this->assertStringContainsString("timeZone: 'Asia/Manila'", $header);
+        $this->assertStringContainsString("window.matchMedia('(max-width: 480px)')", $header);
+        $this->assertStringContainsString('document.hidden', $header);
+        $this->assertStringContainsString('.operations-header-time {', $css);
+        $this->assertStringContainsString('font-variant-numeric: tabular-nums;', $css);
     }
 
     public function testRequestedMobileActionGroupsKeepTheirAlignment(): void
