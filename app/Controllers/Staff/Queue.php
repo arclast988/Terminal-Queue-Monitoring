@@ -7,6 +7,7 @@ use App\Models\QueueModel;
 use App\Models\VehicleModel;
 use App\Models\RouteModel;
 use App\Models\DepartureRuleModel;
+use App\Models\TerminalModel;
 use App\Models\UserRouteModel;
 
 class Queue extends BaseController
@@ -77,6 +78,37 @@ class Queue extends BaseController
             $lockKey -= 4294967296;
         }
         $db->query('SELECT pg_advisory_xact_lock(?)', [(int) $lockKey]);
+    }
+
+    /**
+     * Return a user-facing error when the terminal cannot accept another
+     * active (waiting or boarding) vehicle, otherwise return null.
+     */
+    private function terminalCapacityError($db, int $terminalId): ?string
+    {
+        $terminal = (new TerminalModel())->find($terminalId);
+        if (!$terminal) {
+            return 'The terminal assigned to this route no longer exists.';
+        }
+
+        $capacity = (int) ($terminal['capacity'] ?? 0);
+        if ($capacity < 1) {
+            return 'The vehicle limit for ' . ($terminal['name'] ?? 'this terminal') . ' is not configured.';
+        }
+
+        $activeCount = (int) $db->table('queue')
+            ->join('routes', 'routes.id = queue.route_id')
+            ->where('routes.terminal_id', $terminalId)
+            ->whereIn('queue.status', ['waiting', 'boarding'])
+            ->countAllResults();
+
+        if ($activeCount >= $capacity) {
+            return ($terminal['name'] ?? 'This terminal') . ' has reached its limit of '
+                . $capacity . ' active vehicle' . ($capacity === 1 ? '' : 's')
+                . '. Depart or cancel a vehicle before adding another.';
+        }
+
+        return null;
     }
 
     public function index()
@@ -348,6 +380,13 @@ class Queue extends BaseController
                 }
             }
 
+            $terminalId = (int) ($route['terminal_id'] ?? 0);
+            $capacityError = $this->terminalCapacityError($db, $terminalId);
+            if ($capacityError !== null) {
+                $errors[] = $capacityError;
+                continue;
+            }
+
             // Positions are shared by every route with the same terminal and
             // destination, so append to the end of that complete queue line.
             $sameDestinationRouteIds = (new RouteModel())
@@ -361,7 +400,6 @@ class Queue extends BaseController
                 ->first();
             $nextPosition = ($lastPosition['position'] ?? 0) + 1;
 
-            $terminalId  = (int) ($route['terminal_id'] ?? 1);
             $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
             $waitMinutes = (int) $matchedRule['wait_minutes'];
             $ruleLabel   = $matchedRule['label'] ?? 'Default';
@@ -445,7 +483,8 @@ class Queue extends BaseController
             return redirect()->back()->with('error', 'Invalid status.');
         }
 
-        if (! $this->queueModel->find($id)) {
+        $existingItem = $this->queueModel->find($id);
+        if (! $existingItem) {
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Queue item not found.']);
             }
@@ -495,6 +534,22 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+
+        $wasActive = in_array($existingItem['status'] ?? '', ['waiting', 'boarding'], true);
+        $willBeActive = in_array($status, ['waiting', 'boarding'], true);
+        if (!$wasActive && $willBeActive) {
+            $route = $this->routeModel->find($existingItem['route_id']);
+            $capacityError = $route
+                ? $this->terminalCapacityError($db, (int) ($route['terminal_id'] ?? 0))
+                : 'The route assigned to this trip no longer exists.';
+            if ($capacityError !== null) {
+                $db->transRollback();
+                if ($this->request->isAJAX()) {
+                    return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => $capacityError]);
+                }
+                return redirect()->back()->with('error', $capacityError);
+            }
+        }
 
         $this->queueModel->update($id, $data);
 
@@ -884,6 +939,15 @@ class Queue extends BaseController
             return $this->response->setStatusCode(409)->setJSON([
                 'success' => false,
                 'message' => 'Vehicle ' . ($queueItem['plate_number'] ?? '') . ' is already active in the queue.',
+            ]);
+        }
+
+        $capacityError = $this->terminalCapacityError($db, (int) ($route['terminal_id'] ?? 0));
+        if ($capacityError !== null) {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => $capacityError,
             ]);
         }
 

@@ -64,7 +64,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                 <td data-label="ID"><strong>#<?= $terminal['id'] ?></strong></td>
                                 <td data-label="Name"><?= esc($terminal['name']) ?></td>
                                 <td data-label="Location"><?= esc($terminal['location']) ?></td>
-                                <td data-label="Capacity"><span class="badge-modern badge-modern-primary"><?= $terminal['capacity'] ?> pax</span></td>
+                                <td data-label="Capacity"><span class="badge-modern badge-modern-primary"><?= (int) $terminal['capacity'] ?> vehicles</span></td>
                                 <td data-label="Created At">
                                     <div style="white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-main);">
                                         <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= !empty($terminal['created_at']) ? date('M d, Y', strtotime($terminal['created_at'])) : 'N/A' ?>
@@ -331,7 +331,7 @@ body.modal-open #deleteTerminalConfirmModal,
 
         if (extraEl) {
             if (opts.capacity) {
-                extraEl.textContent = opts.capacity + ' pax';
+                extraEl.textContent = opts.capacity + ' vehicles';
                 extraEl.style.display = '';
             } else {
                 extraEl.style.display = 'none';

@@ -32,20 +32,16 @@ class Terminals extends BaseController
 
     public function store()
     {
-        $rules = [
-            'name' => 'required|min_length[3]|max_length[100]',
-            'location' => 'required|min_length[3]|max_length[255]',
-            'capacity' => 'required|integer|greater_than[0]'
-        ];
+        $rules = $this->terminalValidationRules();
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $this->terminalModel->save([
-            'name' => $this->request->getPost('name'),
-            'location' => $this->request->getPost('location'),
-            'capacity' => $this->request->getPost('capacity')
+            'name' => trim((string) $this->request->getPost('name')),
+            'location' => trim((string) $this->request->getPost('location')),
+            'capacity' => (int) $this->request->getPost('capacity')
         ]);
 
         $this->logActivity('Create terminal', 'Added terminal: ' . $this->request->getPost('name'));
@@ -72,11 +68,7 @@ class Terminals extends BaseController
 
     public function update($id)
     {
-        $rules = [
-            'name' => 'required|min_length[3]|max_length[100]',
-            'location' => 'required|min_length[3]|max_length[255]',
-            'capacity' => 'required|integer|greater_than[0]'
-        ];
+        $rules = $this->terminalValidationRules();
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -90,7 +82,7 @@ class Terminals extends BaseController
         $newData = [
             'name'     => trim((string) $this->request->getPost('name')),
             'location' => trim((string) $this->request->getPost('location')),
-            'capacity' => $this->request->getPost('capacity'),
+            'capacity' => (int) $this->request->getPost('capacity'),
         ];
 
         if ($this->inputsUnchanged([
@@ -122,5 +114,35 @@ class Terminals extends BaseController
             return redirect()->to('/admin/terminals')->with('success', 'Terminal "' . $terminal['name'] . '" deleted successfully.');
         }
         return redirect()->to('/admin/terminals')->with('error', 'Failed to delete terminal.');
+    }
+
+    private function terminalValidationRules(): array
+    {
+        return [
+            'name' => [
+                'rules' => 'required|min_length[3]|max_length[100]',
+                'errors' => [
+                    'required' => 'Please enter the terminal name.',
+                    'min_length' => 'Terminal name must be at least 3 characters.',
+                    'max_length' => 'Terminal name cannot exceed 100 characters.',
+                ],
+            ],
+            'location' => [
+                'rules' => 'required|min_length[3]|max_length[255]',
+                'errors' => [
+                    'required' => 'Please enter the terminal location.',
+                    'min_length' => 'Terminal location must be at least 3 characters.',
+                    'max_length' => 'Terminal location cannot exceed 255 characters.',
+                ],
+            ],
+            'capacity' => [
+                'rules' => 'required|integer|greater_than[0]',
+                'errors' => [
+                    'required' => 'Please enter the maximum number of vehicles.',
+                    'integer' => 'Terminal capacity must be a whole number.',
+                    'greater_than' => 'Terminal capacity must be at least 1 vehicle.',
+                ],
+            ],
+        ];
     }
 }

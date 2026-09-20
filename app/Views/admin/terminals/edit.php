@@ -65,7 +65,7 @@
                         
                         <div class="mb-4">
                             <label for="capacity" class="form-label-modern">Capacity (Max Vehicles) <span class="text-danger">*</span></label>
-                            <input type="number" class="input-modern" id="capacity" name="capacity" value="<?= old('capacity', $terminal['capacity']) ?>" min="0" required>
+                            <input type="number" class="input-modern" id="capacity" name="capacity" value="<?= old('capacity', $terminal['capacity']) ?>" min="1" step="1" inputmode="numeric" required>
                             <div class="form-text-modern">Maximum number of vehicles that can be stationed at this terminal.</div>
                         </div>
                         
