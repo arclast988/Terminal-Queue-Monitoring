@@ -633,6 +633,12 @@
         border: 1px solid #86efac;
     }
 
+    #manageQueueModal .queue-order-boarding-badge,
+    #manageQueueModal .queue-order-boarding-badge i {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
     .queue-order-moves {
         display: flex;
         gap: 0.4rem;
@@ -981,7 +987,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         <div class="small text-muted text-truncate">
                                             <?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?>
                                             <?php if ($isOrderLocked): ?>
-                                                <span class="badge bg-success ms-1"><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
+                                                <span class="badge bg-success ms-1 queue-order-boarding-badge"><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
                                             <?php else: ?>
                                                 <span class="badge bg-warning-subtle text-warning-emphasis ms-1">WAITING</span>
                                             <?php endif; ?>

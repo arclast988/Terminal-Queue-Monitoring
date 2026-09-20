@@ -56,5 +56,7 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString('$queueOrderGroups = array_values($queueOrderGroups);', $view);
         $this->assertStringContainsString('queue-order-header', $view);
         $this->assertStringContainsString('queue-order-note', $view);
+        $this->assertStringContainsString('queue-order-boarding-badge', $view);
+        $this->assertStringContainsString('-webkit-text-fill-color: #ffffff !important;', $view);
     }
 }
