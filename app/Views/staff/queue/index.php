@@ -559,6 +559,50 @@
         min-height: 0;
     }
 
+    #manageQueueModal .queue-order-header {
+        background: #15803d !important;
+        border-bottom-color: #166534 !important;
+        color: #ffffff !important;
+    }
+
+    #manageQueueModal .queue-order-header .modal-title,
+    #manageQueueModal .queue-order-header .queue-order-subtitle {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    #manageQueueModal .queue-order-header .queue-order-subtitle {
+        opacity: 0.82 !important;
+    }
+
+    #manageQueueModal .queue-order-header .btn-close {
+        opacity: 1 !important;
+    }
+
+    .queue-order-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        padding: 0.8rem 0.9rem;
+        margin-bottom: 1rem;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        background: #eff6ff;
+        color: #1e3a8a;
+        font-size: 0.86rem;
+        line-height: 1.45;
+    }
+
+    #manageQueueModal .queue-order-note,
+    #manageQueueModal .queue-order-note span,
+    #manageQueueModal .queue-order-note i {
+        color: #1e3a8a !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
     .queue-order-list {
         display: flex;
         flex-direction: column;
@@ -667,6 +711,7 @@ foreach (($queue ?? []) as $queueOrderItem) {
     }
     $queueOrderGroups[$queueGroupKey]['items'][] = $queueOrderItem;
 }
+$queueOrderGroups = array_values($queueOrderGroups);
 ?>
 
 <div class="page-header-modern">
@@ -885,12 +930,12 @@ foreach (($queue ?? []) as $queueOrderItem) {
 <div class="modal fade" id="manageQueueModal" tabindex="-1" aria-labelledby="manageQueueModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content shadow-lg">
-            <div class="modal-header bg-success text-white">
+            <div class="modal-header queue-order-header">
                 <div>
                     <h5 class="modal-title fw-bold mb-1" id="manageQueueModalLabel">
                         <i class="bi bi-list-ol me-2"></i>Manage Queue Order
                     </h5>
-                    <div class="small text-white-50">Move waiting vehicles up or down in their destination line.</div>
+                    <div class="small queue-order-subtitle">Move waiting vehicles up or down in their destination line.</div>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -908,12 +953,12 @@ foreach (($queue ?? []) as $queueOrderItem) {
                     </div>
                 <?php endif; ?>
 
-                <div class="alert alert-light border small d-flex gap-2 align-items-start mb-3">
-                    <i class="bi bi-info-circle-fill text-primary mt-1"></i>
+                <div class="queue-order-note">
+                    <i class="bi bi-info-circle-fill mt-1"></i>
                     <span>A boarding vehicle is locked at the front because its dispatch is already in progress. Save each destination separately.</span>
                 </div>
 
-                <div id="queueOrderFeedback" class="alert d-none" role="alert"></div>
+                <div id="queueOrderFeedback" class="alert alert-permanent d-none" data-permanent="true" role="alert"></div>
 
                 <?php foreach ($queueOrderGroups as $groupIndex => $queueOrderGroup): ?>
                     <?php

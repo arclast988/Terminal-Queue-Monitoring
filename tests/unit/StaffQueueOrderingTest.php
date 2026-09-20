@@ -53,5 +53,8 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString('data-queue-move="down"', $view);
         $this->assertStringContainsString("base_url('staff/queue/reorder')", $view);
         $this->assertStringContainsString('grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);', $view);
+        $this->assertStringContainsString('$queueOrderGroups = array_values($queueOrderGroups);', $view);
+        $this->assertStringContainsString('queue-order-header', $view);
+        $this->assertStringContainsString('queue-order-note', $view);
     }
 }
