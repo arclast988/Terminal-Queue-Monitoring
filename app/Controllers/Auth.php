@@ -286,6 +286,10 @@ class Auth extends BaseController
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
+                // Do not leave a dead reset session or rate-limit after a
+                // message that never reached the account owner.
+                $db->table('password_reset_tokens')->where('token', $token)->delete();
+                $cache->delete('otp_resend_' . $token);
                 $session->setFlashdata('error', 'Failed to send verification email. Please check server SMTP configuration.');
                 return redirect()->to('/forgot-password')->withInput();
             }
@@ -439,6 +443,8 @@ class Auth extends BaseController
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
+                // Permit an immediate retry when no message was delivered.
+                $cache->delete($cacheKey);
                 $session->setFlashdata('error', 'Failed to send new verification email. Please check server SMTP configuration.');
                 return redirect()->to("/verify-reset-code/{$token}");
             }
@@ -719,6 +725,8 @@ class Auth extends BaseController
             if (ENVIRONMENT === 'development') {
                 $devMsg = ' (Local Dev OTP Code: ' . $resetCode . ')';
             } else {
+                $db->table('password_reset_tokens')->where('token', $token)->delete();
+                $cache->delete('otp_resend_cp_' . $user['id']);
                 $msg = 'Failed to send verification email. Please check server SMTP configuration.';
                 if ($isAjax) {
                     return $this->response->setJSON(['status' => 'error', 'message' => $msg]);

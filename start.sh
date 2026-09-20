@@ -89,8 +89,13 @@ database.default.port = "$(escape_dotenv "$DB_PORT")"
 email.fromEmail = "$(escape_dotenv "${EMAIL_FROM:-}")"
 email.fromName = "$(escape_dotenv "${EMAIL_FROM_NAME:-Jeepney nVans}")"
 email.recipients = "$(escape_dotenv "${EMAIL_RECIPIENTS:-}")"
+email.protocol = "$(escape_dotenv "${EMAIL_PROTOCOL:-smtp}")"
+email.SMTPHost = "$(escape_dotenv "${EMAIL_SMTP_HOST:-smtp.gmail.com}")"
 email.SMTPUser = "$(escape_dotenv "${EMAIL_SMTP_USER:-}")"
 email.SMTPPass = "$(escape_dotenv "${EMAIL_SMTP_PASS:-}")"
+email.SMTPPort = "$(escape_dotenv "${EMAIL_SMTP_PORT:-587}")"
+email.SMTPCrypto = "$(escape_dotenv "${EMAIL_SMTP_CRYPTO:-tls}")"
+email.SMTPTimeout = "$(escape_dotenv "${EMAIL_SMTP_TIMEOUT:-5}")"
 
 websocket.bindAddress = 127.0.0.1
 websocket.clientPort = ${WEBSOCKET_PORT}
@@ -103,6 +108,9 @@ chown www-data:www-data "$APP_ROOT/.env"
 chmod 640 "$APP_ROOT/.env"
 
 echo "[ENV] Production configuration generated."
+if [ -z "${EMAIL_SMTP_USER:-}" ] || [ -z "${EMAIL_SMTP_PASS:-}" ]; then
+    echo "[WARN] EMAIL_SMTP_USER or EMAIL_SMTP_PASS is empty; password-reset and contact email delivery will be unavailable."
+fi
 
 mkdir -p \
     "$APP_ROOT/writable/cache" \

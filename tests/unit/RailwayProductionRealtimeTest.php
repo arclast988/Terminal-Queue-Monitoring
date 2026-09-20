@@ -43,6 +43,10 @@ final class RailwayProductionRealtimeTest extends CIUnitTestCase
         $this->assertStringContainsString('require_env ENCRYPTION_KEY', $start);
         $this->assertStringContainsString('DB_PASS="${DB_CONN%%@*}"', $start);
         $this->assertStringContainsString('${EMAIL_SMTP_PASS:-}', $start);
+        $this->assertStringContainsString('${EMAIL_SMTP_HOST:-smtp.gmail.com}', $start);
+        $this->assertStringContainsString('${EMAIL_SMTP_PORT:-587}', $start);
+        $this->assertStringContainsString('${EMAIL_SMTP_CRYPTO:-tls}', $start);
+        $this->assertStringContainsString('${EMAIL_SMTP_TIMEOUT:-5}', $start);
         $this->assertStringContainsString('encryption.key = "$(escape_dotenv "$ENCRYPTION_KEY")"', $start);
     }
 

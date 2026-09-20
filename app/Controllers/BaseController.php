@@ -209,10 +209,25 @@ abstract class BaseController extends Controller
 
     /**
      * Get a pre-configured Email service instance.
-     */    protected function getConfiguredEmailService(): \CodeIgniter\Email\Email
+     */
+    protected function getConfiguredEmailService(): \CodeIgniter\Email\Email
     {
-        $config = config('Email');
-        $emailSvc = \Config\Services::email();
+        /** @var \Config\Email $config */
+        $config = clone config('Email');
+
+        $config->SMTPHost = trim($config->SMTPHost);
+        $config->SMTPUser = trim($config->SMTPUser);
+        $config->SMTPPass = trim($config->SMTPPass);
+
+        // Google displays app passwords in four groups for readability, but
+        // SMTP authentication expects the actual 16-character passcode.
+        if (strcasecmp($config->SMTPHost, 'smtp.gmail.com') === 0) {
+            $config->SMTPPass = (string) preg_replace('/\s+/', '', $config->SMTPPass);
+        }
+
+        // Use a fresh instance so a request cannot inherit recipients,
+        // reply-to headers, or stale SMTP state from another email.
+        $emailSvc = \Config\Services::email($config, false);
 
         $fromEmail = $config->fromEmail ?: $config->SMTPUser;
         $fromName  = $config->fromName ?: (app_name() . ' System');

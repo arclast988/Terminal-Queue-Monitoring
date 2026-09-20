@@ -255,7 +255,7 @@
                     <label for="username">Username or Email</label>
                     <input type="text" id="username" name="username" value="<?= esc(old('username', '')) ?>" placeholder="Enter your username or email" autocomplete="username" required autofocus>
                 </div>
-                <button type="submit" class="btn">
+                <button type="submit" class="btn" data-loading-text="Sending verification code…">
                     <span>Continue</span>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
