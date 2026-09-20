@@ -22,6 +22,8 @@ final class GuestDesktopSiteResponsiveTest extends CIUnitTestCase
         $this->assertStringContainsString('height: 100dvh;', $css);
         $this->assertStringContainsString('transform: translate3d(100%, 0, 0);', $css);
         $this->assertStringContainsString('transform: translate3d(0, 0, 0);', $css);
+        $this->assertStringContainsString('.guest-header .nav-menu > a', $css);
+        $this->assertStringContainsString('display: flex !important;', $css);
         $this->assertStringNotContainsString('.guest-header .mobile-nav-close', $css);
         $this->assertStringContainsString('.guest-header .mobile-toggle[aria-expanded="true"]', $css);
         $this->assertStringContainsString('z-index: 1004;', $css);

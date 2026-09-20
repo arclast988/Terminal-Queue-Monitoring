@@ -745,7 +745,7 @@
             transform: translate3d(100%, 0, 0);
             visibility: hidden;
             pointer-events: none;
-            transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.26s;
+            transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.18s;
             z-index: 1003;
             gap: 12px;
             box-sizing: border-box;
@@ -761,6 +761,12 @@
             visibility: visible;
             pointer-events: auto;
             transition-delay: 0s;
+        }
+        /* responsive.css hides ordinary nav links when the drawer loses its
+           .open class, but leaves Login visible. Keep every guest link rendered
+           during the short slide-out so the drawer closes as one complete panel. */
+        .guest-header .nav-menu > a {
+            display: flex !important;
         }
         .guest-header .nav-menu a {
             width: 100%;
