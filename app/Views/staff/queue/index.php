@@ -629,6 +629,10 @@
         isolation: isolate;
     }
 
+    .queue-order-details {
+        min-width: 0;
+    }
+
     .queue-order-item[data-status="waiting"] {
         cursor: grab;
     }
@@ -733,21 +737,112 @@
             max-height: calc(100dvh - 1.2rem);
         }
 
+        #manageQueueModal .queue-order-header {
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+
+        #manageQueueModal .queue-order-header > div {
+            min-width: 0;
+        }
+
+        #manageQueueModal .queue-order-header .modal-title {
+            font-size: 1.05rem;
+            line-height: 1.3;
+        }
+
+        #manageQueueModal .queue-order-header .queue-order-subtitle {
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+
+        #manageQueueModal .queue-order-header .btn-close {
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        #manageQueueModal .modal-body {
+            padding: 0.75rem !important;
+        }
+
+        #manageQueueModal .queue-order-note {
+            padding: 0.7rem 0.75rem;
+            margin-bottom: 0.8rem;
+            font-size: 0.78rem;
+        }
+
+        #manageQueueModal .queue-order-panel > .d-flex {
+            align-items: flex-start !important;
+        }
+
+        #manageQueueModal .queue-order-panel h6 {
+            min-width: 0;
+            overflow-wrap: anywhere;
+        }
+
+        #manageQueueModal [data-queue-order-count] {
+            flex: 0 0 auto;
+        }
+
         .queue-order-item {
-            gap: 0.55rem;
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr);
+            align-items: center;
+            column-gap: 0.65rem;
+            row-gap: 0.55rem;
             padding: 0.7rem;
         }
 
         .queue-order-position {
-            width: 34px;
-            height: 34px;
-            flex-basis: 34px;
+            width: 36px;
+            height: 36px;
+            grid-row: 1 / span 2;
+            align-self: center;
+        }
+
+        .queue-order-details {
+            grid-column: 2;
+        }
+
+        .queue-order-details .small {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            line-height: 1.25;
+            white-space: normal;
+        }
+
+        .queue-order-details .badge {
+            margin-left: 0 !important;
+        }
+
+        .queue-order-moves {
+            grid-column: 2;
+            display: grid;
+            grid-template-columns: repeat(3, 42px);
+            justify-content: end;
+            gap: 0.45rem;
+            width: 100%;
+            margin-left: 0;
         }
 
         .queue-order-drag-handle,
         .queue-order-move {
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 40px;
+        }
+
+        #manageQueueModal .modal-footer {
+            gap: 0.6rem;
+            padding: 0.75rem;
+            padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+        }
+
+        #manageQueueModal .modal-footer .btn-modern {
+            min-width: 0;
+            padding-inline: 0.65rem;
         }
     }
 </style>
@@ -758,7 +853,7 @@ foreach (($queue ?? []) as $queueOrderItem) {
     $queueGroupKey = (string) ($queueOrderItem['terminal_id'] ?? 0) . '|' . (string) ($queueOrderItem['destination'] ?? '');
     if (!isset($queueOrderGroups[$queueGroupKey])) {
         $queueOrderGroups[$queueGroupKey] = [
-            'panel_id' => 'queue-order-' . substr(sha1($queueGroupKey), 0, 10),
+            'panel_id' => 'queue-order-' . substr(hash('sha256', $queueGroupKey), 0, 10),
             'origin' => (string) ($queueOrderItem['origin'] ?? ''),
             'destination' => (string) ($queueOrderItem['destination'] ?? ''),
             'items' => [],
@@ -1031,7 +1126,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                 <?php $isOrderLocked = ($queueOrderItem['status'] ?? '') === 'boarding'; ?>
                                 <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>" draggable="false">
                                     <span class="queue-order-position">#<?= (int) $queueOrderItem['position'] ?></span>
-                                    <div class="min-w-0 flex-grow-1">
+                                    <div class="queue-order-details flex-grow-1">
                                         <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?></div>
                                         <div class="small text-muted text-truncate">
                                             <?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?>
@@ -1162,6 +1257,24 @@ $queueOrderGroups = array_values($queueOrderGroups);
         background: var(--surface, #ffffff);
         border-bottom: 1px solid var(--border, #e2e8f0) !important;
         padding: 1.25rem 1.5rem !important;
+    }
+
+    #addToQueueModal .add-queue-heading,
+    #addToQueueModal .add-queue-heading-copy {
+        min-width: 0;
+    }
+
+    #addToQueueModal .add-queue-title-row {
+        min-width: 0;
+    }
+
+    #addToQueueModal .add-queue-empty-state {
+        max-width: 520px;
+        margin: auto;
+    }
+
+    #addToQueueModal .add-queue-modal-empty .modal-body {
+        flex: 0 1 auto !important;
     }
 
     .modal-icon-badge {
@@ -1340,6 +1453,20 @@ $queueOrderGroups = array_values($queueOrderGroups);
             flex: 1 1 auto !important;
             gap: 10px !important;
         }
+        #addToQueueModal .add-queue-heading {
+            display: grid !important;
+            grid-template-columns: 36px minmax(0, 1fr);
+            align-items: start !important;
+        }
+        #addToQueueModal .add-queue-title-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 5px !important;
+        }
+        #addToQueueModal .add-queue-title-row .badge {
+            font-size: 0.62rem !important;
+            padding: 0.35rem 0.6rem !important;
+        }
         #addToQueueModal .modal-icon-badge {
             width: 36px !important;
             height: 36px !important;
@@ -1361,6 +1488,19 @@ $queueOrderGroups = array_values($queueOrderGroups);
         #addToQueueModal .modal-body {
             padding: 12px 12px !important;
             max-height: calc(94vh - 130px) !important;
+        }
+        #addToQueueModal .add-queue-modal-empty .modal-body {
+            min-height: 0 !important;
+        }
+        #addToQueueModal .add-queue-empty-state {
+            padding: 2rem 0.75rem !important;
+        }
+        #addToQueueModal .add-queue-empty-state h6 {
+            font-size: 1.05rem !important;
+            line-height: 1.35;
+        }
+        #addToQueueModal .add-queue-empty-state p {
+            line-height: 1.5;
         }
         #addToQueueModal .modal-footer {
             padding: 10px 14px !important;
@@ -1440,16 +1580,16 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
 <div class="modal fade" id="addToQueueModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-        <form action="<?= base_url('staff/queue/add') ?>" method="post" id="addToQueueForm" class="modal-content">
+        <form action="<?= base_url('staff/queue/add') ?>" method="post" id="addToQueueForm" class="modal-content <?= empty($vehicles) ? 'add-queue-modal-empty' : '' ?>">
             <?= csrf_field() ?>
             <!-- Header -->
             <div class="modal-header">
-                    <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3 add-queue-heading">
                         <div class="modal-icon-badge">
                             <i class="bi bi-truck-front-fill fs-5"></i>
                         </div>
-                        <div>
-                            <div class="d-flex align-items-center gap-2">
+                        <div class="add-queue-heading-copy">
+                            <div class="d-flex align-items-center gap-2 add-queue-title-row">
                                 <h5 class="modal-title fw-bold mb-0">Add Vehicles to Queue</h5>
                                 <span class="badge rounded-pill fw-bold" style="font-size: 0.7rem; background: #dcfce7; color: #15803d;">BATCH DISPATCH</span>
                             </div>
@@ -1461,7 +1601,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 
                 <div class="modal-body p-3 p-md-4">
                     <?php if (empty($vehicles)): ?>
-                        <div class="text-center py-5">
+                        <div class="text-center py-5 add-queue-empty-state">
                             <div class="rounded-circle bg-success bg-opacity-10 d-inline-flex p-3 mb-3 text-success">
                                 <i class="bi bi-check-circle-fill fs-1"></i>
                             </div>
@@ -1780,6 +1920,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         });
 
         modalEl.addEventListener('shown.bs.modal', function() {
+            var modalBody = modalEl.querySelector('.modal-body');
+            if (modalBody) modalBody.scrollTop = 0;
             refreshPanel(activePanel());
         });
 

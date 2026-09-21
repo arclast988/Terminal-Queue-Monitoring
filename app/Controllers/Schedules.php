@@ -197,7 +197,7 @@ class Schedules extends BaseController
         $syncTokenTime = (float) $syncToken;
 
         $useCache  = ($search === '');
-        $cacheKey  = 'rt_sched_' . substr(md5(($vehicleType ?? '') . '|' . ($destination ?? '')), 0, 16);
+        $cacheKey  = 'rt_sched_' . substr(hash('sha256', ($vehicleType ?? '') . '|' . ($destination ?? '')), 0, 16);
         $payload   = $useCache ? cache($cacheKey) : null;
 
         // Air-tight guarantee: if a queue mutation happened after this payload was cached, discard stale cache immediately

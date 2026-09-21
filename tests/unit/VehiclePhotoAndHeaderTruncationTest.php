@@ -173,7 +173,7 @@ class VehiclePhotoAndHeaderTruncationTest extends CIUnitTestCase
     public function testSchedulesCacheKeyShortenedForDirectInvalidation(): void
     {
         $schedulesContent = file_get_contents(APPPATH . 'Controllers/Schedules.php');
-        $this->assertStringContainsString('\'rt_sched_\' . substr(md5(', $schedulesContent);
+        $this->assertStringContainsString("'rt_sched_' . substr(hash('sha256',", $schedulesContent);
 
         $baseControllerContent = file_get_contents(APPPATH . 'Controllers/BaseController.php');
         $this->assertStringContainsString('$cache->deleteMatching(\'rt_sched_*\');', $baseControllerContent);
@@ -215,4 +215,3 @@ class VehiclePhotoAndHeaderTruncationTest extends CIUnitTestCase
         $this->assertStringContainsString('item.has_custom_photo ? \'custom\' : \'default\'', $queueSyncContent);
     }
 }
-

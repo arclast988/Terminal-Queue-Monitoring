@@ -76,5 +76,11 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString("window.addEventListener('blur', finishDragging);", $view);
         $this->assertStringContainsString('contain: layout paint;', $view);
         $this->assertStringContainsString("item.getAttribute('data-status') !== 'waiting'", $view);
+        $this->assertStringContainsString('grid-template-columns: 36px minmax(0, 1fr);', $view);
+        $this->assertStringContainsString('grid-template-columns: repeat(3, 42px);', $view);
+        $this->assertStringContainsString('queue-order-details flex-grow-1', $view);
+        $this->assertStringContainsString('modalBody.scrollTop = 0;', $view);
+        $this->assertStringContainsString('add-queue-modal-empty', $view);
+        $this->assertStringContainsString('add-queue-title-row', $view);
     }
 }

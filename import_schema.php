@@ -1,7 +1,7 @@
 <?php
 /**
  * Import PostgreSQL schema from SQL file using PDO.
- * Reads DATABASE_URL from environment or fallback parameters.
+ * Reads the complete database connection from DATABASE_URL.
  */
 
 $dbUrl = getenv('DATABASE_URL');
@@ -11,13 +11,31 @@ if (!$dbUrl) {
 }
 
 $parts = parse_url($dbUrl);
-$host = $parts['host'] ?? '127.0.0.1';
-$port = $parts['port'] ?? 5432;
-$user = isset($parts['user']) ? urldecode($parts['user']) : 'postgres';
-$pass = isset($parts['pass']) ? urldecode($parts['pass']) : '';
-$dbname = isset($parts['path']) ? ltrim($parts['path'], '/') : 'railway';
+if ($parts === false) {
+    echo "[IMPORT] DATABASE_URL is invalid.\n";
+    exit(1);
+}
 
-echo "[IMPORT] Connecting to database at $host:$port/$dbname as $user...\n";
+$requiredParts = ['host', 'port', 'user', 'pass', 'path'];
+foreach ($requiredParts as $requiredPart) {
+    if (!isset($parts[$requiredPart]) || $parts[$requiredPart] === '') {
+        echo "[IMPORT] DATABASE_URL is incomplete.\n";
+        exit(1);
+    }
+}
+
+$host = $parts['host'];
+$port = (int) $parts['port'];
+$user = rawurldecode($parts['user']);
+$pass = rawurldecode($parts['pass']);
+$dbname = ltrim($parts['path'], '/');
+
+if ($port < 1 || $port > 65535 || $dbname === '') {
+    echo "[IMPORT] DATABASE_URL is invalid.\n";
+    exit(1);
+}
+
+echo "[IMPORT] Connecting to configured database...\n";
 
 try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $pass, [
@@ -55,8 +73,7 @@ try {
     $tables = $pdo->query("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")->fetchAll(PDO::FETCH_COLUMN);
     echo "[IMPORT] SUCCESS! Imported " . count($tables) . " tables into public schema.\n";
 
-} catch (PDOException $e) {
-    echo "[IMPORT] Database error: " . $e->getMessage() . "\n";
+} catch (PDOException) {
+    echo "[IMPORT] Database initialization failed.\n";
     exit(1);
 }
-

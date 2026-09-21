@@ -36,4 +36,26 @@ final class SnykSecurityRemediationTest extends CIUnitTestCase
         $this->assertStringContainsString('RETURN_DOM_FRAGMENT: true', $customCode);
         $this->assertStringContainsString('replaceChildren', $customCode);
     }
+
+    public function testNonPasswordIdentifiersUseSha256(): void
+    {
+        $queueView = file_get_contents(APPPATH . 'Views/staff/queue/index.php');
+        $schedulesController = file_get_contents(APPPATH . 'Controllers/Schedules.php');
+
+        $this->assertStringContainsString("hash('sha256', \$queueGroupKey)", $queueView);
+        $this->assertStringNotContainsString('sha1(', $queueView);
+        $this->assertStringContainsString("hash('sha256', (\$vehicleType ?? '')", $schedulesController);
+        $this->assertStringNotContainsString('md5(', $schedulesController);
+    }
+
+    public function testSchemaImporterRequiresEnvironmentCredentialsAndHidesDatabaseErrors(): void
+    {
+        $importer = file_get_contents(HOMEPATH . 'import_schema.php');
+
+        $this->assertStringContainsString("\$requiredParts = ['host', 'port', 'user', 'pass', 'path'];", $importer);
+        $this->assertStringNotContainsString("'postgres'", $importer);
+        $this->assertStringNotContainsString("\$e->getMessage()", $importer);
+        $this->assertStringNotContainsString('database at $host:$port/$dbname as $user', $importer);
+        $this->assertStringContainsString('[IMPORT] Database initialization failed.', $importer);
+    }
 }
