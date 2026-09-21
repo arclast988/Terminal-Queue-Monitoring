@@ -409,7 +409,7 @@
             body.layout-lock header#site-header {
                 padding-left: 16px !important;
                 padding-right: 16px !important;
-                max-height: 88px !important;
+                max-height: 74px !important;
             }
 
             .main-content {
@@ -448,7 +448,7 @@
             body.layout-lock header#site-header {
                 padding-left: 10px !important;
                 padding-right: 10px !important;
-                max-height: 84px !important;
+                max-height: 70px !important;
             }
 
             .main-content {
@@ -532,7 +532,7 @@
                 var hdr = document.getElementById('site-header');
                 if (hdr && hdr.offsetHeight > 0) {
                     var isMobile = window.innerWidth <= 768;
-                    var maxCap = isMobile ? 96 : 84;
+                    var maxCap = isMobile ? 82 : 84;
                     var h = Math.min(Math.max(hdr.offsetHeight || 52, 48), maxCap);
                     document.documentElement.style.setProperty('--site-header-height', h + 'px');
                 }

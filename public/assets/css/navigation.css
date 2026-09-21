@@ -120,17 +120,6 @@ header#site-header {
   font-size: 12px;
 }
 
-.operations-header-timezone {
-  padding: 3px 5px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.16);
-  color: inherit;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.45px;
-  line-height: 1;
-}
-
 /* Base logo text – dynamic token-driven for all themes (admin, staff, guest) */
 #site-header .logo-text h1,
 .logo-section .logo-text h1,
@@ -1322,13 +1311,13 @@ body.staff-theme .drawer-nav-item.active i {
 @media (max-width: 768px) {
   body.admin-theme,
   body.staff-theme {
-    --site-header-height: 88px;
+    --site-header-height: 74px;
   }
 
   header#site-header {
-    height: 88px !important;
-    max-height: 88px !important;
-    padding: 6px 16px 30px !important;
+    height: 74px !important;
+    max-height: 74px !important;
+    padding: 6px 16px 20px !important;
     overflow: visible !important;
   }
 
@@ -1341,23 +1330,26 @@ body.staff-theme .drawer-nav-item.active i {
   .operations-header-time {
     position: absolute;
     top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: 24px;
-    justify-content: center;
-    gap: 5px;
-    padding: 0 12px;
+    bottom: 2px;
+    left: auto;
+    right: 14px;
+    width: auto;
+    height: 18px;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 0;
     border-left: 0;
     border-top: 0;
     border-bottom: 0;
-    border-top: 1px solid var(--nav-divider, rgba(255, 255, 255, 0.22));
-    background: rgba(0, 0, 0, 0.14);
+    background: transparent;
     box-shadow: none;
-    font-size: 11.5px;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-size: 11px;
+    font-weight: 800;
     letter-spacing: 0;
     z-index: 2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
   .operations-header-time i {
@@ -1433,7 +1425,7 @@ body.staff-theme .drawer-nav-item.active i {
 
   .profile-dropdown-card {
     position: fixed !important;
-    top: calc(var(--site-header-height, 88px) + 4px) !important;
+    top: calc(var(--site-header-height, 74px) + 4px) !important;
     right: 12px !important;
     width: min(330px, calc(100vw - 24px)) !important;
     max-width: calc(100vw - 24px) !important;
@@ -1443,7 +1435,7 @@ body.staff-theme .drawer-nav-item.active i {
 @media (max-width: 480px) {
   body.admin-theme,
   body.staff-theme {
-    --site-header-height: 84px;
+    --site-header-height: 70px;
   }
 
   .sidebar-drawer {
@@ -1507,9 +1499,9 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   header#site-header {
-    height: 84px !important;
-    max-height: 84px !important;
-    padding: 4px 10px 28px !important;
+    height: 70px !important;
+    max-height: 70px !important;
+    padding: 4px 10px 20px !important;
     gap: 8px !important;
     justify-content: space-between !important;
     width: 100% !important;
@@ -1523,7 +1515,8 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .operations-header-time {
-    height: 22px;
+    right: 10px;
+    height: 17px;
     font-size: 10.5px;
   }
 
@@ -1540,9 +1533,9 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .logo {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
     border-radius: 10px !important;
     flex-shrink: 0 !important;
   }

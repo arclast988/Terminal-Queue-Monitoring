@@ -53,13 +53,6 @@ SVG;
                 <p><?= esc(app_subtitle()) ?></p>
             </div>
         </a>
-        <?php if ($isAdmin || $role === 'staff'): ?>
-            <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
-                <i class="fas fa-clock" aria-hidden="true"></i>
-                <span class="operations-header-timezone" aria-hidden="true">PHT</span>
-                <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('h:i:s A') ?></time>
-            </div>
-        <?php endif; ?>
     </div>
 
     <nav class="nav-menu" aria-label="Primary navigation">
@@ -71,6 +64,12 @@ SVG;
             <?= view('partials/nav-guest') ?>
         <?php endif; ?>
     </nav>
+    <?php if ($isAdmin || $role === 'staff'): ?>
+        <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
+            <i class="fas fa-clock" aria-hidden="true"></i>
+            <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
+        </div>
+    <?php endif; ?>
 </header>
 
 <!-- Google Classroom-Style Left Sidebar Drawer & Overlay (Universal Desktop & Mobile) -->
@@ -259,24 +258,17 @@ SVG;
         if (!clock) return;
 
         var clockTimer = null;
-        var fullFormatter = new Intl.DateTimeFormat('en-US', {
+        var formatter = new Intl.DateTimeFormat('en-GB', {
             timeZone: 'Asia/Manila',
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit',
-            hour12: true
+            hour12: false,
+            hourCycle: 'h23'
         });
-        var compactFormatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'Asia/Manila',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-        });
-        var compactClockMedia = window.matchMedia('(max-width: 480px)');
 
         function updateClock() {
             var now = new Date();
-            clock.textContent = (compactClockMedia.matches ? compactFormatter : fullFormatter).format(now);
+            clock.textContent = formatter.format(now);
             clock.dateTime = now.toISOString();
         }
 
