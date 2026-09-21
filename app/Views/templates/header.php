@@ -413,7 +413,7 @@
             }
 
             .main-content {
-                padding-top: calc(var(--site-header-height, 60px) + 10px) !important;
+                padding-top: calc(var(--site-header-height, 60px) + 12px) !important;
                 padding-right: 14px !important;
                 padding-bottom: 24px !important;
                 padding-left: 14px !important;
@@ -452,7 +452,7 @@
             }
 
             .main-content {
-                padding-top: calc(var(--site-header-height, 56px) + 8px) !important;
+                padding-top: calc(var(--site-header-height, 56px) + 12px) !important;
                 padding-right: 10px !important;
                 padding-bottom: 20px !important;
                 padding-left: 10px !important;

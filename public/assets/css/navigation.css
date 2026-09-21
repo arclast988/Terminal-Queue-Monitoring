@@ -1317,37 +1317,48 @@ body.staff-theme .drawer-nav-item.active i {
   header#site-header {
     height: 74px !important;
     max-height: 74px !important;
-    padding: 6px 16px 20px !important;
+    padding: 6px 10px 20px !important;
+    gap: 5px !important;
     overflow: visible !important;
   }
 
   #site-header .logo {
-    width: 50px !important;
-    height: 50px !important;
-    min-width: 50px !important;
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
   }
 
   #site-header .logo-section {
-    transform: translateY(7px);
+    flex: 1 1 auto;
+    gap: 5px;
+    transform: translateY(5px);
   }
 
   #site-header .nav-hamburger-btn {
-    width: 42px !important;
-    height: 42px !important;
-    font-size: 19px !important;
-    transform: translateY(7px);
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 17px !important;
+    transform: translateY(5px);
   }
 
   #site-header .nav-hamburger-btn:active {
-    transform: translateY(7px) scale(0.95);
+    transform: translateY(5px) scale(0.95);
+  }
+
+  #site-header .logo-text {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   #site-header .logo-text h1 {
-    font-size: 17px !important;
+    max-width: 100% !important;
+    font-size: clamp(12.5px, 3.5vw, 15px) !important;
+    letter-spacing: -0.35px !important;
   }
 
   #site-header .logo-text p {
-    font-size: 10.5px !important;
+    max-width: 100% !important;
+    font-size: 9.5px !important;
   }
 
   .operations-header-time {
@@ -1524,15 +1535,15 @@ body.staff-theme .drawer-nav-item.active i {
   header#site-header {
     height: 70px !important;
     max-height: 70px !important;
-    padding: 4px 10px 20px !important;
-    gap: 8px !important;
+    padding: 4px 6px 20px !important;
+    gap: 5px !important;
     justify-content: space-between !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
 
   .header-left-cluster {
-    gap: 8px !important;
+    gap: 5px !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
   }
@@ -1545,17 +1556,17 @@ body.staff-theme .drawer-nav-item.active i {
 
   .nav-hamburger-btn {
     flex-shrink: 0 !important;
-    transform: translateY(7px);
+    transform: translateY(5px);
   }
 
   .logo-section {
-    gap: 8px !important;
+    gap: 5px !important;
     min-width: 0 !important;
-    transform: translateY(7px);
+    transform: translateY(5px);
   }
 
   .nav-hamburger-btn:active {
-    transform: translateY(7px) scale(0.95);
+    transform: translateY(5px) scale(0.95);
   }
 
   .logo {

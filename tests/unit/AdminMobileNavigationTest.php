@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_8', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_9', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -67,14 +67,15 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('--site-header-height: 70px;', $css);
         $this->assertStringContainsString('height: 74px !important;', $css);
         $this->assertStringContainsString('height: 70px !important;', $css);
-        $this->assertStringContainsString('padding: 6px 16px 20px !important;', $css);
-        $this->assertStringContainsString('padding: 4px 10px 20px !important;', $css);
-        $this->assertStringContainsString('transform: translateY(7px);', $css);
-        $this->assertStringContainsString('width: 42px !important;', $css);
-        $this->assertStringContainsString('font-size: 19px !important;', $css);
-        $this->assertStringContainsString('width: 50px !important;', $css);
+        $this->assertStringContainsString('padding: 6px 10px 20px !important;', $css);
+        $this->assertStringContainsString('padding: 4px 6px 20px !important;', $css);
+        $this->assertStringContainsString('transform: translateY(5px);', $css);
+        $this->assertStringContainsString('width: 38px !important;', $css);
         $this->assertStringContainsString('font-size: 17px !important;', $css);
-        $this->assertStringContainsString('font-size: 10.5px !important;', $css);
+        $this->assertStringContainsString('width: 46px !important;', $css);
+        $this->assertStringContainsString('font-size: clamp(12.5px, 3.5vw, 15px) !important;', $css);
+        $this->assertStringContainsString('font-size: 9.5px !important;', $css);
+        $this->assertStringContainsString('max-width: 100% !important;', $css);
         $this->assertStringContainsString('bottom: 2px;', $css);
         $this->assertStringContainsString('justify-content: flex-end;', $css);
         $this->assertStringContainsString('width: auto;', $css);
@@ -83,6 +84,8 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('max-height: 74px !important;', $template);
         $this->assertStringContainsString('max-height: 70px !important;', $template);
         $this->assertStringContainsString('var maxCap = isMobile ? 82 : 84;', $template);
+        $this->assertStringContainsString('calc(var(--site-header-height, 60px) + 12px)', $template);
+        $this->assertStringContainsString('calc(var(--site-header-height, 56px) + 12px)', $template);
         $this->assertStringNotContainsString('max-height: 60px !important;', $template);
     }
 
