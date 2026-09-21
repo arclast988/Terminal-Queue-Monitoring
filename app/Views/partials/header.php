@@ -56,6 +56,7 @@ SVG;
         <?php if ($isAdmin || $role === 'staff'): ?>
             <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
                 <i class="fas fa-clock" aria-hidden="true"></i>
+                <span class="operations-header-timezone" aria-hidden="true">PHT</span>
                 <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('h:i:s A') ?></time>
             </div>
         <?php endif; ?>

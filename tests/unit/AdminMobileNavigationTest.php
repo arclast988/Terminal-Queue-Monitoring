@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_1', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_2', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -54,23 +54,24 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertNotFalse($css);
         $this->assertStringContainsString("\$isAdmin || \$role === 'staff'", $header);
         $this->assertStringContainsString('id="operationsHeaderClock"', $header);
+        $this->assertStringContainsString('operations-header-timezone', $header);
         $this->assertStringContainsString("timeZone: 'Asia/Manila'", $header);
         $this->assertStringContainsString("window.matchMedia('(max-width: 480px)')", $header);
         $this->assertStringContainsString('document.hidden', $header);
         $this->assertStringContainsString('.operations-header-time {', $css);
         $this->assertStringContainsString('font-variant-numeric: tabular-nums;', $css);
-        $this->assertStringContainsString('--site-header-height: 92px;', $css);
         $this->assertStringContainsString('--site-header-height: 88px;', $css);
-        $this->assertStringContainsString('height: 92px !important;', $css);
+        $this->assertStringContainsString('--site-header-height: 84px;', $css);
         $this->assertStringContainsString('height: 88px !important;', $css);
-        $this->assertStringContainsString('padding-top: 36px !important;', $css);
-        $this->assertStringContainsString('padding: 34px 12px 6px !important;', $css);
-        $this->assertStringContainsString('top: 0;', $css);
+        $this->assertStringContainsString('height: 84px !important;', $css);
+        $this->assertStringContainsString('padding: 6px 16px 30px !important;', $css);
+        $this->assertStringContainsString('padding: 4px 10px 28px !important;', $css);
+        $this->assertStringContainsString('bottom: 0;', $css);
         $this->assertStringContainsString('justify-content: center;', $css);
-        $this->assertStringContainsString('top: calc(var(--site-header-height, 92px) + 4px) !important;', $css);
-        $this->assertStringContainsString('max-height: 92px !important;', $template);
+        $this->assertStringContainsString('top: calc(var(--site-header-height, 88px) + 4px) !important;', $css);
         $this->assertStringContainsString('max-height: 88px !important;', $template);
-        $this->assertStringContainsString('var maxCap = isMobile ? 104 : 84;', $template);
+        $this->assertStringContainsString('max-height: 84px !important;', $template);
+        $this->assertStringContainsString('var maxCap = isMobile ? 96 : 84;', $template);
         $this->assertStringNotContainsString('max-height: 60px !important;', $template);
     }
 
