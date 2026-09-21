@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_13', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_14', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -83,7 +83,8 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString("#site-header .header-left-cluster {\n    overflow: visible !important;", str_replace("\r\n", "\n", $css));
         $this->assertStringContainsString('top: 0;', $css);
         $this->assertStringContainsString('bottom: auto;', $css);
-        $this->assertStringContainsString('right: 10px;', $css);
+        $this->assertStringContainsString('right: 16px;', $css);
+        $this->assertStringContainsString('right: 12px;', $css);
         $this->assertStringContainsString('width: 42px;', $css);
         $this->assertStringContainsString('justify-content: center;', $css);
         $this->assertStringContainsString('#site-header .profile-trigger-btn {', $css);
