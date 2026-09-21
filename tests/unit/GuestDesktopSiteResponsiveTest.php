@@ -7,27 +7,28 @@ use CodeIgniter\Test\CIUnitTestCase;
  */
 final class GuestDesktopSiteResponsiveTest extends CIUnitTestCase
 {
-    public function testGuestDrawerReusesHeaderToggleAsItsOnlyCloseControl(): void
+    public function testGuestDrawerUsesItsOwnResponsiveCloseControl(): void
     {
         $header = file_get_contents(APPPATH . 'Views/templates/guest_header.php');
         $css = file_get_contents(FCPATH . 'assets/css/guest-shell.css');
 
-        $this->assertStringNotContainsString('class="mobile-nav-close"', $header);
+        $this->assertStringContainsString('class="guest-nav-close-btn"', $header);
         $this->assertStringContainsString('function setMenuOpen(shouldOpen)', $header);
         $this->assertStringContainsString('aria-expanded="false"', $header);
-        $this->assertStringContainsString("if (icon) icon.className = 'fas fa-times';", $header);
         $this->assertStringContainsString("if (icon) icon.className = 'fas fa-bars';", $header);
         $this->assertStringContainsString("m.addEventListener('transitionend', finishClose, { once: true })", $header);
         $this->assertStringContainsString('width: min(340px, 86vw);', $css);
-        $this->assertStringContainsString('height: 100dvh;', $css);
+        $this->assertStringContainsString('width: min(300px, 82vw);', $css);
+        $this->assertStringContainsString('height: calc(100dvh - 42px);', $css);
         $this->assertStringContainsString('transform: translate3d(100%, 0, 0);', $css);
         $this->assertStringContainsString('transform: translate3d(0, 0, 0);', $css);
         $this->assertStringContainsString('.guest-header .nav-menu > a', $css);
         $this->assertStringContainsString('display: flex !important;', $css);
-        $this->assertStringNotContainsString('.guest-header .mobile-nav-close', $css);
+        $this->assertStringContainsString('.guest-header .guest-nav-close-btn', $css);
         $this->assertStringContainsString('.guest-header .mobile-toggle[aria-expanded="true"]', $css);
-        $this->assertStringContainsString('z-index: 1004;', $css);
-        $this->assertStringContainsString('padding: max(92px, calc(env(safe-area-inset-top) + 78px))', $css);
+        $this->assertStringContainsString('top: 42px;', $css);
+        $this->assertStringContainsString('top: 38px;', $css);
+        $this->assertStringContainsString('top: 36px;', $css);
     }
 
     public function testGuestFooterAdaptsToDesktopSitePhoneWidths(): void

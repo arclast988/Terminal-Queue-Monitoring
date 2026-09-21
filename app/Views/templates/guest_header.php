@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260920d">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260921e">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -179,6 +179,9 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     </div>
 
     <div class="nav-menu" id="navMenu">
+        <button type="button" class="guest-nav-close-btn" onclick="closeMenu()" aria-label="Close navigation menu">
+            <i class="fas fa-times" aria-hidden="true"></i>
+        </button>
         <a href="<?= base_url('guest') ?>" class="<?= current_url() == base_url('guest') ? 'active' : '' ?>"><i
                 class="fas fa-home"></i> Home</a>
         <a href="<?= base_url('schedules') ?>"
@@ -373,13 +376,12 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         }
         if (toggle) {
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+            toggle.setAttribute('aria-label', 'Open navigation menu');
         }
 
+        if (icon) icon.className = 'fas fa-bars';
+
         if (isOpen) {
-            // The header button is the drawer's only close control. Keep it in
-            // the burger's exact position and avoid Android's sticky tap color.
-            if (icon) icon.className = 'fas fa-times';
             if (toggle) toggle.classList.remove('is-closing');
             document.body.style.overflow = 'hidden';
             return;
@@ -393,7 +395,6 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
             if (event && event.target !== m) return;
             if (event && event.propertyName !== 'transform') return;
             if (closeSequence !== guestMenuCloseSequence || m.classList.contains('open')) return;
-            if (icon) icon.className = 'fas fa-bars';
             if (toggle) {
                 toggle.classList.remove('is-closing');
                 toggle.blur();

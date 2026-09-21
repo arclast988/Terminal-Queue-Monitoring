@@ -589,6 +589,10 @@
         outline: 2px solid var(--primary, #D62828);
         outline-offset: 2px;
     }
+
+    .guest-nav-close-btn {
+        display: none;
+    }
     /* --- Breadcrumb --- */
     .breadcrumb-section {
         background: white;
@@ -731,16 +735,16 @@
     @media (max-width: 1200px) {
         .guest-header .nav-menu {
             position: fixed;
-            top: 0;
+            top: 42px;
             right: 0;
             width: min(340px, 86vw);
             max-width: 100%;
-            height: 100vh;
-            height: 100dvh;
+            height: calc(100vh - 42px);
+            height: calc(100dvh - 42px);
             background: var(--nav-bg, white);
             flex-direction: column;
             justify-content: flex-start;
-            padding: max(92px, calc(env(safe-area-inset-top) + 78px)) 22px max(30px, env(safe-area-inset-bottom));
+            padding: 10px 22px max(30px, env(safe-area-inset-bottom));
             box-shadow: -5px 0 25px rgba(0, 0, 0, 0.08);
             transform: translate3d(100%, 0, 0);
             visibility: hidden;
@@ -767,6 +771,39 @@
            during the short slide-out so the drawer closes as one complete panel. */
         .guest-header .nav-menu > a {
             display: flex !important;
+        }
+        .guest-header .guest-nav-close-btn {
+            display: inline-flex;
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+            align-self: flex-end;
+            flex: 0 0 44px;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--nav-text, #1e293b);
+            font-size: 22px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .guest-header .guest-nav-close-btn:hover,
+        .guest-header .guest-nav-close-btn:focus-visible {
+            background: var(--nav-chip-bg, #f1f5f9);
+        }
+        .guest-header .guest-nav-close-btn:focus-visible {
+            outline: 2px solid var(--primary, #D62828);
+            outline-offset: 2px;
+        }
+        .guest-header .guest-nav-close-btn i {
+            color: inherit !important;
+            -webkit-text-fill-color: currentColor !important;
         }
         .guest-header .nav-menu a {
             width: 100%;
@@ -795,7 +832,32 @@
             z-index: 1004;
         }
         .guest-header .mobile-toggle[aria-expanded="true"] {
-            color: var(--nav-text, #1e293b);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .guest-header .mobile-toggle.is-closing {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .guest-header .nav-menu {
+            top: 38px;
+            height: calc(100vh - 38px);
+            height: calc(100dvh - 38px);
+            padding-right: 18px;
+            padding-left: 18px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .guest-header .nav-menu {
+            width: min(300px, 82vw);
+            padding-right: 16px;
+            padding-left: 16px;
         }
     }
 
@@ -875,6 +937,11 @@
         .breadcrumb-section {
             padding: 8px 3% !important;
             font-size: 11px !important;
+        }
+        .guest-header .nav-menu {
+            top: 36px;
+            height: calc(100vh - 36px);
+            height: calc(100dvh - 36px);
         }
     }
 
