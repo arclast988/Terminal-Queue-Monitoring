@@ -59,7 +59,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString("date('H:i')", $header);
         $this->assertStringNotContainsString('operations-header-timezone', $header);
         $this->assertStringNotContainsString('compactClockMedia', $header);
-        $this->assertLessThan(strpos($header, '</nav>'), strpos($header, 'class="operations-header-time"'));
+        $this->assertGreaterThan(strpos($header, '</nav>'), strpos($header, 'class="operations-header-time"'));
         $this->assertStringContainsString('document.hidden', $header);
         $this->assertStringContainsString('.operations-header-time {', $css);
         $this->assertStringContainsString('font-variant-numeric: tabular-nums;', $css);
