@@ -1321,7 +1321,7 @@ body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn i {
     color: {$gp['hex']} !important;
     background: {$gp['soft']} !important;
 }
-@media (max-width: 1200px) {
+@media (max-width: 900px) {
     .guest-header .nav-menu {
         background: {$gn['hex']} !important;
         border-left: 1px solid {$gn['divider']} !important;

@@ -6,6 +6,17 @@ use CodeIgniter\Test\CIUnitTestCase;
 
 class ThemeConsistencyAndClearButtonTest extends CIUnitTestCase
 {
+    public function testGuestDrawerThemeStartsAtTheActualDrawerBreakpoint(): void
+    {
+        $css = app_theme_css();
+
+        $this->assertStringContainsString('@media (max-width: 900px)', $css);
+        $this->assertStringNotContainsString(
+            "@media (max-width: 1200px) {\n    .guest-header .nav-menu",
+            $css
+        );
+    }
+
     /**
      * Test that app_theme_css outputs clear search button protection rules
      * ensuring it remains a small circular icon and never takes on primary button padding.
@@ -233,5 +244,4 @@ class ThemeConsistencyAndClearButtonTest extends CIUnitTestCase
         $this->assertStringContainsString('background-image:', $themeCss);
     }
 }
-
 
