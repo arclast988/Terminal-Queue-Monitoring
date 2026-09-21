@@ -1686,6 +1686,7 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .nav-menu {
+    top: calc(50% - 3px);
     width: auto !important;
     max-width: none !important;
     margin-left: auto !important;
