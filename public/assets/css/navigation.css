@@ -1335,7 +1335,7 @@ body.staff-theme .drawer-nav-item.active i {
   #site-header .logo-section {
     flex: 1 1 auto;
     gap: 5px;
-    transform: translateY(5px);
+    transform: translateY(7px);
   }
 
   #site-header .nav-hamburger-btn {
@@ -1566,7 +1566,7 @@ body.staff-theme .drawer-nav-item.active i {
   .logo-section {
     gap: 5px !important;
     min-width: 0 !important;
-    transform: translateY(5px);
+    transform: translateY(7px);
   }
 
   .nav-hamburger-btn:active {
