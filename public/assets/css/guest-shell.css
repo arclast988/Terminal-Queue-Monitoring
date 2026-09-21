@@ -645,12 +645,17 @@
     }
 
     /* --- Responsive --- */
-    @media (max-width: 1200px) and (min-width: 769px) {
+    /* Wide tablets have enough room for the desktop navigation. Keep the
+       clock beside the branding and compact only the horizontal spacing. */
+    @media (min-width: 901px) and (max-width: 1200px) {
+        .guest-header {
+            padding-right: 3%;
+            padding-left: 3%;
+        }
         .guest-header .logo-container {
             gap: 16px;
         }
         .guest-header .header-info {
-            margin-left: auto;
             padding-left: 14px;
             display: flex !important;
             height: 24px;
@@ -662,8 +667,51 @@
         .header-clock-pill i {
             font-size: 15px;
         }
+        .guest-header .nav-menu {
+            position: static;
+            width: auto;
+            height: auto;
+            padding: 0;
+            background: transparent;
+            box-shadow: none;
+            transform: none;
+            visibility: visible;
+            pointer-events: auto;
+            flex-direction: row;
+            gap: 6px;
+            overflow: visible;
+        }
+        .guest-header .nav-menu > a {
+            display: flex !important;
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+        .guest-header .nav-menu a.login-btn {
+            margin-left: 0 !important;
+            padding-right: 16px;
+            padding-left: 16px;
+        }
+        .guest-header .guest-nav-close-btn,
         .guest-header .mobile-toggle {
-            margin-left: 8px;
+            display: none !important;
+        }
+    }
+
+    @media (min-width: 769px) and (max-width: 900px) {
+        .guest-header .logo-container {
+            gap: 16px;
+        }
+        .guest-header .header-info {
+            padding-left: 14px;
+            display: flex !important;
+            height: 24px;
+        }
+        .header-clock-pill {
+            font-size: 14.5px;
+            gap: 6px;
+        }
+        .header-clock-pill i {
+            font-size: 15px;
         }
     }
 
@@ -748,7 +796,7 @@
         }
     }
 
-    @media (max-width: 1200px) {
+    @media (max-width: 900px) {
         .guest-header .nav-menu {
             position: fixed;
             top: 42px;

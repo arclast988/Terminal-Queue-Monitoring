@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260921g">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260921h">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -419,7 +419,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     });
 
     window.addEventListener('resize', function () {
-        if (window.innerWidth > 1200) closeMenu();
+        if (window.innerWidth > 900) closeMenu();
     });
 
     // Keep body padding-top in sync with the fixed header height so content
