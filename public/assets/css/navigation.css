@@ -1478,6 +1478,118 @@ body.staff-theme .drawer-nav-item.active i {
   .mobile-nav-overlay.active { display: block; }
 }
 
+/* Logged-in tablet headers keep the original desktop-style composition.
+   Only the header height grows so the 68px seal stays fully contained. */
+@media (min-width: 769px) and (max-width: 1280px) {
+  body.admin-theme,
+  body.staff-theme {
+    --site-header-height: 84px;
+  }
+
+  body.admin-theme.layout-lock header#site-header,
+  body.staff-theme.layout-lock header#site-header {
+    height: 84px !important;
+    max-height: 84px !important;
+    padding: 8px 24px !important;
+    gap: clamp(8px, 1vw, 16px) !important;
+  }
+
+  body.admin-theme #site-header .header-left-cluster,
+  body.staff-theme #site-header .header-left-cluster {
+    flex: 0 1 auto;
+    max-width: none;
+    overflow: hidden !important;
+  }
+
+  body.admin-theme #site-header .nav-hamburger-btn,
+  body.staff-theme #site-header .nav-hamburger-btn {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 18px !important;
+    transform: none;
+  }
+
+  body.admin-theme #site-header .nav-hamburger-btn:active,
+  body.staff-theme #site-header .nav-hamburger-btn:active {
+    transform: scale(0.95);
+  }
+
+  body.admin-theme #site-header .logo,
+  body.staff-theme #site-header .logo {
+    width: 68px !important;
+    height: 68px !important;
+    min-width: 68px !important;
+  }
+
+  body.admin-theme #site-header .logo-section,
+  body.staff-theme #site-header .logo-section {
+    flex: 0 1 auto;
+    gap: 12px;
+    transform: none;
+  }
+
+  body.admin-theme #site-header .logo-text h1,
+  body.staff-theme #site-header .logo-text h1 {
+    max-width: clamp(180px, 22vw, 380px) !important;
+    font-size: 16.5px !important;
+    letter-spacing: normal !important;
+  }
+
+  body.admin-theme #site-header .logo-text p,
+  body.staff-theme #site-header .logo-text p {
+    max-width: clamp(180px, 22vw, 380px) !important;
+    font-size: 10.5px !important;
+  }
+
+  body.admin-theme #site-header .header-left-cluster > .operations-header-time,
+  body.staff-theme #site-header .header-left-cluster > .operations-header-time {
+    display: inline-flex;
+  }
+
+  body.admin-theme #site-header .nav-menu,
+  body.staff-theme #site-header .nav-menu {
+    position: static;
+    top: auto;
+    right: auto;
+    transform: none;
+  }
+
+  body.admin-theme #site-header .nav-menu .user-profile-dropdown,
+  body.staff-theme #site-header .nav-menu .user-profile-dropdown {
+    display: flex !important;
+    align-items: center;
+  }
+
+  body.admin-theme #site-header .profile-operations-time,
+  body.staff-theme #site-header .profile-operations-time {
+    display: none;
+  }
+
+  body.admin-theme #site-header .profile-trigger-info,
+  body.staff-theme #site-header .profile-trigger-info {
+    display: flex !important;
+  }
+
+  body.admin-theme #site-header .profile-trigger-btn,
+  body.staff-theme #site-header .profile-trigger-btn {
+    width: auto !important;
+    height: auto !important;
+    min-width: 0 !important;
+    padding: 4px 12px 4px 5px !important;
+    border-radius: 24px !important;
+    display: inline-flex !important;
+    gap: 9px !important;
+    box-shadow: none !important;
+  }
+
+  body.admin-theme #site-header .profile-trigger-btn .profile-avatar-circle,
+  body.staff-theme #site-header .profile-trigger-btn .profile-avatar-circle {
+    width: 36px !important;
+    height: 36px !important;
+    border-width: 2px !important;
+  }
+}
+
 @media (max-width: 768px) {
   body.layout-lock header#site-header,
   header#site-header {

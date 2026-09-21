@@ -29,6 +29,11 @@ final class GuestDesktopSiteResponsiveTest extends CIUnitTestCase
         $this->assertStringContainsString('top: 42px;', $css);
         $this->assertStringContainsString('top: 38px;', $css);
         $this->assertStringContainsString('top: 36px;', $css);
+        $this->assertStringContainsString('font-variant-numeric: tabular-nums;', $css);
+        $this->assertStringContainsString('flex: 0 0 16px;', $css);
+        $this->assertStringContainsString('font-size: 14.5px;', $css);
+        $this->assertStringContainsString('margin-left: auto;', $css);
+        $this->assertStringContainsString('margin-left: 8px;', $css);
     }
 
     public function testGuestFooterAdaptsToDesktopSitePhoneWidths(): void

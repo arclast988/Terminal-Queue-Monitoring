@@ -621,7 +621,7 @@
         flex-shrink: 0 !important;
     }
     .header-clock-pill {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 7px;
         font-weight: 700;
@@ -629,25 +629,41 @@
         font-size: 15px;
         letter-spacing: 0.5px;
         line-height: 1;
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
     }
     .header-clock-pill i {
         color: var(--primary, #D62828);
         font-size: 15px;
+        line-height: 1;
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 16px;
     }
 
     /* --- Responsive --- */
     @media (max-width: 1200px) and (min-width: 769px) {
+        .guest-header .logo-container {
+            gap: 16px;
+        }
         .guest-header .header-info {
+            margin-left: auto;
             padding-left: 14px;
             display: flex !important;
             height: 24px;
         }
         .header-clock-pill {
-            font-size: 13.5px;
-            gap: 5px;
+            font-size: 14.5px;
+            gap: 6px;
         }
         .header-clock-pill i {
-            font-size: 13px;
+            font-size: 15px;
+        }
+        .guest-header .mobile-toggle {
+            margin-left: 8px;
         }
     }
 

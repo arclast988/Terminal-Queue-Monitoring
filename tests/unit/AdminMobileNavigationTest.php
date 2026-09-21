@@ -44,7 +44,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_16', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_17', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -104,6 +104,13 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('body.guest-theme.layout-lock header#site-header', $css);
         $this->assertStringContainsString('@media (max-width: 360px)', $css);
         $this->assertStringContainsString('--site-header-height: 60px;', $css);
+        $this->assertStringContainsString('@media (min-width: 769px) and (max-width: 1280px)', $css);
+        $this->assertStringContainsString('--site-header-height: 84px;', $css);
+        $this->assertStringContainsString('height: 84px !important;', $css);
+        $this->assertStringContainsString('body.admin-theme #site-header .header-left-cluster > .operations-header-time', $css);
+        $this->assertStringContainsString('body.staff-theme #site-header .header-left-cluster > .operations-header-time', $css);
+        $this->assertStringContainsString('body.admin-theme #site-header .profile-trigger-info', $css);
+        $this->assertStringContainsString('body.staff-theme #site-header .profile-trigger-info', $css);
         $this->assertStringContainsString('max-height: 74px !important;', $template);
         $this->assertStringContainsString('max-height: 70px !important;', $template);
         $this->assertStringContainsString('var maxCap = isMobile ? 82 : 84;', $template);
