@@ -53,6 +53,12 @@ SVG;
                 <p><?= esc(app_subtitle()) ?></p>
             </div>
         </a>
+        <?php if ($isAdmin || $role === 'staff'): ?>
+            <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
+                <i class="fas fa-clock" aria-hidden="true"></i>
+                <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
+            </div>
+        <?php endif; ?>
     </div>
 
     <nav class="nav-menu" aria-label="Primary navigation">
@@ -64,12 +70,6 @@ SVG;
             <?= view('partials/nav-guest') ?>
         <?php endif; ?>
     </nav>
-    <?php if ($isAdmin || $role === 'staff'): ?>
-        <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
-            <i class="fas fa-clock" aria-hidden="true"></i>
-            <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
-        </div>
-    <?php endif; ?>
 </header>
 
 <!-- Google Classroom-Style Left Sidebar Drawer & Overlay (Universal Desktop & Mobile) -->
