@@ -33,6 +33,9 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('transform: translate3d(0, 0, 0);', $css);
         $this->assertStringContainsString('touch-action: pan-y;', $css);
         $this->assertStringContainsString('width: min(288px, 86vw);', $css);
+        $this->assertStringContainsString('@media (min-width: 1281px)', $css);
+        $this->assertStringContainsString('min-height: 70px;', $css);
+        $this->assertStringContainsString('min-height: 66px;', $css);
     }
 
     public function testUpdatedMobileStylesAreCacheBusted(): void
@@ -41,12 +44,13 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_14', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_15', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
     {
         $header = file_get_contents(APPPATH . 'Views/partials/header.php');
+        $profile = file_get_contents(APPPATH . 'Views/partials/nav-profile.php');
         $template = file_get_contents(APPPATH . 'Views/templates/header.php');
         $css = file_get_contents(FCPATH . 'assets/css/navigation.css');
 
@@ -54,6 +58,8 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertNotFalse($css);
         $this->assertStringContainsString("\$isAdmin || \$role === 'staff'", $header);
         $this->assertStringContainsString('id="operationsHeaderClock"', $header);
+        $this->assertStringContainsString('id="profileOperationsHeaderClock"', $profile);
+        $this->assertStringContainsString("document.querySelectorAll('.operations-header-clock')", $header);
         $this->assertStringContainsString("timeZone: 'Asia/Manila'", $header);
         $this->assertStringContainsString("hourCycle: 'h23'", $header);
         $this->assertStringContainsString("date('H:i')", $header);
@@ -80,16 +86,23 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString(".drawer-brand-title {\n    font-size: 14px;", str_replace("\r\n", "\n", $css));
         $this->assertStringContainsString(".drawer-brand-subtitle {\n    font-size: 9.5px;", str_replace("\r\n", "\n", $css));
         $this->assertStringContainsString('max-width: 100% !important;', $css);
-        $this->assertStringContainsString("#site-header .header-left-cluster {\n    overflow: visible !important;", str_replace("\r\n", "\n", $css));
-        $this->assertStringContainsString('top: 0;', $css);
-        $this->assertStringContainsString('bottom: auto;', $css);
-        $this->assertStringContainsString('right: 16px;', $css);
-        $this->assertStringContainsString('right: 12px;', $css);
+        $this->assertStringContainsString("#site-header .header-left-cluster {\n    flex: 1 1 auto;", str_replace("\r\n", "\n", $css));
+        $this->assertStringContainsString('.header-left-cluster > .operations-header-time {', $css);
+        $this->assertStringContainsString('grid-template-rows: 13px auto;', $css);
+        $this->assertStringContainsString('justify-items: start;', $css);
+        $this->assertStringContainsString('.profile-operations-time {', $css);
+        $this->assertStringContainsString('margin-left: 0;', $css);
+        $this->assertStringContainsString('@media (max-width: 1280px)', $css);
+        $this->assertStringContainsString('padding: 6px 16px 20px !important;', $css);
+        $this->assertStringContainsString('position: absolute;', $css);
+        $this->assertStringContainsString('transform: translateY(-50%);', $css);
         $this->assertStringContainsString('width: 42px;', $css);
         $this->assertStringContainsString('justify-content: center;', $css);
-        $this->assertStringContainsString('#site-header .profile-trigger-btn {', $css);
         $this->assertStringContainsString('background: transparent;', $css);
         $this->assertStringContainsString('top: calc(var(--site-header-height, 74px) + 4px) !important;', $css);
+        $this->assertStringContainsString('body.guest-theme.layout-lock header#site-header', $css);
+        $this->assertStringContainsString('@media (max-width: 360px)', $css);
+        $this->assertStringContainsString('--site-header-height: 60px;', $css);
         $this->assertStringContainsString('max-height: 74px !important;', $template);
         $this->assertStringContainsString('max-height: 70px !important;', $template);
         $this->assertStringContainsString('var maxCap = isMobile ? 82 : 84;', $template);

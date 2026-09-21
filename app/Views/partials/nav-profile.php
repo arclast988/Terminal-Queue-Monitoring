@@ -39,6 +39,11 @@ $identiconSvg = <<<SVG
 SVG;
 ?>
 <div class="user-profile-dropdown" id="userProfileDropdown">
+    <div class="operations-header-time profile-operations-time" title="Current Philippine time" aria-label="Current Philippine time">
+        <i class="fas fa-clock" aria-hidden="true"></i>
+        <time id="profileOperationsHeaderClock" class="operations-header-clock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
+    </div>
+
     <!-- Navbar Profile Trigger Button: Icon on top, name directly below -->
     <button class="profile-trigger-btn" id="userProfileBtn" type="button" aria-expanded="false" aria-haspopup="true" title="<?= esc($fullName) ?> (<?= esc($roleLabel) ?>)">
         <div class="profile-avatar-circle" id="navProfileTriggerAvatar">

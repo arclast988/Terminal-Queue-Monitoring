@@ -56,7 +56,7 @@ SVG;
         <?php if ($isAdmin || $role === 'staff'): ?>
             <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
                 <i class="fas fa-clock" aria-hidden="true"></i>
-                <time id="operationsHeaderClock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
+                <time id="operationsHeaderClock" class="operations-header-clock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
             </div>
         <?php endif; ?>
     </div>
@@ -254,8 +254,8 @@ SVG;
 
 <script>
     (function initOperationsHeaderClock() {
-        var clock = document.getElementById('operationsHeaderClock');
-        if (!clock) return;
+        var clocks = document.querySelectorAll('.operations-header-clock');
+        if (!clocks.length) return;
 
         var clockTimer = null;
         var formatter = new Intl.DateTimeFormat('en-GB', {
@@ -268,8 +268,10 @@ SVG;
 
         function updateClock() {
             var now = new Date();
-            clock.textContent = formatter.format(now);
-            clock.dateTime = now.toISOString();
+            clocks.forEach(function (clock) {
+                clock.textContent = formatter.format(now);
+                clock.dateTime = now.toISOString();
+            });
         }
 
         function startClock() {
