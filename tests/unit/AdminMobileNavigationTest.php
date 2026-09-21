@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_11', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_12', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -73,13 +73,15 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('transform: translateY(5px);', $css);
         $this->assertStringContainsString('width: 38px !important;', $css);
         $this->assertStringContainsString('font-size: 17px !important;', $css);
-        $this->assertStringContainsString('width: 46px !important;', $css);
-        $this->assertStringContainsString('font-size: clamp(12.5px, 3.5vw, 15px) !important;', $css);
-        $this->assertStringContainsString('font-size: 9.5px !important;', $css);
+        $this->assertStringContainsString('width: 48px !important;', $css);
+        $this->assertStringContainsString('font-size: clamp(13px, 3.6vw, 15.5px) !important;', $css);
+        $this->assertStringContainsString('font-size: 10px !important;', $css);
         $this->assertStringContainsString('max-width: 100% !important;', $css);
         $this->assertStringContainsString("#site-header .header-left-cluster {\n    overflow: visible !important;", str_replace("\r\n", "\n", $css));
-        $this->assertStringContainsString('bottom: 2px;', $css);
+        $this->assertStringContainsString('top: 0;', $css);
+        $this->assertStringContainsString('bottom: auto;', $css);
         $this->assertStringContainsString('justify-content: flex-end;', $css);
+        $this->assertStringContainsString('#site-header .profile-trigger-btn {', $css);
         $this->assertStringContainsString('width: auto;', $css);
         $this->assertStringContainsString('background: transparent;', $css);
         $this->assertStringContainsString('top: calc(var(--site-header-height, 74px) + 4px) !important;', $css);

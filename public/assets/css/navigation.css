@@ -1327,9 +1327,9 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   #site-header .logo {
-    width: 46px !important;
-    height: 46px !important;
-    min-width: 46px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
   }
 
   #site-header .logo-section {
@@ -1356,23 +1356,23 @@ body.staff-theme .drawer-nav-item.active i {
 
   #site-header .logo-text h1 {
     max-width: 100% !important;
-    font-size: clamp(12.5px, 3.5vw, 15px) !important;
+    font-size: clamp(13px, 3.6vw, 15.5px) !important;
     letter-spacing: -0.35px !important;
   }
 
   #site-header .logo-text p {
     max-width: 100% !important;
-    font-size: 9.5px !important;
+    font-size: 10px !important;
   }
 
   .operations-header-time {
     position: absolute;
-    top: auto;
-    bottom: 2px;
+    top: 0;
+    bottom: auto;
     left: auto;
     right: 14px;
     width: auto;
-    height: 18px;
+    height: 13px;
     justify-content: flex-end;
     gap: 4px;
     padding: 0;
@@ -1383,7 +1383,7 @@ body.staff-theme .drawer-nav-item.active i {
     box-shadow: none;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
-    font-size: 11px;
+    font-size: 9.5px;
     font-weight: 800;
     letter-spacing: 0;
     z-index: 2;
@@ -1391,7 +1391,11 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .operations-header-time i {
-    font-size: 11px;
+    font-size: 9px;
+  }
+
+  #site-header .profile-trigger-btn {
+    transform: translateY(7px);
   }
 
   /* On mobile screens, hide the user text info and show a sleek circular avatar button */
@@ -1553,9 +1557,9 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .operations-header-time {
-    right: 10px;
-    height: 17px;
-    font-size: 10.5px;
+    right: 8px;
+    height: 13px;
+    font-size: 9.5px;
   }
 
   .nav-hamburger-btn {
