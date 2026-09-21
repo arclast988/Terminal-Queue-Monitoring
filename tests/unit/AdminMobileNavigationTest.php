@@ -41,7 +41,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_5', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_6', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void
@@ -71,6 +71,11 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('padding: 4px 10px 20px !important;', $css);
         $this->assertStringContainsString('transform: translateY(3px);', $css);
         $this->assertStringContainsString('transform: translateY(4px);', $css);
+        $this->assertStringContainsString('width: 38px !important;', $css);
+        $this->assertStringContainsString('font-size: 17px !important;', $css);
+        $this->assertStringContainsString('width: 46px !important;', $css);
+        $this->assertStringContainsString('font-size: 14.5px !important;', $css);
+        $this->assertStringContainsString('font-size: 9.5px !important;', $css);
         $this->assertStringContainsString('bottom: 2px;', $css);
         $this->assertStringContainsString('justify-content: flex-end;', $css);
         $this->assertStringContainsString('width: auto;', $css);
