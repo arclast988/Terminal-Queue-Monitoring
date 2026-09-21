@@ -1322,6 +1322,10 @@ body.staff-theme .drawer-nav-item.active i {
     overflow: visible !important;
   }
 
+  #site-header .header-left-cluster {
+    overflow: visible !important;
+  }
+
   #site-header .logo {
     width: 46px !important;
     height: 46px !important;
