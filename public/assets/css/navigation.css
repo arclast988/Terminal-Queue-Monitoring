@@ -1317,7 +1317,7 @@ body.staff-theme .drawer-nav-item.active i {
   header#site-header {
     height: 74px !important;
     max-height: 74px !important;
-    padding: 8px 16px 18px !important;
+    padding: 6px 16px 20px !important;
     overflow: visible !important;
   }
 
@@ -1325,6 +1325,10 @@ body.staff-theme .drawer-nav-item.active i {
     width: 48px !important;
     height: 48px !important;
     min-width: 48px !important;
+  }
+
+  #site-header .logo-section {
+    transform: translateY(3px);
   }
 
   .operations-header-time {
@@ -1501,7 +1505,7 @@ body.staff-theme .drawer-nav-item.active i {
   header#site-header {
     height: 70px !important;
     max-height: 70px !important;
-    padding: 8px 10px 16px !important;
+    padding: 4px 10px 20px !important;
     gap: 8px !important;
     justify-content: space-between !important;
     width: 100% !important;
@@ -1530,6 +1534,7 @@ body.staff-theme .drawer-nav-item.active i {
   .logo-section {
     gap: 8px !important;
     min-width: 0 !important;
+    transform: translateY(4px);
   }
 
   .logo {
