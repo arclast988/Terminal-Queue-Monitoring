@@ -1322,13 +1322,32 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   #site-header .logo {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
+    width: 50px !important;
+    height: 50px !important;
+    min-width: 50px !important;
   }
 
   #site-header .logo-section {
-    transform: translateY(3px);
+    transform: translateY(7px);
+  }
+
+  #site-header .nav-hamburger-btn {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 19px !important;
+    transform: translateY(7px);
+  }
+
+  #site-header .nav-hamburger-btn:active {
+    transform: translateY(7px) scale(0.95);
+  }
+
+  #site-header .logo-text h1 {
+    font-size: 17px !important;
+  }
+
+  #site-header .logo-text p {
+    font-size: 10.5px !important;
   }
 
   .operations-header-time {
@@ -1525,27 +1544,21 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .nav-hamburger-btn {
-    width: 37px !important;
-    height: 37px !important;
-    font-size: 16.5px !important;
     flex-shrink: 0 !important;
-    transform: translateY(4px);
+    transform: translateY(7px);
   }
 
   .logo-section {
     gap: 8px !important;
     min-width: 0 !important;
-    transform: translateY(4px);
+    transform: translateY(7px);
   }
 
   .nav-hamburger-btn:active {
-    transform: translateY(4px) scale(0.95);
+    transform: translateY(7px) scale(0.95);
   }
 
   .logo {
-    width: 45px !important;
-    height: 45px !important;
-    min-width: 45px !important;
     border-radius: 10px !important;
     flex-shrink: 0 !important;
   }
@@ -1555,7 +1568,6 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .logo-text h1 {
-    font-size: 14.25px !important;
     letter-spacing: -0.2px !important;
     white-space: normal !important;
     word-break: break-word !important;
@@ -1570,7 +1582,6 @@ body.staff-theme .drawer-nav-item.active i {
   }
 
   .logo-text p {
-    font-size: 9.25px !important;
     letter-spacing: .4px !important;
     white-space: normal !important;
     word-break: break-word !important;
