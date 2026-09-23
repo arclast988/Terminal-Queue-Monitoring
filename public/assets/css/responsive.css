@@ -1248,18 +1248,19 @@ body.staff-theme .form-select:focus {
 
 /* ---- 5. Motion preferences: respect reduced-motion users ---- */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *:not(.marquee),
+    *:not(.marquee)::before,
+    *:not(.marquee)::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
 
+    /* Keep live advisory marquee functional at an accessible, steady speed so advisories aren't cut off */
     .marquee {
-        animation: none !important;
-        padding-left: 0 !important;
+        animation: gh-marquee 60s linear infinite !important;
+        padding-left: 100% !important;
     }
 }
 

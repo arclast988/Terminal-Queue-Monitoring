@@ -32,6 +32,29 @@ class App extends BaseConfig
     public array $allowedHostnames = [];
 
     /**
+     * Dynamically detect base_url when accessed from other devices or network hosts (e.g. LAN IP, Railway, or domain),
+     * preventing asset URLs from breaking or defaulting to 'http://localhost/' on external clients.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        if (!empty($_SERVER['HTTP_HOST'])) {
+            $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
+                || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+                || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+            $scheme = $isHttps ? 'https://' : 'http://';
+            $currentHost = $_SERVER['HTTP_HOST'];
+
+            // If baseURL is currently empty, points to localhost, or differs from the requesting host,
+            // adapt to the client's current request host so asset links and API calls point to the actual server.
+            if (empty($this->baseURL) || str_contains($this->baseURL, 'localhost') || !str_contains($this->baseURL, $currentHost)) {
+                $this->baseURL = $scheme . $currentHost . '/';
+            }
+        }
+    }
+
+    /**
      * --------------------------------------------------------------------------
      * Index File
      * --------------------------------------------------------------------------

@@ -697,9 +697,9 @@ textarea.input:focus {
   .grid-stats { grid-template-columns: 1fr 1fr; }
 }
 
-/* Respect reduced motion */
+/* Respect reduced motion (excluding live advisory marquee) */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; animation: none !important; }
+  *:not(.marquee), *:not(.marquee)::before, *:not(.marquee)::after { transition: none !important; animation: none !important; }
 }
 
 /* ==========================================================================

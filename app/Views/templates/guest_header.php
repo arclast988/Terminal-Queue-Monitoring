@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260921h">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260923a">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -62,35 +62,55 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                     var totalDist = (window.innerWidth || 1200) + Math.max(600, rawText.length * 9.5);
                     var DURATION = Math.max(35, Math.round(totalDist / 60));
                     document.documentElement.style.setProperty('--marquee-duration', DURATION + 's');
-                    sessionStorage.setItem(KEY_DUR, DURATION.toString());
-                    localStorage.setItem(KEY_DUR, DURATION.toString());
 
-                    var storedText = sessionStorage.getItem(KEY_TEXT) || localStorage.getItem(KEY_TEXT);
-                    var lastSeen = parseFloat(sessionStorage.getItem(KEY_LAST) || localStorage.getItem(KEY_LAST));
-                    var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
+                    try {
+                        sessionStorage.setItem(KEY_DUR, DURATION.toString());
+                        localStorage.setItem(KEY_DUR, DURATION.toString());
+                    } catch (se) {}
+
+                    var storedText = null;
+                    var lastSeen = 0;
+                    var baseTime = 0;
+                    try {
+                        storedText = sessionStorage.getItem(KEY_TEXT) || localStorage.getItem(KEY_TEXT);
+                        lastSeen = parseFloat(sessionStorage.getItem(KEY_LAST) || localStorage.getItem(KEY_LAST));
+                        baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
+                    } catch (se) {}
 
                     // If announcement text changed or inactive for more than 15 mins or fresh session: initialize base time
                     if (!baseTime || isNaN(baseTime) || storedText !== rawText || !lastSeen || (now - lastSeen > 15 * 60 * 1000)) {
                         baseTime = now;
-                        sessionStorage.setItem(KEY_BASE, baseTime.toString());
-                        localStorage.setItem(KEY_BASE, baseTime.toString());
-                        sessionStorage.setItem(KEY_TEXT, rawText);
-                        localStorage.setItem(KEY_TEXT, rawText);
+                        try {
+                            sessionStorage.setItem(KEY_BASE, baseTime.toString());
+                            localStorage.setItem(KEY_BASE, baseTime.toString());
+                            sessionStorage.setItem(KEY_TEXT, rawText);
+                            localStorage.setItem(KEY_TEXT, rawText);
+                        } catch (se) {}
                     }
 
-                    sessionStorage.setItem(KEY_LAST, now.toString());
-                    localStorage.setItem(KEY_LAST, now.toString());
+                    try {
+                        sessionStorage.setItem(KEY_LAST, now.toString());
+                        localStorage.setItem(KEY_LAST, now.toString());
+                    } catch (se) {}
 
                     var elapsed = ((now - baseTime) / 1000) % DURATION;
-                    if (elapsed < 0) elapsed = 0;
+                    if (elapsed < 0 || isNaN(elapsed)) elapsed = 0;
                     var delayStr = '-' + elapsed.toFixed(3) + 's';
 
                     var el = document.getElementById('guestMarquee');
                     if (el) {
+                        el.style.animationDuration = DURATION + 's';
                         el.style.animationDelay = delayStr;
+                        el.style.animationPlayState = 'running';
                     }
                     document.documentElement.style.setProperty('--marquee-delay', delayStr);
-                } catch (e) {}
+                } catch (e) {
+                    var fallbackEl = document.getElementById('guestMarquee');
+                    if (fallbackEl) {
+                        fallbackEl.style.animationDuration = '35s';
+                        fallbackEl.style.animationPlayState = 'running';
+                    }
+                }
             })();
         </script>
     </div>
