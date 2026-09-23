@@ -937,7 +937,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     ?>
                     <span class="vehicle-type-icon <?= vehicle_type_class($vType) ?>" style="padding:0.2rem;border-radius:8px; background: <?= esc($itemCol) ?>18 !important; border: 1px solid <?= esc($itemCol) ?>44 !important; color: <?= esc($itemCol) ?> !important;">
                         <?php if (!empty($vtPhoto)): ?>
-                            <img src="<?= esc($vtPhoto) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;" class="<?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?>>
+                            <img src="<?= esc($vtPhoto) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height:32px;width:auto;" class="<?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?> onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
+                            <i class="fas <?= esc($itemIco) ?>" style="color: <?= esc($itemCol) ?>; font-size: 16px; display: none;"></i>
                         <?php else: ?>
                             <i class="fas <?= esc($itemIco) ?>" style="color: <?= esc($itemCol) ?>; font-size: 16px;"></i>
                         <?php endif; ?>
@@ -1665,7 +1666,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         ?>
                                         <div class="vehicle-type-icon <?= vehicle_type_class($vType) ?> flex-shrink-0 p-2 rounded-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: <?= esc($vCol) ?>18; border: 1px solid <?= esc($vCol) ?>44;">
                                             <?php if (!empty($vPhoto)): ?>
-                                                <img src="<?= esc($vPhoto) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;" class="<?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?>>
+                                                <img src="<?= esc($vPhoto) ?>" alt="<?= vehicle_type_label($vType) ?>" style="height: 24px; width: auto;" class="<?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?> onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-block';">
+                                                <i class="fas <?= esc($vIco) ?>" style="color: <?= esc($vCol) ?>; font-size: 16px; display: none;"></i>
                                             <?php else: ?>
                                                 <i class="fas <?= esc($vIco) ?>" style="color: <?= esc($vCol) ?>; font-size: 16px;"></i>
                                             <?php endif; ?>

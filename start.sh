@@ -108,8 +108,8 @@ websocket.maxClients = ${WEBSOCKET_MAX_CLIENTS:-500}
 websocket.allowedOrigins = "$(escape_dotenv "${WEBSOCKET_ALLOWED_ORIGINS:-}")"
 ENVFILE
 
-chown www-data:www-data "$APP_ROOT/.env"
-chmod 640 "$APP_ROOT/.env"
+chown www-data:www-data "$APP_ROOT/.env" 2>/dev/null || true
+chmod 640 "$APP_ROOT/.env" 2>/dev/null || true
 
 echo "[ENV] Production configuration generated."
 if [ "${EMAIL_DELIVERY_PROVIDER:-brevo}" = "brevo" ]; then
@@ -134,8 +134,8 @@ mkdir -p \
     /tmp/jeepneynvans-nginx/proxy \
     /tmp/jeepneynvans-nginx/fastcgi
 
-chown -R www-data:www-data "$APP_ROOT/writable" "$APP_ROOT/public/uploads" /tmp/jeepneynvans-nginx
-chmod -R u=rwX,g=rwX,o=rX "$APP_ROOT/writable" "$APP_ROOT/public/uploads"
+chown -R www-data:www-data "$APP_ROOT/writable" "$APP_ROOT/public/uploads" /tmp/jeepneynvans-nginx 2>/dev/null || true
+chmod -R u=rwX,g=rwX,o=rX "$APP_ROOT/writable" "$APP_ROOT/public/uploads" 2>/dev/null || true
 
 echo "[DB] Checking schema and migrations..."
 php "$APP_ROOT/import_schema.php" || echo "[DB] Schema import check skipped or already complete."

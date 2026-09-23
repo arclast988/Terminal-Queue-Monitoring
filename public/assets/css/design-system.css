@@ -13,7 +13,7 @@
    1. TOKENS
    -------------------------------------------------------------------------- */
 :root {
-  color-scheme: light;
+  color-scheme: only light;
 
   /* Typography */
   --font-display: 'Bricolage Grotesque', 'Outfit', sans-serif;

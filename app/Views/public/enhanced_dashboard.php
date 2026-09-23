@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="only light">
     <title>Terminal Status - <?= esc(app_name()) ?></title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
@@ -2267,7 +2268,8 @@
                                 <div class="queue-card-left">
                                     <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12 !important; border-color: <?= esc($vColor) ?>35 !important;">
                                         <?php if (!empty($photoUrl)): ?>
-                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img <?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?>>
+                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img <?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?> onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                                            <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>; display: none;"></i>
                                         <?php else: ?>
                                             <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>;"></i>
                                         <?php endif; ?>
@@ -2933,7 +2935,7 @@
             var extraClass = isEnter ? ' card-enter' : '';
 
             var iconOrImg = photoUrl
-                ? ('<img src="' + photoUrl + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img' + (hasCustom ? ' vehicle-custom-photo' : '') + '" ' + (hasCustom ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' + vType + '"')) + '>')
+                ? ('<img src="' + photoUrl + '" alt="' + vTypeLabel + '" class="vehicle-thumb-img' + (hasCustom ? ' vehicle-custom-photo' : '') + '" ' + (hasCustom ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' + vType + '"')) + ' onerror="this.style.display=\'none\'; if(this.nextElementSibling) this.nextElementSibling.style.display=\'inline-flex\';">' + '<i class="fas ' + (vMeta.icon || 'fa-bus') + '" style="font-size: 28px; color: ' + posColor + '; display: none;"></i>')
                 : ('<i class="fas ' + (vMeta.icon || 'fa-bus') + '" style="font-size: 28px; color: ' + posColor + ';"></i>');
 
             return '<div class="queue-card queue-card-' + vType + extraClass + '" style="--card-stripe-color:' + posColor + '; border-left: 5px solid ' + posColor + ' !important;" data-vehicle-type="' + vType + '" data-destination="' + (item.destination || '').toLowerCase() + '" data-queue-id="' + item.id + '" data-plate="' + item.plate_number + '">'

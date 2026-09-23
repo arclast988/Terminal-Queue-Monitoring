@@ -7,7 +7,7 @@
     <title><?= $title ?? 'Terminal Monitoring System' ?></title>
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <meta name="csrf-header" content="<?= csrf_header() ?>">
-    <meta name="color-scheme" content="light">
+    <meta name="color-scheme" content="only light">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
