@@ -184,7 +184,7 @@ class Home extends BaseController
             $destSlug = !empty($destName) ? strtolower($destName) : 'general';
             $scope = 'All Routes';
             if (!empty($destName)) {
-                $scope = (!empty($rule['terminal_name']) ? $rule['terminal_name'] : 'Palompon') . ' → ' . $destName;
+                $scope = (!empty($rule['terminal_name']) ? $rule['terminal_name'] : 'Terminal') . ' → ' . $destName;
             }
 
             $formatted[] = [
@@ -201,7 +201,7 @@ class Home extends BaseController
                 'route_destination' => $destName,
                 'route_slug' => $destSlug,
                 'route_id' => $rule['route_id'] ?? null,
-                'terminal_name' => $rule['terminal_name'] ?? 'Palompon Central Terminal',
+                'terminal_name' => $rule['terminal_name'] ?? 'Central Terminal',
                 'is_active_now' => $isActive,
             ];
         }

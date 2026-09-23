@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
-    <title>Vehicle Schedules - <?= esc(app_name()) ?></title>
+    <title>Vehicle Schedules · <?= esc(app_system_title()) ?></title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
     <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">

@@ -278,7 +278,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Log in to your Dispatcher account with your username and password.</li>
                         <li>Open the options menu and click <strong>Queue Management</strong>.</li>
-                        <li>Check your assigned terminal (e.g. <em>Palompon Central Terminal</em>) and active routes.</li>
+                        <li>Check your assigned terminal (e.g. <em>Central Transit Terminal</em>) and active routes.</li>
                         <li>Check the queue list to see waiting and boarding vehicles.</li>
                     </ol>
                     <div class="help-tip">

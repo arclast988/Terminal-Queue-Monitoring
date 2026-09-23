@@ -768,7 +768,7 @@
                 <div class="step-number">2</div>
                 <div class="step-text">
                     <h5>Verify Authorized Destinations</h5>
-                    <p>Your dashboard displays the routes assigned to your shift (e.g. <em>Palompon &rarr; Ormoc</em> and <em>Palompon &rarr; Tacloban</em>). You can only check in and dispatch vehicles assigned to these franchised destinations.</p>
+                    <p>Your dashboard displays the routes assigned to your shift (e.g. <em>Terminal &rarr; Ormoc</em> and <em>Terminal &rarr; Tacloban</em>). You can only check in and dispatch vehicles assigned to these franchised destinations.</p>
                 </div>
             </div>
 

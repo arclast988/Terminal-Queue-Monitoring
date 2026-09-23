@@ -991,7 +991,7 @@
                 <div class="step-number">1</div>
                 <div class="step-text">
                     <h5>Add or Edit Terminal</h5>
-                    <p>Go to <strong>Management &rarr; Terminals</strong> and click <strong>+ Add Terminal</strong>. Enter terminal name (e.g., <code>Palompon Central Terminal</code>), address, and bay notes.</p>
+                    <p>Go to <strong>Management &rarr; Terminals</strong> and click <strong>+ Add Terminal</strong>. Enter terminal name (e.g., <code>Central Terminal Bay 1</code>), address, and bay notes.</p>
                 </div>
             </div>
 

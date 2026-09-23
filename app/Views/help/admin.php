@@ -308,7 +308,7 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
                     <p>To view and manage terminal facility information:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Navigate to <strong>Management &gt; Terminals</strong> from the options navigation menu.</li>
-                        <li>Manage terminal information such as terminal name (e.g., <em>Palompon Central Terminal</em>), physical location, and vehicle holding capacity.</li>
+                        <li>Manage terminal information such as terminal name (e.g., <em>Central Transit Terminal</em>), physical location, and vehicle holding capacity.</li>
                     </ol>
                     <div class="step-box">
                         <strong>Why Terminals Matter:</strong> Terminals serve as the origin point for transit routes and connect dispatchers to their local terminal view.
@@ -325,10 +325,10 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Routes connect Palompon Terminal to regional destinations:</p>
+                    <p>Routes connect the terminal to regional destinations:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Go to <strong>Management &gt; Routes</strong>.</li>
-                        <li>Click <strong>Add Route</strong> to register a new destination (e.g., <em>Palompon to Ormoc</em>, <em>Palompon to Tacloban</em>).</li>
+                        <li>Click <strong>Add Route</strong> to register a new destination (e.g., <em>Terminal to Ormoc</em>, <em>Terminal to Tacloban</em>).</li>
                         <li>Enter the route name (origin and destination) and select the applicable vehicle type.</li>
                         <li>Specify the estimated trip duration in minutes for commuter scheduling.</li>
                     </ol>

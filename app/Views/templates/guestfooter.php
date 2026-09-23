@@ -86,7 +86,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>The Terminal Monitor displays arriving, queued, and departing public utility vehicles connecting Palompon to regional destinations. Each vehicle displays a real-time status badge:</p>
+                    <p>The Terminal Monitor displays arriving, queued, and departing public utility vehicles connecting terminal bays to regional destinations. Each vehicle displays a real-time status badge:</p>
                     <div class="step-box">
                         <span class="status-badge status-boarding"><i class="fas fa-door-open"></i> Boarding</span><br>
                         <strong>Actively Loading:</strong> The vehicle is physically stationed at the terminal bay. Passengers are paying fares and taking seats. Head to the bay promptly to secure your ride.
@@ -344,7 +344,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
             <p>By accessing and using the <?= esc(app_system_title()) ?> ("<?= esc(app_acronym()) ?> System"), you agree to be bound by these Terms of Service and all applicable municipal guidelines. If you do not agree with any portion of these terms, please discontinue use of this service.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">2. Description of Service</h4>
-            <p>The <?= esc(app_acronym()) ?> System is a municipal transit monitoring platform providing real-time information regarding vehicle queue positions, departure headway estimates, and official route fares for the Municipality of Palompon, Leyte. This public service is maintained and operated by <?= esc(app_footer_credit()) ?>.</p>
+            <p>The <?= esc(app_acronym()) ?> System is a municipal transit monitoring platform providing real-time information regarding vehicle queue positions, departure headway estimates, and official route fares. This transit service is maintained and operated by <?= esc(app_footer_credit()) ?>.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">3. Use of Transit Information & Estimates</h4>
             <ul>
@@ -366,7 +366,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
             <p>This system does not harvest personal user tracking data from guest commuters. Inquiries and operational issue reports submitted through the Support section are transmitted securely via email to terminal management solely for verification and resolution purposes, and are never shared with unauthorized third parties.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">8. Governing Law & Jurisdiction</h4>
-            <p>These Terms shall be governed and interpreted under the laws of the Republic of the Philippines and local ordinances of the Municipality of Palompon, Province of Leyte.</p>
+            <p>These Terms shall be governed and interpreted under the laws of the Republic of the Philippines and applicable transit regulations and guidelines.</p>
         </div>
     </div>
 </div>

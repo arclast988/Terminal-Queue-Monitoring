@@ -264,7 +264,7 @@ if (!empty($recent_departures)) {
                             </td>
                             <td data-label="Route" class="schedule-route-cell">
                                 <div class="schedule-route-display">
-                                    <strong><?= strtoupper(esc($dept['origin'] ?? 'Palompon')) ?></strong>
+                                    <strong><?= strtoupper(esc($dept['origin'] ?? 'Terminal')) ?></strong>
                                     <i class="bi bi-arrow-right text-primary"></i>
                                     <strong><?= strtoupper(esc($dept['destination'] ?? '—')) ?></strong>
                                 </div>

@@ -76,6 +76,7 @@ class StaffQueueAndVehicleFixTest extends CIUnitTestCase
         $this->assertFileExists(FCPATH . 'images/bg/bg5_terminal_bay.webp');
 
         // 2. Clear any custom DB settings to test defaults
+        try {
         $model = new \App\Models\SystemSettingModel();
         $model->setSetting('app_logo', null);
         $model->setSetting('app_background_image', null);
@@ -85,6 +86,9 @@ class StaffQueueAndVehicleFixTest extends CIUnitTestCase
         $model->setSetting('app_bg_slideshow_3', null);
         $model->setSetting('app_bg_slideshow_4', null);
         $model->setSetting('app_bg_slideshow_5', null);
+        } catch (\Throwable ) {
+            // DB offline in standalone unit test
+        }
         get_all_system_settings(true);
 
         // 3. Verify defaults return logo.webp

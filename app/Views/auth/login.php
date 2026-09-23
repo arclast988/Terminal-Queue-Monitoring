@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <meta name="theme-color" content="#D62828">
-    <title>Sign in · <?= esc(app_name()) ?></title>
+    <title>Sign in · <?= esc(app_system_title()) ?></title>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
     <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
@@ -75,7 +75,7 @@
             position: relative;
         }
 
-        /* Semi-transparent system background watermark (Palompon Photo Slideshow or Single Hero) */
+        /* Semi-transparent system background watermark (Terminal Photo Slideshow or Single Hero) */
         <?php
         $bgMode = app_bg_mode();
         $useSingle = ($bgMode === 'single');
@@ -526,15 +526,70 @@
            Responsive — laptop / tablet / mobile
            ================================================================= */
 
-        /* ≥1025px: full hero + floating card composition.
-           ≤1024px: form-first — hide hero artwork/copy, keep logo + centered card. */
+        /* =================================================================
+           Responsive Breakpoints:
+           - Large / Ultrawide Monitors (≥1440px / ≥2000px)
+           - Standard Desktop (1025px - 1439px)
+           - Compact Laptops (≤820px height)
+           - Tablets (641px - 1024px)
+           - Mobile (<640px / <420px)
+           ================================================================= */
+
+        /* Large & Ultra-Wide Desktop Displays (1440p, 2K, 4K, 21:9) */
+        @media (min-width: 1440px) {
+            .page {
+                max-width: 1320px;
+                padding: var(--space-8) var(--space-8) var(--space-10);
+            }
+            .hero-copy h1 {
+                font-size: clamp(2.8rem, 3.6vw, 3.8rem);
+            }
+            .hero-art img {
+                max-height: 480px;
+            }
+            .login-card {
+                max-width: 460px;
+                padding: var(--space-10) var(--space-8);
+            }
+        }
+
+        @media (min-width: 2000px) {
+            .page {
+                max-width: 1440px;
+            }
+            .hero-copy h1 {
+                font-size: 4rem;
+            }
+        }
+
+        /* Compact Laptops with short viewport height (≤820px) */
+        @media (max-height: 820px) and (min-width: 1025px) {
+            .brand { margin-bottom: var(--space-3); }
+            .hero-copy h1 { font-size: 2.2rem; }
+            .hero-copy .lede { margin-top: var(--space-2); font-size: 14px; }
+            .features { margin-top: var(--space-3); gap: var(--space-2); }
+            .feature-icon { width: 34px; height: 34px; }
+            .hero-art { margin-top: var(--space-3); }
+            .hero-art img { max-height: 240px; }
+            .login-card { padding: var(--space-6) var(--space-6); }
+            .login-card .card-head { margin-bottom: var(--space-4); }
+            .page-foot { margin-top: var(--space-3); }
+        }
+
+        /* Tablets & Mobile Form-First View (≤1024px) */
         @media (max-width: 1024px) {
             .hero { display: none; }
 
-            .page { max-width: 520px; }
+            .page {
+                max-width: 500px;
+                justify-content: center;
+            }
 
             .brand {
-                margin-bottom: var(--space-8);
+                align-self: center;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: var(--space-6);
                 animation-name: fadeDown;
             }
 
@@ -543,28 +598,38 @@
                 flex-direction: column;
                 justify-content: center;
                 gap: 0;
-                min-height: 60vh;
+                min-height: auto;
             }
 
             .login-col { width: 100%; }
 
-            .login-card { max-width: 460px; margin: 0 auto; }
+            .login-card {
+                max-width: 440px;
+                margin: 0 auto;
+                padding: var(--space-8) var(--space-6);
+            }
         }
 
+        /* Compact Tablets & Large Phones (≤640px) */
         @media (max-width: 640px) {
-            .page { padding: var(--space-6) var(--space-5) var(--space-8); }
-            .brand { margin-bottom: var(--space-8); }
-            .login-layout { min-height: auto; }
-            .login-card { padding: var(--space-6); border-radius: var(--radius-lg); }
+            .page { padding: var(--space-5) var(--space-4) var(--space-6); }
+            .brand { margin-bottom: var(--space-5); }
+            .login-card {
+                padding: var(--space-6) var(--space-5);
+                border-radius: var(--radius-lg);
+            }
             .login-card h2 { font-size: 22px; }
-            .page-foot { margin-top: var(--space-8); }
+            .page-foot { margin-top: var(--space-6); }
         }
 
+        /* Small Phones (≤420px) */
         @media (max-width: 420px) {
-            .page { padding: 16px 10px 24px; }
+            .page { padding: 16px 10px 20px; }
+            .brand-name { font-size: 19px; }
+            .brand-sub { font-size: 12px; }
             .login-card { padding: 18px 14px; border-radius: var(--radius-md); }
             .login-card h2 { font-size: 20px; }
-            .options { flex-direction: column; align-items: flex-start; gap: 6px; }
+            .options { flex-direction: column; align-items: flex-start; gap: 4px; }
         }
     </style>
 </head>

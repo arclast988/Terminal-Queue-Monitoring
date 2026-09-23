@@ -480,10 +480,10 @@ if (! function_exists('get_all_system_settings')) {
         }
 
         $defaults = [
-            'app_name'               => 'Palompon Transit',
-            'app_subtitle'           => 'Terminal Monitor',
-            'acronym'                => 'PTTM',
-            'system_title'           => 'Palompon Transit Terminal Management System',
+            'app_name'               => 'Terminal Queue',
+            'app_subtitle'           => 'Monitoring System',
+            'acronym'                => 'TQMS',
+            'system_title'           => 'Terminal Queue Monitoring System',
             'app_logo'               => null,
             'app_background_image'   => null,
             'app_login_card_image'   => null,
@@ -502,13 +502,13 @@ if (! function_exists('get_all_system_settings')) {
             'app_bg_slideshow_3'     => null,
             'app_bg_slideshow_4'     => null,
             'app_bg_slideshow_5'     => null,
-            'footer_about_title'     => 'PTTM System',
-            'footer_about_text'      => 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.',
-            'footer_credit'          => 'Municipality of Palompon, Leyte',
+            'footer_about_title'     => 'TQMS System',
+            'footer_about_text'      => 'Terminal Queue Monitoring System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.',
+            'footer_credit'          => 'Terminal Operations & Management',
             'footer_copyright_text'  => '© {year} {title} ({acronym}). All rights reserved. | {credit}',
             'contact_email'          => '',
-            'contact_phone'          => '(053) 555-8376 / 338-2022',
-            'contact_address'        => 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538',
+            'contact_phone'          => '',
+            'contact_address'        => 'Central Public Transit Terminal',
             'login_headline'         => 'Move every van, jeepney & bus on time.',
             'login_subheadline'      => 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.',
             'login_kicker'           => 'Terminal Operations',
@@ -650,7 +650,7 @@ if (! function_exists('app_name')) {
      */
     function app_name(): string
     {
-        return get_system_setting('app_name', 'Palompon Transit') ?: 'Palompon Transit';
+        return get_system_setting('app_name', 'Terminal Queue') ?: 'Terminal Queue';
     }
 }
 
@@ -660,7 +660,7 @@ if (! function_exists('app_subtitle')) {
      */
     function app_subtitle(): string
     {
-        return get_system_setting('app_subtitle', 'Terminal Monitor') ?: 'Terminal Monitor';
+        return get_system_setting('app_subtitle', 'Monitoring System') ?: 'Monitoring System';
     }
 }
 
@@ -847,7 +847,7 @@ if (! function_exists('app_acronym')) {
      */
     function app_acronym(): string
     {
-        return get_system_setting('acronym', 'PTTM') ?: 'PTTM';
+        return get_system_setting('acronym', 'TQMS') ?: 'TQMS';
     }
 }
 
@@ -857,7 +857,7 @@ if (! function_exists('app_system_title')) {
      */
     function app_system_title(): string
     {
-        return get_system_setting('system_title', 'Palompon Transit Terminal Management System') ?: 'Palompon Transit Terminal Management System';
+        return get_system_setting('system_title', 'Terminal Queue Monitoring System') ?: 'Terminal Queue Monitoring System';
     }
 }
 
@@ -867,7 +867,7 @@ if (! function_exists('app_footer_about_title')) {
      */
     function app_footer_about_title(): string
     {
-        return get_system_setting('footer_about_title', 'PTTM System') ?: 'PTTM System';
+        return get_system_setting('footer_about_title', 'TQMS System') ?: 'TQMS System';
     }
 }
 
@@ -877,7 +877,7 @@ if (! function_exists('app_footer_about_text')) {
      */
     function app_footer_about_text(): string
     {
-        return get_system_setting('footer_about_text', 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?: '';
+        return get_system_setting('footer_about_text', 'Terminal Queue Monitoring System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?: '';
     }
 }
 
@@ -887,7 +887,7 @@ if (! function_exists('app_footer_credit')) {
      */
     function app_footer_credit(): string
     {
-        return get_system_setting('footer_credit', 'Municipality of Palompon, Leyte') ?: 'Municipality of Palompon, Leyte';
+        return get_system_setting('footer_credit', 'Terminal Operations & Management') ?: 'Terminal Operations & Management';
     }
 }
 
@@ -1017,7 +1017,7 @@ if (! function_exists('app_bg_slideshow_css')) {
         }
 
         $duration = $count * 6; // 6 seconds per slide
-        $keyframes = "@keyframes palomponBgSlideshow {\n";
+        $keyframes = "@keyframes terminalBgSlideshow {\n";
 
         for ($i = 0; $i < $count; $i++) {
             $url = esc($slideList[$i]);
@@ -1043,7 +1043,7 @@ if (! function_exists('app_bg_slideshow_css')) {
         $css .= "    opacity: {$targetOpacity} !important;\n";
         $css .= "    z-index: 0 !important;\n";
         $css .= "    pointer-events: none !important;\n";
-        $css .= "    animation: palomponBgSlideshow {$duration}s infinite ease-in-out !important;\n";
+        $css .= "    animation: terminalBgSlideshow {$duration}s infinite ease-in-out !important;\n";
         $css .= "}\n";
         $css .= $keyframes;
 
@@ -1054,14 +1054,14 @@ if (! function_exists('app_bg_slideshow_css')) {
 if (! function_exists('app_contact_phone')) {
     function app_contact_phone(): string
     {
-        return get_system_setting('contact_phone', '(053) 555-8376 / 338-2022') ?: '';
+        return get_system_setting('contact_phone', '') ?: '';
     }
 }
 
 if (! function_exists('app_contact_address')) {
     function app_contact_address(): string
     {
-        return get_system_setting('contact_address', 'Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538') ?: '';
+        return get_system_setting('contact_address', 'Central Public Transit Terminal') ?: '';
     }
 }
 
@@ -2296,8 +2296,8 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
         } else {
             var count = slides.length;
             var duration = count * 6;
-            var kf = "@keyframes palomponBgSlideshowLive { ";
-            var kfAuth = "@keyframes palomponBgSlideshowAuthLive { ";
+            var kf = "@keyframes terminalBgSlideshowLive { ";
+            var kfAuth = "@keyframes terminalBgSlideshowAuthLive { ";
             for (var i = 0; i < count; i++) {
                 var sUrl = slides[i];
                 var sPct = Math.round((i / count) * 1000) / 10;
@@ -2313,8 +2313,8 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
             kfAuth += "100% { opacity: 0.22; } } ";
 
             var rule = kf + kfAuth +
-                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.12 !important; animation: palomponBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; } " +
-                       "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.22 !important; animation: palomponBgSlideshowAuthLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }";
+                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.12 !important; animation: terminalBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; } " +
+                       "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.22 !important; animation: terminalBgSlideshowAuthLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }";
             bgStyle.textContent = rule;
         }
     };

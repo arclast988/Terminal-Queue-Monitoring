@@ -819,7 +819,7 @@
             <div class="guide-card">
                 <h3><i class="fas fa-satellite-dish" style="color:#B71C1C;"></i> Reading the Live Terminal Queue</h3>
                 <p style="color:#475569; font-size:13.5px; margin-bottom: 16px;">
-                    The Palompon Terminal Monitor (<code>/</code> or <code>/guest</code>) delivers sub-second live updates without requiring manual browser refreshing. Here is what every detail on your screen means:
+                    The <?= esc(app_system_title()) ?> (<code>/</code> or <code>/guest</code>) delivers sub-second live updates without requiring manual browser refreshing. Here is what every detail on your screen means:
                 </p>
 
                 <div class="status-grid">
@@ -933,7 +933,7 @@
             <div class="guide-card">
                 <h3><i class="fas fa-tags" style="color:#10b981;"></i> Official LTFRB Fares & Statutory 20% Concessions</h3>
                 <p style="color:#475569; font-size:13.5px;">
-                    Under LTFRB regulations and Municipality of Palompon resolutions, all public transit fares are strictly regulated by route distance. Check rates at <code>/fares</code>.
+                    Under LTFRB regulations and local transport resolutions, all public transit fares are strictly regulated by route distance. Check rates at <code>/fares</code>.
                 </p>
 
                 <div class="callout-box info">
@@ -986,7 +986,7 @@
                     <div class="step-number"><i class="fas fa-clock"></i></div>
                     <div class="step-text">
                         <h5>Terminal Operating Hours</h5>
-                        <p>Palompon Central Transit Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Earliest trips to Ormoc City depart at approximately 4:30 AM.</p>
+                        <p>The Central Transit Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Earliest trips to Ormoc City depart at approximately 4:30 AM.</p>
                     </div>
                 </div>
 
@@ -994,7 +994,7 @@
                     <div class="step-number"><i class="fas fa-route"></i></div>
                     <div class="step-text">
                         <h5>Primary Regional Destinations</h5>
-                        <p>Direct routes operate between Palompon and: <strong>Ormoc City</strong> (52 km), <strong>Tacloban City</strong> (138 km), <strong>Isabel / PASAR</strong> (18 km), <strong>Naval, Biliran</strong>, and <strong>Kananga</strong>.</p>
+                        <p>Direct routes connect the terminal to: <strong>Ormoc City</strong> (52 km), <strong>Tacloban City</strong> (138 km), <strong>Isabel / PASAR</strong> (18 km), <strong>Naval, Biliran</strong>, and <strong>Kananga</strong>.</p>
                     </div>
                 </div>
 
@@ -1128,9 +1128,9 @@
                 <div class="step-item">
                     <div class="step-number"><i class="fas fa-building"></i></div>
                     <div class="step-text">
-                        <h5>Palompon Terminal Office & Inquiries</h5>
+                        <h5>Terminal Office & Inquiries</h5>
                         <p>
-                            <strong>Address:</strong> Palompon Central Transit Terminal, Rizal Street, Palompon, Leyte 6538.<br>
+                            <strong>Address:</strong> <?= esc(app_contact_address()) ?>.<br>
                             <strong>Hotline:</strong> (053) 555-8376 | (053) 338-2022<br>
                             <strong>Official Email:</strong> arclast988@gmail.com
                         </p>

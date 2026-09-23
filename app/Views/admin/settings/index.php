@@ -16,19 +16,19 @@ $hasCustomLoginCard = app_has_custom_login_card();
 $slotsMeta = [
     1 => [
         'name'        => 'Town Hall / Municipal Landmark',
-        'desc'        => 'Palompon Municipal Hall and municipal landmark',
+        'desc'        => 'Municipal landmark and terminal plaza',
         'defaultFile' => 'bg1_townhall.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_1']),
     ],
     2 => [
         'name'        => 'Aerial Port & Sea Gateway',
-        'desc'        => 'Palompon Port, ocean terminal and coastline',
+        'desc'        => 'Harbor terminal and coastline',
         'defaultFile' => 'bg2_aerial_port.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_2']),
     ],
     3 => [
         'name'        => 'Aerial Townscape',
-        'desc'        => 'Bird\'s eye view of Palompon municipality and streets',
+        'desc'        => 'Bird\'s eye view of town terminal and transit streets',
         'defaultFile' => 'bg3_aerial_town.webp',
         'isCustom'    => !empty($s['app_bg_slideshow_3']),
     ],
@@ -1322,7 +1322,7 @@ $slotsMeta = [
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                             <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
                             <div class="preview-brand">
-                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Terminal Queue') ?></h4>
                                 <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
                             </div>
                         </div>
@@ -1344,7 +1344,7 @@ $slotsMeta = [
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                             <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
                             <div class="preview-brand">
-                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Terminal Queue') ?></h4>
                                 <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
                             </div>
                         </div>
@@ -1366,7 +1366,7 @@ $slotsMeta = [
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                             <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
                             <div class="preview-brand">
-                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Terminal Queue') ?></h4>
                                 <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
                             </div>
                         </div>
@@ -1385,7 +1385,7 @@ $slotsMeta = [
                         <small>Reports & Documents</small>
                     </div>
                     <div style="padding: 14px 18px; background: #f8fafc; font-size: 13px;">
-                        <div style="font-weight: 700; color: var(--sb-text-main); word-break: break-word; overflow-wrap: anywhere;" id="previewSysTitleCard"><?= esc($s['system_title'] ?? 'Palompon Transit Terminal Management System') ?></div>
+                        <div style="font-weight: 700; color: var(--sb-text-main); word-break: break-word; overflow-wrap: anywhere;" id="previewSysTitleCard"><?= esc($s['system_title'] ?? 'Terminal Queue Monitoring System') ?></div>
                         <div style="color: var(--sb-text-muted); font-size: 11.5px; margin-top: 3px;">Short Acronym: <span style="font-weight: 700; color: var(--sb-primary);" id="previewAcronymCard"><?= esc($s['acronym'] ?? 'PTTM') ?></span></div>
                     </div>
                 </div>
@@ -1397,7 +1397,7 @@ $slotsMeta = [
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">Transit / System Name <span class="label-hint">(Shown in Navbar)</span></label>
-                        <input type="text" name="app_name" class="form-input" id="inputAppName" value="<?= esc($s['app_name'] ?? 'Palompon Transit') ?>" required maxlength="80" placeholder="e.g. Palompon Transit">
+                        <input type="text" name="app_name" class="form-input" id="inputAppName" value="<?= esc($s['app_name'] ?? 'Terminal Queue') ?>" required maxlength="80" placeholder="e.g. Terminal Queue">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Subtitle / Tagline <span class="label-hint">(Below name)</span></label>
@@ -1409,7 +1409,7 @@ $slotsMeta = [
                     </div>
                     <div class="form-group">
                         <label class="form-label">Full Official Title <span class="label-hint">(Printed Reports & Documentation)</span></label>
-                        <input type="text" name="system_title" class="form-input" id="inputSystemTitle" value="<?= esc($s['system_title'] ?? 'Palompon Transit Terminal Management System') ?>" maxlength="150" placeholder="e.g. Palompon Transit Terminal Management System">
+                        <input type="text" name="system_title" class="form-input" id="inputSystemTitle" value="<?= esc($s['system_title'] ?? 'Terminal Queue Monitoring System') ?>" maxlength="150" placeholder="e.g. Terminal Queue Monitoring System">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Terminal Contact Phone</label>
@@ -1417,11 +1417,11 @@ $slotsMeta = [
                     </div>
                     <div class="form-group">
                         <label class="form-label">Terminal Contact Email</label>
-                        <input type="email" name="contact_email" class="form-input" value="<?= esc($s['contact_email'] ?? '') ?>" maxlength="120" placeholder="e.g. terminal@palompon.gov.ph">
+                        <input type="email" name="contact_email" class="form-input" value="<?= esc($s['contact_email'] ?? '') ?>" maxlength="120" placeholder="e.g. terminal@transit.gov.ph">
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Terminal Physical Address</label>
-                        <input type="text" name="contact_address" class="form-input" value="<?= esc($s['contact_address'] ?? '') ?>" maxlength="200" placeholder="e.g. Palompon Transit Terminal, Rizal St., Palompon, Leyte 6538">
+                        <input type="text" name="contact_address" class="form-input" value="<?= esc($s['contact_address'] ?? '') ?>" maxlength="200" placeholder="e.g. Central Transit Terminal">
                     </div>
 
                     <div class="form-group full-width" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
@@ -1534,7 +1534,7 @@ $slotsMeta = [
                     <input type="radio" name="bg_display_mode" value="slideshow" <?= $bgMode === 'slideshow' ? 'checked' : '' ?>>
                     <div class="bg-mode-info">
                         <h4><i class="fas fa-images" style="color:#f59e0b; margin-right:6px;"></i> Dynamic Slideshow Mode (5 Rotating Photos)</h4>
-                        <p>Rotates through 5 landmark photos of Palompon terminal and town with smooth 30-second crossfade transitions on login screens. (Recommended)</p>
+                        <p>Rotates through 5 landmark photos of the terminal and town with smooth 30-second crossfade transitions on login screens. (Recommended)</p>
                     </div>
                 </label>
                 <label class="bg-mode-card <?= $bgMode === 'single' ? 'active' : '' ?>" id="modeCardSingle">
@@ -1747,7 +1747,7 @@ $slotsMeta = [
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                             <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
                             <div class="preview-brand">
-                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Terminal Queue') ?></h4>
                                 <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
                             </div>
                         </div>
@@ -1765,7 +1765,7 @@ $slotsMeta = [
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                             <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
                             <div class="preview-brand">
-                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Terminal Queue') ?></h4>
                                 <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
                             </div>
                         </div>
@@ -1783,7 +1783,7 @@ $slotsMeta = [
                         <div style="display:flex; align-items:center; gap:10px; min-width:0;">
                             <img src="<?= esc($logoUrl) ?>" alt="Logo" class="previewLogoImg">
                             <div class="preview-brand">
-                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Palompon Transit') ?></h4>
+                                <h4 class="previewNameEl"><?= esc($s['app_name'] ?? 'Terminal Queue') ?></h4>
                                 <p class="previewSubEl"><?= esc($s['app_subtitle'] ?? 'Terminal Monitor') ?></p>
                             </div>
                         </div>
@@ -1923,7 +1923,7 @@ $slotsMeta = [
                         <h4 id="previewFooterHeading">
                             <span id="previewFooterHeadingText"><?= esc($s['footer_about_title'] ?? 'PTTM System') ?></span>
                         </h4>
-                        <p id="previewFooterBodyText"><?= esc($s['footer_about_text'] ?? 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?></p>
+                        <p id="previewFooterBodyText"><?= esc($s['footer_about_text'] ?? 'Terminal Queue Monitoring System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?></p>
                     </div>
                     <div class="footer-preview-divider"></div>
                     <div class="footer-preview-copyright" id="previewFooterCopyrightText">
@@ -1948,7 +1948,7 @@ $slotsMeta = [
                         <label class="form-label">
                             <span>Municipality / Agency Credit <span class="label-hint">(Picture 2 Credit)</span></span>
                         </label>
-                        <input type="text" name="footer_credit" class="form-input" id="inputFooterCredit" value="<?= esc($s['footer_credit'] ?? 'Municipality of Palompon, Leyte') ?>" maxlength="120" placeholder="e.g. Municipality of Palompon, Leyte" required>
+                        <input type="text" name="footer_credit" class="form-input" id="inputFooterCredit" value="<?= esc($s['footer_credit'] ?? 'Terminal Operations & Management') ?>" maxlength="120" placeholder="e.g. Terminal Operations & Management" required>
                     </div>
 
                     <div class="form-group full-width">
@@ -1956,7 +1956,7 @@ $slotsMeta = [
                             <span>Footer Description Text <strong style="color:var(--sb-primary);">(Picture 1 Description)</strong></span>
                             <span class="label-hint">Summarizes terminal service to the public</span>
                         </label>
-                        <textarea name="footer_about_text" class="form-input form-textarea" id="inputFooterText" maxlength="500" placeholder="Describe your transit system for the public footer." required><?= esc($s['footer_about_text'] ?? 'Palompon Transit Terminal Management System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?></textarea>
+                        <textarea name="footer_about_text" class="form-input form-textarea" id="inputFooterText" maxlength="500" placeholder="Describe your transit system for the public footer." required><?= esc($s['footer_about_text'] ?? 'Terminal Queue Monitoring System provides real-time tracking of vehicle queues and departure schedules to ensure efficient travel for every passenger.') ?></textarea>
                     </div>
 
                     <div class="form-group full-width">
@@ -2241,10 +2241,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var inputFCopy   = document.getElementById('inputFooterCopyright');
 
     function syncIdentityPreviews() {
-        var name = inputName ? inputName.value.trim() : 'Palompon Transit';
+        var name = inputName ? inputName.value.trim() : 'Terminal Queue';
         var sub  = inputSub ? inputSub.value.trim() : 'Terminal Monitor';
         var acro = inputAcro ? inputAcro.value.trim() : 'PTTM';
-        var titl = inputTitle ? inputTitle.value.trim() : 'Palompon Transit Terminal Management System';
+        var titl = inputTitle ? inputTitle.value.trim() : 'Terminal Queue Monitoring System';
 
         document.querySelectorAll('.previewNameEl').forEach(function(el) { el.textContent = name; });
         document.querySelectorAll('.previewSubEl').forEach(function(el) { el.textContent = sub; });
@@ -2266,12 +2266,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function syncFooterPreview() {
-        var fTitle  = inputFTile ? inputFTile.value : 'PTTM System';
+        var fTitle  = inputFTile ? inputFTile.value : 'TQMS System';
         var fText   = inputFText ? inputFText.value : '';
-        var fCredit = inputFCredit ? inputFCredit.value : 'Municipality of Palompon, Leyte';
+        var fCredit = inputFCredit ? inputFCredit.value : 'Terminal Operations & Management';
         var fCopy   = inputFCopy ? inputFCopy.value : '© {year} {title} ({acronym}). All rights reserved. | {credit}';
-        var titl    = inputTitle ? inputTitle.value.trim() : 'Palompon Transit Terminal Management System';
-        var acro    = inputAcro ? inputAcro.value.trim() : 'PTTM';
+        var titl    = inputTitle ? inputTitle.value.trim() : 'Terminal Queue Monitoring System';
+        var acro    = inputAcro ? inputAcro.value.trim() : 'TQMS';
         var year    = (new Date()).getFullYear();
 
         var headingEl = document.getElementById('previewFooterHeadingText');
