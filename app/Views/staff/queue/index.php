@@ -714,19 +714,22 @@
         cursor: not-allowed;
     }
 
-    @media (max-width: 575.98px) {
+    @media (max-width: 768px) {
         .queue-header-actions {
             width: 100%;
-            display: grid !important;
-            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            display: flex !important;
+            flex-direction: row;
+            gap: 8px;
         }
 
         .queue-header-actions .btn-modern {
+            flex: 1 1 0;
             width: 100%;
             min-width: 0;
             justify-content: center;
-            padding-inline: 0.65rem;
-            font-size: 0.78rem;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
 
         #manageQueueModal .modal-dialog {
@@ -1460,83 +1463,72 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     @media (max-width: 768px) {
         #addToQueueModal.fade.show {
-            padding: 8px !important;
+            padding: 12px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
         }
         #addToQueueModal .modal-dialog {
             width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 !important;
+            max-width: 580px !important;
+            margin: 0.5rem auto !important;
             max-height: 94vh !important;
         }
         #addToQueueModal .modal-content {
             max-height: 94vh !important;
-            border-radius: 14px !important;
+            border-radius: 16px !important;
         }
         #addToQueueModal .modal-header {
-            padding: 12px 14px !important;
-            gap: 10px !important;
+            padding: 16px 18px !important;
+            gap: 12px !important;
         }
         #addToQueueModal .modal-header > .d-flex {
             min-width: 0 !important;
             flex: 1 1 auto !important;
-            gap: 10px !important;
-        }
-        #addToQueueModal .add-queue-heading {
-            display: grid !important;
-            grid-template-columns: 36px minmax(0, 1fr);
-            align-items: start !important;
+            gap: 12px !important;
         }
         #addToQueueModal .add-queue-title-row {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 5px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px !important;
         }
         #addToQueueModal .add-queue-title-row .badge {
-            font-size: 0.62rem !important;
-            padding: 0.35rem 0.6rem !important;
+            font-size: 0.7rem !important;
+            padding: 0.35rem 0.65rem !important;
         }
         #addToQueueModal .modal-icon-badge {
-            width: 36px !important;
-            height: 36px !important;
-            border-radius: 10px !important;
+            width: 44px !important;
+            height: 44px !important;
+            border-radius: 12px !important;
         }
         #addToQueueModal .modal-title {
-            font-size: 1rem !important;
-            line-height: 1.25 !important;
+            font-size: 1.15rem !important;
+            line-height: 1.3 !important;
         }
         #addToQueueModal .modal-header .text-muted.small {
-            font-size: 0.75rem !important;
-            line-height: 1.35 !important;
+            font-size: 0.825rem !important;
+            line-height: 1.4 !important;
             display: block !important;
         }
-        #addToQueueModal .modal-header .btn-close {
-            align-self: flex-start !important;
-            flex-shrink: 0 !important;
-        }
         #addToQueueModal .modal-body {
-            padding: 12px 12px !important;
-            max-height: calc(94vh - 130px) !important;
+            padding: 16px 18px !important;
+            max-height: calc(94vh - 140px) !important;
         }
         #addToQueueModal .add-queue-modal-empty .modal-body {
             min-height: 0 !important;
         }
         #addToQueueModal .add-queue-empty-state {
-            padding: 2rem 0.75rem !important;
+            padding: 2.5rem 1rem !important;
         }
         #addToQueueModal .add-queue-empty-state h6 {
-            font-size: 1.05rem !important;
+            font-size: 1.1rem !important;
             line-height: 1.35;
         }
         #addToQueueModal .add-queue-empty-state p {
             line-height: 1.5;
         }
-        #addToQueueModal .modal-footer {
-            padding: 10px 14px !important;
-        }
-        /* Toolbar: search on its own row, Select All + Clear as equal halves. */
+        /* Toolbar: Select All + Clear as equal halves. */
         #addToQueueModal .queue-toolbar-card .row > [class*="col-"] {
             flex: 0 0 100% !important;
             max-width: 100% !important;
@@ -1546,8 +1538,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
             flex: 1 1 0 !important;
             justify-content: center !important;
             white-space: nowrap !important;
-            padding-left: 8px !important;
-            padding-right: 8px !important;
+            padding-left: 10px !important;
+            padding-right: 10px !important;
             min-height: 38px !important;
         }
         #addToQueueModal #selectAllVehiclesBtn {
@@ -1561,44 +1553,38 @@ $queueOrderGroups = array_values($queueOrderGroups);
             color: #64748b !important;
         }
         .vehicle-select-list {
-            max-height: 48vh !important;
+            max-height: 52vh !important;
         }
         .vehicle-select-item {
-            padding: 10px 10px !important;
+            padding: 12px 14px !important;
+            margin-bottom: 0.65rem !important;
         }
         .vehicle-select-item .plate-number-box {
-            font-size: 0.95rem !important;
+            font-size: 1.05rem !important;
         }
         .vehicle-select-item .badge-departed-status,
         .vehicle-select-item .badge-ready-status {
-            font-size: 0.7rem !important;
-            padding: 0.2rem 0.5rem !important;
+            font-size: 0.75rem !important;
+            padding: 0.3rem 0.65rem !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
         }
         /* Plate + type badge may wrap; status pill stays pinned right. */
         .vehicle-select-item .d-flex.align-items-center.justify-content-between {
             flex-wrap: wrap !important;
             row-gap: 6px !important;
         }
-        .vehicle-select-item .badge-departed-status,
-        .vehicle-select-item .badge-ready-status {
-            white-space: nowrap !important;
-            flex-shrink: 0 !important;
-        }
-        /* Summary banner: tidy stacked rows. */
-        #addToQueueModal .p-3.rounded-3.border.bg-body-tertiary > .d-flex {
-            flex-direction: column !important;
-            align-items: stretch !important;
-        }
-        /* Footer actions: equal full-width stacked buttons, primary action first. */
         #addToQueueModal .modal-footer {
+            padding: 14px 18px !important;
             flex-direction: column !important;
             align-items: stretch !important;
-            gap: 8px !important;
+            gap: 10px !important;
         }
         #addToQueueModal .modal-footer .btn {
             width: 100% !important;
             margin: 0 !important;
             justify-content: center !important;
+            min-height: 42px !important;
         }
         #addToQueueModal .modal-footer #submitToQueueBtn {
             order: 1 !important;
@@ -1666,7 +1652,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         </div>
 
                         <!-- Scrollable Vehicle Card List -->
-                        <div class="vehicle-select-list mb-3" style="max-height: 260px; overflow-y: auto;" id="vehicleListContainer">
+                        <div class="vehicle-select-list mb-3" style="max-height: 380px; overflow-y: auto;" id="vehicleListContainer">
                             <?php foreach ($vehicles as $v): ?>
                                 <?php
                                     $vType = $v['type'] ?? '';
