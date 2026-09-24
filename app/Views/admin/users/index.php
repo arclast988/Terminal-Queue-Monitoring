@@ -107,11 +107,6 @@ if (!isset($countActive)) {
     </div>
 </div>
 
-<div class="modern-card shadow-modern fade-in">
-    <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <span class="modern-card-title">
-            <i class="bi bi-people" style="color: var(--primary-red);"></i>
-            User List
 <style>
 /* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
 .bulk-col {
@@ -292,7 +287,7 @@ if (!isset($countActive)) {
     <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span class="modern-card-title">
             <i class="bi bi-people-fill" style="color: var(--primary-red);"></i>
-            User Accounts
+            User List
         </span>
         <div class="d-flex align-items-center gap-2">
             <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-users" onclick="toggleUserSelectMode()" title="Toggle selection mode for batch actions">
