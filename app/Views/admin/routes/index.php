@@ -72,31 +72,216 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     </div>
 </div>
 
+<style>
+/* Scoped Selection & Bulk Action Rules - Zero Lag Guarantee */
+.route-group-checkbox {
+    display: none !important;
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    border-radius: 4px !important;
+    border: 1.5px solid #94a3b8 !important;
+}
+.selection-mode-active .route-group-checkbox {
+    display: inline-block !important;
+}
+.route-group-checkbox:checked {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+.bulk-action-top-bar {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-left: 4px solid #2563eb !important;
+    border-radius: 12px;
+    padding: 10px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.07);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    animation: bulkBarSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bulk-action-top-bar.is-visible {
+    display: flex !important;
+}
+@keyframes bulkBarSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.bulk-bar-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1e293b;
+}
+.bulk-select-all-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}
+.bulk-select-all-wrap:hover {
+    background-color: #f1f5f9;
+}
+.bulk-bar-divider {
+    display: inline-block;
+    width: 1px;
+    height: 18px;
+    background: #cbd5e1;
+}
+.bulk-count-badge {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-radius: 9999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    min-width: 24px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+.bulk-count-text {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #64748b;
+}
+.bulk-bar-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.btn-bulk-deactivate {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 7px 15px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+}
+.btn-bulk-deactivate:hover:not([disabled]) {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35) !important;
+}
+.btn-bulk-activate {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 7px 15px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+}
+.btn-bulk-activate:hover:not([disabled]) {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35) !important;
+}
+.btn-bulk-delete {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 7px 15px !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+}
+.btn-bulk-delete:hover:not([disabled]) {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35) !important;
+}
+.btn-bulk-deactivate[disabled],
+.btn-bulk-activate[disabled],
+.btn-bulk-delete[disabled],
+.btn-bulk-deactivate:disabled,
+.btn-bulk-activate:disabled,
+.btn-bulk-delete:disabled {
+    opacity: 0.45 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+.btn-bulk-cancel {
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
+    color: #475569 !important;
+    border-radius: 8px !important;
+    padding: 6.5px 14px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+}
+.btn-bulk-cancel:hover {
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-color: #94a3b8 !important;
+}
+</style>
+
 <?php if (!empty($groupedRoutes)): ?>
     <div class="d-flex flex-column gap-4 fade-in" id="routes-container">
         <?php if ($isAdmin): ?>
         <!-- Integrated Top Bulk Action Bar -->
         <div id="route-bulk-toolbar" class="bulk-action-top-bar" style="display: none;">
             <div class="bulk-bar-info">
-                <label class="d-flex align-items-center gap-2 mb-0" style="cursor: pointer; user-select: none;">
+                <label class="bulk-select-all-wrap mb-0">
                     <input type="checkbox" id="select-all-routes" class="form-check-input select-all-checkbox m-0" style="width: 18px; height: 18px; cursor: pointer;">
-                    <span class="fw-semibold">Select All</span>
+                    <span class="fw-bold" style="color: #0f172a; font-size: 14px;">Select All</span>
                 </label>
-                <span class="bulk-count-badge" id="route-selected-count">0</span>
-                <span class="text-muted" id="route-selected-text">0 selected</span>
+                <span class="bulk-bar-divider"></span>
+                <div class="d-inline-flex align-items-center gap-1">
+                    <span class="bulk-count-badge" id="route-selected-count">0</span>
+                    <span class="bulk-count-text text-muted" id="route-selected-text">routes selected</span>
+                </div>
             </div>
             <div class="bulk-bar-actions">
                 <button type="button" class="btn-bulk-deactivate" id="btn-bulk-deactivate-routes" onclick="openRouteBulkModal('deactivate')" disabled>
-                    <i class="bi bi-pause-circle"></i> <span>Deactivate Selected</span>
+                    <i class="bi bi-pause-circle-fill"></i> <span>Deactivate Selected</span>
                 </button>
                 <button type="button" class="btn-bulk-activate" id="btn-bulk-activate-routes" onclick="openRouteBulkModal('activate')" style="display: none;" disabled>
-                    <i class="bi bi-check-circle"></i> <span>Activate Selected</span>
+                    <i class="bi bi-check-circle-fill"></i> <span>Activate Selected</span>
                 </button>
                 <button type="button" class="btn-bulk-delete" id="btn-bulk-delete-routes" onclick="openRouteBulkModal('delete')" style="display: none;" disabled>
-                    <i class="bi bi-trash"></i> <span>Delete Selected</span>
+                    <i class="bi bi-trash3-fill"></i> <span>Delete Selected</span>
                 </button>
                 <button type="button" class="btn-bulk-cancel" onclick="toggleRouteSelectMode(false)">
-                    <i class="bi bi-x"></i> <span>Cancel</span>
+                    <i class="bi bi-x-lg" style="font-size: 11px;"></i> <span>Cancel</span>
                 </button>
             </div>
         </div>
@@ -107,7 +292,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-4" style="background: var(--surface-sunken, #f8fafc); border-bottom: 1px solid var(--border, #e2e8f0);">
                     <div class="d-flex align-items-center gap-2">
                         <?php if ($isAdmin): ?>
-                            <input type="checkbox" class="form-check-input route-group-checkbox me-1" value="<?= $group['items'][0]['id'] ?>" data-status="<?= esc($grpStatus) ?>" data-origin="<?= esc(strtoupper($group['terminal_name'])) ?>" data-destination="<?= esc(strtoupper($group['destination'])) ?>" title="Select Route" style="width: 18px; height: 18px; cursor: pointer;">
+                            <input type="checkbox" class="form-check-input route-group-checkbox me-1" value="<?= $group['items'][0]['id'] ?>" data-status="<?= esc($grpStatus) ?>" data-origin="<?= esc(strtoupper($group['terminal_name'])) ?>" data-destination="<?= esc(strtoupper($group['destination'])) ?>" title="Select Route" style="display: none; width: 18px; height: 18px; cursor: pointer;">
                         <?php endif; ?>
                         <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
                         <span class="fw-bold fs-5" style="color: var(--text-main);"><?= strtoupper(esc($group['terminal_name'])) ?> <i class="bi bi-arrow-right text-muted mx-1"></i> <?= strtoupper(esc($group['destination'])) ?></span>
@@ -517,21 +702,28 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         const toolbar = document.getElementById('route-bulk-toolbar');
         const btnText = document.getElementById('btn-select-routes-text');
         const btn = document.getElementById('btn-toggle-select-routes');
+        const routeBoxes = document.querySelectorAll('.route-group-checkbox');
 
         if (isRouteSelectMode) {
             if (container) container.classList.add('selection-mode-active');
+            routeBoxes.forEach(function(b) {
+                b.style.setProperty('display', 'inline-block', 'important');
+            });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
-                toolbar.style.display = 'flex';
+                toolbar.style.setProperty('display', 'flex', 'important');
             }
             if (btnText) btnText.textContent = 'Exit Select';
             if (btn) btn.classList.add('active');
             updateRouteBulkToolbar();
         } else {
             if (container) container.classList.remove('selection-mode-active');
+            routeBoxes.forEach(function(b) {
+                b.style.setProperty('display', 'none', 'important');
+            });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
-                toolbar.style.display = 'none';
+                toolbar.style.setProperty('display', 'none', 'important');
             }
             if (btnText) btnText.textContent = 'Select';
             if (btn) btn.classList.remove('active');
@@ -553,7 +745,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 
         const count = checkedBoxes.length;
         if (countEl) countEl.textContent = count;
-        if (textEl) textEl.textContent = count + ' selected';
+        if (textEl) textEl.textContent = (count === 1 ? 'route selected' : 'routes selected');
 
         const hasSelection = count > 0;
 

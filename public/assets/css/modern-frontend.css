@@ -1870,26 +1870,34 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 /* ── Bulk Action Toolbar & Selection Styles ── */
-.table-modern .bulk-col {
+.bulk-col {
     display: none !important;
-    width: 42px !important;
-    min-width: 42px !important;
-    max-width: 42px !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
     text-align: center !important;
     vertical-align: middle !important;
     padding: 8px 6px !important;
 }
 
-.table-modern.selection-mode-active .bulk-col {
+.table-modern.selection-mode-active .bulk-col,
+.selection-mode-active .bulk-col {
     display: table-cell !important;
 }
 
 .bulk-col input[type="checkbox"] {
-    width: 17px !important;
-    height: 17px !important;
+    width: 18px !important;
+    height: 18px !important;
     cursor: pointer !important;
     margin: 0 auto !important;
     display: block !important;
+    border-radius: 4px !important;
+    border: 1.5px solid #94a3b8 !important;
+}
+
+.bulk-col input[type="checkbox"]:checked {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
 }
 
 /* Route group checkbox hidden until selection mode is active */
@@ -1902,18 +1910,19 @@ input[type="search"]::-webkit-search-results-decoration {
 
 /* ── Top-Docked Integrated Bulk Action Bar ── */
 .bulk-action-top-bar {
-    background: #ffffff;
-    border: 1.5px solid #cbd5e1;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-left: 4px solid #2563eb !important;
     border-radius: 12px;
-    padding: 10px 16px;
-    margin-bottom: 14px;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    padding: 10px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.07);
     display: none;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
-    animation: bulkBarSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: bulkBarSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes bulkBarSlideDown {
@@ -1934,19 +1943,50 @@ input[type="search"]::-webkit-search-results-decoration {
 .bulk-bar-info {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-size: 13.5px;
     font-weight: 600;
-    color: #334155;
+    color: #1e293b;
+}
+
+.bulk-select-all-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background-color 0.15s ease;
+}
+.bulk-select-all-wrap:hover {
+    background-color: #f1f5f9;
+}
+
+.bulk-bar-divider {
+    display: inline-block;
+    width: 1px;
+    height: 18px;
+    background: #cbd5e1;
 }
 
 .bulk-count-badge {
-    background: var(--primary-red, #dc2626);
-    color: #ffffff;
-    border-radius: 20px;
-    padding: 2px 10px;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    border-radius: 9999px;
+    padding: 3px 10px;
     font-size: 12px;
     font-weight: 700;
+    letter-spacing: 0.02em;
+    min-width: 24px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+}
+
+.bulk-count-text {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #64748b;
 }
 
 .bulk-bar-actions {
@@ -1962,18 +2002,19 @@ input[type="search"]::-webkit-search-results-decoration {
     border: none !important;
     font-weight: 600 !important;
     font-size: 13px !important;
-    padding: 6px 14px !important;
+    padding: 7px 15px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
 }
 .btn-bulk-deactivate:hover:not([disabled]) {
     background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
     transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35) !important;
 }
 
 .btn-bulk-activate {
@@ -1982,18 +2023,19 @@ input[type="search"]::-webkit-search-results-decoration {
     border: none !important;
     font-weight: 600 !important;
     font-size: 13px !important;
-    padding: 6px 14px !important;
+    padding: 7px 15px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
 }
 .btn-bulk-activate:hover:not([disabled]) {
     background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
     transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35) !important;
 }
 
 .btn-bulk-delete {
@@ -2002,46 +2044,52 @@ input[type="search"]::-webkit-search-results-decoration {
     border: none !important;
     font-weight: 600 !important;
     font-size: 13px !important;
-    padding: 6px 14px !important;
+    padding: 7px 15px !important;
     border-radius: 8px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 6px !important;
     box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
     cursor: pointer !important;
 }
 .btn-bulk-delete:hover:not([disabled]) {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
     transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35) !important;
 }
 
 .btn-bulk-deactivate[disabled],
 .btn-bulk-activate[disabled],
-.btn-bulk-delete[disabled] {
-    opacity: 0.55 !important;
+.btn-bulk-delete[disabled],
+.btn-bulk-deactivate:disabled,
+.btn-bulk-activate:disabled,
+.btn-bulk-delete:disabled {
+    opacity: 0.45 !important;
     cursor: not-allowed !important;
+    pointer-events: none !important;
     box-shadow: none !important;
     transform: none !important;
 }
 
 .btn-bulk-cancel {
-    background: #f1f5f9 !important;
-    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    border: 1.5px solid #cbd5e1 !important;
     color: #475569 !important;
     border-radius: 8px !important;
-    padding: 6px 12px !important;
+    padding: 6.5px 14px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     transition: all 0.2s !important;
     cursor: pointer !important;
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 5px !important;
 }
 .btn-bulk-cancel:hover {
-    background: #e2e8f0 !important;
+    background: #f1f5f9 !important;
     color: #1e293b !important;
+    border-color: #94a3b8 !important;
 }
 
 /* ── Table Layout Optimization: Prevent horizontal scrollbar on Desktop ── */

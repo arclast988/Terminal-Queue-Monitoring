@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/themes.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/legacy-bridge.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/modern-frontend.css') ? filemtime(FCPATH . 'assets/css/modern-frontend.css') : '20260924_2')) ?>">
 
     <!-- Modern Admin Styling (for logged-in users) - Remove this line to rollback -->
     <?php if (session()->get('isLoggedIn')): ?>
