@@ -1599,9 +1599,9 @@ body.staff-theme .drawer-nav-item.active i {
 
   body.admin-theme #site-header,
   body.staff-theme #site-header {
-    height: 62px !important;
-    max-height: 62px !important;
-    padding-bottom: 12px !important;
+    height: 66px !important;
+    max-height: 66px !important;
+    padding-bottom: 16px !important;
   }
 
   .sidebar-drawer-header {
@@ -1759,12 +1759,12 @@ body.staff-theme .drawer-nav-item.active i {
     box-sizing: border-box !important;
   }
 
-  /* Cut lower part of header card so its bottom levels with sidebar drawer header line */
+  /* Match header height to drawer header so their bottom edges are level */
   body.admin-theme #site-header,
   body.staff-theme #site-header {
-    height: 62px !important;
-    max-height: 62px !important;
-    padding: 4px 10px 12px !important;
+    height: 66px !important;
+    max-height: 66px !important;
+    padding: 4px 10px 16px !important;
   }
 
   .header-left-cluster {
