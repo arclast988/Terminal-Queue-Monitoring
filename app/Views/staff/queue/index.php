@@ -1393,114 +1393,34 @@ $queueOrderGroups = array_values($queueOrderGroups);
         white-space: nowrap;
     }
 
-    /* Queue selection numbering & indicator box */
-    .queue-select-indicator-box {
-        position: relative;
-        width: 30px;
-        height: 30px;
+    /* Checkbox & Selection Order Number */
+    .checkbox-order-wrapper {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        min-width: 24px;
         flex-shrink: 0;
     }
-    .queue-select-indicator-box .vehicle-checkbox {
-        width: 22px;
-        height: 22px;
+    .checkbox-order-wrapper .queue-order-num {
+        font-size: 11px;
+        font-weight: 800;
+        color: #15803d;
+        line-height: 1;
+        min-height: 13px;
+        margin-bottom: 2px;
+        user-select: none;
+        visibility: hidden;
+    }
+    .dark .checkbox-order-wrapper .queue-order-num,
+    [data-bs-theme="dark"] .checkbox-order-wrapper .queue-order-num {
+        color: #4ade80;
+    }
+    .checkbox-order-wrapper .vehicle-checkbox {
+        width: 1.3em;
+        height: 1.3em;
         margin: 0;
         cursor: pointer;
-        border-radius: 6px;
-        border: 2px solid #cbd5e1;
-        transition: all 0.15s ease-in-out;
-    }
-    .queue-select-indicator-box .vehicle-checkbox:hover {
-        border-color: #16a34a;
-    }
-    .vehicle-select-item.is-selected .queue-select-indicator-box .vehicle-checkbox {
-        display: none !important;
-    }
-    .queue-select-indicator-box .queue-order-badge {
-        display: none;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-        color: #ffffff;
-        font-weight: 800;
-        font-size: 0.85rem;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 6px rgba(22, 163, 74, 0.35);
-        border: 2px solid #ffffff;
-        user-select: none;
-        animation: orderBadgePop 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .queue-select-indicator-box .queue-order-badge.is-first {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.45);
-    }
-    .vehicle-select-item.is-selected .queue-select-indicator-box .queue-order-badge {
-        display: flex !important;
-    }
-    .dark .queue-select-indicator-box .queue-order-badge,
-    [data-bs-theme="dark"] .queue-select-indicator-box .queue-order-badge {
-        border-color: #1e293b;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-    }
-
-    @keyframes orderBadgePop {
-        0% { transform: scale(0.3); opacity: 0; }
-        80% { transform: scale(1.15); }
-        100% { transform: scale(1); opacity: 1; }
-    }
-
-    /* Queue position badge on vehicle card */
-    .badge-queue-pos {
-        display: none;
-        align-items: center;
-        font-size: 0.72rem;
-        font-weight: 700;
-        padding: 0.28rem 0.65rem;
-        border-radius: 9999px;
-        letter-spacing: 0.3px;
-        background: #ecfdf5;
-        color: #047857;
-        border: 1px solid #a7f3d0;
-        box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
-        white-space: nowrap;
-        animation: fadeInPos 0.18s ease-in-out;
-    }
-    .badge-queue-pos.is-first {
-        background: #fef3c7;
-        color: #b45309;
-        border: 1px solid #fde68a;
-        box-shadow: 0 1px 4px rgba(245, 158, 11, 0.2);
-    }
-    .dark .badge-queue-pos,
-    [data-bs-theme="dark"] .badge-queue-pos {
-        background: rgba(16, 185, 129, 0.18) !important;
-        color: #6ee7b7 !important;
-        border-color: rgba(16, 185, 129, 0.35) !important;
-    }
-    .dark .badge-queue-pos.is-first,
-    [data-bs-theme="dark"] .badge-queue-pos.is-first {
-        background: rgba(245, 158, 11, 0.22) !important;
-        color: #fcd34d !important;
-        border-color: rgba(245, 158, 11, 0.45) !important;
-    }
-    @keyframes fadeInPos {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-    }
-
-    /* Queue order notice banner */
-    #queueOrderNotice {
-        transition: all 0.2s ease-in-out;
-    }
-    .dark #queueOrderNotice,
-    [data-bs-theme="dark"] #queueOrderNotice {
-        background: rgba(34, 197, 94, 0.12) !important;
-        border-color: rgba(34, 197, 94, 0.3) !important;
-        color: #86efac !important;
     }
 
     .vehicle-select-list {
@@ -1649,7 +1569,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
         .vehicle-select-item .plate-number-box {
             font-size: 0.95rem !important;
         }
-        .vehicle-select-item .badge-queue-pos,
         .vehicle-select-item .badge-departed-status,
         .vehicle-select-item .badge-ready-status {
             font-size: 0.7rem !important;
@@ -1660,7 +1579,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
             flex-wrap: wrap !important;
             row-gap: 6px !important;
         }
-        .vehicle-select-item .badge-queue-pos,
         .vehicle-select-item .badge-departed-status,
         .vehicle-select-item .badge-ready-status {
             white-space: nowrap !important;
@@ -1747,15 +1665,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
                             </div>
                         </div>
 
-                        <!-- Queue Dispatch Order Notice (Shown when >= 1 vehicle selected) -->
-                        <div id="queueOrderNotice" class="d-none align-items-center justify-content-between p-2 px-3 mb-3 rounded-3" style="background: rgba(22, 163, 74, 0.08); border: 1px solid rgba(22, 163, 74, 0.22);">
-                            <div class="d-flex align-items-center gap-2 small text-success fw-semibold text-truncate">
-                                <i class="bi bi-sort-numeric-down fs-5 flex-shrink-0"></i>
-                                <span class="queue-order-summary text-truncate">Vehicles enter active queue in selection order (<strong>#1</strong> dispatches first).</span>
-                            </div>
-                            <span class="badge rounded-pill bg-success text-white px-2 py-1 small fw-bold flex-shrink-0 ms-2" style="font-size: 0.7rem;">FIFO Order</span>
-                        </div>
-
                         <!-- Scrollable Vehicle Card List -->
                         <div class="vehicle-select-list mb-3" style="max-height: 260px; overflow-y: auto;" id="vehicleListContainer">
                             <?php foreach ($vehicles as $v): ?>
@@ -1778,9 +1687,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                 ?>
                                 <div class="vehicle-select-item" data-search="<?= $searchableText ?>" data-vehicle-id="<?= $v['id'] ?>">
                                     <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
-                                        <div class="queue-select-indicator-box flex-shrink-0">
-                                            <input class="form-check-input vehicle-checkbox" type="checkbox" name="vehicle_ids[]" value="<?= $v['id'] ?>" id="veh_check_<?= $v['id'] ?>" style="cursor: pointer;">
-                                            <span class="queue-order-badge" aria-hidden="true"></span>
+                                        <div class="checkbox-order-wrapper flex-shrink-0">
+                                            <span class="queue-order-num" aria-hidden="true"></span>
+                                            <input class="form-check-input vehicle-checkbox" type="checkbox" name="vehicle_ids[]" value="<?= $v['id'] ?>" id="veh_check_<?= $v['id'] ?>" style="cursor: pointer; width: 1.3em; height: 1.3em;">
                                         </div>
                                         <?php
                                             $vCol = vehicle_type_color($vType);
@@ -1800,8 +1709,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                                     <span class="plate-number-box"><?= esc($v['plate_number']) ?></span>
                                                     <?= vehicle_type_badge($vType) ?>
                                                 </div>
-                                                <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                                                    <span class="badge-queue-pos" style="display: none;"></span>
+                                                <div class="flex-shrink-0">
                                                     <?php if ($isDeparted): ?>
                                                         <span class="badge-departed-status" title="Recently Departed">
                                                             <i class="bi bi-clock-history"></i>
@@ -2981,68 +2889,21 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 var cb = card.querySelector('.vehicle-checkbox');
                 if (!cb) return;
                 var idx = selectedOrder.indexOf(cb.value);
-                var orderBadge = card.querySelector('.queue-order-badge');
-                var posBadge = card.querySelector('.badge-queue-pos');
+                var numSpan = card.querySelector('.queue-order-num');
 
                 if (idx !== -1 && cb.checked) {
                     var positionNum = idx + 1;
-                    if (orderBadge) {
-                        orderBadge.textContent = positionNum;
-                        if (positionNum === 1) {
-                            orderBadge.classList.add('is-first');
-                        } else {
-                            orderBadge.classList.remove('is-first');
-                        }
-                    }
-                    if (posBadge) {
-                        if (positionNum === 1) {
-                            posBadge.classList.add('is-first');
-                            posBadge.innerHTML = '<i class="bi bi-star-fill me-1"></i>#1 First in Queue';
-                        } else {
-                            posBadge.classList.remove('is-first');
-                            posBadge.innerHTML = '<i class="bi bi-sort-numeric-down me-1"></i>#' + positionNum + ' in Queue';
-                        }
-                        posBadge.style.setProperty('display', 'inline-flex', 'important');
+                    if (numSpan) {
+                        numSpan.textContent = positionNum;
+                        numSpan.style.visibility = 'visible';
                     }
                 } else {
-                    if (orderBadge) {
-                        orderBadge.textContent = '';
-                        orderBadge.classList.remove('is-first');
-                    }
-                    if (posBadge) {
-                        posBadge.innerHTML = '';
-                        posBadge.classList.remove('is-first');
-                        posBadge.style.setProperty('display', 'none', 'important');
+                    if (numSpan) {
+                        numSpan.textContent = '';
+                        numSpan.style.visibility = 'hidden';
                     }
                 }
             });
-
-            var notice = document.getElementById('queueOrderNotice');
-            if (notice) {
-                if (selectedOrder.length > 0) {
-                    notice.classList.remove('d-none');
-                    notice.style.setProperty('display', 'flex', 'important');
-                    var firstVehicleId = selectedOrder[0];
-                    var firstCard = document.querySelector('#vehicleListContainer .vehicle-select-item[data-vehicle-id="' + firstVehicleId + '"]');
-                    var firstPlate = firstCard ? (firstCard.querySelector('.plate-number-box') ? firstCard.querySelector('.plate-number-box').textContent.trim() : '') : '';
-                    var noticeSummary = notice.querySelector('.queue-order-summary');
-                    if (noticeSummary) {
-                        if (selectedOrder.length === 1) {
-                            noticeSummary.innerHTML = '<strong>' + (firstPlate ? firstPlate : 'Selected vehicle') + '</strong> is set as <strong>#1 First in Queue</strong>.';
-                        } else {
-                            var firstPlateText = firstPlate ? ' (' + firstPlate + ')' : '';
-                            var lastVehicleId = selectedOrder[selectedOrder.length - 1];
-                            var lastCard = document.querySelector('#vehicleListContainer .vehicle-select-item[data-vehicle-id="' + lastVehicleId + '"]');
-                            var lastPlate = lastCard ? (lastCard.querySelector('.plate-number-box') ? lastCard.querySelector('.plate-number-box').textContent.trim() : '') : '';
-                            var lastPlateText = lastPlate ? ' (' + lastPlate + ')' : '';
-                            noticeSummary.innerHTML = 'Dispatch Order: <strong>#1' + firstPlateText + '</strong> dispatches first &rarr; up to <strong>#' + selectedOrder.length + lastPlateText + '</strong>.';
-                        }
-                    }
-                } else {
-                    notice.classList.add('d-none');
-                    notice.style.setProperty('display', 'none', 'important');
-                }
-            }
         }
 
         function updateSelectionCount() {
@@ -3059,7 +2920,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             if (curSubmit) {
                 curSubmit.disabled = (checkedCount === 0);
                 if (checkedCount > 1) {
-                    curSubmit.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add ' + checkedCount + ' Vehicles to Queue (#1 &rarr; #' + checkedCount + ')';
+                    curSubmit.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add ' + checkedCount + ' Vehicles to Queue';
                 } else if (checkedCount === 1) {
                     curSubmit.innerHTML = '<i class="bi bi-plus-circle-fill fs-6 me-1"></i> Add 1 Vehicle to Queue';
                 } else {
