@@ -2894,7 +2894,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 if (idx !== -1 && cb.checked) {
                     var positionNum = idx + 1;
                     if (numSpan) {
-                        numSpan.textContent = positionNum;
+                        numSpan.textContent = '#' + positionNum;
                         numSpan.style.visibility = 'visible';
                     }
                 } else {
