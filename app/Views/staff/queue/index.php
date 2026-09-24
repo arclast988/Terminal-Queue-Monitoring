@@ -1428,6 +1428,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     .vehicle-select-list {
         padding-right: 4px;
+        max-height: 420px;
+        overflow-y: auto;
     }
     .vehicle-select-list::-webkit-scrollbar {
         width: 6px;
@@ -1463,7 +1465,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     @media (max-width: 768px) {
         #addToQueueModal.fade.show {
-            padding: 12px !important;
+            padding: 8px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -1472,54 +1474,69 @@ $queueOrderGroups = array_values($queueOrderGroups);
             width: 100% !important;
             max-width: 580px !important;
             margin: 0.5rem auto !important;
-            max-height: 94vh !important;
+            height: calc(100dvh - 1rem) !important;
+            max-height: calc(100dvh - 1rem) !important;
+            display: flex !important;
+            flex-direction: column !important;
         }
         #addToQueueModal .modal-content {
-            max-height: 94vh !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 100% !important;
             border-radius: 16px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
         }
         #addToQueueModal .modal-header {
-            padding: 16px 18px !important;
-            gap: 12px !important;
+            padding: 10px 14px !important;
+            gap: 10px !important;
+            flex-shrink: 0 !important;
         }
         #addToQueueModal .modal-header > .d-flex {
             min-width: 0 !important;
             flex: 1 1 auto !important;
-            gap: 12px !important;
+            gap: 10px !important;
         }
         #addToQueueModal .add-queue-title-row {
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 8px !important;
+            gap: 6px !important;
         }
         #addToQueueModal .add-queue-title-row .badge {
-            font-size: 0.7rem !important;
-            padding: 0.35rem 0.65rem !important;
+            font-size: 0.65rem !important;
+            padding: 0.2rem 0.5rem !important;
         }
         #addToQueueModal .modal-icon-badge {
-            width: 44px !important;
-            height: 44px !important;
-            border-radius: 12px !important;
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 9px !important;
+            font-size: 1rem !important;
         }
         #addToQueueModal .modal-title {
-            font-size: 1.15rem !important;
-            line-height: 1.3 !important;
+            font-size: 1.05rem !important;
+            line-height: 1.25 !important;
         }
+        /* Hide wordy subtitle on mobile to give maximum room to vehicles */
         #addToQueueModal .modal-header .text-muted.small {
-            font-size: 0.825rem !important;
-            line-height: 1.4 !important;
-            display: block !important;
+            display: none !important;
         }
         #addToQueueModal .modal-body {
-            padding: 16px 18px !important;
-            max-height: calc(94vh - 140px) !important;
+            padding: 8px 12px 4px 12px !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
         }
         #addToQueueModal .add-queue-modal-empty .modal-body {
             min-height: 0 !important;
+            justify-content: center !important;
         }
         #addToQueueModal .add-queue-empty-state {
-            padding: 2.5rem 1rem !important;
+            padding: 2rem 1rem !important;
         }
         #addToQueueModal .add-queue-empty-state h6 {
             font-size: 1.1rem !important;
@@ -1528,19 +1545,40 @@ $queueOrderGroups = array_values($queueOrderGroups);
         #addToQueueModal .add-queue-empty-state p {
             line-height: 1.5;
         }
-        /* Toolbar: Select All + Clear as equal halves. */
+        /* Compact toolbar card */
+        #addToQueueModal .queue-toolbar-card {
+            padding: 6px 8px !important;
+            margin-bottom: 6px !important;
+            border-radius: 10px !important;
+            flex-shrink: 0 !important;
+        }
+        #addToQueueModal .queue-toolbar-card .row {
+            --bs-gutter-y: 4px !important;
+            --bs-gutter-x: 6px !important;
+        }
         #addToQueueModal .queue-toolbar-card .row > [class*="col-"] {
             flex: 0 0 100% !important;
             max-width: 100% !important;
+        }
+        #addToQueueModal .search-input-modern {
+            font-size: 0.82rem !important;
+            height: 34px !important;
+            min-height: 34px !important;
+        }
+        #addToQueueModal .input-group-text {
+            padding: 0 8px !important;
+            font-size: 0.82rem !important;
         }
         #addToQueueModal #selectAllVehiclesBtn,
         #addToQueueModal #deselectAllVehiclesBtn {
             flex: 1 1 0 !important;
             justify-content: center !important;
             white-space: nowrap !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-            min-height: 38px !important;
+            padding: 2px 8px !important;
+            min-height: 30px !important;
+            height: 30px !important;
+            font-size: 0.76rem !important;
+            border-radius: 6px !important;
         }
         #addToQueueModal #selectAllVehiclesBtn {
             background: #ecfdf5 !important;
@@ -1552,45 +1590,122 @@ $queueOrderGroups = array_values($queueOrderGroups);
             border: 1px solid #e2e8f0 !important;
             color: #64748b !important;
         }
+        /* Vehicle list takes 100% of remaining vertical height */
         .vehicle-select-list {
-            max-height: 52vh !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            height: auto !important;
+            overflow-y: auto !important;
+            margin-bottom: 0 !important;
+            padding-right: 2px !important;
         }
+        /* Compact, legible vehicle item cards */
         .vehicle-select-item {
-            padding: 12px 14px !important;
-            margin-bottom: 0.65rem !important;
+            padding: 8px 10px !important;
+            margin-bottom: 6px !important;
+            border-radius: 10px !important;
+            gap: 8px !important;
+        }
+        .vehicle-select-item .vehicle-type-icon {
+            width: 34px !important;
+            height: 34px !important;
+            padding: 5px !important;
+            border-radius: 8px !important;
+        }
+        .vehicle-select-item .vehicle-type-icon img {
+            height: 20px !important;
+            width: auto !important;
+        }
+        .vehicle-select-item .vehicle-type-icon i {
+            font-size: 14px !important;
         }
         .vehicle-select-item .plate-number-box {
-            font-size: 1.05rem !important;
+            font-size: 0.98rem !important;
         }
         .vehicle-select-item .badge-departed-status,
         .vehicle-select-item .badge-ready-status {
-            font-size: 0.75rem !important;
-            padding: 0.3rem 0.65rem !important;
+            font-size: 0.68rem !important;
+            padding: 0.2rem 0.5rem !important;
             white-space: nowrap !important;
             flex-shrink: 0 !important;
         }
-        /* Plate + type badge may wrap; status pill stays pinned right. */
+        .vehicle-select-item .text-muted.small {
+            font-size: 0.74rem !important;
+        }
+        .checkbox-order-wrapper {
+            min-width: 20px !important;
+        }
+        .checkbox-order-wrapper .queue-order-num {
+            font-size: 10px !important;
+            min-height: 12px !important;
+            margin-bottom: 1px !important;
+        }
+        .checkbox-order-wrapper .vehicle-checkbox {
+            width: 1.15em !important;
+            height: 1.15em !important;
+        }
         .vehicle-select-item .d-flex.align-items-center.justify-content-between {
             flex-wrap: wrap !important;
-            row-gap: 6px !important;
+            row-gap: 4px !important;
         }
+        /* Footer: single horizontal row with Cancel and Add button */
         #addToQueueModal .modal-footer {
-            padding: 14px 18px !important;
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 10px !important;
-        }
-        #addToQueueModal .modal-footer .btn {
-            width: 100% !important;
-            margin: 0 !important;
-            justify-content: center !important;
-            min-height: 42px !important;
-        }
-        #addToQueueModal .modal-footer #submitToQueueBtn {
-            order: 1 !important;
+            padding: 8px 12px !important;
+            padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-shrink: 0 !important;
         }
         #addToQueueModal .modal-footer [data-bs-dismiss="modal"] {
+            order: 1 !important;
+            width: auto !important;
+            flex: 0 0 auto !important;
+            padding: 0.45rem 0.9rem !important;
+            min-height: 38px !important;
+            font-size: 0.85rem !important;
+            border-radius: 8px !important;
+            margin: 0 !important;
+        }
+        #addToQueueModal .modal-footer #submitToQueueBtn {
             order: 2 !important;
+            width: auto !important;
+            flex: 1 1 auto !important;
+            padding: 0.45rem 0.9rem !important;
+            min-height: 38px !important;
+            font-size: 0.85rem !important;
+            border-radius: 8px !important;
+            margin: 0 !important;
+            justify-content: center !important;
+            white-space: nowrap !important;
+        }
+    }
+
+    /* Extra optimization for phones: full screen edge-to-edge modal sheet */
+    @media (max-width: 575.98px) {
+        #addToQueueModal.fade.show {
+            padding: 0 !important;
+        }
+        #addToQueueModal .modal-dialog {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            min-height: 100dvh !important;
+            border-radius: 0 !important;
+        }
+        #addToQueueModal .modal-content {
+            width: 100% !important;
+            height: 100dvh !important;
+            max-height: 100dvh !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+        #addToQueueModal .modal-footer {
+            padding-bottom: max(12px, env(safe-area-inset-bottom)) !important;
         }
     }
 </style>
@@ -1652,7 +1767,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         </div>
 
                         <!-- Scrollable Vehicle Card List -->
-                        <div class="vehicle-select-list mb-3" style="max-height: 380px; overflow-y: auto;" id="vehicleListContainer">
+                        <div class="vehicle-select-list mb-3" id="vehicleListContainer">
                             <?php foreach ($vehicles as $v): ?>
                                 <?php
                                     $vType = $v['type'] ?? '';
