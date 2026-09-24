@@ -1302,39 +1302,47 @@ $queueOrderGroups = array_values($queueOrderGroups);
     }
 
     #addToQueueModal .input-group {
-        border-radius: 10px !important;
+        border-radius: 24px !important;
         border: 1.5px solid var(--border-strong, #cbd5e1) !important;
         background: var(--surface, #ffffff) !important;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
         display: flex !important;
         align-items: stretch !important;
         overflow: hidden;
+        height: 36px !important;
+        min-height: 36px !important;
     }
     #addToQueueModal .input-group:focus-within {
-        border-color: #15803d !important;
-        box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15) !important;
+        border-color: #16a34a !important;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
     }
     #addToQueueModal .input-group > .input-group-text {
         border: none !important;
         background: transparent !important;
         color: #64748b !important;
-        padding: 0 0 0 12px !important;
+        padding: 0 0 0 14px !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
-        font-size: 0.95rem !important;
+        font-size: 0.92rem !important;
     }
     #addToQueueModal .input-group > .search-input-modern {
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
         color: var(--text-main, #1e293b) !important;
-        height: 38px !important;
-        min-height: 38px !important;
-        padding: 6px 36px 6px 8px !important;
-        font-size: 0.88rem !important;
+        height: 100% !important;
+        min-height: 100% !important;
+        padding: 4px 34px 4px 8px !important;
+        font-size: 0.85rem !important;
+        font-family: 'Outfit', -apple-system, sans-serif !important;
         border-radius: 0 !important;
+    }
+    #addToQueueModal .input-group > .search-input-modern::placeholder {
+        color: #64748b !important;
+        opacity: 0.85;
+        font-size: 0.85rem;
     }
     #addToQueueModal .input-group > .search-input-modern:focus {
         border: none !important;
@@ -1564,13 +1572,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
         }
         /* Compact toolbar card */
         #addToQueueModal .queue-toolbar-card {
-            padding: 6px 8px !important;
-            margin-bottom: 6px !important;
-            border-radius: 10px !important;
+            padding: 8px 10px !important;
+            margin-bottom: 8px !important;
+            border-radius: 12px !important;
             flex-shrink: 0 !important;
         }
         #addToQueueModal .queue-toolbar-card .row {
-            --bs-gutter-y: 4px !important;
+            --bs-gutter-y: 6px !important;
             --bs-gutter-x: 6px !important;
         }
         #addToQueueModal .queue-toolbar-card .row > [class*="col-"] {
