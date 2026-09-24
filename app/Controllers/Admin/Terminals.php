@@ -145,4 +145,59 @@ class Terminals extends BaseController
             ],
         ];
     }
+
+    public function bulkAction()
+    {
+        $role = session()->get('role');
+        if (!in_array($role, ['admin', 'super_admin'], true)) {
+            return redirect()->to('/admin/terminals')->with('error', 'You do not have permission to delete terminals.');
+        }
+
+        $rawIds = $this->request->getPost('ids');
+        if (is_string($rawIds)) {
+            $ids = array_filter(array_map('intval', explode(',', $rawIds)));
+        } elseif (is_array($rawIds)) {
+            $ids = array_filter(array_map('intval', $rawIds));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->to('/admin/terminals')->with('error', 'No terminals selected for deletion.');
+        }
+
+        $terminals = $this->terminalModel->whereIn('id', $ids)->findAll();
+        if (empty($terminals)) {
+            return redirect()->to('/admin/terminals')->with('error', 'Selected terminals not found.');
+        }
+
+        $deletedCount = 0;
+        $failedNames = [];
+
+        foreach ($terminals as $term) {
+            try {
+                if ($this->terminalModel->delete($term['id'])) {
+                    $deletedCount++;
+                } else {
+                    $failedNames[] = $term['name'];
+                }
+            } catch (\Throwable $e) {
+                $failedNames[] = $term['name'];
+            }
+        }
+
+        if ($deletedCount > 0) {
+            $this->logActivity('Bulk delete terminals', "Deleted {$deletedCount} terminal(s).");
+            $this->broadcastUpdate('fare_update', ['action' => 'terminals_bulk_deleted']);
+        }
+
+        if ($deletedCount > 0 && empty($failedNames)) {
+            return redirect()->to('/admin/terminals')->with('success', "{$deletedCount} terminal(s) deleted successfully.");
+        } elseif ($deletedCount > 0 && !empty($failedNames)) {
+            return redirect()->to('/admin/terminals')->with('warning', "{$deletedCount} terminal(s) deleted, but " . implode(', ', $failedNames) . " could not be deleted because they are linked to active records.");
+        } else {
+            return redirect()->to('/admin/terminals')->with('error', 'Could not delete selected terminal(s) because they are linked to active records (routes, fares, or rules).');
+        }
+    }
 }
+

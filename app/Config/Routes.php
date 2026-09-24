@@ -94,6 +94,7 @@ $routes->group('admin/announcements', ['filter' => 'auth:admin,staff'], function
     $routes->post('delete/(:num)', 'Admin\Announcements::delete/$1');
     $routes->post('delete-all', 'Admin\Announcements::deleteAll');
     $routes->post('deleteAll', 'Admin\Announcements::deleteAll');
+    $routes->post('bulk-action', 'Admin\Announcements::bulkAction');
 });
 
 // System Branding & Settings — Super Admin only
@@ -144,6 +145,7 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->get('terminals/edit/(:num)', 'Admin\Terminals::edit/$1');
     $routes->post('terminals/update/(:num)', 'Admin\Terminals::update/$1');
     $routes->post('terminals/delete/(:num)', 'Admin\Terminals::delete/$1');
+    $routes->post('terminals/bulk-action', 'Admin\Terminals::bulkAction');
 
     // History
     $routes->get('history', 'Admin\History::index');

@@ -203,4 +203,42 @@ class Announcements extends BaseController
 
         return redirect()->to('/admin/announcements')->with('error', 'Failed to delete all announcements.');
     }
+
+    public function bulkAction()
+    {
+        $role = session()->get('role');
+        if (!in_array($role, ['admin', 'super_admin', 'staff'], true)) {
+            return redirect()->to('/admin/announcements')->with('error', 'You do not have permission to delete announcements.');
+        }
+
+        $rawIds = $this->request->getPost('ids');
+        if (is_string($rawIds)) {
+            $ids = array_filter(array_map('intval', explode(',', $rawIds)));
+        } elseif (is_array($rawIds)) {
+            $ids = array_filter(array_map('intval', $rawIds));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->to('/admin/announcements')->with('error', 'No announcements selected for deletion.');
+        }
+
+        try {
+            $count = $this->announcementModel->whereIn('id', $ids)->countAllResults();
+            if ($count === 0) {
+                return redirect()->to('/admin/announcements')->with('error', 'Selected announcements not found.');
+            }
+
+            if ($this->announcementModel->whereIn('id', $ids)->delete()) {
+                $this->logActivity('Bulk delete announcements', "Deleted $count announcement(s).");
+                $this->broadcastUpdate('announcement_update', ['action' => 'bulk_delete', 'ids' => $ids]);
+                return redirect()->to('/admin/announcements')->with('success', "$count announcement(s) deleted successfully.");
+            }
+        } catch (\Throwable $e) {
+            return redirect()->to('/admin/announcements')->with('error', 'Failed to delete selected announcements.');
+        }
+
+        return redirect()->to('/admin/announcements')->with('error', 'Failed to delete selected announcements.');
+    }
 }
