@@ -1410,6 +1410,7 @@ body.staff-theme .drawer-nav-item.active i {
     justify-content: center;
     gap: 3px;
     margin-left: 0;
+    transform: translateX(-3px);
     padding: 0;
     border: 0;
     background: transparent;
@@ -1596,6 +1597,21 @@ body.staff-theme .drawer-nav-item.active i {
     padding: 6px 10px 20px !important;
   }
 
+  body.admin-theme #site-header,
+  body.staff-theme #site-header {
+    height: 66px !important;
+    max-height: 66px !important;
+    padding-bottom: 16px !important;
+  }
+
+  .sidebar-drawer-header {
+    height: 66px !important;
+    min-height: 66px !important;
+    max-height: 66px !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
   body.guest-theme.layout-lock header#site-header {
     height: 64px !important;
     max-height: 64px !important;
@@ -1675,6 +1691,10 @@ body.staff-theme .drawer-nav-item.active i {
 
   .sidebar-drawer-header {
     min-height: 66px;
+    height: 66px !important;
+    max-height: 66px !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid #e2e8f0 !important;
     padding: 10px 10px 10px 12px;
   }
 
@@ -1737,6 +1757,14 @@ body.staff-theme .drawer-nav-item.active i {
     justify-content: space-between !important;
     width: 100% !important;
     box-sizing: border-box !important;
+  }
+
+  /* Cut lower part of header card so its bottom levels with sidebar drawer header line */
+  body.admin-theme #site-header,
+  body.staff-theme #site-header {
+    height: 66px !important;
+    max-height: 66px !important;
+    padding: 4px 10px 16px !important;
   }
 
   .header-left-cluster {

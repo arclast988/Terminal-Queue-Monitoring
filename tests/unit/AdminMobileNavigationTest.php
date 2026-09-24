@@ -44,7 +44,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
         $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
-        $this->assertStringContainsString('navigation.css?v=20260921_17', $navbar);
+        $this->assertStringContainsString('navigation.css?v=20260921_18', $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void

@@ -1587,28 +1587,12 @@ $queueOrderGroups = array_values($queueOrderGroups);
         }
         #addToQueueModal #selectAllVehiclesBtn,
         #addToQueueModal #deselectAllVehiclesBtn {
-            flex: 1 1 0 !important;
-            justify-content: center !important;
             white-space: nowrap !important;
             padding: 0.35rem 0.75rem !important;
             min-height: 34px !important;
             height: 34px !important;
             font-size: 0.82rem !important;
             border-radius: 8px !important;
-        }
-        #addToQueueModal #selectAllVehiclesBtn:focus,
-        #addToQueueModal #deselectAllVehiclesBtn:focus {
-            box-shadow: none !important;
-        }
-        @media (hover: none) and (pointer: coarse) {
-            #addToQueueModal #selectAllVehiclesBtn:not(:active) {
-                background-color: transparent !important;
-                color: #198754 !important;
-            }
-            #addToQueueModal #deselectAllVehiclesBtn:not(:active) {
-                background-color: transparent !important;
-                color: #6c757d !important;
-            }
         }
         /* Vehicle list takes 100% of remaining vertical height */
         .vehicle-select-list {
@@ -3098,7 +3082,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     }
                 });
                 updateSelectionCount();
-                selAll.blur();
                 return;
             }
             var clearBtn = e.target.closest('#deselectAllVehiclesBtn');
