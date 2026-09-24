@@ -229,12 +229,13 @@ class ThemeConsistencyAndClearButtonTest extends CIUnitTestCase
         $css1 = app_bg_slideshow_css(['https://example.com/photo1.jpg'], 0.22);
         $this->assertStringContainsString('body::after', $css1);
         $this->assertStringContainsString('https://example.com/photo1.jpg', $css1);
+        $this->assertStringNotContainsString('@keyframes terminalBgSlideshow', $css1);
         $this->assertStringNotContainsString('@keyframes palomponBgSlideshow', $css1);
 
         // 2 slides -> 12s duration animation with 2 keyframe stops
         $css2 = app_bg_slideshow_css(['https://example.com/p1.jpg', 'https://example.com/p2.jpg'], 0.20);
-        $this->assertStringContainsString('animation: palomponBgSlideshow 12s infinite', $css2);
-        $this->assertStringContainsString('@keyframes palomponBgSlideshow', $css2);
+        $this->assertStringContainsString('animation: terminalBgSlideshow 12s infinite', $css2);
+        $this->assertStringContainsString('@keyframes terminalBgSlideshow', $css2);
         $this->assertStringContainsString('https://example.com/p1.jpg', $css2);
         $this->assertStringContainsString('https://example.com/p2.jpg', $css2);
 
