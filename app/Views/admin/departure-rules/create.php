@@ -60,7 +60,7 @@
     border-color: #3b82f6;
 }
 
-/* Compact, perfectly anchored horizontal Time Picker Popover */
+/* Compact, touch-friendly Time Picker Popover */
 .military-time-popover {
     display: none;
     position: absolute;
@@ -71,14 +71,14 @@
     border-radius: 0.75rem;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
     z-index: 1050;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.65rem;
     box-sizing: border-box;
 }
 
 .military-time-popover.open {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.45rem;
     animation: tpFadeIn 0.15s ease-out;
 }
 
@@ -87,11 +87,55 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+.tp-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.tp-btn {
+    width: 54px;
+    height: 27px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #f8fafc;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    transition: all 0.12s ease;
+}
+
+.tp-btn:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.tp-btn:active {
+    background: #e2e8f0;
+    transform: scale(0.95);
+    color: var(--primary, #c62828);
+}
+
+.tp-btn i {
+    font-size: 13px;
+    line-height: 1;
+    pointer-events: none;
+}
+
 .tp-input {
-    width: 60px;
-    height: 42px;
+    width: 54px;
+    height: 38px;
     border: 1.5px solid #cbd5e1;
-    border-radius: 0.5rem;
+    border-radius: 6px;
     text-align: center;
     font-size: 1.25rem;
     font-weight: 700;
@@ -102,7 +146,7 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, box-shadow 0.15s;
     -moz-appearance: textfield;
 }
 
@@ -122,25 +166,45 @@
     font-weight: 800;
     color: #334155;
     user-select: none;
-    margin: 0;
+    margin: 0 1px;
+    line-height: 1;
 }
 
 .tp-set-btn {
-    height: 42px;
-    padding: 0 18px;
+    align-self: stretch;
+    min-height: 98px;
+    padding: 0 16px;
     border: none;
-    border-radius: 0.5rem;
-    background: var(--primary, #1565C0);
-    color: #fff;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    background: var(--primary, #c62828);
+    color: #ffffff;
+    font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.1s;
     white-space: nowrap;
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 0;
+    gap: 4px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+}
+
+.tp-set-btn:hover {
+    background: #b71c1c;
+    color: #ffffff;
+}
+
+.tp-set-btn:active {
+    transform: scale(0.97);
+}
+
+.tp-set-btn i {
+    font-size: 1.25rem;
+    line-height: 1;
 }
 
 .tp-set-btn:hover {
@@ -483,18 +547,53 @@ document.addEventListener('DOMContentLoaded', function() {
         let popover = document.createElement('div');
         popover.className = 'military-time-popover';
 
+        // Hours Column (Up, Input, Down)
+        let hhCol = document.createElement('div');
+        hhCol.className = 'tp-col';
+
+        let hhUpBtn = document.createElement('button');
+        hhUpBtn.type = 'button';
+        hhUpBtn.className = 'tp-btn tp-btn-up';
+        hhUpBtn.tabIndex = -1;
+        hhUpBtn.setAttribute('aria-label', 'Increase hours');
+        hhUpBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+        hhCol.appendChild(hhUpBtn);
+
         let hhInput = document.createElement('input');
         hhInput.type = 'text';
         hhInput.className = 'tp-input';
         hhInput.maxLength = 2;
         hhInput.inputMode = 'numeric';
         hhInput.placeholder = 'HH';
-        popover.appendChild(hhInput);
+        hhCol.appendChild(hhInput);
 
+        let hhDownBtn = document.createElement('button');
+        hhDownBtn.type = 'button';
+        hhDownBtn.className = 'tp-btn tp-btn-down';
+        hhDownBtn.tabIndex = -1;
+        hhDownBtn.setAttribute('aria-label', 'Decrease hours');
+        hhDownBtn.innerHTML = '<i class="bi bi-chevron-down"></i>';
+        hhCol.appendChild(hhDownBtn);
+
+        popover.appendChild(hhCol);
+
+        // Separator
         let sep = document.createElement('span');
         sep.className = 'tp-sep';
         sep.textContent = ':';
         popover.appendChild(sep);
+
+        // Minutes Column (Up, Input, Down)
+        let mmCol = document.createElement('div');
+        mmCol.className = 'tp-col';
+
+        let mmUpBtn = document.createElement('button');
+        mmUpBtn.type = 'button';
+        mmUpBtn.className = 'tp-btn tp-btn-up';
+        mmUpBtn.tabIndex = -1;
+        mmUpBtn.setAttribute('aria-label', 'Increase minutes');
+        mmUpBtn.innerHTML = '<i class="bi bi-chevron-up"></i>';
+        mmCol.appendChild(mmUpBtn);
 
         let mmInput = document.createElement('input');
         mmInput.type = 'text';
@@ -502,15 +601,72 @@ document.addEventListener('DOMContentLoaded', function() {
         mmInput.maxLength = 2;
         mmInput.inputMode = 'numeric';
         mmInput.placeholder = 'MM';
-        popover.appendChild(mmInput);
+        mmCol.appendChild(mmInput);
 
+        let mmDownBtn = document.createElement('button');
+        mmDownBtn.type = 'button';
+        mmDownBtn.className = 'tp-btn tp-btn-down';
+        mmDownBtn.tabIndex = -1;
+        mmDownBtn.setAttribute('aria-label', 'Decrease minutes');
+        mmDownBtn.innerHTML = '<i class="bi bi-chevron-down"></i>';
+        mmCol.appendChild(mmDownBtn);
+
+        popover.appendChild(mmCol);
+
+        // Set Button
         let setBtn = document.createElement('button');
         setBtn.type = 'button';
         setBtn.className = 'tp-set-btn';
-        setBtn.textContent = 'Set';
+        setBtn.innerHTML = '<i class="bi bi-check2"></i><span>Set</span>';
         popover.appendChild(setBtn);
 
         wrap.appendChild(popover);
+
+        function stepHour(delta) {
+            let cur = parseInt(hhInput.value, 10) || 0;
+            cur = (cur + delta + 24) % 24;
+            hhInput.value = String(cur).padStart(2, '0');
+        }
+
+        function stepMinute(delta) {
+            let cur = parseInt(mmInput.value, 10) || 0;
+            cur = (cur + delta + 60) % 60;
+            mmInput.value = String(cur).padStart(2, '0');
+        }
+
+        function setupSpin(btnEl, stepCallback) {
+            let timer = null;
+            let interval = null;
+
+            function onStart(e) {
+                if (e.button && e.button !== 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                stepCallback();
+
+                timer = setTimeout(function() {
+                    interval = setInterval(stepCallback, 80);
+                }, 300);
+            }
+
+            function onStop(e) {
+                if (timer) { clearTimeout(timer); timer = null; }
+                if (interval) { clearInterval(interval); interval = null; }
+            }
+
+            btnEl.addEventListener('mousedown', onStart);
+            btnEl.addEventListener('touchstart', onStart, { passive: false });
+
+            btnEl.addEventListener('mouseup', onStop);
+            btnEl.addEventListener('mouseleave', onStop);
+            btnEl.addEventListener('touchend', onStop);
+            btnEl.addEventListener('touchcancel', onStop);
+        }
+
+        setupSpin(hhUpBtn, function() { stepHour(1); });
+        setupSpin(hhDownBtn, function() { stepHour(-1); });
+        setupSpin(mmUpBtn, function() { stepMinute(1); });
+        setupSpin(mmDownBtn, function() { stepMinute(-1); });
 
         function syncFromMain() {
             let val = input.value.trim();
