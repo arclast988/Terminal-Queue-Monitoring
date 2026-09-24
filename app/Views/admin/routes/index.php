@@ -73,7 +73,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 </div>
 
 <style>
-/* Scoped Selection & Bulk Action Rules - Zero Lag Guarantee */
+/* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
 .route-group-checkbox {
     display: none !important;
     width: 18px !important;
@@ -90,137 +90,133 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     border-color: #2563eb !important;
 }
 .bulk-action-top-bar {
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    border-left: 4px solid #2563eb !important;
-    border-radius: 12px;
-    padding: 10px 18px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.07);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     display: none;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    animation: bulkBarSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 10px;
 }
 .bulk-action-top-bar.is-visible {
     display: flex !important;
 }
-@keyframes bulkBarSlideDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
 .bulk-bar-info {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    font-size: 13.5px;
-    font-weight: 600;
+    gap: 10px;
+    font-size: 13px;
     color: #1e293b;
 }
 .bulk-select-all-wrap {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     cursor: pointer;
     user-select: none;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background-color 0.15s ease;
-}
-.bulk-select-all-wrap:hover {
-    background-color: #f1f5f9;
+    margin-bottom: 0;
 }
 .bulk-bar-divider {
     display: inline-block;
     width: 1px;
-    height: 18px;
-    background: #cbd5e1;
+    height: 16px;
+    background: #e2e8f0;
 }
 .bulk-count-badge {
-    background: #2563eb !important;
-    color: #ffffff !important;
-    border-radius: 9999px;
-    padding: 3px 10px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    padding: 2px 7px;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    min-width: 24px;
-    text-align: center;
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    font-weight: 600;
 }
 .bulk-count-text {
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: 13px;
     color: #64748b;
 }
 .bulk-bar-actions {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 .btn-bulk-deactivate {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
-    color: #ffffff !important;
-    border: none !important;
+    background: #fef3c7 !important;
+    color: #d97706 !important;
+    border: 1px solid #fde68a !important;
     font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
     font-size: 13px !important;
-    padding: 7px 15px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25) !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    align-items: center;
+    gap: 6px;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
     cursor: pointer !important;
 }
 .btn-bulk-deactivate:hover:not([disabled]) {
-    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.35) !important;
-}
-.btn-bulk-activate {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    background: #f59e0b !important;
     color: #ffffff !important;
-    border: none !important;
+    border-color: #f59e0b !important;
+}
+.btn-bulk-deactivate:hover:not([disabled]) i,
+.btn-bulk-deactivate:hover:not([disabled]) span {
+    color: #ffffff !important;
+}
+
+.btn-bulk-activate {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
     font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
     font-size: 13px !important;
-    padding: 7px 15px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25) !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    align-items: center;
+    gap: 6px;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
     cursor: pointer !important;
 }
 .btn-bulk-activate:hover:not([disabled]) {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35) !important;
-}
-.btn-bulk-delete {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    background: #16a34a !important;
     color: #ffffff !important;
-    border: none !important;
+    border-color: #16a34a !important;
+}
+.btn-bulk-activate:hover:not([disabled]) i,
+.btn-bulk-activate:hover:not([disabled]) span {
+    color: #ffffff !important;
+}
+
+.btn-bulk-delete {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+    border: 1px solid #fecaca !important;
     font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
     font-size: 13px !important;
-    padding: 7px 15px !important;
-    border-radius: 8px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25) !important;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    align-items: center;
+    gap: 6px;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
     cursor: pointer !important;
 }
 .btn-bulk-delete:hover:not([disabled]) {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35) !important;
+    background: #dc2626 !important;
+    color: #ffffff !important;
+    border-color: #dc2626 !important;
 }
+.btn-bulk-delete:hover:not([disabled]) i,
+.btn-bulk-delete:hover:not([disabled]) span {
+    color: #ffffff !important;
+}
+
 .btn-bulk-deactivate[disabled],
 .btn-bulk-activate[disabled],
 .btn-bulk-delete[disabled],
@@ -233,23 +229,23 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     box-shadow: none !important;
     transform: none !important;
 }
+
 .btn-bulk-cancel {
     background: #ffffff !important;
     border: 1.5px solid #cbd5e1 !important;
     color: #475569 !important;
-    border-radius: 8px !important;
-    padding: 6.5px 14px !important;
+    border-radius: 6px !important;
+    padding: 5px 12px !important;
     font-size: 13px !important;
     font-weight: 600 !important;
-    transition: all 0.2s !important;
+    transition: all 0.15s ease !important;
     cursor: pointer !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
+    align-items: center;
+    gap: 4px;
 }
 .btn-bulk-cancel:hover {
     background: #f1f5f9 !important;
-    color: #1e293b !important;
+    color: #0f172a !important;
     border-color: #94a3b8 !important;
 }
 </style>
@@ -261,27 +257,26 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         <div id="route-bulk-toolbar" class="bulk-action-top-bar" style="display: none;">
             <div class="bulk-bar-info">
                 <label class="bulk-select-all-wrap mb-0">
-                    <input type="checkbox" id="select-all-routes" class="form-check-input select-all-checkbox m-0" style="width: 18px; height: 18px; cursor: pointer;">
-                    <span class="fw-bold" style="color: #0f172a; font-size: 14px;">Select All</span>
+                    <input type="checkbox" id="select-all-routes" class="form-check-input select-all-checkbox m-0" style="width: 17px; height: 17px; cursor: pointer;">
+                    <span class="fw-semibold text-dark" style="font-size: 13.5px;">Select All</span>
                 </label>
                 <span class="bulk-bar-divider"></span>
-                <div class="d-inline-flex align-items-center gap-1">
-                    <span class="bulk-count-badge" id="route-selected-count">0</span>
-                    <span class="bulk-count-text text-muted" id="route-selected-text">routes selected</span>
-                </div>
+                <span class="bulk-count-badge">
+                    <span id="route-selected-count">0</span> <span id="route-selected-text">selected</span>
+                </span>
             </div>
             <div class="bulk-bar-actions">
-                <button type="button" class="btn-bulk-deactivate" id="btn-bulk-deactivate-routes" onclick="openRouteBulkModal('deactivate')" disabled>
-                    <i class="bi bi-pause-circle-fill"></i> <span>Deactivate Selected</span>
+                <button type="button" class="btn-modern btn-modern-sm btn-action-deactivate btn-bulk-deactivate" id="btn-bulk-deactivate-routes" onclick="openRouteBulkModal('deactivate')" disabled>
+                    <i class="bi bi-pause-circle"></i> <span>Deactivate Selected</span>
                 </button>
-                <button type="button" class="btn-bulk-activate" id="btn-bulk-activate-routes" onclick="openRouteBulkModal('activate')" style="display: none;" disabled>
-                    <i class="bi bi-check-circle-fill"></i> <span>Activate Selected</span>
+                <button type="button" class="btn-modern btn-modern-sm btn-action-activate btn-bulk-activate" id="btn-bulk-activate-routes" onclick="openRouteBulkModal('activate')" style="display: none;" disabled>
+                    <i class="bi bi-check-circle"></i> <span>Activate Selected</span>
                 </button>
-                <button type="button" class="btn-bulk-delete" id="btn-bulk-delete-routes" onclick="openRouteBulkModal('delete')" style="display: none;" disabled>
-                    <i class="bi bi-trash3-fill"></i> <span>Delete Selected</span>
+                <button type="button" class="btn-modern btn-modern-sm btn-action-delete btn-bulk-delete" id="btn-bulk-delete-routes" onclick="openRouteBulkModal('delete')" style="display: none;" disabled>
+                    <i class="bi bi-trash"></i> <span>Delete Selected</span>
                 </button>
-                <button type="button" class="btn-bulk-cancel" onclick="toggleRouteSelectMode(false)">
-                    <i class="bi bi-x-lg" style="font-size: 11px;"></i> <span>Cancel</span>
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline btn-bulk-cancel" onclick="toggleRouteSelectMode(false)">
+                    <i class="bi bi-x"></i> <span>Cancel</span>
                 </button>
             </div>
         </div>
@@ -750,22 +745,22 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         const hasSelection = count > 0;
 
         if (currentRouteTab === 'archived') {
-            if (btnDeact) btnDeact.style.display = 'none';
+            if (btnDeact) btnDeact.style.setProperty('display', 'none', 'important');
             if (btnAct) {
-                btnAct.style.display = 'inline-flex';
+                btnAct.style.setProperty('display', 'inline-flex', 'important');
                 btnAct.disabled = !hasSelection;
             }
             if (btnDel) {
-                btnDel.style.display = 'inline-flex';
+                btnDel.style.setProperty('display', 'inline-flex', 'important');
                 btnDel.disabled = !hasSelection;
             }
         } else {
             if (btnDeact) {
-                btnDeact.style.display = 'inline-flex';
+                btnDeact.style.setProperty('display', 'inline-flex', 'important');
                 btnDeact.disabled = !hasSelection;
             }
-            if (btnAct) btnAct.style.display = 'none';
-            if (btnDel) btnDel.style.display = 'none';
+            if (btnAct) btnAct.style.setProperty('display', 'none', 'important');
+            if (btnDel) btnDel.style.setProperty('display', 'none', 'important');
         }
 
         const selectAll = document.getElementById('select-all-routes');
