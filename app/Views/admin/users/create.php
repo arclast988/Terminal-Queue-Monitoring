@@ -47,7 +47,7 @@ $defaultAvatarSvg = <<<SVG
 SVG;
 ?>
 
-                <form action="<?= base_url('admin/users/store') ?>" method="post" enctype="multipart/form-data" novalidate>
+                <form action="<?= base_url('admin/users/store') ?>" method="post" enctype="multipart/form-data">
                     <?= csrf_field() ?>
 
                     <!-- Profile Photo Section -->

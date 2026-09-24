@@ -141,6 +141,7 @@ class DepartureRules extends BaseController
             'terminals'       => $this->terminalModel->findAll(),
             'routes'          => $this->getRoutesForDropdown(),
             'selectedRouteId' => $selectedRouteId,
+            'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label')->findAll(),
         ];
         return view('admin/departure-rules/create', $data);
     }
@@ -175,8 +176,9 @@ class DepartureRules extends BaseController
         $timeTo     = $this->normalizeClockTime($this->request->getPost('time_to'));
 
         if ($timeFrom === null || $timeTo === null) {
-            return redirect()->back()->withInput()->with('errors', [
-                'time' => 'Time From and Time To must use 24-hour HH:MM format.'
+            $msg = 'Time From and Time To must use 24-hour HH:MM format.';
+            return redirect()->back()->withInput()->with('error', $msg)->with('errors', [
+                'time' => $msg
             ]);
         }
 
@@ -193,7 +195,8 @@ class DepartureRules extends BaseController
 
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
-            return redirect()->back()->withInput()->with('error', 'Time From must be earlier than Time To.');
+            $msg = 'Time From must be earlier than Time To.';
+            return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['time' => $msg]);
         }
 
         // Check for an overlapping rule in the same scope (same route, or terminal-wide default).
@@ -207,7 +210,8 @@ class DepartureRules extends BaseController
         }
         $overlap = $overlapQuery->first();
         if ($overlap) {
-            return redirect()->back()->withInput()->with('error', 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').');
+            $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
+            return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
         }
 
         $label       = $this->request->getPost('label') ?: null;
@@ -243,11 +247,12 @@ class DepartureRules extends BaseController
         }
 
         $data = [
-            'title'     => 'Edit Departure Rule',
-            'rule'      => $rule,
-            'prefix'    => $this->getPrefix(),
-            'terminals' => $this->terminalModel->findAll(),
-            'routes'    => $this->getRoutesForDropdown(),
+            'title'         => 'Edit Departure Rule',
+            'rule'          => $rule,
+            'prefix'        => $this->getPrefix(),
+            'terminals'     => $this->terminalModel->findAll(),
+            'routes'        => $this->getRoutesForDropdown(),
+            'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label')->findAll(),
         ];
 
         return view('admin/departure-rules/edit', $data);
@@ -283,8 +288,9 @@ class DepartureRules extends BaseController
         $timeTo     = $this->normalizeClockTime($this->request->getPost('time_to'));
 
         if ($timeFrom === null || $timeTo === null) {
-            return redirect()->back()->withInput()->with('errors', [
-                'time' => 'Time From and Time To must use 24-hour HH:MM format.'
+            $msg = 'Time From and Time To must use 24-hour HH:MM format.';
+            return redirect()->back()->withInput()->with('error', $msg)->with('errors', [
+                'time' => $msg
             ]);
         }
 
@@ -301,7 +307,8 @@ class DepartureRules extends BaseController
 
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
-            return redirect()->back()->withInput()->with('error', 'Time From must be earlier than Time To.');
+            $msg = 'Time From must be earlier than Time To.';
+            return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['time' => $msg]);
         }
 
         // Check for an overlapping rule in the same scope (same route, or terminal-wide default), excluding this rule.
@@ -316,7 +323,8 @@ class DepartureRules extends BaseController
         }
         $overlap = $overlapQuery->first();
         if ($overlap) {
-            return redirect()->back()->withInput()->with('error', 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').');
+            $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
+            return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
         }
 
         $oldRule     = $this->ruleModel->find($id);

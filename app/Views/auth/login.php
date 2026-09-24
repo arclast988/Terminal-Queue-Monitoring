@@ -739,7 +739,7 @@
                         </div>
                     <?php endif; ?>
 
-                    <form action="<?= base_url('login') ?>" method="post" novalidate>
+                    <form action="<?= base_url('login') ?>" method="post" id="loginForm">
                         <?= csrf_field() ?>
 
                         <div class="field">
@@ -748,7 +748,10 @@
                                 <input type="text" id="username" name="username"
                                        placeholder="Enter your username or email"
                                        autocomplete="username"
-                                       required autofocus>
+                                       required
+                                       oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : '')"
+                                       oninput="this.setCustomValidity('')"
+                                       autofocus>
                             </div>
                         </div>
 
@@ -758,7 +761,9 @@
                                 <input type="password" id="password" name="password"
                                        placeholder="Enter your password"
                                        autocomplete="current-password"
-                                       required>
+                                       required
+                                       oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : '')"
+                                       oninput="this.setCustomValidity('')">
                                 <button type="button" class="toggle" aria-pressed="false"
                                         aria-label="Show password">
                                     <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -838,11 +843,16 @@
                 });
             }
 
-            // --- Soft loading state on submit (client-side only) ---
-            var form = document.querySelector('form');
+            // --- Form validation and soft loading state on submit ---
+            var form = document.getElementById('loginForm') || document.querySelector('form');
             var submit = form ? form.querySelector('.btn-primary') : null;
             if (form && submit) {
-                form.addEventListener('submit', function () {
+                form.addEventListener('submit', function (e) {
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        form.reportValidity();
+                        return false;
+                    }
                     submit.classList.add('is-loading');
                     var label = submit.querySelector('.btn-label');
                     if (label) label.textContent = 'Signing in\u2026';

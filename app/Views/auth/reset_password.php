@@ -286,13 +286,20 @@
                     </svg>
                 </a>
             <?php else: ?>
-            <form action="<?= base_url('reset-password/' . $token) ?>" method="post" novalidate>
+            <form action="<?= base_url('reset-password/' . $token) ?>" method="post" id="resetPasswordForm">
                 <?= csrf_field() ?>
 
                 <div class="field password">
                     <label for="password">New password</label>
                     <div class="control">
-                        <input type="password" id="password" name="password" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8" autofocus>
+                        <input type="password" id="password" name="password" 
+                               placeholder="At least 8 characters" 
+                               autocomplete="new-password" 
+                               required 
+                               minlength="8" 
+                               oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : (this.validity.tooShort ? 'Please enter at least 8 characters.' : ''))"
+                               oninput="this.setCustomValidity('')"
+                               autofocus>
                         <button type="button" class="toggle" aria-pressed="false" aria-label="Show password">
                             <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
@@ -316,7 +323,13 @@
                 <div class="field password">
                     <label for="confirm_password">Confirm password</label>
                     <div class="control">
-                        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat new password" autocomplete="new-password" required minlength="8">
+                        <input type="password" id="confirm_password" name="confirm_password" 
+                               placeholder="Repeat new password" 
+                               autocomplete="new-password" 
+                               required 
+                               minlength="8"
+                               oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : '')"
+                               oninput="this.setCustomValidity('')">
                         <button type="button" class="toggle" aria-pressed="false" aria-label="Show password">
                             <svg class="icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
@@ -380,10 +393,24 @@
             }
 
             // --- Soft loading state on submit (client-side only) ---
-            var form = document.querySelector('form');
+            var form = document.getElementById('resetPasswordForm') || document.querySelector('form');
             var submit = form ? form.querySelector('.btn') : null;
             if (form && submit) {
-                form.addEventListener('submit', function () {
+                form.addEventListener('submit', function (e) {
+                    var p1 = document.getElementById('password');
+                    var p2 = document.getElementById('confirm_password');
+                    if (p1 && p2 && p1.value && p2.value && p1.value !== p2.value) {
+                        e.preventDefault();
+                        p2.setCustomValidity('Passwords do not match.');
+                        p2.reportValidity();
+                        p2.focus();
+                        return false;
+                    }
+                    if (!form.checkValidity()) {
+                        e.preventDefault();
+                        form.reportValidity();
+                        return false;
+                    }
                     submit.classList.add('is-loading');
                     var label = submit.querySelector('.btn-label');
                     if (label) label.textContent = 'Resetting\u2026';

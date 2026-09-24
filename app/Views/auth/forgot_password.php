@@ -250,11 +250,17 @@
                 </div>
             <?php endif; ?>
 
-            <form action="<?= base_url('forgot-password') ?>" method="post" novalidate>
+            <form action="<?= base_url('forgot-password') ?>" method="post" id="forgotPasswordForm">
                 <?= csrf_field() ?>
                 <div class="field">
                     <label for="username">Username or Email</label>
-                    <input type="text" id="username" name="username" value="<?= esc(old('username', '')) ?>" placeholder="Enter your username or email" autocomplete="username" required autofocus>
+                    <input type="text" id="username" name="username" value="<?= esc(old('username', '')) ?>" 
+                           placeholder="Enter your username or email" 
+                           autocomplete="username" 
+                           required 
+                           oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : '')"
+                           oninput="this.setCustomValidity('')"
+                           autofocus>
                 </div>
                 <button type="submit" class="btn" data-loading-text="Sending verification code…">
                     <span>Continue</span>
@@ -281,6 +287,23 @@
             window.applyLiveBranding(e.detail.data);
         }
     });
+
+    (function () {
+        var form = document.getElementById('forgotPasswordForm') || document.querySelector('form');
+        var btn = form ? form.querySelector('button[type="submit"]') : null;
+        if (form && btn) {
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    form.reportValidity();
+                    return false;
+                }
+                btn.classList.add('is-loading');
+                var span = btn.querySelector('span');
+                if (span) span.textContent = 'Sending verification code\u2026';
+            });
+        }
+    })();
     </script>
 </body>
 </html>

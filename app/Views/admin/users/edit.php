@@ -50,7 +50,7 @@
 
                 <?= $this->include('partials/flash_notices') ?>
 
-                <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" novalidate data-no-change-guard>
+                <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" data-no-change-guard>
                     <?= csrf_field() ?>
 
                     <?php
