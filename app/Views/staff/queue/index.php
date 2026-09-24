@@ -1577,19 +1577,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
             flex: 0 0 100% !important;
             max-width: 100% !important;
         }
-        #addToQueueModal .input-group {
-            border-radius: 8px !important;
-        }
-        #addToQueueModal .input-group > .search-input-modern {
-            font-size: 0.84rem !important;
-            height: 36px !important;
-            min-height: 36px !important;
-            padding: 6px 32px 6px 6px !important;
-        }
-        #addToQueueModal .input-group > .input-group-text {
-            padding: 0 0 0 10px !important;
-            font-size: 0.88rem !important;
-        }
         #addToQueueModal #selectAllVehiclesBtn,
         #addToQueueModal #deselectAllVehiclesBtn {
             flex: 1 1 0 !important;
@@ -1600,6 +1587,20 @@ $queueOrderGroups = array_values($queueOrderGroups);
             height: 34px !important;
             font-size: 0.82rem !important;
             border-radius: 8px !important;
+        }
+        #addToQueueModal #selectAllVehiclesBtn:focus,
+        #addToQueueModal #deselectAllVehiclesBtn:focus {
+            box-shadow: none !important;
+        }
+        @media (hover: none) and (pointer: coarse) {
+            #addToQueueModal #selectAllVehiclesBtn:not(:active) {
+                background-color: transparent !important;
+                color: #198754 !important;
+            }
+            #addToQueueModal #deselectAllVehiclesBtn:not(:active) {
+                background-color: transparent !important;
+                color: #6c757d !important;
+            }
         }
         /* Vehicle list takes 100% of remaining vertical height */
         .vehicle-select-list {
@@ -3076,6 +3077,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             // re-rendered on realtime refresh) — handle via delegation.
             var selAll = e.target.closest('#selectAllVehiclesBtn');
             if (selAll) {
+                e.preventDefault();
                 selectedOrder = [];
                 getVehicleItems().forEach(function(item) {
                     if (!item.classList.contains('d-none') && item.style.display !== 'none') {
@@ -3088,23 +3090,24 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     }
                 });
                 updateSelectionCount();
+                selAll.blur();
                 return;
             }
             var clearBtn = e.target.closest('#deselectAllVehiclesBtn');
             if (clearBtn) {
-                selectedOrder = [];
-                var searchInput = getModalSearchInput();
-                if (searchInput) searchInput.value = '';
-                getVehicleItems().forEach(function(item) {
-                    item.classList.remove('d-none');
-                    item.style.setProperty('display', 'flex', 'important');
-                });
-                getCheckboxes().forEach(function(cb) {
-                    cb.checked = false;
-                    var card = cb.closest('.vehicle-select-item');
-                    if (card) updateCardStyle(card);
-                });
-                updateSelectionCount();
+                e.preventDefault();
+                if (selectedOrder.length > 0) {
+                    selectedOrder = [];
+                    getCheckboxes().forEach(function(cb) {
+                        if (cb.checked) {
+                            cb.checked = false;
+                            var card = cb.closest('.vehicle-select-item');
+                            if (card) updateCardStyle(card);
+                        }
+                    });
+                    updateSelectionCount();
+                }
+                clearBtn.blur();
                 return;
             }
 
@@ -3146,7 +3149,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 input.value = '';
                 toggleVehicleModalClear('');
                 input.dispatchEvent(new Event('input', { bubbles: true }));
-                input.focus();
             }
         };
 
