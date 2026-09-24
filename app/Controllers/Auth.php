@@ -610,12 +610,20 @@ class Auth extends BaseController
             $email = $user['username'];
         }
 
+        $db = \Config\Database::connect();
+        $hasActiveToken = (bool) $db->table('password_reset_tokens')
+            ->where('username', $user['username'])
+            ->where('used', 0)
+            ->where('expires_at >', date('Y-m-d H:i:s'))
+            ->countAllResults();
+
         return view('auth/change_password', [
-            'title'        => 'Change Password',
-            'user'         => $user,
-            'email'        => $email,
-            'masked_email' => !empty($email) ? $this->maskEmail($email) : 'No email registered',
-            'has_email'    => !empty($email),
+            'title'            => 'Change Password',
+            'user'             => $user,
+            'email'            => $email,
+            'masked_email'     => !empty($email) ? $this->maskEmail($email) : 'No email registered',
+            'has_email'        => !empty($email),
+            'has_active_token' => $hasActiveToken,
         ]);
     }
 

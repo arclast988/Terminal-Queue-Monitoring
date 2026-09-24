@@ -140,6 +140,36 @@ SVG;
                         </div>
                     <?php endif; ?>
 
+                    <?php
+                    $flashError = session()->getFlashdata('error');
+                    $isCurrentPwError = !empty($flashError) && (stripos($flashError, 'current password') !== false);
+                    $isCodeError = !empty($flashError) && (stripos($flashError, 'verification code') !== false || stripos($flashError, 'get code') !== false || stripos($flashError, 'expired') !== false);
+                    ?>
+
+                    <?php if (!empty($flashError)): ?>
+                        <div class="alert-modern alert-modern-danger mb-4 fade-in" data-permanent="true">
+                            <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+                            <div><?= esc($flashError) ?></div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (session()->getFlashdata('errors')): ?>
+                        <div class="alert-modern alert-modern-danger mb-4 fade-in" data-permanent="true">
+                            <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+                            <div>
+                                <?php if (is_array(session()->getFlashdata('errors'))): ?>
+                                    <ul class="mb-0 ps-3">
+                                        <?php foreach (session()->getFlashdata('errors') as $err): ?>
+                                            <li><?= esc($err) ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php else: ?>
+                                    <?= esc(session()->getFlashdata('errors')) ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Form -->
                     <form action="<?= base_url('change-password/update') ?>" method="POST" id="changePasswordForm" class="cp-enterprise-form">
                         <?= csrf_field() ?>
@@ -153,7 +183,7 @@ SVG;
                                 <input type="password" 
                                        name="current_password" 
                                        id="current_password" 
-                                       class="form-control-modern input-with-toggle" 
+                                       class="form-control-modern input-with-toggle <?= $isCurrentPwError ? 'is-invalid' : '' ?>"
                                        placeholder="Enter your current password" 
                                        required 
                                        oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : '')"
@@ -163,6 +193,11 @@ SVG;
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
+                            <?php if ($isCurrentPwError): ?>
+                                <div class="text-danger small mt-1 fw-semibold d-flex align-items-center gap-1" id="currentPwFeedback">
+                                    <i class="bi bi-exclamation-circle-fill"></i> <?= esc($flashError) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <!-- 6-Digit Email Verification Code Group -->
@@ -181,14 +216,15 @@ SVG;
                                     <input type="text" 
                                            name="verification_code" 
                                            id="verification_code" 
-                                           class="form-control-modern otp-input-field" 
+                                           class="form-control-modern otp-input-field <?= $isCodeError ? 'is-invalid' : '' ?>"
                                            placeholder="000000" 
                                            maxlength="6" 
                                            pattern="\d{6}" 
                                            inputmode="numeric" 
                                            autocomplete="one-time-code" 
+                                           value="<?= esc(old('verification_code', '')) ?>"
                                            required
-                                           oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please fill out this field.' : 'Please enter a valid 6-digit code.')"
+                                           oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'Please click \'Get Code\' to receive your code, then enter it here.' : 'Please enter a valid 6-digit code.')"
                                            oninput="this.setCustomValidity('')">
                                 </div>
                                 <button type="button" 
@@ -199,6 +235,11 @@ SVG;
                                     <span id="btnSendOtpText">Get Code</span>
                                 </button>
                             </div>
+                            <?php if ($isCodeError): ?>
+                                <div class="text-danger small mt-1 fw-semibold d-flex align-items-center gap-1" id="codeFeedback">
+                                    <i class="bi bi-exclamation-circle-fill"></i> <?= esc($flashError) ?>
+                                </div>
+                            <?php endif; ?>
 
                             <!-- Real-time dynamic OTP status notice -->
                             <div id="otpStatusBox" class="mt-2 p-2 rounded-3" style="display: none; font-size: 13px; font-weight: 500;"></div>
@@ -271,6 +312,34 @@ SVG;
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!--  System Warning Alert Modal (No "localhost says")  -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="modal fade" id="systemWarningModal" tabindex="-1" aria-labelledby="systemWarningLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.18); overflow: hidden; background: #ffffff;">
+            <div class="modal-body text-center" style="padding: 32px 24px 22px;">
+                <!-- Icon badge: soft pink/peach rounded square with warning triangle -->
+                <div style="width: 60px; height: 60px; border-radius: 16px; background-color: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+                    <i class="fas fa-triangle-exclamation" style="font-size: 26px; color: #1e293b;"></i>
+                </div>
+
+                <h4 id="systemWarningLabel" style="font-weight: 700; font-size: 1.3rem; color: #1e293b; margin-bottom: 12px; letter-spacing: -0.01em;">
+                    Notice
+                </h4>
+                <p id="systemWarningMessage" style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0 auto; max-width: 290px;">
+                </p>
+            </div>
+
+            <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; justify-content: center; background: #ffffff;">
+                <button type="button" class="btn" id="systemWarningOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: #15803d; border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
+                    OK
+                </button>
             </div>
         </div>
     </div>
@@ -365,6 +434,26 @@ SVG;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+.form-control-modern.is-invalid {
+    border-color: #ef4444 !important;
+    background-color: #fef2f2 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+.dark .form-control-modern.is-invalid,
+[data-bs-theme="dark"] .form-control-modern.is-invalid {
+    border-color: #f87171 !important;
+    background-color: rgba(239, 68, 68, 0.1) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+}
+@keyframes pulseGetCode {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.7); }
+    50% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(21, 128, 61, 0); }
+}
+.btn-pulse-attention {
+    animation: pulseGetCode 0.5s ease-in-out 3 !important;
 }
 
 /* Requirements & Feedback */
@@ -480,15 +569,48 @@ function togglePasswordVisibility(inputId, btn) {
     }
 }
 
-// Field Warning Helper using native HTML5 validation tooltips (no popup modals)
-function showFieldWarning(inputEl, message) {
-    if (!inputEl) return;
-    inputEl.setCustomValidity(message || 'Please fill out this field.');
-    inputEl.reportValidity();
-    try {
-        inputEl.focus();
-    } catch (e) {}
+// System Warning Modal Helper (In-System warning dialog matching Picture 1 style, zero "localhost says")
+var systemWarningModalEl = null;
+var systemWarningModalInstance = null;
+var pendingWarningFocusEl = null;
+
+function showSystemWarning(message, title, focusEl) {
+    if (!systemWarningModalEl) {
+        systemWarningModalEl = document.getElementById('systemWarningModal');
+    }
+    if (!systemWarningModalEl) {
+        console.warn('System warning:', message);
+        return;
+    }
+
+    var titleEl = document.getElementById('systemWarningLabel');
+    var msgEl = document.getElementById('systemWarningMessage');
+
+    if (titleEl) titleEl.textContent = title || 'Notice';
+    if (msgEl) msgEl.textContent = message || '';
+
+    pendingWarningFocusEl = focusEl || null;
+
+    if (window.bootstrap && window.bootstrap.Modal) {
+        if (!systemWarningModalInstance) {
+            systemWarningModalInstance = window.bootstrap.Modal.getOrCreateInstance(systemWarningModalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+        }
+        systemWarningModalInstance.show();
+
+        setTimeout(function() {
+            var okBtn = document.getElementById('systemWarningOkBtn');
+            if (okBtn) okBtn.focus();
+        }, 120);
+    }
 }
+
+// Global safety intercept on this page: native browser dialogs route to showSystemWarning
+window.alert = function(msg) {
+    showSystemWarning(msg, 'Notice');
+};
 
 // Live Validation: Length & Password Match
 document.addEventListener('DOMContentLoaded', function() {
@@ -503,6 +625,30 @@ document.addEventListener('DOMContentLoaded', function() {
     var otpStatusBox = document.getElementById('otpStatusBox');
     var cpForm = document.getElementById('changePasswordForm');
     var btnSubmitPassword = document.getElementById('btnSubmitPassword');
+
+    // Attach listener to restore focus to invalid input field after warning modal is dismissed
+    systemWarningModalEl = document.getElementById('systemWarningModal');
+    if (systemWarningModalEl) {
+        systemWarningModalEl.addEventListener('hidden.bs.modal', function() {
+            if (pendingWarningFocusEl) {
+                try {
+                    pendingWarningFocusEl.focus();
+                    pendingWarningFocusEl.classList.add('is-invalid');
+                    setTimeout(function() {
+                        pendingWarningFocusEl.classList.remove('is-invalid');
+                    }, 2500);
+                } catch (e) {}
+                pendingWarningFocusEl = null;
+            }
+        });
+    }
+
+    <?php if (session()->getFlashdata('error')): ?>
+    // Display server-side error in the system warning dialog for seamless unified UX
+    setTimeout(function() {
+        showSystemWarning(<?= json_encode((string) session()->getFlashdata('error')) ?>, 'Notice', <?= $isCurrentPwError ? "document.getElementById('current_password')" : ($isCodeError ? "document.getElementById('verification_code')" : "null") ?>);
+    }, 200);
+    <?php endif; ?>
 
     // Clear custom validity on input
     [curPwInput, codeInput, newPwInput, confirmPwInput].forEach(function(el) {
@@ -565,12 +711,35 @@ document.addEventListener('DOMContentLoaded', function() {
         updateFormValidity();
     }
 
+    var otpCodeSent = <?= !empty($has_active_token) ? 'true' : 'false' ?>;
+
+    function highlightGetCodeButton() {
+        if (!btnSendOtp) return;
+        btnSendOtp.classList.add('btn-pulse-attention');
+        setTimeout(function() {
+            btnSendOtp.classList.remove('btn-pulse-attention');
+        }, 1800);
+        try {
+            btnSendOtp.focus();
+        } catch (e) {}
+    }
+
     if (curPwInput) {
-        curPwInput.addEventListener('input', updateFormValidity);
+        curPwInput.addEventListener('input', function() {
+            curPwInput.classList.remove('is-invalid');
+            var fb = document.getElementById('currentPwFeedback');
+            if (fb) fb.style.display = 'none';
+            updateFormValidity();
+        });
         curPwInput.addEventListener('change', updateFormValidity);
     }
     if (codeInput) {
-        codeInput.addEventListener('input', updateFormValidity);
+        codeInput.addEventListener('input', function() {
+            codeInput.classList.remove('is-invalid');
+            var fb = document.getElementById('codeFeedback');
+            if (fb) fb.style.display = 'none';
+            updateFormValidity();
+        });
         codeInput.addEventListener('change', updateFormValidity);
     }
     if (newPwInput) {
@@ -646,16 +815,21 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(data) {
                 otpStatusBox.style.display = 'block';
                 if (data.status === 'success') {
+                    otpCodeSent = true;
                     otpStatusBox.className = 'mt-2 p-2 rounded-3 status-success';
                     otpStatusBox.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + (data.message || 'Verification code sent to your email.');
                     startOtpCooldown(data.cooldown || 60);
                     var codeInput = document.getElementById('verification_code');
-                    if (codeInput) codeInput.focus();
+                    if (codeInput) {
+                        codeInput.classList.remove('is-invalid');
+                        codeInput.focus();
+                    }
                 } else {
                     otpStatusBox.className = 'mt-2 p-2 rounded-3 status-error';
                     otpStatusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' + (data.message || 'Could not send verification code.');
                     btnSendOtp.disabled = false;
                     btnSendOtpText.textContent = originalText;
+                    showSystemWarning(data.message || 'Could not send verification code.', 'Notice');
                 }
             })
             .catch(function(err) {
@@ -664,11 +838,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 otpStatusBox.innerHTML = '<i class="bi bi-exclamation-circle-fill me-1"></i> Connection error. Please check your network and try again.';
                 btnSendOtp.disabled = false;
                 btnSendOtpText.textContent = originalText;
+                showSystemWarning('Connection error. Please check your network and try again.', 'Notice');
             });
         });
     }
 
-    // Client-side Form Submit Validation with native browser tooltips (no popup modal)
+    // Client-side Form Submit Validation (All warnings from system modal, zero localhost alert)
     if (cpForm) {
         cpForm.addEventListener('submit', function(e) {
             var p1 = newPwInput ? newPwInput.value : '';
@@ -678,49 +853,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!cur) {
                 e.preventDefault();
-                showFieldWarning(curPwInput, 'Please fill out this field.');
+                showSystemWarning('Please enter your current password.', 'Notice', curPwInput);
                 return false;
             }
 
             if (!code) {
                 e.preventDefault();
-                showFieldWarning(codeInput, 'Please fill out this field.');
+                otpStatusBox.style.display = 'block';
+                otpStatusBox.className = 'mt-2 p-2 rounded-3 status-error';
+                otpStatusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> Please click <strong>Get Code</strong> to receive your 6-digit confirmation code via email.';
+                highlightGetCodeButton();
+                showSystemWarning('Please click "Get Code" first to receive your confirmation code.', 'Notice', codeInput);
+                return false;
+            }
+
+            if (!otpCodeSent) {
+                e.preventDefault();
+                otpStatusBox.style.display = 'block';
+                otpStatusBox.className = 'mt-2 p-2 rounded-3 status-error';
+                otpStatusBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> You have not requested a code yet. Please click <strong>Get Code</strong> first.';
+                highlightGetCodeButton();
+                showSystemWarning('You have not requested a code yet. Please click "Get Code" first.', 'Notice', codeInput);
                 return false;
             }
 
             if (code.length !== 6 || !/^\d{6}$/.test(code)) {
                 e.preventDefault();
-                showFieldWarning(codeInput, 'Please enter a valid 6-digit code.');
+                showSystemWarning('Please enter a valid 6-digit code.', 'Notice', codeInput);
                 return false;
             }
 
             if (!p1) {
                 e.preventDefault();
-                showFieldWarning(newPwInput, 'Please fill out this field.');
+                showSystemWarning('Please enter your new password.', 'Notice', newPwInput);
                 return false;
             }
 
             if (p1.length < 8) {
                 e.preventDefault();
-                showFieldWarning(newPwInput, 'Please enter at least 8 characters.');
+                showSystemWarning('New password must be at least 8 characters long.', 'Notice', newPwInput);
                 return false;
             }
 
             if (cur && p1 && cur === p1) {
                 e.preventDefault();
-                showFieldWarning(newPwInput, 'New password must be different from your current password.');
+                showSystemWarning('New password must be different from your current password.', 'Notice', newPwInput);
                 return false;
             }
 
             if (!p2) {
                 e.preventDefault();
-                showFieldWarning(confirmPwInput, 'Please fill out this field.');
+                showSystemWarning('Please confirm your new password.', 'Notice', confirmPwInput);
                 return false;
             }
 
             if (p1 !== p2) {
                 e.preventDefault();
-                showFieldWarning(confirmPwInput, 'Passwords do not match.');
+                showSystemWarning('New password and confirm password do not match.', 'Notice', confirmPwInput);
                 return false;
             }
         });
