@@ -294,7 +294,7 @@
         pointer-events: auto !important;
     }
 
-    /* 10-Second Undo Banner */
+    /* 10-Second Undo Banner - Compact & Responsive */
     .undo-banner {
         position: relative;
         background: #fffbeb !important;
@@ -302,7 +302,7 @@
         color: #92400e !important;
         border-radius: 12px !important;
         box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12) !important;
-        padding: 0.85rem 1.15rem !important;
+        padding: 0.75rem 1rem !important;
     }
     .dark .undo-banner,
     [data-bs-theme="dark"] .undo-banner {
@@ -310,15 +310,67 @@
         border-color: #b45309 !important;
         color: #fde68a !important;
     }
-    .undo-banner .btn-undo-action {
+    .undo-banner-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+    }
+    .undo-banner-msg-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .undo-banner-icon {
+        font-size: 1.15rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    .undo-banner-text {
+        color: #78350f;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+    .undo-banner-text strong {
+        color: #451a03;
+        font-weight: 700;
+    }
+    .dark .undo-banner .undo-banner-text,
+    [data-bs-theme="dark"] .undo-banner .undo-banner-text {
+        color: #fde68a !important;
+    }
+    .dark .undo-banner .undo-banner-text strong,
+    [data-bs-theme="dark"] .undo-banner .undo-banner-text strong {
+        color: #ffffff !important;
+    }
+    .undo-banner-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+    .undo-banner .btn-undo-action,
+    body .undo-banner .btn-undo-action {
         background: #f59e0b !important;
         border: none !important;
         color: #1c1917 !important;
-        font-size: 0.875rem;
-        font-weight: 700;
+        font-size: 0.85rem !important;
+        font-weight: 700 !important;
+        padding: 6px 16px !important;
+        min-height: 36px !important;
+        height: auto !important;
+        border-radius: 20px !important;
         transition: all 0.2s ease;
         box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
         cursor: pointer;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap;
     }
     .undo-banner .btn-undo-action:hover:not(:disabled) {
         background: #d97706 !important;
@@ -330,6 +382,19 @@
         opacity: 0.7;
         cursor: not-allowed;
     }
+    .undo-banner-close {
+        flex-shrink: 0;
+        opacity: 0.65;
+        transition: opacity 0.15s ease;
+        padding: 4px !important;
+    }
+    .undo-banner-close:hover {
+        opacity: 1;
+    }
+    .dark .undo-banner .undo-banner-close,
+    [data-bs-theme="dark"] .undo-banner .undo-banner-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+    }
     .undo-progress-bar {
         position: absolute;
         bottom: 0;
@@ -339,6 +404,68 @@
         background: linear-gradient(90deg, #f59e0b, #b45309);
         border-bottom-left-radius: 12px;
         border-bottom-right-radius: 12px;
+    }
+
+    /* Mobile Responsive Optimizations for Undo Banner */
+    @media (max-width: 768px) {
+        .undo-banner {
+            padding: 8px 10px 10px !important;
+            margin-bottom: 10px !important;
+            border-radius: 10px !important;
+        }
+        .undo-banner-content {
+            display: grid !important;
+            grid-template-columns: 1fr auto !important;
+            grid-template-rows: auto auto !important;
+            align-items: center !important;
+            gap: 7px 6px !important;
+        }
+        .undo-banner-msg-left {
+            grid-column: 1 / 2 !important;
+            grid-row: 1 / 2 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            min-width: 0 !important;
+        }
+        .undo-banner-icon {
+            font-size: 1rem !important;
+        }
+        .undo-banner-text {
+            font-size: 12.5px !important;
+        }
+        .undo-banner-actions {
+            display: contents !important;
+        }
+        .undo-banner-close {
+            grid-column: 2 / 3 !important;
+            grid-row: 1 / 2 !important;
+            justify-self: end !important;
+            padding: 2px !important;
+            transform: scale(0.85);
+        }
+        .undo-banner .btn-undo-action,
+        body .undo-banner .btn-undo-action,
+        body .undo-banner button#undoTripBtn {
+            grid-column: 1 / -1 !important;
+            grid-row: 2 / 3 !important;
+            width: 100% !important;
+            min-height: 34px !important;
+            height: 34px !important;
+            padding: 3px 12px !important;
+            font-size: 12.5px !important;
+            border-radius: 18px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-shadow: 0 1px 4px rgba(245, 158, 11, 0.3) !important;
+        }
+        #undoSuccessAlert {
+            padding: 8px 12px !important;
+            font-size: 13px !important;
+            margin-bottom: 10px !important;
+            border-radius: 10px !important;
+        }
     }
 
     /* Modern Queue Card Hover Effects & Transitions */
@@ -2525,17 +2652,21 @@ $queueOrderGroups = array_values($queueOrderGroups);
         if (!bannerContainer) return;
 
         bannerContainer.innerHTML =
-            '<div class="undo-banner alert-modern alert-modern-warning fade-in d-flex align-items-center justify-content-between position-relative overflow-hidden" id="undoBannerAlert">' +
-                '<div class="d-flex align-items-center gap-2 flex-wrap min-w-0 py-1">' +
-                    '<span class="fs-5" style="line-height:1;">⚠️</span>' +
-                    '<span class="fw-semibold text-dark">' +
-                        'Trip for <strong>' + escHtml(plateNumber) + '</strong> was canceled.' +
-                    '</span>' +
-                    '<button type="button" class="btn btn-sm btn-warning text-dark fw-bold px-3 py-1 rounded-pill ms-sm-2 shadow-sm btn-undo-action" id="undoTripBtn" data-id="' + queueId + '">' +
-                        '<i class="bi bi-arrow-counterclockwise me-1"></i>Click to Undo / Restore <span id="undoSecondsBadge" class="badge bg-dark bg-opacity-25 ms-1">10s</span>' +
-                    '</button>' +
+            '<div class="undo-banner alert-modern alert-modern-warning fade-in position-relative overflow-hidden" id="undoBannerAlert">' +
+                '<div class="undo-banner-content">' +
+                    '<div class="undo-banner-msg-left">' +
+                        '<span class="undo-banner-icon">⚠️</span>' +
+                        '<span class="undo-banner-text">' +
+                            'Trip for <strong>' + escHtml(plateNumber) + '</strong> was canceled.' +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="undo-banner-actions">' +
+                        '<button type="button" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill shadow-sm btn-undo-action" id="undoTripBtn" data-id="' + queueId + '">' +
+                            '<i class="bi bi-arrow-counterclockwise me-1"></i>Click to Undo / Restore <span id="undoSecondsBadge" class="badge bg-dark bg-opacity-25 ms-1">10s</span>' +
+                        '</button>' +
+                        '<button type="button" class="btn-close btn-close-sm undo-banner-close" id="closeUndoBannerBtn" aria-label="Dismiss"></button>' +
+                    '</div>' +
                 '</div>' +
-                '<button type="button" class="btn-close btn-sm ms-2 flex-shrink-0" id="closeUndoBannerBtn" aria-label="Dismiss"></button>' +
                 '<div class="undo-progress-bar" id="undoProgressBar"></div>' +
             '</div>';
 
@@ -2618,7 +2749,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 var bannerContainer = document.getElementById('undoBannerContainer');
                 if (bannerContainer) {
                     bannerContainer.innerHTML =
-                        '<div class="alert-modern alert-modern-success fade-in d-flex align-items-center justify-content-between p-3" id="undoSuccessAlert">' +
+                        '<div class="alert-modern alert-modern-success fade-in d-flex align-items-center justify-content-between p-2 px-3" id="undoSuccessAlert">' +
                             '<div class="d-flex align-items-center gap-2">' +
                                 '<i class="bi bi-check-circle-fill fs-5 text-success"></i>' +
                                 '<span>Trip for <strong>' + escHtml(plateNumber) + '</strong> was restored to the queue!</span>' +

@@ -146,8 +146,8 @@ html, body {
    ================================================================= */
 @media (max-width: 768px) {
     /* Touch target for buttons */
-    .btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close):not(.d-none):not([style*="display: none"]):not([style*="display:none"]), 
-    button.btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close):not(.d-none):not([style*="display: none"]):not([style*="display:none"]) {
+    .btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close):not(.btn-undo-action):not(.d-none):not([style*="display: none"]):not([style*="display:none"]), 
+    button.btn:not(.vt-color-swatch):not(.add-color-swatch):not([class*="edit-color-swatch"]):not(.btn-close):not(.btn-undo-action):not(.d-none):not([style*="display: none"]):not([style*="display:none"]) {
         min-height: 44px !important;
         padding: 0.5rem 1.25rem !important;
         display: inline-flex !important;
