@@ -360,9 +360,7 @@ $countInService = $countActive + $countMaintenance;
             <table class="table-modern" id="vehicles-table">
                 <thead>
                     <tr>
-                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;">
-                            <input type="checkbox" id="table-head-select-all-vehicles" class="form-check-input select-all-checkbox" title="Select All">
-                        </th>
+                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <th>#</th>
                         <th>Plate Number</th>
                         <th>Operator Name</th>

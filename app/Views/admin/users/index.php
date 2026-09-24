@@ -332,9 +332,7 @@ if (!isset($countActive)) {
             <table class="table-modern" id="users-table">
                 <thead>
                     <tr>
-                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;">
-                            <input type="checkbox" id="table-head-select-all-users" class="form-check-input select-all-checkbox" title="Select All">
-                        </th>
+                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <th>#</th>
                         <th>User</th>
                         <th>Role</th>
