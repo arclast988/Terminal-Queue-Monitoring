@@ -2184,7 +2184,7 @@ a[title*="delete" i]:hover .bi,
     margin-right: auto !important;
     align-self: center !important;
     justify-content: center !important;
-    flex: 0 0 auto !important;
+    flex: 0 1 auto !important;
     box-sizing: border-box !important;
   }
 
@@ -2213,17 +2213,23 @@ a[title*="delete" i]:hover .bi,
   html body table.table-modern tbody tr td.empty-state-table .empty-state-title,
   html body table.table tbody tr td.empty-state-table .empty-state-title,
   html body table.table-modern tbody tr td[colspan] .fw-bold,
-  html body table.table tbody tr td[colspan] .fw-bold {
+  html body table.table tbody tr td[colspan] .fw-bold,
+  html body table.table-modern tbody tr td[colspan] #empty-filter-text,
+  html body table.table tbody tr td[colspan] #empty-filter-text {
     font-size: 15px !important;
     font-weight: 700 !important;
     color: #1e293b !important;
-    margin: 0 auto 4px auto !important;
+    margin: 0 auto 6px auto !important;
     text-align: center !important;
     display: block !important;
     width: 100% !important;
     max-width: 100% !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    box-sizing: border-box !important;
+    padding: 0 4px !important;
+    line-height: 1.45 !important;
   }
 
   /* Empty state subtitles in tables on mobile */
@@ -2244,8 +2250,8 @@ a[title*="delete" i]:hover .bi,
     max-width: 100% !important;
     line-height: 1.5 !important;
     white-space: normal !important;
-    overflow-wrap: break-word !important;
-    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
     box-sizing: border-box !important;
     padding: 0 4px !important;
   }

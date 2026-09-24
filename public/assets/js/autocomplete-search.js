@@ -562,7 +562,7 @@
             selectEl.dataset.autocompleteInitialized = "true";
 
             // Visually hide original select while keeping it validatable by HTML5 form checks
-            selectEl.style.cssText = 'position: absolute !important; opacity: 0 !important; pointer-events: none !important; width: 1px !important; height: 1px !important; margin: 0 !important; padding: 0 !important; border: 0 !important; z-index: -1 !important;';
+            selectEl.style.cssText = 'position: absolute !important; opacity: 0 !important; pointer-events: none !important; left: 16px !important; top: 0 !important; width: calc(100% - 32px) !important; height: 100% !important; margin: 0 !important; padding: 0 !important; border: 0 !important; z-index: -1 !important;';
             selectEl.tabIndex = -1;
 
             // Container wrapper
@@ -686,6 +686,13 @@
 
             updateInputValue();
             selectEl.addEventListener('change', updateInputValue);
+            selectEl.addEventListener('invalid', function () {
+                searchInput.focus();
+                searchInput.classList.add('is-invalid');
+            });
+            searchInput.addEventListener('input', function () {
+                searchInput.classList.remove('is-invalid');
+            });
             wrapper.appendChild(searchInput);
             wrapper.appendChild(clearBtn);
 

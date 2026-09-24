@@ -1869,3 +1869,172 @@ input[type="search"]::-webkit-search-results-decoration {
     pointer-events: none !important;
 }
 
+/* ── Bulk Action Toolbar & Selection Styles ── */
+.bulk-col {
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 8px 10px !important;
+}
+
+.bulk-col input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    margin: 0 auto !important;
+    display: block !important;
+}
+
+.bulk-action-bar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1060;
+    width: calc(100% - 32px);
+    max-width: 680px;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    padding: 12px 18px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    animation: bulkBarSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes bulkBarSlideUp {
+    from { transform: translate(-50%, 30px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.bulk-action-bar.is-visible {
+    display: flex !important;
+}
+
+.bulk-bar-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #f1f5f9;
+    white-space: nowrap;
+}
+
+.bulk-count-badge {
+    background: var(--primary-red, #dc2626);
+    color: #ffffff;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.bulk-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-bulk-deactivate {
+    background: #f59e0b !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+.btn-bulk-deactivate:hover {
+    background: #d97706 !important;
+}
+
+.btn-bulk-activate {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+.btn-bulk-activate:hover {
+    background: #059669 !important;
+}
+
+.btn-bulk-delete {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-weight: 600 !important;
+}
+.btn-bulk-delete:hover {
+    background: #dc2626 !important;
+}
+
+.btn-bulk-cancel {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.btn-bulk-cancel:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .table-modern tbody td.bulk-select-cell {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 8px 14px !important;
+        background: #f8fafc !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        border-top-left-radius: 8px !important;
+        border-top-right-radius: 8px !important;
+    }
+    .table-modern tbody td.bulk-select-cell::before {
+        content: 'SELECT ITEM' !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+    }
+    .table-modern tbody td.bulk-select-cell input[type="checkbox"] {
+        width: 20px !important;
+        height: 20px !important;
+        margin: 0 !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .bulk-action-bar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px 14px;
+        bottom: 12px;
+    }
+    .bulk-bar-info {
+        justify-content: space-between;
+        width: 100%;
+        margin-bottom: 2px;
+    }
+    .bulk-bar-actions {
+        width: 100%;
+    }
+    .bulk-bar-actions .btn-modern {
+        flex: 1 1 auto;
+        justify-content: center;
+        font-size: 12.5px !important;
+        padding: 8px 10px !important;
+    }
+}
+

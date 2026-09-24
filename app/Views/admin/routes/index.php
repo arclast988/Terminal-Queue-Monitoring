@@ -48,7 +48,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 </button>
             </div>
 
-            <!-- Route Status Tabs -->
+            <!-- Route Status Tabs & Select All -->
             <div class="d-flex flex-wrap align-items-center gap-2">
                 <button type="button" class="vf-btn active" id="tab-active-routes" onclick="setRouteTab('active', this)">
                     <i class="bi bi-check-circle-fill" style="color: var(--primary-red, #b71c1c);"></i> Active Routes
@@ -58,6 +58,12 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                     <i class="bi bi-archive-fill text-secondary"></i> Archived Routes
                     <span class="vf-count" id="count-archived-tab"><?= $countArchivedGroups ?? 0 ?></span>
                 </button>
+                <?php if ($isAdmin): ?>
+                <label class="d-flex align-items-center gap-2 mb-0 px-2 py-1 rounded" style="font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; background: #f1f5f9; border: 1.5px solid #cbd5e1; color: #475569;" title="Select all visible routes">
+                    <input type="checkbox" id="select-all-routes" class="form-check-input select-all-checkbox m-0" style="width: 17px; height: 17px; cursor: pointer;">
+                    <span>Select All</span>
+                </label>
+                <?php endif; ?>
             </div>
 
             <div id="route-count-display" style="font-size: 13.5px; font-weight: 600; color: var(--text-muted, #64748b);">
@@ -74,6 +80,9 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
             <div class="modern-card shadow-modern mb-0 route-card-item <?= ($grpStatus === 'archived') ? 'route-card-archived' : '' ?>" data-status="<?= esc($grpStatus) ?>" data-destination="<?= esc(strtolower($group['destination'])) ?>" data-terminal="<?= esc(strtolower($group['terminal_name'])) ?>">
                 <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2 py-3 px-4" style="background: var(--surface-sunken, #f8fafc); border-bottom: 1px solid var(--border, #e2e8f0);">
                     <div class="d-flex align-items-center gap-2">
+                        <?php if ($isAdmin): ?>
+                            <input type="checkbox" class="form-check-input route-group-checkbox me-1" value="<?= $group['items'][0]['id'] ?>" data-status="<?= esc($grpStatus) ?>" data-origin="<?= esc(strtoupper($group['terminal_name'])) ?>" data-destination="<?= esc(strtoupper($group['destination'])) ?>" title="Select Route" style="width: 18px; height: 18px; cursor: pointer;">
+                        <?php endif; ?>
                         <i class="bi bi-geo-alt-fill text-danger fs-5"></i>
                         <span class="fw-bold fs-5" style="color: var(--text-main);"><?= strtoupper(esc($group['terminal_name'])) ?> <i class="bi bi-arrow-right text-muted mx-1"></i> <?= strtoupper(esc($group['destination'])) ?></span>
                         <?php if ($grpStatus === 'archived'): ?>
@@ -110,6 +119,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                 </button>
                                 <form id="delete-route-group-form-<?= $group['items'][0]['id'] ?>" action="<?= base_url('admin/routes/delete_group/'.$group['items'][0]['id']) ?>" method="post" class="d-none">
                                     <?= csrf_field() ?>
+                                    <input type="hidden" name="redirect_tab" value="archived">
                                 </form>
                             <?php else: ?>
                                 <a href="<?= base_url('admin/routes/edit/'.$group['items'][0]['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" style="padding: 6px 12px;" title="Edit Route Group">
@@ -180,6 +190,67 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
             </div>
         </div>
     </div>
+
+<!-- Route Bulk Actions Floating Toolbar -->
+<div id="route-bulk-toolbar" class="bulk-action-bar">
+    <div class="bulk-bar-info">
+        <span class="bulk-count-badge" id="route-selected-count">0</span>
+        <span id="route-selected-text">routes selected</span>
+    </div>
+    <div class="bulk-bar-actions">
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-deactivate" id="btn-bulk-deactivate-routes" onclick="openRouteBulkModal('deactivate')">
+            <i class="bi bi-pause-circle me-1"></i> Deactivate Selected
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-activate" id="btn-bulk-activate-routes" onclick="openRouteBulkModal('activate')" style="display: none;">
+            <i class="bi bi-check-circle me-1"></i> Activate Selected
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-delete" id="btn-bulk-delete-routes" onclick="openRouteBulkModal('delete')" style="display: none;">
+            <i class="bi bi-trash me-1"></i> Delete Selected
+        </button>
+        <button type="button" class="btn-bulk-cancel" onclick="clearRouteSelection()" title="Clear selection">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Route Bulk Confirmation Modal -->
+<div class="modal fade" id="routeBulkConfirmModal" tabindex="-1" aria-labelledby="routeBulkConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px; margin: 1.75rem auto;">
+        <div class="modal-content delete-route-modal-content">
+            <div id="routeBulkStripe" style="height: 4px; width: 100%; background: #f59e0b;"></div>
+            <form id="routeBulkForm" method="post" action="<?= base_url('admin/routes/bulk-action') ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" id="routeBulkActionInput" value="">
+                <input type="hidden" name="redirect_tab" id="routeBulkRedirectTab" value="">
+                <div id="routeBulkIdsContainer"></div>
+
+                <div class="modal-body text-center p-4">
+                    <div id="routeBulkIconBadge" style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; background: #fef3c7; color: #d97706;">
+                        <i id="routeBulkIcon" class="bi bi-pause-circle-fill"></i>
+                    </div>
+
+                    <h4 class="delete-route-modal-title" id="routeBulkConfirmTitle">Deactivate Selected Routes?</h4>
+                    <p class="delete-route-modal-desc" id="routeBulkConfirmDesc">
+                        Are you sure you want to deactivate the selected routes?
+                    </p>
+
+                    <div id="routeBulkSelectedList" class="p-2 mb-2 text-start" style="max-height: 140px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div class="modal-footer delete-route-modal-footer">
+                    <button type="button" class="btn delete-route-btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn" id="routeBulkSubmitBtn" style="flex: 1; font-weight: 600; padding: 10px 18px; border-radius: 10px; border: none; background: #f59e0b; color: #fff;">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <?php else: ?>
     <div class="modern-card shadow-modern fade-in text-center py-5 empty-state">
         <div class="py-4 text-muted">
@@ -326,7 +397,27 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     function setRouteTab(tab, btn) {
         currentRouteTab = tab;
         document.querySelectorAll('#tab-active-routes, #tab-archived-routes').forEach(b => b.classList.remove('active'));
-        if (btn) btn.classList.add('active');
+        if (btn) {
+            btn.classList.add('active');
+        } else {
+            const target = tab === 'archived' ? document.getElementById('tab-archived-routes') : document.getElementById('tab-active-routes');
+            if (target) target.classList.add('active');
+        }
+
+        // URL tab persistence
+        const newUrl = new URL(window.location);
+        if (tab === 'active') {
+            newUrl.searchParams.delete('tab');
+        } else {
+            newUrl.searchParams.set('tab', tab);
+        }
+        window.history.replaceState({}, '', newUrl);
+
+        // Update single modal redirect_tab
+        const deactRedir = document.getElementById('deactivateRouteRedirectTab');
+        if (deactRedir) deactRedir.value = tab;
+
+        clearRouteSelection();
         filterRoutes();
     }
 
@@ -408,8 +499,179 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         }
     }
 
+    // Bulk selection handlers for routes
+    function updateRouteBulkToolbar() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.route-group-checkbox:checked'));
+        const toolbar = document.getElementById('route-bulk-toolbar');
+        const countEl = document.getElementById('route-selected-count');
+        const textEl = document.getElementById('route-selected-text');
+        const btnDeact = document.getElementById('btn-bulk-deactivate-routes');
+        const btnAct = document.getElementById('btn-bulk-activate-routes');
+        const btnDel = document.getElementById('btn-bulk-delete-routes');
+
+        if (!toolbar) return;
+
+        const count = checkedBoxes.length;
+        if (count > 0) {
+            toolbar.classList.add('is-visible');
+            toolbar.style.display = 'flex';
+            if (countEl) countEl.textContent = count;
+            if (textEl) textEl.textContent = 'route' + (count !== 1 ? 's' : '') + ' selected';
+
+            if (currentRouteTab === 'archived') {
+                if (btnDeact) btnDeact.style.display = 'none';
+                if (btnAct) btnAct.style.display = 'inline-flex';
+                if (btnDel) btnDel.style.display = 'inline-flex';
+            } else {
+                if (btnDeact) btnDeact.style.display = 'inline-flex';
+                if (btnAct) btnAct.style.display = 'none';
+                if (btnDel) btnDel.style.display = 'none';
+            }
+        } else {
+            toolbar.classList.remove('is-visible');
+            toolbar.style.display = 'none';
+        }
+
+        const selectAll = document.getElementById('select-all-routes');
+        if (selectAll) {
+            const visibleCheckboxes = Array.from(document.querySelectorAll('.route-card-item'))
+                .filter(c => !c.classList.contains('d-none'))
+                .map(c => c.querySelector('.route-group-checkbox'))
+                .filter(cb => cb);
+            if (visibleCheckboxes.length > 0) {
+                selectAll.checked = visibleCheckboxes.every(cb => cb.checked);
+                selectAll.indeterminate = visibleCheckboxes.some(cb => cb.checked) && !selectAll.checked;
+            } else {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            }
+        }
+    }
+
+    function clearRouteSelection() {
+        document.querySelectorAll('.route-group-checkbox').forEach(cb => cb.checked = false);
+        const selectAll = document.getElementById('select-all-routes');
+        if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+        updateRouteBulkToolbar();
+    }
+
+    function openRouteBulkModal(action) {
+        const checkedBoxes = Array.from(document.querySelectorAll('.route-group-checkbox:checked'));
+        if (checkedBoxes.length === 0) return;
+
+        const modalEl = document.getElementById('routeBulkConfirmModal');
+        const actionInput = document.getElementById('routeBulkActionInput');
+        const redirectInput = document.getElementById('routeBulkRedirectTab');
+        const idsContainer = document.getElementById('routeBulkIdsContainer');
+        const titleEl = document.getElementById('routeBulkConfirmTitle');
+        const descEl = document.getElementById('routeBulkConfirmDesc');
+        const listEl = document.getElementById('routeBulkSelectedList');
+        const stripeEl = document.getElementById('routeBulkStripe');
+        const iconBadge = document.getElementById('routeBulkIconBadge');
+        const iconEl = document.getElementById('routeBulkIcon');
+        const submitBtn = document.getElementById('routeBulkSubmitBtn');
+
+        if (actionInput) actionInput.value = action;
+        if (redirectInput) redirectInput.value = currentRouteTab;
+
+        if (idsContainer) {
+            idsContainer.innerHTML = '';
+            checkedBoxes.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                idsContainer.appendChild(input);
+            });
+        }
+
+        if (listEl) {
+            listEl.innerHTML = checkedBoxes.map(cb => {
+                const orig = cb.getAttribute('data-origin') || '';
+                const dest = cb.getAttribute('data-destination') || '';
+                return `<span class="badge bg-light text-dark border me-1 mb-1" style="font-size: 13px; font-weight: 600;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>${orig} → ${dest}</span>`;
+            }).join(' ');
+        }
+
+        const count = checkedBoxes.length;
+
+        if (action === 'deactivate') {
+            if (titleEl) titleEl.textContent = `Deactivate ${count} Selected Route Group${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to deactivate these ${count} route groups? They will be moved to the archive and excluded from active assignments.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#fef3c7';
+                iconBadge.style.color = '#d97706';
+            }
+            if (iconEl) iconEl.className = 'bi bi-pause-circle-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                submitBtn.textContent = 'Yes, Deactivate All';
+            }
+        } else if (action === 'activate') {
+            if (titleEl) titleEl.textContent = `Activate ${count} Selected Route Group${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to reactivate these ${count} route groups? They will be restored from archive.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#ecfdf5';
+                iconBadge.style.color = '#059669';
+            }
+            if (iconEl) iconEl.className = 'bi bi-check-circle-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                submitBtn.textContent = 'Yes, Activate All';
+            }
+        } else if (action === 'delete') {
+            if (titleEl) titleEl.textContent = `Permanently Delete ${count} Route Group${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to permanently delete these ${count} route groups and all their associated fares from the system? This action CANNOT be undone.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#fee2e2';
+                iconBadge.style.color = '#dc2626';
+            }
+            if (iconEl) iconEl.className = 'bi bi-trash-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                submitBtn.textContent = 'Yes, Permanently Delete All';
+            }
+        }
+
+        if (modalEl && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        filterRoutes();
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab') || 'active';
+        const targetBtn = initialTab === 'archived' ? document.getElementById('tab-archived-routes') : document.getElementById('tab-active-routes');
+        setRouteTab(initialTab, targetBtn);
+
+        // Select All listener
+        const selectAll = document.getElementById('select-all-routes');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const cards = document.querySelectorAll('.route-card-item');
+                cards.forEach(card => {
+                    if (!card.classList.contains('d-none')) {
+                        const cb = card.querySelector('.route-group-checkbox');
+                        if (cb) cb.checked = isChecked;
+                    }
+                });
+                updateRouteBulkToolbar();
+            });
+        }
+
+        // Delegate route checkbox listener
+        const container = document.getElementById('routes-container');
+        if (container) {
+            container.addEventListener('change', function(e) {
+                if (e.target && e.target.classList.contains('route-group-checkbox')) {
+                    updateRouteBulkToolbar();
+                }
+            });
+        }
     });
 </script>
 
@@ -425,6 +687,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 
             <form id="deactivateRouteForm" method="post" action="">
                 <?= csrf_field() ?>
+                <input type="hidden" name="redirect_tab" id="deactivateRouteRedirectTab" value="">
                 <div class="modal-body text-center p-4">
                     <!-- Icon badge -->
                     <div style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 8px #fffbeb;">
@@ -468,6 +731,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 
             <form id="activateRouteForm" method="post" action="">
                 <?= csrf_field() ?>
+                <input type="hidden" name="redirect_tab" id="activateRouteRedirectTab" value="archived">
                 <div class="modal-body text-center p-4">
                     <!-- Icon badge -->
                     <div style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 8px #f0fdf4;">

@@ -17,10 +17,10 @@
 
 /* Seamless input + button union for time input */
 .military-time-wrap {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    width: 100%;
+    position: relative !important;
+    display: flex !important;
+    align-items: stretch !important;
+    width: 100% !important;
 }
 
 .military-time-wrap .input-modern {
@@ -34,8 +34,8 @@
 }
 
 .military-time-btn {
-    width: 46px;
-    min-width: 46px;
+    width: 44px;
+    min-width: 44px;
     border: 1.5px solid #cbd5e1;
     border-left: none;
     border-top-right-radius: var(--radius-md, 0.5rem);
@@ -60,22 +60,25 @@
     border-color: #3b82f6;
 }
 
-/* Clean, balanced Time Picker Popover */
+/* Compact, perfectly anchored horizontal Time Picker Popover */
 .military-time-popover {
     display: none;
-    position: fixed;
-    width: 280px;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
     background: #ffffff;
     border: 1px solid #cbd5e1;
     border-radius: 0.75rem;
-    box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.18), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-    z-index: 99999;
-    padding: 0.85rem 1rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+    z-index: 1050;
+    padding: 0.5rem 0.75rem;
     box-sizing: border-box;
 }
 
 .military-time-popover.open {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     animation: tpFadeIn 0.15s ease-out;
 }
 
@@ -84,154 +87,60 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-.tp-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.65rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.tp-title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #475569;
-}
-
-.tp-close-btn {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    line-height: 1;
-    color: #94a3b8;
-    cursor: pointer;
-    padding: 0 4px;
-    transition: color 0.15s;
-}
-
-.tp-close-btn:hover {
-    color: #0f172a;
-}
-
-.tp-picker-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.65rem;
-    margin-bottom: 0.75rem;
-}
-
-.tp-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 72px;
-}
-
-.tp-arrow-btn {
-    width: 100%;
-    height: 28px;
-    border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    border-radius: 0.375rem;
-    color: #475569;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.12s;
-}
-
-.tp-arrow-btn:hover {
-    background: #e2e8f0;
-    color: #0f172a;
-}
-
-.tp-val-input {
-    width: 100%;
-    height: 44px;
+.tp-input {
+    width: 60px;
+    height: 42px;
     border: 1.5px solid #cbd5e1;
     border-radius: 0.5rem;
-    margin: 4px 0;
     text-align: center;
-    font-size: 1.35rem;
+    font-size: 1.25rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: #1e293b;
     background: #ffffff;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
     -moz-appearance: textfield;
 }
 
-.tp-val-input::-webkit-inner-spin-button,
-.tp-val-input::-webkit-outer-spin-button {
+.tp-input::-webkit-inner-spin-button,
+.tp-input::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
 
-.tp-val-input:focus {
+.tp-input:focus {
     border-color: #0d6efd;
     box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.18);
 }
 
-.tp-col-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 2px;
-}
-
-.tp-colon {
-    font-size: 1.6rem;
+.tp-sep {
+    font-size: 1.5rem;
     font-weight: 800;
     color: #334155;
-    margin-bottom: 14px;
     user-select: none;
-}
-
-.tp-presets {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    margin-bottom: 0.75rem;
-}
-
-.tp-preset-chip {
-    flex: 1;
-    padding: 4px 0;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.375rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.12s;
-}
-
-.tp-preset-chip:hover {
-    background: #e2e8f0;
-    color: #0f172a;
+    margin: 0;
 }
 
 .tp-set-btn {
-    width: 100%;
-    height: 38px;
+    height: 42px;
+    padding: 0 18px;
     border: none;
     border-radius: 0.5rem;
     background: var(--primary, #1565C0);
     color: #fff;
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     font-weight: 700;
     cursor: pointer;
     transition: background 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
 }
 
 .tp-set-btn:hover {
@@ -574,43 +483,34 @@ document.addEventListener('DOMContentLoaded', function() {
         let popover = document.createElement('div');
         popover.className = 'military-time-popover';
 
-        popover.innerHTML = `
-            <div class="tp-header">
-                <span class="tp-title"><i class="bi bi-clock me-1"></i> Set Time (24h)</span>
-                <button type="button" class="tp-close-btn" aria-label="Close">&times;</button>
-            </div>
-            <div class="tp-picker-body">
-                <div class="tp-col">
-                    <button type="button" class="tp-arrow-btn tp-up" data-unit="hour" title="Increase hour"><i class="bi bi-chevron-up"></i></button>
-                    <input type="text" class="tp-val-input tp-hour-input" maxlength="2" inputmode="numeric" value="00">
-                    <button type="button" class="tp-arrow-btn tp-down" data-unit="hour" title="Decrease hour"><i class="bi bi-chevron-down"></i></button>
-                    <span class="tp-col-label">Hours</span>
-                </div>
-                <div class="tp-colon">:</div>
-                <div class="tp-col">
-                    <button type="button" class="tp-arrow-btn tp-up" data-unit="min" title="Increase minute"><i class="bi bi-chevron-up"></i></button>
-                    <input type="text" class="tp-val-input tp-min-input" maxlength="2" inputmode="numeric" value="00">
-                    <button type="button" class="tp-arrow-btn tp-down" data-unit="min" title="Decrease minute"><i class="bi bi-chevron-down"></i></button>
-                    <span class="tp-col-label">Mins</span>
-                </div>
-            </div>
-            <div class="tp-presets">
-                <button type="button" class="tp-preset-chip" data-min="00">:00</button>
-                <button type="button" class="tp-preset-chip" data-min="15">:15</button>
-                <button type="button" class="tp-preset-chip" data-min="30">:30</button>
-                <button type="button" class="tp-preset-chip" data-min="45">:45</button>
-            </div>
-            <div class="tp-footer">
-                <button type="button" class="tp-set-btn">Apply Time</button>
-            </div>
-        `;
+        let hhInput = document.createElement('input');
+        hhInput.type = 'text';
+        hhInput.className = 'tp-input';
+        hhInput.maxLength = 2;
+        hhInput.inputMode = 'numeric';
+        hhInput.placeholder = 'HH';
+        popover.appendChild(hhInput);
 
-        document.body.appendChild(popover);
+        let sep = document.createElement('span');
+        sep.className = 'tp-sep';
+        sep.textContent = ':';
+        popover.appendChild(sep);
 
-        const hourInput = popover.querySelector('.tp-hour-input');
-        const minInput = popover.querySelector('.tp-min-input');
-        const setBtn = popover.querySelector('.tp-set-btn');
-        const closeBtn = popover.querySelector('.tp-close-btn');
+        let mmInput = document.createElement('input');
+        mmInput.type = 'text';
+        mmInput.className = 'tp-input';
+        mmInput.maxLength = 2;
+        mmInput.inputMode = 'numeric';
+        mmInput.placeholder = 'MM';
+        popover.appendChild(mmInput);
+
+        let setBtn = document.createElement('button');
+        setBtn.type = 'button';
+        setBtn.className = 'tp-set-btn';
+        setBtn.textContent = 'Set';
+        popover.appendChild(setBtn);
+
+        wrap.appendChild(popover);
 
         function syncFromMain() {
             let val = input.value.trim();
@@ -627,72 +527,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     h = Math.min(23, d);
                 }
             }
-            hourInput.value = String(h).padStart(2, '0');
-            minInput.value = String(m).padStart(2, '0');
+            hhInput.value = String(h).padStart(2, '0');
+            mmInput.value = String(m).padStart(2, '0');
         }
 
-        function stepHour(delta) {
-            let cur = parseInt(hourInput.value, 10) || 0;
-            cur = (cur + delta + 24) % 24;
-            hourInput.value = String(cur).padStart(2, '0');
-        }
-
-        function stepMin(delta) {
-            let cur = parseInt(minInput.value, 10) || 0;
-            cur = (cur + delta + 60) % 60;
-            minInput.value = String(cur).padStart(2, '0');
-        }
-
-        popover.querySelectorAll('.tp-arrow-btn').forEach(function(arrBtn) {
-            arrBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                let unit = arrBtn.dataset.unit;
-                let isUp = arrBtn.classList.contains('tp-up');
-                let delta = isUp ? 1 : -1;
-                if (unit === 'hour') stepHour(delta);
-                else stepMin(delta);
-            });
-        });
-
-        popover.querySelectorAll('.tp-preset-chip').forEach(function(chip) {
-            chip.addEventListener('click', function(e) {
-                e.stopPropagation();
-                minInput.value = chip.dataset.min;
-            });
-        });
-
-        hourInput.addEventListener('change', function() {
+        // Clamp & pad inputs
+        hhInput.addEventListener('change', function() {
             let n = parseInt(this.value, 10) || 0;
             if (n < 0) n = 0;
             if (n > 23) n = 23;
             this.value = String(n).padStart(2, '0');
         });
 
-        minInput.addEventListener('change', function() {
+        mmInput.addEventListener('change', function() {
             let n = parseInt(this.value, 10) || 0;
             if (n < 0) n = 0;
             if (n > 59) n = 59;
             this.value = String(n).padStart(2, '0');
         });
 
-        // Mouse wheel adjustment over inputs
-        hourInput.addEventListener('wheel', function(e) {
+        // Mouse wheel adjustment
+        hhInput.addEventListener('wheel', function(e) {
             e.preventDefault();
-            stepHour(e.deltaY < 0 ? 1 : -1);
+            let cur = parseInt(hhInput.value, 10) || 0;
+            cur = (cur + (e.deltaY < 0 ? 1 : -1) + 24) % 24;
+            hhInput.value = String(cur).padStart(2, '0');
         }, { passive: false });
 
-        minInput.addEventListener('wheel', function(e) {
+        mmInput.addEventListener('wheel', function(e) {
             e.preventDefault();
-            stepMin(e.deltaY < 0 ? 1 : -1);
+            let cur = parseInt(mmInput.value, 10) || 0;
+            cur = (cur + (e.deltaY < 0 ? 1 : -1) + 60) % 60;
+            mmInput.value = String(cur).padStart(2, '0');
         }, { passive: false });
 
         function applyTime() {
-            let h = String(Math.min(23, Math.max(0, parseInt(hourInput.value, 10) || 0))).padStart(2, '0');
-            let m = String(Math.min(59, Math.max(0, parseInt(minInput.value, 10) || 0))).padStart(2, '0');
+            let h = String(Math.min(23, Math.max(0, parseInt(hhInput.value, 10) || 0))).padStart(2, '0');
+            let m = String(Math.min(59, Math.max(0, parseInt(mmInput.value, 10) || 0))).padStart(2, '0');
             input.value = h + ':' + m;
             popover.classList.remove('open');
             activePopover = null;
-            activeWrap = null;
             input.dispatchEvent(new Event('input', { bubbles: true }));
             input.dispatchEvent(new Event('change', { bubbles: true }));
             checkContradiction();
@@ -703,13 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
             applyTime();
         });
 
-        closeBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            popover.classList.remove('open');
-            activePopover = null;
-            activeWrap = null;
-        });
-
         popover.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -717,7 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (e.key === 'Escape') {
                 popover.classList.remove('open');
                 activePopover = null;
-                activeWrap = null;
             }
         });
 
@@ -734,49 +600,18 @@ document.addEventListener('DOMContentLoaded', function() {
             popover.classList.toggle('open');
             if (popover.classList.contains('open')) {
                 activePopover = popover;
-                activeWrap = wrap;
-                positionActivePopover();
-                hourInput.focus();
-                hourInput.select();
+                hhInput.focus();
+                hhInput.select();
             } else {
                 activePopover = null;
-                activeWrap = null;
             }
         });
     });
-
-    function positionActivePopover() {
-        if (!activePopover || !activeWrap) return;
-        let wrapRect = activeWrap.getBoundingClientRect();
-        let popW = 280;
-        let popH = activePopover.offsetHeight || 220;
-
-        // Align right edge of popover with right edge of wrap
-        let left = wrapRect.right - popW;
-        if (left < 10) left = wrapRect.left;
-        if (left < 10) left = 10;
-        if (left + popW > window.innerWidth - 10) {
-            left = window.innerWidth - popW - 10;
-        }
-
-        // Align vertically
-        let spaceBelow = window.innerHeight - wrapRect.bottom - 10;
-        if (spaceBelow >= popH) {
-            activePopover.style.top = (wrapRect.bottom + 6) + 'px';
-        } else {
-            activePopover.style.top = Math.max(10, wrapRect.top - popH - 6) + 'px';
-        }
-        activePopover.style.left = left + 'px';
-    }
-
-    window.addEventListener('resize', positionActivePopover);
-    window.addEventListener('scroll', positionActivePopover, { passive: true });
 
     document.addEventListener('click', function() {
         if (activePopover) {
             activePopover.classList.remove('open');
             activePopover = null;
-            activeWrap = null;
         }
     });
 });

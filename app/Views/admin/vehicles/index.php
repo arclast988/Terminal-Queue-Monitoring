@@ -152,6 +152,9 @@ $countInService = $countActive + $countMaintenance;
             <table class="table-modern" id="vehicles-table">
                 <thead>
                     <tr>
+                        <th class="bulk-col">
+                            <input type="checkbox" id="select-all-vehicles" class="form-check-input select-all-checkbox" title="Select All">
+                        </th>
                         <th>#</th>
                         <th>Plate Number</th>
                         <th>Operator Name</th>
@@ -167,7 +170,10 @@ $countInService = $countActive + $countMaintenance;
                 <tbody>
                     <?php if (!empty($vehicles) && is_array($vehicles)): ?>
                         <?php foreach ($vehicles as $i => $vehicle): ?>
-                            <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>">
+                            <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>" data-vehicle-id="<?= $vehicle['id'] ?>">
+                                <td data-label="Select" class="bulk-col bulk-select-cell">
+                                    <input type="checkbox" class="form-check-input vehicle-row-checkbox" value="<?= $vehicle['id'] ?>" data-status="<?= esc($vehicle['status']) ?>" data-plate="<?= esc($vehicle['plate_number']) ?>" title="Select vehicle <?= esc($vehicle['plate_number']) ?>">
+                                </td>
                                 <td data-label="#" class="row-number"><strong><?= $i + 1 ?></strong></td>
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($vehicle['plate_number']) ?></span>
@@ -257,6 +263,7 @@ $countInService = $countActive + $countMaintenance;
                                                 <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                             </a>
                                             <form id="delete-vehicle-form-<?= $vehicle['id'] ?>" action="<?= base_url('admin/vehicles/delete/' . $vehicle['id']) ?>" method="post" class="d-inline">
+                                                <input type="hidden" name="redirect_tab" value="archived">
                                                 <?= csrf_field() ?>
                                                 <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Permanently delete vehicle"
                                                     onclick="showDeleteVehicleModal({
@@ -296,7 +303,7 @@ $countInService = $countActive + $countMaintenance;
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="no-vehicles-row">
-                            <td colspan="10" class="text-center py-5 text-muted empty-state-table">
+                            <td colspan="11" class="text-center py-5 text-muted empty-state-table">
                                 <i class="bi bi-truck fs-1 d-block mb-3 opacity-50"></i>
                                 <div class="fw-bold fs-6 empty-state-title">No vehicles registered yet</div>
                                 <small class="empty-state-subtitle">Use the form above to register your first terminal vehicle.</small>
@@ -308,6 +315,67 @@ $countInService = $countActive + $countMaintenance;
         </div>
     </div>
 </div>
+
+<!-- Vehicle Bulk Actions Floating Toolbar -->
+<div id="vehicle-bulk-toolbar" class="bulk-action-bar">
+    <div class="bulk-bar-info">
+        <span class="bulk-count-badge" id="vehicle-selected-count">0</span>
+        <span id="vehicle-selected-text">vehicles selected</span>
+    </div>
+    <div class="bulk-bar-actions">
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-deactivate" id="btn-bulk-deactivate-vehicles" onclick="openVehicleBulkModal('deactivate')">
+            <i class="bi bi-pause-circle me-1"></i> Deactivate Selected
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-activate" id="btn-bulk-activate-vehicles" onclick="openVehicleBulkModal('activate')" style="display: none;">
+            <i class="bi bi-check-circle me-1"></i> Activate Selected
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-delete" id="btn-bulk-delete-vehicles" onclick="openVehicleBulkModal('delete')" style="display: none;">
+            <i class="bi bi-trash me-1"></i> Delete Selected
+        </button>
+        <button type="button" class="btn-bulk-cancel" onclick="clearVehicleSelection()" title="Clear selection">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Vehicle Bulk Confirmation Modal -->
+<div class="modal fade" id="vehicleBulkConfirmModal" tabindex="-1" aria-labelledby="vehicleBulkConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px; margin: 1.75rem auto;">
+        <div class="modal-content delete-vehicle-modal-content">
+            <div id="vehicleBulkStripe" style="height: 4px; width: 100%; background: #f59e0b;"></div>
+            <form id="vehicleBulkForm" method="post" action="<?= base_url('admin/vehicles/bulk-action') ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" id="vehicleBulkActionInput" value="">
+                <input type="hidden" name="redirect_tab" id="vehicleBulkRedirectTab" value="">
+                <div id="vehicleBulkIdsContainer"></div>
+
+                <div class="modal-body text-center p-4">
+                    <div id="vehicleBulkIconBadge" style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; background: #fef3c7; color: #d97706;">
+                        <i id="vehicleBulkIcon" class="bi bi-pause-circle-fill"></i>
+                    </div>
+
+                    <h4 class="delete-vehicle-modal-title" id="vehicleBulkConfirmTitle">Deactivate Selected Vehicles?</h4>
+                    <p class="delete-vehicle-modal-desc" id="vehicleBulkConfirmDesc">
+                        Are you sure you want to deactivate the selected vehicles?
+                    </p>
+
+                    <div id="vehicleBulkSelectedList" class="p-2 mb-2 text-start" style="max-height: 140px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div class="modal-footer delete-vehicle-modal-footer">
+                    <button type="button" class="btn delete-vehicle-btn-cancel" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn" id="vehicleBulkSubmitBtn" style="flex: 1; font-weight: 600; padding: 10px 18px; border-radius: 10px; border: none; background: #f59e0b; color: #fff;">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <style>
     .dropdown-chevron-icon {
@@ -754,6 +822,22 @@ $countInService = $countActive + $countMaintenance;
             }
         });
 
+        // Update URL tab parameter for persistence
+        const newUrl = new URL(window.location);
+        if (filter === 'all') {
+            newUrl.searchParams.delete('tab');
+        } else {
+            newUrl.searchParams.set('tab', filter);
+        }
+        window.history.replaceState({}, '', newUrl);
+
+        // Update single deactivate modal redirect_tab
+        const deactRedirectEl = document.getElementById('deactivateVehicleRedirectTab');
+        if (deactRedirectEl) deactRedirectEl.value = filter;
+
+        // Reset selection whenever filter changes
+        clearVehicleSelection();
+
         // Update filter label text
         if (filter === 'all') {
             filterLabel.innerHTML = 'Showing all <strong>' + visibleCount + '</strong> in-service vehicles';
@@ -769,7 +853,7 @@ $countInService = $countActive + $countMaintenance;
             if (!emptyRow) {
                 emptyRow = document.createElement('tr');
                 emptyRow.classList.add('no-filter-results');
-                emptyRow.innerHTML = '<td colspan="10" class="text-center py-5 text-muted empty-state-table"><i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i><div class="fw-bold fs-6 empty-state-title">No vehicles match the selected filter</div><small class="empty-state-subtitle">Try selecting a different filter or clearing your search.</small></td>';
+                emptyRow.innerHTML = '<td colspan="11" class="text-center py-5 text-muted empty-state-table"><i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i><div class="fw-bold fs-6 empty-state-title">No vehicles match the selected filter</div><small class="empty-state-subtitle">Try selecting a different filter or clearing your search.</small></td>';
                 document.querySelector('#vehicles-table tbody').appendChild(emptyRow);
             }
             emptyRow.style.removeProperty('display');
@@ -779,9 +863,178 @@ $countInService = $countActive + $countMaintenance;
         }
     }
 
-    // Hide archived rows on initial page load
+    // Bulk selection handlers
+    function updateVehicleBulkToolbar() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.vehicle-row-checkbox:checked'));
+        const toolbar = document.getElementById('vehicle-bulk-toolbar');
+        const countEl = document.getElementById('vehicle-selected-count');
+        const textEl = document.getElementById('vehicle-selected-text');
+        const btnDeact = document.getElementById('btn-bulk-deactivate-vehicles');
+        const btnAct = document.getElementById('btn-bulk-activate-vehicles');
+        const btnDel = document.getElementById('btn-bulk-delete-vehicles');
+
+        if (!toolbar) return;
+
+        const count = checkedBoxes.length;
+        if (count > 0) {
+            toolbar.classList.add('is-visible');
+            toolbar.style.display = 'flex';
+            if (countEl) countEl.textContent = count;
+            if (textEl) textEl.textContent = 'vehicle' + (count !== 1 ? 's' : '') + ' selected';
+
+            if (currentFilter === 'archived') {
+                if (btnDeact) btnDeact.style.display = 'none';
+                if (btnAct) btnAct.style.display = 'inline-flex';
+                if (btnDel) btnDel.style.display = 'inline-flex';
+            } else {
+                if (btnDeact) btnDeact.style.display = 'inline-flex';
+                if (btnAct) btnAct.style.display = 'none';
+                if (btnDel) btnDel.style.display = 'none';
+            }
+        } else {
+            toolbar.classList.remove('is-visible');
+            toolbar.style.display = 'none';
+        }
+
+        const selectAll = document.getElementById('select-all-vehicles');
+        if (selectAll) {
+            const visibleCheckboxes = Array.from(document.querySelectorAll('#vehicles-table tbody tr[data-type]'))
+                .filter(tr => !tr.classList.contains('vehicle-row-hidden'))
+                .map(tr => tr.querySelector('.vehicle-row-checkbox'))
+                .filter(cb => cb);
+            if (visibleCheckboxes.length > 0) {
+                selectAll.checked = visibleCheckboxes.every(cb => cb.checked);
+                selectAll.indeterminate = visibleCheckboxes.some(cb => cb.checked) && !selectAll.checked;
+            } else {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            }
+        }
+    }
+
+    function clearVehicleSelection() {
+        document.querySelectorAll('.vehicle-row-checkbox').forEach(cb => cb.checked = false);
+        const selectAll = document.getElementById('select-all-vehicles');
+        if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+        updateVehicleBulkToolbar();
+    }
+
+    function openVehicleBulkModal(action) {
+        const checkedBoxes = Array.from(document.querySelectorAll('.vehicle-row-checkbox:checked'));
+        if (checkedBoxes.length === 0) return;
+
+        const modalEl = document.getElementById('vehicleBulkConfirmModal');
+        const actionInput = document.getElementById('vehicleBulkActionInput');
+        const redirectInput = document.getElementById('vehicleBulkRedirectTab');
+        const idsContainer = document.getElementById('vehicleBulkIdsContainer');
+        const titleEl = document.getElementById('vehicleBulkConfirmTitle');
+        const descEl = document.getElementById('vehicleBulkConfirmDesc');
+        const listEl = document.getElementById('vehicleBulkSelectedList');
+        const stripeEl = document.getElementById('vehicleBulkStripe');
+        const iconBadge = document.getElementById('vehicleBulkIconBadge');
+        const iconEl = document.getElementById('vehicleBulkIcon');
+        const submitBtn = document.getElementById('vehicleBulkSubmitBtn');
+
+        if (actionInput) actionInput.value = action;
+        if (redirectInput) redirectInput.value = currentFilter;
+
+        if (idsContainer) {
+            idsContainer.innerHTML = '';
+            checkedBoxes.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                idsContainer.appendChild(input);
+            });
+        }
+
+        if (listEl) {
+            listEl.innerHTML = checkedBoxes.map(cb => {
+                const plate = cb.getAttribute('data-plate') || 'Vehicle';
+                return `<span class="badge bg-light text-dark border me-1 mb-1" style="font-family: monospace; font-size: 13px; font-weight: 600;">${plate}</span>`;
+            }).join(' ');
+        }
+
+        const count = checkedBoxes.length;
+
+        if (action === 'deactivate') {
+            if (titleEl) titleEl.textContent = `Deactivate ${count} Selected Vehicle${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to deactivate these ${count} vehicles? They will be removed from active queue operations and moved to archive.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#fef3c7';
+                iconBadge.style.color = '#d97706';
+            }
+            if (iconEl) iconEl.className = 'bi bi-pause-circle-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                submitBtn.textContent = 'Yes, Deactivate All';
+            }
+        } else if (action === 'activate') {
+            if (titleEl) titleEl.textContent = `Activate ${count} Selected Vehicle${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to reactivate these ${count} vehicles? They will be restored from archive and become eligible for queue assignments.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#ecfdf5';
+                iconBadge.style.color = '#059669';
+            }
+            if (iconEl) iconEl.className = 'bi bi-check-circle-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                submitBtn.textContent = 'Yes, Activate All';
+            }
+        } else if (action === 'delete') {
+            if (titleEl) titleEl.textContent = `Permanently Delete ${count} Vehicle${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to permanently delete these ${count} vehicles from the system? This action CANNOT be undone.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#fee2e2';
+                iconBadge.style.color = '#dc2626';
+            }
+            if (iconEl) iconEl.className = 'bi bi-trash-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                submitBtn.textContent = 'Yes, Permanently Delete All';
+            }
+        }
+
+        if (modalEl && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    // Hide archived rows on initial page load or restore from ?tab=
     document.addEventListener('DOMContentLoaded', function() {
-        filterVehicles('all');
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab') || 'all';
+        filterVehicles(initialTab);
+
+        // Select All listener
+        const selectAll = document.getElementById('select-all-vehicles');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const rows = document.querySelectorAll('#vehicles-table tbody tr[data-type]');
+                rows.forEach(tr => {
+                    if (!tr.classList.contains('vehicle-row-hidden')) {
+                        const cb = tr.querySelector('.vehicle-row-checkbox');
+                        if (cb) cb.checked = isChecked;
+                    }
+                });
+                updateVehicleBulkToolbar();
+            });
+        }
+
+        // Delegate row checkbox change listener
+        const tableBody = document.querySelector('#vehicles-table tbody');
+        if (tableBody) {
+            tableBody.addEventListener('change', function(e) {
+                if (e.target && e.target.classList.contains('vehicle-row-checkbox')) {
+                    updateVehicleBulkToolbar();
+                }
+            });
+        }
     });
 </script>
 
@@ -2417,6 +2670,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 
             <form id="deactivateVehicleForm" method="post" action="">
                 <?= csrf_field() ?>
+                <input type="hidden" name="redirect_tab" id="deactivateVehicleRedirectTab" value="">
                 <div class="modal-body text-center p-4">
                     <!-- Icon badge -->
                     <div style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 8px #fffbeb;">
@@ -2462,6 +2716,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 
             <form id="activateVehicleForm" method="post" action="">
                 <?= csrf_field() ?>
+                <input type="hidden" name="redirect_tab" id="activateVehicleRedirectTab" value="archived">
                 <div class="modal-body text-center p-4">
                     <!-- Icon badge -->
                     <div style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; background: #ecfdf5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 0 0 8px #f0fdf4;">

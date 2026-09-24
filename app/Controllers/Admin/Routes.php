@@ -685,7 +685,8 @@ class Routes extends BaseController
         }
 
         $originLabel = !empty($route['origin']) ? $route['origin'] : 'Terminal';
-        return redirect()->to('/admin/routes')->with('success', 'Route group "' . strtoupper($originLabel) . ' → ' . strtoupper($destination) . '" deleted successfully.');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
+        return redirect()->to('/admin/routes' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'Route group "' . strtoupper($originLabel) . ' → ' . strtoupper($destination) . '" deleted successfully.');
     }
 
     public function deactivateGroup($id)
@@ -710,7 +711,8 @@ class Routes extends BaseController
         $this->logActivity('Deactivate route group', "Deactivated route group $routeLabel.");
         $this->broadcastUpdate('fare_update', ['action' => 'route_group_deactivated', 'id' => (int) $id]);
 
-        return redirect()->to('/admin/routes')->with('success', "Route group \"{$routeLabel}\" deactivated and moved to archive.");
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'active';
+        return redirect()->to('/admin/routes' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', "Route group \"{$routeLabel}\" deactivated and moved to archive.");
     }
 
     public function activateGroup($id)
@@ -735,7 +737,88 @@ class Routes extends BaseController
         $this->logActivity('Activate route group', "Activated route group $routeLabel.");
         $this->broadcastUpdate('fare_update', ['action' => 'route_group_activated', 'id' => (int) $id]);
 
-        return redirect()->to('/admin/routes')->with('success', "Route group \"{$routeLabel}\" restored to active routes.");
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
+        return redirect()->to('/admin/routes' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', "Route group \"{$routeLabel}\" restored to active routes.");
+    }
+
+    public function bulkAction()
+    {
+        $action = $this->request->getPost('action');
+        $rawIds = $this->request->getPost('ids');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? 'archived';
+
+        if (is_string($rawIds)) {
+            $ids = array_filter(array_map('intval', explode(',', $rawIds)));
+        } elseif (is_array($rawIds)) {
+            $ids = array_filter(array_map('intval', $rawIds));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->to('/admin/routes' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'No routes selected for bulk action.');
+        }
+
+        $routes = $this->routeModel->whereIn('id', $ids)->findAll();
+        if (empty($routes)) {
+            return redirect()->to('/admin/routes' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Selected routes not found.');
+        }
+
+        $count = 0;
+
+        if ($action === 'deactivate') {
+            foreach ($routes as $route) {
+                $terminalId  = $route['terminal_id'];
+                $destination = $route['destination'];
+                $this->routeModel
+                    ->where('terminal_id', $terminalId)
+                    ->where('destination', $destination)
+                    ->set(['status' => 'archived'])
+                    ->update();
+                $count++;
+            }
+            $this->logActivity('Bulk deactivate routes', "Deactivated $count route group(s).");
+            $this->broadcastUpdate('fare_update', ['action' => 'bulk_route_group_deactivated']);
+            return redirect()->to('/admin/routes?tab=active')->with('success', "$count route group(s) deactivated and moved to archive.");
+        } elseif ($action === 'activate') {
+            foreach ($routes as $route) {
+                $terminalId  = $route['terminal_id'];
+                $destination = $route['destination'];
+                $this->routeModel
+                    ->where('terminal_id', $terminalId)
+                    ->where('destination', $destination)
+                    ->set(['status' => 'active'])
+                    ->update();
+                $count++;
+            }
+            $this->logActivity('Bulk activate routes', "Activated $count route group(s).");
+            $this->broadcastUpdate('fare_update', ['action' => 'bulk_route_group_activated']);
+            return redirect()->to('/admin/routes?tab=archived')->with('success', "$count route group(s) activated successfully.");
+        } elseif ($action === 'delete') {
+            $totalDeleted = 0;
+            foreach ($routes as $route) {
+                $terminalId  = $route['terminal_id'];
+                $destination = $route['destination'];
+                $groupRoutes = $this->routeModel
+                    ->where('terminal_id', $terminalId)
+                    ->where('destination', $destination)
+                    ->findAll();
+                $this->unassignVehiclesFromRoutes(array_column($groupRoutes, 'id'));
+                foreach ($groupRoutes as $r) {
+                    try {
+                        if ($this->routeModel->delete($r['id'])) {
+                            $totalDeleted++;
+                        }
+                    } catch (\Throwable $e) {}
+                }
+                $count++;
+            }
+            $this->logActivity('Bulk delete routes', "Permanently deleted $count route group(s) ($totalDeleted route entries).");
+            $this->broadcastUpdate('fare_update', ['action' => 'bulk_route_group_deleted']);
+            return redirect()->to('/admin/routes?tab=archived')->with('success', "$count route group(s) permanently deleted.");
+        }
+
+        return redirect()->to('/admin/routes' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Invalid bulk action.');
     }
 
     public function deleteFare($id)

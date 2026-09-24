@@ -502,12 +502,14 @@ class Vehicles extends BaseController
             @unlink(FCPATH . $vehicle['photo']);
         }
 
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
+
         if ($this->vehicleModel->delete($id)) {
             $this->logActivity('Delete vehicle', 'Permanently deleted vehicle ' . $vehicle['plate_number'] . '.');
             $this->broadcastUpdate('queue_update', ['action' => 'vehicle_deleted', 'id' => (int) $id]);
-            return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" permanently deleted.');
+            return redirect()->to('/admin/vehicles' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" permanently deleted.');
         }
-        return redirect()->to('/admin/vehicles')->with('error', 'Failed to delete vehicle.');
+        return redirect()->to('/admin/vehicles' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('error', 'Failed to delete vehicle.');
     }
 
     public function deactivate($id)
@@ -535,7 +537,8 @@ class Vehicles extends BaseController
         $this->logActivity('Deactivate vehicle', 'Deactivated vehicle ' . $vehicle['plate_number'] . '.');
         $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
 
-        return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" deactivated and moved to archive.');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'active';
+        return redirect()->to('/admin/vehicles' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" deactivated and moved to archive.');
     }
 
     public function activate($id)
@@ -549,6 +552,81 @@ class Vehicles extends BaseController
         $this->logActivity('Activate vehicle', 'Activated vehicle ' . $vehicle['plate_number'] . '.');
         $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
 
-        return redirect()->to('/admin/vehicles')->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" activated successfully.');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
+        return redirect()->to('/admin/vehicles' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" activated successfully.');
+    }
+
+    public function bulkAction()
+    {
+        $action = $this->request->getPost('action');
+        $rawIds = $this->request->getPost('ids');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? 'archived';
+
+        if (is_string($rawIds)) {
+            $ids = array_filter(array_map('intval', explode(',', $rawIds)));
+        } elseif (is_array($rawIds)) {
+            $ids = array_filter(array_map('intval', $rawIds));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->to('/admin/vehicles' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'No vehicles selected for bulk action.');
+        }
+
+        $vehicles = $this->vehicleModel->whereIn('id', $ids)->findAll();
+        if (empty($vehicles)) {
+            return redirect()->to('/admin/vehicles' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Selected vehicles not found.');
+        }
+
+        $count = 0;
+        $queueModel = new \App\Models\QueueModel();
+
+        if ($action === 'deactivate') {
+            foreach ($vehicles as $v) {
+                if (($v['status'] ?? 'active') !== 'archived') {
+                    $this->vehicleModel->update($v['id'], ['status' => 'archived']);
+                    $activeTrips = $queueModel->where('vehicle_id', $v['id'])
+                        ->whereIn('status', ['waiting', 'boarding'])
+                        ->findAll();
+                    if (!empty($activeTrips)) {
+                        $queueModel->where('vehicle_id', $v['id'])
+                            ->whereIn('status', ['waiting', 'boarding'])
+                            ->set(['status' => 'canceled'])
+                            ->update();
+                    }
+                    $count++;
+                }
+            }
+            $queueModel->reorderByDeparture();
+            $this->logActivity('Bulk deactivate vehicles', "Deactivated $count vehicle(s) and moved to archive.");
+            $this->broadcastUpdate('queue_update', ['action' => 'bulk_vehicle_updated']);
+            return redirect()->to('/admin/vehicles?tab=active')->with('success', "$count vehicle(s) deactivated and moved to archive.");
+        } elseif ($action === 'activate') {
+            foreach ($vehicles as $v) {
+                if (($v['status'] ?? 'active') === 'archived') {
+                    $this->vehicleModel->update($v['id'], ['status' => 'active']);
+                    $count++;
+                }
+            }
+            $this->logActivity('Bulk activate vehicles', "Activated $count vehicle(s).");
+            $this->broadcastUpdate('queue_update', ['action' => 'bulk_vehicle_updated']);
+            return redirect()->to('/admin/vehicles?tab=archived')->with('success', "$count vehicle(s) activated successfully.");
+        } elseif ($action === 'delete') {
+            foreach ($vehicles as $v) {
+                if (($v['status'] ?? 'active') === 'archived') {
+                    if (!empty($v['photo']) && file_exists(FCPATH . $v['photo'])) {
+                        @unlink(FCPATH . $v['photo']);
+                    }
+                    $this->vehicleModel->delete($v['id']);
+                    $count++;
+                }
+            }
+            $this->logActivity('Bulk delete vehicles', "Permanently deleted $count archived vehicle(s).");
+            $this->broadcastUpdate('queue_update', ['action' => 'bulk_vehicle_deleted']);
+            return redirect()->to('/admin/vehicles?tab=archived')->with('success', "$count archived vehicle(s) permanently deleted.");
+        }
+
+        return redirect()->to('/admin/vehicles' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Invalid bulk action.');
     }
 }

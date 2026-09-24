@@ -209,19 +209,46 @@
         display: none !important;
     }
     
-    .table-modern tbody tr td[colspan] {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
+    .table-modern tbody tr td[colspan],
+    .table-modern tbody tr td.empty-state-table {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
         text-align: center !important;
-        padding: 28px 16px !important;
+        padding: 28px 14px !important;
+        box-sizing: border-box !important;
     }
     .table-modern tbody tr td[colspan] > *,
-    .table-modern tbody tr td[colspan] * {
+    .table-modern tbody tr td[colspan] *,
+    .table-modern tbody tr td.empty-state-table > *,
+    .table-modern tbody tr td.empty-state-table * {
         text-align: center !important;
         margin-left: auto !important;
         margin-right: auto !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+    }
+    #empty-filter-text,
+    .empty-state-title {
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        max-width: 100% !important;
+        line-height: 1.45 !important;
+        padding: 0 4px !important;
+        font-size: 14.5px !important;
+    }
+    .empty-state-subtitle {
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        max-width: 100% !important;
+        line-height: 1.4 !important;
+        padding: 0 4px !important;
+        display: block !important;
     }
     .table-modern tbody tr td[colspan]::before {
         display: none !important;
@@ -400,7 +427,7 @@
                     <tr id="empty-filter-row" class="d-none" style="display: none !important;">
                         <td colspan="7" class="text-center py-5 text-muted empty-state-table">
                             <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
-                            <div class="fw-bold fs-6 empty-state-title" id="empty-filter-text">No departure rules configured for this route</div>
+                            <div class="fw-bold fs-6 empty-state-title" id="empty-filter-text" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important; max-width: 100% !important;">No departure rules configured for this route</div>
                             <small class="empty-state-subtitle">No custom dispatch interval has been configured for this destination.</small>
                             <?php if (session()->get('role') !== 'staff'): ?>
                             <div class="mt-3">

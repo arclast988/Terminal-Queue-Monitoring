@@ -119,6 +119,9 @@ if (!isset($countActive)) {
             <table class="table-modern" id="users-table">
                 <thead>
                     <tr>
+                        <th class="bulk-col">
+                            <input type="checkbox" id="select-all-users" class="form-check-input select-all-checkbox" title="Select All">
+                        </th>
                         <th>#</th>
                         <th>User</th>
                         <th>Role</th>
@@ -129,7 +132,41 @@ if (!isset($countActive)) {
                 <tbody>
                     <?php if (!empty($users)): ?>
                         <?php foreach ($users as $i => $user): ?>
-                            <tr data-role="<?= esc($user['role']) ?>" data-status="<?= esc($user['status'] ?? 'active') ?>" class="<?= ($user['status'] ?? 'active') === 'archived' ? 'user-row-archived' : '' ?>">
+                            <?php
+                            $cUserId = (int) session()->get('id');
+                            $cUserRole = session()->get('role');
+                            $tUserId = (int) $user['id'];
+                            $tUserRole = $user['role'];
+                            $isUArchived = ($user['status'] ?? 'active') === 'archived';
+
+                            $canUDeact = !$isUArchived && 
+                                         ($tUserId !== $cUserId) && 
+                                         ($tUserRole !== 'super_admin') && 
+                                         (($cUserRole === 'super_admin') || 
+                                          ($cUserRole === 'admin' && $tUserRole === 'staff'));
+
+                            $canUAct = $isUArchived && 
+                                       (($cUserRole === 'super_admin') || 
+                                        ($cUserRole === 'admin' && $tUserRole === 'staff'));
+
+                            $canUDel = $isUArchived && 
+                                       ($tUserId !== $cUserId) && 
+                                       ($tUserRole !== 'super_admin') && 
+                                       (($cUserRole === 'super_admin') || 
+                                        ($cUserRole === 'admin' && $tUserRole === 'staff'));
+
+                            $canUSelect = $isUArchived ? ($canUAct || $canUDel) : $canUDeact;
+                            ?>
+                            <tr data-role="<?= esc($user['role']) ?>" data-status="<?= esc($user['status'] ?? 'active') ?>" class="<?= ($user['status'] ?? 'active') === 'archived' ? 'user-row-archived' : '' ?>" data-user-id="<?= $user['id'] ?>">
+                                <td data-label="Select" class="bulk-col bulk-select-cell">
+                                    <?php if ($canUSelect): ?>
+                                        <input type="checkbox" class="form-check-input user-row-checkbox" value="<?= $user['id'] ?>" data-status="<?= esc($user['status'] ?? 'active') ?>" data-name="<?= esc($user['full_name'] ?? $user['username']) ?>" data-role="<?= esc($user['role']) ?>" title="Select <?= esc($user['full_name'] ?? $user['username']) ?>">
+                                    <?php else: ?>
+                                        <span class="text-muted" title="<?= $tUserRole === 'super_admin' ? 'Superadmin cannot be modified' : ($tUserId === $cUserId ? 'Cannot modify your own account' : 'Protected Account') ?>" style="opacity: 0.45; cursor: not-allowed; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;">
+                                            <i class="bi bi-lock-fill" style="font-size: 13px;"></i>
+                                        </span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="row-number" data-label="#"><?= $i + 1 ?></td>
                                 <td data-label="User">
                                     <?php
@@ -266,6 +303,7 @@ if (!isset($countActive)) {
                                         <?php if ($isArchived): ?>
                                             <?php if ($canActivate): ?>
                                                 <form id="activate-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/activate/' . $user['id']) ?>" method="post" class="d-inline">
+                                                    <input type="hidden" name="redirect_tab" value="archived">
                                                     <?= csrf_field() ?>
                                                     <button type="button" class="btn-modern btn-action-activate btn-modern-sm" title="Activate"
                                                         onclick="showActivateUserModal({
@@ -288,6 +326,7 @@ if (!isset($countActive)) {
                                             <?php endif; ?>
                                             <?php if ($canDelete): ?>
                                                 <form id="delete-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/delete/' . $user['id']) ?>" method="post" class="d-inline">
+                                                    <input type="hidden" name="redirect_tab" value="archived">
                                                     <?= csrf_field() ?>
                                                     <button type="button" class="btn-modern btn-action-delete btn-modern-sm" title="Delete Permanently"
                                                         onclick="showDeleteUserModal({
@@ -311,6 +350,7 @@ if (!isset($countActive)) {
                                             <?php endif; ?>
                                             <?php if ($canDeactivate): ?>
                                                 <form id="deactivate-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/deactivate/' . $user['id']) ?>" method="post" class="d-inline">
+                                                    <input type="hidden" name="redirect_tab" class="user-deact-redirect-tab" value="">
                                                     <?= csrf_field() ?>
                                                     <button type="button" class="btn-modern btn-action-deactivate btn-modern-sm" title="Deactivate"
                                                         onclick="showDeactivateUserModal({
@@ -332,7 +372,7 @@ if (!isset($countActive)) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted empty-state-table">
+                            <td colspan="6" class="text-center py-5 text-muted empty-state-table">
                                 <i class="bi bi-people fs-1 d-block mb-3 opacity-50"></i>
                                 <div class="fw-bold fs-6 empty-state-title">No users found</div>
                                 <small class="empty-state-subtitle">No user accounts exist in the system.</small>
@@ -344,6 +384,67 @@ if (!isset($countActive)) {
         </div>
     </div>
 </div>
+
+<!-- User Bulk Actions Floating Toolbar -->
+<div id="user-bulk-toolbar" class="bulk-action-bar">
+    <div class="bulk-bar-info">
+        <span class="bulk-count-badge" id="user-selected-count">0</span>
+        <span id="user-selected-text">users selected</span>
+    </div>
+    <div class="bulk-bar-actions">
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-deactivate" id="btn-bulk-deactivate-users" onclick="openUserBulkModal('deactivate')">
+            <i class="bi bi-person-slash me-1"></i> Deactivate Selected
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-activate" id="btn-bulk-activate-users" onclick="openUserBulkModal('activate')" style="display: none;">
+            <i class="bi bi-person-check-fill me-1"></i> Activate Selected
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-bulk-delete" id="btn-bulk-delete-users" onclick="openUserBulkModal('delete')" style="display: none;">
+            <i class="bi bi-trash me-1"></i> Delete Selected
+        </button>
+        <button type="button" class="btn-bulk-cancel" onclick="clearUserSelection()" title="Clear selection">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>
+
+<!-- User Bulk Confirmation Modal -->
+<div class="modal fade" id="userBulkConfirmModal" tabindex="-1" aria-labelledby="userBulkConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px; margin: 1.75rem auto;">
+        <div class="modal-content delete-user-modal-content" style="border-radius: 18px; overflow: hidden; border: none; box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25);">
+            <div id="userBulkStripe" style="height: 4px; width: 100%; background: #f59e0b;"></div>
+            <form id="userBulkForm" method="post" action="<?= base_url('admin/users/bulk-action') ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" id="userBulkActionInput" value="">
+                <input type="hidden" name="redirect_tab" id="userBulkRedirectTab" value="">
+                <div id="userBulkIdsContainer"></div>
+
+                <div class="modal-body text-center p-4">
+                    <div id="userBulkIconBadge" style="width: 68px; height: 68px; margin: 4px auto 18px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; background: #fef3c7; color: #d97706;">
+                        <i id="userBulkIcon" class="bi bi-person-slash"></i>
+                    </div>
+
+                    <h4 class="delete-user-modal-title" id="userBulkConfirmTitle" style="font-size: 1.25rem; font-weight: 700; color: #0f172a;">Deactivate Selected Users?</h4>
+                    <p class="delete-user-modal-desc" id="userBulkConfirmDesc" style="font-size: 0.9rem; color: #64748b;">
+                        Are you sure you want to deactivate the selected users?
+                    </p>
+
+                    <div id="userBulkSelectedList" class="p-2 mb-2 text-start" style="max-height: 140px; overflow-y: auto; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px;">
+                    </div>
+                </div>
+
+                <div class="modal-footer delete-user-modal-footer" style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; gap: 8px;">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="border: 1px solid #cbd5e1; background: #fff; color: #475569; font-weight: 600; padding: 10px 18px; border-radius: 10px;">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn" id="userBulkSubmitBtn" style="flex: 1; font-weight: 600; padding: 10px 18px; border-radius: 10px; border: none; background: #f59e0b; color: #fff;">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <style>
     #users-table {
@@ -760,6 +861,21 @@ if (!isset($countActive)) {
             }
         });
 
+        // Update URL tab parameter for persistence
+        const newUrl = new URL(window.location);
+        if (filter === 'all') {
+            newUrl.searchParams.delete('tab');
+        } else {
+            newUrl.searchParams.set('tab', filter);
+        }
+        window.history.replaceState({}, '', newUrl);
+
+        // Update single deactivate forms redirect_tab
+        document.querySelectorAll('.user-deact-redirect-tab').forEach(el => el.value = filter);
+
+        // Reset selection whenever filter changes
+        clearUserSelection();
+
         // Update filter label text
         if (filter === 'all') {
             filterLabel.innerHTML = 'Showing all <strong>' + visibleCount + '</strong> active users';
@@ -775,7 +891,7 @@ if (!isset($countActive)) {
             if (!emptyRow) {
                 emptyRow = document.createElement('tr');
                 emptyRow.classList.add('no-filter-results');
-                emptyRow.innerHTML = '<td colspan="5" class="text-center py-5 text-muted empty-state-table"><i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i><div class="fw-bold fs-6 empty-state-title">No users match the selected filter</div><small class="empty-state-subtitle">Try selecting a different role or clearing your search.</small></td>';
+                emptyRow.innerHTML = '<td colspan="6" class="text-center py-5 text-muted empty-state-table"><i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i><div class="fw-bold fs-6 empty-state-title">No users match the selected filter</div><small class="empty-state-subtitle">Try selecting a different role or clearing your search.</small></td>';
                 document.querySelector('#users-table tbody').appendChild(emptyRow);
             }
             emptyRow.style.removeProperty('display');
@@ -785,9 +901,179 @@ if (!isset($countActive)) {
         }
     }
 
-    // Initialize filter on DOMContentLoaded
+    // Bulk selection handlers for users
+    function updateUserBulkToolbar() {
+        const checkedBoxes = Array.from(document.querySelectorAll('.user-row-checkbox:checked'));
+        const toolbar = document.getElementById('user-bulk-toolbar');
+        const countEl = document.getElementById('user-selected-count');
+        const textEl = document.getElementById('user-selected-text');
+        const btnDeact = document.getElementById('btn-bulk-deactivate-users');
+        const btnAct = document.getElementById('btn-bulk-activate-users');
+        const btnDel = document.getElementById('btn-bulk-delete-users');
+
+        if (!toolbar) return;
+
+        const count = checkedBoxes.length;
+        if (count > 0) {
+            toolbar.classList.add('is-visible');
+            toolbar.style.display = 'flex';
+            if (countEl) countEl.textContent = count;
+            if (textEl) textEl.textContent = 'user' + (count !== 1 ? 's' : '') + ' selected';
+
+            if (currentFilter === 'archived') {
+                if (btnDeact) btnDeact.style.display = 'none';
+                if (btnAct) btnAct.style.display = 'inline-flex';
+                if (btnDel) btnDel.style.display = 'inline-flex';
+            } else {
+                if (btnDeact) btnDeact.style.display = 'inline-flex';
+                if (btnAct) btnAct.style.display = 'none';
+                if (btnDel) btnDel.style.display = 'none';
+            }
+        } else {
+            toolbar.classList.remove('is-visible');
+            toolbar.style.display = 'none';
+        }
+
+        const selectAll = document.getElementById('select-all-users');
+        if (selectAll) {
+            const visibleCheckboxes = Array.from(document.querySelectorAll('#users-table tbody tr[data-role]'))
+                .filter(tr => !tr.classList.contains('user-row-hidden'))
+                .map(tr => tr.querySelector('.user-row-checkbox'))
+                .filter(cb => cb && !cb.disabled);
+            if (visibleCheckboxes.length > 0) {
+                selectAll.checked = visibleCheckboxes.every(cb => cb.checked);
+                selectAll.indeterminate = visibleCheckboxes.some(cb => cb.checked) && !selectAll.checked;
+            } else {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            }
+        }
+    }
+
+    function clearUserSelection() {
+        document.querySelectorAll('.user-row-checkbox').forEach(cb => cb.checked = false);
+        const selectAll = document.getElementById('select-all-users');
+        if (selectAll) { selectAll.checked = false; selectAll.indeterminate = false; }
+        updateUserBulkToolbar();
+    }
+
+    function openUserBulkModal(action) {
+        const checkedBoxes = Array.from(document.querySelectorAll('.user-row-checkbox:checked'));
+        if (checkedBoxes.length === 0) return;
+
+        const modalEl = document.getElementById('userBulkConfirmModal');
+        const actionInput = document.getElementById('userBulkActionInput');
+        const redirectInput = document.getElementById('userBulkRedirectTab');
+        const idsContainer = document.getElementById('userBulkIdsContainer');
+        const titleEl = document.getElementById('userBulkConfirmTitle');
+        const descEl = document.getElementById('userBulkConfirmDesc');
+        const listEl = document.getElementById('userBulkSelectedList');
+        const stripeEl = document.getElementById('userBulkStripe');
+        const iconBadge = document.getElementById('userBulkIconBadge');
+        const iconEl = document.getElementById('userBulkIcon');
+        const submitBtn = document.getElementById('userBulkSubmitBtn');
+
+        if (actionInput) actionInput.value = action;
+        if (redirectInput) redirectInput.value = currentFilter;
+
+        if (idsContainer) {
+            idsContainer.innerHTML = '';
+            checkedBoxes.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                idsContainer.appendChild(input);
+            });
+        }
+
+        if (listEl) {
+            listEl.innerHTML = checkedBoxes.map(cb => {
+                const name = cb.getAttribute('data-name') || 'User';
+                const role = cb.getAttribute('data-role') || '';
+                return `<span class="badge bg-light text-dark border me-1 mb-1" style="font-size: 13px; font-weight: 600;"><i class="bi bi-person me-1"></i>${name} (${role})</span>`;
+            }).join(' ');
+        }
+
+        const count = checkedBoxes.length;
+
+        if (action === 'deactivate') {
+            if (titleEl) titleEl.textContent = `Deactivate ${count} Selected User${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to deactivate these ${count} users? They will be unable to log in and moved to archive.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#fef3c7';
+                iconBadge.style.color = '#d97706';
+            }
+            if (iconEl) iconEl.className = 'bi bi-person-slash';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                submitBtn.textContent = 'Yes, Deactivate All';
+            }
+        } else if (action === 'activate') {
+            if (titleEl) titleEl.textContent = `Activate ${count} Selected User${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to reactivate these ${count} users? They will be restored from archive and regain system access.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#ecfdf5';
+                iconBadge.style.color = '#059669';
+            }
+            if (iconEl) iconEl.className = 'bi bi-person-check-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                submitBtn.textContent = 'Yes, Activate All';
+            }
+        } else if (action === 'delete') {
+            if (titleEl) titleEl.textContent = `Permanently Delete ${count} User${count > 1 ? 's' : ''}?`;
+            if (descEl) descEl.textContent = `Are you sure you want to permanently delete these ${count} users from the system? All associated user records will be deleted. This action CANNOT be undone.`;
+            if (stripeEl) stripeEl.style.background = 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)';
+            if (iconBadge) {
+                iconBadge.style.background = '#fee2e2';
+                iconBadge.style.color = '#dc2626';
+            }
+            if (iconEl) iconEl.className = 'bi bi-trash-fill';
+            if (submitBtn) {
+                submitBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                submitBtn.textContent = 'Yes, Permanently Delete All';
+            }
+        }
+
+        if (modalEl && window.bootstrap) {
+            window.bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    // Initialize filter on DOMContentLoaded or restore from ?tab=
     document.addEventListener('DOMContentLoaded', function() {
-        filterUsers('all');
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialTab = urlParams.get('tab') || 'all';
+        filterUsers(initialTab);
+
+        // Select All listener
+        const selectAll = document.getElementById('select-all-users');
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                const isChecked = this.checked;
+                const rows = document.querySelectorAll('#users-table tbody tr[data-role]');
+                rows.forEach(tr => {
+                    if (!tr.classList.contains('user-row-hidden')) {
+                        const cb = tr.querySelector('.user-row-checkbox');
+                        if (cb && !cb.disabled) cb.checked = isChecked;
+                    }
+                });
+                updateUserBulkToolbar();
+            });
+        }
+
+        // Delegate row checkbox change listener
+        const tableBody = document.querySelector('#users-table tbody');
+        if (tableBody) {
+            tableBody.addEventListener('change', function(e) {
+                if (e.target && e.target.classList.contains('user-row-checkbox')) {
+                    updateUserBulkToolbar();
+                }
+            });
+        }
     });
 </script>
 

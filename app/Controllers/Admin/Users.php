@@ -389,7 +389,8 @@ class Users extends BaseController
         $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
         $this->logActivity('Deactivate user', 'Deactivated user "' . $displayName . '" (' . $targetUser['username'] . ') and moved to archive');
 
-        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" has been deactivated and moved to archive.');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'active';
+        return redirect()->to('/admin/users' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'User "' . $displayName . '" has been deactivated and moved to archive.');
     }
 
     public function activate($id)
@@ -412,7 +413,8 @@ class Users extends BaseController
         $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
         $this->logActivity('Activate user', 'Reactivated user "' . $displayName . '" (' . $targetUser['username'] . ')');
 
-        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" has been reactivated successfully.');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
+        return redirect()->to('/admin/users' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'User "' . $displayName . '" has been reactivated successfully.');
     }
 
     public function delete($id)
@@ -444,7 +446,77 @@ class Users extends BaseController
         // user_routes cleaned up automatically by ON DELETE CASCADE
         $displayName = !empty($targetUser['full_name']) ? $targetUser['full_name'] : $targetUser['username'];
         $this->logActivity('Delete user', 'Permanently deleted user "' . $displayName . '" (' . $targetUser['username'] . ')');
-        return redirect()->to('/admin/users')->with('success', 'User "' . $displayName . '" permanently deleted successfully.');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
+        return redirect()->to('/admin/users' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'User "' . $displayName . '" permanently deleted successfully.');
+    }
+
+    public function bulkAction()
+    {
+        $currentRole = session()->get('role');
+        $currentUserId = (int) session()->get('id');
+        $model = new UserModel();
+
+        $action = $this->request->getPost('action');
+        $rawIds = $this->request->getPost('ids');
+        $redirectTab = $this->request->getPost('redirect_tab') ?? 'archived';
+
+        if (is_string($rawIds)) {
+            $ids = array_filter(array_map('intval', explode(',', $rawIds)));
+        } elseif (is_array($rawIds)) {
+            $ids = array_filter(array_map('intval', $rawIds));
+        } else {
+            $ids = [];
+        }
+
+        if (empty($ids)) {
+            return redirect()->to('/admin/users' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'No users selected for bulk action.');
+        }
+
+        $users = $model->whereIn('id', $ids)->findAll();
+        if (empty($users)) {
+            return redirect()->to('/admin/users' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Selected users not found.');
+        }
+
+        $count = 0;
+
+        if ($action === 'deactivate') {
+            foreach ($users as $u) {
+                if ((int)$u['id'] === $currentUserId) continue;
+                if ($u['role'] === 'super_admin') continue;
+                if ($currentRole !== 'super_admin' && $u['role'] === 'admin') continue;
+
+                if (($u['status'] ?? 'active') !== 'archived') {
+                    $model->update($u['id'], ['status' => 'archived']);
+                    $count++;
+                }
+            }
+            $this->logActivity('Bulk deactivate users', "Deactivated $count user(s) and moved to archive.");
+            return redirect()->to('/admin/users?tab=active')->with('success', "$count user(s) deactivated and moved to archive.");
+        } elseif ($action === 'activate') {
+            foreach ($users as $u) {
+                if ($currentRole !== 'super_admin' && $u['role'] === 'admin') continue;
+                if (($u['status'] ?? 'active') === 'archived') {
+                    $model->update($u['id'], ['status' => 'active']);
+                    $count++;
+                }
+            }
+            $this->logActivity('Bulk activate users', "Activated $count user(s).");
+            return redirect()->to('/admin/users?tab=archived')->with('success', "$count user(s) reactivated successfully.");
+        } elseif ($action === 'delete') {
+            foreach ($users as $u) {
+                if ((int)$u['id'] === $currentUserId) continue;
+                if ($u['role'] === 'super_admin') continue;
+                if ($currentRole !== 'super_admin' && $u['role'] === 'admin') continue;
+                if (($u['status'] ?? 'active') === 'archived') {
+                    $model->delete($u['id']);
+                    $count++;
+                }
+            }
+            $this->logActivity('Bulk delete users', "Permanently deleted $count archived user(s).");
+            return redirect()->to('/admin/users?tab=archived')->with('success', "$count archived user(s) permanently deleted.");
+        }
+
+        return redirect()->to('/admin/users' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Invalid bulk action.');
     }
 
     public function uploadAvatar($id)
