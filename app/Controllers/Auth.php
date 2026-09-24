@@ -288,7 +288,7 @@ class Auth extends BaseController
                 // message that never reached the account owner.
                 $db->table('password_reset_tokens')->where('token', $token)->delete();
                 $cache->delete('otp_resend_' . $token);
-                $session->setFlashdata('error', 'Failed to send verification email. Please check server SMTP configuration.');
+                $session->setFlashdata('error', $this->getEmailDeliveryErrorMessage());
                 return redirect()->to('/forgot-password')->withInput();
             }
         }
@@ -441,7 +441,7 @@ class Auth extends BaseController
             } else {
                 // Permit an immediate retry when no message was delivered.
                 $cache->delete($cacheKey);
-                $session->setFlashdata('error', 'Failed to send new verification email. Please check server SMTP configuration.');
+                $session->setFlashdata('error', $this->getEmailDeliveryErrorMessage());
                 return redirect()->to("/verify-reset-code/{$token}");
             }
         }
@@ -721,7 +721,7 @@ class Auth extends BaseController
             } else {
                 $db->table('password_reset_tokens')->where('token', $token)->delete();
                 $cache->delete('otp_resend_cp_' . $user['id']);
-                $msg = 'Failed to send verification email. Please check server SMTP configuration.';
+                $msg = $this->getEmailDeliveryErrorMessage();
                 if ($isAjax) {
                     return $this->response->setJSON(['status' => 'error', 'message' => $msg]);
                 }
@@ -896,4 +896,18 @@ class Auth extends BaseController
                 return redirect()->to('/guest');
         }
     }
+
+    private function getEmailDeliveryErrorMessage(): string
+    {
+        $config = config('Email');
+        $hasBrevo = trim($config->brevoApiKey) !== '' && filter_var(trim($config->fromEmail ?: $config->SMTPUser), FILTER_VALIDATE_EMAIL);
+        $hasSmtp  = trim($config->SMTPUser) !== '' && trim($config->SMTPPass) !== '';
+
+        if (!$hasBrevo && !$hasSmtp) {
+            return 'Email service is not yet configured on this server. Please configure BREVO_API_KEY (or SMTP credentials) in your server environment variables.';
+        }
+
+        return 'Failed to send verification email. Please check server email/SMTP configuration.';
+    }
+
 }

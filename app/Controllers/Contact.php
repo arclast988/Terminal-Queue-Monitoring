@@ -36,7 +36,21 @@ class Contact extends BaseController
         }
 
         $config = config('Email');
-        $toEmail = $config->recipients;
+        $toEmail = trim($config->recipients);
+        if ($toEmail === '' || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            $toEmail = trim(app_contact_email());
+        }
+        if ($toEmail === '' || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            $toEmail = trim($config->fromEmail ?: $config->SMTPUser);
+        }
+
+        if ($toEmail === '' || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            log_message('error', 'Contact submission failed: No destination recipient email configured.');
+            $supportPhone = app_contact_phone() ? ' (' . app_contact_phone() . ')' : '';
+            return redirect()->back()->withInput()
+                ->with('contact_error', 'The terminal contact email is not currently configured on the server. Please visit the terminal office or contact us by phone' . $supportPhone . '.');
+        }
+
         $acro = app_acronym();
         $subjectLine = ($type === 'report')
             ? '[' . $acro . ' Report Issue] ' . ($subject ?: 'Issue reported via website')
@@ -56,8 +70,9 @@ class Contact extends BaseController
                 ->with('contact_success', 'Your message has been sent! We will respond shortly.');
         } else {
             // Fallback – still store session so user knows what happened
-            return redirect()->back()
-                ->with('contact_error', 'Message could not be sent. Please try contacting us directly at ' . $config->recipients);
+            $displayEmail = ($toEmail !== '' && filter_var($toEmail, FILTER_VALIDATE_EMAIL)) ? $toEmail : 'the terminal management office';
+            return redirect()->back()->withInput()
+                ->with('contact_error', 'Message could not be sent. Email delivery is unconfigured or unavailable on the server. Please contact us directly at ' . $displayEmail . '.');
         }
     }
 }

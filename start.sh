@@ -87,7 +87,7 @@ database.default.DBPrefix =
 database.default.port = "$(escape_dotenv "$DB_PORT")"
 
 email.fromEmail = "$(escape_dotenv "${EMAIL_FROM:-}")"
-email.fromName = "$(escape_dotenv "${EMAIL_FROM_NAME:-Jeepney nVans}")"
+email.fromName = "$(escape_dotenv "${EMAIL_FROM_NAME:-Terminal Queue Monitoring System}")"
 email.recipients = "$(escape_dotenv "${EMAIL_RECIPIENTS:-}")"
 email.deliveryProvider = "$(escape_dotenv "${EMAIL_DELIVERY_PROVIDER:-brevo}")"
 email.brevoApiKey = "$(escape_dotenv "${BREVO_API_KEY:-}")"

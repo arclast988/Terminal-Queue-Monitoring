@@ -261,10 +261,25 @@ abstract class BaseController extends Controller
         }
 
         if ($provider === 'brevo') {
-            return $this->sendViaBrevo($config, $recipients, $subject, $html, $replyToEmail, $replyToName);
-        }
+            $hasBrevo = trim($config->brevoApiKey) !== '' && filter_var(trim($config->fromEmail ?: $config->SMTPUser), FILTER_VALIDATE_EMAIL);
+            if ($hasBrevo) {
+                return $this->sendViaBrevo($config, $recipients, $subject, $html, $replyToEmail, $replyToName);
+            }
 
-        if ($provider !== '' && $provider !== 'smtp') {
+            $hasSmtp = trim($config->SMTPUser) !== '' && trim($config->SMTPPass) !== '';
+            if ($hasSmtp) {
+                log_message('info', 'Brevo API key is not configured; falling back to SMTP.');
+            } else {
+                return $this->sendViaBrevo($config, $recipients, $subject, $html, $replyToEmail, $replyToName);
+            }
+        } elseif ($provider === 'smtp') {
+            $hasSmtp = trim($config->SMTPUser) !== '' && trim($config->SMTPPass) !== '';
+            $hasBrevo = trim($config->brevoApiKey) !== '' && filter_var(trim($config->fromEmail ?: $config->SMTPUser), FILTER_VALIDATE_EMAIL);
+            if (!$hasSmtp && $hasBrevo) {
+                log_message('info', 'SMTP credentials are not configured; falling back to Brevo API.');
+                return $this->sendViaBrevo($config, $recipients, $subject, $html, $replyToEmail, $replyToName);
+            }
+        } elseif ($provider !== '') {
             log_message('error', 'Email delivery aborted: unsupported provider "' . $provider . '".');
             return false;
         }
