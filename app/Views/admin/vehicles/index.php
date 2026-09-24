@@ -141,19 +141,49 @@ $countInService = $countActive + $countMaintenance;
 
 <!-- Vehicles Table -->
 <div class="modern-card shadow-modern fade-in">
-    <div class="modern-card-header">
+    <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span class="modern-card-title">
             <i class="bi bi-list-ul" style="color: var(--primary-red);"></i>
             Vehicle List
         </span>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-vehicles" onclick="toggleVehicleSelectMode()" title="Toggle selection mode for batch actions">
+                <i class="bi bi-check2-square me-1"></i> <span id="btn-select-vehicles-text">Select</span>
+            </button>
+        </div>
     </div>
     <div class="modern-card-body">
+        <!-- Integrated Top Bulk Action Bar -->
+        <div id="vehicle-bulk-toolbar" class="bulk-action-top-bar" style="display: none;">
+            <div class="bulk-bar-info">
+                <label class="d-flex align-items-center gap-2 mb-0" style="cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="select-all-vehicles" class="form-check-input select-all-checkbox m-0" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span class="fw-semibold">Select All</span>
+                </label>
+                <span class="bulk-count-badge" id="vehicle-selected-count">0</span>
+                <span class="text-muted" id="vehicle-selected-text">0 selected</span>
+            </div>
+            <div class="bulk-bar-actions">
+                <button type="button" class="btn-bulk-deactivate" id="btn-bulk-deactivate-vehicles" onclick="openVehicleBulkModal('deactivate')" disabled>
+                    <i class="bi bi-pause-circle"></i> <span>Deactivate Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-activate" id="btn-bulk-activate-vehicles" onclick="openVehicleBulkModal('activate')" style="display: none;" disabled>
+                    <i class="bi bi-check-circle"></i> <span>Activate Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-delete" id="btn-bulk-delete-vehicles" onclick="openVehicleBulkModal('delete')" style="display: none;" disabled>
+                    <i class="bi bi-trash"></i> <span>Delete Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-cancel" onclick="toggleVehicleSelectMode(false)">
+                    <i class="bi bi-x"></i> <span>Cancel</span>
+                </button>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table-modern" id="vehicles-table">
                 <thead>
                     <tr>
                         <th class="bulk-col">
-                            <input type="checkbox" id="select-all-vehicles" class="form-check-input select-all-checkbox" title="Select All">
+                            <input type="checkbox" id="table-head-select-all-vehicles" class="form-check-input select-all-checkbox" title="Select All">
                         </th>
                         <th>#</th>
                         <th>Plate Number</th>
@@ -316,27 +346,7 @@ $countInService = $countActive + $countMaintenance;
     </div>
 </div>
 
-<!-- Vehicle Bulk Actions Floating Toolbar -->
-<div id="vehicle-bulk-toolbar" class="bulk-action-bar">
-    <div class="bulk-bar-info">
-        <span class="bulk-count-badge" id="vehicle-selected-count">0</span>
-        <span id="vehicle-selected-text">vehicles selected</span>
-    </div>
-    <div class="bulk-bar-actions">
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-deactivate" id="btn-bulk-deactivate-vehicles" onclick="openVehicleBulkModal('deactivate')">
-            <i class="bi bi-pause-circle me-1"></i> Deactivate Selected
-        </button>
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-activate" id="btn-bulk-activate-vehicles" onclick="openVehicleBulkModal('activate')" style="display: none;">
-            <i class="bi bi-check-circle me-1"></i> Activate Selected
-        </button>
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-delete" id="btn-bulk-delete-vehicles" onclick="openVehicleBulkModal('delete')" style="display: none;">
-            <i class="bi bi-trash me-1"></i> Delete Selected
-        </button>
-        <button type="button" class="btn-bulk-cancel" onclick="clearVehicleSelection()" title="Clear selection">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div>
-</div>
+
 
 <!-- Vehicle Bulk Confirmation Modal -->
 <div class="modal fade" id="vehicleBulkConfirmModal" tabindex="-1" aria-labelledby="vehicleBulkConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
@@ -835,8 +845,8 @@ $countInService = $countActive + $countMaintenance;
         const deactRedirectEl = document.getElementById('deactivateVehicleRedirectTab');
         if (deactRedirectEl) deactRedirectEl.value = filter;
 
-        // Reset selection whenever filter changes
-        clearVehicleSelection();
+        // Reset selection & exit select mode whenever filter changes
+        toggleVehicleSelectMode(false);
 
         // Update filter label text
         if (filter === 'all') {
@@ -863,6 +873,40 @@ $countInService = $countActive + $countMaintenance;
         }
     }
 
+    // Selection mode state & toggler
+    let isVehicleSelectMode = false;
+    function toggleVehicleSelectMode(forceState) {
+        if (typeof forceState === 'boolean') {
+            isVehicleSelectMode = forceState;
+        } else {
+            isVehicleSelectMode = !isVehicleSelectMode;
+        }
+        const table = document.getElementById('vehicles-table');
+        const toolbar = document.getElementById('vehicle-bulk-toolbar');
+        const btnText = document.getElementById('btn-select-vehicles-text');
+        const btn = document.getElementById('btn-toggle-select-vehicles');
+
+        if (isVehicleSelectMode) {
+            if (table) table.classList.add('selection-mode-active');
+            if (toolbar) {
+                toolbar.classList.add('is-visible');
+                toolbar.style.display = 'flex';
+            }
+            if (btnText) btnText.textContent = 'Exit Select';
+            if (btn) btn.classList.add('active');
+            updateVehicleBulkToolbar();
+        } else {
+            if (table) table.classList.remove('selection-mode-active');
+            if (toolbar) {
+                toolbar.classList.remove('is-visible');
+                toolbar.style.display = 'none';
+            }
+            if (btnText) btnText.textContent = 'Select';
+            if (btn) btn.classList.remove('active');
+            clearVehicleSelection();
+        }
+    }
+
     // Bulk selection handlers
     function updateVehicleBulkToolbar() {
         const checkedBoxes = Array.from(document.querySelectorAll('.vehicle-row-checkbox:checked'));
@@ -876,39 +920,48 @@ $countInService = $countActive + $countMaintenance;
         if (!toolbar) return;
 
         const count = checkedBoxes.length;
-        if (count > 0) {
-            toolbar.classList.add('is-visible');
-            toolbar.style.display = 'flex';
-            if (countEl) countEl.textContent = count;
-            if (textEl) textEl.textContent = 'vehicle' + (count !== 1 ? 's' : '') + ' selected';
+        if (countEl) countEl.textContent = count;
+        if (textEl) textEl.textContent = count + ' selected';
 
-            if (currentFilter === 'archived') {
-                if (btnDeact) btnDeact.style.display = 'none';
-                if (btnAct) btnAct.style.display = 'inline-flex';
-                if (btnDel) btnDel.style.display = 'inline-flex';
-            } else {
-                if (btnDeact) btnDeact.style.display = 'inline-flex';
-                if (btnAct) btnAct.style.display = 'none';
-                if (btnDel) btnDel.style.display = 'none';
+        const hasSelection = count > 0;
+
+        // Toggle which buttons show based on current active tab
+        if (currentFilter === 'archived') {
+            if (btnDeact) btnDeact.style.display = 'none';
+            if (btnAct) {
+                btnAct.style.display = 'inline-flex';
+                btnAct.disabled = !hasSelection;
+            }
+            if (btnDel) {
+                btnDel.style.display = 'inline-flex';
+                btnDel.disabled = !hasSelection;
             }
         } else {
-            toolbar.classList.remove('is-visible');
-            toolbar.style.display = 'none';
+            if (btnDeact) {
+                btnDeact.style.display = 'inline-flex';
+                btnDeact.disabled = !hasSelection;
+            }
+            if (btnAct) btnAct.style.display = 'none';
+            if (btnDel) btnDel.style.display = 'none';
         }
 
         const selectAll = document.getElementById('select-all-vehicles');
+        const tableHeadSelectAll = document.getElementById('table-head-select-all-vehicles');
+        const visibleCheckboxes = Array.from(document.querySelectorAll('#vehicles-table tbody tr[data-type]'))
+            .filter(tr => !tr.classList.contains('vehicle-row-hidden'))
+            .map(tr => tr.querySelector('.vehicle-row-checkbox'))
+            .filter(cb => cb);
+
+        const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+        const someChecked = visibleCheckboxes.some(cb => cb.checked) && !allChecked;
+
         if (selectAll) {
-            const visibleCheckboxes = Array.from(document.querySelectorAll('#vehicles-table tbody tr[data-type]'))
-                .filter(tr => !tr.classList.contains('vehicle-row-hidden'))
-                .map(tr => tr.querySelector('.vehicle-row-checkbox'))
-                .filter(cb => cb);
-            if (visibleCheckboxes.length > 0) {
-                selectAll.checked = visibleCheckboxes.every(cb => cb.checked);
-                selectAll.indeterminate = visibleCheckboxes.some(cb => cb.checked) && !selectAll.checked;
-            } else {
-                selectAll.checked = false;
-                selectAll.indeterminate = false;
-            }
+            selectAll.checked = allChecked;
+            selectAll.indeterminate = someChecked;
+        }
+        if (tableHeadSelectAll) {
+            tableHeadSelectAll.checked = allChecked;
+            tableHeadSelectAll.indeterminate = someChecked;
         }
     }
 
@@ -1010,20 +1063,25 @@ $countInService = $countActive + $countMaintenance;
         const initialTab = urlParams.get('tab') || 'all';
         filterVehicles(initialTab);
 
-        // Select All listener
+        // Select All listeners (both in top bar and table header)
+        function handleSelectAll(isChecked) {
+            const rows = document.querySelectorAll('#vehicles-table tbody tr[data-type]');
+            rows.forEach(tr => {
+                if (!tr.classList.contains('vehicle-row-hidden')) {
+                    const cb = tr.querySelector('.vehicle-row-checkbox');
+                    if (cb) cb.checked = isChecked;
+                }
+            });
+            updateVehicleBulkToolbar();
+        }
+
         const selectAll = document.getElementById('select-all-vehicles');
         if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                const isChecked = this.checked;
-                const rows = document.querySelectorAll('#vehicles-table tbody tr[data-type]');
-                rows.forEach(tr => {
-                    if (!tr.classList.contains('vehicle-row-hidden')) {
-                        const cb = tr.querySelector('.vehicle-row-checkbox');
-                        if (cb) cb.checked = isChecked;
-                    }
-                });
-                updateVehicleBulkToolbar();
-            });
+            selectAll.addEventListener('change', function() { handleSelectAll(this.checked); });
+        }
+        const tableHeadSelectAll = document.getElementById('table-head-select-all-vehicles');
+        if (tableHeadSelectAll) {
+            tableHeadSelectAll.addEventListener('change', function() { handleSelectAll(this.checked); });
         }
 
         // Delegate row checkbox change listener

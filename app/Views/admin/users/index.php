@@ -108,19 +108,49 @@ if (!isset($countActive)) {
 </div>
 
 <div class="modern-card shadow-modern fade-in">
-    <div class="modern-card-header">
+    <div class="modern-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span class="modern-card-title">
             <i class="bi bi-people" style="color: var(--primary-red);"></i>
             User List
         </span>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-users" onclick="toggleUserSelectMode()" title="Toggle selection mode for batch actions">
+                <i class="bi bi-check2-square me-1"></i> <span id="btn-select-users-text">Select</span>
+            </button>
+        </div>
     </div>
     <div class="modern-card-body">
+        <!-- Integrated Top Bulk Action Bar -->
+        <div id="user-bulk-toolbar" class="bulk-action-top-bar" style="display: none;">
+            <div class="bulk-bar-info">
+                <label class="d-flex align-items-center gap-2 mb-0" style="cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="select-all-users" class="form-check-input select-all-checkbox m-0" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span class="fw-semibold">Select All</span>
+                </label>
+                <span class="bulk-count-badge" id="user-selected-count">0</span>
+                <span class="text-muted" id="user-selected-text">0 selected</span>
+            </div>
+            <div class="bulk-bar-actions">
+                <button type="button" class="btn-bulk-deactivate" id="btn-bulk-deactivate-users" onclick="openUserBulkModal('deactivate')" disabled>
+                    <i class="bi bi-person-slash"></i> <span>Deactivate Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-activate" id="btn-bulk-activate-users" onclick="openUserBulkModal('activate')" style="display: none;" disabled>
+                    <i class="bi bi-person-check-fill"></i> <span>Activate Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-delete" id="btn-bulk-delete-users" onclick="openUserBulkModal('delete')" style="display: none;" disabled>
+                    <i class="bi bi-trash"></i> <span>Delete Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-cancel" onclick="toggleUserSelectMode(false)">
+                    <i class="bi bi-x"></i> <span>Cancel</span>
+                </button>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table-modern" id="users-table">
                 <thead>
                     <tr>
                         <th class="bulk-col">
-                            <input type="checkbox" id="select-all-users" class="form-check-input select-all-checkbox" title="Select All">
+                            <input type="checkbox" id="table-head-select-all-users" class="form-check-input select-all-checkbox" title="Select All">
                         </th>
                         <th>#</th>
                         <th>User</th>
@@ -385,27 +415,7 @@ if (!isset($countActive)) {
     </div>
 </div>
 
-<!-- User Bulk Actions Floating Toolbar -->
-<div id="user-bulk-toolbar" class="bulk-action-bar">
-    <div class="bulk-bar-info">
-        <span class="bulk-count-badge" id="user-selected-count">0</span>
-        <span id="user-selected-text">users selected</span>
-    </div>
-    <div class="bulk-bar-actions">
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-deactivate" id="btn-bulk-deactivate-users" onclick="openUserBulkModal('deactivate')">
-            <i class="bi bi-person-slash me-1"></i> Deactivate Selected
-        </button>
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-activate" id="btn-bulk-activate-users" onclick="openUserBulkModal('activate')" style="display: none;">
-            <i class="bi bi-person-check-fill me-1"></i> Activate Selected
-        </button>
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-delete" id="btn-bulk-delete-users" onclick="openUserBulkModal('delete')" style="display: none;">
-            <i class="bi bi-trash me-1"></i> Delete Selected
-        </button>
-        <button type="button" class="btn-bulk-cancel" onclick="clearUserSelection()" title="Clear selection">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div>
-</div>
+
 
 <!-- User Bulk Confirmation Modal -->
 <div class="modal fade" id="userBulkConfirmModal" tabindex="-1" aria-labelledby="userBulkConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
@@ -873,8 +883,8 @@ if (!isset($countActive)) {
         // Update single deactivate forms redirect_tab
         document.querySelectorAll('.user-deact-redirect-tab').forEach(el => el.value = filter);
 
-        // Reset selection whenever filter changes
-        clearUserSelection();
+        // Reset selection & exit select mode whenever filter changes
+        toggleUserSelectMode(false);
 
         // Update filter label text
         if (filter === 'all') {
@@ -901,6 +911,40 @@ if (!isset($countActive)) {
         }
     }
 
+    // Selection mode state & toggler for users
+    let isUserSelectMode = false;
+    function toggleUserSelectMode(forceState) {
+        if (typeof forceState === 'boolean') {
+            isUserSelectMode = forceState;
+        } else {
+            isUserSelectMode = !isUserSelectMode;
+        }
+        const table = document.getElementById('users-table');
+        const toolbar = document.getElementById('user-bulk-toolbar');
+        const btnText = document.getElementById('btn-select-users-text');
+        const btn = document.getElementById('btn-toggle-select-users');
+
+        if (isUserSelectMode) {
+            if (table) table.classList.add('selection-mode-active');
+            if (toolbar) {
+                toolbar.classList.add('is-visible');
+                toolbar.style.display = 'flex';
+            }
+            if (btnText) btnText.textContent = 'Exit Select';
+            if (btn) btn.classList.add('active');
+            updateUserBulkToolbar();
+        } else {
+            if (table) table.classList.remove('selection-mode-active');
+            if (toolbar) {
+                toolbar.classList.remove('is-visible');
+                toolbar.style.display = 'none';
+            }
+            if (btnText) btnText.textContent = 'Select';
+            if (btn) btn.classList.remove('active');
+            clearUserSelection();
+        }
+    }
+
     // Bulk selection handlers for users
     function updateUserBulkToolbar() {
         const checkedBoxes = Array.from(document.querySelectorAll('.user-row-checkbox:checked'));
@@ -914,39 +958,47 @@ if (!isset($countActive)) {
         if (!toolbar) return;
 
         const count = checkedBoxes.length;
-        if (count > 0) {
-            toolbar.classList.add('is-visible');
-            toolbar.style.display = 'flex';
-            if (countEl) countEl.textContent = count;
-            if (textEl) textEl.textContent = 'user' + (count !== 1 ? 's' : '') + ' selected';
+        if (countEl) countEl.textContent = count;
+        if (textEl) textEl.textContent = count + ' selected';
 
-            if (currentFilter === 'archived') {
-                if (btnDeact) btnDeact.style.display = 'none';
-                if (btnAct) btnAct.style.display = 'inline-flex';
-                if (btnDel) btnDel.style.display = 'inline-flex';
-            } else {
-                if (btnDeact) btnDeact.style.display = 'inline-flex';
-                if (btnAct) btnAct.style.display = 'none';
-                if (btnDel) btnDel.style.display = 'none';
+        const hasSelection = count > 0;
+
+        if (currentFilter === 'archived') {
+            if (btnDeact) btnDeact.style.display = 'none';
+            if (btnAct) {
+                btnAct.style.display = 'inline-flex';
+                btnAct.disabled = !hasSelection;
+            }
+            if (btnDel) {
+                btnDel.style.display = 'inline-flex';
+                btnDel.disabled = !hasSelection;
             }
         } else {
-            toolbar.classList.remove('is-visible');
-            toolbar.style.display = 'none';
+            if (btnDeact) {
+                btnDeact.style.display = 'inline-flex';
+                btnDeact.disabled = !hasSelection;
+            }
+            if (btnAct) btnAct.style.display = 'none';
+            if (btnDel) btnDel.style.display = 'none';
         }
 
         const selectAll = document.getElementById('select-all-users');
+        const tableHeadSelectAll = document.getElementById('table-head-select-all-users');
+        const visibleCheckboxes = Array.from(document.querySelectorAll('#users-table tbody tr[data-role]'))
+            .filter(tr => !tr.classList.contains('user-row-hidden'))
+            .map(tr => tr.querySelector('.user-row-checkbox'))
+            .filter(cb => cb && !cb.disabled);
+
+        const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+        const someChecked = visibleCheckboxes.some(cb => cb.checked) && !allChecked;
+
         if (selectAll) {
-            const visibleCheckboxes = Array.from(document.querySelectorAll('#users-table tbody tr[data-role]'))
-                .filter(tr => !tr.classList.contains('user-row-hidden'))
-                .map(tr => tr.querySelector('.user-row-checkbox'))
-                .filter(cb => cb && !cb.disabled);
-            if (visibleCheckboxes.length > 0) {
-                selectAll.checked = visibleCheckboxes.every(cb => cb.checked);
-                selectAll.indeterminate = visibleCheckboxes.some(cb => cb.checked) && !selectAll.checked;
-            } else {
-                selectAll.checked = false;
-                selectAll.indeterminate = false;
-            }
+            selectAll.checked = allChecked;
+            selectAll.indeterminate = someChecked;
+        }
+        if (tableHeadSelectAll) {
+            tableHeadSelectAll.checked = allChecked;
+            tableHeadSelectAll.indeterminate = someChecked;
         }
     }
 
@@ -1049,20 +1101,25 @@ if (!isset($countActive)) {
         const initialTab = urlParams.get('tab') || 'all';
         filterUsers(initialTab);
 
-        // Select All listener
+        // Select All listeners (both in top bar and table header)
+        function handleUserSelectAll(isChecked) {
+            const rows = document.querySelectorAll('#users-table tbody tr[data-role]');
+            rows.forEach(tr => {
+                if (!tr.classList.contains('user-row-hidden')) {
+                    const cb = tr.querySelector('.user-row-checkbox');
+                    if (cb && !cb.disabled) cb.checked = isChecked;
+                }
+            });
+            updateUserBulkToolbar();
+        }
+
         const selectAll = document.getElementById('select-all-users');
         if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                const isChecked = this.checked;
-                const rows = document.querySelectorAll('#users-table tbody tr[data-role]');
-                rows.forEach(tr => {
-                    if (!tr.classList.contains('user-row-hidden')) {
-                        const cb = tr.querySelector('.user-row-checkbox');
-                        if (cb && !cb.disabled) cb.checked = isChecked;
-                    }
-                });
-                updateUserBulkToolbar();
-            });
+            selectAll.addEventListener('change', function() { handleUserSelectAll(this.checked); });
+        }
+        const tableHeadSelectAll = document.getElementById('table-head-select-all-users');
+        if (tableHeadSelectAll) {
+            tableHeadSelectAll.addEventListener('change', function() { handleUserSelectAll(this.checked); });
         }
 
         // Delegate row checkbox change listener

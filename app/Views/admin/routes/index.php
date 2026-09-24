@@ -59,10 +59,9 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                     <span class="vf-count" id="count-archived-tab"><?= $countArchivedGroups ?? 0 ?></span>
                 </button>
                 <?php if ($isAdmin): ?>
-                <label class="d-flex align-items-center gap-2 mb-0 px-2 py-1 rounded" style="font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; background: #f1f5f9; border: 1.5px solid #cbd5e1; color: #475569;" title="Select all visible routes">
-                    <input type="checkbox" id="select-all-routes" class="form-check-input select-all-checkbox m-0" style="width: 17px; height: 17px; cursor: pointer;">
-                    <span>Select All</span>
-                </label>
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-routes" onclick="toggleRouteSelectMode()" title="Toggle selection mode for batch actions">
+                    <i class="bi bi-check2-square me-1"></i> <span id="btn-select-routes-text">Select</span>
+                </button>
                 <?php endif; ?>
             </div>
 
@@ -75,6 +74,33 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 
 <?php if (!empty($groupedRoutes)): ?>
     <div class="d-flex flex-column gap-4 fade-in" id="routes-container">
+        <?php if ($isAdmin): ?>
+        <!-- Integrated Top Bulk Action Bar -->
+        <div id="route-bulk-toolbar" class="bulk-action-top-bar" style="display: none;">
+            <div class="bulk-bar-info">
+                <label class="d-flex align-items-center gap-2 mb-0" style="cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="select-all-routes" class="form-check-input select-all-checkbox m-0" style="width: 18px; height: 18px; cursor: pointer;">
+                    <span class="fw-semibold">Select All</span>
+                </label>
+                <span class="bulk-count-badge" id="route-selected-count">0</span>
+                <span class="text-muted" id="route-selected-text">0 selected</span>
+            </div>
+            <div class="bulk-bar-actions">
+                <button type="button" class="btn-bulk-deactivate" id="btn-bulk-deactivate-routes" onclick="openRouteBulkModal('deactivate')" disabled>
+                    <i class="bi bi-pause-circle"></i> <span>Deactivate Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-activate" id="btn-bulk-activate-routes" onclick="openRouteBulkModal('activate')" style="display: none;" disabled>
+                    <i class="bi bi-check-circle"></i> <span>Activate Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-delete" id="btn-bulk-delete-routes" onclick="openRouteBulkModal('delete')" style="display: none;" disabled>
+                    <i class="bi bi-trash"></i> <span>Delete Selected</span>
+                </button>
+                <button type="button" class="btn-bulk-cancel" onclick="toggleRouteSelectMode(false)">
+                    <i class="bi bi-x"></i> <span>Cancel</span>
+                </button>
+            </div>
+        </div>
+        <?php endif; ?>
         <?php foreach ($groupedRoutes as $routeKey => $group): ?>
             <?php $grpStatus = $group['status'] ?? 'active'; ?>
             <div class="modern-card shadow-modern mb-0 route-card-item <?= ($grpStatus === 'archived') ? 'route-card-archived' : '' ?>" data-status="<?= esc($grpStatus) ?>" data-destination="<?= esc(strtolower($group['destination'])) ?>" data-terminal="<?= esc(strtolower($group['terminal_name'])) ?>">
@@ -191,27 +217,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         </div>
     </div>
 
-<!-- Route Bulk Actions Floating Toolbar -->
-<div id="route-bulk-toolbar" class="bulk-action-bar">
-    <div class="bulk-bar-info">
-        <span class="bulk-count-badge" id="route-selected-count">0</span>
-        <span id="route-selected-text">routes selected</span>
-    </div>
-    <div class="bulk-bar-actions">
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-deactivate" id="btn-bulk-deactivate-routes" onclick="openRouteBulkModal('deactivate')">
-            <i class="bi bi-pause-circle me-1"></i> Deactivate Selected
-        </button>
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-activate" id="btn-bulk-activate-routes" onclick="openRouteBulkModal('activate')" style="display: none;">
-            <i class="bi bi-check-circle me-1"></i> Activate Selected
-        </button>
-        <button type="button" class="btn-modern btn-modern-sm btn-bulk-delete" id="btn-bulk-delete-routes" onclick="openRouteBulkModal('delete')" style="display: none;">
-            <i class="bi bi-trash me-1"></i> Delete Selected
-        </button>
-        <button type="button" class="btn-bulk-cancel" onclick="clearRouteSelection()" title="Clear selection">
-            <i class="bi bi-x-lg"></i>
-        </button>
-    </div>
-</div>
+
 
 <!-- Route Bulk Confirmation Modal -->
 <div class="modal fade" id="routeBulkConfirmModal" tabindex="-1" aria-labelledby="routeBulkConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
@@ -417,7 +423,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         const deactRedir = document.getElementById('deactivateRouteRedirectTab');
         if (deactRedir) deactRedir.value = tab;
 
-        clearRouteSelection();
+        toggleRouteSelectMode(false);
         filterRoutes();
     }
 
@@ -499,6 +505,40 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         }
     }
 
+    // Selection mode state & toggler for routes
+    let isRouteSelectMode = false;
+    function toggleRouteSelectMode(forceState) {
+        if (typeof forceState === 'boolean') {
+            isRouteSelectMode = forceState;
+        } else {
+            isRouteSelectMode = !isRouteSelectMode;
+        }
+        const container = document.getElementById('routes-container');
+        const toolbar = document.getElementById('route-bulk-toolbar');
+        const btnText = document.getElementById('btn-select-routes-text');
+        const btn = document.getElementById('btn-toggle-select-routes');
+
+        if (isRouteSelectMode) {
+            if (container) container.classList.add('selection-mode-active');
+            if (toolbar) {
+                toolbar.classList.add('is-visible');
+                toolbar.style.display = 'flex';
+            }
+            if (btnText) btnText.textContent = 'Exit Select';
+            if (btn) btn.classList.add('active');
+            updateRouteBulkToolbar();
+        } else {
+            if (container) container.classList.remove('selection-mode-active');
+            if (toolbar) {
+                toolbar.classList.remove('is-visible');
+                toolbar.style.display = 'none';
+            }
+            if (btnText) btnText.textContent = 'Select';
+            if (btn) btn.classList.remove('active');
+            clearRouteSelection();
+        }
+    }
+
     // Bulk selection handlers for routes
     function updateRouteBulkToolbar() {
         const checkedBoxes = Array.from(document.querySelectorAll('.route-group-checkbox:checked'));
@@ -512,24 +552,28 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         if (!toolbar) return;
 
         const count = checkedBoxes.length;
-        if (count > 0) {
-            toolbar.classList.add('is-visible');
-            toolbar.style.display = 'flex';
-            if (countEl) countEl.textContent = count;
-            if (textEl) textEl.textContent = 'route' + (count !== 1 ? 's' : '') + ' selected';
+        if (countEl) countEl.textContent = count;
+        if (textEl) textEl.textContent = count + ' selected';
 
-            if (currentRouteTab === 'archived') {
-                if (btnDeact) btnDeact.style.display = 'none';
-                if (btnAct) btnAct.style.display = 'inline-flex';
-                if (btnDel) btnDel.style.display = 'inline-flex';
-            } else {
-                if (btnDeact) btnDeact.style.display = 'inline-flex';
-                if (btnAct) btnAct.style.display = 'none';
-                if (btnDel) btnDel.style.display = 'none';
+        const hasSelection = count > 0;
+
+        if (currentRouteTab === 'archived') {
+            if (btnDeact) btnDeact.style.display = 'none';
+            if (btnAct) {
+                btnAct.style.display = 'inline-flex';
+                btnAct.disabled = !hasSelection;
+            }
+            if (btnDel) {
+                btnDel.style.display = 'inline-flex';
+                btnDel.disabled = !hasSelection;
             }
         } else {
-            toolbar.classList.remove('is-visible');
-            toolbar.style.display = 'none';
+            if (btnDeact) {
+                btnDeact.style.display = 'inline-flex';
+                btnDeact.disabled = !hasSelection;
+            }
+            if (btnAct) btnAct.style.display = 'none';
+            if (btnDel) btnDel.style.display = 'none';
         }
 
         const selectAll = document.getElementById('select-all-routes');
@@ -538,13 +582,10 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 .filter(c => !c.classList.contains('d-none'))
                 .map(c => c.querySelector('.route-group-checkbox'))
                 .filter(cb => cb);
-            if (visibleCheckboxes.length > 0) {
-                selectAll.checked = visibleCheckboxes.every(cb => cb.checked);
-                selectAll.indeterminate = visibleCheckboxes.some(cb => cb.checked) && !selectAll.checked;
-            } else {
-                selectAll.checked = false;
-                selectAll.indeterminate = false;
-            }
+            const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+            const someChecked = visibleCheckboxes.some(cb => cb.checked) && !allChecked;
+            selectAll.checked = allChecked;
+            selectAll.indeterminate = someChecked;
         }
     }
 
