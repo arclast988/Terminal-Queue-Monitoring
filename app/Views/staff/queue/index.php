@@ -1301,28 +1301,45 @@ $queueOrderGroups = array_values($queueOrderGroups);
         padding: 0.75rem 1rem;
     }
 
-    .search-input-modern {
-        background-color: var(--surface, #ffffff) !important;
-        border: 1px solid var(--border-strong, #cbd5e1) !important;
+    #addToQueueModal .input-group {
         border-radius: 10px !important;
-        font-size: 0.9rem;
-        transition: all 0.2s ease;
+        border: 1.5px solid var(--border-strong, #cbd5e1) !important;
+        background: var(--surface, #ffffff) !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        display: flex !important;
+        align-items: stretch !important;
+        overflow: hidden;
     }
-    .input-group > .search-input-modern {
-        border-left: 0 !important;
-        border-top-left-radius: 0 !important;
-        border-bottom-left-radius: 0 !important;
-    }
-    .input-group > .input-group-text {
-        border-right: 0 !important;
-        border-color: var(--border-strong, #cbd5e1) !important;
-        background-color: var(--surface, #ffffff) !important;
-        border-top-left-radius: 10px !important;
-        border-bottom-left-radius: 10px !important;
-    }
-    .search-input-modern:focus {
+    #addToQueueModal .input-group:focus-within {
         border-color: #15803d !important;
         box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.15) !important;
+    }
+    #addToQueueModal .input-group > .input-group-text {
+        border: none !important;
+        background: transparent !important;
+        color: #64748b !important;
+        padding: 0 0 0 12px !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 0.95rem !important;
+    }
+    #addToQueueModal .input-group > .search-input-modern {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        color: var(--text-main, #1e293b) !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        padding: 6px 36px 6px 8px !important;
+        font-size: 0.88rem !important;
+        border-radius: 0 !important;
+    }
+    #addToQueueModal .input-group > .search-input-modern:focus {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
     }
 
     /* Vehicle item card styling (Custom Flex - No Bootstrap d-flex to allow display toggling) */
@@ -1560,35 +1577,29 @@ $queueOrderGroups = array_values($queueOrderGroups);
             flex: 0 0 100% !important;
             max-width: 100% !important;
         }
-        #addToQueueModal .search-input-modern {
-            font-size: 0.82rem !important;
-            height: 34px !important;
-            min-height: 34px !important;
+        #addToQueueModal .input-group {
+            border-radius: 8px !important;
         }
-        #addToQueueModal .input-group-text {
-            padding: 0 8px !important;
-            font-size: 0.82rem !important;
+        #addToQueueModal .input-group > .search-input-modern {
+            font-size: 0.84rem !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            padding: 6px 32px 6px 6px !important;
+        }
+        #addToQueueModal .input-group > .input-group-text {
+            padding: 0 0 0 10px !important;
+            font-size: 0.88rem !important;
         }
         #addToQueueModal #selectAllVehiclesBtn,
         #addToQueueModal #deselectAllVehiclesBtn {
             flex: 1 1 0 !important;
             justify-content: center !important;
             white-space: nowrap !important;
-            padding: 2px 8px !important;
-            min-height: 30px !important;
-            height: 30px !important;
-            font-size: 0.76rem !important;
-            border-radius: 6px !important;
-        }
-        #addToQueueModal #selectAllVehiclesBtn {
-            background: #ecfdf5 !important;
-            border: 1px solid #86efac !important;
-            color: #15803d !important;
-        }
-        #addToQueueModal #deselectAllVehiclesBtn {
-            background: #f8fafc !important;
-            border: 1px solid #e2e8f0 !important;
-            color: #64748b !important;
+            padding: 0.35rem 0.75rem !important;
+            min-height: 34px !important;
+            height: 34px !important;
+            font-size: 0.82rem !important;
+            border-radius: 8px !important;
         }
         /* Vehicle list takes 100% of remaining vertical height */
         .vehicle-select-list {
@@ -1745,12 +1756,12 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <div class="queue-toolbar-card mb-3">
                             <div class="row g-2 align-items-center">
                                 <div class="col-12 col-sm">
-                                    <div class="input-group input-group-sm position-relative">
-                                        <span class="input-group-text bg-body border-end-0 text-muted ps-3">
+                                    <div class="input-group position-relative">
+                                        <span class="input-group-text text-muted">
                                             <i class="bi bi-search"></i>
                                         </span>
-                                        <input type="text" id="vehicleModalSearch" class="form-control search-input-modern border-start-0 ps-0 pe-4" placeholder="Search plate number, type, route, driver..." autocomplete="off">
-                                        <button type="button" class="btn-clear-search" id="clearVehicleModalSearch" onclick="clearVehicleModalSearch()" style="display: none !important; right: 8px;" title="Clear search">
+                                        <input type="text" id="vehicleModalSearch" class="form-control search-input-modern" placeholder="Search plate, type, route, driver..." autocomplete="off">
+                                        <button type="button" class="btn-clear-search" id="clearVehicleModalSearch" onclick="clearVehicleModalSearch()" style="display: none !important; right: 10px;" title="Clear search">
                                             <i class="bi bi-x-circle-fill"></i>
                                         </button>
                                     </div>
