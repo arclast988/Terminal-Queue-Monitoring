@@ -5,11 +5,17 @@
 
 <style>
 /* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
-.bulk-col {
+.bulk-col,
+.bulk-select-cell,
+#terminals-table:not(.selection-mode-active) .bulk-col,
+#terminals-table:not(.selection-mode-active) .bulk-select-cell,
+table:not(.selection-mode-active) .bulk-col,
+table:not(.selection-mode-active) .bulk-select-cell {
     display: none !important;
 }
 @media (min-width: 769px) {
-    .bulk-col {
+    .bulk-col,
+    .bulk-select-cell {
         width: 44px !important;
         min-width: 44px !important;
         max-width: 44px !important;
@@ -18,7 +24,9 @@
         padding: 8px 6px !important;
     }
     .table-modern.selection-mode-active .bulk-col,
-    .selection-mode-active .bulk-col {
+    .table-modern.selection-mode-active .bulk-select-cell,
+    .selection-mode-active .bulk-col,
+    .selection-mode-active .bulk-select-cell {
         display: table-cell !important;
     }
 }

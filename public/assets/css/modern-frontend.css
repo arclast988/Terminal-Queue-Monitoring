@@ -1870,7 +1870,10 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 /* ── Bulk Action Toolbar & Selection Styles ── */
-.bulk-col {
+.bulk-col,
+.bulk-select-cell,
+table:not(.selection-mode-active) .bulk-col,
+table:not(.selection-mode-active) .bulk-select-cell {
     display: none !important;
     width: 44px !important;
     min-width: 44px !important;
@@ -1881,7 +1884,9 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 .table-modern.selection-mode-active .bulk-col,
-.selection-mode-active .bulk-col {
+.table-modern.selection-mode-active .bulk-select-cell,
+.selection-mode-active .bulk-col,
+.selection-mode-active .bulk-select-cell {
     display: table-cell !important;
 }
 
@@ -2140,8 +2145,12 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 @media (max-width: 768px) {
-    .table-modern.selection-mode-active tbody td.bulk-select-cell,
-    .table-modern tbody tr td.bulk-select-cell {
+    .table-modern:not(.selection-mode-active) .bulk-col,
+    .table-modern:not(.selection-mode-active) .bulk-select-cell,
+    :not(.selection-mode-active) .route-group-checkbox {
+        display: none !important;
+    }
+    .table-modern.selection-mode-active tbody td.bulk-select-cell {
         display: flex !important;
         flex-direction: row !important;
         align-items: center !important;
@@ -2158,8 +2167,7 @@ input[type="search"]::-webkit-search-results-decoration {
         min-height: 42px !important;
         cursor: pointer !important;
     }
-    .table-modern.selection-mode-active tbody td.bulk-select-cell::before,
-    .table-modern tbody tr td.bulk-select-cell::before {
+    .table-modern.selection-mode-active tbody td.bulk-select-cell::before {
         content: 'SELECT ITEM' !important;
         font-weight: 700 !important;
         color: #475569 !important;
@@ -2174,9 +2182,8 @@ input[type="search"]::-webkit-search-results-decoration {
         white-space: nowrap !important;
     }
     .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"],
-    .table-modern tbody tr td.bulk-select-cell input[type="checkbox"],
-    .route-group-checkbox,
-    .select-all-checkbox {
+    .selection-mode-active .route-group-checkbox,
+    .selection-mode-active .select-all-checkbox {
         display: inline-block !important;
         width: 22px !important;
         height: 22px !important;
@@ -2202,9 +2209,8 @@ input[type="search"]::-webkit-search-results-decoration {
         transition: all 0.15s ease-in-out !important;
     }
     .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"]:checked,
-    .table-modern tbody tr td.bulk-select-cell input[type="checkbox"]:checked,
-    .route-group-checkbox:checked,
-    .select-all-checkbox:checked {
+    .selection-mode-active .route-group-checkbox:checked,
+    .selection-mode-active .select-all-checkbox:checked {
         background-color: #2563eb !important;
         border-color: #2563eb !important;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;

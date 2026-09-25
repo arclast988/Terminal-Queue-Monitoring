@@ -74,7 +74,8 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 
 <style>
 /* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
-.route-group-checkbox {
+.route-group-checkbox,
+:not(.selection-mode-active) .route-group-checkbox {
     display: none !important;
     width: 20px !important;
     height: 20px !important;

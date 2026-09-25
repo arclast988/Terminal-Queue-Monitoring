@@ -1938,7 +1938,44 @@ a[title*="delete" i]:hover .bi,
     min-height: auto !important;
     width: auto !important;
     max-width: none !important;
-    text-align: left;
+    text-align: left !important;
+  }
+
+  /* Desktop Selection Columns: STRICTLY hidden when NOT in selection mode */
+  html body table:not(.selection-mode-active) th.bulk-col,
+  html body table:not(.selection-mode-active) td.bulk-col,
+  html body table:not(.selection-mode-active) td.bulk-select-cell,
+  html body table.table-modern:not(.selection-mode-active) th.bulk-col,
+  html body table.table-modern:not(.selection-mode-active) td.bulk-col,
+  html body table.table-modern:not(.selection-mode-active) td.bulk-select-cell,
+  html body table.table-modern:not(.selection-mode-active) tbody tr td.bulk-col,
+  html body table.table-modern:not(.selection-mode-active) tbody tr td.bulk-select-cell,
+  html body table.table:not(.selection-mode-active) th.bulk-col,
+  html body table.table:not(.selection-mode-active) td.bulk-col,
+  html body table.table:not(.selection-mode-active) td.bulk-select-cell,
+  html body table.table:not(.selection-mode-active) tbody tr td.bulk-col,
+  html body table.table:not(.selection-mode-active) tbody tr td.bulk-select-cell {
+    display: none !important;
+  }
+
+  /* Desktop Selection Columns: Visible as table-cell ONLY when selection mode is active */
+  html body table.table-modern.selection-mode-active th.bulk-col,
+  html body table.table-modern.selection-mode-active td.bulk-col,
+  html body table.table-modern.selection-mode-active td.bulk-select-cell,
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-col,
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell,
+  html body table.selection-mode-active th.bulk-col,
+  html body table.selection-mode-active td.bulk-col,
+  html body table.selection-mode-active td.bulk-select-cell,
+  html body table.selection-mode-active tbody tr td.bulk-col,
+  html body table.selection-mode-active tbody tr td.bulk-select-cell {
+    display: table-cell !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 8px 6px !important;
   }
 
   /* Keep filter placeholders out of the layout on desktop. */
@@ -2088,10 +2125,22 @@ a[title*="delete" i]:hover .bi,
     color: #0f172a !important;
   }
 
-  /* Mobile Batch Selection Cell & Checkbox (Announcements, Terminals, Users, Vehicles) */
-  html body table.table-modern tbody tr td.bulk-select-cell,
-  html body table.table tbody tr td.bulk-select-cell,
-  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell {
+  /* Mobile Bulk Selection: Strictly hidden when NOT in selection mode */
+  html body table:not(.selection-mode-active) .bulk-col,
+  html body table:not(.selection-mode-active) .bulk-select-cell,
+  html body table.table-modern:not(.selection-mode-active) tbody tr td.bulk-col,
+  html body table.table-modern:not(.selection-mode-active) tbody tr td.bulk-select-cell,
+  html body table.table:not(.selection-mode-active) tbody tr td.bulk-col,
+  html body table.table:not(.selection-mode-active) tbody tr td.bulk-select-cell,
+  html body :not(.selection-mode-active) > .route-group-checkbox,
+  html body :not(.selection-mode-active) .route-group-checkbox {
+    display: none !important;
+  }
+
+  /* Mobile Batch Selection Cell & Checkbox (Announcements, Terminals, Users, Vehicles) - ONLY WHEN ACTIVE */
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell,
+  html body table.table.selection-mode-active tbody tr td.bulk-select-cell,
+  html body .selection-mode-active tbody tr td.bulk-select-cell {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
@@ -2110,15 +2159,18 @@ a[title*="delete" i]:hover .bi,
     user-select: none !important;
   }
 
-  html body table.table-modern tbody tr td.bulk-select-cell:hover,
-  html body table.table-modern tbody tr td.bulk-select-cell:has(input:checked) {
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell:hover,
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell:has(input:checked),
+  html body .selection-mode-active tbody tr td.bulk-select-cell:hover,
+  html body .selection-mode-active tbody tr td.bulk-select-cell:has(input:checked) {
     background: #e2e8f0 !important;
     border-color: #94a3b8 !important;
   }
 
   /* Label inside Mobile Selection Cell */
-  html body table.table-modern tbody tr td.bulk-select-cell::before,
-  html body table.table tbody tr td.bulk-select-cell::before {
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell::before,
+  html body table.table.selection-mode-active tbody tr td.bulk-select-cell::before,
+  html body .selection-mode-active tbody tr td.bulk-select-cell::before {
     content: 'SELECT ITEM' !important;
     font-weight: 700 !important;
     color: #334155 !important;
@@ -2134,12 +2186,12 @@ a[title*="delete" i]:hover .bi,
   }
 
   /* Perfectly Square Touch-Friendly Checkboxes on Mobile (Announcements, Terminals, Users, Vehicles, Routes) */
-  html body table.table-modern tbody tr td.bulk-select-cell input[type="checkbox"],
-  html body table.table tbody tr td.bulk-select-cell input[type="checkbox"],
-  html body table.table-modern tbody tr td.bulk-select-cell .form-check-input,
-  html body table.table-modern tbody tr td.bulk-col input[type="checkbox"],
-  html body .route-group-checkbox,
-  html body .select-all-checkbox {
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell input[type="checkbox"],
+  html body table.table.selection-mode-active tbody tr td.bulk-select-cell input[type="checkbox"],
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell .form-check-input,
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-col input[type="checkbox"],
+  html body .selection-mode-active .route-group-checkbox,
+  html body .selection-mode-active .select-all-checkbox {
     display: inline-block !important;
     width: 22px !important;
     height: 22px !important;
@@ -2166,12 +2218,12 @@ a[title*="delete" i]:hover .bi,
   }
 
   /* Checked State with Clear High-Contrast White Checkmark */
-  html body table.table-modern tbody tr td.bulk-select-cell input[type="checkbox"]:checked,
-  html body table.table tbody tr td.bulk-select-cell input[type="checkbox"]:checked,
-  html body table.table-modern tbody tr td.bulk-select-cell .form-check-input:checked,
-  html body table.table-modern tbody tr td.bulk-col input[type="checkbox"]:checked,
-  html body .route-group-checkbox:checked,
-  html body .select-all-checkbox:checked {
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell input[type="checkbox"]:checked,
+  html body table.table.selection-mode-active tbody tr td.bulk-select-cell input[type="checkbox"]:checked,
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell .form-check-input:checked,
+  html body table.table-modern.selection-mode-active tbody tr td.bulk-col input[type="checkbox"]:checked,
+  html body .selection-mode-active .route-group-checkbox:checked,
+  html body .selection-mode-active .select-all-checkbox:checked {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
