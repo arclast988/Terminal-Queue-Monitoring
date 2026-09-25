@@ -229,7 +229,7 @@ body.admin-theme .fare-search-group:focus-within {
 .discount-card-actions {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-end !important;
+    justify-content: center !important;
     flex-wrap: nowrap !important;
     gap: 10px !important;
 }

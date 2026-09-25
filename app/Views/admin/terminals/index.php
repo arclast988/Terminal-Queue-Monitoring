@@ -106,9 +106,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 <thead>
                     <tr>
                         <?php if ($isAdmin): ?>
-                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;">
-                            <input type="checkbox" id="table-head-select-all-terminals" class="form-check-input select-all-checkbox m-0" style="width: 17px; height: 17px; cursor: pointer;" title="Select All">
-                        </th>
+                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
                         <th>ID</th>
                         <th>Name</th>

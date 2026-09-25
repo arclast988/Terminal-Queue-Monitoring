@@ -52,7 +52,7 @@ class SearchClearAndMarqueeAlignmentTest extends CIUnitTestCase
         $this->assertStringContainsString('border-radius: 12px !important;', $html);
         $this->assertStringContainsString('box-shadow: 0 0 0 2px', $html);
         $this->assertStringContainsString('.discount-card-actions', $html);
-        $this->assertStringContainsString('justify-content: flex-end !important;', $html);
+        $this->assertStringContainsString('justify-content: center !important;', $html);
     }
 
     public function testPublicSchedulesHasClearSearchButton(): void

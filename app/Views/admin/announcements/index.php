@@ -144,9 +144,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                 <thead>
                     <tr>
                         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
-                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;">
-                            <input type="checkbox" id="table-head-select-all-announcements" class="form-check-input select-all-checkbox m-0" style="width: 17px; height: 17px; cursor: pointer;" title="Select All">
-                        </th>
+                        <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
                         <th>ID</th>
                         <th>Terminal</th>

@@ -53,7 +53,7 @@ final class TerminalAndAnnouncementBulkDeleteTest extends CIUnitTestCase
         $this->assertStringContainsString('Delete Selected', $html);
 
         // Checkbox column in thead and tbody
-        $this->assertStringContainsString('id="table-head-select-all-terminals"', $html);
+        $this->assertStringContainsString('<th class="bulk-col"', $html);
         $this->assertStringContainsString('class="form-check-input terminal-row-checkbox"', $html);
         $this->assertStringContainsString('data-name="North Terminal"', $html);
         $this->assertStringContainsString('data-name="South Terminal"', $html);
@@ -116,7 +116,7 @@ final class TerminalAndAnnouncementBulkDeleteTest extends CIUnitTestCase
         $this->assertStringContainsString('Delete Selected', $html);
 
         // Checkbox column in thead and tbody
-        $this->assertStringContainsString('id="table-head-select-all-announcements"', $html);
+        $this->assertStringContainsString('<th class="bulk-col"', $html);
         $this->assertStringContainsString('class="form-check-input announcement-row-checkbox"', $html);
         $this->assertStringContainsString('value="10"', $html);
         $this->assertStringContainsString('value="11"', $html);
