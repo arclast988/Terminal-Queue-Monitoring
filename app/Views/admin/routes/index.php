@@ -76,11 +76,21 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 /* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
 .route-group-checkbox {
     display: none !important;
-    width: 18px !important;
-    height: 18px !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 20px !important;
+    flex-shrink: 0 !important;
     cursor: pointer !important;
-    border-radius: 4px !important;
+    border-radius: 5px !important;
     border: 1.5px solid #94a3b8 !important;
+    background-color: #ffffff !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 .selection-mode-active .route-group-checkbox {
     display: inline-block !important;
@@ -88,6 +98,10 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 .route-group-checkbox:checked {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+    background-size: 13px 13px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
 }
 .bulk-action-top-bar {
     background: #ffffff;

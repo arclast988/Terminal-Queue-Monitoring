@@ -2140,27 +2140,78 @@ input[type="search"]::-webkit-search-results-decoration {
 }
 
 @media (max-width: 768px) {
-    .table-modern.selection-mode-active tbody td.bulk-select-cell {
+    .table-modern.selection-mode-active tbody td.bulk-select-cell,
+    .table-modern tbody tr td.bulk-select-cell {
         display: flex !important;
+        flex-direction: row !important;
         align-items: center !important;
         justify-content: space-between !important;
-        padding: 8px 14px !important;
-        background: #f8fafc !important;
-        border-bottom: 1px solid #e2e8f0 !important;
-        border-top-left-radius: 8px !important;
-        border-top-right-radius: 8px !important;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 9px 12px !important;
+        margin-bottom: 8px !important;
+        background: #f1f5f9 !important;
+        border: 1.5px solid #cbd5e1 !important;
+        border-radius: 8px !important;
+        min-height: 42px !important;
+        cursor: pointer !important;
     }
-    .table-modern.selection-mode-active tbody td.bulk-select-cell::before {
+    .table-modern.selection-mode-active tbody td.bulk-select-cell::before,
+    .table-modern tbody tr td.bulk-select-cell::before {
         content: 'SELECT ITEM' !important;
         font-weight: 700 !important;
-        color: #64748b !important;
-        font-size: 11px !important;
+        color: #475569 !important;
+        font-size: 11.5px !important;
         letter-spacing: 0.5px !important;
-    }
-    .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"] {
-        width: 20px !important;
-        height: 20px !important;
+        text-transform: uppercase !important;
+        flex: 0 0 auto !important;
+        max-width: 75% !important;
         margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+    }
+    .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"],
+    .table-modern tbody tr td.bulk-select-cell input[type="checkbox"],
+    .route-group-checkbox,
+    .select-all-checkbox {
+        display: inline-block !important;
+        width: 22px !important;
+        height: 22px !important;
+        min-width: 22px !important;
+        min-height: 22px !important;
+        max-width: 22px !important;
+        max-height: 22px !important;
+        aspect-ratio: 1 / 1 !important;
+        flex: 0 0 22px !important;
+        flex-shrink: 0 !important;
+        flex-grow: 0 !important;
+        align-self: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 2px solid #64748b !important;
+        border-radius: 6px !important;
+        background-color: #ffffff !important;
+        cursor: pointer !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
+        position: relative !important;
+        transition: all 0.15s ease-in-out !important;
+    }
+    .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"]:checked,
+    .table-modern tbody tr td.bulk-select-cell input[type="checkbox"]:checked,
+    .route-group-checkbox:checked,
+    .select-all-checkbox:checked {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+        background-size: 14px 14px !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3) !important;
     }
     .bulk-action-top-bar {
         flex-direction: column;
@@ -2182,3 +2233,4 @@ input[type="search"]::-webkit-search-results-decoration {
         padding: 7px 10px !important;
     }
 }
+

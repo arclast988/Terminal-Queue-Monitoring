@@ -143,16 +143,20 @@ $countInService = $countActive + $countMaintenance;
 /* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
 .bulk-col {
     display: none !important;
-    width: 44px !important;
-    min-width: 44px !important;
-    max-width: 44px !important;
-    text-align: center !important;
-    vertical-align: middle !important;
-    padding: 8px 6px !important;
 }
-.table-modern.selection-mode-active .bulk-col,
-.selection-mode-active .bulk-col {
-    display: table-cell !important;
+@media (min-width: 769px) {
+    .bulk-col {
+        width: 44px !important;
+        min-width: 44px !important;
+        max-width: 44px !important;
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 8px 6px !important;
+    }
+    .table-modern.selection-mode-active .bulk-col,
+    .selection-mode-active .bulk-col {
+        display: table-cell !important;
+    }
 }
 .bulk-action-top-bar {
     background: #ffffff;
@@ -1066,7 +1070,7 @@ $countInService = $countActive + $countMaintenance;
         if (isVehicleSelectMode) {
             if (table) table.classList.add('selection-mode-active');
             bulkCells.forEach(function(c) {
-                c.style.setProperty('display', 'table-cell', 'important');
+                c.style.removeProperty('display');
             });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
@@ -1078,7 +1082,7 @@ $countInService = $countActive + $countMaintenance;
         } else {
             if (table) table.classList.remove('selection-mode-active');
             bulkCells.forEach(function(c) {
-                c.style.setProperty('display', 'none', 'important');
+                c.style.removeProperty('display');
             });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
@@ -1267,12 +1271,22 @@ $countInService = $countActive + $countMaintenance;
             tableHeadSelectAll.addEventListener('change', function() { handleSelectAll(this.checked); });
         }
 
-        // Delegate row checkbox change listener
+        // Delegate row checkbox change listener & card select bar tap
         const tableBody = document.querySelector('#vehicles-table tbody');
         if (tableBody) {
             tableBody.addEventListener('change', function(e) {
                 if (e.target && e.target.classList.contains('vehicle-row-checkbox')) {
                     updateVehicleBulkToolbar();
+                }
+            });
+            tableBody.addEventListener('click', function(e) {
+                const cell = e.target.closest('.bulk-select-cell');
+                if (cell && e.target.tagName !== 'INPUT') {
+                    const cb = cell.querySelector('.vehicle-row-checkbox');
+                    if (cb && !cb.disabled) {
+                        cb.checked = !cb.checked;
+                        cb.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                 }
             });
         }

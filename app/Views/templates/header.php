@@ -36,7 +36,7 @@
     <?php if (session()->get('isLoggedIn')): ?>
         <link rel="stylesheet" href="<?= base_url('assets/css/admin-modern.css') ?>">
     <?php endif; ?>
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css?v=20260920_1') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/responsive.css') ? filemtime(FCPATH . 'assets/css/responsive.css') : '20260925_1')) ?>">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
 
