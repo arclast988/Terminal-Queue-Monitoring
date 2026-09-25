@@ -760,6 +760,7 @@ ul.pagination li span,
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
   line-height: 1 !important;
   user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
 .pagination a:hover,

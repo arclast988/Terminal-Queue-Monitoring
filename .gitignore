@@ -84,3 +84,8 @@ writable/session/*
 !writable/session/index.html
 writable/uploads/*
 !writable/uploads/index.html
+
+# Public runtime uploads
+public/uploads/*
+!public/uploads/**/.gitkeep
+!public/uploads/**/index.html

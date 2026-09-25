@@ -2159,7 +2159,9 @@ document.addEventListener('DOMContentLoaded', function() {
         activeBtn.classList.add('active');
         activeContent.classList.add('active');
 
-        localStorage.setItem('sb_active_tab', tabId);
+        try {
+            localStorage.setItem('sb_active_tab', tabId);
+        } catch (e) {}
         if (pushHash) {
             history.replaceState(null, null, '#' + tabId);
         }
@@ -2173,7 +2175,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check hash on page load
     var initialHash = (window.location.hash || '').replace('#', '');
-    var savedTab = localStorage.getItem('sb_active_tab');
+    var savedTab = null;
+    try {
+        savedTab = localStorage.getItem('sb_active_tab');
+    } catch (e) {}
     if (initialHash && document.getElementById('tab-' + initialHash)) {
         switchTab(initialHash, false);
     } else if (savedTab && document.getElementById('tab-' + savedTab)) {

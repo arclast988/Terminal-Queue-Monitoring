@@ -735,6 +735,7 @@ textarea::placeholder {
     border-bottom-left-radius: var(--radius-md);
     white-space: nowrap;
     user-select: none;
+    -webkit-user-select: none;
     line-height: 1;
     min-height: 44px;
     box-sizing: border-box;
@@ -1349,6 +1350,7 @@ ul.pagination li span,
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
     line-height: 1 !important;
     user-select: none !important;
+    -webkit-user-select: none !important;
 }
 
 .pagination a i,
@@ -1961,6 +1963,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
     gap: 7px;
     cursor: pointer;
     user-select: none;
+    -webkit-user-select: none;
     margin-bottom: 0;
 }
 
