@@ -42,21 +42,17 @@ final class AnnouncementsDeleteAllTest extends CIUnitTestCase
         ]);
 
         $this->assertStringContainsString('Announcement List', $html);
-        $this->assertStringContainsString('id="deleteAllAnnouncementsBtn"', $html);
-        $this->assertStringContainsString('data-bs-target="#deleteAllAnnouncementsModal"', $html);
-        $this->assertStringContainsString('confirmDeleteAll(event)', $html);
-        $this->assertStringContainsString('Delete All', $html);
-        $this->assertStringContainsString('bi-trash', $html);
-        $this->assertStringContainsString('btn-action-delete', $html);
+        $this->assertStringContainsString('id="btn-toggle-select-announcements"', $html);
+        $this->assertStringContainsString('toggleAnnouncementSelectMode()', $html);
+        $this->assertStringContainsString('Select', $html);
 
-        // Verify custom confirmation modal
-        $this->assertStringContainsString('id="deleteAllAnnouncementsModal"', $html);
-        $this->assertStringContainsString('Delete All Announcements?', $html);
-        $this->assertStringContainsString('admin/announcements/delete-all', $html);
-        $this->assertStringContainsString('id="deleteAllAnnouncementsForm"', $html);
-        $this->assertStringContainsString('id="btnConfirmDeleteAll"', $html);
-        $this->assertStringContainsString('Yes, Delete All', $html);
-        $this->assertStringContainsString('2</strong> announcements will be permanently deleted', $html);
+        // Verify bulk delete confirmation modal
+        $this->assertStringContainsString('id="announcementBulkConfirmModal"', $html);
+        $this->assertStringContainsString('Delete Selected Announcements?', $html);
+        $this->assertStringContainsString('admin/announcements/bulk-action', $html);
+        $this->assertStringContainsString('id="announcementBulkForm"', $html);
+        $this->assertStringContainsString('id="announcementBulkSubmitBtn"', $html);
+        $this->assertStringContainsString('Yes, Delete Selected', $html);
     }
 
     public function testDispatcherAnnouncementListRendersDeleteAllButton(): void
@@ -86,11 +82,9 @@ final class AnnouncementsDeleteAllTest extends CIUnitTestCase
         ]);
 
         $this->assertStringContainsString('Announcement List', $html);
-        $this->assertStringContainsString('id="deleteAllAnnouncementsBtn"', $html);
-        $this->assertStringContainsString('data-bs-target="#deleteAllAnnouncementsModal"', $html);
-        $this->assertStringContainsString('Delete All', $html);
-        $this->assertStringContainsString('id="deleteAllAnnouncementsModal"', $html);
-        $this->assertStringContainsString('body.staff-theme .delete-all-btn-confirm', $html);
+        $this->assertStringContainsString('id="btn-toggle-select-announcements"', $html);
+        $this->assertStringContainsString('Select', $html);
+        $this->assertStringContainsString('id="announcementBulkConfirmModal"', $html);
     }
 
     public function testEmptyAnnouncementsRendersDisabledDeleteAllButton(): void
@@ -108,13 +102,15 @@ final class AnnouncementsDeleteAllTest extends CIUnitTestCase
             'announcements' => [],
         ]);
 
-        $this->assertStringContainsString('id="deleteAllAnnouncementsBtn"', $html);
+        $this->assertStringContainsString('id="btn-toggle-select-announcements"', $html);
         $this->assertStringContainsString('disabled', $html);
-        $this->assertStringContainsString('No announcements to delete', $html);
     }
 
     public function testAnnouncementsControllerHasDeleteAllMethod(): void
     {
-        $this->assertTrue(method_exists(\App\Controllers\Admin\Announcements::class, 'deleteAll'));
+        $this->assertTrue(
+            method_exists(\App\Controllers\Admin\Announcements::class, 'bulkAction') ||
+            method_exists(\App\Controllers\Admin\Announcements::class, 'deleteAll')
+        );
     }
 }

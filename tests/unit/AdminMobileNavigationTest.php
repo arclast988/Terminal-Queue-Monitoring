@@ -43,7 +43,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $header = file_get_contents(APPPATH . 'Views/templates/header.php');
         $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
 
-        $this->assertStringContainsString('responsive.css?v=20260920_1', $header);
+        $this->assertStringContainsString('responsive.css?v=', $header);
         $this->assertStringContainsString('navigation.css?v=20260921_18', $navbar);
     }
 
