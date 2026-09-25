@@ -83,7 +83,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         <div id="terminal-bulk-toolbar" class="bulk-action-top-bar" style="display: none;">
             <div class="bulk-bar-info">
                 <label class="bulk-select-all-wrap mb-0">
-                    <input type="checkbox" id="select-all-terminals" class="form-check-input select-all-checkbox m-0" style="width: 17px; height: 17px; cursor: pointer;">
+                    <input type="checkbox" id="select-all-terminals" class="form-check-input select-all-checkbox m-0" style="width: 18px; height: 18px; cursor: pointer;">
                     <span class="fw-semibold text-dark" style="font-size: 13.5px;">Select All</span>
                 </label>
                 <span class="bulk-bar-divider"></span>

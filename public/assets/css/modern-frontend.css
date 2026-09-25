@@ -1890,7 +1890,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
     display: table-cell !important;
 }
 
-.bulk-col input[type="checkbox"] {
+.bulk-col input[type="checkbox"],
+.bulk-select-cell input[type="checkbox"] {
     width: 18px !important;
     height: 18px !important;
     cursor: pointer !important;
@@ -1900,7 +1901,21 @@ table:not(.selection-mode-active) .bulk-select-cell {
     border: 1.5px solid #94a3b8 !important;
 }
 
-.bulk-col input[type="checkbox"]:checked {
+.select-all-checkbox,
+.bulk-action-top-bar .select-all-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    margin: 0 !important;
+    display: inline-block !important;
+    border-radius: 4px !important;
+    border: 1.5px solid #94a3b8 !important;
+}
+
+.bulk-col input[type="checkbox"]:checked,
+.bulk-select-cell input[type="checkbox"]:checked,
+.select-all-checkbox:checked,
+.bulk-action-top-bar .select-all-checkbox:checked {
     background-color: #2563eb !important;
     border-color: #2563eb !important;
 }
@@ -2174,23 +2189,29 @@ table:not(.selection-mode-active) .bulk-select-cell {
     }
     .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"],
     .selection-mode-active .route-group-checkbox,
-    .selection-mode-active .select-all-checkbox {
+    .announcement-row-checkbox,
+    .terminal-row-checkbox,
+    .user-row-checkbox,
+    .vehicle-row-checkbox,
+    .route-row-checkbox,
+    .select-all-checkbox,
+    .bulk-action-top-bar .select-all-checkbox {
         display: inline-block !important;
-        width: 22px !important;
-        height: 22px !important;
-        min-width: 22px !important;
-        min-height: 22px !important;
-        max-width: 22px !important;
-        max-height: 22px !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        max-width: 18px !important;
+        max-height: 18px !important;
         aspect-ratio: 1 / 1 !important;
-        flex: 0 0 22px !important;
+        flex: 0 0 18px !important;
         flex-shrink: 0 !important;
         flex-grow: 0 !important;
         align-self: center !important;
         margin: 0 !important;
         padding: 0 !important;
-        border: 2px solid #64748b !important;
-        border-radius: 6px !important;
+        border: 1.5px solid #94a3b8 !important;
+        border-radius: 4px !important;
         background-color: #ffffff !important;
         cursor: pointer !important;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
@@ -2201,11 +2222,17 @@ table:not(.selection-mode-active) .bulk-select-cell {
     }
     .table-modern.selection-mode-active tbody td.bulk-select-cell input[type="checkbox"]:checked,
     .selection-mode-active .route-group-checkbox:checked,
-    .selection-mode-active .select-all-checkbox:checked {
+    .announcement-row-checkbox:checked,
+    .terminal-row-checkbox:checked,
+    .user-row-checkbox:checked,
+    .vehicle-row-checkbox:checked,
+    .route-row-checkbox:checked,
+    .select-all-checkbox:checked,
+    .bulk-action-top-bar .select-all-checkbox:checked {
         background-color: #2563eb !important;
         border-color: #2563eb !important;
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
-        background-size: 14px 14px !important;
+        background-size: 12px 12px !important;
         background-position: center !important;
         background-repeat: no-repeat !important;
         box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3) !important;
