@@ -1002,7 +1002,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     <div class="d-flex gap-2 queue-header-actions">
         <?php if (empty($noRoutesAssigned)): ?>
         <?php if (!empty($queueOrderGroups)): ?>
-        <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageQueueModal">
+        <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageQueueModal" id="manageQueueBtn">
             <i class="bi bi-list-ol"></i> Manage Queue
         </button>
         <?php endif; ?>
@@ -2433,6 +2433,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
             if (window.QueueOrderManager) {
                 window.QueueOrderManager.setStatus(id, data.status || status);
             }
+            if (typeof syncQueueHeaderActions === 'function') {
+                syncQueueHeaderActions();
+            }
             if (window.QueueSync) {
                 window.QueueSync.refresh();
             } else {
@@ -2893,6 +2896,30 @@ $queueOrderGroups = array_values($queueOrderGroups);
         });
     }
 
+    function syncQueueHeaderActions(newDoc) {
+        var curActions = document.querySelector('.queue-header-actions');
+        var newActions = newDoc ? newDoc.querySelector('.queue-header-actions') : null;
+        if (curActions && newActions) {
+            curActions.innerHTML = newActions.innerHTML;
+        }
+
+        // Defensive check: If there are 0 queue cards (or empty state is showing), ensure Manage Queue button is hidden
+        var queueCards = document.querySelectorAll('#queue-list .q-card');
+        var manageBtn = document.getElementById('manageQueueBtn') || document.querySelector('[data-bs-target="#manageQueueModal"]');
+        if (manageBtn) {
+            if (queueCards.length === 0) {
+                manageBtn.style.setProperty('display', 'none', 'important');
+                var modalEl = document.getElementById('manageQueueModal');
+                if (modalEl && modalEl.classList.contains('show') && typeof bootstrap !== 'undefined') {
+                    var inst = bootstrap.Modal.getInstance(modalEl);
+                    if (inst) inst.hide();
+                }
+            } else {
+                manageBtn.style.removeProperty('display');
+            }
+        }
+    }
+
     // Initialize real-time sync (polling + WebSocket)
     // NOTE: this page uses card divs (#queue-list), NOT a <table> — the sync
     // module now refreshes #queue-list + #vehicleListContainer automatically so
@@ -2906,11 +2933,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
         extraRefresh: function(newDoc) {
             // New queue cards carry fresh countdown targets — repaint immediately.
             updateCountdowns();
+            syncQueueHeaderActions(newDoc);
             if (window.QueueOrderManager && window.QueueOrderManager.syncFromDocument) {
                 window.QueueOrderManager.syncFromDocument(newDoc);
             }
         }
     });
+    syncQueueHeaderActions();
 
     // Universal WebSocket document event listeners for full real-time reactivity
     document.addEventListener('pttm:ws-queue_update', function(e) {

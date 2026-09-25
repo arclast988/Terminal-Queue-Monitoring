@@ -422,6 +422,13 @@
             refreshQueueCards(newDoc);
             refreshVehicleModalList(newDoc);
 
+            // Sync queue header action buttons (e.g. Manage Queue button appearing/disappearing live)
+            var curActions = document.querySelector('.queue-header-actions');
+            var newActions = newDoc.querySelector('.queue-header-actions');
+            if (curActions && newActions) {
+                replaceElementChildrenSafely(curActions, newActions, false);
+            }
+
             // Re-mount modals (depart confirmation, etc.)
             // Guard: Never hide or destroy a modal that the user is actively interacting with!
             if (_config.modalSelector) {
