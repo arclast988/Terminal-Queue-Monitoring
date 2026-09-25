@@ -22,6 +22,13 @@
             }
         }
 
+        // Prevent Chrome aria-hidden accessibility warning on modal close
+        document.addEventListener('hide.bs.modal', function(e) {
+            if (document.activeElement && e.target && e.target.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+        });
+
         // Disable hot reload
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
