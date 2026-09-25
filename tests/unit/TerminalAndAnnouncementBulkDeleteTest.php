@@ -39,10 +39,10 @@ final class TerminalAndAnnouncementBulkDeleteTest extends CIUnitTestCase
             'terminals' => $mockTerminals,
         ]);
 
-        // Toggle button in header labeled "Delete"
-        $this->assertStringContainsString('id="btn-toggle-delete-terminals"', $html);
-        $this->assertStringContainsString('toggleTerminalDeleteMode()', $html);
-        $this->assertStringContainsString('id="btn-delete-terminals-text">Delete</span>', $html);
+        // Toggle button in header labeled "Select"
+        $this->assertStringContainsString('id="btn-toggle-select-terminals"', $html);
+        $this->assertStringContainsString('toggleTerminalSelectMode()', $html);
+        $this->assertStringContainsString('id="btn-select-terminals-text">Select</span>', $html);
 
         // Bulk toolbar above table
         $this->assertStringContainsString('id="terminal-bulk-toolbar"', $html);
@@ -102,10 +102,10 @@ final class TerminalAndAnnouncementBulkDeleteTest extends CIUnitTestCase
             'announcements' => $mockAnnouncements,
         ]);
 
-        // Toggle button in header labeled "Delete"
-        $this->assertStringContainsString('id="btn-toggle-delete-announcements"', $html);
-        $this->assertStringContainsString('toggleAnnouncementDeleteMode()', $html);
-        $this->assertStringContainsString('id="btn-delete-announcements-text">Delete</span>', $html);
+        // Toggle button in header labeled "Select"
+        $this->assertStringContainsString('id="btn-toggle-select-announcements"', $html);
+        $this->assertStringContainsString('toggleAnnouncementSelectMode()', $html);
+        $this->assertStringContainsString('id="btn-select-announcements-text">Select</span>', $html);
 
         // Bulk toolbar above table
         $this->assertStringContainsString('id="announcement-bulk-toolbar"', $html);

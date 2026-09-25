@@ -3,6 +3,23 @@
 <!-- Modern Frontend Styles -->
 <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
+<style>
+/* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
+.bulk-col {
+    display: none !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 8px 6px !important;
+}
+.table-modern.selection-mode-active .bulk-col,
+.selection-mode-active .bulk-col {
+    display: table-cell !important;
+}
+</style>
+
 <?php
 $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 ?>
@@ -43,8 +60,8 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         </span>
         <?php if ($isAdmin): ?>
         <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn-modern btn-modern-sm btn-action-delete" id="btn-toggle-delete-terminals" onclick="toggleTerminalDeleteMode()" title="Toggle selection mode to delete terminals" <?= empty($terminals) ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' ?>>
-                <i class="bi bi-trash me-1" id="btn-delete-terminals-icon"></i> <span id="btn-delete-terminals-text">Delete</span>
+            <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-terminals" onclick="toggleTerminalSelectMode()" title="Toggle selection mode for batch actions" <?= empty($terminals) ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' ?>>
+                <i class="bi bi-check2-square me-1"></i> <span id="btn-select-terminals-text">Select</span>
             </button>
         </div>
         <?php endif; ?>
@@ -66,7 +83,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                 <button type="button" class="btn-modern btn-modern-sm btn-action-delete btn-bulk-delete" id="btn-bulk-delete-terminals" onclick="openTerminalBulkModal()" disabled>
                     <i class="bi bi-trash"></i> <span>Delete Selected</span>
                 </button>
-                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline btn-bulk-cancel" onclick="toggleTerminalDeleteMode(false)">
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline btn-bulk-cancel" onclick="toggleTerminalSelectMode(false)">
                     <i class="bi bi-x"></i> <span>Cancel</span>
                 </button>
             </div>
@@ -455,23 +472,22 @@ body.modal-open #deleteTerminalConfirmModal,
 
 <script>
 (function() {
-    window.isTerminalDeleteMode = false;
+    window.isTerminalSelectMode = false;
 
-    window.toggleTerminalDeleteMode = function(forceState) {
+    window.toggleTerminalSelectMode = function(forceState) {
         if (typeof forceState === 'boolean') {
-            window.isTerminalDeleteMode = forceState;
+            window.isTerminalSelectMode = forceState;
         } else {
-            window.isTerminalDeleteMode = !window.isTerminalDeleteMode;
+            window.isTerminalSelectMode = !window.isTerminalSelectMode;
         }
 
         const table = document.getElementById('terminals-table');
         const toolbar = document.getElementById('terminal-bulk-toolbar');
-        const btnText = document.getElementById('btn-delete-terminals-text');
-        const btnIcon = document.getElementById('btn-delete-terminals-icon');
-        const btn = document.getElementById('btn-toggle-delete-terminals');
+        const btnText = document.getElementById('btn-select-terminals-text');
+        const btn = document.getElementById('btn-toggle-select-terminals');
         const bulkCells = document.querySelectorAll('#terminals-table .bulk-col');
 
-        if (window.isTerminalDeleteMode) {
+        if (window.isTerminalSelectMode) {
             if (table) table.classList.add('selection-mode-active');
             bulkCells.forEach(function(c) {
                 c.style.setProperty('display', 'table-cell', 'important');
@@ -480,12 +496,8 @@ body.modal-open #deleteTerminalConfirmModal,
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
             }
-            if (btnText) btnText.textContent = 'Exit Delete';
-            if (btnIcon) btnIcon.className = 'bi bi-x-lg me-1';
-            if (btn) {
-                btn.classList.remove('btn-action-delete');
-                btn.classList.add('btn-modern-outline', 'active');
-            }
+            if (btnText) btnText.textContent = 'Exit Select';
+            if (btn) btn.classList.add('active');
             updateTerminalBulkToolbar();
         } else {
             if (table) table.classList.remove('selection-mode-active');
@@ -496,12 +508,8 @@ body.modal-open #deleteTerminalConfirmModal,
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');
             }
-            if (btnText) btnText.textContent = 'Delete';
-            if (btnIcon) btnIcon.className = 'bi bi-trash me-1';
-            if (btn) {
-                btn.classList.remove('btn-modern-outline', 'active');
-                btn.classList.add('btn-action-delete');
-            }
+            if (btnText) btnText.textContent = 'Select';
+            if (btn) btn.classList.remove('active');
             clearTerminalSelection();
         }
     };

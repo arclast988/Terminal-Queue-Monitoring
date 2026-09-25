@@ -45,6 +45,21 @@
         justify-content: flex-end !important;
     }
 }
+
+/* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */
+.bulk-col {
+    display: none !important;
+    width: 44px !important;
+    min-width: 44px !important;
+    max-width: 44px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 8px 6px !important;
+}
+.table-modern.selection-mode-active .bulk-col,
+.selection-mode-active .bulk-col {
+    display: table-cell !important;
+}
 </style>
 
 <div class="page-header-modern fade-in">
@@ -83,8 +98,8 @@
         </span>
         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
             <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn-modern btn-modern-sm btn-action-delete" id="btn-toggle-delete-announcements" onclick="toggleAnnouncementDeleteMode()" title="Toggle selection mode to delete announcements" <?= empty($announcements) ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' ?>>
-                    <i class="bi bi-trash me-1" id="btn-delete-announcements-icon"></i> <span id="btn-delete-announcements-text">Delete</span>
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-announcements" onclick="toggleAnnouncementSelectMode()" title="Toggle selection mode for batch actions" <?= empty($announcements) ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : '' ?>>
+                    <i class="bi bi-check2-square me-1"></i> <span id="btn-select-announcements-text">Select</span>
                 </button>
             </div>
         <?php endif; ?>
@@ -106,16 +121,7 @@
                 <button type="button" class="btn-modern btn-modern-sm btn-action-delete btn-bulk-delete" id="btn-bulk-delete-announcements" onclick="openAnnouncementBulkModal()" disabled>
                     <i class="bi bi-trash"></i> <span>Delete Selected</span>
                 </button>
-                <?php if (!empty($announcements) && is_array($announcements)): ?>
-                <button type="button" class="btn-modern btn-modern-sm btn-action-delete" id="deleteAllAnnouncementsBtn" data-bs-toggle="modal" data-bs-target="#deleteAllAnnouncementsModal" onclick="confirmDeleteAll(event);" title="Delete All Announcements">
-                    <i class="bi bi-trash"></i> <span>Delete All</span>
-                </button>
-                <?php else: ?>
-                <button type="button" class="btn-modern btn-modern-sm btn-action-delete" id="deleteAllAnnouncementsBtn" title="No announcements to delete" disabled style="opacity: 0.5; cursor: not-allowed;">
-                    <i class="bi bi-trash"></i> <span>Delete All</span>
-                </button>
-                <?php endif; ?>
-                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline btn-bulk-cancel" onclick="toggleAnnouncementDeleteMode(false)">
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline btn-bulk-cancel" onclick="toggleAnnouncementSelectMode(false)">
                     <i class="bi bi-x"></i> <span>Cancel</span>
                 </button>
             </div>
@@ -576,19 +582,19 @@ body.modal-open #deleteAnnouncementModal,
 
         // Real-time table synchronization on announcement broadcasts
         function refreshAnnouncementsTable() {
-            if (window.isAnnouncementDeleteMode || document.querySelector('.modal.show')) return;
+            if (window.isAnnouncementSelectMode || document.querySelector('.modal.show')) return;
             fetch(window.location.href, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
             })
             .then(function(r) { return r.ok ? r.text() : null; })
             .then(function(html) {
-                if (!html || window.isAnnouncementDeleteMode || document.querySelector('.modal.show')) return;
+                if (!html || window.isAnnouncementSelectMode || document.querySelector('.modal.show')) return;
                 var parser = new DOMParser();
                 var newDoc = parser.parseFromString(html, 'text/html');
-                var curTbody = document.querySelector('.table-modern tbody');
-                var newTbody = newDoc.querySelector('.table-modern tbody');
-                if (curTbody && newTbody) {
-                    curTbody.innerHTML = newTbody.innerHTML;
+                var curTable = document.getElementById('announcements-table');
+                var newTable = newDoc.getElementById('announcements-table');
+                if (curTable && newTable) {
+                    curTable.innerHTML = newTable.innerHTML;
                 }
                 var curHeader = document.querySelector('.modern-card-header');
                 var newHeader = newDoc.querySelector('.modern-card-header');
@@ -647,23 +653,22 @@ body.modal-open #deleteAnnouncementModal,
 
 <script>
 (function() {
-    window.isAnnouncementDeleteMode = false;
+    window.isAnnouncementSelectMode = false;
 
-    window.toggleAnnouncementDeleteMode = function(forceState) {
+    window.toggleAnnouncementSelectMode = function(forceState) {
         if (typeof forceState === 'boolean') {
-            window.isAnnouncementDeleteMode = forceState;
+            window.isAnnouncementSelectMode = forceState;
         } else {
-            window.isAnnouncementDeleteMode = !window.isAnnouncementDeleteMode;
+            window.isAnnouncementSelectMode = !window.isAnnouncementSelectMode;
         }
 
         const table = document.getElementById('announcements-table');
         const toolbar = document.getElementById('announcement-bulk-toolbar');
-        const btnText = document.getElementById('btn-delete-announcements-text');
-        const btnIcon = document.getElementById('btn-delete-announcements-icon');
-        const btn = document.getElementById('btn-toggle-delete-announcements');
+        const btnText = document.getElementById('btn-select-announcements-text');
+        const btn = document.getElementById('btn-toggle-select-announcements');
         const bulkCells = document.querySelectorAll('#announcements-table .bulk-col');
 
-        if (window.isAnnouncementDeleteMode) {
+        if (window.isAnnouncementSelectMode) {
             if (table) table.classList.add('selection-mode-active');
             bulkCells.forEach(function(c) {
                 c.style.setProperty('display', 'table-cell', 'important');
@@ -672,12 +677,8 @@ body.modal-open #deleteAnnouncementModal,
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
             }
-            if (btnText) btnText.textContent = 'Exit Delete';
-            if (btnIcon) btnIcon.className = 'bi bi-x-lg me-1';
-            if (btn) {
-                btn.classList.remove('btn-action-delete');
-                btn.classList.add('btn-modern-outline', 'active');
-            }
+            if (btnText) btnText.textContent = 'Exit Select';
+            if (btn) btn.classList.add('active');
             updateAnnouncementBulkToolbar();
         } else {
             if (table) table.classList.remove('selection-mode-active');
@@ -688,12 +689,8 @@ body.modal-open #deleteAnnouncementModal,
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');
             }
-            if (btnText) btnText.textContent = 'Delete';
-            if (btnIcon) btnIcon.className = 'bi bi-trash me-1';
-            if (btn) {
-                btn.classList.remove('btn-modern-outline', 'active');
-                btn.classList.add('btn-action-delete');
-            }
+            if (btnText) btnText.textContent = 'Select';
+            if (btn) btn.classList.remove('active');
             clearAnnouncementSelection();
         }
     };
