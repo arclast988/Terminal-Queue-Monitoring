@@ -18,34 +18,40 @@
     </div>
 </div>
 
-<?php if (session()->getFlashdata('success')): ?>
-    <div class="alert-modern alert-modern-success fade-in">
-        <i class="bi bi-check-circle-fill alert-modern-icon"></i>
-        <div><?= esc(session()->getFlashdata('success')) ?></div>
-    </div>
-<?php endif; ?>
+<?php 
+$isManageVehicleTypesOpen = (bool) (session()->getFlashdata('manage_vehicle_types_open') || (isset($_GET['manage_types']) && $_GET['manage_types'] == '1'));
+?>
 
-<?php if (session()->getFlashdata('error')): ?>
-    <div class="alert-modern alert-modern-danger fade-in">
-        <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
-        <div><?= esc(session()->getFlashdata('error')) ?></div>
-    </div>
-<?php endif; ?>
-
-<?php if (session()->getFlashdata('errors')): ?>
-    <div class="alert-modern alert-modern-danger fade-in">
-        <i class="bi bi-exclamation-circle-fill alert-modern-icon"></i>
-        <div style="flex: 1; min-width: 0;">
-            <ul class="mb-0" style="padding-left: 20px;">
-            <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                <li><?= esc($error) ?></li>
-            <?php endforeach; ?>
-            </ul>
+<?php if (!$isManageVehicleTypesOpen): ?>
+    <?php if (session()->getFlashdata('success')): ?>
+        <div class="alert-modern alert-modern-success fade-in">
+            <i class="bi bi-check-circle-fill alert-modern-icon"></i>
+            <div><?= esc(session()->getFlashdata('success')) ?></div>
         </div>
-    </div>
-<?php endif; ?>
+    <?php endif; ?>
 
-<?= view('partials/flash_notices') ?>
+    <?php if (session()->getFlashdata('error')): ?>
+        <div class="alert-modern alert-modern-danger fade-in">
+            <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
+            <div><?= esc(session()->getFlashdata('error')) ?></div>
+        </div>
+    <?php endif; ?>
+
+    <?php if (session()->getFlashdata('errors')): ?>
+        <div class="alert-modern alert-modern-danger fade-in">
+            <i class="bi bi-exclamation-circle-fill alert-modern-icon"></i>
+            <div style="flex: 1; min-width: 0;">
+                <ul class="mb-0" style="padding-left: 20px;">
+                <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                    <li><?= esc($error) ?></li>
+                <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?= view('partials/flash_notices') ?>
+<?php endif; ?>
 
 
 <?php
@@ -1654,7 +1660,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
             updateRegTypeFallback(typeSelect);
         }
 
-        <?php if (session()->getFlashdata('manage_vehicle_types_open') || (isset($_GET['manage_types']) && $_GET['manage_types'] == '1')): ?>
+        <?php if ($isManageVehicleTypesOpen): ?>
         var mTypesEl = document.getElementById('manageVehicleTypesModal');
         if (mTypesEl) {
             var mTypesModal = bootstrap.Modal.getOrCreateInstance(mTypesEl);
@@ -2579,7 +2585,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                 <h5 class="modal-title fw-bold fs-6 mb-0" id="manageVehicleTypesModalLabel"><i class="bi bi-gear-fill me-2"></i>Manage Vehicle Types</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <?php if (session()->getFlashdata('manage_vehicle_types_open')): ?>
+            <?php if ($isManageVehicleTypesOpen): ?>
                 <?php if (session()->getFlashdata('success')): ?>
                     <div class="alert alert-success m-2 py-2 px-3 d-flex align-items-center gap-2" style="font-size: 13px; border-radius: 8px;">
                         <i class="bi bi-check-circle-fill flex-shrink-0"></i>
@@ -2599,6 +2605,18 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <li><?= esc($err) ?></li>
                             <?php endforeach; ?>
                         </ul>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('info')): ?>
+                    <div class="alert alert-info m-2 py-2 px-3 d-flex align-items-center gap-2" style="font-size: 13px; border-radius: 8px;">
+                        <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+                        <div><?= esc(session()->getFlashdata('info')) ?></div>
+                    </div>
+                <?php endif; ?>
+                <?php if (session()->getFlashdata('warning')): ?>
+                    <div class="alert alert-warning m-2 py-2 px-3 d-flex align-items-center gap-2" style="font-size: 13px; border-radius: 8px;">
+                        <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+                        <div><?= esc(session()->getFlashdata('warning')) ?></div>
                     </div>
                 <?php endif; ?>
             <?php endif; ?>
