@@ -211,6 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function validateForm() {
         syncDateStates();
+        syncPresetButtons();
         const isValid = fromInput.value !== '' && toInput.value !== '';
         btnPdf.disabled = !isValid;
         
@@ -243,6 +244,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial state check
     syncDateStates();
 
+    function syncPresetButtons() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        let weekDate = new Date();
+        weekDate.setDate(weekDate.getDate() - 7);
+        const weekStr = weekDate.toISOString().split('T')[0];
+        let monthDate = new Date();
+        monthDate.setDate(1);
+        const monthStr = monthDate.toISOString().split('T')[0];
+
+        document.querySelectorAll('.log-date-preset').forEach(b => {
+            b.classList.remove('btn-secondary');
+            b.classList.add('btn-outline-secondary');
+            const range = b.getAttribute('data-range');
+            // 'all' / 'Clear' is a reset action and never stays highlighted
+            if (range === 'today' && fromInput.value === todayStr && toInput.value === todayStr) {
+                b.classList.remove('btn-outline-secondary');
+                b.classList.add('btn-secondary');
+            } else if (range === 'week' && fromInput.value === weekStr && toInput.value === todayStr) {
+                b.classList.remove('btn-outline-secondary');
+                b.classList.add('btn-secondary');
+            } else if (range === 'month' && fromInput.value === monthStr && toInput.value === todayStr) {
+                b.classList.remove('btn-outline-secondary');
+                b.classList.add('btn-secondary');
+            }
+        });
+    }
+
     // Date Presets Logic
     document.querySelectorAll('.log-date-preset').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -253,23 +281,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 b.classList.remove('btn-secondary');
                 b.classList.add('btn-outline-secondary');
             });
-            this.classList.remove('btn-outline-secondary');
-            this.classList.add('btn-secondary');
 
             if (range === 'today') {
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-secondary');
                 fromInput.value = today;
                 toInput.value = today;
             } else if (range === 'week') {
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-secondary');
                 let d = new Date();
                 d.setDate(d.getDate() - 7);
                 fromInput.value = d.toISOString().split('T')[0];
                 toInput.value = today;
             } else if (range === 'month') {
+                this.classList.remove('btn-outline-secondary');
+                this.classList.add('btn-secondary');
                 let d = new Date();
                 d.setDate(1);
                 fromInput.value = d.toISOString().split('T')[0];
                 toInput.value = today;
             } else {
+                // Clear action: reset fields, do NOT highlight Clear button
                 fromInput.value = '';
                 toInput.value = '';
             }
