@@ -1,4 +1,12 @@
 /* Shared guest portal shell styles. Extracted verbatim from the guest templates to preserve the current design. */
+    .guest-header a,
+    .guest-header button,
+    .guest-header .nav-menu a,
+    .advisory-bar,
+    .advisory-icon {
+        -webkit-tap-highlight-color: transparent;
+    }
+
     /* --- Advisory Bar --- */
     .advisory-bar {
         background: linear-gradient(135deg, var(--primary, #B71C1C) 0%, var(--primary-dark, #7F0000) 100%);
@@ -521,6 +529,7 @@
         align-items: center;
         gap: 8px;
         border-radius: 6px;
+        -webkit-tap-highlight-color: transparent;
     }
     .guest-header .nav-menu a i {
         font-size: 16px;
@@ -887,6 +896,7 @@
             font-size: 15px;
             font-weight: 600;
             color: var(--nav-text, #1e293b);
+            -webkit-tap-highlight-color: transparent;
         }
         .guest-header .nav-menu a.active {
             background: var(--primary-soft, rgba(214, 40, 40, 0.08));

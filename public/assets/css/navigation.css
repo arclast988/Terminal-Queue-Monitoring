@@ -212,6 +212,7 @@ body.staff-theme .logo-text p {
   cursor: pointer;
   line-height: 1.2;
   flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-menu > a:not(.profile-dropdown-item) i,
