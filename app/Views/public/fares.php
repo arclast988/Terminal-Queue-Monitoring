@@ -20,9 +20,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
 
@@ -44,10 +44,32 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button,
+        .btn,
+        input[type="button"],
+        input[type="submit"],
+        [role="button"],
+        a,
+        .search-bar button,
+        .guest-clear-search-btn {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button:focus:not(:focus-visible),
+        .btn:focus:not(:focus-visible),
+        [role="button"]:focus:not(:focus-visible),
+        a:focus:not(:focus-visible) {
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         body {

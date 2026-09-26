@@ -27,7 +27,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <!-- Design system: shared tokens/components, role themes, then the legacy-class bridge -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/design-system.css') ? filemtime(FCPATH . 'assets/css/design-system.css') : '20260926_1')) ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/themes.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/legacy-bridge.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/modern-frontend.css') ? filemtime(FCPATH . 'assets/css/modern-frontend.css') : '20260924_2')) ?>">
@@ -48,6 +48,22 @@
         }
 
 
+
+        *, *::before, *::after {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button, .btn, .btn-modern, input[type="button"], input[type="submit"], [role="button"], a {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button:focus:not(:focus-visible),
+        .btn:focus:not(:focus-visible),
+        [role="button"]:focus:not(:focus-visible),
+        a:focus:not(:focus-visible) {
+            outline: none !important;
+            box-shadow: none !important;
+        }
 
         /* Disable tooltip/popover animations */
         .tooltip-inner,

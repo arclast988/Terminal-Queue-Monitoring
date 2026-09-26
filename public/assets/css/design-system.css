@@ -65,18 +65,33 @@
 *,
 *::before,
 *::after {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
 a,
 button,
+.btn,
+.btn-modern,
 input,
 select,
 textarea,
 label,
+summary,
 [role="button"],
 [tabindex] {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Prevent default mobile browser blue focus rings on tap */
+button:focus:not(:focus-visible),
+.btn:focus:not(:focus-visible),
+.btn-modern:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input[type="button"]:focus:not(:focus-visible),
+input[type="submit"]:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 body {

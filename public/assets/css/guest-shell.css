@@ -1,10 +1,36 @@
 /* Shared guest portal shell styles. Extracted verbatim from the guest templates to preserve the current design. */
+    *,
+    *::before,
+    *::after {
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    button,
+    .btn,
+    a,
+    [role="button"],
+    input[type="button"],
+    input[type="submit"],
     .guest-header a,
     .guest-header button,
     .guest-header .nav-menu a,
     .advisory-bar,
-    .advisory-icon {
-        -webkit-tap-highlight-color: transparent;
+    .advisory-icon,
+    .support-modal button,
+    .support-modal .close-modal,
+    .support-modal .submit-btn,
+    .support-modal .faq-question,
+    .support-modal .accordion-header,
+    .ann-modal-btn-close {
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    button:focus:not(:focus-visible),
+    .btn:focus:not(:focus-visible),
+    [role="button"]:focus:not(:focus-visible),
+    a:focus:not(:focus-visible) {
+        outline: none !important;
+        box-shadow: none !important;
     }
 
     /* --- Advisory Bar --- */

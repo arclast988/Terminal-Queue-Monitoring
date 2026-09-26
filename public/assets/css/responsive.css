@@ -9,7 +9,35 @@
 *,
 *::before,
 *::after {
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+button,
+.btn,
+.btn-modern,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+[role="button"],
+a,
+.filter-chip,
+.rules-route-chip,
+.route-chip,
+.vf-btn,
+.stat-card-button,
+.search-bar button,
+.dropdown-toggle,
+.dropbtn {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+button:focus:not(:focus-visible),
+.btn:focus:not(:focus-visible),
+.btn-modern:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 html, body {

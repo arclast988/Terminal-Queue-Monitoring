@@ -13,9 +13,9 @@
     <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=3.2">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=3.2">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=3.2">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
     <style>
@@ -36,10 +36,40 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button,
+        .btn,
+        .btn-modern,
+        input[type="button"],
+        input[type="submit"],
+        [role="button"],
+        a,
+        .filter-chip,
+        .rules-route-chip,
+        .stat-card-button,
+        .stat-card-link,
+        .search-bar button,
+        .guest-clear-search-btn,
+        .route-average-close {
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button:focus:not(:focus-visible),
+        .btn:focus:not(:focus-visible),
+        [role="button"]:focus:not(:focus-visible),
+        a:focus:not(:focus-visible),
+        .filter-chip:focus:not(:focus-visible),
+        .stat-card-button:focus:not(:focus-visible) {
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         body {
@@ -460,10 +490,16 @@
             margin: 0 !important;
         }
 
-        .stat-card-link:focus,
-        .stat-card-button:focus {
+        .stat-card-link:focus-visible,
+        .stat-card-button:focus-visible {
             outline: none;
-            box-shadow: 0 0 0 3px var(--primary-soft, rgba(21, 101, 192, 0.25)), var(--shadow-md);
+            box-shadow: 0 0 0 3px var(--primary, #C62828), var(--shadow-md);
+        }
+
+        .stat-card-link:focus:not(:focus-visible),
+        .stat-card-button:focus:not(:focus-visible) {
+            outline: none !important;
+            box-shadow: var(--shadow-sm) !important;
         }
 
         .stat-card .stat-icon-wrapper {
