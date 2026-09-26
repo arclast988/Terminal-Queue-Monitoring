@@ -31,6 +31,68 @@
     border-color: #C62828 !important;
     box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
 }
+/* Date input styling with calendar icon & watermark cue */
+.report-date-group {
+    position: relative;
+    border-radius: 6px;
+}
+.report-date-icon {
+    background-color: #f8fafc !important;
+    color: #C62828 !important;
+    border-right: none !important;
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-color: #ced4da !important;
+}
+.report-date-input {
+    border-left: none !important;
+    padding-left: 6px !important;
+    color: #1e293b;
+    font-weight: 500;
+    border-color: #ced4da !important;
+}
+.report-date-group:focus-within .report-date-icon,
+.report-date-group:focus-within .report-date-input {
+    border-color: #C62828 !important;
+}
+.report-date-group:focus-within {
+    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
+    border-radius: 6px;
+}
+.report-date-group .form-control:focus {
+    box-shadow: none !important;
+}
+.report-date-watermark {
+    position: absolute;
+    left: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.85rem;
+    color: #94a3b8;
+    pointer-events: none;
+    z-index: 4;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.15s ease;
+    letter-spacing: 0.3px;
+}
+.report-date-group.has-value .report-date-watermark,
+.report-date-group:focus-within .report-date-watermark {
+    display: none !important;
+    opacity: 0 !important;
+}
+.report-date-group:not(.has-value):not(:focus-within) .report-date-input::-webkit-datetime-edit {
+    color: transparent !important;
+}
+.report-date-group.has-value .report-date-input::-webkit-datetime-edit,
+.report-date-group:focus-within .report-date-input::-webkit-datetime-edit {
+    color: inherit !important;
+}
+@supports (-moz-appearance: none) {
+    .report-date-watermark {
+        display: none !important;
+    }
+}
 </style>
 <div class="modal fade report-filter-modal" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered report-filter-dialog">
@@ -54,12 +116,26 @@
 
                     <div class="row g-3 mb-4 report-filter-dates">
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase">From Date</label>
-                            <input type="date" class="form-control" name="from_date" id="modal_from_date">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-0">From Date</label>
+                                <span class="badge bg-light text-muted border px-2 py-0" style="font-size: 10px; font-weight: 500;">dd/mm/yyyy</span>
+                            </div>
+                            <div class="input-group report-date-group" id="group_modal_from_date">
+                                <span class="input-group-text report-date-icon" title="Choose date"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" class="form-control report-date-input" name="from_date" id="modal_from_date" placeholder="dd/mm/yyyy">
+                                <span class="report-date-watermark text-muted">dd/mm/yyyy</span>
+                            </div>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase">To Date</label>
-                            <input type="date" class="form-control" name="to_date" id="modal_to_date">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold text-muted text-uppercase mb-0">To Date</label>
+                                <span class="badge bg-light text-muted border px-2 py-0" style="font-size: 10px; font-weight: 500;">dd/mm/yyyy</span>
+                            </div>
+                            <div class="input-group report-date-group" id="group_modal_to_date">
+                                <span class="input-group-text report-date-icon" title="Choose date"><i class="bi bi-calendar3"></i></span>
+                                <input type="date" class="form-control report-date-input" name="to_date" id="modal_to_date" placeholder="dd/mm/yyyy">
+                                <span class="report-date-watermark text-muted">dd/mm/yyyy</span>
+                            </div>
                         </div>
                     </div>
 
@@ -124,7 +200,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnPdf = document.getElementById('btn-pdf');
     const validationMsg = document.getElementById('validation-msg');
 
+    function syncDateStates() {
+        [fromInput, toInput].forEach(inp => {
+            if (!inp) return;
+            const group = inp.closest('.report-date-group');
+            if (group) {
+                if (inp.value && inp.value.trim() !== '') {
+                    group.classList.add('has-value');
+                } else {
+                    group.classList.remove('has-value');
+                }
+            }
+        });
+    }
+
     function validateForm() {
+        syncDateStates();
         const isValid = fromInput.value !== '' && toInput.value !== '';
         btnPdf.disabled = !isValid;
         
@@ -135,7 +226,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    [fromInput, toInput].forEach(el => el.addEventListener('change', validateForm));
+    [fromInput, toInput].forEach(el => {
+        el.addEventListener('change', validateForm);
+        el.addEventListener('input', validateForm);
+    });
+
+    // Calendar icon click helper to trigger native date picker
+    document.querySelectorAll('.report-filter-modal .report-date-icon').forEach(icon => {
+        icon.addEventListener('click', function() {
+            const input = this.closest('.input-group')?.querySelector('input[type="date"]');
+            if (input) {
+                if (typeof input.showPicker === 'function') {
+                    try { input.showPicker(); } catch (err) { input.focus(); }
+                } else {
+                    input.focus();
+                }
+            }
+        });
+    });
+
+    const modalEl = document.getElementById('reportFilterModal');
+    if (modalEl) {
+        modalEl.addEventListener('show.bs.modal', function() {
+            syncDateStates();
+            validateForm();
+        });
+    }
+
+    // Initial state check
+    syncDateStates();
 
     // Dynamic Filtering: Vehicle Type -> Destination
     typeSelect.addEventListener('change', function() {
