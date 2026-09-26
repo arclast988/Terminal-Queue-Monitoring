@@ -2325,6 +2325,17 @@ body.swal2-shown .register-vehicle-card {
   margin: 0 !important;
   padding: 8px 10px !important;
   white-space: normal;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.report-filter-modal .report-filter-presets .btn:focus,
+.report-filter-modal .report-filter-presets .btn:active,
+.report-filter-modal .report-filter-submit:focus,
+.report-filter-modal .report-filter-submit:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .report-filter-modal .report-filter-footer {

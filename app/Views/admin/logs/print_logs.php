@@ -7,8 +7,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+
+        button, .btn-toolbar, a {
+            -webkit-tap-highlight-color: transparent !important;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        button:focus,
+        button:active,
+        .btn-toolbar:focus,
+        .btn-toolbar:active,
+        a:focus,
+        a:active {
+            outline: none !important;
+            box-shadow: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
         body {
@@ -68,8 +86,12 @@
             color: #ffffff;
         }
 
-        .btn-toolbar-primary:hover {
-            background: #991b1b;
+        .btn-toolbar-primary:hover,
+        .btn-toolbar-primary:focus,
+        .btn-toolbar-primary:active {
+            background: #991b1b !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         .btn-toolbar-secondary {
@@ -77,8 +99,12 @@
             color: #ffffff;
         }
 
-        .btn-toolbar-secondary:hover {
-            background: #475569;
+        .btn-toolbar-secondary:hover,
+        .btn-toolbar-secondary:focus,
+        .btn-toolbar-secondary:active {
+            background: #475569 !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         .header {

@@ -1,4 +1,37 @@
 <!-- Report Filter Modal (Reusable Partial) -->
+<style>
+.report-filter-modal,
+.report-filter-modal *,
+.report-filter-modal *::before,
+.report-filter-modal *::after {
+    -webkit-tap-highlight-color: transparent !important;
+}
+.report-filter-modal button,
+.report-filter-modal .btn,
+.report-filter-modal .btn-close,
+.report-filter-modal .report-filter-submit,
+.report-filter-modal .date-preset,
+.report-filter-modal .form-control,
+.report-filter-modal .form-select {
+    -webkit-tap-highlight-color: transparent !important;
+    user-select: none;
+    -webkit-user-select: none;
+}
+.report-filter-modal button:focus,
+.report-filter-modal button:active,
+.report-filter-modal .btn:focus,
+.report-filter-modal .btn:active,
+.report-filter-modal .report-filter-submit:focus,
+.report-filter-modal .report-filter-submit:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+.report-filter-modal .form-control:focus,
+.report-filter-modal .form-select:focus {
+    border-color: #C62828 !important;
+    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
+}
+</style>
 <div class="modal fade report-filter-modal" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered report-filter-dialog">
         <div class="modal-content border-0 shadow report-filter-content">

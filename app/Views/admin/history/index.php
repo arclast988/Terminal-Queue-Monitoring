@@ -70,7 +70,16 @@
         display: inline-flex;
         align-items: center;
         cursor: pointer;
-        outline: none;
+        outline: none !important;
+        -webkit-tap-highlight-color: transparent !important;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    html body .quick-chip:focus,
+    html body .quick-chip:active {
+        outline: none !important;
+        box-shadow: none !important;
     }
 
     html body .quick-chip:hover {
