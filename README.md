@@ -65,15 +65,15 @@ On a Linux server, one script installs **and** starts everything (as systemd ser
    ```
 
 ### Database (PostgreSQL)
-The app's defaults live in `app/Config/Database.php` and `.env`:
+For a local install, set a unique database password in `.env`:
 ```
-hostname = 127.0.0.1
-database = jeepneynvans
-username = jeepney_user
-password = 12345678
-driver   = Postgre
-port     = 5432
-schema   = public
+database.default.hostname = 127.0.0.1
+database.default.database = jeepneynvans
+database.default.username = jeepney_user
+database.default.password = your-unique-local-password
+database.default.DBDriver = Postgre
+database.default.port = 5432
+database.default.schema = public
 ```
 
 ### Real-time WebSocket features

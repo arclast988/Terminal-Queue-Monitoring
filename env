@@ -34,7 +34,7 @@
 # database.default.hostname = 127.0.0.1
 # database.default.database = jeepneynvans
 # database.default.username = jeepney_user
-# database.default.password = 12345678
+# database.default.password = replace-with-unique-secret
 # database.default.DBDriver = Postgre
 # database.default.DBPrefix =
 # database.default.port = 5432

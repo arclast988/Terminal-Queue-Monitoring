@@ -140,8 +140,10 @@ chmod -R u=rwX,g=rwX,o=rX "$APP_ROOT/writable" "$APP_ROOT/public/uploads" 2>/dev
 echo "[DB] Checking schema and migrations..."
 php "$APP_ROOT/import_schema.php" || echo "[DB] Schema import check skipped or already complete."
 php "$APP_ROOT/spark" migrate --all 2>&1 || echo "[DB] Migrations already complete or unavailable."
-if [ "${RUN_DEFAULT_SEEDERS:-false}" = "true" ]; then
+if [ "${RUN_DEFAULT_SEEDERS:-false}" = "true" ] && [ "${CI_ENVIRONMENT:-production}" != "production" ]; then
     php "$APP_ROOT/spark" db:seed UserSeeder 2>&1 || echo "[DB] Initial seed not required."
+elif [ "${RUN_DEFAULT_SEEDERS:-false}" = "true" ]; then
+    echo "[DB] Demo users are disabled in production."
 else
     echo "[DB] Default demo users skipped. Set RUN_DEFAULT_SEEDERS=true only for a new development database."
 fi

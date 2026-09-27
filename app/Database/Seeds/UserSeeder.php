@@ -8,6 +8,10 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
+        if (ENVIRONMENT === 'production') {
+            throw new \RuntimeException('Demo user seeding is disabled in production.');
+        }
+
         $users = $this->db->table('users');
         $hasSuperAdmin = $users->where('role', 'super_admin')->countAllResults() > 0;
 
