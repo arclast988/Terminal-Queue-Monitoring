@@ -1588,6 +1588,8 @@ body.guest-theme .hero .guest-page-search #guest-results-clear-btn {
 body.guest-theme .hero .guest-page-search #guest-hero-clear-btn,
 body.guest-theme .hero .guest-page-search #guest-results-clear-btn {
     margin-right: -6px !important;
+    justify-content: flex-end !important;
+    padding-right: 2px !important;
 }
 
 body.guest-theme .hero .guest-page-search button[type="submit"] {
