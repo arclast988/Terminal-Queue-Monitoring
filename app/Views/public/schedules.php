@@ -295,12 +295,6 @@
             font-family: inherit;
         }
 
-        .schedule-search-icon {
-            color: var(--primary, #B71C1C);
-            margin-left: 18px;
-            flex-shrink: 0;
-        }
-
         #guest-schedule-clear-btn {
             position: relative !important;
             right: auto !important;
@@ -1074,10 +1068,10 @@
         <p>View departure times, vehicle status, and route information for all available vehicle types.</p>
 
         <div class="search-container">
-            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar" id="scheduleSearchForm" style="position: relative;">
+            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar guest-page-search" id="scheduleSearchForm" style="position: relative;">
                 <?php if (!empty($vehicle_type)): ?><input type="hidden" name="type" value="<?= esc($vehicle_type) ?>"><?php endif; ?>
                 <?php if (!empty($destination)): ?><input type="hidden" name="destination" value="<?= esc($destination) ?>"><?php endif; ?>
-                <i class="fas fa-search schedule-search-icon" aria-hidden="true"></i>
+                <i class="fas fa-search guest-page-search-icon" aria-hidden="true"></i>
                 <input type="text" name="q" id="scheduleSearchInput" placeholder="Search route, destination, or plate" aria-label="Search schedules" value="<?= esc($search ?? '') ?>" autocomplete="off" oninput="toggleGuestScheduleClear(this.value)">
                 <button type="button" class="guest-clear-search-btn" id="guest-schedule-clear-btn" onclick="clearGuestScheduleSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search" aria-label="Clear schedule search">
                     <i class="fas fa-times-circle"></i>

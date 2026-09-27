@@ -302,12 +302,6 @@
             font-family: inherit;
         }
 
-        .fare-search-icon {
-            color: var(--primary, #B71C1C);
-            margin-left: 18px;
-            flex-shrink: 0;
-        }
-
         #guest-fare-clear-btn {
             position: relative !important;
             right: auto !important;
@@ -716,8 +710,8 @@
         <p>Check official fare rates for all destinations to ensure fair pricing.</p>
 
         <div class="search-container">
-            <div class="search-bar" role="search" style="position: relative;">
-                <i class="fas fa-search fare-search-icon" aria-hidden="true"></i>
+            <div class="search-bar guest-page-search" role="search" style="position: relative;">
+                <i class="fas fa-search guest-page-search-icon" aria-hidden="true"></i>
                 <input type="text" id="fareSearch" placeholder="Search destination or vehicle type" aria-label="Search fares" autocomplete="off">
                 <button type="button" class="guest-clear-search-btn" id="guest-fare-clear-btn" onclick="clearGuestFareSearch()" style="display: none !important;" title="Clear search" aria-label="Clear fare search">
                     <i class="fas fa-times-circle"></i>
