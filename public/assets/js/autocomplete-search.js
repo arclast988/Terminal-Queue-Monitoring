@@ -349,6 +349,7 @@
     }
 
     function initLocationAutocomplete(root = document) {
+        if (!root || typeof root.querySelectorAll !== 'function') root = document;
         // --- 1. Destination Text Inputs ---
         const textInputs = root.querySelectorAll(
             '.autocomplete-location, input#destination, input#add_destination, input#edit_fare_destination'
@@ -979,7 +980,7 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initLocationAutocomplete);
+        document.addEventListener('DOMContentLoaded', function () { initLocationAutocomplete(); });
     } else {
         initLocationAutocomplete();
     }
