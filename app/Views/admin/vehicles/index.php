@@ -617,39 +617,42 @@ table:not(.selection-mode-active) .bulk-select-cell {
         gap: 4px;
     }
 
-    /* Premium Hover & Transitions for Table Rows */
+    /* Selection is the only persistent highlight on touch screens. */
     #vehicles-table tbody tr {
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
         position: relative;
     }
-    #vehicles-table tbody tr:hover {
-        background-color: var(--primary-soft, #f1f5f9) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-        z-index: 2;
+    #vehicles-table.selection-mode-active tbody tr.vehicle-row-selected {
+        background: #eff6ff !important;
+        border-color: #93c5fd !important;
     }
-    /* Left border accent on hover */
-    #vehicles-table tbody tr td:first-child {
-        position: relative;
-        transition: border-left-color 0.2s ease;
-    }
-    #vehicles-table tbody tr:hover td:first-child {
-        border-left: 3px solid var(--primary, #c62828) !important;
-    }
-    /* Scale inner badges and icons smoothly on hover */
-    #vehicles-table tbody tr:hover .badge-modern {
-        transform: scale(1.05);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #vehicles-table tbody tr:hover .vehicle-type-icon img {
-        transform: scale(1.1) rotate(2deg);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    #vehicles-table tbody tr:hover .btn-modern {
-        transform: scale(1.02);
+    @media (hover: hover) and (pointer: fine) {
+        #vehicles-table tbody tr:not(.vehicle-row-selected):hover {
+            background-color: var(--primary-soft, #f1f5f9) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            z-index: 2;
+        }
+        #vehicles-table tbody tr:not(.vehicle-row-selected):hover td:first-child {
+            border-left: 3px solid var(--primary, #c62828) !important;
+        }
+        #vehicles-table tbody tr:hover .badge-modern {
+            transform: scale(1.05);
+        }
+        #vehicles-table tbody tr:hover .vehicle-type-icon img {
+            transform: scale(1.1) rotate(2deg);
+        }
+        #vehicles-table tbody tr:hover .btn-modern {
+            transform: scale(1.02);
+        }
     }
     .vehicle-type-icon img, .badge-modern, .btn-modern {
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @media (max-width: 768px) {
+        #vehicles-table.selection-mode-active tbody td[data-label="Action"] {
+            display: none !important;
+        }
     }
 
     /* ── Search Input Capsule and Alignments ── */
@@ -1108,6 +1111,10 @@ table:not(.selection-mode-active) .bulk-select-cell {
     // Bulk selection handlers
     function updateVehicleBulkToolbar() {
         const checkedBoxes = Array.from(document.querySelectorAll('.vehicle-row-checkbox:checked'));
+        document.querySelectorAll('#vehicles-table tbody tr[data-type]').forEach(function(row) {
+            const checkbox = row.querySelector('.vehicle-row-checkbox');
+            row.classList.toggle('vehicle-row-selected', Boolean(checkbox && checkbox.checked));
+        });
         const toolbar = document.getElementById('vehicle-bulk-toolbar');
         const countEl = document.getElementById('vehicle-selected-count');
         const textEl = document.getElementById('vehicle-selected-text');

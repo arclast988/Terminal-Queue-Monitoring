@@ -9,28 +9,23 @@
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
     }
-    .table-modern tbody tr:hover {
-        background-color: var(--primary-soft, #f1f5f9) !important;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-        z-index: 2;
-    }
-    /* Accent hover indicator */
-    .table-modern tbody tr td:first-child {
-        position: relative;
-        transition: border-left-color 0.2s ease;
-    }
-    .table-modern tbody tr:hover td:first-child {
-        border-left: 3px solid var(--primary, #1565c0) !important;
-    }
-    /* Scale inner badges and icons smoothly on hover */
-    .table-modern tbody tr:hover .badge-modern {
-        transform: scale(1.05);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .table-modern tbody tr:hover .vehicle-type-icon img {
-        transform: scale(1.1) rotate(2deg);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Touch browsers can keep :hover after a tap; reserve this effect for a mouse. */
+    @media (hover: hover) and (pointer: fine) {
+        .table-modern tbody tr:hover {
+            background-color: var(--primary-soft, #f1f5f9) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+            z-index: 2;
+        }
+        .table-modern tbody tr:hover td:first-child {
+            border-left: 3px solid var(--primary, #1565c0) !important;
+        }
+        .table-modern tbody tr:hover .badge-modern {
+            transform: scale(1.05);
+        }
+        .table-modern tbody tr:hover .vehicle-type-icon img {
+            transform: scale(1.1) rotate(2deg);
+        }
     }
     .vehicle-type-icon img, .badge-modern {
         transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
