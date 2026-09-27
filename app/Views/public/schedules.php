@@ -1128,11 +1128,11 @@
                 <i class="fas fa-route" style="color: var(--primary);"></i> Route Destinations:
             </div>
             <div class="route-filter-bar" id="routeFilterBar">
-                <button type="button" class="route-chip <?= empty($destination) ? 'active' : '' ?>" data-dest="all" onclick="selectRouteFilter('all', this)">
+                <button type="button" class="route-chip <?= empty($destination) ? 'active' : '' ?>" data-dest="all">
                     All Routes <span class="chip-count"><?= (int)($total_active_count ?? count($schedules)) ?></span>
                 </button>
                 <?php foreach (($active_dest_counts ?? []) as $dest => $cnt): ?>
-                    <button type="button" class="route-chip <?= (strcasecmp($destination ?? '', $dest) === 0) ? 'active' : '' ?>" data-dest="<?= esc(strtolower($dest)) ?>" onclick="selectRouteFilter('<?= esc(strtolower($dest)) ?>', this)">
+                    <button type="button" class="route-chip <?= (strcasecmp($destination ?? '', $dest) === 0) ? 'active' : '' ?>" data-dest="<?= esc(strtolower($dest)) ?>">
                         <?= strtoupper(esc($dest)) ?> <span class="chip-count"><?= (int)$cnt ?></span>
                     </button>
                 <?php endforeach; ?>
@@ -1250,13 +1250,19 @@
         <script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
         <script src="<?= base_url('js/queue-sync.js?v=20260927_1') ?>"></script>
         <script>
-        var currentType = '<?= esc($vehicle_type) ?>';
-        var currentDest = '<?= esc($destination) ?>';
-        var currentSearch = '<?= esc($search ?? '') ?>';
+        var currentType = <?= json_encode((string) ($vehicle_type ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+        var currentDest = <?= json_encode(strtolower((string) ($destination ?? '')), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+        var currentSearch = <?= json_encode((string) ($search ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
         var _fetchPending = false;
+        var _scheduleFetchController = null;
+        var _scheduleRequestId = 0;
+        var _lastRenderedSchedules = null;
+        var _lastChipSignature = null;
 
         function selectRouteFilter(dest, btn) {
-            currentDest = (dest === 'all') ? '' : dest;
+            var nextDest = (dest === 'all') ? '' : dest;
+            if (nextDest === currentDest) return;
+            currentDest = nextDest;
 
             // Update chip active classes
             document.querySelectorAll('#routeFilterBar .route-chip').forEach(function(c) {
@@ -1284,7 +1290,7 @@
             // Instant client-side filter
             filterTableClientSide();
 
-            // Fetch live update with new filter
+            // Refresh in the background. The rows already respond immediately.
             fetchSchedulesStatus(true);
         }
 
@@ -1318,13 +1324,12 @@
         }
 
         function fetchSchedulesStatus(isUserAction) {
-            if (_fetchPending) return;
+            if (_fetchPending && isUserAction !== true) return;
+            if (_scheduleFetchController) _scheduleFetchController.abort();
+            var controller = new AbortController();
+            var requestId = ++_scheduleRequestId;
+            _scheduleFetchController = controller;
             _fetchPending = true;
-
-            var card = document.querySelector('.schedule-card');
-            if (isUserAction === true && card && window.GlobalLoader) {
-                GlobalLoader.showTableLoader(card, 'Loading schedules\u2026');
-            }
 
             var params = [];
             if (currentType) params.push('type=' + encodeURIComponent(currentType));
@@ -1333,24 +1338,24 @@
             params.push('_=' + Date.now());
             var fetchUrl = '<?= base_url('schedules/status') ?>?' + params.join('&');
 
-            fetch(fetchUrl)
+            fetch(fetchUrl, { signal: controller.signal })
             .then(function(response) {
                 if (!response.ok) throw new Error('Network error');
                 return response.json();
             })
             .then(function(data) {
+                if (requestId !== _scheduleRequestId) return;
                 renderSchedules(data.schedules, data.vehicle_types || []);
-                var badge = document.getElementById('scheduleCount');
-                if (badge) badge.innerText = (data.count !== undefined ? data.count : data.schedules.length) + ' Found';
+                filterTableClientSide();
                 syncDestinationOptions(data.destinations, data.active_dest_counts, data.total_active_count);
             })
             .catch(function(e) {
-                console.error('Fetch error:', e);
+                if (e.name !== 'AbortError' && requestId === _scheduleRequestId) console.error('Fetch error:', e);
             })
             .finally(function() {
-                _fetchPending = false;
-                if (card && window.GlobalLoader) {
-                    GlobalLoader.hideTableLoader(card);
+                if (requestId === _scheduleRequestId) {
+                    _fetchPending = false;
+                    _scheduleFetchController = null;
                 }
             });
         }
@@ -1361,8 +1366,11 @@
             if (!card) return;
 
             if (schedules.length === 0) {
-                card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">0 Found</span></div>'
-                    + '<div class="empty-state"><i class="far fa-calendar-times"></i><h4>No schedules available</h4><p>No active vehicles waiting or boarding right now.</p></div>';
+                if (_lastRenderedSchedules !== 'empty') {
+                    card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">0 Found</span></div>'
+                        + '<div class="empty-state"><i class="far fa-calendar-times"></i><h4>No schedules available</h4><p>No active vehicles waiting or boarding right now.</p></div>';
+                    _lastRenderedSchedules = 'empty';
+                }
                 return;
             }
 
@@ -1423,7 +1431,10 @@
                     '<td data-label="Status"><span class="status-badge ' + statusClass + '" id="sched-status-' + qid + '">' + s.status.toUpperCase() + '</span></td>' +
                 '</tr>';
             });
-            tbody.innerHTML = html;
+            if (_lastRenderedSchedules !== html) {
+                tbody.innerHTML = html;
+                _lastRenderedSchedules = html;
+            }
         }
 
         // Targeted in-place passenger DOM update without full table re-render
@@ -1477,22 +1488,42 @@
                 var activeDestNames = Object.keys(activeCounts).sort();
                 var activeDest = currentDest ? currentDest.toLowerCase() : 'all';
                 var totCount = (totalCount !== undefined) ? totalCount : 0;
+                var chipSignature = JSON.stringify([activeDest, totCount, activeDestNames.map(function(d) { return [d, activeCounts[d]]; })]);
+                if (chipSignature === _lastChipSignature) return;
+                _lastChipSignature = chipSignature;
 
-                var chipHtml = '<button type="button" class="route-chip' + (activeDest === 'all' ? ' active' : '') + '" data-dest="all" onclick="selectRouteFilter(\'all\', this)">'
-                    + 'All Routes <span class="chip-count">' + totCount + '</span></button>';
-
+                var fragment = document.createDocumentFragment();
+                function addChip(value, label, count) {
+                    var chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'route-chip' + (activeDest === value ? ' active' : '');
+                    chip.setAttribute('data-dest', value);
+                    chip.appendChild(document.createTextNode(label + ' '));
+                    var badge = document.createElement('span');
+                    badge.className = 'chip-count';
+                    badge.textContent = String(count);
+                    chip.appendChild(badge);
+                    fragment.appendChild(chip);
+                }
+                addChip('all', 'All Routes', totCount);
                 activeDestNames.forEach(function(d) {
-                    var isAct = (activeDest === d.toLowerCase());
-                    var cnt = activeCounts[d] || 0;
-                    chipHtml += '<button type="button" class="route-chip' + (isAct ? ' active' : '') + '" data-dest="' + d.toLowerCase() + '" onclick="selectRouteFilter(\'' + d.toLowerCase() + '\', this)">'
-                        + d.toUpperCase() + ' <span class="chip-count">' + cnt + '</span></button>';
+                    addChip(d.toLowerCase(), d.toUpperCase(), activeCounts[d] || 0);
                 });
-                bar.innerHTML = chipHtml;
+                bar.textContent = '';
+                bar.appendChild(fragment);
             }
         }
 
         // Initialize real-time sync & search input listeners
         document.addEventListener('DOMContentLoaded', function() {
+            var routeFilterBar = document.getElementById('routeFilterBar');
+            if (routeFilterBar) {
+                routeFilterBar.addEventListener('click', function(event) {
+                    var chip = event.target.closest('.route-chip');
+                    if (chip && routeFilterBar.contains(chip)) selectRouteFilter(chip.getAttribute('data-dest') || 'all', chip);
+                });
+            }
+
             function toggleGuestScheduleClear(val) {
                 var btn = document.getElementById('guest-schedule-clear-btn');
                 if (btn) {
