@@ -22,8 +22,9 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     width: 100%;
+    min-width: 0;
 }
 
 .rule-filter-label {
@@ -42,11 +43,19 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 4px;
 }
 
 .rule-filter-btn {
     display: inline-flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 7px;
     padding: 8px 18px;
@@ -101,6 +110,14 @@
 .rule-filter-btn.active .badge-count {
     background: rgba(255, 255, 255, 0.25);
     color: #ffffff;
+}
+
+@media (max-width: 600px) {
+    .rule-filter-left {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
 }
 
 .route-tag-pill {

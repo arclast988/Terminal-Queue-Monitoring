@@ -59,6 +59,32 @@
     font-weight: 600;
     color: var(--text-main, #1e293b);
 }
+.vt-check-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.vt-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 6px 10px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 9px;
+    color: var(--text-main, #1e293b);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.vt-select-all .form-check-input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+.vt-select-all .form-check-input:checked,
+.vt-select-all .form-check-input:indeterminate {
+    background-color: var(--primary, #b71c1c) !important;
+    border-color: var(--primary, #b71c1c) !important;
+}
 @media (max-width: 575.98px) {
     .vt-check-card {
         padding: 12px 14px;
@@ -146,9 +172,12 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label-modern d-block">Vehicle Types <span class="text-danger">*</span></label>
+                            <div class="vt-check-heading">
+                                <label class="form-label-modern mb-0">Vehicle Types <span class="text-danger">*</span></label>
+                                <label class="vt-select-all"><input type="checkbox" class="form-check-input" id="selectAllVehicleTypes" aria-controls="routeVehicleTypes"> Select All</label>
+                            </div>
                             <div class="form-text-modern mb-3"><i class="bi bi-info-circle me-1"></i>Select which vehicle types operate on this route. Fares can be assigned later in <strong>Fare Management</strong>.</div>
-                            <div class="row g-3">
+                            <div class="row g-3" id="routeVehicleTypes">
                                 <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                                     <?php
                                         $vtSlug = $vehicleType['slug'];
@@ -181,14 +210,29 @@
                     </form>
                     <script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        document.querySelectorAll('.vt-checkbox').forEach(function(cb) {
-                            cb.addEventListener('change', function() {
-                                var card = this.closest('.vt-check-card');
-                                if (card) {
-                                    card.classList.toggle('checked', this.checked);
-                                }
+                        var group = document.getElementById('routeVehicleTypes');
+                        var selectAll = document.getElementById('selectAllVehicleTypes');
+                        if (!group || !selectAll) return;
+                        var boxes = Array.from(group.querySelectorAll('.vt-checkbox:not(:disabled)'));
+                        function syncVehicleSelection() {
+                            var selected = 0;
+                            boxes.forEach(function(cb) {
+                                if (cb.checked) selected++;
+                                var card = cb.closest('.vt-check-card');
+                                if (card) card.classList.toggle('checked', cb.checked);
                             });
+                            selectAll.disabled = boxes.length === 0;
+                            selectAll.checked = boxes.length > 0 && selected === boxes.length;
+                            selectAll.indeterminate = selected > 0 && selected < boxes.length;
+                        }
+                        selectAll.addEventListener('change', function() {
+                            boxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+                            syncVehicleSelection();
                         });
+                        group.addEventListener('change', function(event) {
+                            if (event.target.classList.contains('vt-checkbox')) syncVehicleSelection();
+                        });
+                        syncVehicleSelection();
                     });
                     </script>
                 </div>

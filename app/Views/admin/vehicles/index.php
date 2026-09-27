@@ -90,10 +90,11 @@ $countInService = $countActive + $countMaintenance;
                 </button>
             </div>
             
-            <span class="filter-label-text">
-                <i class="bi bi-funnel me-1"></i>Filter:
-            </span>
-            
+            <div class="vehicle-filter-controls">
+                <span class="filter-label-text">
+                    <i class="bi bi-funnel me-1"></i>Filter:
+                </span>
+                <div class="vehicle-filter-strip" role="group" aria-label="Filter vehicles">
             <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterVehicles('all')">
                 <i class="bi bi-grid-3x3-gap-fill"></i> All
                 <span class="vf-count"><?= $countInService ?></span>
@@ -137,6 +138,8 @@ $countInService = $countActive + $countMaintenance;
                 <i class="bi bi-archive-fill"></i> Archived
                 <span class="vf-count"><?= $countArchived ?></span>
             </button>
+                </div>
+            </div>
         </div>
         <div id="filter-label" style="font-size:13px; color:var(--slate-500);">Showing all <strong><?= $countInService ?></strong> in-service vehicles</div>
     </div>
@@ -623,8 +626,15 @@ table:not(.selection-mode-active) .bulk-select-cell {
         position: relative;
     }
     #vehicles-table.selection-mode-active tbody tr.vehicle-row-selected {
-        background: #eff6ff !important;
-        border-color: #93c5fd !important;
+        background: var(--primary-soft, #fff1f2) !important;
+        border-color: var(--primary, #b71c1c) !important;
+    }
+    #vehicles-table .vehicle-row-checkbox:checked,
+    #select-all-vehicles:checked,
+    #table-head-select-all-vehicles:checked {
+        background-color: var(--primary, #b71c1c) !important;
+        border-color: var(--primary, #b71c1c) !important;
+        box-shadow: none !important;
     }
     @media (hover: hover) and (pointer: fine) {
         #vehicles-table tbody tr:not(.vehicle-row-selected):hover {
@@ -933,6 +943,39 @@ table:not(.selection-mode-active) .bulk-select-cell {
         .vehicle-register-form .vehicle-add-btn {
             width: 100%;
         }
+    }
+
+    .vehicle-filter-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1 1 480px;
+        min-width: 0;
+    }
+    .vehicle-filter-controls .filter-label-text {
+        flex: 0 0 auto;
+        width: auto !important;
+        margin: 0 !important;
+    }
+    .vehicle-filter-strip {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding-bottom: 4px;
+    }
+    .vehicle-filter-strip .vf-btn,
+    .vehicle-filter-strip .vf-divider {
+        flex: 0 0 auto !important;
+    }
+    @media (max-width: 768px) {
+        .vehicle-filter-controls { flex-basis: 100%; width: 100%; }
     }
 </style>
 

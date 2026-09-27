@@ -626,10 +626,10 @@
             border-bottom: 1px solid #e2e8f0;
             background: #f8fafc;
             flex-shrink: 0;
-            display: flex;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
             align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
         }
 
         .rules-filter-label {
@@ -648,10 +648,17 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            flex-wrap: wrap;
+            min-width: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            padding: 2px 0 5px;
         }
 
         .rules-route-chip {
+            flex: 0 0 auto;
             padding: 6px 14px;
             border-radius: 20px;
             border: 1.5px solid #e2e8f0;
@@ -927,7 +934,7 @@
             box-shadow: var(--shadow-sm);
             border: 1px solid #edf2f7;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
             gap: 10px;
             animation: fadeInUp 0.5s ease-out both;
@@ -938,7 +945,14 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            padding-bottom: 4px;
         }
 
         .filter-label {
@@ -951,6 +965,7 @@
         }
 
         .filter-chip {
+            flex: 0 0 auto;
             padding: 7px 16px;
             border-radius: 20px;
             border: 1.5px solid #e2e8f0;
@@ -1889,6 +1904,7 @@
             .rules-filter-bar {
                 padding: 10px 14px;
                 gap: 8px;
+                grid-template-columns: minmax(0, 1fr);
             }
 
             .rules-route-chip {
@@ -2222,10 +2238,10 @@
                     <span class="label">Operating Routes</span>
                 </div>
             </a>
-            <button type="button" class="stat-card stat-card-button" id="routeAverageCard" onclick="openRouteAverageModal()" aria-haspopup="dialog" aria-controls="routeAverageModal">
+            <button type="button" class="stat-card stat-card-button" id="routeAverageCard" onclick="openRouteAverageModal()" aria-haspopup="dialog" aria-controls="routeAverageModal" aria-label="View <?= count($departure_rules ?? []) ?> departure rules">
                 <div class="stat-icon-wrapper si-purple"><i class="fas fa-clock"></i></div>
                 <div class="stat-info">
-                    <span class="value">View</span>
+                    <span class="value" id="departure-rule-count"><?= count($departure_rules ?? []) ?></span>
                     <span class="label">Departure Rules</span>
                 </div>
             </button>
@@ -2467,31 +2483,29 @@
             ?>
 
             <!-- Route Filter Bar (only shown when specific route rules exist) -->
-            <?php if (!empty($destMap)): ?>
-            <div class="rules-filter-bar">
+            <div class="rules-filter-bar" id="rulesFilterBar" <?= empty($destMap) ? 'style="display:none"' : '' ?>>
                 <span class="rules-filter-label">
                     <i class="fas fa-filter"></i> Route:
                 </span>
-                <div class="rules-filter-chips" id="rulesRouteFilterGroup">
-                    <button type="button" class="rules-route-chip active" data-route="all">
+                <div class="rules-filter-chips" id="rulesRouteFilterGroup" role="group" aria-label="Filter departure rules by route">
+                    <button type="button" class="rules-route-chip active" data-route="all" aria-pressed="true">
                         <i class="fas fa-route"></i> All Routes
                         <span class="chip-count"><?= $totalRulesCount ?></span>
                     </button>
                     <?php foreach ($destMap as $destName => $cnt): ?>
-                        <button type="button" class="rules-route-chip" data-route="<?= esc(strtolower($destName), 'attr') ?>">
+                        <button type="button" class="rules-route-chip" data-route="<?= esc(strtolower($destName), 'attr') ?>" aria-pressed="false">
                             <i class="fas fa-map-marker-alt"></i> <?= esc($destName) ?>
                             <span class="chip-count"><?= $cnt ?></span>
                         </button>
                     <?php endforeach; ?>
                     <?php if ($generalCount > 0): ?>
-                        <button type="button" class="rules-route-chip" data-route="general">
+                        <button type="button" class="rules-route-chip" data-route="general" aria-pressed="false">
                             <i class="fas fa-sliders-h"></i> Terminal Default
                             <span class="chip-count"><?= $generalCount ?></span>
                         </button>
                     <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?>
 
             <div class="route-average-body">
                 <div class="route-average-list" id="routeAverageList">
@@ -2562,6 +2576,7 @@
         modal.classList.add('is-open');
         modal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';
+        if (typeof scheduleFetchStatus === 'function') scheduleFetchStatus(0);
 
         window.requestAnimationFrame(function() {
             var closeButton = document.getElementById('routeAverageClose');
@@ -2608,6 +2623,70 @@
     // Departure Rules route filter
     var activeRulesFilter = 'all';
 
+    function ruleDestinationKey(rule) {
+        var dest = rule.route_destination;
+        if (!dest && rule.route_scope) {
+            var separator = rule.route_scope.indexOf('→') !== -1 ? '→' : (rule.route_scope.indexOf('->') !== -1 ? '->' : null);
+            if (separator) {
+                var parts = rule.route_scope.split(separator);
+                dest = parts[parts.length - 1].trim();
+            }
+        }
+        var key = String(dest || '').trim().toLowerCase();
+        return key && key !== 'all routes' && key !== 'all' ? key : 'general';
+    }
+
+    function renderRuleFilterChips(rows) {
+        var bar = document.getElementById('rulesFilterBar');
+        var group = document.getElementById('rulesRouteFilterGroup');
+        if (!bar || !group) return;
+
+        var counts = Object.create(null);
+        counts.all = rows.length;
+        counts.general = 0;
+        rows.forEach(function(rule) {
+            var key = ruleDestinationKey(rule);
+            counts[key] = (counts[key] || 0) + 1;
+        });
+        var destinations = Object.keys(counts).filter(function(key) { return key !== 'all' && key !== 'general'; }).sort();
+        if (destinations.length === 0) {
+            activeRulesFilter = 'all';
+            group.replaceChildren();
+            bar.style.display = 'none';
+            return;
+        }
+        if (activeRulesFilter !== 'all' && !Object.prototype.hasOwnProperty.call(counts, activeRulesFilter)) {
+            activeRulesFilter = 'all';
+        }
+
+        function chip(key, label, iconName) {
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'rules-route-chip' + (activeRulesFilter === key ? ' active' : '');
+            button.dataset.route = key;
+            button.setAttribute('aria-pressed', activeRulesFilter === key ? 'true' : 'false');
+            var icon = document.createElement('i');
+            icon.className = 'fas ' + iconName;
+            icon.setAttribute('aria-hidden', 'true');
+            button.appendChild(icon);
+            button.appendChild(document.createTextNode(' ' + label));
+            var badge = document.createElement('span');
+            badge.className = 'chip-count';
+            badge.textContent = counts[key];
+            button.appendChild(badge);
+            return button;
+        }
+
+        var previousScroll = group.scrollLeft;
+        var fragment = document.createDocumentFragment();
+        fragment.appendChild(chip('all', 'All Routes', 'fa-route'));
+        destinations.forEach(function(key) { fragment.appendChild(chip(key, key.toUpperCase(), 'fa-map-marker-alt')); });
+        if (counts.general > 0) fragment.appendChild(chip('general', 'Terminal Default', 'fa-sliders-h'));
+        group.replaceChildren(fragment);
+        group.scrollLeft = previousScroll;
+        bar.style.removeProperty('display');
+    }
+
     function applyDepartureRulesFilter() {
         var items = document.querySelectorAll('#routeAverageList .route-average-item');
         var visible = 0;
@@ -2648,8 +2727,10 @@
             // Update active chip styles
             filterGroup.querySelectorAll('.rules-route-chip').forEach(function(c) {
                 c.classList.remove('active');
+                c.setAttribute('aria-pressed', 'false');
             });
             chip.classList.add('active');
+            chip.setAttribute('aria-pressed', 'true');
 
             activeRulesFilter = chip.dataset.route || 'all';
             applyDepartureRulesFilter();
@@ -2762,6 +2843,7 @@
 
         // Fingerprint cache to avoid flickering DOM rewrites when data hasn't changed
         var _lastQueueFingerprint = '';
+        var _lastQueueFilterFingerprint = '';
         var _lastDepartureRulesFingerprint = makeFingerprint(departureRules);
 
         function makeFingerprint(arr) {
@@ -2780,6 +2862,7 @@
                 list.appendChild(empty);
                 var noRes = document.getElementById('rulesNoResults');
                 if (noRes) noRes.style.display = 'none';
+                renderRuleFilterChips([]);
                 return;
             }
 
@@ -2787,18 +2870,7 @@
                 var item = document.createElement('div');
                 item.className = 'route-average-item' + (rule.is_active_now ? ' is-active-rule' : '');
 
-                var dest = rule.route_destination;
-                if (!dest && rule.route_scope) {
-                    if (rule.route_scope.indexOf('→') !== -1) {
-                        var parts = rule.route_scope.split('→');
-                        dest = parts[parts.length - 1].trim();
-                    } else if (rule.route_scope.indexOf('->') !== -1) {
-                        var parts = rule.route_scope.split('->');
-                        dest = parts[parts.length - 1].trim();
-                    }
-                }
-                var destSlug = (dest && dest.toLowerCase() !== 'all routes') ? dest.toLowerCase() : 'general';
-                item.setAttribute('data-rule-dest', destSlug);
+                item.setAttribute('data-rule-dest', ruleDestinationKey(rule));
                 item.setAttribute('data-rule-route', rule.route_scope || 'All Routes');
 
                 var leftWrap = document.createElement('div');
@@ -2813,7 +2885,12 @@
 
                 var time = document.createElement('div');
                 time.className = 'route-average-route';
-                time.innerHTML = '<i class="fas fa-clock" style="color:var(--primary);margin-right:6px;font-size:12px;"></i>' + (rule.time_range || (rule.time_from_formatted + ' – ' + rule.time_to_formatted));
+                var timeIcon = document.createElement('i');
+                timeIcon.className = 'fas fa-clock';
+                timeIcon.style.cssText = 'color:var(--primary);margin-right:6px;font-size:12px;';
+                timeIcon.setAttribute('aria-hidden', 'true');
+                time.appendChild(timeIcon);
+                time.appendChild(document.createTextNode(rule.time_range || (rule.time_from_formatted + ' – ' + rule.time_to_formatted)));
 
                 timeRow.appendChild(time);
 
@@ -2840,32 +2917,7 @@
                 list.appendChild(item);
             });
 
-            // Sync chip counts if filter group exists
-            var filterGroup = document.getElementById('rulesRouteFilterGroup');
-            if (filterGroup && rows && rows.length > 0) {
-                var counts = { all: rows.length, general: 0 };
-                rows.forEach(function(r) {
-                    var d = r.route_destination;
-                    if (!d && r.route_scope) {
-                        if (r.route_scope.indexOf('→') !== -1) {
-                            var p = r.route_scope.split('→');
-                            d = p[p.length - 1].trim();
-                        } else if (r.route_scope.indexOf('->') !== -1) {
-                            var p = r.route_scope.split('->');
-                            d = p[p.length - 1].trim();
-                        }
-                    }
-                    var s = (d && d.toLowerCase() !== 'all routes') ? d.toLowerCase() : 'general';
-                    counts[s] = (counts[s] || 0) + 1;
-                });
-                filterGroup.querySelectorAll('.rules-route-chip').forEach(function(chip) {
-                    var routeKey = chip.dataset.route;
-                    var badge = chip.querySelector('.chip-count');
-                    if (badge && counts[routeKey] !== undefined) {
-                        badge.textContent = counts[routeKey];
-                    }
-                });
-            }
+            renderRuleFilterChips(rows);
 
             // Re-apply active filter to maintain user's view during real-time updates
             if (typeof applyDepartureRulesFilter === 'function') {
@@ -3267,7 +3319,12 @@
                         countRoutes.innerText = uniqueDests.length;
                     }
 
-                    if (data.departure_rules) {
+                    if (Array.isArray(data.departure_rules)) {
+                        var ruleCount = data.departure_rules.length;
+                        var ruleCountEl = document.getElementById('departure-rule-count');
+                        var ruleCard = document.getElementById('routeAverageCard');
+                        if (ruleCountEl && ruleCountEl.textContent !== String(ruleCount)) ruleCountEl.textContent = ruleCount;
+                        if (ruleCard) ruleCard.setAttribute('aria-label', 'View ' + ruleCount + ' departure rules');
                         var departureRulesFP = makeFingerprint(data.departure_rules);
                         if (departureRulesFP !== _lastDepartureRulesFingerprint) {
                             _lastDepartureRulesFingerprint = departureRulesFP;
@@ -3447,23 +3504,41 @@
                             var destGroup = document.getElementById('filterDestGroup');
                             if (destGroup && data.active_queue) {
                                 var dests = [];
-                                var destCounts = {};
+                                var destCounts = Object.create(null);
                                 data.active_queue.forEach(function (it) {
                                     if (it.destination) {
                                         if (dests.indexOf(it.destination) === -1) dests.push(it.destination);
                                         destCounts[it.destination] = (destCounts[it.destination] || 0) + 1;
                                     }
                                 });
-                                var prevActive = activeFilterValue;
                                 var totalCount = data.active_queue.length;
-                                var html = '<button class="filter-chip' + (prevActive === 'all' ? ' active' : '') + '" data-filter="all" data-type="all">All Routes <span class="chip-count">' + totalCount + '</span></button>';
-                                dests.forEach(function (d) {
-                                    var isActive = prevActive === d.toLowerCase();
-                                    var count = destCounts[d] || 0;
-                                    html += '<button class="filter-chip' + (isActive ? ' active' : '') + '" data-filter="' + d.toLowerCase() + '" data-type="destination">' + d.toUpperCase() + ' <span class="chip-count">' + count + '</span></button>';
-                                });
-                                if (destGroup.innerHTML !== html) {
-                                    destGroup.innerHTML = html;
+                                var filterFingerprint = makeFingerprint([dests, destCounts, totalCount]);
+                                if (filterFingerprint !== _lastQueueFilterFingerprint) {
+                                    _lastQueueFilterFingerprint = filterFingerprint;
+                                    if (activeFilterType === 'destination' && !dests.some(function(d) { return d.toLowerCase() === activeFilterValue; })) {
+                                        activeFilterType = 'all';
+                                        activeFilterValue = 'all';
+                                    }
+                                    function makeQueueFilterChip(key, type, label, count, isActive) {
+                                        var button = document.createElement('button');
+                                        button.type = 'button';
+                                        button.className = 'filter-chip' + (isActive ? ' active' : '');
+                                        button.dataset.filter = key;
+                                        button.dataset.type = type;
+                                        button.appendChild(document.createTextNode(label + ' '));
+                                        var badge = document.createElement('span');
+                                        badge.className = 'chip-count';
+                                        badge.textContent = count;
+                                        button.appendChild(badge);
+                                        return button;
+                                    }
+                                    var fragment = document.createDocumentFragment();
+                                    fragment.appendChild(makeQueueFilterChip('all', 'all', 'All Routes', totalCount, activeFilterType === 'all'));
+                                    dests.forEach(function(d) {
+                                        var key = d.toLowerCase();
+                                        fragment.appendChild(makeQueueFilterChip(key, 'destination', d.toUpperCase(), destCounts[d] || 0, activeFilterType === 'destination' && activeFilterValue === key));
+                                    });
+                                    destGroup.replaceChildren(fragment);
                                     initFilterChips();
                                 }
                             }
