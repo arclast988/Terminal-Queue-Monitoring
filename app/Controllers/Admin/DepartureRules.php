@@ -29,6 +29,21 @@ class DepartureRules extends BaseController
         return ($role === 'staff') ? 'staff' : 'admin';
     }
 
+    private function normalizeReturnRoute($route): string
+    {
+        $route = is_string($route) ? strtolower(trim($route)) : '';
+        return $route !== '' && strlen($route) <= 100 && preg_match('/^[\p{L}\p{N} _.-]+$/u', $route)
+            ? $route
+            : 'all';
+    }
+
+    private function listUrlForRoute($route): string
+    {
+        $path = '/' . $this->getPrefix() . '/departure-rules';
+        $route = $this->normalizeReturnRoute($route);
+        return $route === 'all' ? $path : $path . '?route=' . rawurlencode($route);
+    }
+
     /**
      * Unique destinations for the departure-rule dropdown.
      * Returns one entry per destination (with a representative route_id),
@@ -134,6 +149,7 @@ class DepartureRules extends BaseController
     public function create()
     {
         $selectedRouteId = $this->request->getGet('route_id');
+        $returnRoute = $this->normalizeReturnRoute($this->request->getGet('return_route'));
 
         $data = [
             'title'           => 'Add Departure Rule',
@@ -141,6 +157,8 @@ class DepartureRules extends BaseController
             'terminals'       => $this->terminalModel->findAll(),
             'routes'          => $this->getRoutesForDropdown(),
             'selectedRouteId' => $selectedRouteId,
+            'returnRoute'     => $returnRoute,
+            'listUrl'         => $this->listUrlForRoute($returnRoute),
             'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label')->findAll(),
         ];
         return view('admin/departure-rules/create', $data);
@@ -230,7 +248,7 @@ class DepartureRules extends BaseController
         (new \App\Models\QueueModel())->recalculateSchedule();
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
 
-        return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule added successfully.');
+        return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule added successfully.');
     }
 
     public function edit($id)
@@ -253,7 +271,10 @@ class DepartureRules extends BaseController
             'terminals'     => $this->terminalModel->findAll(),
             'routes'        => $this->getRoutesForDropdown(),
             'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label')->findAll(),
+            'returnRoute'   => $this->normalizeReturnRoute($this->request->getGet('return_route')),
         ];
+
+        $data['listUrl'] = $this->listUrlForRoute($data['returnRoute']);
 
         return view('admin/departure-rules/edit', $data);
     }
@@ -362,7 +383,7 @@ class DepartureRules extends BaseController
         (new \App\Models\QueueModel())->recalculateSchedule();
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
 
-        return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule updated successfully.');
+        return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule updated successfully.');
     }
 
     public function delete($id)
@@ -383,8 +404,8 @@ class DepartureRules extends BaseController
             $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
             (new \App\Models\QueueModel())->recalculateSchedule();
             $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
-            return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('success', 'Departure rule "' . $ruleTime . $ruleLabel . '" deleted successfully.');
+            return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule "' . $ruleTime . $ruleLabel . '" deleted successfully.');
         }
-        return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Failed to delete rule.');
+        return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('error', 'Failed to delete rule.');
     }
 }

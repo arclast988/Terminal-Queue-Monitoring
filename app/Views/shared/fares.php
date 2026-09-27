@@ -280,7 +280,6 @@ body.admin-theme .fare-search-group:focus-within {
     color: #b91c1c;
     margin-top: 6px;
     box-sizing: border-box;
-    animation: fadeIn 0.2s ease-in-out;
 }
 .route-fare-inline-alert i {
     font-size: 13.5px;
@@ -1659,12 +1658,12 @@ if (addFareModalEl) {
                 cbs.forEach(function(cb) { cb.checked = false; });
             }
         }
-    });
-
-    addFareModalEl.addEventListener('shown.bs.modal', function() {
         filterAddDestinationOptions();
         validateAddFareForm();
         syncAddDestinationUI();
+    });
+
+    addFareModalEl.addEventListener('shown.bs.modal', function() {
         var modalBody = addFareModalEl.querySelector('.modal-body');
         if (modalBody) modalBody.scrollTop = 0;
 
@@ -1758,33 +1757,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     if (matched) {
                         destSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                        destSelect.dispatchEvent(new Event('input', { bubbles: true }));
-                        syncAddDestinationUI();
-                        validateAddFareForm();
                     }
                 }
             }
 
-            // Guaranteed focus listener when modal finishes opening
+            // Focus once after the modal is stable on desktop. Touch devices
+            // keep focus on the modal to avoid keyboard and viewport jumps.
             const onShownFocus = function() {
                 addModalEl.removeEventListener('shown.bs.modal', onShownFocus);
-                setTimeout(function() { focusAddFareInput(true); }, 50);
-                setTimeout(function() { focusAddFareInput(true); }, 150);
-                setTimeout(function() { focusAddFareInput(true); }, 300);
+                if (window.matchMedia('(min-width: 769px) and (pointer: fine)').matches) {
+                    focusAddFareInput(false);
+                }
             };
             addModalEl.addEventListener('shown.bs.modal', onShownFocus);
 
             bsModal.show();
-
-            setTimeout(() => {
-                syncAddDestinationUI();
-                validateAddFareForm();
-                const modalBody = addModalEl.querySelector('.modal-body');
-                if (modalBody) modalBody.scrollTop = 0;
-                focusAddFareInput(true);
-            }, 350);
-            setTimeout(function() { focusAddFareInput(true); }, 500);
-            setTimeout(function() { focusAddFareInput(true); }, 750);
 
             if (window.history.replaceState) {
                 window.history.replaceState({}, document.title, window.location.pathname);

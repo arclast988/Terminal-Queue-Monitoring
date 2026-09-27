@@ -227,7 +227,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
         <p class="text-muted mb-0">Update departure schedule rule</p>
     </div>
     <div class="mt-3 mt-md-0">
-        <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+        <a href="<?= esc($listUrl) ?>" class="btn btn-modern btn-modern-outline">
             <i class="bi bi-arrow-left"></i> Back to List
         </a>
     </div>
@@ -272,6 +272,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                 <div class="card-body-modern">
                     <form action="<?= base_url($prefix . '/departure-rules/update/' . $rule['id']) ?>" method="post" id="departureRuleForm" data-no-change-guard>
                         <?= csrf_field() ?>
+                        <input type="hidden" name="return_route" value="<?= esc($returnRoute) ?>">
 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
                         <div class="mb-4">
@@ -354,7 +355,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                             <button type="submit" class="btn btn-modern btn-modern-primary" id="btn-update-rule">
                                 <i class="bi bi-save"></i> Update Rule
                             </button>
-                            <a href="<?= base_url($prefix . '/departure-rules') ?>" class="btn btn-modern btn-modern-outline">
+                            <a href="<?= esc($listUrl) ?>" class="btn btn-modern btn-modern-outline">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
                         </div>

@@ -389,11 +389,12 @@
                                 <?php if (session()->get('role') !== 'staff'): ?>
                                 <td data-label="Action">
                                     <div class="d-flex gap-2 justify-content-end">
-                                        <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
+                                        <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm rule-edit-link" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
                                         <form id="delete-rule-form-<?= $rule['id'] ?>" action="<?= base_url($prefix . '/departure-rules/delete/'.$rule['id']) ?>" method="post" class="d-inline">
                                             <?= csrf_field() ?>
+                                            <input type="hidden" name="return_route" class="rule-return-route" value="all">
                                             <button type="button" class="btn-modern btn-modern-sm btn-action-delete" title="Delete"
                                                 onclick="showDeleteRuleModal({
                                                     formId: 'delete-rule-form-<?= $rule['id'] ?>',
@@ -456,6 +457,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnAddForRoute = document.getElementById('btn-add-for-route');
     const baseAddUrl = "<?= base_url($prefix . '/departure-rules/create') ?>";
 
+    function addUrlForFilter(routeId, filterName) {
+        const url = new URL(baseAddUrl, window.location.href);
+        if (routeId) url.searchParams.set('route_id', routeId);
+        url.searchParams.set('return_route', filterName);
+        return url.toString();
+    }
+
     function applyFilter(filterName, routeId) {
         let visibleCount = 0;
 
@@ -511,9 +519,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (emptyFilterText) {
                 emptyFilterText.textContent = `No departure rules configured for ${routeDisplayName}. Default wait time of 30 minutes will be used.`;
             }
-            if (btnAddForRoute) {
-                btnAddForRoute.href = routeId ? `${baseAddUrl}?route_id=${routeId}` : baseAddUrl;
-            }
         } else if (emptyFilterRow) {
             emptyFilterRow.style.setProperty('display', 'none', 'important');
             emptyFilterRow.classList.add('d-none');
@@ -529,13 +534,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        if (btnAddRule) {
-            if (routeId) {
-                btnAddRule.href = `${baseAddUrl}?route_id=${routeId}`;
-            } else {
-                btnAddRule.href = baseAddUrl;
-            }
-        }
+        if (btnAddRule) btnAddRule.href = addUrlForFilter(routeId, filterName);
+        if (btnAddForRoute) btnAddForRoute.href = addUrlForFilter(routeId, filterName);
+        document.querySelectorAll('.rule-edit-link').forEach(link => {
+            const editUrl = new URL(link.href, window.location.href);
+            editUrl.searchParams.set('return_route', filterName);
+            link.href = editUrl.toString();
+        });
+        document.querySelectorAll('.rule-return-route').forEach(input => {
+            input.value = filterName;
+        });
 
         // Update URL query parameter without page reload
         const url = new URL(window.location.href);
@@ -559,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const initialUrl = new URL(window.location.href);
     const initialRoute = initialUrl.searchParams.get('route');
     if (initialRoute) {
-        const matchingBtn = document.querySelector(`.rule-filter-btn[data-route-filter="${initialRoute.toLowerCase()}"]`);
+        const matchingBtn = Array.from(filterBtns).find(btn => btn.getAttribute('data-route-filter') === initialRoute.toLowerCase());
         if (matchingBtn) {
             matchingBtn.click();
         }
