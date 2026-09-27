@@ -881,7 +881,8 @@
 
                     QueueWS.init({
                         onQueueUpdate: wsHandler,
-                        onVehicleTypeUpdate: wsHandler,
+                        // QueueWS also routes vehicle_type_update through
+                        // onQueueUpdate, so a second callback duplicates the refresh.
                         onFareUpdate: wsHandler,
                         onAnnouncementUpdate: wsHandler,
                         onConnected: function(connectionInfo) {

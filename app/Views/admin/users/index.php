@@ -66,13 +66,13 @@ if (!isset($countActive)) {
         <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
             <div class="user-search-group position-relative">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." onkeyup="filterUsers(currentFilter)" oninput="toggleUserClearBtn(this.value)" autocomplete="off">
+                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." oninput="filterUsers(currentFilter)" autocomplete="off">
                 <button type="button" class="btn-clear-search" id="clear-user-search" onclick="clearUserSearch()" style="display: none !important;" title="Clear search">
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
             </div>
             
-            <div class="user-filter-bar d-flex flex-wrap align-items-center gap-2">
+            <div class="user-filter-bar d-flex flex-wrap align-items-center gap-2" role="group" aria-label="Filter users by role or status">
                 <span class="user-filter-heading d-none d-sm-inline-flex align-items-center" style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
                     <i class="bi bi-funnel me-1" style="font-size: 14px;"></i>Filter:
                 </span>
@@ -954,6 +954,27 @@ table:not(.selection-mode-active) .bulk-select-cell {
         color: #fff !important;
     }
 
+    @media (max-width: 991.98px) {
+        .user-filter-bar {
+            min-width: 0;
+            max-width: 100%;
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-inline: contain;
+            scrollbar-width: thin;
+            padding-bottom: 4px;
+        }
+        .user-filter-bar .vf-btn {
+            flex: 0 0 auto !important;
+        }
+        .user-filter-bar .user-filter-heading,
+        .user-filter-bar .vf-divider {
+            display: none !important;
+        }
+    }
+
     .badge-status-archived {
         display: inline-flex;
         align-items: center;
@@ -998,14 +1019,21 @@ table:not(.selection-mode-active) .bulk-select-cell {
     }
 
     function filterUsers(filter) {
+        const filterChanged = currentFilter !== filter;
         currentFilter = filter;
         const rows = document.querySelectorAll('#users-table tbody tr[data-role]');
         const filterLabel = document.getElementById('filter-label');
 
         // Update active button styling
-        document.querySelectorAll('.vf-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.user-filter-bar .vf-btn').forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-pressed', 'false');
+        });
         const activeBtn = document.getElementById('filter-btn-' + filter);
-        if (activeBtn) activeBtn.classList.add('active');
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.setAttribute('aria-pressed', 'true');
+        }
 
         // Filter label map
         const labelMap = {
@@ -1066,13 +1094,13 @@ table:not(.selection-mode-active) .bulk-select-cell {
         } else {
             newUrl.searchParams.set('tab', filter);
         }
-        window.history.replaceState({}, '', newUrl);
+        if (newUrl.href !== window.location.href) window.history.replaceState({}, '', newUrl);
 
         // Update single deactivate forms redirect_tab
         document.querySelectorAll('.user-deact-redirect-tab').forEach(el => el.value = filter);
 
-        // Reset selection & exit select mode whenever filter changes
-        toggleUserSelectMode(false);
+        // Changing a filter resets the batch selection; typing in search does not.
+        if (filterChanged) toggleUserSelectMode(false);
 
         // Update filter label text
         if (filter === 'all') {

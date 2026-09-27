@@ -1248,7 +1248,7 @@
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
         <script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
-        <script src="<?= base_url('js/queue-sync.js?v=20260927_1') ?>"></script>
+        <script src="<?= base_url('js/queue-sync.js?v=20260928_1') ?>"></script>
         <script>
         var currentType = <?= json_encode((string) ($vehicle_type ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
         var currentDest = <?= json_encode(strtolower((string) ($destination ?? '')), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;

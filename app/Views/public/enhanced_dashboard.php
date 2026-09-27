@@ -2741,7 +2741,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/queue-sync.js?v=20260927_1') ?>"></script>
+    <script src="<?= base_url('js/queue-sync.js?v=20260928_1') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;
@@ -3632,21 +3632,10 @@
             }
         });
 
-        // QueueSync owns passenger delivery. The document event is intentionally
-        // ignored for passenger changes because QueueWS also invokes QueueSync's
-        // callback for the same message.
-        document.addEventListener('pttm:ws-queue_update', function(e) {
-            var detail = (e && e.detail) ? e.detail : {};
-            var data = detail.data || detail;
-            if (data && (data.action === 'passenger_change' || data.type === 'passenger_change')) {
-                return;
-            }
-            scheduleFetchStatus(300);
-        });
-        document.addEventListener('pttm:ws-vehicle_type_update', function() { scheduleFetchStatus(300); });
-        document.addEventListener('pttm:ws-fare_update', function() { scheduleFetchStatus(300); });
+        // QueueSync already refreshes for queue, vehicle type, fare, and
+        // announcement messages. Keep document listeners only for messages
+        // that QueueSync does not handle.
         document.addEventListener('pttm:ws-operational_settings_updated', function() { scheduleFetchStatus(300); });
-        document.addEventListener('pttm:ws-announcement_update', function() { scheduleFetchStatus(300); });
         document.addEventListener('pttm:ws-branding_updated', function() { scheduleFetchStatus(300); });
 
         window.addEventListener('beforeunload', function() {
