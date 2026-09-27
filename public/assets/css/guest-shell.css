@@ -1535,7 +1535,7 @@ footer {
         display: none !important;
     }
 }
-.guest-page-search {
+body.guest-theme .hero .search-bar.guest-page-search {
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
@@ -1544,7 +1544,7 @@ footer {
     box-sizing: border-box;
 }
 
-.guest-page-search .guest-page-search-icon {
+body.guest-theme .hero .guest-page-search .guest-page-search-icon {
     display: inline-flex;
     flex: 0 0 20px;
     align-items: center;
@@ -1558,7 +1558,7 @@ footer {
     line-height: 1;
 }
 
-.guest-page-search input {
+body.guest-theme .hero .guest-page-search input {
     flex: 1 1 auto !important;
     min-width: 0 !important;
     width: 100% !important;
@@ -1572,8 +1572,10 @@ footer {
     text-align: left;
 }
 
-.guest-page-search #guest-fare-clear-btn,
-.guest-page-search #guest-schedule-clear-btn {
+body.guest-theme .hero .guest-page-search #guest-fare-clear-btn,
+body.guest-theme .hero .guest-page-search #guest-schedule-clear-btn,
+body.guest-theme .hero .guest-page-search #guest-hero-clear-btn,
+body.guest-theme .hero .guest-page-search #guest-results-clear-btn {
     flex: 0 0 32px;
     width: 32px;
     height: 32px;
@@ -1583,9 +1585,33 @@ footer {
     justify-content: center;
 }
 
+body.guest-theme .hero .guest-page-search button[type="submit"] {
+    flex-shrink: 0;
+    height: 40px !important;
+    padding: 0 18px !important;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary, #b71c1c);
+    color: var(--on-primary, #ffffff);
+    font-size: 13px !important;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+body.guest-theme .hero .guest-page-search button[type="submit"]:hover {
+    background: var(--primary-dark, #8b0000);
+}
+
 @media (max-width: 420px) {
-    .guest-page-search {
+    body.guest-theme .hero .search-bar.guest-page-search {
         min-height: 48px;
         padding: 5px 12px !important;
+    }
+
+    body.guest-theme .hero .guest-page-search button[type="submit"] {
+        height: 36px !important;
+        padding: 0 12px !important;
+        font-size: 12px !important;
     }
 }

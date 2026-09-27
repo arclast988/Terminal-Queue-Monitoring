@@ -828,18 +828,20 @@
         <p>Find and track your vehicle information below.</p>
 
         <div class="search-container">
-            <form method="get" action="<?= base_url('search') ?>" class="search-bar" style="position: relative;">
+            <form method="get" action="<?= base_url('search') ?>" class="search-bar guest-page-search" style="position: relative;">
+                <i class="fas fa-search guest-page-search-icon" aria-hidden="true"></i>
                 <input
                     type="text"
                     name="q"
-                    placeholder="Search by Plate Number, Driver Name, or Destination..."
+                    placeholder="Plate, driver, or place"
+                    aria-label="Search vehicle status"
                     value="<?= esc($search) ?>"
                     autocomplete="off"
-                    autofocus
+                    <?= empty($search) ? 'autofocus' : '' ?>
                     id="guest-results-search-input"
                     oninput="toggleGuestResultsClear(this.value)"
                 >
-                <button type="button" class="guest-clear-search-btn" id="guest-results-clear-btn" onclick="clearGuestResultsSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search">
+                <button type="button" class="guest-clear-search-btn" id="guest-results-clear-btn" onclick="clearGuestResultsSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search" aria-label="Clear vehicle search">
                     <i class="fas fa-times-circle"></i>
                 </button>
                 <button type="submit">SEARCH</button>

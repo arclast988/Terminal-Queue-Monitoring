@@ -2194,9 +2194,10 @@
         <p>Monitor arrivals, departures, and current queue positions seamlessly from your device.</p>
 
         <div class="search-container">
-            <form action="<?= base_url('search') ?>" method="get" class="search-bar" style="position: relative;">
-                <input type="text" name="q" id="guest-hero-search-input" placeholder="Search by Plate Number, Destination, or Driver..." required autocomplete="off" oninput="toggleGuestHeroClear(this.value)">
-                <button type="button" class="guest-clear-search-btn" id="guest-hero-clear-btn" onclick="clearGuestHeroSearch()" style="display: none !important;" title="Clear search">
+            <form action="<?= base_url('search') ?>" method="get" class="search-bar guest-page-search" style="position: relative;">
+                <i class="fas fa-search guest-page-search-icon" aria-hidden="true"></i>
+                <input type="text" name="q" id="guest-hero-search-input" placeholder="Plate, driver, or place" aria-label="Search vehicle status" required autocomplete="off" oninput="toggleGuestHeroClear(this.value)">
+                <button type="button" class="guest-clear-search-btn" id="guest-hero-clear-btn" onclick="clearGuestHeroSearch()" style="display: none !important;" title="Clear search" aria-label="Clear vehicle search">
                     <i class="fas fa-times-circle"></i>
                 </button>
                 <button type="submit">TRACK STATUS</button>
