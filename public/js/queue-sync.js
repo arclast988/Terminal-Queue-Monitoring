@@ -162,21 +162,18 @@
 
     /* ── Generic AJAX page-refresh ── */
 
-    function sanitizeHtml(html) {
-        if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
-            return DOMPurify.sanitize(html, { ADD_ATTR: ['style'] });
-        }
-        return html;
-    }
-
     function replaceElementChildrenSafely(targetEl, source, isTableBody) {
         if (!targetEl) return;
 
-        // Fast & faithful path: If source is an Element/Node from DOMParser (same-origin, authenticated HTML)
+        // DOMParser is inert only until nodes are inserted into the live page.
+        // Sanitize the detached clone before moving any refreshed content.
         if (source && typeof source === 'object' && source.nodeType) {
+            if (typeof DOMPurify === 'undefined' || !DOMPurify.sanitize) return;
+            var cleanSource = DOMPurify.sanitize(source.cloneNode(true), { IN_PLACE: true, ADD_ATTR: ['style'] });
+            if (!cleanSource) return;
             var frag = document.createDocumentFragment();
-            while (source.firstChild) {
-                frag.appendChild(source.firstChild);
+            while (cleanSource.firstChild) {
+                frag.appendChild(cleanSource.firstChild);
             }
             if (typeof targetEl.replaceChildren === 'function') {
                 targetEl.replaceChildren(frag);
@@ -405,7 +402,10 @@
             method: 'GET',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
         })
-        .then(function(r) { return r.text(); })
+        .then(function(r) {
+            if (!r.ok) throw new Error('Refresh returned HTTP ' + r.status);
+            return r.text();
+        })
         .then(function(html) {
             var parser = new DOMParser();
             var newDoc = parser.parseFromString(html, 'text/html');
@@ -431,7 +431,7 @@
 
             // Re-mount modals (depart confirmation, etc.)
             // Guard: Never hide or destroy a modal that the user is actively interacting with!
-            if (_config.modalSelector) {
+            if (_config.modalSelector && typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
                 var openModalIds = {};
                 document.querySelectorAll(_config.modalSelector).forEach(function(m) {
                     var isOpen = m.classList.contains('show') || !!m.querySelector(':focus');

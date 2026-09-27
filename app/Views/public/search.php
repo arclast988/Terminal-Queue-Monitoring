@@ -14,7 +14,7 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
     <?= vehicle_type_colors_css() ?>

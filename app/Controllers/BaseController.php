@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use CodeIgniter\HTTP\Files\UploadedFile;
 use Psr\Log\LoggerInterface;
 use App\Models\LogModel;
 
@@ -196,6 +197,29 @@ abstract class BaseController extends Controller
             }
         }
         return true;
+    }
+
+    /** Return a safe file extension based on verified image content. */
+    protected function validatedImageExtension(UploadedFile $file, bool $allowGif = false): ?string
+    {
+        $image = @getimagesize($file->getTempName());
+        $extensions = [
+            IMAGETYPE_JPEG => ['jpg', ['image/jpeg', 'image/jpg', 'image/pjpeg']],
+            IMAGETYPE_PNG => ['png', ['image/png', 'image/x-png']],
+            IMAGETYPE_WEBP => ['webp', ['image/webp']],
+        ];
+        if ($allowGif) {
+            $extensions[IMAGETYPE_GIF] = ['gif', ['image/gif']];
+        }
+
+        $type = $image[2] ?? null;
+        if (!isset($extensions[$type])) {
+            return null;
+        }
+
+        return in_array(strtolower($file->getMimeType()), $extensions[$type][1], true)
+            ? $extensions[$type][0]
+            : null;
     }
 
     /**

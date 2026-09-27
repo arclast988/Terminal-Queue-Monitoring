@@ -1481,10 +1481,10 @@ $slotsMeta = [
             </div>
 
             <div class="upload-zone" id="logoUploadZone">
-                <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/svg+xml" style="display:none;">
+                <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
                 <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                 <div class="upload-text"><strong>Click to upload</strong> or drag and drop official seal</div>
-                <div class="upload-hint">PNG, JPG, WEBP, GIF, or SVG &bull; Maximum 5 MB &bull; Transparent PNG recommended</div>
+                <div class="upload-hint">PNG, JPG, WEBP, or GIF &bull; Maximum 5 MB &bull; Transparent PNG recommended</div>
             </div>
 
             <div class="media-preview-card" id="logoPreviewCard">

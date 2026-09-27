@@ -31,7 +31,8 @@ final class AutocompleteDropdownLayoutTest extends CIUnitTestCase
         $guestFooter = file_get_contents(APPPATH . 'Views/templates/guestfooter.php');
         $appFooter = file_get_contents(APPPATH . 'Views/templates/footer.php');
 
-        $this->assertStringContainsString('autocomplete-search.js?v=20260920_2', $guestFooter);
-        $this->assertStringContainsString('autocomplete-search.js?v=20260920_2', $appFooter);
+        $this->assertMatchesRegularExpression('/autocomplete-search\.js\?v=[0-9A-Za-z_-]+/', $guestFooter);
+        $this->assertStringContainsString('autocomplete-search.js?v=', $appFooter);
+        $this->assertStringContainsString('filemtime(', $appFooter);
     }
 }

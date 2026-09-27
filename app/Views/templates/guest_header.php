@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260926b">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260927b">
 
 <div class="sticky-top-wrapper">
 <!-- Advisory Bar -->
@@ -42,7 +42,7 @@ $annSeparator = str_repeat("\u{00A0}", 6) . '|' . str_repeat("\u{00A0}", 6);
 $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) : ('Welcome to ' . app_name() . ' Terminal. Check schedules and fares for your trip.');
 ?>
 <div class="advisory-bar">
-    <div class="advisory-icon" onclick="openAnnouncementModal()" title="View Announcements"><i class="fas fa-bullhorn"></i></div>
+    <button type="button" class="advisory-icon" onclick="openAnnouncementModal()" title="View announcements" aria-label="View announcements"><i class="fas fa-bullhorn"></i></button>
     <div class="advisory-text">
         <div class="marquee" id="guestMarquee"><?= esc($rawMarqueeText) ?></div>
         <script>
@@ -101,14 +101,12 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                     if (el) {
                         el.style.animationDuration = DURATION + 's';
                         el.style.animationDelay = delayStr;
-                        el.style.animationPlayState = 'running';
                     }
                     document.documentElement.style.setProperty('--marquee-delay', delayStr);
                 } catch (e) {
                     var fallbackEl = document.getElementById('guestMarquee');
                     if (fallbackEl) {
                         fallbackEl.style.animationDuration = '35s';
-                        fallbackEl.style.animationPlayState = 'running';
                     }
                 }
             })();
@@ -267,15 +265,17 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     (function () {
         var el = document.getElementById('headerClock');
         if (el) {
-            setInterval(function () {
-                el.innerText = new Date().toLocaleTimeString('en-US', {
-                    timeZone: 'Asia/Manila',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true
-                });
-            }, 1000);
+            var formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+            });
+            function updateClock() {
+                if (document.hidden) return;
+                var value = formatter.format(new Date());
+                if (el.textContent !== value) el.textContent = value;
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+            document.addEventListener('visibilitychange', updateClock);
         }
     })();
 
@@ -286,6 +286,74 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         if (!bar) return;
         var FALLBACK = <?= json_encode('Welcome to ' . app_name() . ' Terminal. Check schedules and fares for your trip.') ?>;
         var lastText = bar.textContent.trim();
+        var lastModalSignature = null;
+        function appendAnnouncementText(container, message) {
+            var text = String(message || '');
+            var urlPattern = /https?:\/\/[^\s<>]+/gi;
+            var cursor = 0;
+            var match;
+            while ((match = urlPattern.exec(text)) !== null) {
+                container.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+                var url = match[0].replace(/[.,;!?:)]+$/, '');
+                var trailing = match[0].slice(url.length);
+                try {
+                    var parsed = new URL(url);
+                    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('Invalid link');
+                    var link = document.createElement('a');
+                    link.href = parsed.href;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = url;
+                    container.appendChild(link);
+                } catch (e) {
+                    container.appendChild(document.createTextNode(url));
+                }
+                container.appendChild(document.createTextNode(trailing));
+                cursor = match.index + match[0].length;
+            }
+            container.appendChild(document.createTextNode(text.slice(cursor)));
+        }
+        function renderAnnouncementList(announcements, modalList, countBadge) {
+            var signature = JSON.stringify(announcements.map(function(a) { return [a.id, a.message, a.severity]; }));
+            if (signature === lastModalSignature) return;
+            lastModalSignature = signature;
+            var fragment = document.createDocumentFragment();
+            announcements.forEach(function(a) {
+                var message = String(a.message || '').trim();
+                if (!message) return;
+                var severity = a.severity === 'danger' || a.severity === 'warning' ? a.severity : 'info';
+                var icon = severity === 'danger' ? 'fa-circle-exclamation' : severity === 'warning' ? 'fa-triangle-exclamation' : 'fa-info-circle';
+                var label = severity === 'danger' ? 'Urgent' : severity === 'warning' ? 'Warning' : 'Notice';
+                var item = document.createElement('li');
+                item.className = 'ann-item-' + severity;
+                var bullet = document.createElement('div');
+                bullet.className = 'ann-bullet-wrap ann-bullet-' + severity;
+                var iconEl = document.createElement('i');
+                iconEl.className = 'fas ' + icon;
+                bullet.appendChild(iconEl);
+                var body = document.createElement('div');
+                body.className = 'ann-modal-text';
+                var tag = document.createElement('div');
+                tag.className = 'ann-severity-tag ann-tag-' + severity;
+                tag.textContent = label;
+                var content = document.createElement('div');
+                appendAnnouncementText(content, message);
+                body.appendChild(tag);
+                body.appendChild(content);
+                item.appendChild(bullet);
+                item.appendChild(body);
+                fragment.appendChild(item);
+            });
+            if (!fragment.childNodes.length) {
+                var empty = document.createElement('li');
+                empty.className = 'ann-modal-empty';
+                empty.textContent = 'No active announcements at this time.';
+                fragment.appendChild(empty);
+            }
+            if (countBadge) countBadge.textContent = announcements.length ? announcements.length + ' Active' : 'Live';
+            while (modalList.firstChild) modalList.removeChild(modalList.firstChild);
+            modalList.appendChild(fragment);
+        }
         function refreshAnnouncements() {
             fetch('<?= base_url('api/announcements') ?>?_=' + Date.now(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function (r) { return r.ok ? r.json() : null; })
@@ -325,33 +393,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                     // Also update modal list
                     var modalList = document.getElementById('annModalList');
                     var countBadge = document.getElementById('annCountBadge');
-                    if (modalList) {
-                        if (d.announcements.length) {
-                            if (countBadge) countBadge.textContent = d.announcements.length + ' Active';
-                            modalList.innerHTML = d.announcements.map(function(a) {
-                                var m = String(a.message || '').trim();
-                                if (!m) return '';
-                                var s = a.severity || 'info';
-                                var iconClass = (s === 'danger') ? 'fa-circle-exclamation' : ((s === 'warning') ? 'fa-triangle-exclamation' : 'fa-info-circle');
-                                var tagLabel = (s === 'danger') ? 'Urgent' : ((s === 'warning') ? 'Warning' : 'Notice');
-                                var safe = m.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                safe = safe.replace(/(\bhttps?:\/\/[^\s<]+?)\)([A-Za-z0-9])/gi, '$1) $2');
-                                var withLinks = safe.replace(/https?:\/\/[^\s<]+/gi, function (fullMatch) {
-                                    var url = fullMatch;
-                                    var trailing = '';
-                                    while (url.length && /[.,;!?:)]$/.test(url)) {
-                                        trailing = url.slice(-1) + trailing;
-                                        url = url.slice(0, -1);
-                                    }
-                                    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>' + trailing;
-                                });
-                                return '<li class="ann-item-' + s + '"><div class="ann-bullet-wrap ann-bullet-' + s + '"><i class="fas ' + iconClass + '"></i></div><div class="ann-modal-text"><div class="ann-severity-tag ann-tag-' + s + '">' + tagLabel + '</div><div>' + withLinks + '</div></div></li>';
-                            }).filter(Boolean).join('');
-                        } else {
-                            if (countBadge) countBadge.textContent = 'Live';
-                            modalList.innerHTML = '<li class="ann-modal-empty"><i class="fas fa-bell-slash"></i>No active announcements at this time.</li>';
-                        }
-                    }
+                    if (modalList) renderAnnouncementList(d.announcements, modalList, countBadge);
                 })
                 .catch(function () { /* keep current text on error */ });
         }
@@ -466,10 +508,14 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         document.body.style.left = '0';
         document.body.style.right = '0';
         document.getElementById('annModalOverlay').classList.add('open');
+        var advisory = document.querySelector('.advisory-bar');
+        if (advisory) advisory.classList.add('modal-ann-open');
     }
     function closeAnnouncementModal(e) {
         if (e && e.target !== e.currentTarget) return;
         document.getElementById('annModalOverlay').classList.remove('open');
+        var advisory = document.querySelector('.advisory-bar');
+        if (advisory) advisory.classList.remove('modal-ann-open');
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.left = '';
@@ -484,6 +530,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 
         var KEY_BASE = 'pt_ann_base_time';
         var hoverStart = 0;
+        var hiddenStart = document.hidden ? Date.now() : 0;
 
         function applyPausedDuration(duration) {
             if (duration <= 0) return;
@@ -514,6 +561,18 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 hoverStart = 0;
             }
         }, true);
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                hiddenStart = Date.now();
+                bar.style.animationPlayState = 'paused';
+            } else {
+                if (hiddenStart) applyPausedDuration(Date.now() - hiddenStart);
+                hiddenStart = 0;
+                bar.style.animationPlayState = '';
+            }
+        });
+        if (document.hidden) bar.style.animationPlayState = 'paused';
 
         // Handle browser bfcache restore
         window.addEventListener('pageshow', function (e) {

@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
     <?= vehicle_type_colors_css() ?>
@@ -288,27 +288,17 @@
         .search-bar input {
             flex: 1;
             border: none;
-            padding: 15px 25px;
-            padding-right: 40px !important;
+            padding: 15px 12px;
             font-size: 16px;
             outline: none;
             background: transparent;
             font-family: inherit;
         }
 
-        .search-bar button:not(.guest-clear-search-btn) {
-            background: var(--primary, #B71C1C);
-            color: var(--on-primary, white);
-            border: none;
-            padding: 0 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .search-bar button:not(.guest-clear-search-btn):hover {
-            background: var(--primary-dark, #8B0000);
+        .schedule-search-icon {
+            color: var(--primary, #B71C1C);
+            margin-left: 18px;
+            flex-shrink: 0;
         }
 
         #guest-schedule-clear-btn {
@@ -849,16 +839,6 @@
                 flex: 1;
                 width: auto;
             }
-            .search-bar button:not(.guest-clear-search-btn) {
-                padding: 0 18px;
-                height: 42px;
-                border-radius: 50px;
-                font-size: 12.5px;
-                font-weight: 700;
-                white-space: nowrap;
-                flex-shrink: 0;
-                width: auto;
-            }
 
             .schedule-table thead {
                 display: none;
@@ -1030,11 +1010,6 @@
                 padding: 8px 10px !important;
                 font-size: 12px !important;
             }
-            .search-bar button:not(.guest-clear-search-btn) {
-                padding: 0 12px !important;
-                height: 36px !important;
-                font-size: 11px !important;
-            }
             .filter-box {
                 padding: 10px !important;
                 border-radius: 12px !important;
@@ -1102,11 +1077,11 @@
             <form action="<?= base_url('schedules') ?>" method="get" class="search-bar" id="scheduleSearchForm" style="position: relative;">
                 <?php if (!empty($vehicle_type)): ?><input type="hidden" name="type" value="<?= esc($vehicle_type) ?>"><?php endif; ?>
                 <?php if (!empty($destination)): ?><input type="hidden" name="destination" value="<?= esc($destination) ?>"><?php endif; ?>
-                <input type="text" name="q" id="scheduleSearchInput" placeholder="Search by Route, Destination, or Plate Number..." value="<?= esc($search ?? '') ?>" autocomplete="off" oninput="toggleGuestScheduleClear(this.value)">
-                <button type="button" class="guest-clear-search-btn" id="guest-schedule-clear-btn" onclick="clearGuestScheduleSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search">
+                <i class="fas fa-search schedule-search-icon" aria-hidden="true"></i>
+                <input type="text" name="q" id="scheduleSearchInput" placeholder="Search route, destination, or plate" aria-label="Search schedules" value="<?= esc($search ?? '') ?>" autocomplete="off" oninput="toggleGuestScheduleClear(this.value)">
+                <button type="button" class="guest-clear-search-btn" id="guest-schedule-clear-btn" onclick="clearGuestScheduleSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search" aria-label="Clear schedule search">
                     <i class="fas fa-times-circle"></i>
                 </button>
-                <button type="submit">SEARCH</button>
             </form>
         </div>
     </section>
@@ -1278,8 +1253,8 @@
     <?= $this->include('templates/guestfooter') ?>
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
-        <script src="<?= base_url('js/ws-client.js?v=20260920_2') ?>"></script>
-        <script src="<?= base_url('js/queue-sync.js?v=20260920_3') ?>"></script>
+        <script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
+        <script src="<?= base_url('js/queue-sync.js?v=20260927_1') ?>"></script>
         <script>
         var currentType = '<?= esc($vehicle_type) ?>';
         var currentDest = '<?= esc($destination) ?>';

@@ -2213,18 +2213,12 @@ body.modal-open .card-modern,
 body.modal-open .card,
 body.modal-open .autocomplete-wrapper,
 body.modal-open div:has(> .autocomplete-wrapper),
-body.modal-open .modern-card:has(.autocomplete-wrapper),
-body.modal-open .card-modern:has(.autocomplete-wrapper),
-body.modal-open .card:has(.autocomplete-wrapper),
 body.modal-open .register-vehicle-card,
 body.swal2-shown .modern-card,
 body.swal2-shown .card-modern,
 body.swal2-shown .card,
 body.swal2-shown .autocomplete-wrapper,
 body.swal2-shown div:has(> .autocomplete-wrapper),
-body.swal2-shown .modern-card:has(.autocomplete-wrapper),
-body.swal2-shown .card-modern:has(.autocomplete-wrapper),
-body.swal2-shown .card:has(.autocomplete-wrapper),
 body.swal2-shown .register-vehicle-card {
   z-index: auto !important;
 }

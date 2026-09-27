@@ -484,29 +484,14 @@ class Settings extends BaseController
             ]);
         }
 
-        // Validate MIME
-        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-        $mime = $file->getMimeType();
-        if (! in_array(strtolower($mime), $allowedMimes, true)) {
+        $ext = $this->validatedImageExtension($file, true);
+        if ($ext === null) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
-                'message'    => 'Invalid file type. Only PNG, JPG, WEBP, GIF, and SVG are allowed.',
+                'message'    => 'Invalid file type. Only PNG, JPG, WEBP, and GIF are allowed.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
-        }
-
-        // Validate image (skip SVG)
-        if ($mime !== 'image/svg+xml') {
-            $imageInfo = @getimagesize($file->getTempName());
-            if ($imageInfo === false) {
-                return $this->response->setStatusCode(400)->setJSON([
-                    'success'    => false,
-                    'message'    => 'Uploaded file is not a valid image.',
-                    'csrf_token' => csrf_token(),
-                    'csrf_hash'  => csrf_hash(),
-                ]);
-            }
         }
 
         $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'settings';
@@ -514,10 +499,6 @@ class Settings extends BaseController
             @mkdir($uploadDir, 0755, true);
         }
 
-        // Delete previous custom logo
-        $this->deleteOldMedia('app_logo', $uploadDir);
-
-        $ext = $file->guessExtension() ?: 'png';
         $newFilename = 'logo_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
         if (! $file->move($uploadDir, $newFilename)) {
@@ -529,6 +510,7 @@ class Settings extends BaseController
             ]);
         }
 
+        $this->deleteOldMedia('app_logo', $uploadDir);
         $relPath = 'uploads/settings/' . $newFilename;
         $model = new SystemSettingModel();
         $model->setSetting('app_logo', $relPath);
@@ -607,23 +589,11 @@ class Settings extends BaseController
             ]);
         }
 
-        // Validate MIME
-        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp'];
-        $mime = $file->getMimeType();
-        if (! in_array(strtolower($mime), $allowedMimes, true)) {
+        $ext = $this->validatedImageExtension($file);
+        if ($ext === null) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
                 'message'    => 'Invalid file type. Only PNG, JPG, and WEBP are allowed for backgrounds.',
-                'csrf_token' => csrf_token(),
-                'csrf_hash'  => csrf_hash(),
-            ]);
-        }
-
-        $imageInfo = @getimagesize($file->getTempName());
-        if ($imageInfo === false) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success'    => false,
-                'message'    => 'Uploaded file is not a valid image.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
@@ -634,10 +604,6 @@ class Settings extends BaseController
             @mkdir($uploadDir, 0755, true);
         }
 
-        // Delete previous custom background
-        $this->deleteOldMedia('app_background_image', $uploadDir);
-
-        $ext = $file->guessExtension() ?: 'png';
         $newFilename = 'bg_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
         if (! $file->move($uploadDir, $newFilename)) {
@@ -651,6 +617,7 @@ class Settings extends BaseController
 
         $relPath = 'uploads/settings/' . $newFilename;
         $model = new SystemSettingModel();
+        $this->deleteOldMedia('app_background_image', $uploadDir);
         $model->setSetting('app_background_image', $relPath);
 
         $mode = $this->request->getPost('mode');
@@ -795,8 +762,8 @@ class Settings extends BaseController
             ]);
         }
 
-        $allowedMimes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-        if (! in_array($file->getMimeType(), $allowedMimes, true)) {
+        $ext = $this->validatedImageExtension($file);
+        if ($ext === null) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
                 'message'    => 'Only PNG, JPG, and WEBP image formats are supported.',
@@ -819,10 +786,6 @@ class Settings extends BaseController
             @mkdir($uploadDir, 0755, true);
         }
 
-        // Delete old custom login card if one was previously uploaded
-        $this->deleteOldMedia('app_login_card_image', $uploadDir);
-
-        $ext = $file->getClientExtension() ?: 'png';
         $newFilename = 'login_card_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
         try {
@@ -836,6 +799,7 @@ class Settings extends BaseController
             ]);
         }
 
+        $this->deleteOldMedia('app_login_card_image', $uploadDir);
         $relPath = 'uploads/settings/' . $newFilename;
         $model = new SystemSettingModel();
         $model->setSetting('app_login_card_image', $relPath);
@@ -924,23 +888,11 @@ class Settings extends BaseController
             ]);
         }
 
-        // Validate MIME
-        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp'];
-        $mime = $file->getMimeType();
-        if (! in_array(strtolower($mime), $allowedMimes, true)) {
+        $ext = $this->validatedImageExtension($file);
+        if ($ext === null) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
                 'message'    => 'Invalid file type. Only PNG, JPG, and WEBP are allowed.',
-                'csrf_token' => csrf_token(),
-                'csrf_hash'  => csrf_hash(),
-            ]);
-        }
-
-        $imageInfo = @getimagesize($file->getTempName());
-        if ($imageInfo === false) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success'    => false,
-                'message'    => 'Uploaded file is not a valid image.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
@@ -952,9 +904,6 @@ class Settings extends BaseController
         }
 
         $settingKey = "app_bg_slideshow_{$slot}";
-        $this->deleteOldMedia($settingKey, $uploadDir);
-
-        $ext = $file->guessExtension() ?: 'png';
         $newFilename = "bg_slot_{$slot}_" . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
         if (! $file->move($uploadDir, $newFilename)) {
@@ -968,6 +917,7 @@ class Settings extends BaseController
 
         $relPath = 'uploads/settings/' . $newFilename;
         $model = new SystemSettingModel();
+        $this->deleteOldMedia($settingKey, $uploadDir);
         $model->setSetting($settingKey, $relPath);
         get_all_system_settings(true);
         $this->broadcastBrandingChange('background');
@@ -1013,9 +963,8 @@ class Settings extends BaseController
             ]);
         }
 
-        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp'];
-        $mime = $file->getMimeType();
-        if (! in_array(strtolower($mime), $allowedMimes, true)) {
+        $ext = $this->validatedImageExtension($file);
+        if ($ext === null) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
                 'message'    => 'Invalid file type. Only PNG, JPG, and WEBP are allowed.',
@@ -1042,7 +991,6 @@ class Settings extends BaseController
             @mkdir($uploadDir, 0755, true);
         }
 
-        $ext = $file->guessExtension() ?: 'png';
         $newFilename = "bg_slot_{$nextSlot}_" . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
         if (! $file->move($uploadDir, $newFilename)) {

@@ -39,7 +39,14 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        if (!empty($_SERVER['HTTP_HOST'])) {
+        // Railway writes app.baseURL from APP_BASE_URL/RAILWAY_PUBLIC_DOMAIN.
+        // Never replace that trusted value with a request's Host header: reset
+        // links and other absolute URLs must not be controlled by the caller.
+        if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
+            return;
+        }
+
+        if (!empty($_SERVER['HTTP_HOST']) && preg_match('/\A[a-zA-Z0-9.-]+(?::[0-9]{1,5})?\z/D', $_SERVER['HTTP_HOST'])) {
             $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
                 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
                 || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);

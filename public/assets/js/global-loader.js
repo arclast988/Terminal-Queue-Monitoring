@@ -60,6 +60,7 @@
         /\/api\/fares/i,
         /\/api\/announcements/i,
         /\/api\/check-vehicle-availability/i,
+        /\/admin\/vehicles\/check-plate/i,
         /\/ws(\/|$)/i,
         /[?&]silent=1/i,
         /[?&]silent=true/i
@@ -98,7 +99,7 @@
             '/* In-Table / In-Card Loading Overlay */',
             '.table-loader-overlay {',
             '  position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100px;',
-            '  background: rgba(255, 255, 255, 0.82); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);',
+            '  background: rgba(255, 255, 255, 0.92);',
             '  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;',
             '  z-index: 50; border-radius: inherit; transition: opacity 0.2s ease;',
             '}',

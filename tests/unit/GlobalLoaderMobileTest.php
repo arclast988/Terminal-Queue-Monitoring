@@ -26,7 +26,7 @@ final class GlobalLoaderMobileTest extends CIUnitTestCase
         ] as $viewPath) {
             $view = file_get_contents(APPPATH . 'Views/' . $viewPath);
             $this->assertNotFalse($view);
-            $this->assertStringContainsString('global-loader.js?v=20260920_2', $view);
+            $this->assertMatchesRegularExpression('/global-loader\.js\?v=[0-9A-Za-z_-]+/', $view);
         }
     }
 }

@@ -236,6 +236,10 @@
     // Visibility change: pause reconnect when tab is hidden
     function onVisibilityChange() {
         _tabHidden = document.hidden;
+        if (_retryTimer) {
+            clearTimeout(_retryTimer);
+            _retryTimer = null;
+        }
         if (!_tabHidden && _initialized && !_connected) {
             // Tab became visible and we're disconnected — reconnect now
             _retryDelay = MIN_RETRY;

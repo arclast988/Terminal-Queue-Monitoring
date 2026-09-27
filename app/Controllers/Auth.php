@@ -67,6 +67,7 @@ class Auth extends BaseController
                     'role' => $user['role'],
                     'full_name' => $user['full_name'],
                     'profile_image' => $user['profile_image'] ?? null,
+                    'profile_image_synced_at' => time(),
                     'isLoggedIn' => TRUE
                 ];
                 $session->set($ses_data);

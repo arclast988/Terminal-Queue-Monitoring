@@ -132,6 +132,15 @@
     // Always close autocomplete dropdowns when modals open or forms submit
     document.addEventListener('show.bs.modal', function () { closeAllAutocompleteDropdowns(); });
     document.addEventListener('submit', function () { closeAllAutocompleteDropdowns(); });
+    // One outside-click listener is enough, even on pages with many selects.
+    document.addEventListener('click', function (event) {
+        document.querySelectorAll('.autocomplete-wrapper.is-open').forEach(function (wrapper) {
+            if (wrapper.contains(event.target)) return;
+            var dropdown = wrapper.querySelector('.autocomplete-dropdown');
+            closeDropdown(wrapper, dropdown);
+            if (wrapper.syncAutocompleteValue) wrapper.syncAutocompleteValue();
+        });
+    });
 
     // Inject base dropdown CSS styles to ensure complete appearance on all pages
     if (!document.getElementById('autocomplete-search-base-styles')) {
@@ -339,9 +348,9 @@
         document.head.appendChild(style);
     }
 
-    function initLocationAutocomplete() {
+    function initLocationAutocomplete(root = document) {
         // --- 1. Destination Text Inputs ---
-        const textInputs = document.querySelectorAll(
+        const textInputs = root.querySelectorAll(
             '.autocomplete-location, input#destination, input#add_destination, input#edit_fare_destination'
         );
 
@@ -547,15 +556,10 @@
                 });
             }
 
-            document.addEventListener('click', (e) => {
-                if (!wrapper.contains(e.target)) {
-                    closeDropdown(wrapper, dropdown);
-                }
-            });
         });
 
         // --- 2. Convert all eligible select elements to searchable inputs ---
-        const selects = document.querySelectorAll('select:not([data-no-autocomplete])');
+        const selects = root.querySelectorAll('select:not([data-no-autocomplete])');
 
         selects.forEach(selectEl => {
             if (selectEl.dataset.autocompleteInitialized === "true") return;
@@ -888,6 +892,7 @@
             });
 
             selectEl.syncAutocompleteValue = updateInputValue;
+            wrapper.syncAutocompleteValue = updateInputValue;
 
             searchInput.addEventListener('keydown', (e) => {
                 const items = dropdown.querySelectorAll('.autocomplete-item');
@@ -922,16 +927,10 @@
                 });
             }
 
-            document.addEventListener('click', (e) => {
-                if (!wrapper.contains(e.target)) {
-                    closeDropdown(wrapper, dropdown);
-                    updateInputValue();
-                }
-            });
         });
 
         // --- 3. Ensure any standalone search/filter input has a working clear button ---
-        const searchInputs = document.querySelectorAll('input[type="search"], input[id*="search"], input[id*="Search"], input[name="q"], input.search-input, input.search-input-modern');
+        const searchInputs = root.querySelectorAll('input[type="search"], input[id*="search"], input[id*="Search"], input[name="q"], input.search-input, input.search-input-modern');
         searchInputs.forEach(inputEl => {
             if (inputEl.closest('.autocomplete-wrapper')) return;
             const parent = inputEl.parentElement;
@@ -985,8 +984,8 @@
         initLocationAutocomplete();
     }
 
-    document.addEventListener('shown.bs.modal', function () {
-        initLocationAutocomplete();
+    document.addEventListener('shown.bs.modal', function (event) {
+        initLocationAutocomplete(event.target);
     });
 
     window.initLocationAutocomplete = initLocationAutocomplete;

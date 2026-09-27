@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Bootstrap Icons (Fallback) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
     <?= vehicle_type_colors_css() ?>
@@ -295,27 +295,17 @@
         .search-bar input {
             flex: 1;
             border: none;
-            padding: 15px 25px;
-            padding-right: 40px !important;
+            padding: 15px 12px;
             font-size: 16px;
             outline: none;
             background: transparent;
             font-family: inherit;
         }
 
-        .search-bar button:not(.guest-clear-search-btn) {
-            background: var(--primary, #B71C1C);
-            color: var(--on-primary, white);
-            border: none;
-            padding: 0 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .search-bar button:not(.guest-clear-search-btn):hover {
-            background: var(--primary-dark, #8B0000);
+        .fare-search-icon {
+            color: var(--primary, #B71C1C);
+            margin-left: 18px;
+            flex-shrink: 0;
         }
 
         #guest-fare-clear-btn {
@@ -338,6 +328,17 @@
             #guest-fare-clear-btn {
             }
         }
+
+        .fare-search-empty {
+            padding: 22px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #475569;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+        }
+        .fare-search-empty[hidden] { display: none; }
 
         /* --- Fares Grid --- */
         .fares-grid {
@@ -666,16 +667,6 @@
                 flex: 1;
                 width: auto;
             }
-            .search-bar button:not(.guest-clear-search-btn) {
-                padding: 0 18px;
-                height: 42px;
-                border-radius: 50px;
-                font-size: 12.5px;
-                font-weight: 700;
-                white-space: nowrap;
-                flex-shrink: 0;
-                width: auto;
-            }
         }
 
         @media (max-width: 420px) {
@@ -703,11 +694,6 @@
                 padding: 7px 10px;
                 font-size: 12px;
             }
-            .search-bar button:not(.guest-clear-search-btn) {
-                padding: 0 12px;
-                height: 36px;
-                font-size: 11px;
-            }
             .fare-card {
                 padding: 10px !important;
                 border-radius: 12px !important;
@@ -730,18 +716,20 @@
         <p>Check official fare rates for all destinations to ensure fair pricing.</p>
 
         <div class="search-container">
-            <form class="search-bar" onsubmit="applyFareSearch(); return false;" style="position: relative;">
-                <input type="text" id="fareSearch" placeholder="Search by Route, Destination, Origin, or Vehicle Type..." autocomplete="off" oninput="toggleGuestFareClear(this.value)">
-                <button type="button" class="guest-clear-search-btn" id="guest-fare-clear-btn" onclick="clearGuestFareSearch()" style="display: none !important;" title="Clear search">
+            <div class="search-bar" role="search" style="position: relative;">
+                <i class="fas fa-search fare-search-icon" aria-hidden="true"></i>
+                <input type="text" id="fareSearch" placeholder="Search destination or vehicle type" aria-label="Search fares" autocomplete="off">
+                <button type="button" class="guest-clear-search-btn" id="guest-fare-clear-btn" onclick="clearGuestFareSearch()" style="display: none !important;" title="Clear search" aria-label="Clear fare search">
                     <i class="fas fa-times-circle"></i>
                 </button>
-                <button type="submit">SEARCH</button>
-            </form>
+            </div>
         </div>
     </section>
 
     <!-- Main Content -->
     <div class="container">
+
+        <div class="fare-search-empty" id="fareSearchEmpty" role="status" hidden>No fares match your search. Try another destination or vehicle type.</div>
 
         <div class="fares-grid initial-load" id="faresGrid">
             <!-- Van Routes -->
@@ -1054,6 +1042,7 @@
         var input = document.getElementById('fareSearch');
         var q = input ? input.value.toLowerCase().trim() : '';
         var cards = document.querySelectorAll('#faresGrid .fare-card');
+        var visibleCards = 0;
 
         cards.forEach(function(card) {
             var cardHeader = card.querySelector('.card-header h3');
@@ -1089,11 +1078,14 @@
             } else {
                 if (matchCount > 0 || (emptyState && headerMatches)) {
                     card.style.display = '';
+                    visibleCards++;
                 } else {
                     card.style.display = 'none';
                 }
             }
         });
+        var noResults = document.getElementById('fareSearchEmpty');
+        if (noResults) noResults.hidden = q === '' || visibleCards > 0;
     }
 
     function toggleGuestFareClear(val) {

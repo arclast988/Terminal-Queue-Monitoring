@@ -43,24 +43,11 @@ class Profile extends BaseController
             ]);
         }
 
-        // Validate MIME type
-        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/webp', 'image/gif'];
-        $mime = $avatarFile->getMimeType();
-        if (!in_array(strtolower($mime), $allowedMimes, true)) {
+        $ext = $this->validatedImageExtension($avatarFile, true);
+        if ($ext === null) {
             return $this->response->setStatusCode(400)->setJSON([
                 'success'    => false,
                 'message'    => 'Invalid file type. Only JPG, PNG, WEBP, and GIF images are allowed.',
-                'csrf_token' => csrf_token(),
-                'csrf_hash'  => csrf_hash(),
-            ]);
-        }
-
-        // Validate that the file is genuinely an image via getimagesize
-        $imageInfo = @getimagesize($avatarFile->getTempName());
-        if ($imageInfo === false) {
-            return $this->response->setStatusCode(400)->setJSON([
-                'success'    => false,
-                'message'    => 'Uploaded file is not a valid image.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
             ]);
@@ -74,16 +61,7 @@ class Profile extends BaseController
         $userModel = new UserModel();
         $user = $userModel->find($userId);
 
-        // Delete old custom avatar if it exists
-        if (!empty($user['profile_image'])) {
-            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $user['profile_image']);
-            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
-                @unlink($oldPath);
-            }
-        }
-
         // Generate safe random filename
-        $ext = $avatarFile->guessExtension() ?: 'jpg';
         $newFilename = 'avatar_' . $userId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
         if (!$avatarFile->move($uploadDir, $newFilename)) {
@@ -98,7 +76,14 @@ class Profile extends BaseController
         $relPath = 'uploads/avatars/' . $newFilename;
 
         $userModel->update($userId, ['profile_image' => $relPath]);
+        if (!empty($user['profile_image'])) {
+            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $user['profile_image']);
+            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                @unlink($oldPath);
+            }
+        }
         session()->set('profile_image', $relPath);
+        session()->set('profile_image_synced_at', time());
 
         $imageUrl = base_url($relPath) . '?v=' . time();
 
@@ -144,6 +129,7 @@ class Profile extends BaseController
 
             $userModel->update($userId, ['profile_image' => null]);
             session()->remove('profile_image');
+            session()->set('profile_image_synced_at', time());
 
             $this->broadcastUpdate('user_avatar_updated', [
                 'user_id'   => (int)$userId,

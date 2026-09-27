@@ -210,11 +210,8 @@ class Vehicles extends BaseController
             if (!$photoFile->isValid()) {
                 return redirect()->back()->withInput()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
             }
-            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp'];
-            $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
-            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (!in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && !in_array($clientExt, $allowedExts, true)) {
+            $ext = $this->validatedImageExtension($photoFile);
+            if ($ext === null) {
                 return redirect()->back()->withInput()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP).');
             }
 
@@ -226,7 +223,6 @@ class Vehicles extends BaseController
             if (!is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0755, true);
             }
-            $ext = $clientExt ?: 'jpg';
             $safePlate = preg_replace('/[^a-zA-Z0-9]/', '_', $rawPlate);
             $newFilename = 'veh_' . strtolower($safePlate) . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
             if ($photoFile->move($uploadDir, $newFilename)) {
@@ -395,11 +391,8 @@ class Vehicles extends BaseController
             if (!$photoFile->isValid()) {
                 return redirect()->back()->withInput()->with('error', 'Photo upload failed: ' . $photoFile->getErrorString());
             }
-            $allowedMimes = ['image/jpeg', 'image/jpg', 'image/pjpeg', 'image/png', 'image/x-png', 'image/webp'];
-            $clientExt = strtolower($photoFile->getClientExtension() ?: $photoFile->guessExtension() ?: '');
-            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
-
-            if (!in_array(strtolower($photoFile->getMimeType()), $allowedMimes, true) && !in_array($clientExt, $allowedExts, true)) {
+            $ext = $this->validatedImageExtension($photoFile);
+            if ($ext === null) {
                 return redirect()->back()->withInput()->with('error', 'Please upload a valid image file (JPG, PNG, WEBP).');
             }
 
@@ -411,7 +404,6 @@ class Vehicles extends BaseController
             if (!is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0755, true);
             }
-            $ext = $clientExt ?: 'jpg';
             $safePlate = preg_replace('/[^a-zA-Z0-9]/', '_', $rawPlate);
             $newFilename = 'veh_' . strtolower($safePlate) . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
             if ($photoFile->move($uploadDir, $newFilename)) {

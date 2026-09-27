@@ -13,7 +13,7 @@
     <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
     <?= vehicle_type_colors_css() ?>
@@ -1551,9 +1551,9 @@
         .countdown-timer.cd-soon,
         .countdown-timer.cd-orange { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
         .countdown-timer.cd-imminent,
-        .countdown-timer.cd-red { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; animation: cdPulse 1s infinite; }
+        .countdown-timer.cd-red { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
         .countdown-timer.cd-passed,
-        .countdown-timer.cd-overdue { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; animation: cdPulse 1.2s infinite; }
+        .countdown-timer.cd-overdue { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
 
         @keyframes cdPulse {
             0%, 100% { opacity: 1; }
@@ -2304,7 +2304,7 @@
                                 <div class="queue-card-left">
                                     <div class="vehicle-thumb-box vehicle-type-<?= esc($vType) ?>" style="background: <?= esc($vColor) ?>12 !important; border-color: <?= esc($vColor) ?>35 !important;">
                                         <?php if (!empty($photoUrl)): ?>
-                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" class="vehicle-thumb-img <?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?> onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
+                                            <img src="<?= esc($photoUrl) ?>" alt="<?= esc(vehicle_type_label($vType)) ?>" loading="lazy" decoding="async" class="vehicle-thumb-img <?= $hasCustomPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasCustomPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vType)) . '"') ?> onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='inline-flex';">
                                             <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>; display: none;"></i>
                                         <?php else: ?>
                                             <i class="fas <?= esc(vehicle_type_icon($vType)) ?>" style="font-size: 28px; color: <?= esc($vColor) ?>;"></i>
@@ -2659,7 +2659,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/queue-sync.js?v=20260920_3') ?>"></script>
+    <script src="<?= base_url('js/queue-sync.js?v=20260927_1') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;
@@ -3585,7 +3585,15 @@
         observeItems(); // Initial intersection observer
 
         // Countdown timer updater
+        function setCountdown(el, label, tone, classes) {
+            if (el.textContent !== label) el.textContent = label;
+            if (el.dataset.countdownTone === tone && el.classList.contains(classes[0])) return;
+            el.classList.remove('cd-plenty', 'cd-green', 'cd-yellow', 'cd-soon', 'cd-orange', 'cd-imminent', 'cd-red', 'cd-passed', 'cd-overdue');
+            el.classList.add.apply(el.classList, classes);
+            el.dataset.countdownTone = tone;
+        }
         function updateCountdowns() {
+            if (document.hidden) return;
             var timers = document.querySelectorAll('.countdown-timer[data-departure]');
             var now = new Date();
             timers.forEach(function (el) {
@@ -3593,16 +3601,12 @@
                 var diff = dep - now;
                 if (isNaN(dep.getTime())) { el.textContent = ''; return; }
 
-                el.classList.remove('cd-plenty', 'cd-green', 'cd-yellow', 'cd-soon', 'cd-orange', 'cd-imminent', 'cd-red', 'cd-passed', 'cd-overdue');
-
                 if (diff <= 0) {
                     var overMin = Math.floor(Math.abs(diff) / 60000);
                     if (overMin < 5) {
-                        el.textContent = '⏱ Departing soon!';
-                        el.classList.add('cd-imminent', 'cd-red');
+                        setCountdown(el, '⏱ Departing soon!', 'imminent', ['cd-imminent', 'cd-red']);
                     } else {
-                        el.textContent = '⏱ ' + overMin + 'm overdue';
-                        el.classList.add('cd-passed', 'cd-overdue');
+                        setCountdown(el, '⏱ ' + overMin + 'm overdue', 'overdue', ['cd-passed', 'cd-overdue']);
                     }
                     return;
                 }
@@ -3620,20 +3624,19 @@
                 } else {
                     label = secs + 's';
                 }
-                el.textContent = '⏱ ' + label;
-
                 if (totalSec <= 120) {
-                    el.classList.add('cd-imminent', 'cd-red');
+                    setCountdown(el, '⏱ ' + label, 'imminent', ['cd-imminent', 'cd-red']);
                 } else if (totalSec <= 300) {
-                    el.classList.add('cd-soon', 'cd-orange');
+                    setCountdown(el, '⏱ ' + label, 'soon', ['cd-soon', 'cd-orange']);
                 } else if (totalSec <= 600) {
-                    el.classList.add('cd-yellow');
+                    setCountdown(el, '⏱ ' + label, 'yellow', ['cd-yellow']);
                 } else {
-                    el.classList.add('cd-plenty', 'cd-green');
+                    setCountdown(el, '⏱ ' + label, 'plenty', ['cd-plenty', 'cd-green']);
                 }
             });
         }
         setInterval(updateCountdowns, 1000);
+        document.addEventListener('visibilitychange', updateCountdowns);
         updateCountdowns();
 
         function toggleGuestHeroClear(val) {

@@ -14,9 +14,11 @@ class AuthFilter implements FilterInterface
             return redirect()->to('/login');
         }
 
-        // Keep profile_image synchronized with the database
+        // Profile writes update the current session immediately. Refresh other
+        // sessions at most once a minute instead of querying on every request.
         $userId = session()->get('id');
-        if ($userId) {
+        $lastAvatarSync = (int) session()->get('profile_image_synced_at');
+        if ($userId && time() - $lastAvatarSync >= 60) {
             try {
                 $userModel = new \App\Models\UserModel();
                 $dbUser = $userModel->select('profile_image')->find($userId);
@@ -26,6 +28,7 @@ class AuthFilter implements FilterInterface
             } catch (\Throwable $e) {
                 // Non-blocking fallback
             }
+            session()->set('profile_image_synced_at', time());
         }
         
         // Optional: Role-based checking if arguments provided
@@ -46,13 +49,8 @@ class AuthFilter implements FilterInterface
                 return redirect()->to('/admin/dashboard')->with('error', 'Dispatcher-only pages are restricted to dispatchers.');
             }
 
-            $previous = previous_url();
-            $current  = current_url();
-            if (empty($previous) || $previous === $current) {
-                $defaultUrl = ($role === 'staff') ? '/staff/queue' : '/admin/dashboard';
-                return redirect()->to($defaultUrl)->with('error', 'You do not have access to this page.');
-            }
-            return redirect()->back()->with('error', 'You do not have access to this page.');
+            $defaultUrl = ($role === 'staff') ? '/staff/queue' : '/admin/dashboard';
+            return redirect()->to($defaultUrl)->with('error', 'You do not have access to this page.');
         }
     }
 

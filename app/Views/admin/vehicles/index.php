@@ -1,7 +1,4 @@
-<?= view('templates/header', ['title' => $title]) ?>
-
-<!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<?= view('templates/header', ['title' => $title, 'body_class' => ' vehicle-register-page']) ?>
 
 <div class="page-header-modern fade-in">
     <h1 class="page-title-modern">
@@ -424,7 +421,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     <div class="vehicle-type-cell">
                                         <?php if (!empty($displayPhoto)): ?>
                                             <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>" style="<?= $hasVehPhoto ? 'border-radius: 8px; overflow: hidden; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #cbd5e1; background: #ffffff;' : '' ?>">
-                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>"
+                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>" loading="lazy" decoding="async"
                                                     style="<?= $hasVehPhoto ? 'width: 100%; height: 100%; object-fit: cover;' : 'height:28px; width:auto; max-width:32px; object-fit:contain;' ?>" 
                                                     title="<?= $hasVehPhoto ? ('Vehicle ' . esc($vehicle['plate_number']) . ' (' . vehicle_type_label($vehicle['type']) . ')') : vehicle_type_label($vehicle['type']) ?>">
                                             </span>
@@ -1348,9 +1345,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         line-height: 1.35;
         transition: opacity 0.2s ease, transform 0.2s ease;
         font-weight: 500;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: #ffffff;
         border-radius: 8px;
         border: 1px solid rgba(0, 0, 0, 0.08);
         box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10);
@@ -1420,6 +1415,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
 (function() {
     var plateCheckTimer = null;
     var plateCheckXhr = null;
+    var plateRequestId = 0;
     var plateIsValid = true; // assume valid until proven otherwise
     var baseUrl = '<?= base_url('admin/vehicles/check-plate') ?>';
     var excludeId = 0; // no exclude for new vehicles
@@ -1431,7 +1427,9 @@ table:not(.selection-mode-active) .bulk-select-cell {
         var feedback = document.getElementById('plate-validation-feedback');
 
         // Clear previous timer
-        if (plateCheckTimer) clearTimeout(plateCheckTimer);
+        plateRequestId++;
+        var requestId = plateRequestId;
+        if (plateCheckTimer) { clearTimeout(plateCheckTimer); plateCheckTimer = null; }
         if (plateCheckXhr) { plateCheckXhr.abort(); plateCheckXhr = null; }
 
         // Reset states
@@ -1468,29 +1466,33 @@ table:not(.selection-mode-active) .bulk-select-cell {
             return;
         }
 
-        // Show checking state
-        feedback.style.display = 'block';
-        feedback.className = 'plate-validation-feedback feedback-checking';
-        feedback.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Checking availability...';
-        icon.style.display = 'inline-block';
-        icon.innerHTML = '<i class="bi bi-arrow-repeat" style="color: #6c757d;"></i>';
-        icon.classList.add('spinning');
-
-        // Debounce the AJAX call (400ms)
+        // Wait for typing to pause before updating the UI or contacting the server.
+        feedback.style.display = 'none';
+        plateIsValid = true; // The final server-side uniqueness check remains authoritative.
         plateCheckTimer = setTimeout(function() {
+            plateCheckTimer = null;
+            if (requestId !== plateRequestId) return;
+            feedback.style.display = 'block';
+            feedback.className = 'plate-validation-feedback feedback-checking';
+            feedback.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Checking availability...';
+            icon.style.display = 'inline-block';
+            icon.innerHTML = '<i class="bi bi-arrow-repeat" style="color: #6c757d;"></i>';
+            icon.classList.add('spinning');
             var url = baseUrl + '?plate=' + encodeURIComponent(plate);
             if (excludeId > 0) url += '&exclude_id=' + excludeId;
 
-            plateCheckXhr = new XMLHttpRequest();
-            plateCheckXhr.open('GET', url, true);
-            plateCheckXhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            plateCheckXhr.onreadystatechange = function() {
-                if (plateCheckXhr.readyState !== 4) return;
+            var xhr = new XMLHttpRequest();
+            plateCheckXhr = xhr;
+            xhr.open('GET', url, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== 4 || requestId !== plateRequestId || xhr !== plateCheckXhr) return;
+                plateCheckXhr = null;
                 icon.classList.remove('spinning');
 
-                if (plateCheckXhr.status === 200) {
+                if (xhr.status === 200) {
                     try {
-                        var data = JSON.parse(plateCheckXhr.responseText);
+                        var data = JSON.parse(xhr.responseText);
                         if (data.available) {
                             // Available
                             feedback.className = 'plate-validation-feedback feedback-success';
@@ -1520,7 +1522,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                     plateIsValid = true;
                 }
             };
-            plateCheckXhr.send();
+            xhr.send();
         }, 400);
     };
 
@@ -2300,6 +2302,23 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 
 <style>
     /* Keep vehicle registration modal dropdowns fully visible and unclipped */
+    body.vehicle-register-page > .modal-backdrop {
+        transition: none !important;
+    }
+
+    #registerVehicleModal.show .modal-content {
+        animation: register-vehicle-enter 160ms ease-out both;
+    }
+
+    @keyframes register-vehicle-enter {
+        from { opacity: .88; transform: translate3d(0, 8px, 0); }
+        to { opacity: 1; transform: translate3d(0, 0, 0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #registerVehicleModal.show .modal-content { animation: none; }
+    }
+
     #registerVehicleModal.modal {
         overflow-x: hidden !important;
         overflow-y: auto !important;
@@ -2438,7 +2457,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 </style>
 
 <!-- Register New Vehicle Modal -->
-<div class="modal fade" id="registerVehicleModal" tabindex="-1" aria-labelledby="registerVehicleModalLabel" aria-hidden="true">
+<div class="modal" id="registerVehicleModal" tabindex="-1" aria-labelledby="registerVehicleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered mx-auto my-2" style="max-width: 680px; width: calc(100% - 1.5rem);">
         <div class="modal-content border-0 shadow" style="border-radius: 16px;">
             <div class="modal-header py-2 px-3 bg-white flex-shrink-0" style="border-bottom: 1px solid var(--border, #e2e8f0); border-top-left-radius: 16px; border-top-right-radius: 16px;">

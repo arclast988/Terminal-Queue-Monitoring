@@ -49,9 +49,11 @@
         box-sizing: border-box;
     }
     .advisory-icon {
-        width: 28px;
-        height: 28px;
-        min-width: 28px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        border: 0;
+        padding: 0;
         background: #ffffff;
         border-radius: 50%;
         display: inline-flex;
@@ -66,6 +68,10 @@
     }
     .advisory-icon:hover {
         box-shadow: 0 0 0 3px rgba(255,255,255,0.35);
+    }
+    .advisory-icon:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
     }
     .advisory-text {
         overflow: hidden;
@@ -105,8 +111,22 @@
         padding-top: 0;
         padding-bottom: 0;
     }
-    .marquee:hover {
+    .marquee:hover,
+    .advisory-bar:focus-within .marquee,
+    .advisory-bar.modal-ann-open .marquee {
         animation-play-state: paused;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .marquee {
+            animation: none !important;
+            padding-left: 0;
+            transform: none;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ann-modal { animation: none !important; }
     }
 
     /* --- Announcement Modal --- */
@@ -115,8 +135,6 @@
         position: fixed;
         inset: 0;
         background: rgba(15, 23, 42, 0.65);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
         z-index: 99999;
         align-items: center;
         justify-content: center;
@@ -193,8 +211,8 @@
         background: rgba(255,255,255,0.18);
         border: none;
         color: white;
-        width: 32px;
-        height: 32px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         cursor: pointer;
         font-size: 18px;
@@ -768,10 +786,10 @@
             gap: 10px;
         }
         .advisory-icon {
-            width: 24px;
-            height: 24px;
-            min-width: 24px;
-            font-size: 11px;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            font-size: 13px;
         }
         .marquee {
             font-size: 14px !important;
@@ -1102,9 +1120,7 @@
 
 /* Footer styling */
 footer {
-    background: rgba(26, 32, 44, 0.82) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: #1a202c !important;
     color: white;
     padding: 60px 5% 30px;
     margin-top: 60px;

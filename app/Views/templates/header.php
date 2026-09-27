@@ -34,7 +34,7 @@
 
     <!-- Modern Admin Styling (for logged-in users) - Remove this line to rollback -->
     <?php if (session()->get('isLoggedIn')): ?>
-        <link rel="stylesheet" href="<?= base_url('assets/css/admin-modern.css') ?>">
+        <link rel="stylesheet" href="<?= base_url('assets/css/admin-modern.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/admin-modern.css') ? filemtime(FCPATH . 'assets/css/admin-modern.css') : '20260927_1')) ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/responsive.css') ? filemtime(FCPATH . 'assets/css/responsive.css') : '20260925_1')) ?>">
     <?= vehicle_type_colors_css() ?>
@@ -126,8 +126,6 @@
             border: 1px solid var(--border) !important;
             color: var(--text-main) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-            backdrop-filter: blur(12px) saturate(150%);
-            -webkit-backdrop-filter: blur(12px) saturate(150%);
         }
 
         body.admin-theme .card.text-white {
@@ -226,8 +224,6 @@
             border: 1px solid var(--border) !important;
             color: var(--text-main) !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
-            backdrop-filter: blur(12px) saturate(150%);
-            -webkit-backdrop-filter: blur(12px) saturate(150%);
         }
 
         body.staff-theme .card.text-white {
@@ -344,9 +340,7 @@
             max-width: 100% !important;
             margin: auto 0 0 0 !important;
             padding: 16px 24px !important;
-            background: rgba(255, 255, 255, 0.75) !important;
-            backdrop-filter: blur(12px) saturate(160%) !important;
-            -webkit-backdrop-filter: blur(12px) saturate(160%) !important;
+            background: #ffffff !important;
             border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
             border-radius: 0 !important;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02) !important;
@@ -511,8 +505,7 @@
         }
 
         /* Remove stacking context on .main-content when modal is open */
-        body.modal-open > .main-content,
-        body:has(.modal.show) > .main-content {
+        body.modal-open > .main-content {
             position: static !important;
             z-index: auto !important;
             transform: none !important;
@@ -521,7 +514,6 @@
 
         /* All modals (whether in body or nested in .main-content) sit above backdrop */
         body.modal-open .modal,
-        body:has(.modal.show) .modal,
         .modal.show {
             position: fixed !important;
             z-index: 1055 !important;
