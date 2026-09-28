@@ -660,7 +660,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         }
         #users-table th:nth-child(2) { width: 48px; }
         #users-table th:nth-child(3) { width: 24%; }
-        #users-table th:nth-child(4) { width: 125px; }
+        #users-table th:nth-child(4) { width: 145px; }
         #users-table th:nth-child(6) { width: 190px; }
         #users-table td[data-label="User"] .user-info-text { overflow-wrap: anywhere; }
         #users-table td[data-label="Assigned Routes"] .badge-scroll-wrap {
@@ -828,6 +828,11 @@ table:not(.selection-mode-active) .bulk-select-cell {
     .profile-role-pill i {
         font-size: 13.5px !important;
         vertical-align: -1px;
+    }
+
+    #users-table td[data-label="Role"] .profile-role-pill {
+        white-space: nowrap !important;
+        flex-shrink: 0;
     }
 
     @media (max-width: 991.98px) {

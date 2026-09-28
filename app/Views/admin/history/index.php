@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
         })
         .then(function(res) {
             if (!res.ok) throw new Error('Network response was not ok');

@@ -255,10 +255,10 @@
         .hero-art {
             display: grid;
             place-items: center;
-            width: 230px;
-            min-height: 230px;
+            width: 250px;
+            min-height: 250px;
             margin-inline: auto;
-            padding: 10px;
+            padding: 12px;
             border-radius: 20px;
             background: radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .09), transparent 62%), rgba(255, 255, 255, .97);
             border: 1px solid rgba(183, 28, 28, .19);
@@ -271,8 +271,8 @@
         }
         .hero-art img {
             display: block;
-            width: 204px;
-            height: 204px;
+            width: 220px;
+            height: 220px;
             object-fit: contain;
         }
         .hero-art:not(.has-custom-artwork) img {
@@ -291,7 +291,7 @@
         }
 
         @media (min-width: 992px) and (max-width: 1199px) {
-            .hero-art { width: 230px; min-height: 230px; margin-inline: auto; }
+            .hero-art { width: 250px; min-height: 250px; margin-inline: auto; }
         }
 
         /* =================================================================
@@ -688,7 +688,7 @@
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-support { margin-top: var(--space-3); }
-            .hero-art:not(.has-custom-artwork) img { max-height: 192px; }
+            .hero-art:not(.has-custom-artwork) img { max-height: 210px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
         }
