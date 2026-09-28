@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -13,6 +13,7 @@
 
 </style>
 
+<div class="form-entry-page">
 <div class="page-header-modern fade-in">
     <div>
         <h1 class="page-title-modern">
@@ -67,11 +68,11 @@
                             <div class="form-text-modern">Maximum number of vehicles that can be stationed at this terminal.</div>
                         </div>
                         
-                        <div class="d-flex gap-2 mt-5 flex-wrap terminal-form-actions">
+                        <div class="d-flex gap-2 mt-5 flex-wrap terminal-form-actions form-entry-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary">
                                 <i class="bi bi-save"></i> Save Terminal
                             </button>
-                <a href="<?= base_url('admin/terminals') ?>" class="btn-modern btn-modern-outline">
+                            <a href="<?= base_url('admin/terminals') ?>" class="btn-modern btn-modern-outline">
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
                         </div>
@@ -80,5 +81,6 @@
             </div>
         </div>
     </div>
+</div>
 
 <?= $this->include('templates/footer') ?>

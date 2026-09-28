@@ -73,6 +73,164 @@
     --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Creation and account forms: stable surfaces and touch-friendly controls. */
+.form-entry-page {
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    min-width: 0;
+}
+
+.form-entry-page:not(.change-password-page) > .row {
+    margin-inline: 0;
+}
+
+.form-entry-page:not(.change-password-page) > .row > [class*="col-"] {
+    min-width: 0;
+    padding-inline: 0;
+}
+
+.form-entry-page .page-header-modern {
+    gap: 12px 20px;
+    flex-wrap: wrap;
+}
+
+.form-entry-page .page-title-modern {
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.form-entry-page .page-title-modern > i,
+.form-entry-page .card-title-modern > i,
+.form-entry-page .modern-card-title > i,
+.form-entry-page .btn-modern > i {
+    flex: 0 0 auto;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.form-entry-page .card-title-modern > i.me-2,
+.form-entry-page .modern-card-title > i.me-2 {
+    margin-right: 0 !important;
+}
+
+.form-entry-page .input-group-text-modern {
+    width: 44px;
+    flex: 0 0 44px;
+    padding-inline: 0;
+}
+
+.form-entry-page .card-modern,
+.form-entry-page .modern-card,
+.form-entry-page .card-modern:hover,
+.form-entry-page .modern-card:hover {
+    background: #ffffff !important;
+    transform: none;
+    box-shadow: var(--shadow-sm);
+    transition: none;
+}
+
+.form-entry-page #routeSearch { padding-right: 44px !important; }
+
+.form-entry-page .card-header-modern,
+.form-entry-page .modern-card-header {
+    flex-wrap: wrap;
+}
+
+.form-entry-page .input-modern,
+.form-entry-page .form-control-modern,
+.form-entry-page .select-modern {
+    min-height: 44px;
+    min-width: 0;
+}
+
+.form-entry-page textarea.input-modern {
+    min-height: 112px;
+    resize: vertical;
+}
+
+.form-entry-page .btn-modern {
+    min-height: 44px;
+    touch-action: manipulation;
+    transition: background-color .16s ease, color .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.form-entry-page .btn-modern:hover {
+    transform: none;
+}
+
+.form-entry-page .btn-modern > i,
+.form-entry-page .btn-modern > .bi {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-entry-page .btn-modern:focus-visible,
+.form-entry-page .severity-card:focus-within,
+.form-entry-page .route-item:focus-within {
+    outline: 2px solid var(--primary, #b71c1c);
+    outline-offset: 2px;
+}
+
+.form-entry-page .fade-in {
+    animation: formEntryFade .22s ease-out both;
+}
+
+@keyframes formEntryFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.form-entry-page:not(.change-password-page) .form-entry-actions {
+    align-items: stretch;
+    margin-top: 24px !important;
+    padding-top: 18px;
+    border-top: 1px solid var(--slate-200);
+}
+
+.form-entry-page:not(.change-password-page) .form-entry-actions > .btn-modern {
+    min-width: 152px;
+}
+
+@media (max-width: 767.98px) {
+    .form-entry-page .page-header-modern > :last-child {
+        margin-top: 0 !important;
+    }
+
+    .form-entry-page .card-header-modern,
+    .form-entry-page .modern-card-header {
+        padding: 16px;
+    }
+
+    .form-entry-page .card-body-modern,
+    .form-entry-page .modern-card-body {
+        padding: 18px 16px;
+    }
+
+    .form-entry-page .input-modern,
+    .form-entry-page .form-control-modern,
+    .form-entry-page .select-modern {
+        font-size: 16px;
+    }
+
+    .form-entry-page:not(.change-password-page) .form-entry-actions {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px !important;
+    }
+
+    .form-entry-page:not(.change-password-page) .form-entry-actions > .btn-modern {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .form-entry-page .fade-in { animation: none; }
+    .form-entry-page .btn-modern { transition: none; }
+}
+
 /* =================================================================
    BASE STYLES
    ================================================================= */

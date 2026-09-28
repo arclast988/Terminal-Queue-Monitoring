@@ -1,3 +1,4 @@
+<?php $hasCustomLoginArtwork = app_has_custom_login_card(); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -234,51 +235,23 @@
         .feature-text b { display: block; font-size: 14.5px; font-weight: 800; color: #000000 !important; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
         .feature-text span { font-size: 13.5px; color: #000000 !important; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
-        /* ---- Desktop hero illustration ---- */
+        /* ---- Optional artwork supplied by Superadmin ---- */
         .hero-art {
-            position: relative;
-            margin-top: clamp(var(--space-8), 5vh, var(--space-12));
+            margin-top: var(--space-6);
             border-radius: var(--radius-2xl);
-            background: linear-gradient(135deg, #a81e22 0%, #cf302f 100%);
+            background: rgba(255, 255, 255, .88);
+            border: 1px solid rgba(15, 23, 42, .1);
             overflow: hidden;
-            box-shadow: 0 18px 38px -20px rgba(127, 29, 29, .55);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            min-height: 176px;
-            padding: 22px 26px;
+            box-shadow: 0 12px 30px -22px rgba(15, 23, 42, .32);
+            padding: var(--space-4);
             animation: fadeUp .6s ease .2s both;
         }
-        .hero-art::before {
-            content: "";
-            position: absolute;
-            background-image: none;
-            width: 250px;
-            height: 250px;
-            right: -70px;
-            top: -110px;
-            border: 1px solid rgba(255, 255, 255, .13);
-            border-radius: 50%;
-        }
-        .hero-art::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
-            border-radius: var(--radius-2xl);
-            pointer-events: none;
-        }
-        .hero-art .art-route { position: relative; z-index: 1; width: min(58%, 300px); height: 120px; flex: 1 1 auto; opacity: .9; pointer-events: none; }
+        .hero-art[hidden] { display: none; }
         .hero-art img {
-            position: relative;
-            z-index: 1;
             display: block;
-            width: min(35%, 155px);
-            height: 145px;
-            flex: 0 0 auto;
+            width: 100%;
+            max-height: 210px;
             object-fit: contain;
-            filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .2));
         }
 
         /* =================================================================
@@ -536,7 +509,6 @@
             .hero-copy h1 {
                 font-size: clamp(2.8rem, 3.6vw, 3.8rem);
             }
-            .hero-art img { height: 155px; }
             .login-card {
                 max-width: 460px;
                 padding: var(--space-10) var(--space-8);
@@ -641,8 +613,7 @@
             .brand { margin-bottom: 20px; }
             .hero-copy h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
             .features { margin-top: 24px; gap: 12px; }
-            .hero-art { margin-top: clamp(16px, 2.5vh, 28px); }
-            .hero-art img { max-height: 155px; }
+            .hero-art { margin-top: var(--space-4); }
         }
 
         @media (min-width: 992px) and (min-height: 1000px) {
@@ -656,8 +627,7 @@
             .hero-copy .lede { margin-top: var(--space-2); font-size: 14px; }
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
-            .hero-art { margin-top: var(--space-3); min-height: 150px; padding: 18px 22px; }
-            .hero-art img { height: 112px; }
+            .hero-art img { max-height: 145px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
         }
@@ -741,19 +711,12 @@
                     </div>
                 </div>
 
-                <!-- Decorative route artwork; the image remains configurable by Superadmin -->
-                <div class="hero-art" aria-hidden="true">
-                    <svg class="art-route" viewBox="0 0 240 120" fill="none">
-                        <path d="M18 92C72 92 83 34 146 45S199 71 222 26"
-                              stroke="#FFFFFF" stroke-opacity="0.52" stroke-width="2.5" stroke-dasharray="4 8" stroke-linecap="round"/>
-                        <circle cx="18" cy="92" r="7" fill="#FFFFFF" fill-opacity="0.75"/>
-                        <circle cx="146" cy="45" r="7" fill="#FFFFFF" fill-opacity="0.75"/>
-                        <circle cx="222" cy="26" r="7" fill="#FFFFFF" fill-opacity="0.75"/>
-                    </svg>
-                    <img src="<?= esc(app_login_card_image()) ?>"
+                <!-- Show uploaded artwork only; the brand logo is already in the page header. -->
+                <div class="hero-art" aria-hidden="true" <?= $hasCustomLoginArtwork ? '' : 'hidden' ?>>
+                    <img <?= $hasCustomLoginArtwork ? 'src="' . esc(app_login_card_image()) . '"' : '' ?>
                          id="loginHeroImg"
                          alt=""
-                         width="1536" height="1024" loading="eager">
+                         width="1536" height="1024" loading="lazy" decoding="async">
                 </div>
             </section>
 
@@ -890,6 +853,10 @@
         if (features[1]) {
             if (data.login_feature2_title) features[1].querySelector('b').textContent = data.login_feature2_title;
             if (data.login_feature2_desc) features[1].querySelector('span').textContent = data.login_feature2_desc;
+        }
+        var artwork = document.querySelector('.hero-art');
+        if (artwork && typeof data.has_custom_login_card === 'boolean') {
+            artwork.hidden = !data.has_custom_login_card;
         }
     });
     </script>

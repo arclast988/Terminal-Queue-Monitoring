@@ -820,7 +820,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Reset login page hero illustration to default 3-vehicle artwork.
+     * Remove the optional login page hero illustration.
      */
     public function resetLoginCard()
     {
@@ -836,11 +836,11 @@ class Settings extends BaseController
         get_all_system_settings(true);
         $this->broadcastBrandingChange('identity');
 
-        $this->logActivity('System Settings', 'Reset login page hero illustration to default artwork');
+        $this->logActivity('System Settings', 'Removed login page hero illustration');
 
         return $this->response->setJSON([
             'success'    => true,
-            'message'    => 'Login hero illustration restored to default artwork.',
+            'message'    => 'Login page artwork removed.',
             'image_url'  => base_url('images/logo.webp'),
             'data'       => app_full_branding_payload('identity'),
             'csrf_token' => csrf_token(),

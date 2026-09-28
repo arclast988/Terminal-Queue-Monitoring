@@ -1,8 +1,9 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
 
+<div class="form-entry-page">
 <div class="page-header-modern fade-in">
     <h1 class="page-title-modern">
         <i class="bi bi-person-plus-fill"></i> Add New User
@@ -192,7 +193,7 @@ SVG;
                         </div>
                     </div>
 
-                    <div class="d-flex gap-2 flex-column flex-sm-row user-form-actions">
+                    <div class="d-flex gap-2 flex-column flex-sm-row user-form-actions form-entry-actions">
                         <button type="submit" class="btn-modern btn-modern-primary">
                             <i class="bi bi-check-lg"></i> Create User
                         </button>
@@ -204,6 +205,7 @@ SVG;
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <style>

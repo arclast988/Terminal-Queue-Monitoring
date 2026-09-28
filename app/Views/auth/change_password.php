@@ -1,7 +1,7 @@
 <?= view('templates/header', ['title' => $title ?? 'Change Password']) ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
 
 <?php
 $sessionRole = session()->get('role');
@@ -31,7 +31,7 @@ $defaultAvatarSvg = <<<SVG
 SVG;
 ?>
 
-<div class="change-password-page fade-in">
+<div class="change-password-page form-entry-page fade-in">
     <!-- Standard Page Header -->
     <div class="page-header-modern mb-4">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 w-100">
@@ -53,7 +53,7 @@ SVG;
     <!-- 2-Column Responsive Layout -->
     <div class="row g-4">
         <!-- Left Column: User Identity & Security Guidance -->
-        <div class="col-lg-4 col-md-5">
+        <div class="col-lg-4 order-2 order-lg-1">
             <!-- Profile Overview Card -->
             <div class="modern-card shadow-modern mb-4">
                 <div class="modern-card-body text-center p-4">
@@ -120,7 +120,7 @@ SVG;
         </div>
 
         <!-- Right Column: Password Update Form Card -->
-        <div class="col-lg-8 col-md-7">
+        <div class="col-lg-8 order-1 order-lg-2">
             <div class="modern-card shadow-modern">
                 <div class="modern-card-header py-3 px-4 d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #f1f5f9;">
                     <span class="modern-card-title" style="font-size: 15px; font-weight: 700; color: #0f172a;">
@@ -347,9 +347,9 @@ SVG;
 
 <style>
 .change-password-page .modern-card {
-    background: rgba(255, 255, 255, 0.92) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     border: 1px solid rgba(226, 232, 240, 0.8) !important;
 }
 
@@ -453,12 +453,11 @@ SVG;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
 }
 @keyframes pulseGetCode {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.7); }
-    50% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(21, 128, 61, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(21, 128, 61, 0); }
+    0%, 100% { opacity: 1; }
+    50% { opacity: .72; }
 }
 .btn-pulse-attention {
-    animation: pulseGetCode 0.5s ease-in-out 3 !important;
+    animation: pulseGetCode .55s ease-in-out 2 !important;
 }
 
 /* Requirements & Feedback */
@@ -528,10 +527,10 @@ SVG;
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
     color: #ffffff !important;
     box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45) !important;
-    transform: translateY(-2px);
+    transform: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
     .change-password-page .modern-card {
         background: #ffffff !important;
         backdrop-filter: none !important;
@@ -554,6 +553,14 @@ SVG;
         font-size: 14px !important;
         white-space: nowrap !important;
         justify-content: center !important;
+    }
+
+    .change-password-page .modern-card-body.p-4 {
+        padding: clamp(16px, 3vw, 24px) !important;
+    }
+
+    .change-password-page .page-header-modern a.btn-modern {
+        margin-top: 4px;
     }
 }
 @media (max-width: 480px) {

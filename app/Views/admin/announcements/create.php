@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -14,13 +14,16 @@
 /* Severity Selector Styles */
 .severity-options-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px;
 }
-@media (max-width: 768px) {
+@media (max-width: 991.98px) {
     .severity-options-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+}
+@media (max-width: 640px) {
+    .severity-options-grid { grid-template-columns: minmax(0, 1fr); }
 }
 .severity-card {
     display: flex;
@@ -37,8 +40,6 @@
 }
 .severity-card:hover {
     border-color: #cbd5e1;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 .severity-card input.severity-radio {
     position: absolute;
@@ -54,10 +55,6 @@
     justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-.severity-card:hover .severity-card-icon {
-    transform: scale(1.06);
 }
 .severity-info { background: #e0f2fe; color: #0284c7; }
 .severity-warning { background: #fef3c7; color: #d97706; }
@@ -113,15 +110,9 @@
     color: #dc2626;
 }
 
-@media (hover: none), (pointer: coarse) {
-    .severity-card:hover,
-    .severity-card:hover .severity-card-icon {
-        transform: none;
-    }
-}
-
 </style>
 
+<div class="form-entry-page">
 <div class="page-header-modern fade-in">
     <div>
         <h1 class="page-title-modern">
@@ -228,7 +219,7 @@
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-5 flex-wrap announcement-form-actions">
+                        <div class="d-flex gap-2 mt-5 flex-wrap announcement-form-actions form-entry-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary">
                                 <i class="bi bi-save"></i> Save Announcement
                             </button>
@@ -240,6 +231,8 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var cards = document.querySelectorAll('.severity-card');

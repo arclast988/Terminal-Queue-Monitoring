@@ -1,7 +1,7 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -121,7 +121,6 @@
 
 .tp-btn:active {
     background: #e2e8f0;
-    transform: scale(0.95);
     color: var(--primary, #c62828);
 }
 
@@ -199,7 +198,7 @@
 }
 
 .tp-set-btn:active {
-    transform: scale(0.97);
+    filter: brightness(.95);
 }
 
 .tp-set-btn i {
@@ -210,6 +209,16 @@
 .tp-set-btn:hover {
     background: var(--primary-dark, #0D47A1);
 }
+
+@media (max-width: 420px) {
+    .military-time-popover { max-width: 100%; padding: 8px; gap: 4px; }
+    .tp-btn, .tp-input { width: 44px; }
+    .tp-set-btn { padding-inline: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .military-time-popover.open { animation: none; }
+}
 </style>
 
 <?php
@@ -219,6 +228,7 @@ $defaultMins = old('wait_mins') ?? ($oldWaitMinutes % 60);
 $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, $defaultMins);
 ?>
 
+<div class="form-entry-page">
 <div class="page-header-modern fade-in">
     <div>
         <h1 class="page-title-modern">
@@ -349,7 +359,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-5 flex-wrap departure-rule-form-actions">
+                        <div class="d-flex gap-2 mt-5 flex-wrap departure-rule-form-actions form-entry-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary" id="btn-save-rule">
                                 <i class="bi bi-save"></i> Save Rule
                             </button>
@@ -362,6 +372,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
             </div>
         </div>
     </div>
+</div>
 
 <?= view('templates/footer') ?>
 
@@ -544,6 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let input = wrap.querySelector('.military-time-input');
         let btn = wrap.querySelector('.military-time-btn');
         if (!input || !btn) return;
+        btn.setAttribute('aria-expanded', 'false');
 
         let popover = document.createElement('div');
         popover.className = 'military-time-popover';
@@ -723,6 +735,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let m = String(Math.min(59, Math.max(0, parseInt(mmInput.value, 10) || 0))).padStart(2, '0');
             input.value = h + ':' + m;
             popover.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
             activePopover = null;
             input.dispatchEvent(new Event('input', { bubbles: true }));
             input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -740,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 applyTime();
             } else if (e.key === 'Escape') {
                 popover.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
                 activePopover = null;
             }
         });
@@ -752,13 +766,24 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             if (activePopover && activePopover !== popover) {
                 activePopover.classList.remove('open');
+                activePopover.parentElement.querySelector('.military-time-btn')?.setAttribute('aria-expanded', 'false');
             }
             syncFromMain();
             popover.classList.toggle('open');
+            btn.setAttribute('aria-expanded', String(popover.classList.contains('open')));
             if (popover.classList.contains('open')) {
                 activePopover = popover;
-                hhInput.focus();
-                hhInput.select();
+                popover.style.top = '';
+                popover.style.bottom = '';
+                if (popover.getBoundingClientRect().bottom > (window.visualViewport?.height || window.innerHeight) - 8) {
+                    popover.style.top = 'auto';
+                    popover.style.bottom = 'calc(100% + 4px)';
+                }
+                // Avoid opening the mobile keyboard until a time field is tapped.
+                if (e.detail === 0 || window.matchMedia('(pointer: fine)').matches) {
+                    hhInput.focus();
+                    hhInput.select();
+                }
             } else {
                 activePopover = null;
             }
@@ -768,6 +793,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function() {
         if (activePopover) {
             activePopover.classList.remove('open');
+            activePopover.parentElement.querySelector('.military-time-btn')?.setAttribute('aria-expanded', 'false');
             activePopover = null;
         }
     });

@@ -773,7 +773,7 @@ if (! function_exists('app_bg_image')) {
 
 if (! function_exists('app_login_card_image')) {
     /**
-     * URL to the active login card hero illustration (custom uploaded or default artwork).
+     * URL to the optional login card illustration (fallback URL supports existing callers).
      */
     function app_login_card_image(): string
     {

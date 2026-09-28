@@ -1667,7 +1667,7 @@ $slotsMeta = [
                 <div class="card-icon"><i class="fas fa-truck-front"></i></div>
                 <div>
                     <h3>Login Page Hero Illustration</h3>
-                    <p>Customize the 3-vehicle terminal hero illustration displayed on the login page (<code>/login</code>). Superadmins can upload a custom illustration/artwork or reset to the system default.</p>
+                    <p>Optional artwork for the desktop login page (<code>/login</code>). The page stays clean without an upload; resetting removes the artwork.</p>
                 </div>
             </div>
 
@@ -1679,19 +1679,19 @@ $slotsMeta = [
             </div>
 
             <div class="media-preview-card bg-type" id="loginCardPreviewCard" style="margin-top: 14px;">
-                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #0f172a; padding: 6px; border-radius: 10px;">
+                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #f8fafc; padding: 6px; border-radius: 10px; <?= $hasCustomLoginCard ? '' : 'display: none;' ?>">
                 <div class="media-preview-info">
-                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'Default Illustration (logo.webp)' ?></div>
+                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'No artwork uploaded' ?></div>
                     <div class="filemeta">
                         <span class="status-chip <?= $hasCustomLoginCard ? 'custom' : 'default' ?>" id="loginCardStatusChip">
                             <i class="fas <?= $hasCustomLoginCard ? 'fa-check-circle' : 'fa-circle-info' ?>"></i>
-                            <?= $hasCustomLoginCard ? 'Custom Artwork Active' : 'System Default Artwork' ?>
+                            <?= $hasCustomLoginCard ? 'Custom Artwork Active' : 'No Artwork on Login' ?>
                         </span>
-                        <span>Displayed on /login hero presentation card</span>
+                        <span>Only custom artwork appears beside the login form</span>
                     </div>
                 </div>
                 <button type="button" class="btn-reset-media" id="btnResetLoginCard" style="<?= $hasCustomLoginCard ? '' : 'display:none;' ?>">
-                    <i class="fas fa-undo"></i> Reset to Default
+                    <i class="fas fa-undo"></i> Remove Artwork
                 </button>
             </div>
 
@@ -1701,7 +1701,7 @@ $slotsMeta = [
                     <i class="fas fa-clock"></i> New hero illustration staged. Click "Save Login Hero Illustration" to apply changes.
                 </span>
                 <span id="loginCardIdleNotice" style="font-size: 12.5px; color: var(--sb-text-muted); margin-right: auto;">
-                    <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i> Select or drop a new 3-vehicle hero illustration above, then click Save Login Hero Illustration.
+                    <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i> Select or drop artwork above, then click Save Login Hero Illustration.
                 </span>
                 <button type="button" id="btnSaveLoginCard" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25); opacity: 0.65;" disabled>
                     <i class="fas fa-save"></i> Save Login Hero Illustration
@@ -2876,6 +2876,25 @@ document.addEventListener('DOMContentLoaded', function() {
     var loginCardIdleNotice    = document.getElementById('loginCardIdleNotice');
     var stagedLoginCardFile    = null;
 
+    document.addEventListener('pttm:branding-applied', function(event) {
+        var branding = event.detail || {};
+        if (branding.category && branding.category !== 'identity') return;
+        if (typeof branding.has_custom_login_card !== 'boolean') return;
+        var hasArtwork = branding.has_custom_login_card;
+        if (loginCardActiveImg) loginCardActiveImg.style.display = hasArtwork ? '' : 'none';
+        if (loginCardFilename) {
+            var imagePath = (branding.app_login_card_image || '').split('?')[0];
+            loginCardFilename.textContent = hasArtwork ? (imagePath.split('/').pop() || 'Custom artwork') : 'No artwork uploaded';
+        }
+        if (loginCardStatusChip) {
+            loginCardStatusChip.className = 'status-chip ' + (hasArtwork ? 'custom' : 'default');
+            loginCardStatusChip.innerHTML = hasArtwork
+                ? '<i class="fas fa-check-circle"></i> Custom Artwork Active'
+                : '<i class="fas fa-circle-info"></i> No Artwork on Login';
+        }
+        if (btnResetLoginCard) btnResetLoginCard.style.display = hasArtwork ? 'inline-flex' : 'none';
+    });
+
     if (loginCardZone && loginCardInput) {
         loginCardZone.addEventListener('click', function() { loginCardInput.click(); });
         loginCardZone.addEventListener('dragover', function(e) { e.preventDefault(); loginCardZone.classList.add('drag-over'); });
@@ -2893,7 +2912,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function stageLoginCardFile(file) {
         stagedLoginCardFile = file;
         var objectUrl = URL.createObjectURL(file);
-        if (loginCardActiveImg) loginCardActiveImg.src = objectUrl;
+        if (loginCardActiveImg) {
+            loginCardActiveImg.src = objectUrl;
+            loginCardActiveImg.style.display = '';
+        }
         if (loginCardFilename) loginCardFilename.textContent = file.name + ' (Pending Save)';
         if (loginCardStatusChip) {
             loginCardStatusChip.className = 'status-chip custom';
@@ -2926,7 +2948,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 showToast(data.message || 'Login hero illustration saved successfully!', true);
                 var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-                if (loginCardActiveImg) loginCardActiveImg.src = newUrl;
+                if (loginCardActiveImg) {
+                    loginCardActiveImg.src = newUrl;
+                    loginCardActiveImg.style.display = '';
+                }
                 if (loginCardFilename) loginCardFilename.textContent = fileSaved ? fileSaved.name : (data.filename || 'Custom Artwork');
                 if (loginCardStatusChip) {
                     loginCardStatusChip.className = 'status-chip custom';
@@ -2963,12 +2988,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                         if (data.success) {
                             showToast(data.message, true);
-                            var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
-                            if (loginCardActiveImg) loginCardActiveImg.src = newUrl;
-                            if (loginCardFilename) loginCardFilename.textContent = 'Default Illustration (logo.webp)';
+                            if (loginCardActiveImg) loginCardActiveImg.style.display = 'none';
+                            if (loginCardFilename) loginCardFilename.textContent = 'No artwork uploaded';
                             if (loginCardStatusChip) {
                                 loginCardStatusChip.className = 'status-chip default';
-                                loginCardStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Default Artwork';
+                                loginCardStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> No Artwork on Login';
                             }
                             btnResetLoginCard.style.display = 'none';
                             if (data.data && typeof window.broadcastLiveBranding === 'function') {
@@ -2983,12 +3007,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (typeof window.confirmAction === 'function') {
                 window.confirmAction({
-                    title: 'Reset Login Hero Artwork',
-                    message: 'Reset login hero illustration back to system default artwork?',
-                    confirmText: 'Reset Artwork',
+                    title: 'Remove Login Artwork',
+                    message: 'Remove the custom artwork from the login page?',
+                    confirmText: 'Remove Artwork',
                     onConfirm: doResetLoginCard
                 });
-            } else if (confirm('Reset login hero illustration back to system default artwork?')) {
+            } else if (confirm('Remove the custom artwork from the login page?')) {
                 doResetLoginCard();
             }
         });
