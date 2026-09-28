@@ -255,10 +255,10 @@
         .hero-art {
             display: grid;
             place-items: center;
-            width: 214px;
-            min-height: 214px;
+            width: 230px;
+            min-height: 230px;
             margin-inline: auto;
-            padding: 12px;
+            padding: 10px;
             border-radius: 20px;
             background: radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .09), transparent 62%), rgba(255, 255, 255, .97);
             border: 1px solid rgba(183, 28, 28, .19);
@@ -266,11 +266,17 @@
             overflow: hidden;
             box-shadow: 0 12px 26px -18px rgba(153, 27, 27, .32), 0 0 0 3px rgba(220, 38, 38, .04);
         }
+        .hero-art:not(.has-custom-artwork) {
+            background: radial-gradient(circle at 50% 45%, rgba(255, 220, 140, .18), transparent 65%), radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .09), transparent 62%), rgba(255, 255, 255, .97);
+        }
         .hero-art img {
             display: block;
-            width: 188px;
-            height: 188px;
+            width: 204px;
+            height: 204px;
             object-fit: contain;
+        }
+        .hero-art:not(.has-custom-artwork) img {
+            filter: drop-shadow(0 0 7px rgba(245, 184, 61, .22));
         }
         .hero-art.has-custom-artwork {
             width: min(100%, 420px);
@@ -285,7 +291,7 @@
         }
 
         @media (min-width: 992px) and (max-width: 1199px) {
-            .hero-art { width: 214px; min-height: 214px; margin-inline: auto; }
+            .hero-art { width: 230px; min-height: 230px; margin-inline: auto; }
         }
 
         /* =================================================================
@@ -558,7 +564,7 @@
             }
         }
 
-        /* Narrow tablets and phones keep the form first, with the seal below it. */
+        /* Narrow tablets and phones keep one default seal in the brand row. */
         @media (max-width: 991px) {
             .hero { display: block; order: 2; width: 100%; }
             .hero-copy { animation: none; }
@@ -572,13 +578,13 @@
                 justify-content: center;
                 margin-top: var(--space-5);
             }
+            .hero-support:not(.has-custom-artwork) { display: none; }
             .hero-art,
             .hero-art.has-custom-artwork {
                 width: 100%;
                 min-height: 176px;
                 padding: 12px;
             }
-            .hero-art:not(.has-custom-artwork) img { width: 180px; height: 180px; }
             .login-col { order: 1; }
 
             .page {
@@ -633,7 +639,7 @@
                 margin-bottom: 14px;
                 text-align: center;
             }
-            .brand-mark { width: 56px; height: 56px; }
+            .brand-mark { width: 64px; height: 64px; }
             .brand-name, .brand-sub { display: block; text-align: center; }
             .login-card {
                 padding: var(--space-6) var(--space-5);
@@ -682,7 +688,7 @@
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-support { margin-top: var(--space-3); }
-            .hero-art:not(.has-custom-artwork) img { max-height: 180px; }
+            .hero-art:not(.has-custom-artwork) img { max-height: 192px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
         }
