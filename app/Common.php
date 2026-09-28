@@ -509,13 +509,13 @@ if (! function_exists('get_all_system_settings')) {
             'contact_email'          => '',
             'contact_phone'          => '',
             'contact_address'        => 'Central Public Transit Terminal',
-            'login_headline'         => 'Move every van, jeepney & bus on time.',
-            'login_subheadline'      => 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.',
+            'login_headline'         => 'Keep every trip on time.',
+            'login_subheadline'      => 'gives dispatchers a clear view of every route and its next departure.',
             'login_kicker'           => 'Terminal Operations',
-            'login_feature1_title'   => 'Real-time queue',
-            'login_feature1_desc'    => 'Live queue and departure status across every route.',
-            'login_feature2_title'   => 'Secure & audited',
-            'login_feature2_desc'    => 'Role-based access with a full activity audit trail.',
+            'login_feature1_title'   => 'Live queue',
+            'login_feature1_desc'    => 'See which vehicle is next in line.',
+            'login_feature2_title'   => 'Role-based access',
+            'login_feature2_desc'    => 'Tools tailored to dispatchers and administrators.',
             'log_retention_days'       => '60',
             'departure_retention_days' => '60',
             'vehicle_cooldown_minutes' => '30',
@@ -664,10 +664,19 @@ if (! function_exists('app_subtitle')) {
     }
 }
 
+if (! function_exists('login_copy_setting')) {
+    /** Keep existing custom copy while refreshing the original stock wording. */
+    function login_copy_setting(string $key, string $newDefault, string $oldDefault): string
+    {
+        $value = get_system_setting($key, $newDefault);
+        return (! $value || $value === $oldDefault) ? $newDefault : $value;
+    }
+}
+
 if (! function_exists('login_headline')) {
     function login_headline(): string
     {
-        return get_system_setting('login_headline', 'Move every van, jeepney & bus on time.') ?: 'Move every van, jeepney & bus on time.';
+        return login_copy_setting('login_headline', 'Keep every trip on time.', 'Move every van, jeepney & bus on time.');
     }
 }
 
@@ -675,9 +684,6 @@ if (! function_exists('login_headline_html')) {
     function login_headline_html(): string
     {
         $raw = login_headline();
-        if (str_contains($raw, '<span')) {
-            return $raw;
-        }
         $words = explode(' ', trim($raw));
         if (count($words) >= 2) {
             $lastTwo = array_splice($words, -2);
@@ -690,7 +696,7 @@ if (! function_exists('login_headline_html')) {
 if (! function_exists('login_subheadline')) {
     function login_subheadline(): string
     {
-        return get_system_setting('login_subheadline', 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.') ?: 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.';
+        return login_copy_setting('login_subheadline', 'gives dispatchers a clear view of every route and its next departure.', 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.');
     }
 }
 
@@ -704,28 +710,28 @@ if (! function_exists('login_kicker')) {
 if (! function_exists('login_feature1_title')) {
     function login_feature1_title(): string
     {
-        return get_system_setting('login_feature1_title', 'Real-time queue') ?: 'Real-time queue';
+        return login_copy_setting('login_feature1_title', 'Live queue', 'Real-time queue');
     }
 }
 
 if (! function_exists('login_feature1_desc')) {
     function login_feature1_desc(): string
     {
-        return get_system_setting('login_feature1_desc', 'Live queue and departure status across every route.') ?: 'Live queue and departure status across every route.';
+        return login_copy_setting('login_feature1_desc', 'See which vehicle is next in line.', 'Live queue and departure status across every route.');
     }
 }
 
 if (! function_exists('login_feature2_title')) {
     function login_feature2_title(): string
     {
-        return get_system_setting('login_feature2_title', 'Secure & audited') ?: 'Secure & audited';
+        return login_copy_setting('login_feature2_title', 'Role-based access', 'Secure & audited');
     }
 }
 
 if (! function_exists('login_feature2_desc')) {
     function login_feature2_desc(): string
     {
-        return get_system_setting('login_feature2_desc', 'Role-based access with a full activity audit trail.') ?: 'Role-based access with a full activity audit trail.';
+        return login_copy_setting('login_feature2_desc', 'Tools tailored to dispatchers and administrators.', 'Role-based access with a full activity audit trail.');
     }
 }
 
@@ -833,6 +839,10 @@ if (! function_exists('app_full_branding_payload')) {
             'login_headline'        => login_headline(),
             'login_subheadline'     => login_subheadline(),
             'login_kicker'          => login_kicker(),
+            'login_feature1_title'  => login_feature1_title(),
+            'login_feature1_desc'   => login_feature1_desc(),
+            'login_feature2_title'  => login_feature2_title(),
+            'login_feature2_desc'   => login_feature2_desc(),
         ];
         if ($category !== null) {
             $payload['category'] = $category;

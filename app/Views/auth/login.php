@@ -81,6 +81,7 @@
         $useSingle = ($bgMode === 'single');
         ?>
         <?php if ($useSingle): ?>
+        <?php if (app_has_custom_bg()): ?>
         body::after {
             content: "";
             position: fixed;
@@ -95,6 +96,7 @@
             z-index: 0;
             pointer-events: none;
         }
+        <?php endif; ?>
         <?php else: ?>
         <?= app_bg_slideshow_css(null, 0.22) ?>
         <?php endif; ?>
@@ -240,10 +242,10 @@
             background: linear-gradient(135deg, #a81e22 0%, #cf302f 100%);
             overflow: hidden;
             box-shadow: 0 18px 38px -20px rgba(127, 29, 29, .55);
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(112px, 30%);
+            display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 20px;
             min-height: 176px;
             padding: 22px 26px;
             animation: fadeUp .6s ease .2s both;
@@ -267,17 +269,14 @@
             border-radius: var(--radius-2xl);
             pointer-events: none;
         }
-        .hero-art .art-route { position: absolute; bottom: -18px; left: -20px; width: 210px; height: 120px; opacity: .45; pointer-events: none; }
-        .hero-art figcaption { position: relative; z-index: 1; min-width: 0; color: #fff; }
-        .hero-art .art-eyebrow { display: block; font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; opacity: .84; }
-        .hero-art .art-title { display: block; margin-top: 10px; font-size: clamp(20px, 2vw, 27px); font-weight: 800; letter-spacing: -.025em; line-height: 1.16; }
-        .hero-art .art-description { display: block; max-width: 30ch; margin-top: 10px; font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, .88); }
+        .hero-art .art-route { position: relative; z-index: 1; width: min(58%, 300px); height: 120px; flex: 1 1 auto; opacity: .9; pointer-events: none; }
         .hero-art img {
             position: relative;
             z-index: 1;
             display: block;
-            width: 100%;
+            width: min(35%, 155px);
             height: 145px;
+            flex: 0 0 auto;
             object-fit: contain;
             filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .2));
         }
@@ -487,23 +486,6 @@
             line-height: 1.5;
         }
 
-        .page-foot {
-            margin: var(--space-8) auto 0;
-            text-align: center;
-            font-size: 13.5px;
-            font-weight: 700;
-            color: #000000 !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            animation: fadeUp .7s ease .5s both;
-            align-self: center;
-            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
-        }
-        .page-foot b { color: #000000 !important; font-weight: 800; }
-        .page-foot .foot-sub { color: #000000 !important; font-weight: 700; }
-
         /* ---- Focus visibility (keyboard) ---- */
         a:focus-visible, button:focus-visible, input:focus-visible {
             outline: 2px solid var(--red);
@@ -570,23 +552,8 @@
             }
         }
 
-        /* Compact Laptops with short viewport height (≤820px) */
-        @media (max-height: 820px) and (min-width: 1025px) {
-            .brand { margin-bottom: var(--space-3); }
-            .hero-copy h1 { font-size: 2.2rem; }
-            .hero-copy .lede { margin-top: var(--space-2); font-size: 14px; }
-            .features { margin-top: var(--space-3); gap: var(--space-2); }
-            .feature-icon { width: 34px; height: 34px; }
-            .hero-art { margin-top: var(--space-3); }
-            .hero-art { min-height: 150px; padding: 18px 22px; }
-            .hero-art img { height: 112px; }
-            .login-card { padding: var(--space-6) var(--space-6); }
-            .login-card .card-head { margin-bottom: var(--space-4); }
-            .page-foot { margin-top: var(--space-3); }
-        }
-
-        /* Tablets & Mobile Form-First View (≤1024px) */
-        @media (max-width: 1024px) {
+        /* Narrow tablets and phones use the centered form. */
+        @media (max-width: 991px) {
             .hero { display: none; }
 
             .page {
@@ -608,6 +575,7 @@
                 justify-content: center;
                 gap: 0;
                 min-height: auto;
+                flex: 0 0 auto;
             }
 
             .login-col { width: 100%; }
@@ -616,6 +584,17 @@
                 max-width: 440px;
                 margin: 0 auto;
                 padding: var(--space-8) var(--space-6);
+                background: #ffffff;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+        }
+
+        @media (min-width: 992px) and (max-width: 1200px) {
+            .login-card {
+                background: #ffffff;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
             }
         }
 
@@ -642,7 +621,6 @@
             .login-card .card-head { margin-bottom: 20px; }
             .field { margin-bottom: 16px; }
             .options { margin: 4px 0 20px; }
-            .page-foot { margin-top: var(--space-6); }
         }
 
         /* Small Phones (≤420px) */
@@ -658,21 +636,36 @@
             .options { flex-direction: column; align-items: flex-start; gap: 4px; }
         }
 
-        @media (min-width: 1025px) {
+        @media (min-width: 992px) {
             .page { padding-top: 20px; padding-bottom: 24px; }
             .brand { margin-bottom: 20px; }
             .hero-copy h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
             .features { margin-top: 24px; gap: 12px; }
             .hero-art { margin-top: clamp(16px, 2.5vh, 28px); }
             .hero-art img { max-height: 155px; }
-            .page-foot { margin-top: 20px; }
         }
 
-        @media (min-width: 641px) and (max-width: 1024px) and (max-height: 820px) {
+        @media (min-width: 992px) and (min-height: 1000px) {
+            .page { justify-content: center; }
+            .login-layout { flex: 0 0 auto; }
+        }
+
+        @media (min-width: 992px) and (max-height: 820px) {
+            .brand { margin-bottom: var(--space-3); }
+            .hero-copy h1 { font-size: 2.2rem; }
+            .hero-copy .lede { margin-top: var(--space-2); font-size: 14px; }
+            .features { margin-top: var(--space-3); gap: var(--space-2); }
+            .feature-icon { width: 34px; height: 34px; }
+            .hero-art { margin-top: var(--space-3); min-height: 150px; padding: 18px 22px; }
+            .hero-art img { height: 112px; }
+            .login-card { padding: var(--space-6); }
+            .login-card .card-head { margin-bottom: var(--space-4); }
+        }
+
+        @media (min-width: 641px) and (max-width: 991px) and (max-height: 820px) {
             .page { padding-top: 16px; padding-bottom: 16px; }
             .brand { margin-bottom: 16px; }
             .login-card { padding-top: 24px; padding-bottom: 24px; }
-            .page-foot { margin-top: 16px; }
         }
     </style>
 </head>
@@ -701,12 +694,12 @@
         <!-- Brand -->
         <div class="brand">
             <span class="brand-mark" aria-hidden="true">
-                <img src="<?= esc(app_logo()) ?>"
+                <img class="app-logo" src="<?= esc(app_logo()) ?>"
                      alt="<?= esc(app_name()) ?> logo"
                      width="400" height="400" loading="eager">
             </span>
             <span class="brand-name">
-                <?= esc(app_name()) ?>
+                <span class="brand-title app-brand-name"><?= esc(app_name()) ?></span>
                 <span class="brand-sub"><?= esc(app_subtitle()) ?></span>
             </span>
         </div>
@@ -715,7 +708,7 @@
             <!-- Left — hero copy + artwork -->
             <section class="hero">
                 <div class="hero-copy">
-                    <p class="kicker"><?= esc(app_name()) ?> · <?= esc(login_kicker()) ?></p>
+                    <p class="kicker"><?= esc(login_kicker()) ?></p>
                     <h1><?= login_headline_html() ?></h1>
                     <p class="lede">
                         <?= esc(app_name()) ?> <?= esc(login_subheadline()) ?>
@@ -748,24 +741,20 @@
                     </div>
                 </div>
 
-                <!-- Transportation artwork, framed as the hero -->
-                <figure class="hero-art">
-                    <figcaption>
-                        <span class="art-eyebrow">Terminal operations</span>
-                        <span class="art-title">Keep every trip moving.</span>
-                        <span class="art-description">Track vehicles, queues, and departures in one place.</span>
-                    </figcaption>
-                    <svg class="art-route" viewBox="0 0 210 120" fill="none" aria-hidden="true">
-                        <path d="M6 96C56 96 74 34 128 40S188 78 204 24"
-                              stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
-                        <circle cx="204" cy="24" r="4" fill="#FFFFFF" fill-opacity="0.35"/>
-                        <circle cx="6" cy="96" r="4" fill="#FFFFFF" fill-opacity="0.30"/>
+                <!-- Decorative route artwork; the image remains configurable by Superadmin -->
+                <div class="hero-art" aria-hidden="true">
+                    <svg class="art-route" viewBox="0 0 240 120" fill="none">
+                        <path d="M18 92C72 92 83 34 146 45S199 71 222 26"
+                              stroke="#FFFFFF" stroke-opacity="0.52" stroke-width="2.5" stroke-dasharray="4 8" stroke-linecap="round"/>
+                        <circle cx="18" cy="92" r="7" fill="#FFFFFF" fill-opacity="0.75"/>
+                        <circle cx="146" cy="45" r="7" fill="#FFFFFF" fill-opacity="0.75"/>
+                        <circle cx="222" cy="26" r="7" fill="#FFFFFF" fill-opacity="0.75"/>
                     </svg>
                     <img src="<?= esc(app_login_card_image()) ?>"
                          id="loginHeroImg"
                          alt=""
                          width="1536" height="1024" loading="eager">
-                </figure>
+                </div>
             </section>
 
             <!-- Right — floating login card -->
@@ -773,7 +762,7 @@
                 <div class="login-card">
                     <div class="card-head">
                         <h2>Welcome back</h2>
-                        <p class="card-sub">Sign in to manage terminal operations and dispatch.</p>
+                        <p class="card-sub">Sign in to your dashboard.</p>
                     </div>
 
                     <?php if (session()->getFlashdata('error')): ?>
@@ -856,24 +845,51 @@
                         Continue as guest
                     </a>
 
-                    <p class="card-foot">Protected access · Your session is logged for audit.</p>
+                    <p class="card-foot">Sign-in activity is recorded for security.</p>
                 </div>
             </aside>
         </main>
 
-        <footer class="page-foot">
-            <b><?= esc(app_name()) ?></b> · <span class="foot-sub"><?= esc(app_subtitle()) ?></span>
-        </footer>
     </div>
 
     <script src="<?= base_url('assets/js/global-loader.js?v=20260920_2') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
     <script>
-    // Listen for branding and background updates in real-time
-    document.addEventListener('pttm:ws-branding_updated', function (e) {
-        if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {
-            window.applyLiveBranding(e.detail.data);
+    // Keep the editable login copy in sync with Superadmin's identity settings.
+    document.addEventListener('pttm:branding-applied', function (e) {
+        var data = e.detail || {};
+        if (data.category && data.category !== 'identity') return;
+        var brand = document.querySelector('.brand-title');
+        var brandSub = document.querySelector('.brand-sub');
+        if (brand && data.app_name) brand.textContent = data.app_name;
+        if (brandSub && data.app_subtitle) brandSub.textContent = data.app_subtitle;
+        var kicker = document.querySelector('.hero-copy .kicker');
+        if (kicker && data.login_kicker) kicker.textContent = data.login_kicker;
+        var headline = document.querySelector('.hero-copy h1');
+        if (headline && data.login_headline) {
+            var words = data.login_headline.trim().split(/\s+/);
+            if (words.length >= 2) {
+                var accent = document.createElement('span');
+                accent.className = 'accent';
+                accent.textContent = words.splice(-2).join(' ');
+                headline.replaceChildren(document.createTextNode(words.join(' ') + ' '), accent);
+            } else {
+                headline.textContent = data.login_headline;
+            }
+        }
+        var description = document.querySelector('.hero-copy .lede');
+        if (description && data.app_name && data.login_subheadline) {
+            description.textContent = data.app_name + ' ' + data.login_subheadline;
+        }
+        var features = document.querySelectorAll('.feature-text');
+        if (features[0]) {
+            if (data.login_feature1_title) features[0].querySelector('b').textContent = data.login_feature1_title;
+            if (data.login_feature1_desc) features[0].querySelector('span').textContent = data.login_feature1_desc;
+        }
+        if (features[1]) {
+            if (data.login_feature2_title) features[1].querySelector('b').textContent = data.login_feature2_title;
+            if (data.login_feature2_desc) features[1].querySelector('span').textContent = data.login_feature2_desc;
         }
     });
     </script>

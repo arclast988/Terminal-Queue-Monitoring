@@ -1432,31 +1432,32 @@ $slotsMeta = [
                     </div>
                     <div class="form-group">
                         <label class="form-label">Login Eyebrow / Kicker</label>
-                        <input type="text" name="login_kicker" class="form-input" value="<?= esc($s['login_kicker'] ?? 'Terminal Operations') ?>" maxlength="60" placeholder="e.g. Terminal Operations">
+                        <input type="text" name="login_kicker" class="form-input" value="<?= esc(login_kicker()) ?>" maxlength="60" placeholder="e.g. Terminal Operations">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Login Main Headline</label>
-                        <input type="text" name="login_headline" class="form-input" value="<?= esc($s['login_headline'] ?? 'Move every van, jeepney & bus on time.') ?>" maxlength="120" placeholder="e.g. Move every van, jeepney & bus on time.">
+                        <input type="text" name="login_headline" class="form-input" value="<?= esc(login_headline()) ?>" maxlength="120" placeholder="e.g. Keep every trip on time.">
                     </div>
                     <div class="form-group full-width">
                         <label class="form-label">Login Subheadline / Description</label>
-                        <textarea name="login_subheadline" class="form-input" rows="2" maxlength="250" placeholder="e.g. gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule."><?= esc($s['login_subheadline'] ?? 'gives dispatchers a live view of vehicle queues, routes, and departures — so every trip leaves the terminal on schedule.') ?></textarea>
+                        <textarea name="login_subheadline" class="form-input" rows="2" maxlength="250" placeholder="e.g. gives dispatchers a clear view of every route and its next departure."><?= esc(login_subheadline()) ?></textarea>
+                        <small class="form-text">This text follows the system name on the login page.</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Feature 1 Title</label>
-                        <input type="text" name="login_feature1_title" class="form-input" value="<?= esc($s['login_feature1_title'] ?? 'Real-time queue') ?>" maxlength="60" placeholder="e.g. Real-time queue">
+                        <input type="text" name="login_feature1_title" class="form-input" value="<?= esc(login_feature1_title()) ?>" maxlength="60" placeholder="e.g. Live queue">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Feature 1 Description</label>
-                        <input type="text" name="login_feature1_desc" class="form-input" value="<?= esc($s['login_feature1_desc'] ?? 'Live queue and departure status across every route.') ?>" maxlength="120" placeholder="e.g. Live queue and departure status across every route.">
+                        <input type="text" name="login_feature1_desc" class="form-input" value="<?= esc(login_feature1_desc()) ?>" maxlength="120" placeholder="e.g. See which vehicle is next in line.">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Feature 2 Title</label>
-                        <input type="text" name="login_feature2_title" class="form-input" value="<?= esc($s['login_feature2_title'] ?? 'Secure & audited') ?>" maxlength="60" placeholder="e.g. Secure & audited">
+                        <input type="text" name="login_feature2_title" class="form-input" value="<?= esc(login_feature2_title()) ?>" maxlength="60" placeholder="e.g. Role-based access">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Feature 2 Description</label>
-                        <input type="text" name="login_feature2_desc" class="form-input" value="<?= esc($s['login_feature2_desc'] ?? 'Role-based access with a full activity audit trail.') ?>" maxlength="120" placeholder="e.g. Role-based access with a full activity audit trail.">
+                        <input type="text" name="login_feature2_desc" class="form-input" value="<?= esc(login_feature2_desc()) ?>" maxlength="120" placeholder="e.g. Tools tailored to dispatchers and administrators.">
                     </div>
                 </div>
                 <div class="form-action-row">
