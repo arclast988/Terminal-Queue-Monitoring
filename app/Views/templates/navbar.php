@@ -8,4 +8,5 @@
  */
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/navigation.css?v=20260927a') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20260929a') ?>">
 <?= view('partials/header') ?>
