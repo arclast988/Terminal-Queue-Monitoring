@@ -1125,11 +1125,8 @@
                 <div class="step-item">
                     <div class="step-number">?</div>
                     <div class="step-text">
-                        <h5>How do I add this terminal monitor to my phone home screen?</h5>
-                        <p>
-                            <strong>On iPhone / iPad (Safari):</strong> Tap the <em>Share button</em> (square with arrow pointing up) and select <strong>Add to Home Screen</strong>.<br>
-                            <strong>On Android (Chrome):</strong> Tap the <em>Three Dots menu</em> (top right) and tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.
-                        </p>
+                        <h5>Do I need to install an app on my phone?</h5>
+                        <p>No. Open the Terminal Queue Monitoring website in your phone's browser and continue as a guest to view public queue, route, departure, and fare information.</p>
                     </div>
                 </div>
 

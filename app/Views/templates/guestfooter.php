@@ -197,21 +197,17 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                 </div>
             </div>
 
-            <!-- Item 7: Mobile Web & Home Screen Access -->
+            <!-- Item 7: Mobile browser access -->
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
-                    <h4 class="accordion-header-text"><i class="fas fa-mobile-screen-button" style="color:#0284c7;"></i> 7. Mobile Browser & Smartphone Tips</h4>
+                    <h4 class="accordion-header-text"><i class="fas fa-mobile-screen-button" style="color:#0284c7;"></i> 7. Using the Website on a Phone</h4>
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>No App Store or Play Store download is required. For fast, one-tap access on your phone:</p>
-                    <ol style="padding-left: 20px; margin: 0 0 10px 0;">
-                        <li><strong>Android (Chrome):</strong> Tap the three-dot browser menu &rarr; tap <em>"Add to Home screen"</em> or <em>"Install app"</em>.</li>
-                        <li><strong>iPhone (Safari):</strong> Tap the Share button &rarr; scroll down and tap <em>"Add to Home Screen"</em>.</li>
-                    </ol>
+                    <p>Open the Terminal Queue Monitoring website in your phone's browser to view live queues, routes, departures, and fares. There is no separate mobile app to install.</p>
                     <div class="help-tip">
                         <i class="fas fa-check-circle"></i>
-                        <span>This creates a dedicated full-screen icon on your phone that launches the terminal monitor instantly like a native app.</span>
+                        <span>Save the website as a browser bookmark if you want to find it quickly on your next visit.</span>
                     </div>
                 </div>
             </div>
