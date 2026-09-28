@@ -255,7 +255,7 @@
         .hero-art {
             display: grid;
             place-items: center;
-            width: 270px;
+            width: 310px;
             min-height: 250px;
             margin-inline: auto;
             padding: 12px;
@@ -291,7 +291,7 @@
         }
 
         @media (min-width: 992px) and (max-width: 1199px) {
-            .hero-art { width: 270px; min-height: 250px; margin-inline: auto; }
+            .hero-art { width: 310px; min-height: 250px; margin-inline: auto; }
         }
 
         /* =================================================================
