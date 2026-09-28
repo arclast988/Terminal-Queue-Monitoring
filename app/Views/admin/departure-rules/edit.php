@@ -288,7 +288,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                 <span id="rule-contradiction-msg"></span>
             </div>
 
-            <div class="card-modern">
+            <div class="card-modern fade-in">
                 <div class="card-header-modern">
                     <span class="card-title-modern"><i class="bi bi-gear me-2"></i> Rule Configuration</span>
                 </div>

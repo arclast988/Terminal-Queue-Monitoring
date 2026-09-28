@@ -132,7 +132,7 @@
 
             <?= $this->include('partials/flash_notices') ?>
 
-            <div class="card-modern">
+            <div class="card-modern fade-in">
                 <div class="card-header-modern">
                     <span class="card-title-modern"><i class="bi bi-map me-2"></i> Route Information</span>
                 </div>

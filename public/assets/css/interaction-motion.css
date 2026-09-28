@@ -1,12 +1,12 @@
 /* Shared motion for page changes and overlays. Keep paint-heavy effects off phones. */
 @keyframes tq-content-enter {
-  from { opacity: .9; transform: translate3d(0, 5px, 0); }
+  from { opacity: .12; transform: translate3d(0, 10px, 0); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes tq-content-enter-small {
-  from { opacity: .9; }
-  to { opacity: 1; }
+  from { opacity: .35; transform: translate3d(0, 5px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
 @keyframes tq-overlay-enter {
@@ -15,7 +15,7 @@
 }
 
 @keyframes tq-dialog-enter {
-  from { opacity: .94; transform: translate3d(0, 6px, 0); }
+  from { opacity: .55; transform: translate3d(0, 12px, 0) scale(.98); }
   to { opacity: 1; transform: translate3d(0, 0, 0); }
 }
 
@@ -23,7 +23,7 @@
   /* The form wrapper enters once; its fields do not each animate in sequence. */
   body .fade-in:not(.alert-modern):not(.alert):not(.alert-success-banner):not(.alert-error-banner),
   body .form-entry-page {
-    animation: tq-content-enter .22s cubic-bezier(.2, .8, .2, 1) backwards;
+    animation: tq-content-enter .3s cubic-bezier(.2, .8, .2, 1) backwards;
   }
 
   body .form-entry-page .fade-in {
@@ -32,8 +32,8 @@
 
   /* Bootstrap dialogs keep their native show/hide behavior and focus handling. */
   .modal.fade .modal-dialog {
-    transform: translate3d(0, 8px, 0) scale(.99);
-    transition: transform .2s cubic-bezier(.2, .8, .2, 1);
+    transform: translate3d(0, 12px, 0) scale(.98);
+    transition: transform .25s cubic-bezier(.2, .8, .2, 1);
   }
 
   .modal.fade.show .modal-dialog {
@@ -41,16 +41,16 @@
   }
 
   .modal-backdrop.fade {
-    transition: opacity .2s ease;
+    transition: opacity .25s ease;
   }
 
   /* Guest support dialogs are shown with a class instead of Bootstrap. */
   .support-modal-backdrop.active {
-    animation: tq-overlay-enter .18s ease-out backwards;
+    animation: tq-overlay-enter .22s ease-out backwards;
   }
 
   .support-modal-backdrop.active .support-modal {
-    animation: tq-dialog-enter .2s cubic-bezier(.2, .8, .2, 1) backwards;
+    animation: tq-dialog-enter .25s cubic-bezier(.2, .8, .2, 1) backwards;
   }
 }
 
@@ -58,12 +58,12 @@
   body .fade-in:not(.alert-modern):not(.alert):not(.alert-success-banner):not(.alert-error-banner),
   body .form-entry-page {
     animation-name: tq-content-enter-small;
-    animation-duration: .16s;
+    animation-duration: .24s;
   }
 
   .modal.fade .modal-dialog {
-    transform: translate3d(0, 4px, 0);
-    transition-duration: .16s;
+    transform: translate3d(0, 7px, 0) scale(.99);
+    transition-duration: .22s;
   }
 }
 
