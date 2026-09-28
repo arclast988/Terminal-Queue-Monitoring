@@ -625,6 +625,9 @@ table:not(.selection-mode-active) .bulk-select-cell {
         transition: background-color 0.2s ease, border-color 0.2s ease;
         position: relative;
     }
+    #vehicles-table.selection-mode-active tbody tr {
+        transition: none;
+    }
     #vehicles-table.selection-mode-active tbody tr.vehicle-row-selected {
         background: var(--primary-soft, #fff1f2) !important;
         border-color: var(--primary, #b71c1c) !important;
@@ -975,7 +978,23 @@ table:not(.selection-mode-active) .bulk-select-cell {
         flex: 0 0 auto !important;
     }
     @media (max-width: 768px) {
-        .vehicle-filter-controls { flex-basis: 100%; width: 100%; }
+        .vehicle-filter-controls {
+            flex-basis: 100%;
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .vehicle-filter-controls .filter-label-text {
+            height: auto !important;
+            min-height: 20px;
+        }
+        .vehicle-filter-strip {
+            width: 100%;
+            flex: 0 0 auto;
+        }
+        .vehicle-filter-strip .vf-btn {
+            flex: 0 0 auto !important;
+        }
     }
 </style>
 
@@ -1122,13 +1141,9 @@ table:not(.selection-mode-active) .bulk-select-cell {
         const toolbar = document.getElementById('vehicle-bulk-toolbar');
         const btnText = document.getElementById('btn-select-vehicles-text');
         const btn = document.getElementById('btn-toggle-select-vehicles');
-        const bulkCells = document.querySelectorAll('#vehicles-table .bulk-col');
 
         if (isVehicleSelectMode) {
             if (table) table.classList.add('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
@@ -1138,9 +1153,6 @@ table:not(.selection-mode-active) .bulk-select-cell {
             updateVehicleBulkToolbar();
         } else {
             if (table) table.classList.remove('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');
@@ -1152,11 +1164,23 @@ table:not(.selection-mode-active) .bulk-select-cell {
     }
 
     // Bulk selection handlers
-    function updateVehicleBulkToolbar() {
-        const checkedBoxes = Array.from(document.querySelectorAll('.vehicle-row-checkbox:checked'));
+    function updateVehicleBulkToolbar(changedRow = null) {
+        let count = 0;
+        let visibleCount = 0;
+        let visibleChecked = 0;
         document.querySelectorAll('#vehicles-table tbody tr[data-type]').forEach(function(row) {
             const checkbox = row.querySelector('.vehicle-row-checkbox');
-            row.classList.toggle('vehicle-row-selected', Boolean(checkbox && checkbox.checked));
+            const checked = Boolean(checkbox && checkbox.checked);
+            if (checked) count++;
+            if (changedRow === null || changedRow === row) {
+                if (row.classList.contains('vehicle-row-selected') !== checked) {
+                    row.classList.toggle('vehicle-row-selected', checked);
+                }
+            }
+            if (!row.classList.contains('vehicle-row-hidden') && checkbox) {
+                visibleCount++;
+                if (checked) visibleChecked++;
+            }
         });
         const toolbar = document.getElementById('vehicle-bulk-toolbar');
         const countEl = document.getElementById('vehicle-selected-count');
@@ -1167,7 +1191,6 @@ table:not(.selection-mode-active) .bulk-select-cell {
 
         if (!toolbar) return;
 
-        const count = checkedBoxes.length;
         if (countEl) countEl.textContent = count;
         if (textEl) textEl.textContent = (count === 1 ? 'vehicle selected' : 'vehicles selected');
 
@@ -1195,13 +1218,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
 
         const selectAll = document.getElementById('select-all-vehicles');
         const tableHeadSelectAll = document.getElementById('table-head-select-all-vehicles');
-        const visibleCheckboxes = Array.from(document.querySelectorAll('#vehicles-table tbody tr[data-type]'))
-            .filter(tr => !tr.classList.contains('vehicle-row-hidden'))
-            .map(tr => tr.querySelector('.vehicle-row-checkbox'))
-            .filter(cb => cb);
-
-        const allChecked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
-        const someChecked = visibleCheckboxes.some(cb => cb.checked) && !allChecked;
+        const allChecked = visibleCount > 0 && visibleChecked === visibleCount;
+        const someChecked = visibleChecked > 0 && !allChecked;
 
         if (selectAll) {
             selectAll.checked = allChecked;
@@ -1337,7 +1355,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         if (tableBody) {
             tableBody.addEventListener('change', function(e) {
                 if (e.target && e.target.classList.contains('vehicle-row-checkbox')) {
-                    updateVehicleBulkToolbar();
+                    updateVehicleBulkToolbar(e.target.closest('tr'));
                 }
             });
             tableBody.addEventListener('click', function(e) {

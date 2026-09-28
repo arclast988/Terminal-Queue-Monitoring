@@ -628,7 +628,7 @@
             flex-shrink: 0;
             display: grid;
             grid-template-columns: auto minmax(0, 1fr);
-            align-items: center;
+            align-items: baseline;
             gap: 10px;
         }
 
@@ -935,10 +935,17 @@
             border: 1px solid #edf2f7;
             display: flex;
             flex-wrap: nowrap;
-            align-items: center;
+            align-items: baseline;
             gap: 10px;
             animation: fadeInUp 0.5s ease-out both;
             animation-delay: 0.2s;
+        }
+
+        .quick-filter-bar .filter-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex: 0 0 auto;
         }
 
         .filter-group {
@@ -1674,6 +1681,9 @@
         @media (max-width: 640px) {
             .quick-filter-bar {
                 padding: 12px 15px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
             }
             .filter-chip {
                 padding: 6px 12px;
@@ -1900,11 +1910,16 @@
             }
         }
 
+        @media (max-width: 640px) {
+            .rules-filter-bar {
+                gap: 8px;
+                grid-template-columns: minmax(0, 1fr);
+            }
+        }
+
         @media (max-width: 480px) {
             .rules-filter-bar {
                 padding: 10px 14px;
-                gap: 8px;
-                grid-template-columns: minmax(0, 1fr);
             }
 
             .rules-route-chip {
@@ -2280,6 +2295,7 @@
 
                 <!-- Quick Filters -->
                 <div class="quick-filter-bar" id="quickFilterBar">
+                    <span class="filter-label"><i class="fas fa-filter" aria-hidden="true"></i> Route:</span>
                     <div class="filter-group" id="filterDestGroup">
                         <button class="filter-chip active" data-filter="all" data-type="all">
                             All Routes <span class="chip-count"><?= $totalQueueCount ?></span>

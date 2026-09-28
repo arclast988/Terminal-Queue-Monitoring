@@ -1496,7 +1496,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         border: 1.5px solid var(--border, #e2e8f0) !important;
         border-left: 5px solid transparent !important;
         background: var(--surface, #ffffff);
-        transition: all 0.18s ease-in-out;
+        transition: background-color 0.12s ease, border-color 0.12s ease;
         position: relative;
         display: flex;
         align-items: center;
@@ -3164,14 +3164,14 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         function updateOrderIndicators() {
             var items = getVehicleItems();
+            var positions = new Map(selectedOrder.map(function(id, index) { return [id, index + 1]; }));
             items.forEach(function(card) {
                 var cb = card.querySelector('.vehicle-checkbox');
                 if (!cb) return;
-                var idx = selectedOrder.indexOf(cb.value);
+                var positionNum = positions.get(cb.value);
                 var numSpan = card.querySelector('.queue-order-num');
 
-                if (idx !== -1 && cb.checked) {
-                    var positionNum = idx + 1;
+                if (positionNum && cb.checked) {
                     if (numSpan) {
                         numSpan.textContent = '#' + positionNum;
                         numSpan.style.visibility = 'visible';
@@ -3188,10 +3188,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
         function updateSelectionCount() {
             // Keep selectedOrder in sync with checked checkboxes (fresh DOM —
             // realtime refresh may have removed vehicles that are now queued).
-            selectedOrder = selectedOrder.filter(function(id) {
-                var cb = document.querySelector('#vehicleListContainer .vehicle-checkbox[value="' + id + '"]');
-                return cb && cb.checked;
+            var checkedIds = new Set();
+            getCheckboxes().forEach(function(cb) {
+                if (cb.checked) checkedIds.add(cb.value);
             });
+            selectedOrder = selectedOrder.filter(function(id) { return checkedIds.has(id); });
 
             var checkedCount = selectedOrder.length;
             var curSubmit = getSubmitBtn() || submitBtn;
@@ -3220,15 +3221,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
         // Delegated handlers — survive realtime list replacement (QueueSync
         // swaps #vehicleListContainer innerHTML when admin edits vehicles).
         // Card click toggles its checkbox; checkbox change keeps order in sync.
-        function toggleVehicleCard(card, checkboxClicked) {
+        function toggleVehicleCard(card) {
             var container = document.getElementById('vehicleListContainer');
             if (!container || !card || !container.contains(card)) return;
             var cb = card.querySelector('.vehicle-checkbox');
             if (!cb) return;
             var vId = cb.value;
-            if (!checkboxClicked) {
-                cb.checked = !cb.checked;
-            }
+            cb.checked = !cb.checked;
             if (cb.checked) {
                 if (selectedOrder.indexOf(vId) === -1) selectedOrder.push(vId);
             } else {
@@ -3285,7 +3284,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             var card = e.target.closest ? e.target.closest('#vehicleListContainer .vehicle-select-item') : null;
             if (!card) return;
             var isCheckbox = e.target.classList && e.target.classList.contains('vehicle-checkbox');
-            toggleVehicleCard(card, isCheckbox);
+            if (!isCheckbox) toggleVehicleCard(card);
         });
 
         document.addEventListener('change', function(e) {

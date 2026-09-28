@@ -72,11 +72,9 @@ if (!isset($countActive)) {
                 </button>
             </div>
             
-            <div class="user-filter-bar d-flex flex-wrap align-items-center gap-2" role="group" aria-label="Filter users by role or status">
-                <span class="user-filter-heading d-none d-sm-inline-flex align-items-center" style="font-size:13px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">
-                    <i class="bi bi-funnel me-1" style="font-size: 14px;"></i>Filter:
-                </span>
-                
+            <div class="user-filter-controls">
+                <span class="user-filter-heading"><i class="bi bi-funnel" aria-hidden="true"></i> Filter:</span>
+                <div class="user-filter-bar d-flex flex-wrap align-items-center gap-2" role="group" aria-label="Filter users by role or status">
                 <button type="button" class="vf-btn active" id="filter-btn-all" onclick="filterUsers('all')">
                     <i class="bi bi-grid-3x3-gap-fill"></i> All
                     <span class="vf-count"><?= $totalActiveUsers ?></span>
@@ -100,6 +98,7 @@ if (!isset($countActive)) {
                     <i class="bi bi-archive-fill"></i> Archived
                     <span class="vf-count"><?= $countArchived ?></span>
                 </button>
+                </div>
             </div>
         </div>
         
@@ -954,7 +953,34 @@ table:not(.selection-mode-active) .bulk-select-cell {
         color: #fff !important;
     }
 
+    .user-filter-controls {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .user-filter-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 auto;
+        font-size: 13px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+    .user-filter-bar {
+        min-width: 0;
+    }
+
     @media (max-width: 991.98px) {
+        .user-filter-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
         .user-filter-bar {
             min-width: 0;
             max-width: 100%;
@@ -969,7 +995,6 @@ table:not(.selection-mode-active) .bulk-select-cell {
         .user-filter-bar .vf-btn {
             flex: 0 0 auto !important;
         }
-        .user-filter-bar .user-filter-heading,
         .user-filter-bar .vf-divider {
             display: none !important;
         }
@@ -1139,13 +1164,9 @@ table:not(.selection-mode-active) .bulk-select-cell {
         const toolbar = document.getElementById('user-bulk-toolbar');
         const btnText = document.getElementById('btn-select-users-text');
         const btn = document.getElementById('btn-toggle-select-users');
-        const bulkCells = document.querySelectorAll('#users-table .bulk-col');
 
         if (isUserSelectMode) {
             if (table) table.classList.add('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
@@ -1155,9 +1176,6 @@ table:not(.selection-mode-active) .bulk-select-cell {
             updateUserBulkToolbar();
         } else {
             if (table) table.classList.remove('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');

@@ -76,8 +76,9 @@ final class QueueFilterChipsTest extends CIUnitTestCase
         $this->assertStringContainsString('.filter-chip .chip-count', $html);
         $this->assertStringContainsString('.filter-chip.active .chip-count', $html);
 
-        // Verify JS contains dynamic rebuild logic with chip-count
-        $this->assertStringContainsString('<span class="chip-count">\' + totalCount + \'</span>', $html);
-        $this->assertStringContainsString('<span class="chip-count">\' + count + \'</span>', $html);
+        // Dynamic counts are added as text nodes so route names cannot inject markup.
+        $this->assertStringContainsString("fragment.appendChild(makeQueueFilterChip('all', 'all', 'All Routes', totalCount", $html);
+        $this->assertStringContainsString("badge.className = 'chip-count'", $html);
+        $this->assertStringContainsString('badge.textContent = count;', $html);
     }
 }

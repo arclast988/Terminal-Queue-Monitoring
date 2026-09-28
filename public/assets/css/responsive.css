@@ -2198,9 +2198,7 @@ a[title*="delete" i]:hover .bi,
   }
 
   html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell:hover,
-  html body table.table-modern.selection-mode-active tbody tr td.bulk-select-cell:has(input:checked),
-  html body .selection-mode-active tbody tr td.bulk-select-cell:hover,
-  html body .selection-mode-active tbody tr td.bulk-select-cell:has(input:checked) {
+  html body .selection-mode-active tbody tr td.bulk-select-cell:hover {
     background: transparent !important;
     border: none !important;
     border-bottom: 1px solid #e2e8f0 !important;
@@ -2250,7 +2248,7 @@ a[title*="delete" i]:hover .bi,
     -moz-appearance: none !important;
     appearance: none !important;
     position: relative !important;
-    transition: all 0.15s ease-in-out !important;
+    transition: none !important;
   }
 
   /* Checked State with Clear High-Contrast White Checkmark */

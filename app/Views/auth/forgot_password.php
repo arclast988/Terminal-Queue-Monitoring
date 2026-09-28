@@ -95,7 +95,7 @@
 
         .brand { display: inline-flex; align-items: center; gap: 14px; animation: fadeDown .6s ease .1s both; }
         .brand-mark {
-            width: 60px; height: 60px; border-radius: 16px;
+            width: 60px; height: 60px; border-radius: 50%;
             padding: 3.5px;
             background: rgba(255, 255, 255, 0.9);
             border: 2px solid var(--border);
@@ -106,7 +106,7 @@
         }
         .brand-mark img {
             display: block; width: 100%; height: 100%;
-            border-radius: 12px; object-fit: cover;
+            border-radius: 50%; object-fit: cover;
         }
         .brand-name { font-size: 21px; font-weight: 800; letter-spacing: -.015em; color: #000000 !important; line-height: 1.2; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
         .brand-sub { display: block; font-size: 13.5px; font-weight: 800; color: #000000 !important; margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
@@ -225,7 +225,7 @@
             <div class="card-head">
                 <span class="step-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M13 2L4.5 12.5h6L10 22l8.5-10.5h-6z"/>
+                        <circle cx="8" cy="15" r="4"/><path d="M11 12 21 2m-4 0h4v4"/>
                     </svg>
                 </span>
                 <h1>Forgot password?</h1>

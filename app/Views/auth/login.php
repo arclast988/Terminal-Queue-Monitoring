@@ -629,7 +629,27 @@
             .brand-sub { font-size: 12px; }
             .login-card { padding: 18px 14px; border-radius: var(--radius-md); }
             .login-card h2 { font-size: 20px; }
+        }
+
+        @media (max-width: 350px) {
             .options { flex-direction: column; align-items: flex-start; gap: 4px; }
+        }
+
+        @media (min-width: 1025px) {
+            .page { padding-top: 20px; padding-bottom: 24px; }
+            .brand { margin-bottom: 20px; }
+            .hero-copy h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
+            .features { margin-top: 24px; gap: 12px; }
+            .hero-art { margin-top: clamp(16px, 2.5vh, 28px); }
+            .hero-art img { max-height: clamp(190px, 25vh, 320px); }
+            .page-foot { margin-top: 20px; }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) and (max-height: 820px) {
+            .page { padding-top: 16px; padding-bottom: 16px; }
+            .brand { margin-bottom: 16px; }
+            .login-card { padding-top: 24px; padding-bottom: 24px; }
+            .page-foot { margin-top: 16px; }
         }
     </style>
 </head>

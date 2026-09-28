@@ -1119,6 +1119,10 @@
     }
 
 /* Footer styling */
+body.guest-theme > footer {
+    margin-top: auto;
+}
+
 footer {
     background: #1a202c !important;
     color: white;

@@ -20,7 +20,7 @@
 
 .rule-filter-left {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: 12px;
     flex-wrap: nowrap;
     width: 100%;
@@ -112,11 +112,16 @@
     color: #ffffff;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .rule-filter-left {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
+    }
+    .rule-filter-group {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 auto;
     }
 }
 

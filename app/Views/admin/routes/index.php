@@ -712,13 +712,9 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         const toolbar = document.getElementById('route-bulk-toolbar');
         const btnText = document.getElementById('btn-select-routes-text');
         const btn = document.getElementById('btn-toggle-select-routes');
-        const routeBoxes = document.querySelectorAll('.route-group-checkbox');
 
         if (isRouteSelectMode) {
             if (container) container.classList.add('selection-mode-active');
-            routeBoxes.forEach(function(b) {
-                b.style.setProperty('display', 'inline-block', 'important');
-            });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
@@ -728,9 +724,6 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
             updateRouteBulkToolbar();
         } else {
             if (container) container.classList.remove('selection-mode-active');
-            routeBoxes.forEach(function(b) {
-                b.style.setProperty('display', 'none', 'important');
-            });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');

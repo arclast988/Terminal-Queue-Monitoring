@@ -146,7 +146,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
                         <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
-                        <th>ID</th>
+                        <th>No.</th>
                         <th>Terminal</th>
                         <th>Severity</th>
                         <th>Message</th>
@@ -159,14 +159,14 @@ table:not(.selection-mode-active) .bulk-select-cell {
                 </thead>
                 <tbody>
                     <?php if (!empty($announcements) && is_array($announcements)): ?>
-                        <?php foreach ($announcements as $a): ?>
+                        <?php foreach ($announcements as $rowNumber => $a): ?>
                             <tr data-announcement-id="<?= $a['id'] ?>">
                                 <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
                                 <td data-label="Select" class="bulk-col bulk-select-cell" style="display: none; text-align: center;">
                                     <input type="checkbox" class="form-check-input announcement-row-checkbox" value="<?= $a['id'] ?>" data-id="<?= $a['id'] ?>" data-message="<?= esc(strlen($a['message']) > 60 ? substr($a['message'], 0, 60) . '…' : $a['message']) ?>" data-terminal="<?= esc($a['terminal_name'] ?? '—') ?>" title="Select announcement #<?= $a['id'] ?>">
                                 </td>
                                 <?php endif; ?>
-                                <td data-label="ID"><strong>#<?= $a['id'] ?></strong></td>
+                                <td data-label="No."><strong><?= $rowNumber + 1 ?></strong></td>
                                 <td data-label="Terminal"><span class="badge-modern badge-modern-primary"><?= strtoupper(esc($a['terminal_name'] ?? '—')) ?></span></td>
                                 <td data-label="Severity">
                                     <?php
@@ -676,13 +676,9 @@ body.modal-open #deleteAnnouncementModal,
         const toolbar = document.getElementById('announcement-bulk-toolbar');
         const btnText = document.getElementById('btn-select-announcements-text');
         const btn = document.getElementById('btn-toggle-select-announcements');
-        const bulkCells = document.querySelectorAll('#announcements-table .bulk-col');
 
         if (window.isAnnouncementSelectMode) {
             if (table) table.classList.add('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
@@ -692,9 +688,6 @@ body.modal-open #deleteAnnouncementModal,
             updateAnnouncementBulkToolbar();
         } else {
             if (table) table.classList.remove('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');

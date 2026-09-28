@@ -143,8 +143,9 @@ if (!empty($recent_departures)) {
             </div>
 
             <!-- Vehicle Type Filter Chips -->
-            <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="departure-type-filter">
                 <span class="filter-label-text"><i class="bi bi-funnel me-1"></i>TYPE:</span>
+                <div class="departure-type-options" role="group" aria-label="Filter departures by vehicle type">
                 <button type="button" class="dep-filter-btn active" data-type="all" onclick="setDepartureTypeFilter('all', this)">
                     <i class="bi bi-grid-fill me-1"></i> All <span class="dep-chip-count" id="count-all"><?= $totalDepartures ?></span>
                 </button>
@@ -180,6 +181,7 @@ if (!empty($recent_departures)) {
                         Van <span class="dep-chip-count"><?= $typeCounts['van'] ?? 0 ?></span>
                     </button>
                 <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -437,6 +439,31 @@ if (!empty($recent_departures)) {
         align-items: center;
     }
 
+    .departure-type-filter {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        flex: 1 1 420px;
+        min-width: 0;
+    }
+    .departure-type-options {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        padding-bottom: 4px;
+    }
+    .departure-type-options .dep-filter-btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
     /* Filter chips */
     .dep-filter-btn {
         display: inline-flex;
@@ -524,6 +551,16 @@ if (!empty($recent_departures)) {
     }
 
     @media (max-width: 768px) {
+        .departure-type-filter {
+            flex-basis: 100%;
+            width: 100%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .departure-type-options {
+            width: 100%;
+            flex: 0 0 auto;
+        }
         .departure-search-group {
             max-width: 100% !important;
             min-width: 0 !important;
@@ -531,8 +568,7 @@ if (!empty($recent_departures)) {
             margin-bottom: 8px;
         }
         .filter-label-text {
-            width: 100%;
-            margin-bottom: 4px;
+            margin-bottom: 0;
         }
     }
 </style>

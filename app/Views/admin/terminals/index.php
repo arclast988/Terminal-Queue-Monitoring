@@ -495,13 +495,9 @@ body.modal-open #deleteTerminalConfirmModal,
         const toolbar = document.getElementById('terminal-bulk-toolbar');
         const btnText = document.getElementById('btn-select-terminals-text');
         const btn = document.getElementById('btn-toggle-select-terminals');
-        const bulkCells = document.querySelectorAll('#terminals-table .bulk-col');
 
         if (window.isTerminalSelectMode) {
             if (table) table.classList.add('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.add('is-visible');
                 toolbar.style.setProperty('display', 'flex', 'important');
@@ -511,9 +507,6 @@ body.modal-open #deleteTerminalConfirmModal,
             updateTerminalBulkToolbar();
         } else {
             if (table) table.classList.remove('selection-mode-active');
-            bulkCells.forEach(function(c) {
-                c.style.removeProperty('display');
-            });
             if (toolbar) {
                 toolbar.classList.remove('is-visible');
                 toolbar.style.setProperty('display', 'none', 'important');
