@@ -250,13 +250,13 @@
         .hero-support.has-custom-artwork { display: block; }
         .hero-support.has-custom-artwork .features { margin-bottom: var(--space-5); }
         @media (min-width: 992px) {
-            .hero-support:not(.has-custom-artwork) { max-width: 44ch; }
+            .hero-support:not(.has-custom-artwork) { max-width: 48ch; }
         }
         .hero-art {
             display: grid;
             place-items: center;
-            width: 310px;
-            min-height: 250px;
+            width: 360px;
+            min-height: 270px;
             margin-inline: auto;
             padding: 12px;
             border-radius: 20px;
@@ -267,16 +267,17 @@
             box-shadow: 0 12px 26px -18px rgba(153, 27, 27, .32), 0 0 0 3px rgba(220, 38, 38, .04);
         }
         .hero-art:not(.has-custom-artwork) {
-            background: radial-gradient(circle at 50% 45%, rgba(255, 220, 140, .18), transparent 65%), radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .09), transparent 62%), rgba(255, 255, 255, .97);
+            background: radial-gradient(circle at 50% 46%, rgba(255, 215, 125, .24), transparent 61%), radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .07), transparent 64%), linear-gradient(135deg, #fff 10%, #fff9f1 55%, #fff);
+            box-shadow: 0 16px 32px -20px rgba(153, 27, 27, .4), 0 0 0 3px rgba(220, 38, 38, .045), inset 0 1px 0 rgba(255, 255, 255, .95);
         }
         .hero-art img {
             display: block;
-            width: 220px;
-            height: 220px;
+            width: 242px;
+            height: 242px;
             object-fit: contain;
         }
         .hero-art:not(.has-custom-artwork) img {
-            filter: drop-shadow(0 0 7px rgba(245, 184, 61, .22));
+            filter: drop-shadow(0 0 10px rgba(245, 184, 61, .26));
         }
         .hero-art.has-custom-artwork {
             width: min(100%, 420px);
@@ -291,7 +292,7 @@
         }
 
         @media (min-width: 992px) and (max-width: 1199px) {
-            .hero-art { width: 310px; min-height: 250px; margin-inline: auto; }
+            .hero-art { width: 360px; min-height: 270px; margin-inline: auto; }
         }
 
         /* =================================================================
@@ -688,7 +689,7 @@
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-support { margin-top: var(--space-3); }
-            .hero-art:not(.has-custom-artwork) img { max-height: 210px; }
+            .hero-art:not(.has-custom-artwork) img { max-height: 235px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
         }
