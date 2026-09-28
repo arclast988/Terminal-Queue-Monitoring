@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_3') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -50,7 +50,7 @@
 
                 <?= $this->include('partials/flash_notices') ?>
 
-                <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" data-no-change-guard>
+                <form class="user-account-form" action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post" data-no-change-guard>
                     <?= csrf_field() ?>
 
                     <?php
@@ -118,7 +118,7 @@ SVG;
                             <label for="password" class="form-label-modern">Password</label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-lock-fill"></i></span>
-                                <input type="password" class="input-modern" id="password" name="password" minlength="8" placeholder="Leave blank to keep current password">
+                                <input type="password" class="input-modern" id="password" name="password" minlength="8" placeholder="New password">
                                 <button type="button" class="btn-modern btn-modern-outline password-toggle" id="togglePassword" title="Show or hide password" aria-label="Show or hide password">
                                     <i class="bi bi-eye"></i>
                                 </button>

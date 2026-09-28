@@ -163,6 +163,17 @@
 .form-entry-page .input-group-text-modern > i,
 .form-entry-page .input-group-text-modern > .bi { font-size: 19px; }
 
+/* Keep the add/edit user field icons centered when mobile input groups resize. */
+.user-account-form .input-group-modern > .input-group-text-modern {
+    width: 48px !important;
+    min-width: 48px;
+    flex: 0 0 48px !important;
+    padding-inline: 0 !important;
+}
+
+.user-account-form .input-group-text-modern > i,
+.user-account-form .input-group-text-modern > .bi { font-size: 19px; }
+
 .form-entry-page .card-modern,
 .form-entry-page .modern-card,
 .form-entry-page .card-modern:hover,

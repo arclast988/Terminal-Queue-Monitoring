@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_3') ?>">
 
 <div class="form-entry-page">
 <div class="page-header-modern fade-in">
@@ -48,7 +48,7 @@ $defaultAvatarSvg = <<<SVG
 SVG;
 ?>
 
-                <form action="<?= base_url('admin/users/store') ?>" method="post" enctype="multipart/form-data">
+                <form class="user-account-form" action="<?= base_url('admin/users/store') ?>" method="post" enctype="multipart/form-data">
                     <?= csrf_field() ?>
 
                     <!-- Profile Photo Section -->
@@ -86,7 +86,7 @@ SVG;
                             <label for="password" class="form-label-modern">Password</label>
                             <div class="input-group-modern">
                                 <span class="input-group-text-modern"><i class="bi bi-lock-fill"></i></span>
-                                <input type="password" class="input-modern" id="password" name="password" required minlength="8" placeholder="Choose a strong password">
+                                <input type="password" class="input-modern" id="password" name="password" required minlength="8" placeholder="Enter password">
                                 <button type="button" class="btn-modern btn-modern-outline password-toggle" id="togglePassword" title="Show or hide password" aria-label="Show or hide password">
                                     <i class="bi bi-eye"></i>
                                 </button>
