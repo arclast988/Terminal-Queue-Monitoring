@@ -820,7 +820,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Remove the optional login page hero illustration.
+     * Restore the system logo in the login page hero panel.
      */
     public function resetLoginCard()
     {
@@ -836,12 +836,12 @@ class Settings extends BaseController
         get_all_system_settings(true);
         $this->broadcastBrandingChange('identity');
 
-        $this->logActivity('System Settings', 'Removed login page hero illustration');
+        $this->logActivity('System Settings', 'Restored system logo in login page hero panel');
 
         return $this->response->setJSON([
             'success'    => true,
-            'message'    => 'Login page artwork removed.',
-            'image_url'  => base_url('images/logo.webp'),
+            'message'    => 'System logo restored on the login page.',
+            'image_url'  => app_login_card_image(),
             'data'       => app_full_branding_payload('identity'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),

@@ -410,7 +410,7 @@
         }
 
         // 4b. Update Login Card Image
-        if (affectsIdentity && data.app_login_card_image) {
+        if ((affectsIdentity || affectsLogo) && data.app_login_card_image) {
             var loginCardUrl = data.app_login_card_image + (data.app_login_card_image.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
             var loginImg = document.getElementById('loginHeroImg');
             if (loginImg) {

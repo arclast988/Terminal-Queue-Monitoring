@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
 
 <div class="form-entry-page">
 <div class="page-header-modern fade-in">
@@ -52,14 +52,14 @@ SVG;
                     <?= csrf_field() ?>
 
                     <!-- Profile Photo Section -->
-                    <div class="p-3 mb-4 rounded-3 d-flex flex-wrap align-items-center gap-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <div id="createUserAvatarPreview" style="width: 60px; height: 60px; border-radius: 50%; background: #F1F5F9; border: 2px solid #15803d; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div class="user-avatar-panel">
+                        <div id="createUserAvatarPreview" class="user-form-avatar-preview">
                             <?= $defaultAvatarSvg ?>
                         </div>
-                        <div style="flex: 1 1 auto; min-width: 200px;">
-                            <div class="fw-bold" style="font-size: 14px; color: #1e293b;">Profile Picture <span class="text-muted fw-normal small">(Optional)</span></div>
-                            <div class="small text-muted mb-2">JPG, PNG, WEBP, or GIF image (max 4MB).</div>
-                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <div class="user-avatar-copy">
+                            <div class="user-avatar-title">Profile Picture <span class="text-muted fw-normal small">(Optional)</span></div>
+                            <div class="user-avatar-hint">JPG, PNG, WEBP, or GIF image (max 4MB).</div>
+                            <div class="user-avatar-actions">
                                 <input type="file" id="createAvatarFileInput" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none;">
                                 <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" onclick="document.getElementById('createAvatarFileInput').click();" id="btnCreateUploadPhoto">
                                     <i class="bi bi-camera-fill"></i> Upload Photo
@@ -67,8 +67,8 @@ SVG;
                                 <button type="button" class="btn-modern btn-modern-outline btn-modern-sm text-danger d-none" id="btnCreateRemovePhoto" onclick="removeCreateUserAvatar();" style="display: none !important;">
                                     <i class="bi bi-trash"></i> Remove Photo
                                 </button>
-                                <span id="createAvatarFeedback" class="small fw-semibold ms-2"></span>
                             </div>
+                            <span id="createAvatarFeedback" class="user-avatar-feedback"></span>
                         </div>
                     </div>
 
@@ -136,10 +136,10 @@ SVG;
                                     <i class="bi bi-x-circle-fill"></i>
                                 </button>
                             </div>
-                            <div class="form-check route-select-all">
+                            <label class="route-select-all" for="selectAllRoutes">
                                 <input class="form-check-input" type="checkbox" id="selectAllRoutes">
-                                <label class="form-check-label small" for="selectAllRoutes">Select all visible</label>
-                            </div>
+                                <span>Select all visible</span>
+                            </label>
                         </div>
 
                         <div class="route-picker border rounded p-3 bg-white">
@@ -220,19 +220,52 @@ SVG;
     .user-form-card .card-header { padding: 1rem 1.25rem !important; }
     .user-form-card .badge { white-space: nowrap; }
     .user-form-card .input-group-text { min-width: 42px; justify-content: center; }
-    .password-toggle { min-width: 44px; border-left: 1px solid #e2e8f0 !important; }
+    .password-toggle { min-width: 48px; border-left: 1px solid #e2e8f0 !important; }
     .route-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
-    .route-select-all { display: flex; align-items: center; min-height: 44px; margin: 0; padding-left: 1.75rem; white-space: nowrap; }
+    .route-select-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        flex: 0 0 auto;
+        min-height: 44px;
+        margin: 0;
+        padding: 8px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        background: #ffffff;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1.3;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .route-select-all .form-check-input {
+        float: none !important;
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        margin: 0 !important;
+        flex: 0 0 22px;
+        border: 2px solid #94a3b8;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .route-select-all .form-check-input:checked {
+        background-color: var(--primary, #b71c1c);
+        border-color: var(--primary, #b71c1c);
+    }
+    .route-select-all:focus-within { outline: 2px solid var(--primary, #b71c1c); outline-offset: 2px; }
     .route-picker { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
     .route-item { border-radius: 6px; margin-bottom: 0.25rem; min-height: 44px; padding: 0.55rem 0.65rem 0.55rem 2rem; }
     .route-item:last-child { margin-bottom: 0; }
-    .route-item .form-check-input { margin-left: -1.35rem; }
+    .route-item .form-check-input { width: 20px; height: 20px; margin-left: -1.35rem; border: 2px solid #94a3b8; }
     .route-name { font-weight: 600; color: var(--text-main, #1e293b); }
     .user-form-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
     @media (max-width: 767.98px) {
         .user-form-heading { align-items: flex-start !important; gap: 0.75rem; }
         .route-section-header { flex-direction: column; }
-        .route-select-all { padding-left: 1.5rem; white-space: normal; }
+        .route-select-all { align-self: flex-start; max-width: 100%; white-space: normal; }
         .route-item { padding-top: 0.5rem; padding-bottom: 0.5rem; }
     }
 </style>
@@ -269,7 +302,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function toggleRouteSection() {
         if (!roleSelect || !routeSection) return;
-        routeSection.style.display = roleSelect.value === 'staff' ? 'block' : 'none';
+        var isDispatcher = roleSelect.value === 'staff';
+        routeSection.style.display = isDispatcher ? 'block' : 'none';
+        routeCheckboxes.forEach(function(checkbox) { checkbox.disabled = !isDispatcher; });
+        if (selectAll) selectAll.disabled = !isDispatcher;
+        if (routeSearch) routeSearch.disabled = !isDispatcher;
     }
 
     if (togglePassword && passwordInput) {

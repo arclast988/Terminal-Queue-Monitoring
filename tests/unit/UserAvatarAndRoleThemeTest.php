@@ -87,9 +87,9 @@ final class UserAvatarAndRoleThemeTest extends CIUnitTestCase
         $this->assertStringContainsString('class="avatar-wrapper me-3 avatar-editable" id="avatar-wrapper-2"', $htmlSuper);
         $this->assertStringContainsString('class="avatar-wrapper me-3 avatar-editable" id="avatar-wrapper-3"', $htmlSuper);
 
-        // Avatar circle is enlarged to 44px
-        $this->assertStringContainsString('width: 44px;', $htmlSuper);
-        $this->assertStringContainsString('height: 44px;', $htmlSuper);
+        // User list avatars remain legible on desktop.
+        $this->assertStringContainsString('width: 58px;', $htmlSuper);
+        $this->assertStringContainsString('height: 58px;', $htmlSuper);
         $this->assertStringContainsString('font-size: 15px;', $htmlSuper);
 
         // Dispatchers filter tab has vf-dispatcher and active Emerald Green styling (#15803d)

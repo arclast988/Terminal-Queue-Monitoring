@@ -1,7 +1,7 @@
 <?= view('templates/header', ['title' => $title ?? 'Change Password']) ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
 
 <?php
 $sessionRole = session()->get('role');
@@ -401,14 +401,14 @@ SVG;
 }
 
 .form-control-modern.input-with-toggle {
-    padding-right: 48px !important;
+    padding-right: 54px !important;
 }
 
 .btn-toggle-eye {
     position: absolute;
     right: 0;
-    width: 44px;
-    height: 44px;
+    width: 50px;
+    height: 48px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -416,7 +416,7 @@ SVG;
     border: none;
     color: #94a3b8;
     padding: 0;
-    font-size: 16px;
+    font-size: 20px;
     cursor: pointer;
     border-radius: 6px;
     transition: color 0.15s ease;
@@ -452,12 +452,9 @@ SVG;
     background-color: rgba(239, 68, 68, 0.1) !important;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
 }
-@keyframes pulseGetCode {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .72; }
-}
 .btn-pulse-attention {
-    animation: pulseGetCode .55s ease-in-out 2 !important;
+    outline: 2px solid #15803d;
+    outline-offset: 2px;
 }
 
 /* Requirements & Feedback */
@@ -572,9 +569,6 @@ SVG;
     .change-password-page form > .change-password-actions.d-flex.justify-content-end.gap-2:last-child {
         grid-template-columns: minmax(0, 1fr) !important;
     }
-}
-@media (prefers-reduced-motion: reduce) {
-    .btn-pulse-attention { animation: none !important; }
 }
 </style>
 

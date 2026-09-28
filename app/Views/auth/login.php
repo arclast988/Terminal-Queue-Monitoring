@@ -173,6 +173,9 @@
         /* =================================================================
            Hero / Branding column
            ================================================================= */
+        .auth-page .hero { padding: 0 !important; min-height: 0 !important; }
+        .auth-page .hero .kicker { font-size: 12px !important; line-height: 1.35 !important; margin-bottom: var(--space-4) !important; }
+        .auth-page .hero .lede { font-size: 16px !important; line-height: 1.65 !important; margin-bottom: 0 !important; }
         .hero-copy {
             animation: fadeUp .7s ease .15s both;
         }
@@ -235,23 +238,51 @@
         .feature-text b { display: block; font-size: 14.5px; font-weight: 800; color: #000000 !important; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
         .feature-text span { font-size: 13.5px; color: #000000 !important; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
-        /* ---- Optional artwork supplied by Superadmin ---- */
-        .hero-art {
+        /* ---- Feature list and prominent system seal ---- */
+        .hero-support {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 190px;
+            align-items: start;
+            gap: 22px;
             margin-top: var(--space-6);
-            border-radius: var(--radius-2xl);
-            background: rgba(255, 255, 255, .88);
-            border: 1px solid rgba(15, 23, 42, .1);
-            overflow: hidden;
-            box-shadow: 0 12px 30px -22px rgba(15, 23, 42, .32);
-            padding: var(--space-4);
-            animation: fadeUp .6s ease .2s both;
         }
-        .hero-art[hidden] { display: none; }
+        .hero-support .features { margin-top: 0; }
+        .hero-support.has-custom-artwork { display: block; }
+        .hero-support.has-custom-artwork .features { margin-bottom: var(--space-5); }
+        .hero-art {
+            display: grid;
+            place-items: center;
+            min-height: 190px;
+            padding: 12px;
+            border-radius: 20px;
+            background: linear-gradient(150deg, rgba(255, 255, 255, .97), rgba(255, 245, 245, .93));
+            border: 1px solid rgba(183, 28, 28, .16);
+            border-bottom: 3px solid var(--red);
+            overflow: hidden;
+            box-shadow: 0 10px 24px -18px rgba(15, 23, 42, .28);
+        }
         .hero-art img {
             display: block;
+            width: 156px;
+            height: 156px;
+            object-fit: contain;
+        }
+        .hero-art.has-custom-artwork {
+            width: min(100%, 420px);
+            min-height: 0;
+            padding: var(--space-4);
+        }
+        .hero-art.has-custom-artwork img {
             width: 100%;
+            height: auto;
             max-height: 210px;
             object-fit: contain;
+        }
+
+        @media (min-width: 992px) and (max-width: 1180px) {
+            .hero-support { grid-template-columns: minmax(0, 1fr); }
+            .hero-art { width: 220px; min-height: 160px; }
+            .hero-art:not(.has-custom-artwork) img { width: 130px; height: 130px; }
         }
 
         /* =================================================================
@@ -524,9 +555,28 @@
             }
         }
 
-        /* Narrow tablets and phones use the centered form. */
+        /* Narrow tablets and phones keep the form first, with the seal below it. */
         @media (max-width: 991px) {
-            .hero { display: none; }
+            .hero { display: block; order: 2; width: 100%; }
+            .hero-copy { animation: none; }
+            .hero-copy > .kicker,
+            .hero-copy > h1,
+            .hero-copy > .lede,
+            .hero-support .features { display: none; }
+            .hero-support,
+            .hero-support.has-custom-artwork {
+                display: flex;
+                justify-content: center;
+                margin-top: var(--space-5);
+            }
+            .hero-art,
+            .hero-art.has-custom-artwork {
+                width: 100%;
+                min-height: 176px;
+                padding: 12px;
+            }
+            .hero-art:not(.has-custom-artwork) img { width: 150px; height: 150px; }
+            .login-col { order: 1; }
 
             .page {
                 max-width: 500px;
@@ -613,7 +663,7 @@
             .brand { margin-bottom: 20px; }
             .hero-copy h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
             .features { margin-top: 24px; gap: 12px; }
-            .hero-art { margin-top: var(--space-4); }
+            .hero-support { margin-top: var(--space-4); }
         }
 
         @media (min-width: 992px) and (min-height: 1000px) {
@@ -624,10 +674,12 @@
         @media (min-width: 992px) and (max-height: 820px) {
             .brand { margin-bottom: var(--space-3); }
             .hero-copy h1 { font-size: 2.2rem; }
-            .hero-copy .lede { margin-top: var(--space-2); font-size: 14px; }
+            .hero-copy .lede { margin-top: var(--space-2); }
+            .auth-page .hero .lede { font-size: 14px !important; }
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
-            .hero-art img { max-height: 145px; }
+            .hero-support { margin-top: var(--space-3); }
+            .hero-art:not(.has-custom-artwork) img { max-height: 145px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
         }
@@ -683,40 +735,41 @@
                     <p class="lede">
                         <?= esc(app_name()) ?> <?= esc(login_subheadline()) ?>
                     </p>
-                    <div class="features">
-                        <div class="feature">
-                            <span class="feature-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="9"/>
-                                    <path d="M12 7v5l3 3"/>
-                                </svg>
-                            </span>
-                            <span class="feature-text">
-                                <b><?= esc(login_feature1_title()) ?></b>
-                                <span><?= esc(login_feature1_desc()) ?></span>
-                            </span>
+                    <div class="hero-support <?= $hasCustomLoginArtwork ? 'has-custom-artwork' : '' ?>">
+                        <div class="features">
+                            <div class="feature">
+                                <span class="feature-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="9"/>
+                                        <path d="M12 7v5l3 3"/>
+                                    </svg>
+                                </span>
+                                <span class="feature-text">
+                                    <b><?= esc(login_feature1_title()) ?></b>
+                                    <span><?= esc(login_feature1_desc()) ?></span>
+                                </span>
+                            </div>
+                            <div class="feature">
+                                <span class="feature-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z"/>
+                                        <path d="M9.5 12l1.8 1.8 3.4-3.6"/>
+                                    </svg>
+                                </span>
+                                <span class="feature-text">
+                                    <b><?= esc(login_feature2_title()) ?></b>
+                                    <span><?= esc(login_feature2_desc()) ?></span>
+                                </span>
+                            </div>
                         </div>
-                        <div class="feature">
-                            <span class="feature-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6z"/>
-                                    <path d="M9.5 12l1.8 1.8 3.4-3.6"/>
-                                </svg>
-                            </span>
-                            <span class="feature-text">
-                                <b><?= esc(login_feature2_title()) ?></b>
-                                <span><?= esc(login_feature2_desc()) ?></span>
-                            </span>
+
+                        <div class="hero-art <?= $hasCustomLoginArtwork ? 'has-custom-artwork' : '' ?>" aria-hidden="true">
+                            <img src="<?= esc(app_login_card_image()) ?>"
+                                 id="loginHeroImg"
+                                 alt=""
+                                 width="1536" height="1024" loading="lazy" decoding="async">
                         </div>
                     </div>
-                </div>
-
-                <!-- Show uploaded artwork only; the brand logo is already in the page header. -->
-                <div class="hero-art" aria-hidden="true" <?= $hasCustomLoginArtwork ? '' : 'hidden' ?>>
-                    <img <?= $hasCustomLoginArtwork ? 'src="' . esc(app_login_card_image()) . '"' : '' ?>
-                         id="loginHeroImg"
-                         alt=""
-                         width="1536" height="1024" loading="lazy" decoding="async">
                 </div>
             </section>
 
@@ -817,7 +870,7 @@
 
     <script src="<?= base_url('assets/js/global-loader.js?v=20260920_2') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20260928_2') ?>"></script>
     <script>
     // Keep the editable login copy in sync with Superadmin's identity settings.
     document.addEventListener('pttm:branding-applied', function (e) {
@@ -855,8 +908,10 @@
             if (data.login_feature2_desc) features[1].querySelector('span').textContent = data.login_feature2_desc;
         }
         var artwork = document.querySelector('.hero-art');
-        if (artwork && typeof data.has_custom_login_card === 'boolean') {
-            artwork.hidden = !data.has_custom_login_card;
+        var support = document.querySelector('.hero-support');
+        if (artwork && support && typeof data.has_custom_login_card === 'boolean') {
+            artwork.classList.toggle('has-custom-artwork', data.has_custom_login_card);
+            support.classList.toggle('has-custom-artwork', data.has_custom_login_card);
         }
     });
     </script>

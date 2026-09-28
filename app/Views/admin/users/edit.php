@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -76,21 +76,21 @@ SVG;
                     ?>
 
                     <!-- Profile Photo Section -->
-                    <div class="p-3 mb-4 rounded-3 d-flex flex-wrap align-items-center gap-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                        <div id="editUserAvatarPreview" style="width: 60px; height: 60px; border-radius: 50%; background: #F1F5F9; border: 2.5px solid <?= $avatarBg ?>; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div class="user-avatar-panel">
+                        <div id="editUserAvatarPreview" class="user-form-avatar-preview" style="border-color: <?= $avatarBg ?>;">
                             <?php if (!empty($user['profile_image'])): ?>
                                 <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             <?php else: ?>
                                 <?= $defaultAvatarSvg ?>
                             <?php endif; ?>
                         </div>
-                        <div style="flex: 1 1 auto; min-width: 200px;">
-                            <div class="fw-bold" style="font-size: 14px; color: #1e293b;">Profile Picture</div>
+                        <div class="user-avatar-copy">
+                            <div class="user-avatar-title">Profile Picture</div>
                             <?php if ($isTargetSuperAdmin && !$canManageThisAvatar): ?>
-                                <div class="small text-muted"><i class="bi bi-shield-lock-fill text-danger me-1"></i> Only the Super Admin can change their own profile picture.</div>
+                                <div class="user-avatar-hint"><i class="bi bi-shield-lock-fill text-danger me-1"></i> Only the Super Admin can change their own profile picture.</div>
                             <?php else: ?>
-                                <div class="small text-muted mb-2">JPG, PNG, WEBP, or GIF image (max 4MB).</div>
-                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <div class="user-avatar-hint">JPG, PNG, WEBP, or GIF image (max 4MB).</div>
+                                <div class="user-avatar-actions">
                                     <input type="file" id="editAvatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display: none;">
                                     <button type="button" class="btn-modern btn-modern-outline btn-modern-sm" onclick="document.getElementById('editAvatarFileInput').click();" id="btnEditUploadPhoto">
                                         <i class="bi bi-camera-fill"></i> Upload New Photo
@@ -98,8 +98,8 @@ SVG;
                                     <button type="button" class="btn-modern btn-modern-outline btn-modern-sm text-danger <?= empty($user['profile_image']) ? 'd-none' : '' ?>" id="btnEditRemovePhoto" onclick="removeEditUserAvatar();" style="<?= empty($user['profile_image']) ? 'display: none !important;' : '' ?>">
                                         <i class="bi bi-trash"></i> Remove Photo
                                     </button>
-                                    <span id="editAvatarFeedback" class="small fw-semibold ms-2"></span>
                                 </div>
+                                <span id="editAvatarFeedback" class="user-avatar-feedback"></span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -177,10 +177,10 @@ SVG;
                                     <i class="bi bi-x-circle-fill"></i>
                                 </button>
                             </div>
-                            <div class="form-check route-select-all">
+                            <label class="route-select-all" for="selectAllRoutes">
                                 <input class="form-check-input" type="checkbox" id="selectAllRoutes">
-                                <label class="form-check-label small" for="selectAllRoutes">Select all visible</label>
-                            </div>
+                                <span>Select all visible</span>
+                            </label>
                         </div>
 
                         <div class="route-picker border rounded p-3 bg-white">
@@ -250,16 +250,19 @@ SVG;
 
 <style>
     .route-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
-    .route-select-all { display: flex; align-items: center; min-height: 34px; margin: 0; padding-left: 1.75rem; white-space: nowrap; }
-    .route-picker { max-height: 280px; overflow-y: auto; }
+    .route-select-all { display: inline-flex; align-items: center; gap: 9px; flex: 0 0 auto; min-height: 44px; margin: 0; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #334155; font-size: 14px; font-weight: 600; line-height: 1.3; white-space: nowrap; cursor: pointer; }
+    .route-select-all .form-check-input { float: none !important; width: 22px; height: 22px; min-width: 22px; margin: 0 !important; flex: 0 0 22px; border: 2px solid #94a3b8; border-radius: 5px; cursor: pointer; }
+    .route-select-all .form-check-input:checked { background-color: var(--primary, #b71c1c); border-color: var(--primary, #b71c1c); }
+    .route-select-all:focus-within { outline: 2px solid var(--primary, #b71c1c); outline-offset: 2px; }
+    .route-picker { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
     .route-item { border-radius: 6px; margin-bottom: 0.25rem; padding: 0.55rem 0.65rem 0.55rem 2rem; }
     .route-item:last-child { margin-bottom: 0; }
-    .route-item .form-check-input { margin-left: -1.35rem; }
+    .route-item .form-check-input { width: 20px; height: 20px; margin-left: -1.35rem; border: 2px solid #94a3b8; }
     .route-name { font-weight: 600; color: var(--text-main, #1e293b); }
     .user-form-actions .btn-modern { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
     @media (max-width: 767.98px) {
         .route-section-header { flex-direction: column; }
-        .route-select-all { padding-left: 1.5rem; white-space: normal; }
+        .route-select-all { align-self: flex-start; max-width: 100%; white-space: normal; }
         .route-item { padding-top: 0.5rem; padding-bottom: 0.5rem; }
     }
 </style>
@@ -297,7 +300,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function toggleRouteSection() {
         if (!routeSection) return;
         var currentRole = roleSelect ? roleSelect.value : (document.querySelector('input[name="role"]') || {}).value || '';
-        routeSection.style.display = currentRole === 'staff' ? 'block' : 'none';
+        var isDispatcher = currentRole === 'staff' || currentRole === 'operator';
+        routeSection.style.display = isDispatcher ? 'block' : 'none';
+        routeCheckboxes.forEach(function(checkbox) { checkbox.disabled = !isDispatcher; });
+        if (selectAll) selectAll.disabled = !isDispatcher;
+        if (routeSearch) routeSearch.disabled = !isDispatcher;
     }
 
     if (togglePassword && passwordInput) {
@@ -542,6 +549,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    if (roleSelect) roleSelect.addEventListener('change', toggleRouteSection);
     toggleRouteSection();
     updateSelectAllState();
 });

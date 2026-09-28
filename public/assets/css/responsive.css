@@ -2720,13 +2720,17 @@ a[title*="delete" i]:hover .bi,
   }
 
   html body table.table-modern tbody tr td[data-label="User"] .avatar-circle {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
     flex-shrink: 0 !important;
     margin-right: 0 !important;
     font-size: 13.5px !important;
     font-weight: 700 !important;
+  }
+
+  html body table.table-modern tbody tr td[data-label="User"] .avatar-wrapper {
+    margin-right: 0 !important;
   }
 
   html body table.table-modern tbody tr td[data-label="User"] .d-flex > div:last-child {

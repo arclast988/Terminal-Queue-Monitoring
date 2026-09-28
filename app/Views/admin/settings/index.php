@@ -1667,7 +1667,7 @@ $slotsMeta = [
                 <div class="card-icon"><i class="fas fa-truck-front"></i></div>
                 <div>
                     <h3>Login Page Hero Illustration</h3>
-                    <p>Optional artwork for the desktop login page (<code>/login</code>). The page stays clean without an upload; resetting removes the artwork.</p>
+                    <p>The system logo appears prominently on the desktop login page (<code>/login</code>). Upload an illustration to replace it, or restore the logo at any time.</p>
                 </div>
             </div>
 
@@ -1679,19 +1679,19 @@ $slotsMeta = [
             </div>
 
             <div class="media-preview-card bg-type" id="loginCardPreviewCard" style="margin-top: 14px;">
-                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #f8fafc; padding: 6px; border-radius: 10px; <?= $hasCustomLoginCard ? '' : 'display: none;' ?>">
+                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #f8fafc; padding: 6px; border-radius: 10px;">
                 <div class="media-preview-info">
-                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'No artwork uploaded' ?></div>
+                    <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'System logo' ?></div>
                     <div class="filemeta">
                         <span class="status-chip <?= $hasCustomLoginCard ? 'custom' : 'default' ?>" id="loginCardStatusChip">
                             <i class="fas <?= $hasCustomLoginCard ? 'fa-check-circle' : 'fa-circle-info' ?>"></i>
-                            <?= $hasCustomLoginCard ? 'Custom Artwork Active' : 'No Artwork on Login' ?>
+                            <?= $hasCustomLoginCard ? 'Custom Artwork Active' : 'System Logo Active' ?>
                         </span>
-                        <span>Only custom artwork appears beside the login form</span>
+                        <span>Displayed beside the login features</span>
                     </div>
                 </div>
                 <button type="button" class="btn-reset-media" id="btnResetLoginCard" style="<?= $hasCustomLoginCard ? '' : 'display:none;' ?>">
-                    <i class="fas fa-undo"></i> Remove Artwork
+                    <i class="fas fa-undo"></i> Restore Logo
                 </button>
             </div>
 
@@ -2878,19 +2878,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('pttm:branding-applied', function(event) {
         var branding = event.detail || {};
-        if (branding.category && branding.category !== 'identity') return;
+        if (branding.category && branding.category !== 'identity' && branding.category !== 'logo') return;
         if (typeof branding.has_custom_login_card !== 'boolean') return;
         var hasArtwork = branding.has_custom_login_card;
-        if (loginCardActiveImg) loginCardActiveImg.style.display = hasArtwork ? '' : 'none';
         if (loginCardFilename) {
             var imagePath = (branding.app_login_card_image || '').split('?')[0];
-            loginCardFilename.textContent = hasArtwork ? (imagePath.split('/').pop() || 'Custom artwork') : 'No artwork uploaded';
+            loginCardFilename.textContent = hasArtwork ? (imagePath.split('/').pop() || 'Custom artwork') : 'System logo';
         }
         if (loginCardStatusChip) {
             loginCardStatusChip.className = 'status-chip ' + (hasArtwork ? 'custom' : 'default');
             loginCardStatusChip.innerHTML = hasArtwork
                 ? '<i class="fas fa-check-circle"></i> Custom Artwork Active'
-                : '<i class="fas fa-circle-info"></i> No Artwork on Login';
+                : '<i class="fas fa-circle-info"></i> System Logo Active';
         }
         if (btnResetLoginCard) btnResetLoginCard.style.display = hasArtwork ? 'inline-flex' : 'none';
     });
@@ -2988,11 +2987,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                         if (data.success) {
                             showToast(data.message, true);
-                            if (loginCardActiveImg) loginCardActiveImg.style.display = 'none';
-                            if (loginCardFilename) loginCardFilename.textContent = 'No artwork uploaded';
+                            var newUrl = data.image_url + (data.image_url.indexOf('?') === -1 ? '?t=' : '&t=') + Date.now();
+                            if (loginCardActiveImg) loginCardActiveImg.src = newUrl;
+                            if (loginCardFilename) loginCardFilename.textContent = 'System logo';
                             if (loginCardStatusChip) {
                                 loginCardStatusChip.className = 'status-chip default';
-                                loginCardStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> No Artwork on Login';
+                                loginCardStatusChip.innerHTML = '<i class="fas fa-circle-info"></i> System Logo Active';
                             }
                             btnResetLoginCard.style.display = 'none';
                             if (data.data && typeof window.broadcastLiveBranding === 'function') {
@@ -3007,12 +3007,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (typeof window.confirmAction === 'function') {
                 window.confirmAction({
-                    title: 'Remove Login Artwork',
-                    message: 'Remove the custom artwork from the login page?',
-                    confirmText: 'Remove Artwork',
+                    title: 'Restore System Logo',
+                    message: 'Replace the custom login artwork with the system logo?',
+                    confirmText: 'Restore Logo',
                     onConfirm: doResetLoginCard
                 });
-            } else if (confirm('Remove the custom artwork from the login page?')) {
+            } else if (confirm('Replace the custom login artwork with the system logo?')) {
                 doResetLoginCard();
             }
         });

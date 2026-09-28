@@ -773,7 +773,7 @@ if (! function_exists('app_bg_image')) {
 
 if (! function_exists('app_login_card_image')) {
     /**
-     * URL to the optional login card illustration (fallback URL supports existing callers).
+     * URL to the login hero artwork, using the active system logo by default.
      */
     function app_login_card_image(): string
     {
@@ -785,7 +785,7 @@ if (! function_exists('app_login_card_image')) {
                 return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
             }
         }
-        return base_url('images/logo.webp');
+        return app_logo();
     }
 }
 

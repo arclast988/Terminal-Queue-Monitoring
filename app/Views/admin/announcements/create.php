@@ -1,7 +1,7 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -34,9 +34,10 @@
     border-radius: 12px;
     background: #ffffff;
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
     position: relative;
     user-select: none;
+    touch-action: manipulation;
 }
 .severity-card:hover {
     border-color: #cbd5e1;
@@ -47,13 +48,13 @@
     pointer-events: none;
 }
 .severity-card-icon {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 21px;
     flex-shrink: 0;
 }
 .severity-info { background: #e0f2fe; color: #0284c7; }
@@ -63,17 +64,14 @@
 .severity-card.active[data-severity="info"] {
     border-color: #0284c7;
     background: #f0f9ff;
-    box-shadow: 0 0 0 1px #0284c7, 0 4px 12px rgba(2, 132, 199, 0.12);
 }
 .severity-card.active[data-severity="warning"] {
     border-color: #d97706;
     background: #fffbeb;
-    box-shadow: 0 0 0 1px #d97706, 0 4px 12px rgba(217, 119, 6, 0.12);
 }
 .severity-card.active[data-severity="danger"] {
     border-color: #dc2626;
     background: #fef2f2;
-    box-shadow: 0 0 0 1px #dc2626, 0 4px 12px rgba(220, 38, 38, 0.12);
 }
 .severity-card-content {
     flex: 1;
@@ -108,6 +106,10 @@
 .severity-card.active[data-severity="danger"] .severity-check-indicator {
     display: block;
     color: #dc2626;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .severity-card { transition: none; }
 }
 
 </style>

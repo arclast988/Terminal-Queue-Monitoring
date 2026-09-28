@@ -74,6 +74,41 @@
 }
 
 /* Creation and account forms: stable surfaces and touch-friendly controls. */
+.user-avatar-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 20px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.user-form-avatar-preview {
+    display: grid;
+    place-items: center;
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    overflow: hidden;
+    border: 2px solid #15803d;
+    border-radius: 50%;
+    background: #f1f5f9;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, .1);
+}
+
+.user-form-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.user-avatar-copy { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+.user-avatar-title { color: #1e293b; font-size: 15px; font-weight: 700; line-height: 1.35; }
+.user-avatar-hint { color: #64748b; font-size: 13px; line-height: 1.4; }
+.user-avatar-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+.user-avatar-actions .btn-modern { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; }
+.user-avatar-feedback { display: block; font-size: 13px; font-weight: 600; }
+
 .form-entry-page {
     width: 100%;
     max-width: 1120px;
@@ -109,16 +144,23 @@
     vertical-align: middle;
 }
 
+.form-entry-page .page-title-modern > i { font-size: 25px; min-width: 28px; text-align: center; }
+.form-entry-page .card-title-modern > i,
+.form-entry-page .modern-card-title > i { font-size: 19px; min-width: 20px; text-align: center; }
+
 .form-entry-page .card-title-modern > i.me-2,
 .form-entry-page .modern-card-title > i.me-2 {
     margin-right: 0 !important;
 }
 
 .form-entry-page .input-group-text-modern {
-    width: 44px;
-    flex: 0 0 44px;
+    width: 48px;
+    flex: 0 0 48px;
     padding-inline: 0;
 }
+
+.form-entry-page .input-group-text-modern > i,
+.form-entry-page .input-group-text-modern > .bi { font-size: 19px; }
 
 .form-entry-page .card-modern,
 .form-entry-page .modern-card,
@@ -140,8 +182,9 @@
 .form-entry-page .input-modern,
 .form-entry-page .form-control-modern,
 .form-entry-page .select-modern {
-    min-height: 44px;
+    min-height: 48px;
     min-width: 0;
+    transition: border-color .12s ease, background-color .12s ease;
 }
 
 .form-entry-page textarea.input-modern {
@@ -150,20 +193,24 @@
 }
 
 .form-entry-page .btn-modern {
-    min-height: 44px;
+    min-height: 48px;
     touch-action: manipulation;
-    transition: background-color .16s ease, color .16s ease, border-color .16s ease, box-shadow .16s ease;
+    transition: background-color .12s ease, color .12s ease, border-color .12s ease;
 }
 
 .form-entry-page .btn-modern:hover {
     transform: none;
 }
 
+.form-entry-page .btn-modern::after { display: none; }
+
 .form-entry-page .btn-modern > i,
 .form-entry-page .btn-modern > .bi {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 18px;
+    min-width: 18px;
 }
 
 .form-entry-page .btn-modern:focus-visible,
@@ -174,12 +221,7 @@
 }
 
 .form-entry-page .fade-in {
-    animation: formEntryFade .22s ease-out both;
-}
-
-@keyframes formEntryFade {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    animation: none !important;
 }
 
 .form-entry-page:not(.change-password-page) .form-entry-actions {
@@ -227,8 +269,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .form-entry-page .fade-in { animation: none; }
     .form-entry-page .btn-modern { transition: none; }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .form-entry-page .btn-modern { transition: none; box-shadow: none !important; }
+    .form-entry-page .btn-modern:hover { transform: none; box-shadow: none !important; }
+    .form-entry-page .input-modern,
+    .form-entry-page .form-control-modern,
+    .form-entry-page .select-modern { transition: none; }
 }
 
 /* =================================================================

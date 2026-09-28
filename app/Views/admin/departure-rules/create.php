@@ -1,7 +1,7 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
 
 <style>
 /* Button sizing (always applies) */
@@ -34,8 +34,8 @@
 }
 
 .military-time-btn {
-    width: 44px;
-    min-width: 44px;
+    width: 48px;
+    min-width: 48px;
     border: 1.5px solid #cbd5e1;
     border-left: none;
     border-top-right-radius: var(--radius-md, 0.5rem);
@@ -47,7 +47,7 @@
     justify-content: center;
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
 }
 
 .military-time-btn:hover {
@@ -218,6 +218,11 @@
 
 @media (prefers-reduced-motion: reduce) {
     .military-time-popover.open { animation: none; }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .military-time-popover.open { animation: none; }
+    .military-time-btn, .tp-btn, .tp-set-btn { transition: none; }
 }
 </style>
 
