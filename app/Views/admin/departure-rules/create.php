@@ -211,11 +211,26 @@
 }
 
 @media (max-width: 768px) {
-    .military-time-wrap { flex-wrap: wrap; }
-    .military-time-btn { flex: 0 0 48px; }
+    .military-time-wrap {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 48px;
+    }
+    .military-time-wrap .input-modern {
+        grid-column: 1;
+        grid-row: 1;
+        width: 100% !important;
+        min-width: 0;
+    }
+    .military-time-btn {
+        grid-column: 2;
+        grid-row: 1;
+        width: 48px;
+        min-width: 48px;
+    }
     .military-time-popover {
         position: static;
-        flex: 0 0 100%;
+        grid-column: 1 / -1;
+        grid-row: 2;
         width: 100%;
         max-width: 100%;
         margin-top: 8px;
