@@ -204,10 +204,14 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Open the Terminal Queue Monitoring website in your phone's browser to view live queues, routes, departures, and fares. There is no separate mobile app to install.</p>
+                    <p>Terminal Queue runs as a website, with no separate App Store or Play Store download. Your browser may offer a home-screen shortcut or a browser-managed web app for quicker access:</p>
+                    <ol style="padding-left: 20px; margin: 0 0 10px 0;">
+                        <li><strong>Android (Chrome):</strong> Open the three-dot menu &rarr; <em>Install and create shortcut</em>. Choose <em>Create shortcut</em> to open the site in Chrome, or <em>Install</em> if Chrome offers it.</li>
+                        <li><strong>iPhone (Safari):</strong> Open the Share menu and choose <em>Add to Home Screen</em>.</li>
+                    </ol>
                     <div class="help-tip">
                         <i class="fas fa-check-circle"></i>
-                        <span>Save the website as a browser bookmark if you want to find it quickly on your next visit.</span>
+                        <span>These options open the same online website. Live queue updates still require an internet connection.</span>
                     </div>
                 </div>
             </div>

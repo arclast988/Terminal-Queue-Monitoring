@@ -1125,8 +1125,8 @@
                 <div class="step-item">
                     <div class="step-number">?</div>
                     <div class="step-text">
-                        <h5>Do I need to install an app on my phone?</h5>
-                        <p>No. Open the Terminal Queue Monitoring website in your phone's browser and continue as a guest to view public queue, route, departure, and fare information.</p>
+                        <h5>Can I add the terminal monitor to my phone's home screen?</h5>
+                        <p>Yes, through your browser. On Android Chrome, open the three-dot menu &rarr; <strong>Install and create shortcut</strong>, then choose <strong>Create shortcut</strong> or <strong>Install</strong> if offered. On iPhone Safari, open Share &rarr; <strong>Add to Home Screen</strong>. These options open the same website, not a separate store app; live information still needs an internet connection.</p>
                     </div>
                 </div>
 
