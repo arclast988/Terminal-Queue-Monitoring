@@ -77,15 +77,33 @@ body.modal-open .fare-item {
 .discount-rate-card:hover .modern-card-header {
     background-color: var(--primary-soft, #f8fafc) !important;
 }
-.fare-action-btn { 
-    width: 34px; 
-    height: 34px; 
-    padding: 0; 
-    display: inline-flex; 
-    align-items: center; 
-    justify-content: center; 
-    border-radius: 8px; 
-    font-size: 14px; 
+.fare-route-actions .fare-action-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    flex: 0 0 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 15px;
+}
+.fare-route-info { min-width: 0; flex: 1 1 150px; }
+.fare-route-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.fare-route-actions form { flex: 0 0 auto; }
+@media (max-width: 575.98px) {
+    .fare-route-row { flex-wrap: wrap; gap: 10px; }
+    .fare-route-info { flex-basis: 100%; }
+    .fare-route-actions { width: 100%; justify-content: flex-start; }
+}
+@media (hover: none), (pointer: coarse) {
+    .fare-section-card:hover,
+    .discount-rate-card:hover,
+    .fare-item:hover {
+        transform: none;
+    }
 }
 .fare-section-title { transition: color 0.15s ease; }
 body .card .fare-section-title.vehicle-type-jeepney,
@@ -613,12 +631,12 @@ $fareTypes = array_map(static fn(array $type) => [
                 <?php if (!empty($routes)): ?>
                     <?php foreach ($routes as $route): ?>
                     <div class="list-group-item fare-item" style="flex-direction: column; align-items: stretch; padding: 16px 20px;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
+                        <div class="d-flex justify-content-between align-items-center fare-route-row">
+                            <div class="fare-route-info">
                                 <strong class="d-block fare-route-text"><?= strtoupper(esc($route['origin'])) ?> → <?= strtoupper(esc($route['destination'])) ?></strong>
                                 <small class="text-muted">Regular Fare</small>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="fare-route-actions">
                                 <span class="badge-modern badge-modern-success fs-6 px-3 py-2">₱<?= number_format($route['fare'], 0) ?></span>
                                 <?php if ($isAdmin): ?>
                                 <button type="button"

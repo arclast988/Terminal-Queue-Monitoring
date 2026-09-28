@@ -46,7 +46,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     font-size: 1.1rem;
 }
 
@@ -96,7 +96,7 @@
 
 .tp-btn {
     width: 54px;
-    height: 27px;
+    height: 40px;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     background: #f8fafc;
@@ -110,7 +110,7 @@
     user-select: none;
     -webkit-user-select: none;
     touch-action: manipulation;
-    transition: all 0.12s ease;
+    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
 }
 
 .tp-btn:hover {
@@ -349,7 +349,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-5">
+                        <div class="d-flex gap-2 mt-5 flex-wrap departure-rule-form-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary" id="btn-save-rule">
                                 <i class="bi bi-save"></i> Save Rule
                             </button>

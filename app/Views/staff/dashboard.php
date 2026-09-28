@@ -347,7 +347,7 @@ if (!empty($recent_departures)) {
         font-size: 13.5px;
         font-weight: 700;
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
         font-family: inherit;
         white-space: nowrap;
         display: inline-flex;
@@ -363,6 +363,9 @@ if (!empty($recent_departures)) {
         color: var(--primary, #15803d);
         background: var(--primary-soft, rgba(21, 128, 61, 0.06));
         transform: translateY(-1px);
+    }
+    @media (hover: none), (pointer: coarse) {
+        .route-chip:hover { transform: none; }
     }
     .route-chip.active {
         background: var(--primary, #15803d) !important;
@@ -457,7 +460,7 @@ if (!empty($recent_departures)) {
         flex-wrap: nowrap;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
-        padding-bottom: 4px;
+        padding: 9px 3px 12px;
     }
     .departure-type-options .dep-filter-btn {
         flex: 0 0 auto;
@@ -478,7 +481,7 @@ if (!empty($recent_departures)) {
         background: #ffffff;
         color: #475569;
         white-space: nowrap;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     }
     .dep-filter-btn:hover {
         border-color: #94a3b8;
@@ -625,11 +628,9 @@ if (!empty($recent_departures)) {
         rows.forEach(row => {
             const vType = (row.getAttribute('data-vehicle-type') || '').toLowerCase();
             const dest = (row.getAttribute('data-destination') || '').toLowerCase();
-            const text = row.innerText.toLowerCase();
-
             const matchesType = (currentVehicleTypeFilter === 'all' || vType === currentVehicleTypeFilter);
             const matchesRoute = (currentRouteFilter === 'all' || dest === currentRouteFilter);
-            const matchesQuery = (!query || text.includes(query));
+            const matchesQuery = !query || row.textContent.toLowerCase().includes(query);
 
             if (matchesType && matchesRoute && matchesQuery) {
                 row.style.removeProperty('display');

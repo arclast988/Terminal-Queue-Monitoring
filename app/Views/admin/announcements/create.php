@@ -31,7 +31,7 @@
     border-radius: 12px;
     background: #ffffff;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
     position: relative;
     user-select: none;
 }
@@ -111,6 +111,13 @@
 .severity-card.active[data-severity="danger"] .severity-check-indicator {
     display: block;
     color: #dc2626;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .severity-card:hover,
+    .severity-card:hover .severity-card-icon {
+        transform: none;
+    }
 }
 
 </style>
@@ -221,7 +228,7 @@
                             </div>
                         </div>
 
-                        <div class="d-flex gap-2 mt-5">
+                        <div class="d-flex gap-2 mt-5 flex-wrap announcement-form-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary">
                                 <i class="bi bi-save"></i> Save Announcement
                             </button>
@@ -237,13 +244,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     var cards = document.querySelectorAll('.severity-card');
     cards.forEach(function(card) {
-        card.addEventListener('click', function() {
-            var radio = card.querySelector('input[type="radio"]');
-            if (radio) {
-                radio.checked = true;
-                cards.forEach(function(c) { c.classList.remove('active'); });
-                card.classList.add('active');
-            }
+        var radio = card.querySelector('input[type="radio"]');
+        if (!radio) return;
+        radio.addEventListener('change', function() {
+            cards.forEach(function(c) { c.classList.toggle('active', c === card); });
         });
     });
 });

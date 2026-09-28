@@ -220,6 +220,11 @@
         }
 
         @media (max-width: 640px) {
+            .auth { gap: 20px; }
+            .brand { flex-direction: column; width: 100%; gap: 8px; text-align: center; }
+            .brand-mark { width: 56px; height: 56px; }
+            .brand-name, .brand-sub { display: block; text-align: center; }
+            .card { background: #ffffff; backdrop-filter: none; -webkit-backdrop-filter: none; }
             body { padding: 20px 16px; }
             .card { padding: var(--space-6); border-radius: var(--radius-lg); }
         }

@@ -202,7 +202,7 @@ SVG;
 
                         <!-- 6-Digit Email Verification Code Group -->
                         <div class="form-group-modern mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
+                            <div class="d-flex justify-content-between align-items-center mb-1 otp-heading">
                                 <label for="verification_code" class="form-label-modern mb-0">
                                     6-Digit Verification Code <span class="text-danger">*</span>
                                 </label>
@@ -211,7 +211,7 @@ SVG;
                                 </span>
                             </div>
 
-                            <div class="d-flex gap-2">
+                            <div class="d-flex gap-2 otp-entry-row">
                                 <div class="position-relative flex-grow-1">
                                     <input type="text" 
                                            name="verification_code" 
@@ -401,16 +401,21 @@ SVG;
 }
 
 .form-control-modern.input-with-toggle {
-    padding-right: 42px !important;
+    padding-right: 48px !important;
 }
 
 .btn-toggle-eye {
     position: absolute;
-    right: 8px;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
     border: none;
     color: #94a3b8;
-    padding: 6px 10px;
+    padding: 0;
     font-size: 16px;
     cursor: pointer;
     border-radius: 6px;
@@ -506,7 +511,7 @@ SVG;
     color: #64748b !important;
     border: 1.5px solid #cbd5e1;
     box-shadow: none;
-    transition: all 0.25s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     cursor: pointer;
 }
 #btnSubmitPassword.btn-modern-success:hover:not(.is-valid-form) {
@@ -527,9 +532,14 @@ SVG;
 }
 
 @media (max-width: 768px) {
+    .change-password-page .modern-card {
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
     .change-password-page form > .change-password-actions.d-flex.justify-content-end.gap-2:last-child {
         display: grid !important;
-        grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         width: 100% !important;
         gap: 8px !important;
         margin-top: 0 !important;
@@ -538,13 +548,26 @@ SVG;
     .change-password-page form > .change-password-actions.d-flex.justify-content-end.gap-2:last-child > .btn-modern {
         width: 100% !important;
         min-width: 0 !important;
-        min-height: 42px !important;
+        min-height: 44px !important;
         margin: 0 !important;
         padding: 8px 6px !important;
-        font-size: 11.5px !important;
+        font-size: 14px !important;
         white-space: nowrap !important;
         justify-content: center !important;
     }
+}
+@media (max-width: 480px) {
+    .otp-heading { flex-wrap: wrap; gap: 4px 8px; }
+    .otp-heading .badge { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+    .otp-entry-row { flex-direction: column; }
+    .otp-entry-row > .position-relative,
+    .otp-entry-row .btn-otp-action { width: 100%; }
+    .change-password-page form > .change-password-actions.d-flex.justify-content-end.gap-2:last-child {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .btn-pulse-attention { animation: none !important; }
 }
 </style>
 

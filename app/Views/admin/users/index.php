@@ -990,7 +990,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-inline: contain;
             scrollbar-width: thin;
-            padding-bottom: 4px;
+            padding: 9px 3px 12px;
         }
         .user-filter-bar .vf-btn {
             flex: 0 0 auto !important;

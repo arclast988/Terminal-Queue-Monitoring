@@ -50,7 +50,7 @@
     flex-wrap: nowrap;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    padding-bottom: 4px;
+    padding: 9px 3px 12px;
 }
 
 .rule-filter-btn {
@@ -66,7 +66,7 @@
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     user-select: none;
     font-family: inherit;
     white-space: nowrap;
@@ -82,6 +82,9 @@
     color: var(--primary, #1565C0);
     background: var(--primary-soft, rgba(21, 101, 192, 0.06));
     transform: translateY(-1px);
+}
+@media (hover: none), (pointer: coarse) {
+    .rule-filter-btn:hover { transform: none; }
 }
 
 .rule-filter-btn.active {
@@ -478,6 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnAddRule = document.getElementById('btn-add-rule');
     const btnAddForRoute = document.getElementById('btn-add-for-route');
     const baseAddUrl = "<?= base_url($prefix . '/departure-rules/create') ?>";
+    let appliedRouteFilter = null;
 
     function addUrlForFilter(routeId, filterName) {
         const url = new URL(baseAddUrl, window.location.href);
@@ -487,6 +491,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function applyFilter(filterName, routeId) {
+        if (appliedRouteFilter === filterName) return;
+        appliedRouteFilter = filterName;
         let visibleCount = 0;
 
         filterBtns.forEach(btn => {
@@ -499,28 +505,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         rows.forEach(row => {
             const dest = row.getAttribute('data-destination');
-            if (filterName === 'all') {
-                row.style.removeProperty('display');
-                row.classList.remove('d-none');
+            const show = filterName === 'all' ||
+                (filterName === 'general' ? (dest === 'general' || dest === '' || dest === '-') : dest === filterName);
+            if (show) {
+                if (row.classList.contains('d-none') || row.style.display === 'none') {
+                    row.style.removeProperty('display');
+                    row.classList.remove('d-none');
+                }
                 visibleCount++;
-            } else if (filterName === 'general') {
-                if (dest === 'general' || dest === '' || dest === '-') {
-                    row.style.removeProperty('display');
-                    row.classList.remove('d-none');
-                    visibleCount++;
-                } else {
-                    row.style.setProperty('display', 'none', 'important');
-                    row.classList.add('d-none');
-                }
-            } else {
-                if (dest === filterName) {
-                    row.style.removeProperty('display');
-                    row.classList.remove('d-none');
-                    visibleCount++;
-                } else {
-                    row.style.setProperty('display', 'none', 'important');
-                    row.classList.add('d-none');
-                }
+            } else if (!row.classList.contains('d-none') || row.style.display !== 'none') {
+                row.style.setProperty('display', 'none', 'important');
+                row.classList.add('d-none');
             }
         });
 

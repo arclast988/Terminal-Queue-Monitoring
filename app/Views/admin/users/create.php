@@ -220,9 +220,9 @@ SVG;
     .user-form-card .input-group-text { min-width: 42px; justify-content: center; }
     .password-toggle { min-width: 44px; border-left: 1px solid #e2e8f0 !important; }
     .route-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
-    .route-select-all { display: flex; align-items: center; min-height: 34px; margin: 0; padding-left: 1.75rem; white-space: nowrap; }
-    .route-picker { max-height: 280px; overflow-y: auto; }
-    .route-item { border-radius: 6px; margin-bottom: 0.25rem; padding: 0.55rem 0.65rem 0.55rem 2rem; }
+    .route-select-all { display: flex; align-items: center; min-height: 44px; margin: 0; padding-left: 1.75rem; white-space: nowrap; }
+    .route-picker { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
+    .route-item { border-radius: 6px; margin-bottom: 0.25rem; min-height: 44px; padding: 0.55rem 0.65rem 0.55rem 2rem; }
     .route-item:last-child { margin-bottom: 0; }
     .route-item .form-check-input { margin-left: -1.35rem; }
     .route-name { font-weight: 600; color: var(--text-main, #1e293b); }

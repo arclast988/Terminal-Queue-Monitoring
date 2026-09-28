@@ -67,7 +67,7 @@
                             <div class="form-text-modern">Maximum number of vehicles that can be stationed at this terminal.</div>
                         </div>
                         
-                        <div class="d-flex gap-2 mt-5">
+                        <div class="d-flex gap-2 mt-5 flex-wrap terminal-form-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary">
                                 <i class="bi bi-save"></i> Save Terminal
                             </button>

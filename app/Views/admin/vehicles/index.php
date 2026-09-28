@@ -755,7 +755,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         color: #475569 !important;
         white-space: nowrap !important;
         line-height: 1.4 !important;
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease !important;
+        transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease !important;
     }
 
     .vf-btn:hover {
@@ -880,6 +880,14 @@ table:not(.selection-mode-active) .bulk-select-cell {
         color: #fff !important;
     }
 
+    @media (hover: none), (pointer: coarse) {
+        .vehicle-filter-strip .vf-btn:hover,
+        .vehicle-filter-strip .vf-btn.active:hover {
+            transform: none !important;
+            filter: none !important;
+        }
+    }
+
     .vehicle-row-hidden {
         display: none !important;
     }
@@ -971,7 +979,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         flex-wrap: nowrap;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
-        padding-bottom: 4px;
+        padding: 9px 3px 12px;
     }
     .vehicle-filter-strip .vf-btn,
     .vehicle-filter-strip .vf-divider {
@@ -1102,7 +1110,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         if (deactRedirectEl) deactRedirectEl.value = filter;
 
         // Reset selection & exit select mode whenever filter changes
-        toggleVehicleSelectMode(false);
+        if (isVehicleSelectMode) toggleVehicleSelectMode(false);
 
         // Update filter label text
         if (filter === 'all') {

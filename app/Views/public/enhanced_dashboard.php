@@ -654,7 +654,7 @@
             flex-wrap: nowrap;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding: 2px 0 5px;
+            padding: 6px 2px 8px;
         }
 
         .rules-route-chip {
@@ -667,7 +667,7 @@
             font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
             font-family: inherit;
             white-space: nowrap;
             display: inline-flex;
@@ -682,6 +682,9 @@
             color: var(--primary, #D62828);
             background: var(--primary-soft, rgba(214, 40, 40, 0.06));
             transform: translateY(-1px);
+        }
+        @media (hover: none), (pointer: coarse) {
+            .rules-route-chip:hover { transform: none; }
         }
 
         .rules-route-chip.active {
@@ -959,7 +962,7 @@
             flex-wrap: nowrap;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
-            padding-bottom: 4px;
+            padding: 5px 2px 7px;
         }
 
         .filter-label {
@@ -981,7 +984,7 @@
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
             font-family: inherit;
             white-space: nowrap;
             display: inline-flex;
@@ -2785,14 +2788,9 @@
                 if (show) {
                     if (card.style.display === 'none') {
                         card.style.display = '';
-                        card.style.animation = 'none';
-                        card.offsetHeight; /* trigger reflow */
-                        card.style.animation = '';
-                    } else {
-                        card.style.display = '';
                     }
                     visible++;
-                } else {
+                } else if (card.style.display !== 'none') {
                     card.style.display = 'none';
                 }
             });
@@ -2803,6 +2801,7 @@
         function initFilterChips() {
             document.querySelectorAll('#filterDestGroup .filter-chip').forEach(function (chip) {
                 chip.addEventListener('click', function () {
+                    if (activeFilterType === this.dataset.type && activeFilterValue === this.dataset.filter) return;
                     document.querySelectorAll('#filterDestGroup .filter-chip').forEach(function (c) { c.classList.remove('active'); });
                     this.classList.add('active');
                     activeFilterType = this.dataset.type;

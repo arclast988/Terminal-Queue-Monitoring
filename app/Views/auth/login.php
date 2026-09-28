@@ -232,44 +232,54 @@
         .feature-text b { display: block; font-size: 14.5px; font-weight: 800; color: #000000 !important; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
         .feature-text span { font-size: 13.5px; color: #000000 !important; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
-        /* ---- Hero artwork: framed on a red plate so it blends in ---- */
+        /* ---- Desktop hero illustration ---- */
         .hero-art {
             position: relative;
             margin-top: clamp(var(--space-8), 5vh, var(--space-12));
             border-radius: var(--radius-2xl);
-            background:
-                radial-gradient(120% 130% at 18% 12%, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, 0) 46%),
-                linear-gradient(158deg, var(--red) 0%, var(--red-dark) 100%);
+            background: linear-gradient(135deg, #a81e22 0%, #cf302f 100%);
             overflow: hidden;
-            box-shadow: 0 30px 70px -24px rgba(183, 28, 28, .5);
-            animation: fadeUp .8s ease .3s both;
+            box-shadow: 0 18px 38px -20px rgba(127, 29, 29, .55);
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(112px, 30%);
+            align-items: center;
+            gap: 12px;
+            min-height: 176px;
+            padding: 22px 26px;
+            animation: fadeUp .6s ease .2s both;
         }
         .hero-art::before {
             content: "";
             position: absolute;
-            inset: 0;
-            background-image: linear-gradient(120deg, rgba(255, 255, 255, .05) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .05) 50%, rgba(255, 255, 255, .05) 75%, transparent 75%);
-            background-size: 28px 28px;
-            opacity: .5;
+            background-image: none;
+            width: 250px;
+            height: 250px;
+            right: -70px;
+            top: -110px;
+            border: 1px solid rgba(255, 255, 255, .13);
+            border-radius: 50%;
         }
         .hero-art::after {
             content: "";
             position: absolute;
             inset: 0;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12), inset 0 -70px 80px -60px rgba(0, 0, 0, .35);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
             border-radius: var(--radius-2xl);
             pointer-events: none;
         }
-        .hero-art .art-route { position: absolute; top: 24px; left: 24px; width: 210px; height: 120px; z-index: 2; }
+        .hero-art .art-route { position: absolute; bottom: -18px; left: -20px; width: 210px; height: 120px; opacity: .45; pointer-events: none; }
+        .hero-art figcaption { position: relative; z-index: 1; min-width: 0; color: #fff; }
+        .hero-art .art-eyebrow { display: block; font-size: 10px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; opacity: .84; }
+        .hero-art .art-title { display: block; margin-top: 10px; font-size: clamp(20px, 2vw, 27px); font-weight: 800; letter-spacing: -.025em; line-height: 1.16; }
+        .hero-art .art-description { display: block; max-width: 30ch; margin-top: 10px; font-size: 13px; line-height: 1.45; color: rgba(255, 255, 255, .88); }
         .hero-art img {
             position: relative;
             z-index: 1;
             display: block;
             width: 100%;
-            height: auto;
-            max-height: 430px;
+            height: 145px;
             object-fit: contain;
-            filter: drop-shadow(0 18px 28px rgba(0, 0, 0, .22));
+            filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .2));
         }
 
         /* =================================================================
@@ -544,9 +554,7 @@
             .hero-copy h1 {
                 font-size: clamp(2.8rem, 3.6vw, 3.8rem);
             }
-            .hero-art img {
-                max-height: 480px;
-            }
+            .hero-art img { height: 155px; }
             .login-card {
                 max-width: 460px;
                 padding: var(--space-10) var(--space-8);
@@ -570,7 +578,8 @@
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-art { margin-top: var(--space-3); }
-            .hero-art img { max-height: 240px; }
+            .hero-art { min-height: 150px; padding: 18px 22px; }
+            .hero-art img { height: 112px; }
             .login-card { padding: var(--space-6) var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
             .page-foot { margin-top: var(--space-3); }
@@ -613,12 +622,26 @@
         /* Compact Tablets & Large Phones (≤640px) */
         @media (max-width: 640px) {
             .page { padding: var(--space-5) var(--space-4) var(--space-6); }
-            .brand { margin-bottom: var(--space-5); }
+            .brand {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px;
+                margin-bottom: 14px;
+                text-align: center;
+            }
+            .brand-mark { width: 56px; height: 56px; }
+            .brand-name, .brand-sub { display: block; text-align: center; }
             .login-card {
                 padding: var(--space-6) var(--space-5);
                 border-radius: var(--radius-lg);
+                background: #ffffff;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
             }
             .login-card h2 { font-size: 22px; }
+            .login-card .card-head { margin-bottom: 20px; }
+            .field { margin-bottom: 16px; }
+            .options { margin: 4px 0 20px; }
             .page-foot { margin-top: var(--space-6); }
         }
 
@@ -641,7 +664,7 @@
             .hero-copy h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
             .features { margin-top: 24px; gap: 12px; }
             .hero-art { margin-top: clamp(16px, 2.5vh, 28px); }
-            .hero-art img { max-height: clamp(190px, 25vh, 320px); }
+            .hero-art img { max-height: 155px; }
             .page-foot { margin-top: 20px; }
         }
 
@@ -727,6 +750,11 @@
 
                 <!-- Transportation artwork, framed as the hero -->
                 <figure class="hero-art">
+                    <figcaption>
+                        <span class="art-eyebrow">Terminal operations</span>
+                        <span class="art-title">Keep every trip moving.</span>
+                        <span class="art-description">Track vehicles, queues, and departures in one place.</span>
+                    </figcaption>
                     <svg class="art-route" viewBox="0 0 210 120" fill="none" aria-hidden="true">
                         <path d="M6 96C56 96 74 34 128 40S188 78 204 24"
                               stroke="#FFFFFF" stroke-opacity="0.22" stroke-width="2" stroke-dasharray="3 9" stroke-linecap="round"/>
@@ -735,7 +763,7 @@
                     </svg>
                     <img src="<?= esc(app_login_card_image()) ?>"
                          id="loginHeroImg"
-                         alt="Terminal Hero Artwork"
+                         alt=""
                          width="1536" height="1024" loading="eager">
                 </figure>
             </section>

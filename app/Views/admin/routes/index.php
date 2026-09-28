@@ -544,7 +544,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         color: #475569 !important;
         white-space: nowrap !important;
         line-height: 1.4 !important;
-        transition: all 0.2s ease !important;
+        transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
     }
     .vf-btn:hover {
         border-color: #cbd5e1 !important;
@@ -594,8 +594,11 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
 
 <script>
     let currentRouteTab = 'active';
+    let routeTabInitialized = false;
 
     function setRouteTab(tab, btn) {
+        if (routeTabInitialized && tab === currentRouteTab) return;
+        routeTabInitialized = true;
         currentRouteTab = tab;
         document.querySelectorAll('#tab-active-routes, #tab-archived-routes').forEach(b => b.classList.remove('active'));
         if (btn) {
@@ -618,7 +621,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         const deactRedir = document.getElementById('deactivateRouteRedirectTab');
         if (deactRedir) deactRedir.value = tab;
 
-        toggleRouteSelectMode(false);
+        if (isRouteSelectMode) toggleRouteSelectMode(false);
         filterRoutes();
     }
 
@@ -659,14 +662,15 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
             const matchesTab = (cardStatus === currentRouteTab);
             if (matchesTab) totalInTab++;
 
-            const text = card.innerText.toLowerCase();
-            const matchesQuery = (!query || text.includes(query));
+            const matchesQuery = !query || card.textContent.toLowerCase().includes(query);
 
             if (matchesTab && matchesQuery) {
-                card.style.removeProperty('display');
-                card.classList.remove('d-none');
+                if (card.classList.contains('d-none') || card.style.display === 'none') {
+                    card.style.removeProperty('display');
+                    card.classList.remove('d-none');
+                }
                 visibleCount++;
-            } else {
+            } else if (!card.classList.contains('d-none') || card.style.display !== 'none') {
                 card.style.setProperty('display', 'none', 'important');
                 card.classList.add('d-none');
             }
