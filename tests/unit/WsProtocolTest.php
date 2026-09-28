@@ -132,6 +132,53 @@ final class WsProtocolTest extends CIUnitTestCase
         $this->assertNull($this->ws->decodeFrame('a'));
     }
 
+    public function testDecodeWaitsForCompletePayloadAndPreservesFrameBoundary(): void
+    {
+        $mask = "\x01\x02\x03\x04";
+        $payload = 'pong';
+        $masked = '';
+        for ($i = 0; $i < strlen($payload); $i++) {
+            $masked .= $payload[$i] ^ $mask[$i % 4];
+        }
+        $frame = "\x8a\x84" . $mask . $masked;
+
+        $this->assertNull($this->ws->decodeFrame(substr($frame, 0, -1)));
+        $decoded = $this->ws->decodeFrame($frame . $frame);
+        $this->assertSame($payload, $decoded['payload']);
+        $this->assertSame(strlen($frame), $decoded['totalLength']);
+        $this->assertSame($payload, $this->ws->decodeFrame(substr($frame . $frame, $decoded['totalLength']))['payload']);
+    }
+
+    public function testDecodeRejectsUnmaskedClientFrame(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->ws->decodeFrame("\x89\x00");
+    }
+
+    public function testDecodeRejectsOversizedClientFrameBeforePayloadArrives(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->ws->decodeFrame("\x82\xff" . pack('NN', 0, 65537));
+    }
+
+    public function testHandshakeRequiresValidWebSocketUpgrade(): void
+    {
+        $stream = fopen('php://memory', 'r+');
+        $headers = "GET /ws HTTP/1.1\r\nHost: localhost\r\nUpgrade: websocket\r\n"
+            . "Connection: Upgrade\r\nSec-WebSocket-Version: 13\r\n"
+            . "Sec-WebSocket-Key: " . base64_encode(random_bytes(16)) . "\r\nOrigin: http://localhost\r\n\r\n";
+
+        $this->assertTrue($this->ws->performHandshake($stream, $headers));
+        rewind($stream);
+        $this->assertStringStartsWith('HTTP/1.1 101', stream_get_contents($stream));
+        fclose($stream);
+
+        $invalid = str_replace('Sec-WebSocket-Version: 13', 'Sec-WebSocket-Version: 12', $headers);
+        $stream = fopen('php://memory', 'r+');
+        $this->assertFalse($this->ws->performHandshake($stream, $invalid));
+        fclose($stream);
+    }
+
     public function testOriginValidationAllowsLocalhost(): void
     {
         $headers = "GET / HTTP/1.1\r\nHost: localhost:8081\r\nOrigin: http://localhost\r\n\r\n";

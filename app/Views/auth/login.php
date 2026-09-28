@@ -268,8 +268,8 @@
         }
         .hero-art img {
             display: block;
-            width: 174px;
-            height: 174px;
+            width: 188px;
+            height: 188px;
             object-fit: contain;
         }
         .hero-art.has-custom-artwork {
@@ -578,7 +578,7 @@
                 min-height: 176px;
                 padding: 12px;
             }
-            .hero-art:not(.has-custom-artwork) img { width: 164px; height: 164px; }
+            .hero-art:not(.has-custom-artwork) img { width: 180px; height: 180px; }
             .login-col { order: 1; }
 
             .page {
@@ -682,7 +682,7 @@
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-support { margin-top: var(--space-3); }
-            .hero-art:not(.has-custom-artwork) img { max-height: 168px; }
+            .hero-art:not(.has-custom-artwork) img { max-height: 180px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }
         }

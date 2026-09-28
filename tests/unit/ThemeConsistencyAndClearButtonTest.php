@@ -173,7 +173,8 @@ class ThemeConsistencyAndClearButtonTest extends CIUnitTestCase
         $this->assertStringContainsString('login_kicker()', $loginView);
         $this->assertStringContainsString('login_feature1_title()', $loginView);
         $this->assertStringContainsString('login_feature2_title()', $loginView);
-        $this->assertStringContainsString('foot-sub', $loginView);
+        $this->assertStringContainsString('class="card-foot"', $loginView);
+        $this->assertStringContainsString('Sign-in activity is recorded for security.', $loginView);
         $this->assertStringContainsString('#000000', $loginView);
     }
 

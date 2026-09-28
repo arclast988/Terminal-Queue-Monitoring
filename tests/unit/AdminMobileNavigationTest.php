@@ -144,7 +144,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
 
         $this->assertStringContainsString('change-password-actions d-flex', $passwordView);
         $this->assertStringContainsString('.change-password-actions.d-flex.justify-content-end.gap-2:last-child', $passwordView);
-        $this->assertStringContainsString('grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important;', $passwordView);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr)) !important;', $passwordView);
 
         $this->assertStringContainsString('.announcement-actions-wrap', $announcementView);
         $this->assertStringContainsString('margin-left: auto !important;', $announcementView);

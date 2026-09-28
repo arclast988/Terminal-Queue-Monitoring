@@ -14,9 +14,9 @@ final class AddFareAutoSelectDestinationTest extends CIUnitTestCase
         // Verify syncAddDestinationUI is defined
         $this->assertStringContainsString('function syncAddDestinationUI()', $faresViewContent);
 
-        // Verify destination select dispatches change and input events on auto-open
+        // Auto-selection notifies validation and syncs the visible autocomplete field.
         $this->assertStringContainsString('destSelect.dispatchEvent(new Event(\'change\', { bubbles: true }));', $faresViewContent);
-        $this->assertStringContainsString('destSelect.dispatchEvent(new Event(\'input\', { bubbles: true }));', $faresViewContent);
+        $this->assertStringContainsString('destSelect.syncAutocompleteValue();', $faresViewContent);
 
         // Verify syncAddDestinationUI is called in auto-open and modal lifecycle
         $this->assertStringContainsString('syncAddDestinationUI();', $faresViewContent);
@@ -28,8 +28,9 @@ final class AddFareAutoSelectDestinationTest extends CIUnitTestCase
         // Verify Fare Amount input in addFareModal has ID add_fare_amount
         $this->assertStringContainsString('id="add_fare_amount"', $faresViewContent);
 
-        // Verify focusAddFareInput helper and shown.bs.modal focus triggers exist
+        // Desktop focus waits for the modal to settle; touch devices avoid a keyboard jump.
         $this->assertStringContainsString('function focusAddFareInput(', $faresViewContent);
-        $this->assertStringContainsString('focusAddFareInput(true);', $faresViewContent);
+        $this->assertStringContainsString("window.matchMedia('(min-width: 769px) and (pointer: fine)').matches", $faresViewContent);
+        $this->assertStringContainsString('focusAddFareInput(false);', $faresViewContent);
     }
 }

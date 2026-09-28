@@ -157,7 +157,14 @@ abstract class BaseController extends Controller
             }
             if ($fp) {
                 stream_set_timeout($fp, 0, 100000);
-                @fwrite($fp, $payload);
+                $remaining = $payload;
+                while ($remaining !== '') {
+                    $written = @fwrite($fp, $remaining);
+                    if ($written === false || $written === 0) {
+                        break;
+                    }
+                    $remaining = substr($remaining, $written);
+                }
                 @fclose($fp);
             }
         } catch (\Throwable $e) {
