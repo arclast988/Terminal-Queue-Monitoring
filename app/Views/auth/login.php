@@ -174,8 +174,8 @@
            Hero / Branding column
            ================================================================= */
         .auth-page .hero { padding: 0 !important; min-height: 0 !important; }
-        .auth-page .hero .kicker { font-size: 12px !important; line-height: 1.35 !important; margin-bottom: var(--space-4) !important; }
-        .auth-page .hero .lede { font-size: 16px !important; line-height: 1.65 !important; margin-bottom: 0 !important; }
+        .auth-page .hero .kicker { font-size: 13px !important; line-height: 1.35 !important; margin-bottom: var(--space-4) !important; }
+        .auth-page .hero .lede { font-size: 17px !important; line-height: 1.65 !important; margin-bottom: 0 !important; }
         .hero-copy {
             animation: fadeUp .7s ease .15s both;
         }
@@ -198,7 +198,7 @@
             background: var(--red);
         }
         .hero-copy h1 {
-            font-size: clamp(2.1rem, 4.2vw, 3.3rem);
+            font-size: clamp(2.2rem, 4.3vw, 3.4rem);
             font-weight: 800;
             letter-spacing: -.035em;
             line-height: 1.08;
@@ -209,7 +209,7 @@
         .hero-copy h1 .accent { color: var(--red); }
         .hero-copy .lede {
             margin-top: var(--space-5);
-            font-size: 16px;
+            font-size: 17px;
             line-height: 1.65;
             color: #000000 !important;
             max-width: 48ch;
@@ -235,8 +235,8 @@
             box-shadow: 0 6px 14px -4px rgba(15, 23, 42, .1);
         }
         .feature-icon svg { width: 20px; height: 20px; }
-        .feature-text b { display: block; font-size: 14.5px; font-weight: 800; color: #000000 !important; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
-        .feature-text span { font-size: 13.5px; color: #000000 !important; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .feature-text b { display: block; font-size: 15.5px; font-weight: 800; color: #000000 !important; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
+        .feature-text span { font-size: 14.5px; color: #000000 !important; font-weight: 600; line-height: 1.45; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85); }
 
         /* ---- Feature list and prominent system seal ---- */
         .hero-support {
@@ -255,7 +255,7 @@
         .hero-art {
             display: grid;
             place-items: center;
-            width: 250px;
+            width: 270px;
             min-height: 250px;
             margin-inline: auto;
             padding: 12px;
@@ -291,7 +291,7 @@
         }
 
         @media (min-width: 992px) and (max-width: 1199px) {
-            .hero-art { width: 250px; min-height: 250px; margin-inline: auto; }
+            .hero-art { width: 270px; min-height: 250px; margin-inline: auto; }
         }
 
         /* =================================================================
@@ -670,7 +670,7 @@
         @media (min-width: 992px) {
             .page { padding-top: 20px; padding-bottom: 24px; }
             .brand { margin-bottom: 20px; }
-            .hero-copy h1 { font-size: clamp(2.2rem, 3.4vw, 3.4rem); }
+            .hero-copy h1 { font-size: clamp(2.3rem, 3.5vw, 3.5rem); }
             .features { margin-top: 24px; gap: 12px; }
             .hero-support { margin-top: var(--space-4); }
         }
@@ -682,9 +682,9 @@
 
         @media (min-width: 992px) and (max-height: 820px) {
             .brand { margin-bottom: var(--space-3); }
-            .hero-copy h1 { font-size: 2.2rem; }
+            .hero-copy h1 { font-size: 2.3rem; }
             .hero-copy .lede { margin-top: var(--space-2); }
-            .auth-page .hero .lede { font-size: 14px !important; }
+            .auth-page .hero .lede { font-size: 15px !important; }
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-support { margin-top: var(--space-3); }
