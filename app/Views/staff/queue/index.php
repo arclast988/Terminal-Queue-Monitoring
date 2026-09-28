@@ -500,19 +500,40 @@
         z-index: 1;
         transition: opacity 0.25s ease;
     }
-    .q-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg, 0 16px 40px -12px rgba(16, 24, 40, 0.2)) !important;
-        border-color: var(--primary, #15803d) !important;
+    @media (hover: hover) and (pointer: fine) {
+        .q-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 24, 40, 0.11) !important;
+            border-color: #b7dec3 !important;
+        }
+        .q-card:hover .q-card-header {
+            background-color: #f4faf5 !important;
+        }
+        .q-card:hover .vehicle-type-icon img {
+            transform: scale(1.04);
+        }
+    }
+    @media (hover: none) {
+        .q-card:hover {
+            transform: none;
+            box-shadow: var(--shadow-sm, 0 1px 3px rgba(16, 24, 40, 0.08)) !important;
+            border-color: var(--border, #e2e8f0) !important;
+        }
+        .q-card:hover .q-card-header {
+            background-color: var(--surface-sunken, #f1f3f6) !important;
+        }
+        .q-card:active {
+            border-color: #b7dec3 !important;
+        }
+        .q-card:active .q-card-header {
+            background-color: #f4faf5 !important;
+        }
     }
     /* Header hover accent matching theme */
     .q-card-header {
         background-color: var(--surface-sunken, #f1f3f6);
         transition: background-color 0.2s ease;
         position: relative;
-    }
-    .q-card:hover .q-card-header {
-        background-color: var(--primary-soft, #dcfce7) !important;
     }
     /* Better text contrast inside cards */
     .q-card .text-muted {
@@ -532,10 +553,6 @@
         color: var(--primary, #15803d) !important;
     }
     /* Rotate / scale type image slightly on card hover */
-    .q-card:hover .vehicle-type-icon img {
-        transform: scale(1.1) rotate(2deg);
-        transition: transform 0.2s ease;
-    }
     .vehicle-type-icon img {
         transition: transform 0.2s ease;
     }
@@ -543,8 +560,10 @@
     .q-card .badge-modern {
         transition: transform 0.2s ease;
     }
-    .q-card:hover .badge-modern {
-        transform: scale(1.05);
+    @media (hover: hover) and (pointer: fine) {
+        .q-card:hover .badge-modern {
+            transform: scale(1.03);
+        }
     }
 
     /* Countdown Timer Styles */

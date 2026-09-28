@@ -2273,6 +2273,15 @@ a[title*="delete" i]:hover .bi,
     box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3) !important;
   }
 
+  html body input[type="checkbox"]:indeterminate {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-width='3' d='M5 10h10'/%3e%3c/svg%3e") !important;
+    background-size: 12px 12px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+  }
+
   /* Empty State & Colspan Rows & Centered Cells on Mobile */
   html body table.table-modern tbody tr:has(td[colspan]),
   html body table.table-modern tbody tr:has(td.empty-state-table),

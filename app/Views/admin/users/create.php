@@ -251,11 +251,12 @@ SVG;
         border-radius: 5px;
         cursor: pointer;
     }
-    .route-select-all .form-check-input:checked {
-        background-color: var(--primary, #b71c1c);
-        border-color: var(--primary, #b71c1c);
+    .route-select-all .form-check-input:checked,
+    .route-select-all .form-check-input:indeterminate {
+        background-color: #2563eb;
+        border-color: #2563eb;
     }
-    .route-select-all:focus-within { outline: 2px solid var(--primary, #b71c1c); outline-offset: 2px; }
+    .route-select-all:focus-within { outline: 2px solid #2563eb; outline-offset: 2px; }
     .route-picker { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
     .route-item { border-radius: 6px; margin-bottom: 0.25rem; min-height: 44px; padding: 0.55rem 0.65rem 0.55rem 2rem; }
     .route-item:last-child { margin-bottom: 0; }

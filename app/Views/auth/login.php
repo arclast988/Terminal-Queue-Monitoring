@@ -428,9 +428,9 @@
             transition: background .15s ease, border-color .15s ease;
         }
         .check .box svg { width: 12px; height: 12px; color: #fff; opacity: 0; transition: opacity .15s ease; }
-        .check input:checked + .box { background: var(--red); border-color: var(--red); }
+        .check input:checked + .box { background: #2563eb; border-color: #2563eb; }
         .check input:checked + .box svg { opacity: 1; }
-        .check input:focus-visible + .box { outline: 2px solid var(--red); outline-offset: 2px; }
+        .check input:focus-visible + .box { outline: 2px solid #2563eb; outline-offset: 2px; }
         .check .label { font-size: 14px; font-weight: 500; color: var(--text); }
         .forgot {
             font-size: 14px;

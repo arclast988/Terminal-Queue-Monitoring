@@ -634,9 +634,11 @@ table:not(.selection-mode-active) .bulk-select-cell {
     }
     #vehicles-table .vehicle-row-checkbox:checked,
     #select-all-vehicles:checked,
-    #table-head-select-all-vehicles:checked {
-        background-color: var(--primary, #b71c1c) !important;
-        border-color: var(--primary, #b71c1c) !important;
+    #table-head-select-all-vehicles:checked,
+    #select-all-vehicles:indeterminate,
+    #table-head-select-all-vehicles:indeterminate {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
         box-shadow: none !important;
     }
     @media (hover: hover) and (pointer: fine) {

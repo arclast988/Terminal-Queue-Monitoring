@@ -41,8 +41,8 @@
     cursor: pointer;
 }
 .vt-check-card .form-check-input:checked {
-    background-color: var(--vt-color, #1565c0);
-    border-color: var(--vt-color, #1565c0);
+    background-color: #2563eb;
+    border-color: #2563eb;
 }
 .vt-check-card .vt-icon {
     width: 32px;
@@ -82,8 +82,8 @@
 .vt-select-all .form-check-input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
 .vt-select-all .form-check-input:checked,
 .vt-select-all .form-check-input:indeterminate {
-    background-color: var(--primary, #b71c1c) !important;
-    border-color: var(--primary, #b71c1c) !important;
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
 }
 @media (max-width: 575.98px) {
     .vt-check-card {

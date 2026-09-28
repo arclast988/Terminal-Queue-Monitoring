@@ -1433,18 +1433,41 @@ body.staff-theme .radio-card-input:checked + .radio-card-content .radio-card-lab
     margin-top: 3px;
     border: 2px solid var(--slate-300);
     border-radius: var(--radius-sm);
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #ffffff;
+    background-position: center;
+    background-repeat: no-repeat;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    accent-color: #2563eb;
+    transition: none;
 }
 
 .form-check-input-modern:checked {
-    background-color: var(--primary-red);
-    border-color: var(--primary-red);
+    background-color: #2563eb;
+    border-color: #2563eb;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
 }
 
 body.staff-theme .form-check-input-modern:checked {
-    background-color: var(--primary, #15803d);
-    border-color: var(--primary, #15803d);
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Checked and partially selected checkboxes share one blue across roles. */
+input[type="checkbox"] { accent-color: #2563eb; }
+input[type="checkbox"].form-check-input:checked,
+input[type="checkbox"].form-check-input:indeterminate,
+input[type="checkbox"].form-check-input-modern:checked,
+input[type="checkbox"].form-check-input-modern:indeterminate {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+input[type="checkbox"].form-check-input:indeterminate,
+input[type="checkbox"].form-check-input-modern:indeterminate {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-width='3' d='M5 10h10'/%3e%3c/svg%3e") !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
 }
 
 .form-check-label-modern {

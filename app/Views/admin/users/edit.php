@@ -252,8 +252,9 @@ SVG;
     .route-section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
     .route-select-all { display: inline-flex; align-items: center; gap: 9px; flex: 0 0 auto; min-height: 44px; margin: 0; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #334155; font-size: 14px; font-weight: 600; line-height: 1.3; white-space: nowrap; cursor: pointer; }
     .route-select-all .form-check-input { float: none !important; width: 22px; height: 22px; min-width: 22px; margin: 0 !important; flex: 0 0 22px; border: 2px solid #94a3b8; border-radius: 5px; cursor: pointer; }
-    .route-select-all .form-check-input:checked { background-color: var(--primary, #b71c1c); border-color: var(--primary, #b71c1c); }
-    .route-select-all:focus-within { outline: 2px solid var(--primary, #b71c1c); outline-offset: 2px; }
+    .route-select-all .form-check-input:checked,
+    .route-select-all .form-check-input:indeterminate { background-color: #2563eb; border-color: #2563eb; }
+    .route-select-all:focus-within { outline: 2px solid #2563eb; outline-offset: 2px; }
     .route-picker { max-height: 280px; overflow-y: auto; overscroll-behavior: contain; }
     .route-item { border-radius: 6px; margin-bottom: 0.25rem; padding: 0.55rem 0.65rem 0.55rem 2rem; }
     .route-item:last-child { margin-bottom: 0; }

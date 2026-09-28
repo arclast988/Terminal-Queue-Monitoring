@@ -623,8 +623,8 @@ html body .form-check-input-modern {
 }
 
 html body .form-check-input-modern:checked {
-  background-color: var(--primary);
-  border-color: var(--primary);
+  background-color: #2563eb;
+  border-color: #2563eb;
 }
 html body .form-check-label-modern {
   font-size: .875rem;
