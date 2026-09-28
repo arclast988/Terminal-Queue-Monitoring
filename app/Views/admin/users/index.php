@@ -653,6 +653,38 @@ table:not(.selection-mode-active) .bulk-select-cell {
         vertical-align: middle;
     }
 
+    @media (min-width: 769px) {
+        html body table#users-table.table-modern {
+            min-width: 900px !important;
+            table-layout: fixed !important;
+        }
+        #users-table th:nth-child(2) { width: 48px; }
+        #users-table th:nth-child(3) { width: 24%; }
+        #users-table th:nth-child(4) { width: 125px; }
+        #users-table th:nth-child(6) { width: 190px; }
+        #users-table td[data-label="User"] .user-info-text { overflow-wrap: anywhere; }
+        #users-table td[data-label="Assigned Routes"] .badge-scroll-wrap {
+            display: flex !important;
+            flex-wrap: wrap;
+            max-width: 100%;
+            overflow: visible;
+            white-space: normal;
+            padding-bottom: 0 !important;
+        }
+        #users-table td[data-label="Assigned Routes"] .badge-modern {
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+        #users-table td[data-label="Action"] .btn-group-modern {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 6px;
+            max-width: 100%;
+        }
+    }
+
     /* Search Input Capsule and Alignments */
     .user-search-group {
         display: flex !important;
