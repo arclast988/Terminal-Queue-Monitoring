@@ -31,6 +31,11 @@ class Dashboard extends BaseController
                                      ->first()['count'] ?? 0;
         $unassignedStaff = (int) $unassignedStaff;
 
+        $destinationVehicleTypes = [];
+        foreach ($routeModel->select('destination, vehicle_type')->distinct()->findAll() as $route) {
+            $destinationVehicleTypes[$route['destination']][] = $route['vehicle_type'];
+        }
+
         $data = [
             'title' => 'Admin Dashboard',
             'stats' => [
@@ -46,7 +51,8 @@ class Dashboard extends BaseController
                                      ->orderBy('timestamp', 'DESC')
                                      ->limit(5)
                                      ->findAll(),
-            'destinations' => $routeModel->select('destination, vehicle_type')->distinct()->orderBy('destination', 'ASC')->findAll(),
+            'destinations' => $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll(),
+            'destinationVehicleTypes' => $destinationVehicleTypes,
             'vehicleTypes' => (new VehicleTypeModel())->where('is_active', 1)->orderBy('name', 'ASC')->findAll()
         ];
 

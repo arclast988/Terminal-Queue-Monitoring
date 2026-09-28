@@ -841,6 +841,7 @@ SVG;
             fileInput.addEventListener('change', function () {
                 var file = this.files && this.files[0];
                 if (!file) return;
+                this.value = '';
 
                 if (!file.type.match(/^image\/(png|jpe?g|webp|gif)$/i)) {
                     showAvatarStatus('Please select a valid image (JPG, PNG, WEBP, GIF).', 'error', 4000);
@@ -875,7 +876,18 @@ SVG;
                     body: formData
                 })
                 .then(function (res) {
-                    return res.json().then(function (data) {
+                    var contentType = res.headers.get('content-type') || '';
+                    if (res.redirected && new URL(res.url).pathname === '/login') {
+                        throw new Error('Your session has expired. Please sign in again.');
+                    }
+                    if (!contentType.includes('application/json')) {
+                        throw new Error(res.status === 413
+                            ? 'This photo is too large for the server. Please choose a smaller image.'
+                            : 'Upload could not be completed. Please refresh the page and try again.');
+                    }
+                    return res.json().catch(function () {
+                        throw new Error('The upload response was unreadable. Please refresh the page and try again.');
+                    }).then(function (data) {
                         return { status: res.status, data: data };
                     });
                 })
@@ -894,8 +906,11 @@ SVG;
                         showAvatarStatus(err, 'error', 4000);
                     }
                 })
-                .catch(function () {
-                    showAvatarStatus('Network error while uploading photo.', 'error', 4000);
+                .catch(function (error) {
+                    var message = error instanceof TypeError
+                        ? 'Connection lost while uploading. Please check your connection and try again.'
+                        : (error.message || 'Upload failed. Please try again.');
+                    showAvatarStatus(message, 'error', 5000);
                 });
             });
         }

@@ -49,6 +49,10 @@ class History extends BaseController
         $vehicleTypeModel = new VehicleTypeModel();
         
         $destinations = $routeModel->select('destination')->distinct()->orderBy('destination', 'ASC')->findAll();
+        $destinationVehicleTypes = [];
+        foreach ($routeModel->select('destination, vehicle_type')->distinct()->findAll() as $route) {
+            $destinationVehicleTypes[$route['destination']][] = $route['vehicle_type'];
+        }
         $vehicleTypes = $vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll();
 
         // --- Departure list (paginated, searchable) ---
@@ -64,7 +68,8 @@ class History extends BaseController
                 'year'    => $totalYear,
             ],
             'departures'   => $departures,
-            'destinations' => $routeModel->select('destination, vehicle_type')->distinct()->orderBy('destination', 'ASC')->findAll(),
+            'destinations' => $destinations,
+            'destinationVehicleTypes' => $destinationVehicleTypes,
             'vehicleTypes' => $vehicleTypes,
             'pager'        => $queueModel->pager,
             'search'       => $search,

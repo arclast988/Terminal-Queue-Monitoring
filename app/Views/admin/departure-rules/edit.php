@@ -210,6 +210,29 @@
 .tp-set-btn:hover {
     background: var(--primary-dark, #0D47A1);
 }
+
+@media (max-width: 768px) {
+    .military-time-wrap { flex-wrap: wrap; }
+    .military-time-btn { flex: 0 0 48px; }
+    .military-time-popover {
+        position: static;
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 8px;
+        padding: 10px 8px;
+    }
+    .military-time-popover.open { justify-content: center; gap: 8px; }
+    .tp-btn { width: 48px; height: 44px; }
+    .military-time-popover .tp-input {
+        width: 48px;
+        height: 44px;
+        min-height: 44px !important;
+        padding: 0 !important;
+        font-size: 18px !important;
+    }
+    .tp-set-btn { min-height: 0; padding-inline: 12px; }
+}
 </style>
 
 <?php
@@ -546,6 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let input = wrap.querySelector('.military-time-input');
         let btn = wrap.querySelector('.military-time-btn');
         if (!input || !btn) return;
+        btn.setAttribute('aria-expanded', 'false');
 
         let popover = document.createElement('div');
         popover.className = 'military-time-popover';
@@ -725,6 +749,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let m = String(Math.min(59, Math.max(0, parseInt(mmInput.value, 10) || 0))).padStart(2, '0');
             input.value = h + ':' + m;
             popover.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
             activePopover = null;
             input.dispatchEvent(new Event('input', { bubbles: true }));
             input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -742,6 +767,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 applyTime();
             } else if (e.key === 'Escape') {
                 popover.classList.remove('open');
+                btn.setAttribute('aria-expanded', 'false');
                 activePopover = null;
             }
         });
@@ -754,13 +780,18 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             if (activePopover && activePopover !== popover) {
                 activePopover.classList.remove('open');
+                activePopover.parentElement.querySelector('.military-time-btn')?.setAttribute('aria-expanded', 'false');
             }
             syncFromMain();
             popover.classList.toggle('open');
+            btn.setAttribute('aria-expanded', String(popover.classList.contains('open')));
             if (popover.classList.contains('open')) {
                 activePopover = popover;
-                hhInput.focus();
-                hhInput.select();
+                // Keep the mobile keyboard closed until a time field is tapped.
+                if (e.detail === 0 || window.matchMedia('(pointer: fine)').matches) {
+                    hhInput.focus();
+                    hhInput.select();
+                }
             } else {
                 activePopover = null;
             }
@@ -770,6 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function() {
         if (activePopover) {
             activePopover.classList.remove('open');
+            activePopover.parentElement.querySelector('.military-time-btn')?.setAttribute('aria-expanded', 'false');
             activePopover = null;
         }
     });

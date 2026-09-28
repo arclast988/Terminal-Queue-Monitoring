@@ -37,4 +37,18 @@ final class ReportModalLayoutTest extends CIUnitTestCase
         $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr));', $content);
         $this->assertStringNotContainsString("#logReportFilterModal .modal-body,\n#logReportFilterModal .mb-3", $content);
     }
+
+    public function testDepartureReportShowsOneDestinationAcrossVehicleTypes(): void
+    {
+        $html = view('admin/modals/report_filter', [
+            'destinations' => [['destination' => 'Tacloban']],
+            'destinationVehicleTypes' => ['Tacloban' => ['van', 'jeepney']],
+            'vehicleTypes' => [],
+        ]);
+
+        $this->assertSame(1, substr_count($html, 'value="Tacloban"'));
+        $this->assertStringContainsString('data-vtypes="van jeepney"', $html);
+        $this->assertStringNotContainsString('TACLOBAN (Van)', $html);
+        $this->assertStringNotContainsString('TACLOBAN (Jeepney)', $html);
+    }
 }

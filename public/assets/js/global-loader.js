@@ -36,7 +36,7 @@
 
     var activeRequests = 0;
     var progress = 0;
-    var startTime = 0;
+    var visibleAt = 0;
     var trickleTimer = null;
     var safetyTimer = null;
     var showTimer = null;
@@ -92,10 +92,11 @@
             '  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(249, 115, 22, 0.75) 45%, transparent 80%);',
             '  border-radius: 50%; box-shadow: 0 0 10px rgba(249, 115, 22, 1);',
             '}',
-            '/* Mobile browsers already provide their own top loading bar. Keep only contextual button/table loaders there. */',
+            '/* Regular mobile browsers provide their own loading bar; installed app windows do not. */',
             '@media (max-width: 768px), (hover: none) and (pointer: coarse) {',
             '  .global-progress-bar { display: none !important; }',
             '}',
+            '.gl-standalone .global-progress-bar { display: block !important; }',
             '/* In-Table / In-Card Loading Overlay */',
             '.table-loader-overlay {',
             '  position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100px;',
@@ -170,6 +171,7 @@
     /** Visually render the active progress bar (called only after threshold delay) */
     function renderStart() {
         isVisible = true;
+        visibleAt = Date.now();
         if (barEl) {
             barEl.classList.remove('is-done');
             barEl.classList.add('is-active');
@@ -199,7 +201,6 @@
         if (!isRunning) {
             isRunning = true;
             isVisible = false;
-            startTime = Date.now();
 
             if (showTimer) {
                 clearTimeout(showTimer);
@@ -264,7 +265,7 @@
             trickleTimer = null;
         }
 
-        var visibleElapsed = Date.now() - (startTime + SHOW_DELAY);
+        var visibleElapsed = Date.now() - visibleAt;
         var remainingDelay = (visibleElapsed < MIN_VISIBLE) ? (MIN_VISIBLE - visibleElapsed) : 0;
 
         setTimeout(function () {
@@ -683,8 +684,8 @@
         }, false);
 
         // Handle BFCache restore (Back/Forward navigation restores DOM from memory)
-        window.addEventListener('pageshow', function () {
-            forceDone();
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) forceDone();
         });
 
         // Clean loader state when the browser is actually leaving the page,
@@ -702,12 +703,32 @@
     hookXHR();
 
     function onInit() {
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+            || window.navigator.standalone === true;
+        if (standalone) document.documentElement.classList.add('gl-standalone');
         ensureElements();
         setupInteractions();
         try {
             // Clean up navigation flag cleanly without replaying a fake progress bar
             sessionStorage.removeItem('gl_navigating');
         } catch (err) {}
+
+        // Chrome's installed app has no browser loading bar on its first page.
+        if (standalone) {
+            var firstPage = true;
+            try {
+                firstPage = sessionStorage.getItem('gl_standalone_opened') !== '1';
+                sessionStorage.setItem('gl_standalone_opened', '1');
+            } catch (err) {}
+            if (firstPage) {
+                start(true);
+                if (document.readyState === 'complete') {
+                    done();
+                } else {
+                    window.addEventListener('load', done, { once: true });
+                }
+            }
+        }
     }
 
     if (document.readyState === 'loading') {

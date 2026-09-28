@@ -210,10 +210,27 @@
     background: var(--primary-dark, #0D47A1);
 }
 
-@media (max-width: 420px) {
-    .military-time-popover { max-width: 100%; padding: 8px; gap: 4px; }
-    .tp-btn, .tp-input { width: 44px; }
-    .tp-set-btn { padding-inline: 10px; }
+@media (max-width: 768px) {
+    .military-time-wrap { flex-wrap: wrap; }
+    .military-time-btn { flex: 0 0 48px; }
+    .military-time-popover {
+        position: static;
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 8px;
+        padding: 10px 8px;
+    }
+    .military-time-popover.open { justify-content: center; gap: 8px; }
+    .tp-btn { width: 48px; height: 44px; }
+    .military-time-popover .tp-input {
+        width: 48px;
+        height: 44px;
+        min-height: 44px !important;
+        padding: 0 !important;
+        font-size: 18px !important;
+    }
+    .tp-set-btn { min-height: 0; padding-inline: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

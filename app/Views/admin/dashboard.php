@@ -98,7 +98,7 @@
     </div>
 </div>
 
-<?= view('admin/modals/report_filter', ['destinations' => $destinations, 'vehicleTypes' => $vehicleTypes]) ?>
+<?= view('admin/modals/report_filter', ['destinations' => $destinations, 'destinationVehicleTypes' => $destinationVehicleTypes ?? [], 'vehicleTypes' => $vehicleTypes]) ?>
 
 <?php if (!empty($unassignedVehicles)): ?>
     <div class="alert-modern alert-modern-warning fade-in">

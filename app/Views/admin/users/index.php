@@ -765,10 +765,10 @@ table:not(.selection-mode-active) .bulk-select-cell {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .avatar-super-admin {
-        border: 2.5px solid rgba(183, 28, 28, 0.45);
+        border: 2px solid #b91c1c;
     }
     .avatar-admin {
-        border: 2.5px solid rgba(220, 38, 38, 0.4);
+        border: 2px solid #dc2626;
     }
     .avatar-dispatcher {
         border: 2.5px solid rgba(21, 128, 61, 0.4);

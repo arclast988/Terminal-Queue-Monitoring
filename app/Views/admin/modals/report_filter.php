@@ -163,11 +163,11 @@
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted text-uppercase">Specific Destination</label>
                         <select class="form-select" name="destination" id="modal_destination">
-                            <option value="" data-vtype="all">-- All Destinations --</option>
+                            <option value="">-- All Destinations --</option>
                             <?php if (!empty($destinations)): ?>
                                 <?php foreach ($destinations as $route): ?>
-                                    <option value="<?= esc($route['destination']) ?>" data-vtype="<?= esc($route['vehicle_type']) ?>">
-                                        <?= strtoupper(esc($route['destination'])) ?> (<?= ucfirst(esc($route['vehicle_type'])) ?>)
+                                    <option value="<?= esc($route['destination']) ?>" data-vtypes="<?= esc(implode(' ', $destinationVehicleTypes[$route['destination']] ?? [])) ?>">
+                                        <?= strtoupper(esc($route['destination'])) ?>
                                     </option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -264,8 +264,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         destSelect.innerHTML = '';
         destOptions.forEach(opt => {
-            const vtype = opt.getAttribute('data-vtype');
-            if (selectedType === '' || vtype === 'all' || vtype === selectedType) {
+            const types = (opt.getAttribute('data-vtypes') || '').split(/\s+/).filter(Boolean);
+            if (selectedType === '' || opt.value === '' || types.includes(selectedType)) {
                 destSelect.appendChild(opt);
             }
         });
