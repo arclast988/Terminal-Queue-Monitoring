@@ -213,7 +213,7 @@
            Hero / Branding column
            ================================================================= */
         .auth-page .hero { padding: 0 !important; min-height: 0 !important; }
-        .auth-page .hero .kicker { font-size: 13px !important; line-height: 1.35 !important; margin-bottom: var(--space-4) !important; }
+        .auth-page .hero .kicker { font-size: 15px !important; line-height: 1.35 !important; margin-bottom: var(--space-4) !important; }
         .auth-page .hero .lede { font-size: 17px !important; line-height: 1.65 !important; margin-bottom: 0 !important; }
         .hero-copy {
             animation: fadeUp .7s ease .15s both;
@@ -294,8 +294,8 @@
         .hero-art {
             display: grid;
             place-items: center;
-            width: 360px;
-            min-height: 270px;
+            width: min(100%, 404px);
+            min-height: 290px;
             margin-inline: auto;
             padding: 12px;
             border-radius: 20px;
@@ -306,7 +306,7 @@
             box-shadow: 0 12px 26px -18px rgba(153, 27, 27, .32), 0 0 0 3px rgba(220, 38, 38, .04);
         }
         .hero-art:not(.has-custom-artwork) {
-            margin-inline: calc(42px + var(--space-4)) auto;
+            margin-inline: 0 auto;
             background: radial-gradient(circle at 50% 46%, rgba(255, 215, 125, .24), transparent 61%), radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .07), transparent 64%), linear-gradient(135deg, #fff 10%, #fff9f1 55%, #fff);
             box-shadow: 0 16px 32px -20px rgba(153, 27, 27, .4), 0 0 0 3px rgba(220, 38, 38, .045), inset 0 1px 0 rgba(255, 255, 255, .95);
         }
@@ -332,7 +332,7 @@
         }
 
         @media (min-width: 992px) and (max-width: 1199px) {
-            .hero-art { width: 360px; min-height: 270px; }
+            .hero-art { width: min(100%, 404px); min-height: 290px; }
         }
 
         /* =================================================================
@@ -729,7 +729,7 @@
             .features { margin-top: var(--space-3); gap: var(--space-2); }
             .feature-icon { width: 34px; height: 34px; }
             .hero-support { margin-top: var(--space-3); }
-            .hero-art:not(.has-custom-artwork) { margin-inline-start: calc(34px + var(--space-4)); }
+            .hero-art:not(.has-custom-artwork) { margin-inline-start: 0; }
             .hero-art:not(.has-custom-artwork) img { max-height: 235px; }
             .login-card { padding: var(--space-6); }
             .login-card .card-head { margin-bottom: var(--space-4); }

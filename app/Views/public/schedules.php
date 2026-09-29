@@ -344,6 +344,16 @@
             }
         }
 
+        .schedule-search-empty {
+            margin-bottom: 16px;
+            padding: 14px 18px;
+            background: #fff;
+            border-radius: 12px;
+            color: var(--text-muted);
+            box-shadow: var(--shadow-sm);
+        }
+        .schedule-search-empty[hidden] { display: none !important; }
+
         /* --- Main Content --- */
         .container {
             width: 90%;
@@ -1096,15 +1106,13 @@
         <p>View departure times, vehicle status, and route information for all available vehicle types.</p>
 
         <div class="search-container">
-            <form action="<?= base_url('schedules') ?>" method="get" class="search-bar guest-page-search" id="scheduleSearchForm" style="position: relative;">
-                <?php if (!empty($vehicle_type)): ?><input type="hidden" name="type" value="<?= esc($vehicle_type) ?>"><?php endif; ?>
-                <?php if (!empty($destination)): ?><input type="hidden" name="destination" value="<?= esc($destination) ?>"><?php endif; ?>
+            <div class="search-bar guest-page-search" role="search" id="scheduleSearchForm" style="position: relative;">
                 <i class="fas fa-search guest-page-search-icon" aria-hidden="true"></i>
-                <input type="text" name="q" id="scheduleSearchInput" placeholder="Search route, destination, or plate" aria-label="Search schedules" value="<?= esc($search ?? '') ?>" autocomplete="off" oninput="toggleGuestScheduleClear(this.value)">
+                <input type="text" id="scheduleSearchInput" placeholder="Search route, destination, plate, or vehicle type" aria-label="Search schedules" value="<?= esc($search ?? '') ?>" autocomplete="off">
                 <button type="button" class="guest-clear-search-btn" id="guest-schedule-clear-btn" onclick="clearGuestScheduleSearch()" style="<?= !empty($search) ? 'display: inline-flex !important;' : 'display: none !important;' ?>" title="Clear search" aria-label="Clear schedule search">
                     <i class="fas fa-times-circle"></i>
                 </button>
-            </form>
+            </div>
         </div>
     </section>
 
@@ -1168,6 +1176,7 @@
         </div>
 
         <!-- Schedule List -->
+        <div class="schedule-search-empty" id="scheduleSearchEmpty" role="status" hidden>No schedules match your search. Try another route, destination, plate, or vehicle type.</div>
         <div class="schedule-card">
             <div class="card-header">
                 <h3><i class="fas fa-list-alt"></i> Schedule Board</h3>
@@ -1325,11 +1334,11 @@
         function filterTableClientSide() {
             var rows = document.querySelectorAll('#scheduleTableBody tr');
             var visibleCount = 0;
-            var q = (currentSearch || '').toLowerCase();
+            var q = (currentSearch || '').toLowerCase().trim();
             rows.forEach(function(row) {
                 var rowDest = (row.getAttribute('data-destination') || '').toLowerCase();
                 var rowType = (row.getAttribute('data-type') || '').toLowerCase();
-                var rowText = (row.innerText || '').toLowerCase();
+                var rowText = (row.textContent || '').toLowerCase();
 
                 var matchesDest = (!currentDest || currentDest === 'all' || rowDest === currentDest.toLowerCase());
                 var matchesType = (!currentType || currentType === 'all' || rowType === currentType.toLowerCase());
@@ -1347,7 +1356,14 @@
 
             var badge = document.getElementById('scheduleCount');
             if (badge) {
-                badge.innerText = visibleCount + ' Found';
+                badge.textContent = visibleCount + ' Found';
+            }
+            var noResults = document.getElementById('scheduleSearchEmpty');
+            if (noResults) {
+                noResults.hidden = rows.length === 0 || visibleCount > 0;
+                noResults.textContent = q
+                    ? 'No schedules match your search. Try another route, destination, plate, or vehicle type.'
+                    : 'No schedules match the selected filters.';
             }
         }
 
@@ -1362,7 +1378,7 @@
             var params = [];
             if (currentType) params.push('type=' + encodeURIComponent(currentType));
             if (currentDest && currentDest !== 'all') params.push('destination=' + encodeURIComponent(currentDest));
-            if (currentSearch) params.push('q=' + encodeURIComponent(currentSearch));
+            // Keep the full row set for instant client-side search and clearing.
             params.push('_=' + Date.now());
             var fetchUrl = '<?= base_url('schedules/status') ?>?' + params.join('&');
 
@@ -1645,6 +1661,7 @@
                 } catch(e) {}
             }
 
+            filterTableClientSide();
             fetchSchedulesStatus(false);
         });
     </script>

@@ -84,13 +84,15 @@ class Schedules extends BaseController
             $builder->where('routes.destination', strtoupper($destination));
         }
 
-        if ($search !== '') {
+        // Guest search filters the complete schedule board in the browser.
+        // Keep server-side search for other callers and make it case-insensitive.
+        if ($search !== '' && session()->get('isLoggedIn')) {
             $builder->groupStart()
-                ->like('vehicles.plate_number', $search)
-                ->orLike('vehicles.operator_name', $search)
-                ->orLike('vehicles.driver_name', $search)
-                ->orLike('routes.destination', $search)
-                ->orLike('terminals.name', $search)
+                ->like('vehicles.plate_number', $search, 'both', null, true)
+                ->orLike('vehicles.operator_name', $search, 'both', null, true)
+                ->orLike('vehicles.driver_name', $search, 'both', null, true)
+                ->orLike('routes.destination', $search, 'both', null, true)
+                ->orLike('terminals.name', $search, 'both', null, true)
             ->groupEnd();
         }
 
@@ -235,11 +237,11 @@ class Schedules extends BaseController
             }
             if ($search !== '') {
                 $builder->groupStart()
-                    ->like('vehicles.plate_number', $search)
-                    ->orLike('vehicles.operator_name', $search)
-                    ->orLike('vehicles.driver_name', $search)
-                    ->orLike('routes.destination', $search)
-                    ->orLike('terminals.name', $search)
+                    ->like('vehicles.plate_number', $search, 'both', null, true)
+                    ->orLike('vehicles.operator_name', $search, 'both', null, true)
+                    ->orLike('vehicles.driver_name', $search, 'both', null, true)
+                    ->orLike('routes.destination', $search, 'both', null, true)
+                    ->orLike('terminals.name', $search, 'both', null, true)
                 ->groupEnd();
             }
 
