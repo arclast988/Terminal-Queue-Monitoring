@@ -242,6 +242,7 @@ final class AdminUsersViewTest extends CIUnitTestCase
             'drivers'      => [],
             'vehicles'     => [],
             'vehicleTypes' => [],
+            'destinationVehicleTypes' => [],
             'pager'        => null,
             'filterOrigin' => '',
             'filterDest'   => '',
