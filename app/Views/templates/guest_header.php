@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260928a">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929a">
 <link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20260929b') ?>">
 
 <div class="sticky-top-wrapper">

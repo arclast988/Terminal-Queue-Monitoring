@@ -97,7 +97,12 @@
         transform: translate3d(0, 0, 0);
         -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
+        /* Keep a fixed-duration fallback for WebKit browsers without CSS variables. */
+        -webkit-animation: gh-marquee 35s linear infinite;
+        animation: gh-marquee 35s linear infinite;
+        -webkit-animation: gh-marquee var(--marquee-duration, 35s) linear infinite;
         animation: gh-marquee var(--marquee-duration, 35s) linear infinite;
+        -webkit-animation-delay: var(--marquee-delay, 0s);
         animation-delay: var(--marquee-delay, 0s);
         font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         font-weight: 800 !important;
@@ -111,14 +116,25 @@
         padding-top: 0;
         padding-bottom: 0;
     }
-    .marquee:hover,
-    .advisory-bar:focus-within .marquee,
     .advisory-bar.modal-ann-open .marquee {
+        -webkit-animation-play-state: paused;
         animation-play-state: paused;
+    }
+    .advisory-icon:focus-visible + .advisory-text .marquee {
+        -webkit-animation-play-state: paused;
+        animation-play-state: paused;
+    }
+    /* Touch browsers can retain :hover or button focus after a tap. */
+    @media (hover: hover) and (pointer: fine) {
+        .marquee:hover {
+            -webkit-animation-play-state: paused;
+            animation-play-state: paused;
+        }
     }
 
     @media (prefers-reduced-motion: reduce) {
         .marquee {
+            -webkit-animation: none !important;
             animation: none !important;
             padding-left: 0;
             transform: none;
