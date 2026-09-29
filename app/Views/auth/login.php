@@ -42,7 +42,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css?v=20260929c') ?>">
     <?= app_theme_css() ?>
     <style>
         /* =================================================================
@@ -104,31 +104,42 @@
             position: relative;
         }
 
-        /* Semi-transparent system background watermark (Terminal Photo Slideshow or Single Hero) */
+        /* Image layers keep the first photo visible even when animation is unavailable. */
         <?php
         $bgMode = app_bg_mode();
         $useSingle = ($bgMode === 'single');
+        $defaultLoginSlides = array_values(app_bg_slideshow());
+        $loginSlides = $useSingle
+            ? [app_has_custom_bg() ? app_bg_image() : ($defaultLoginSlides[0] ?? app_bg_image())]
+            : $defaultLoginSlides;
         ?>
-        <?php if ($useSingle): ?>
-        <?php if (app_has_custom_bg()): ?>
-        body::after {
-            content: "";
+        body.auth-page::after { content: none !important; display: none !important; }
+        .auth-bg-slideshow {
             position: fixed;
             inset: 0;
-            width: 100vw;
+            width: 100%;
             height: 100vh;
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: cover;
-            background-image: url('<?= esc(app_bg_image()) ?>');
-            opacity: 0.28;
+            height: 100dvh;
             z-index: 0;
+            overflow: hidden;
             pointer-events: none;
         }
-        <?php endif; ?>
-        <?php else: ?>
-        <?= app_bg_slideshow_css(null, 0.22) ?>
-        <?php endif; ?>
+        .auth-bg-slide {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity .9s ease;
+        }
+        .auth-bg-slide.is-active { opacity: 1; }
+        @media (prefers-reduced-motion: reduce) {
+            .auth-bg-slide { transition: none; }
+        }
+        @media print {
+            .auth-bg-slideshow { display: none !important; }
+        }
 
         /* ---- Subtle transportation scenery (route lines, nodes, faint skyline) ---- */
         .scenery {
@@ -732,6 +743,10 @@
     </style>
 </head>
 <body class="auth-page">
+    <div class="auth-bg-slideshow" id="authBgSlideshow" aria-hidden="true" style="opacity: <?= $useSingle ? '0.28' : '0.22' ?>">
+        <img class="auth-bg-slide is-active" src="<?= esc($loginSlides[0], 'attr') ?>" alt="" decoding="async">
+        <img class="auth-bg-slide" alt="" decoding="async">
+    </div>
 
     <!-- Subtle transportation scenery -->
     <div class="scenery" aria-hidden="true">
@@ -908,6 +923,80 @@
 
     </div>
 
+    <script>
+    (function () {
+        var root = document.getElementById('authBgSlideshow');
+        if (!root) return;
+        var layers = root.querySelectorAll('.auth-bg-slide');
+        var slides = <?= json_encode($loginSlides, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) ?>;
+        var defaults = <?= json_encode($defaultLoginSlides, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) ?>;
+        var current = 0;
+        var index = 0;
+        var timer;
+
+        function schedule() {
+            clearTimeout(timer);
+            if (slides.length > 1) timer = setTimeout(advance, 6000);
+        }
+        function advance() {
+            if (document.hidden) { schedule(); return; }
+            var nextIndex = (index + 1) % slides.length;
+            var incoming = layers[1 - current];
+            var outgoing = layers[current];
+            var finished = false;
+            function loaded() {
+                if (finished) return;
+                finished = true;
+                incoming.onload = incoming.onerror = null;
+                (window.requestAnimationFrame || function (fn) { setTimeout(fn, 0); })(function () {
+                    incoming.classList.add('is-active');
+                    outgoing.classList.remove('is-active');
+                    current = 1 - current;
+                    index = nextIndex;
+                    schedule();
+                });
+            }
+            function failed() {
+                if (finished) return;
+                finished = true;
+                incoming.onload = incoming.onerror = null;
+                index = nextIndex;
+                schedule();
+            }
+            incoming.onload = loaded;
+            incoming.onerror = failed;
+            incoming.src = slides[nextIndex];
+            if (incoming.complete && incoming.naturalWidth > 0) loaded();
+        }
+        function setSlides(urls, opacity) {
+            var valid = urls.filter(function (url) { return typeof url === 'string' && url.length > 0; });
+            if (!valid.length) return;
+            clearTimeout(timer);
+            slides = valid;
+            current = index = 0;
+            layers[0].src = slides[0];
+            layers[0].classList.add('is-active');
+            layers[1].classList.remove('is-active');
+            layers[1].removeAttribute('src');
+            root.style.opacity = String(opacity);
+            schedule();
+        }
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) schedule();
+        });
+        document.addEventListener('pttm:branding-applied', function (event) {
+            var data = event.detail || {};
+            if (data.category && data.category !== 'background' && data.category !== 'all') return;
+            if (!data.app_bg_mode && !data.app_bg_slideshow && !data.app_background_image) return;
+            var single = data.app_bg_mode === 'single';
+            var urls = single
+                ? [data.app_background_image || defaults[0]]
+                : (Array.isArray(data.app_bg_slideshow) && data.app_bg_slideshow.length ? data.app_bg_slideshow : defaults);
+            setSlides(urls, single ? 0.28 : 0.22);
+        });
+        schedule();
+    })();
+    </script>
     <script src="<?= base_url('assets/js/global-loader.js?v=20260928a') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('js/ws-client.js?v=20260928_2') ?>"></script>

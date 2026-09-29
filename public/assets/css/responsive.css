@@ -1292,12 +1292,6 @@ body.staff-theme .form-select:focus {
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
     }
-
-    /* Keep live advisory marquee functional at an accessible, steady speed so advisories aren't cut off */
-    .marquee {
-        animation: gh-marquee 60s linear infinite !important;
-        padding-left: 100% !important;
-    }
 }
 
 /* ---- 6. Consistent empty/loading states ---- */

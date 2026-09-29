@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929a">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929b">
 <link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20260929b') ?>">
 
 <div class="sticky-top-wrapper">
@@ -45,71 +45,77 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 <div class="advisory-bar">
     <button type="button" class="advisory-icon" onclick="openAnnouncementModal()" title="View announcements" aria-label="View announcements"><i class="fas fa-bullhorn"></i></button>
     <div class="advisory-text">
-        <div class="marquee" id="guestMarquee"><?= esc($rawMarqueeText) ?></div>
+        <div class="marquee" id="guestMarquee">
+            <span class="marquee-copy"><?= esc($rawMarqueeText) ?></span>
+            <span class="marquee-copy" aria-hidden="true"><?= esc($rawMarqueeText) ?></span>
+        </div>
         <script>
-            // Synchronously compute announcement marquee animation phase before paint
-            // so the announcement continues seamlessly when clicking between Home, Schedules, and Fares.
+            // Fill the bar with repeated copies so an announcement is always visible.
             (function () {
-                try {
-                    var KEY_BASE = 'pt_ann_base_time';
-                    var KEY_LAST = 'pt_ann_last_seen';
-                    var KEY_TEXT = 'pt_ann_text';
-                    var KEY_DUR  = 'pt_ann_duration';
+                var track = document.getElementById('guestMarquee');
+                var first = track && track.querySelector('.marquee-copy');
+                if (!track || !first) return;
 
+                var resizeTimer;
+                var BASE_KEY = 'pt_ann_ticker_base_v2';
+                var TEXT_KEY = 'pt_ann_ticker_text_v2';
+
+                function rebuild(reset) {
+                    track.classList.remove('is-ready');
+                    while (track.children.length > 2) track.removeChild(track.lastElementChild);
+                    track.children[1].textContent = first.textContent;
+
+                    var segmentWidth = first.offsetWidth;
+                    var viewportWidth = track.parentElement.clientWidth;
+                    if (!segmentWidth || !viewportWidth) return;
+
+                    // An even number of equal copies makes the -50% loop seamless.
+                    var pairs = Math.max(1, Math.ceil(viewportWidth / segmentWidth));
+                    while (track.children.length < pairs * 2) {
+                        var copy = first.cloneNode(true);
+                        copy.setAttribute('aria-hidden', 'true');
+                        track.appendChild(copy);
+                    }
+
+                    var duration = Math.max(8, (pairs * segmentWidth) / 60);
                     var now = Date.now();
-                    var rawText = <?= json_encode(trim($rawMarqueeText)) ?>;
-
-                    // Content-aware duration: maintains a steady, comfortable ~60px/sec readable speed
-                    var totalDist = (window.innerWidth || 1200) + Math.max(600, rawText.length * 9.5);
-                    var DURATION = Math.max(35, Math.round(totalDist / 60));
-                    document.documentElement.style.setProperty('--marquee-duration', DURATION + 's');
-
+                    var baseTime = now;
+                    var text = first.textContent;
                     try {
-                        sessionStorage.setItem(KEY_DUR, DURATION.toString());
-                        localStorage.setItem(KEY_DUR, DURATION.toString());
-                    } catch (se) {}
-
-                    var storedText = null;
-                    var lastSeen = 0;
-                    var baseTime = 0;
-                    try {
-                        storedText = sessionStorage.getItem(KEY_TEXT) || localStorage.getItem(KEY_TEXT);
-                        lastSeen = parseFloat(sessionStorage.getItem(KEY_LAST) || localStorage.getItem(KEY_LAST));
-                        baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
-                    } catch (se) {}
-
-                    // If announcement text changed or inactive for more than 15 mins or fresh session: initialize base time
-                    if (!baseTime || isNaN(baseTime) || storedText !== rawText || !lastSeen || (now - lastSeen > 15 * 60 * 1000)) {
-                        baseTime = now;
-                        try {
-                            sessionStorage.setItem(KEY_BASE, baseTime.toString());
-                            localStorage.setItem(KEY_BASE, baseTime.toString());
-                            sessionStorage.setItem(KEY_TEXT, rawText);
-                            localStorage.setItem(KEY_TEXT, rawText);
-                        } catch (se) {}
+                        var savedText = sessionStorage.getItem(TEXT_KEY);
+                        var savedBase = Number(sessionStorage.getItem(BASE_KEY));
+                        if (!reset && savedText === text && savedBase > 0 && now - savedBase < 15 * 60 * 1000) {
+                            baseTime = savedBase;
+                        }
+                        sessionStorage.setItem(TEXT_KEY, text);
+                        sessionStorage.setItem(BASE_KEY, String(baseTime));
+                    } catch (e) {
+                        // Private browsing can disable storage; the ticker still runs.
                     }
 
-                    try {
-                        sessionStorage.setItem(KEY_LAST, now.toString());
-                        localStorage.setItem(KEY_LAST, now.toString());
-                    } catch (se) {}
-
-                    var elapsed = ((now - baseTime) / 1000) % DURATION;
-                    if (elapsed < 0 || isNaN(elapsed)) elapsed = 0;
-                    var delayStr = '-' + elapsed.toFixed(3) + 's';
-
-                    var el = document.getElementById('guestMarquee');
-                    if (el) {
-                        el.style.animationDuration = DURATION + 's';
-                        el.style.animationDelay = delayStr;
-                    }
-                    document.documentElement.style.setProperty('--marquee-delay', delayStr);
-                } catch (e) {
-                    var fallbackEl = document.getElementById('guestMarquee');
-                    if (fallbackEl) {
-                        fallbackEl.style.animationDuration = '35s';
-                    }
+                    var elapsed = ((now - baseTime) / 1000) % duration;
+                    var delay = '-' + elapsed.toFixed(3) + 's';
+                    track.style.webkitAnimationDuration = duration + 's';
+                    track.style.animationDuration = duration + 's';
+                    track.style.webkitAnimationDelay = delay;
+                    track.style.animationDelay = delay;
+                    track.offsetWidth;
+                    track.classList.add('is-ready');
                 }
+
+                window.refreshGuestMarquee = rebuild;
+                rebuild(false);
+                window.addEventListener('load', function () { rebuild(false); });
+                window.addEventListener('resize', function () {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(function () { rebuild(false); }, 120);
+                });
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(function () { rebuild(false); });
+                }
+                window.addEventListener('pageshow', function (event) {
+                    if (event.persisted) rebuild(false);
+                });
             })();
         </script>
     </div>
@@ -286,7 +292,8 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         var bar = document.querySelector('.advisory-bar .marquee');
         if (!bar) return;
         var FALLBACK = <?= json_encode('Welcome to ' . app_name() . ' Terminal. Check schedules and fares for your trip.') ?>;
-        var lastText = bar.textContent.trim();
+        var firstCopy = bar.querySelector('.marquee-copy');
+        var lastText = firstCopy ? firstCopy.textContent.trim() : '';
         var lastModalSignature = null;
         function appendAnnouncementText(container, message) {
             var text = String(message || '');
@@ -370,26 +377,10 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                     }).filter(Boolean);
                     var annSeparator = '\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0|\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0';
                     var text = msgs.length ? msgs.join(annSeparator) : FALLBACK;
-                    if (text !== lastText) {
+                    if (text !== lastText && firstCopy) {
                         lastText = text;
-                        bar.textContent = text;
-                        try {
-                            var nowReset = Date.now();
-                            var newDist = (window.innerWidth || 1200) + Math.max(600, text.length * 9.5);
-                            var newDur = Math.max(35, Math.round(newDist / 60));
-                            sessionStorage.setItem('pt_ann_text', text);
-                            localStorage.setItem('pt_ann_text', text);
-                            sessionStorage.setItem('pt_ann_base_time', nowReset.toString());
-                            localStorage.setItem('pt_ann_base_time', nowReset.toString());
-                            sessionStorage.setItem('pt_ann_duration', newDur.toString());
-                            localStorage.setItem('pt_ann_duration', newDur.toString());
-                            document.documentElement.style.setProperty('--marquee-duration', newDur + 's');
-                            bar.style.animation = 'none';
-                            bar.offsetHeight;
-                            bar.style.animation = '';
-                            bar.style.animationDelay = '0s';
-                            document.documentElement.style.setProperty('--marquee-delay', '0s');
-                        } catch (e) {}
+                        firstCopy.textContent = text;
+                        if (window.refreshGuestMarquee) window.refreshGuestMarquee(true);
                     }
                     // Also update modal list
                     var modalList = document.getElementById('annModalList');
@@ -524,74 +515,6 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         // Return to the exact spot instead of the top.
         window.scrollTo(0, _annScrollY);
     }
-    // Announcement pause-on-hover synchronization
-    (function () {
-        var bar = document.getElementById('guestMarquee') || document.querySelector('.advisory-bar .marquee');
-        if (!bar) return;
 
-        var KEY_BASE = 'pt_ann_base_time';
-        var hoverStart = 0;
-        var hiddenStart = document.hidden ? Date.now() : 0;
-
-        function applyPausedDuration(duration) {
-            if (duration <= 0) return;
-            try {
-                var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
-                if (baseTime && !isNaN(baseTime)) {
-                    baseTime += duration;
-                    sessionStorage.setItem(KEY_BASE, baseTime.toString());
-                    localStorage.setItem(KEY_BASE, baseTime.toString());
-                }
-            } catch (e) {}
-        }
-
-        bar.addEventListener('mouseenter', function () {
-            hoverStart = Date.now();
-        });
-
-        bar.addEventListener('mouseleave', function () {
-            if (hoverStart) {
-                applyPausedDuration(Date.now() - hoverStart);
-                hoverStart = 0;
-            }
-        });
-
-        document.addEventListener('click', function (e) {
-            if (hoverStart) {
-                applyPausedDuration(Date.now() - hoverStart);
-                hoverStart = 0;
-            }
-        }, true);
-
-        document.addEventListener('visibilitychange', function () {
-            if (document.hidden) {
-                hiddenStart = Date.now();
-                bar.style.animationPlayState = 'paused';
-            } else {
-                if (hiddenStart) applyPausedDuration(Date.now() - hiddenStart);
-                hiddenStart = 0;
-                bar.style.animationPlayState = '';
-            }
-        });
-        if (document.hidden) bar.style.animationPlayState = 'paused';
-
-        // Handle browser bfcache restore
-        window.addEventListener('pageshow', function (e) {
-            if (e.persisted) {
-                try {
-                    var DURATION = parseFloat(sessionStorage.getItem('pt_ann_duration') || localStorage.getItem('pt_ann_duration')) || 35;
-                    document.documentElement.style.setProperty('--marquee-duration', DURATION + 's');
-                    var baseTime = parseFloat(sessionStorage.getItem(KEY_BASE) || localStorage.getItem(KEY_BASE));
-                    if (baseTime && !isNaN(baseTime)) {
-                        var elapsed = ((Date.now() - baseTime) / 1000) % DURATION;
-                        if (elapsed < 0) elapsed = 0;
-                        var delayStr = '-' + elapsed.toFixed(3) + 's';
-                        bar.style.animationDelay = delayStr;
-                        document.documentElement.style.setProperty('--marquee-delay', delayStr);
-                    }
-                } catch (err) {}
-            }
-        });
-    })();
 </script>
 

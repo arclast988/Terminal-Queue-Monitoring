@@ -43,7 +43,7 @@
     <!-- Google Fonts -->
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260926b">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260929c">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
     <style>

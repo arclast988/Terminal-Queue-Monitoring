@@ -9,9 +9,9 @@ class Search extends BaseController
 {
     public function index()
     {
-        $search = $this->request->getGet('q');
+        $search = trim((string) $this->request->getGet('q'));
 
-        if (!$search) {
+        if ($search === '') {
             return redirect()->to('/guest');
         }
 
@@ -22,11 +22,11 @@ class Search extends BaseController
                                     ->withFullJoins()
                                     ->whereIn('queue.status', ['waiting', 'boarding'])
                                     ->groupStart()
-                                        ->like('vehicles.plate_number', $search)
-                                        ->orLike('vehicles.operator_name', $search)
-                                        ->orLike('vehicles.driver_name', $search)
-                                        ->orLike('routes.destination', $search)
-                                        ->orLike('terminals.name', $search)
+                                        ->like('vehicles.plate_number', $search, 'both', null, true)
+                                        ->orLike('vehicles.operator_name', $search, 'both', null, true)
+                                        ->orLike('vehicles.driver_name', $search, 'both', null, true)
+                                        ->orLike('routes.destination', $search, 'both', null, true)
+                                        ->orLike('terminals.name', $search, 'both', null, true)
                                     ->groupEnd()
                                     ->orderBy('queue.position', 'ASC')
                                     ->orderBy('routes.destination', 'ASC')
