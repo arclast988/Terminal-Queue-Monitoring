@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929b">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929d">
 <link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20260929b') ?>">
 
 <div class="sticky-top-wrapper">
@@ -59,17 +59,37 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 var resizeTimer;
                 var BASE_KEY = 'pt_ann_ticker_base_v2';
                 var TEXT_KEY = 'pt_ann_ticker_text_v2';
+                var baseTime = Date.now();
+                var travelWidth = 0;
+                var durationMs = 35000;
+                var started = false;
+                var nextFrame = function (callback) {
+                    if (window.requestAnimationFrame) window.requestAnimationFrame(callback);
+                    else if (window.webkitRequestAnimationFrame) window.webkitRequestAnimationFrame(callback);
+                    else setTimeout(callback, 16);
+                };
+
+                function advance() {
+                    if (!document.hidden && !track.parentElement.parentElement.classList.contains('modal-ann-open')) {
+                        var elapsed = ((Date.now() - baseTime) % durationMs + durationMs) % durationMs;
+                        var offset = -(elapsed / durationMs) * travelWidth;
+                        var transform = 'translate3d(' + offset.toFixed(2) + 'px, 0, 0)';
+                        track.style.webkitTransform = transform;
+                        track.style.transform = transform;
+                    }
+                    nextFrame(advance);
+                }
 
                 function rebuild(reset) {
-                    track.classList.remove('is-ready');
                     while (track.children.length > 2) track.removeChild(track.lastElementChild);
                     track.children[1].textContent = first.textContent;
 
-                    var segmentWidth = first.offsetWidth;
+                    var bounds = first.getBoundingClientRect();
+                    var segmentWidth = bounds.width || first.offsetWidth;
                     var viewportWidth = track.parentElement.clientWidth;
                     if (!segmentWidth || !viewportWidth) return;
 
-                    // An even number of equal copies makes the -50% loop seamless.
+                    // Repeat equal copies until half the track covers the visible bar.
                     var pairs = Math.max(1, Math.ceil(viewportWidth / segmentWidth));
                     while (track.children.length < pairs * 2) {
                         var copy = first.cloneNode(true);
@@ -77,14 +97,16 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                         track.appendChild(copy);
                     }
 
-                    var duration = Math.max(8, (pairs * segmentWidth) / 60);
+                    travelWidth = pairs * segmentWidth;
+                    durationMs = Math.max(8000, travelWidth / 60 * 1000);
                     var now = Date.now();
-                    var baseTime = now;
+                    baseTime = now;
                     var text = first.textContent;
                     try {
                         var savedText = sessionStorage.getItem(TEXT_KEY);
                         var savedBase = Number(sessionStorage.getItem(BASE_KEY));
-                        if (!reset && savedText === text && savedBase > 0 && now - savedBase < 15 * 60 * 1000) {
+                        if (!reset && savedText === text && savedBase > 0 && savedBase <= now &&
+                                now - savedBase < 15 * 60 * 1000) {
                             baseTime = savedBase;
                         }
                         sessionStorage.setItem(TEXT_KEY, text);
@@ -93,14 +115,13 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                         // Private browsing can disable storage; the ticker still runs.
                     }
 
-                    var elapsed = ((now - baseTime) / 1000) % duration;
-                    var delay = '-' + elapsed.toFixed(3) + 's';
-                    track.style.webkitAnimationDuration = duration + 's';
-                    track.style.animationDuration = duration + 's';
-                    track.style.webkitAnimationDelay = delay;
-                    track.style.animationDelay = delay;
-                    track.offsetWidth;
-                    track.classList.add('is-ready');
+                    // The script drives the transform. CSS keeps it moving if scripts are unavailable.
+                    track.style.webkitAnimation = 'none';
+                    track.style.animation = 'none';
+                    if (!started) {
+                        started = true;
+                        advance();
+                    }
                 }
 
                 window.refreshGuestMarquee = rebuild;
