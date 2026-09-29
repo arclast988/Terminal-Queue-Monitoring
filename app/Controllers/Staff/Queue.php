@@ -304,6 +304,7 @@ class Queue extends BaseController
         if (!is_array($vehicleIds)) {
             $vehicleIds = [$vehicleIds];
         }
+        $vehicleIds = array_values(array_unique(array_map('intval', $vehicleIds)));
 
         $addedCount = 0;
         $addedPlates = [];
@@ -314,6 +315,12 @@ class Queue extends BaseController
         $cooldownCutoff = date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes"));
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s');
+        $assignedRouteIds = $this->getAssignedRouteIds();
+        $terminalModel = new TerminalModel();
+        $routeCache = [];
+        $terminalStates = [];
+        $destinationPositions = [];
+        $ruleCache = [];
 
         $db = \Config\Database::connect();
         $db->transStart();
@@ -339,14 +346,17 @@ class Queue extends BaseController
                 continue;
             }
 
-            $route = $this->routeModel->find($routeId);
+            if (!array_key_exists($routeId, $routeCache)) {
+                $routeCache[$routeId] = $this->routeModel->find($routeId);
+            }
+            $route = $routeCache[$routeId];
             if (!$route) {
                 $errors[] = 'The route assigned to vehicle ' . $vehicle['plate_number'] . ' no longer exists.';
                 continue;
             }
 
             // Server-side route authorization check
-            if (!$this->hasRouteAccess((int) $routeId)) {
+            if ($assignedRouteIds !== null && !in_array((int) $routeId, $assignedRouteIds)) {
                 $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to add vehicle to unassigned route ID ' . $routeId . '.');
                 $errors[] = "You don't have access to the route for " . $vehicle['plate_number'] . '.';
                 continue;
@@ -381,26 +391,62 @@ class Queue extends BaseController
             }
 
             $terminalId = (int) ($route['terminal_id'] ?? 0);
-            $capacityError = $this->terminalCapacityError($db, $terminalId);
-            if ($capacityError !== null) {
-                $errors[] = $capacityError;
+            if (!array_key_exists($terminalId, $terminalStates)) {
+                $terminal = $terminalModel->find($terminalId);
+                if (!$terminal) {
+                    $terminalStates[$terminalId] = ['error' => 'The terminal assigned to this route no longer exists.'];
+                } else {
+                    $capacity = (int) ($terminal['capacity'] ?? 0);
+                    if ($capacity < 1) {
+                        $terminalStates[$terminalId] = ['error' => 'The vehicle limit for ' . ($terminal['name'] ?? 'this terminal') . ' is not configured.'];
+                    } else {
+                        $activeCount = (int) $db->table('queue')
+                            ->join('routes', 'routes.id = queue.route_id')
+                            ->where('routes.terminal_id', $terminalId)
+                            ->whereIn('queue.status', ['waiting', 'boarding'])
+                            ->countAllResults();
+                        $terminalStates[$terminalId] = [
+                            'name' => $terminal['name'] ?? 'This terminal',
+                            'capacity' => $capacity,
+                            'active' => $activeCount,
+                        ];
+                    }
+                }
+            }
+            $terminalState = $terminalStates[$terminalId];
+            if (isset($terminalState['error'])) {
+                $errors[] = $terminalState['error'];
+                continue;
+            }
+            if ($terminalState['active'] >= $terminalState['capacity']) {
+                $capacity = $terminalState['capacity'];
+                $errors[] = $terminalState['name'] . ' has reached its limit of '
+                    . $capacity . ' active vehicle' . ($capacity === 1 ? '' : 's')
+                    . '. Depart or cancel a vehicle before adding another.';
                 continue;
             }
 
             // Positions are shared by every route with the same terminal and
-            // destination, so append to the end of that complete queue line.
-            $sameDestinationRouteIds = (new RouteModel())
-                ->where('terminal_id', $route['terminal_id'])
-                ->where('destination', $route['destination'])
-                ->findColumn('id') ?: [$routeId];
-            $lastPosition = $this->queueModel
-                ->whereIn('route_id', $sameDestinationRouteIds)
-                ->whereIn('status', ['waiting', 'boarding'])
-                ->selectMax('position')
-                ->first();
-            $nextPosition = ($lastPosition['position'] ?? 0) + 1;
+            // destination. Query once per line, then advance locally after inserts.
+            $positionKey = $terminalId . '|' . $route['destination'];
+            if (!array_key_exists($positionKey, $destinationPositions)) {
+                $sameDestinationRouteIds = (new RouteModel())
+                    ->where('terminal_id', $route['terminal_id'])
+                    ->where('destination', $route['destination'])
+                    ->findColumn('id') ?: [$routeId];
+                $lastPosition = $this->queueModel
+                    ->whereIn('route_id', $sameDestinationRouteIds)
+                    ->whereIn('status', ['waiting', 'boarding'])
+                    ->selectMax('position')
+                    ->first();
+                $destinationPositions[$positionKey] = (int) ($lastPosition['position'] ?? 0);
+            }
+            $nextPosition = $destinationPositions[$positionKey] + 1;
 
-            $matchedRule = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
+            if (!array_key_exists($routeId, $ruleCache)) {
+                $ruleCache[$routeId] = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
+            }
+            $matchedRule = $ruleCache[$routeId];
             $waitMinutes = (int) $matchedRule['wait_minutes'];
             $ruleLabel   = $matchedRule['label'] ?? 'Default';
 
@@ -420,6 +466,8 @@ class Queue extends BaseController
                 'estimated_departure' => $estimatedDeparture,
             ]);
 
+            $destinationPositions[$positionKey] = $nextPosition;
+            $terminalStates[$terminalId]['active']++;
             $selectionIndex++;
             $addedCount++;
             $addedPlates[] = $vehicle['plate_number'];
@@ -435,6 +483,9 @@ class Queue extends BaseController
         }
 
         $db->transComplete();
+        if ($db->transStatus() === false) {
+            return redirect()->to('/staff/queue')->with('error', 'The queue could not be updated. Please try again.');
+        }
 
         if ($addedCount > 0) {
             $this->broadcastUpdate('queue_update', [
@@ -445,15 +496,21 @@ class Queue extends BaseController
         }
 
         if ($addedCount > 0) {
-            $successMsg = implode(', ', $addedPlates) . ($addedCount > 1 ? ' added to queue.' : ' added to queue.');
+            $successMsg = $addedCount > 8
+                ? $addedCount . ' vehicles added to queue.'
+                : implode(', ', $addedPlates) . ' added to queue.';
             if (!empty($errors) || !empty($warnings)) {
-                $extra = implode(' ', array_merge($warnings, $errors));
+                $messages = array_values(array_unique(array_merge($warnings, $errors)));
+                $extra = implode(' ', array_slice($messages, 0, 8));
+                if (count($messages) > 8) $extra .= ' And ' . (count($messages) - 8) . ' more could not be added.';
                 return redirect()->to('/staff/queue')->with('success', $successMsg)->with('warning', $extra);
             }
             return redirect()->to('/staff/queue')->with('success', $successMsg);
         }
 
-        $errorMsg = !empty($errors) ? implode(' ', $errors) : (!empty($warnings) ? implode(' ', $warnings) : 'No vehicles were added to queue.');
+        $messages = array_values(array_unique(array_merge($warnings, $errors)));
+        $errorMsg = $messages ? implode(' ', array_slice($messages, 0, 8)) : 'No vehicles were added to queue.';
+        if (count($messages) > 8) $errorMsg .= ' And ' . (count($messages) - 8) . ' more could not be added.';
         return redirect()->to('/staff/queue')->with('error', $errorMsg);
     }
 

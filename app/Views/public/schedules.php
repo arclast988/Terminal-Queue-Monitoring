@@ -1334,6 +1334,7 @@
         function filterTableClientSide() {
             var rows = document.querySelectorAll('#scheduleTableBody tr');
             var visibleCount = 0;
+            var routeCounts = { all: 0 };
             var q = (currentSearch || '').toLowerCase().trim();
             rows.forEach(function(row) {
                 var rowDest = (row.getAttribute('data-destination') || '').toLowerCase();
@@ -1343,6 +1344,10 @@
                 var matchesDest = (!currentDest || currentDest === 'all' || rowDest === currentDest.toLowerCase());
                 var matchesType = (!currentType || currentType === 'all' || rowType === currentType.toLowerCase());
                 var matchesSearch = (!q || rowText.indexOf(q) !== -1);
+                if (matchesType && matchesSearch) {
+                    routeCounts.all++;
+                    routeCounts[rowDest] = (routeCounts[rowDest] || 0) + 1;
+                }
 
                 if (matchesDest && matchesType && matchesSearch) {
                     row.style.removeProperty('display');
@@ -1358,6 +1363,11 @@
             if (badge) {
                 badge.textContent = visibleCount + ' Found';
             }
+            document.querySelectorAll('#routeFilterBar .route-chip').forEach(function(chip) {
+                var count = chip.querySelector('.chip-count');
+                var dest = (chip.getAttribute('data-dest') || 'all').toLowerCase();
+                if (count) count.textContent = String(routeCounts[dest] || 0);
+            });
             var noResults = document.getElementById('scheduleSearchEmpty');
             if (noResults) {
                 noResults.hidden = rows.length === 0 || visibleCount > 0;
@@ -1377,8 +1387,7 @@
 
             var params = [];
             if (currentType) params.push('type=' + encodeURIComponent(currentType));
-            if (currentDest && currentDest !== 'all') params.push('destination=' + encodeURIComponent(currentDest));
-            // Keep the full row set for instant client-side search and clearing.
+            // Keep all destinations and search rows for instant chip switching and clearing.
             params.push('_=' + Date.now());
             var fetchUrl = '<?= base_url('schedules/status') ?>?' + params.join('&');
 
@@ -1390,8 +1399,8 @@
             .then(function(data) {
                 if (requestId !== _scheduleRequestId) return;
                 renderSchedules(data.schedules, data.vehicle_types || []);
-                filterTableClientSide();
                 syncDestinationOptions(data.destinations, data.active_dest_counts, data.total_active_count);
+                filterTableClientSide();
             })
             .catch(function(e) {
                 if (e.name !== 'AbortError' && requestId === _scheduleRequestId) console.error('Fetch error:', e);

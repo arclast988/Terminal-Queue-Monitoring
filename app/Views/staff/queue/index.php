@@ -3133,7 +3133,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     document.addEventListener('visibilitychange', updateCountdowns);
     updateCountdowns();
 
-    // Handle Add to Queue Form — multi-vehicle selection, card click interactivity & availability check
+    // Handle Add to Queue Form — multi-vehicle selection and one ordered batch submission
     document.addEventListener('DOMContentLoaded', function() {
         var addForm = document.getElementById('addToQueueForm');
         var addModalEl = document.getElementById('addToQueueModal');
@@ -3383,72 +3383,33 @@ $queueOrderGroups = array_values($queueOrderGroups);
         }
 
         if (addForm) {
+            var queueSubmitting = false;
             addForm.addEventListener('submit', function(e) {
-                if (selectedOrder.length === 0) {
-                    e.preventDefault();
-                    return;
-                }
-
                 e.preventDefault();
+                if (queueSubmitting) return;
+                updateSelectionCount();
+                if (selectedOrder.length === 0) return;
+
+                queueSubmitting = true;
                 var curSubmitBtn = getSubmitBtn() || submitBtn;
                 if (curSubmitBtn) {
                     curSubmitBtn.disabled = true;
-                    curSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Checking availability...';
+                    curSubmitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Adding vehicles...';
                 }
 
-                var checkPromises = selectedOrder.map(function(id) {
-                    return fetch('<?= base_url('api/check-vehicle-availability') ?>/' + id).then(function(r) { return r.json(); });
+                // Submit the ordered selection once. The server checks each vehicle
+                // and can add eligible ones even if another becomes unavailable.
+                addForm.querySelectorAll('input[name="vehicle_ids[]"]').forEach(function(el) {
+                    el.remove();
                 });
-
-                Promise.all(checkPromises)
-                    .then(function(results) {
-                        var unavailable = results.find(function(data) { return data.success && !data.available; });
-                        if (unavailable) {
-                            if (addModalEl && typeof bootstrap !== 'undefined') {
-                                var addModal = bootstrap.Modal.getInstance(addModalEl) || bootstrap.Modal.getOrCreateInstance(addModalEl);
-                                if (addModal) addModal.hide();
-                            }
-                            cleanUpAllModals();
-
-                            setTimeout(function() {
-                                warningMsg.textContent = unavailable.message;
-                                if (warningModalEl && typeof bootstrap !== 'undefined') {
-                                    var warningModal = bootstrap.Modal.getOrCreateInstance(warningModalEl);
-                                    warningModal.show();
-                                }
-                            }, 100);
-
-                            submitBtn = getSubmitBtn() || submitBtn;
-                            if (submitBtn) submitBtn.disabled = false;
-                            updateSelectionCount();
-                        } else {
-                            // Append vehicle_ids in the EXACT selected order
-                            addForm.querySelectorAll('input[name="vehicle_ids[]"]').forEach(function(el) {
-                                el.remove();
-                            });
-                            selectedOrder.forEach(function(id) {
-                                var hiddenInput = document.createElement('input');
-                                hiddenInput.type = 'hidden';
-                                hiddenInput.name = 'vehicle_ids[]';
-                                hiddenInput.value = id;
-                                addForm.appendChild(hiddenInput);
-                            });
-                            addForm.submit();
-                        }
-                    })
-                    .catch(function() {
-                        addForm.querySelectorAll('input[name="vehicle_ids[]"]').forEach(function(el) {
-                            el.remove();
-                        });
-                        selectedOrder.forEach(function(id) {
-                            var hiddenInput = document.createElement('input');
-                            hiddenInput.type = 'hidden';
-                            hiddenInput.name = 'vehicle_ids[]';
-                            hiddenInput.value = id;
-                            addForm.appendChild(hiddenInput);
-                        });
-                        addForm.submit();
-                    });
+                selectedOrder.forEach(function(id) {
+                    var hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'vehicle_ids[]';
+                    hiddenInput.value = id;
+                    addForm.appendChild(hiddenInput);
+                });
+                addForm.submit();
             });
         }
     });
