@@ -14,7 +14,7 @@ const authPages = new Set(pages.slice(0, 4));
 const cache = new Map();
 const report = { engine, fixtures: 'production PHP views with seeded helper/data values', cases: [], beforeAfter: {} };
 let browser, server, origin, beforeCSS;
-function scriptsOf(html) { return [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).filter(s => s && !s.includes('maze-universal-loader')); }
+function scriptsOf(html) { return [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).filter(Boolean); }
 function fixture(name, long, baseline) {
   const key = name + ':' + long;
   if (!cache.has(key)) {
