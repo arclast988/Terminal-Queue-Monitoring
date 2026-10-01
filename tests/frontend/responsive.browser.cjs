@@ -201,6 +201,128 @@ test('vehicle modals preserve native fields, validation, focus and dismissal at 
   }
 });
 
+test('vehicle autocomplete validation stays closed until the field is used and preserves registration payloads', { timeout: 60000 }, async t => {
+  for (const [width, height, mode] of [[320, 568, 'full'], [844, 390, 'full'], [1280, 800, 'full'], [320, 568, 'lite'], [320, 568, 'reduced']]) {
+    const { page, context, errors } = await open(t, 'admin-vehicles', width, height, '', mode);
+    await page.addScriptTag({ path: path.join(root, 'public/assets/js/autocomplete-search.js') });
+    const posts = []; page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
+    await page.locator('[data-bs-target="#registerVehicleModal"]').click();
+    await page.waitForFunction(() => document.querySelector('#registerVehicleModal').dataset.fixtureShown === '1');
+    const form = page.locator('#registerVehicleForm');
+    const typeInput = page.locator('#type + input');
+    const routeInput = page.locator('#route_id + input');
+    const button = page.locator('#registerVehicleModal button[type="submit"]');
+    const opened = page.locator('.autocomplete-wrapper.is-open');
+    assert.equal(await opened.count(), 0, 'opening the registration modal must not open a select');
+    await page.locator('#plate_number').focus();
+    assert.equal(await form.evaluate(el => el.checkValidity()), false);
+    assert.equal(await page.locator('#plate_number').evaluate(el => el === document.activeElement), true, 'checkValidity must not move focus');
+    assert.equal(await opened.count(), 0, 'checking validity must not open the route placeholder');
+    await button.click();
+    assert.equal(await page.locator('#plate_number').evaluate(el => el === document.activeElement), true, 'native validation must focus the first empty field');
+    assert.equal(await opened.count(), 0);
+    assert.equal(await button.isEnabled(), true);
+    assert.deepEqual(posts, []);
+
+    await page.locator('#plate_number').fill('abc-1234');
+    await page.locator('#operator_name').fill('fixture operator');
+    await page.locator('#driver_name').fill('Fixture Driver');
+    await page.locator('#capacity').fill('16');
+    assert.equal(await form.evaluate(el => el.reportValidity()), false);
+    await page.waitForFunction(() => document.activeElement === document.querySelector('#type + input'));
+    assert.equal(await opened.count(), 0, 'validation focus must expose the field without opening its menu');
+    await typeInput.press('ArrowDown');
+    assert.equal(await opened.count(), 1, 'an explicit keyboard action opens the menu after validation');
+    await typeInput.press('ArrowDown');
+    await typeInput.press('Enter');
+    assert.equal(await page.locator('#type').inputValue(), 'jeepney');
+    assert.equal(await opened.count(), 0);
+    assert.equal(await page.locator('#route_id option[value="1"]').evaluate(el => !el.disabled && el.style.display !== 'none'), true);
+    assert.equal(await form.evaluate(el => el.reportValidity()), false);
+    await page.waitForFunction(() => document.activeElement === document.querySelector('#route_id + input'));
+    assert.equal(await opened.count(), 0, 'the remaining empty route must not pop open during validation');
+    // Check a fresh pointer interaction after leaving validation focus.
+    // Escape is not used here because it dismisses the Bootstrap modal.
+    await page.locator('#capacity').focus();
+    await routeInput.click();
+    await page.locator('#route_id').locator('..').locator('.autocomplete-dropdown').waitFor({ state: 'visible', timeout: 3000 });
+    assert.equal(await opened.count(), 1, `route click ${width} ${height} ${mode}`);
+    await page.locator('#route_id').locator('..').locator('.autocomplete-item[data-value="1"]').click();
+    assert.equal(await page.locator('#route_id').inputValue(), '1');
+    assert.equal(await opened.count(), 0);
+    assert.equal(await form.evaluate(el => el.checkValidity()), true);
+    await form.evaluate(el => {
+      window.fixtureVehicleSubmits = [];
+      el.addEventListener('submit', event => {
+        event.preventDefault();
+        const values = new FormData(el);
+        const fields = ['csrf_fixture', 'plate_number', 'operator_name', 'driver_name', 'type', 'route_id', 'capacity', 'status'];
+        window.fixtureVehicleSubmits.push(Object.fromEntries(fields.map(name => [name, values.get(name)])));
+      });
+    });
+    await button.click();
+    assert.deepEqual(await page.evaluate(() => window.fixtureVehicleSubmits), [{ csrf_fixture: 'unchanged', plate_number: 'ABC-1234', operator_name: 'FIXTURE OPERATOR', driver_name: 'Fixture Driver', type: 'jeepney', route_id: '1', capacity: '16', status: 'active' }]);
+    const contract = await form.evaluate(el => ({ action: el.getAttribute('action'), method: el.method, enctype: el.enctype }));
+    assert.deepEqual(contract, { action: '/admin/vehicles/store', method: 'post', enctype: 'multipart/form-data' });
+    assert.deepEqual(errors, []); assert.deepEqual(posts, []);
+    if (width === 320 && mode === 'full') await screenshot(page, 'vehicle-autocomplete-validation', false);
+    report.cases.push({ page: 'vehicle autocomplete validation and payload', width, height, mode, passed: true });
+    await context.close();
+  }
+});
+
+test('shared role and terminal selects retain keyboard, click and change behavior without stale menus', async t => {
+  for (const theme of ['admin-theme', 'staff-theme', 'guest-theme']) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    t.after(() => context.close());
+    const page = await context.newPage();
+    const errors = []; page.on('pageerror', error => errors.push(error.message));
+    await page.setContent(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:20px}input{box-sizing:border-box;width:100%;padding:12px}.field{margin-bottom:20px}</style></head><body class="${theme}">
+      <form id="sharedForm" action="/fixture-save" method="post">
+        <input type="hidden" name="csrf_fixture" value="unchanged">
+        <div class="field"><input id="first" name="first" value="Fixture" required></div>
+        <div class="field"><select id="role" name="role" required><option value="">-- Select Role --</option><option value="staff">Staff</option></select></div>
+        <div class="field"><select id="terminal" name="terminal" required><option value="">-- Select Terminal --</option><option value="1">Palompon</option><option value="2" disabled>Unavailable</option></select></div>
+      </form></body></html>`);
+    await page.addScriptTag({ path: path.join(root, 'public/assets/js/autocomplete-search.js') });
+    await page.evaluate(() => {
+      window.fixtureSelectEvents = [];
+      for (const select of document.querySelectorAll('select')) {
+        for (const type of ['input', 'change']) select.addEventListener(type, () => fixtureSelectEvents.push(select.id + ':' + type));
+      }
+      initLocationAutocomplete(); // Modal reinitialization must stay idempotent.
+    });
+    assert.equal(await page.locator('.autocomplete-wrapper').count(), 2);
+    await page.locator('#first').focus();
+    assert.equal(await page.locator('#sharedForm').evaluate(el => el.checkValidity()), false);
+    assert.equal(await page.locator('#first').evaluate(el => el === document.activeElement), true);
+    assert.equal(await page.locator('.autocomplete-wrapper.is-open').count(), 0);
+    assert.equal(await page.locator('#sharedForm').evaluate(el => el.reportValidity()), false);
+    await page.waitForFunction(() => document.activeElement === document.querySelector('#role + input'));
+    const roleInput = page.locator('#role + input');
+    assert.equal(await page.locator('.autocomplete-wrapper.is-open').count(), 0);
+    await roleInput.press('ArrowDown'); await roleInput.press('ArrowDown'); await roleInput.press('Enter');
+    assert.equal(await page.locator('#role').inputValue(), 'staff');
+    await page.locator('#terminal + input').click();
+    assert.equal(await page.locator('#terminal').locator('..').locator('.autocomplete-item[data-value="2"]').count(), 0);
+    await page.locator('#terminal').locator('..').locator('.autocomplete-item[data-value="1"]').click();
+    assert.equal(await page.locator('#terminal').inputValue(), '1');
+    assert.deepEqual(await page.evaluate(() => fixtureSelectEvents), ['role:input', 'role:change', 'terminal:input', 'terminal:change']);
+    await roleInput.fill('St');
+    await page.locator('#first').focus();
+    // Wait beyond the production debounce: an earlier input must not reopen
+    // its panel after keyboard focus or native validation moves elsewhere.
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 200)));
+    assert.equal(await page.locator('.autocomplete-wrapper.is-open').count(), 0);
+    assert.equal(await page.locator('#first').evaluate(el => el === document.activeElement), true);
+    const values = await page.locator('#sharedForm').evaluate(el => ({ valid: el.checkValidity(), data: Object.fromEntries(new FormData(el)) }));
+    assert.deepEqual(values, { valid: true, data: { csrf_fixture: 'unchanged', first: 'Fixture', role: 'staff', terminal: '1' } });
+    assert.deepEqual(errors, []);
+    report.cases.push({ page: 'shared autocomplete lifecycle', theme, passed: true });
+    await context.close();
+  }
+});
+
 test('settings tabs and terminal bulk selection retain their real state and keyboard controls', { timeout: 60000 }, async t => {
   for (const [width, height] of [[320, 568], [844, 390], [1280, 800]]) {
     const settings = await open(t, 'admin-settings', width, height);

@@ -689,11 +689,21 @@
                 toggleClearBtn();
             }
 
+            let isValidationFocus = false;
+
             updateInputValue();
             selectEl.addEventListener('change', updateInputValue);
             selectEl.addEventListener('invalid', function () {
-                searchInput.focus();
+                // Validation visits every invalid control. Let the browser
+                // choose the first one instead of focusing/opening each select.
+                closeAllAutocompleteDropdowns();
                 searchInput.classList.add('is-invalid');
+            });
+            selectEl.addEventListener('focus', function () {
+                // Keep native validation focus visible without opening a menu.
+                isValidationFocus = true;
+                searchInput.focus();
+                isValidationFocus = false;
             });
             searchInput.addEventListener('input', function () {
                 searchInput.classList.remove('is-invalid');
@@ -864,6 +874,7 @@
             }
 
             searchInput.addEventListener('focus', () => {
+                if (isValidationFocus) return;
                 // No select-all: the theme selection color looks like an
                 // error block on filled inputs. Just open the dropdown.
                 renderSelectDropdown('');
@@ -881,8 +892,13 @@
             });
 
             searchInput.addEventListener('input', debounce(() => {
+                if (document.activeElement !== searchInput) return;
                 renderSelectDropdown(searchInput.value);
             }, INPUT_DEBOUNCE_MS));
+
+            searchInput.addEventListener('blur', () => {
+                closeDropdown(wrapper, dropdown);
+            });
 
             selectEl.addEventListener('change', () => {
                 updateInputValue();
@@ -896,6 +912,9 @@
             wrapper.syncAutocompleteValue = updateInputValue;
 
             searchInput.addEventListener('keydown', (e) => {
+                if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && dropdown.style.display === 'none') {
+                    renderSelectDropdown('');
+                }
                 const items = dropdown.querySelectorAll('.autocomplete-item');
                 if (dropdown.style.display === 'none' || items.length === 0) return;
 
