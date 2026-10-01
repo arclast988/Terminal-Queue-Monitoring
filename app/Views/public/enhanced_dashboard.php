@@ -43,7 +43,7 @@
     <!-- Google Fonts -->
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260929c">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20261001c">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
     <style>
@@ -490,7 +490,7 @@
             box-sizing: border-box;
             align-self: stretch;
             margin: 0 !important;
-            animation: fadeInUp 0.5s ease-out both;
+            animation: fadeInUp .18s ease-out both;
         }
 
         .stats-grid .stat-card:nth-child(1) {
@@ -899,7 +899,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
-            animation: fadeInUp 0.5s ease-out both;
+            animation: fadeInUp .18s ease-out both;
             animation-delay: 0.15s;
         }
 
@@ -968,7 +968,7 @@
             flex-wrap: nowrap;
             align-items: baseline;
             gap: 10px;
-            animation: fadeInUp 0.5s ease-out both;
+            animation: fadeInUp .18s ease-out both;
             animation-delay: 0.2s;
         }
 
@@ -1089,7 +1089,7 @@
             justify-content: center;
             width: 100%;
             box-sizing: border-box;
-            animation: fadeInUp 0.5s ease-out both;
+            animation: fadeInUp .18s ease-out both;
             animation-delay: 0.25s;
         }
 
@@ -1166,7 +1166,7 @@
 
         /* Smooth departure board transitions: cards only animate when entering or departing */
         .queue-card.card-enter {
-            animation: cardEnter 0.35s ease-out both;
+            animation: cardEnter .18s ease-out both;
         }
         .queue-card.card-leave {
             animation: cardLeave 0.3s ease-in both;
@@ -1482,7 +1482,10 @@
         .progress-bar {
             height: 100%;
             border-radius: 12px;
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.4s ease;
+            width: 100%;
+            transform-origin: left center;
+            transform: scaleX(var(--queue-fill, 0));
+            transition: transform .18s cubic-bezier(.2, .8, .2, 1);
         }
 
         /* Right: Departure Ticket Container */
@@ -2242,11 +2245,13 @@
         }
 
     </style>
+    <?= $this->include('partials/interaction_assets') ?>
 </head>
 
 <body class="guest-theme">
 
     <?= view('templates/guest_header', [
+        'interaction_assets_loaded' => true,
         'announcements' => $announcements ?? [],
     ]) ?>
 
@@ -2435,7 +2440,7 @@
                                                         $barColor = '#22c55e'; // Green
                                                     }
                                                 ?>
-                                                <div class="progress-bar" style="width: <?= $percent ?>%; height: 100%; background: <?= $barColor ?>;"></div>
+                                                <div class="progress-bar" style="--queue-fill: <?= $percent / 100 ?>; height: 100%; background: <?= $barColor ?>;"></div>
                                             </div>
                                             <div class="passenger-pop-anchor" data-pop-id="<?= esc($item['id'] ?? '') ?>" data-pop-plate="<?= esc($item['plate_number'] ?? '') ?>"></div>
                                         </div>
@@ -2788,7 +2793,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/queue-sync.js?v=20260928_1') ?>"></script>
+    <script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;
@@ -3106,7 +3111,7 @@
                 + fullBadge
                 + '</div>'
                 + '<div class="progress progress-modern">'
-                + '<div class="progress-bar" style="width:' + percent + '%; height: 100%; background:' + barColor + ';"></div>'
+                + '<div class="progress-bar" style="--queue-fill:' + (percent / 100) + '; height: 100%; background:' + barColor + ';"></div>'
                 + '</div>'
                 + '<div class="passenger-pop-anchor" data-pop-id="' + item.id + '" data-pop-plate="' + item.plate_number + '"></div>'
                 + '</div>'
@@ -3162,7 +3167,7 @@
             // 3. Smoothly update progress bar width and color
             var pBar = card.querySelector('.progress-modern .progress-bar, .progress-bar');
             if (pBar) {
-                pBar.style.width = percent + '%';
+                pBar.style.setProperty('--queue-fill', String(percent / 100));
                 pBar.style.background = barColor;
             }
 
@@ -3321,7 +3326,7 @@
 
             var progressBar = card.querySelector('.progress-modern .progress-bar, .progress-bar');
             if (progressBar) {
-                progressBar.style.width = percent + '%';
+                progressBar.style.setProperty('--queue-fill', String(percent / 100));
                 progressBar.style.background = barColor;
             }
         }

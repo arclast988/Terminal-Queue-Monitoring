@@ -557,11 +557,12 @@
             z-index: 0 !important;
         }
     </style>
+    <?= $this->include('partials/interaction_assets') ?>
 </head>
 
 <body
     class="layout-lock <?= (in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : 'guest-theme ')) ?><?= esc($body_class ?? '') ?>">
-    <?php include __DIR__ . '/navbar.php'; ?>
+    <?php $interaction_assets_loaded = true; include __DIR__ . '/navbar.php'; ?>
     <script>
         (function() {
             function syncHeaderHeight() {

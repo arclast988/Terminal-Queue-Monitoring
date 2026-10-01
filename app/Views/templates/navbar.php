@@ -8,5 +8,7 @@
  */
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/navigation.css?v=20260927a') ?>">
-<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20260929b') ?>">
+<?php if (empty($interaction_assets_loaded)): ?>
+<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261001c') ?>">
+<?php endif; ?>
 <?= view('partials/header') ?>

@@ -2,7 +2,7 @@
     <?= view('partials/support-modals') ?>
     <?= view('partials/footer') ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?= base_url('assets/js/global-loader.js?v=20260928a') ?>"></script>
+    <script src="<?= base_url('assets/js/global-loader.js?v=20261001a') ?>"></script>
     <script src="<?= base_url('assets/js/autocomplete-search.js?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/js/autocomplete-search.js') ? filemtime(FCPATH . 'assets/js/autocomplete-search.js') : '20260927_1')) ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('assets/js/no-change-guard.js?v=20260909') ?>"></script>
@@ -41,3 +41,4 @@
     </script>
 </body>
 </html>
+

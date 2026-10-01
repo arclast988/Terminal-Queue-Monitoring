@@ -1,440 +1,248 @@
 /**
- * Global Top Progress Bar & Universal Loader System (GlobalLoader)
- * ─────────────────────────────────────────────────────────────
- * Ultra-lightweight, non-blocking progress bar (YouTube / GitHub style).
- * Gives instant visual feedback on user-initiated AJAX requests, internal
- * navigations, and valid form submissions.
- *
- * Adaptive / Debounced Loader Pattern:
- *   • Fast / Responsive System (< 250ms): The loader is NEVER shown. Zero visual
- *     flicker, zero layout jumping, giving a blazing-fast feel.
- *   • Slow Operations (> 250ms): The top progress bar and button spinners smoothly
- *     fade in to reassure the user that work is in progress.
- *   • Guaranteed Minimum Visibility (~250ms): If the loader was displayed because
- *     an operation took > 250ms, it remains visible for at least 250ms to ensure
- *     a clean, professional completion animation rather than an abrupt blink.
- *   • Smart Silent Polling Filter: Ignores background polls (/api/queue-status, /status, etc.).
- *   • Never blocks clicks or input interactions (pointer-events: none).
- *
- * API:
- *   GlobalLoader.start([immediate])
- *   GlobalLoader.done()
- *   GlobalLoader.set(percent)
- *   GlobalLoader.isRunning()
- *   GlobalLoader.isVisible()
- *   GlobalLoader.setDelay(ms)
- *   GlobalLoader.getDelay()
- *   GlobalLoader.showTableLoader(container, label, [immediate])
- *   GlobalLoader.hideTableLoader(container)
- *   GlobalLoader.showButtonSpinner(btn, label, [immediate])
- *   GlobalLoader.hideButtonSpinner(btn)
+ * Non-blocking progress and pending feedback. All request arguments, response
+ * identities, native form fields and existing button child nodes are preserved.
+ * Visual timers never release an API-owned pending button or reset request counts.
+ * The existing GlobalLoader API is retained; see interaction-contracts.d.ts.
  */
 (function (window, document) {
     'use strict';
-
-    if (window.GlobalLoader) return; // Prevent duplicate init
+    if (window.GlobalLoader) return;
 
     var activeRequests = 0;
+    var requestEpoch = 0;
     var progress = 0;
     var visibleAt = 0;
     var trickleTimer = null;
     var safetyTimer = null;
     var showTimer = null;
+    var finishTimer = null;
+    var fadeTimer = null;
     var isRunning = false;
     var isVisible = false;
     var barEl = null;
     var innerEl = null;
-    var glowEl = null;
-
-    // Adaptive Delay Thresholds (in milliseconds)
-    var SHOW_DELAY = 250;      // Threshold before showing top progress bar
-    var MIN_VISIBLE = 250;     // Minimum display time if the bar became visible
-    var BUTTON_DELAY = 200;    // Threshold before showing button spinner
-    var TABLE_DELAY = 200;     // Threshold before showing table loader overlay
-
-    // Background polling endpoints that must NEVER trigger the progress bar
+    var pendingButtons = new Map();
+    var pendingForms = new Set();
+    var tableContainers = new Set();
+    var SHOW_DELAY = 250;
+    var MIN_VISIBLE = 100;
+    var BUTTON_DELAY = 200;
+    var TABLE_DELAY = 200;
     var SILENT_PATTERNS = [
-        /\/api\/queue-status/i,
-        /\/status(\?|$)/i,
-        /\/schedules\/status/i,
-        /\/api\/fares/i,
-        /\/api\/announcements/i,
-        /\/api\/check-vehicle-availability/i,
-        /\/admin\/vehicles\/check-plate/i,
-        /\/ws(\/|$)/i,
-        /[?&]silent=1/i,
-        /[?&]silent=true/i
+        /\/api\/queue-status/i, /\/status(\?|$)/i, /\/schedules\/status/i,
+        /\/api\/fares/i, /\/api\/announcements/i, /\/api\/check-vehicle-availability/i,
+        /\/admin\/vehicles\/check-plate/i, /\/ws(\/|$)/i,
+        /[?&]silent=1/i, /[?&]silent=true/i
     ];
 
-    /** Self-inject base CSS rules if not already present */
+    function motionMode() {
+        if (window.TerminalMotion) return window.TerminalMotion.getMode();
+        return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
+    }
+
     function injectStyles() {
         if (document.getElementById('global-loader-injected-css')) return;
         var style = document.createElement('style');
         style.id = 'global-loader-injected-css';
         style.textContent = [
-            '/* Global Progress Bar (4px Vibrant Glow) */',
-            '.global-progress-bar {',
-            '  position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 4px !important; z-index: 999999 !important;',
-            '  pointer-events: none !important; user-select: none !important; -webkit-user-select: none !important;',
-            '  opacity: 0; transition: opacity 0.25s ease;',
-            '}',
-            '.global-progress-bar.is-active { opacity: 1; }',
-            '.global-progress-bar.is-done { opacity: 0; transition: opacity 0.3s ease 0.12s; }',
-            '.global-progress-bar-inner {',
-            '  position: absolute; top: 0; left: 0; height: 100%; width: 0%;',
-            '  background: linear-gradient(90deg, #b91c1c 0%, #ea580c 45%, #f59e0b 80%, #38bdf8 100%);',
-            '  box-shadow: 0 0 16px rgba(234, 88, 12, 1), 0 0 8px rgba(185, 28, 28, 1);',
-            '  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);',
-            '  border-radius: 0 3px 3px 0;',
-            '}',
-            '.global-progress-bar-glow {',
-            '  position: absolute; right: 0; top: -3px; width: 85px; height: 10px;',
-            '  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(249, 115, 22, 0.75) 45%, transparent 80%);',
-            '  border-radius: 50%; box-shadow: 0 0 10px rgba(249, 115, 22, 1);',
-            '}',
-            '/* Regular mobile browsers provide their own loading bar; installed app windows do not. */',
-            '@media (max-width: 768px), (hover: none) and (pointer: coarse) {',
-            '  .global-progress-bar { display: none !important; }',
-            '}',
+            '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
+            '.global-progress-bar.is-active { opacity:1; }',
+            '.global-progress-bar.is-done { opacity:0; }',
+            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); transition:transform .16s cubic-bezier(.2,.8,.2,1); border-radius:0 3px 3px 0; }',
+            '.global-progress-bar.is-active .global-progress-bar-inner { will-change:transform; }',
+            '@media (max-width: 768px), (hover: none) and (pointer: coarse) { .global-progress-bar { display: none !important; } }',
             '.gl-standalone .global-progress-bar { display: block !important; }',
-            '/* In-Table / In-Card Loading Overlay */',
-            '.table-loader-overlay {',
-            '  position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 100px;',
-            '  background: rgba(255, 255, 255, 0.92);',
-            '  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;',
-            '  z-index: 50; border-radius: inherit; transition: opacity 0.2s ease;',
-            '}',
-            '.table-loader-spinner {',
-            '  width: 2rem; height: 2rem; border: 3px solid rgba(234, 88, 12, 0.2);',
-            '  border-top-color: #ea580c; border-radius: 50%;',
-            '  animation: gl-spin 0.7s linear infinite;',
-            '}',
-            '.table-loader-text { font-size: 13.5px; font-weight: 600; color: #475569; }',
-            '@keyframes gl-spin { to { transform: rotate(360deg); } }',
-            '/* In-Button Loading State */',
-            '.btn.gl-btn-loading { pointer-events: none !important; opacity: 0.88 !important; }',
-            '.gl-btn-spinner {',
-            '  display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em;',
-            '  border: 2px solid currentColor; border-right-color: transparent;',
-            '  border-radius: 50%; animation: gl-spin 0.65s linear infinite; margin-right: 6px;',
-            '}',
-            '/* Validation Shake Effect */',
-            '@keyframes gl-shake {',
-            '  0%, 100% { transform: translateX(0); }',
-            '  20%, 60% { transform: translateX(-6px); }',
-            '  40%, 80% { transform: translateX(6px); }',
-            '}',
-            '.gl-shake { animation: gl-shake 0.38s ease-in-out !important; }'
+            '.table-loader-overlay { position:absolute; inset:0; min-height:100px; background:rgba(255,255,255,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; z-index:50; border-radius:inherit; pointer-events:none !important; transition:opacity .16s ease; }',
+            '.gl-table-skeleton { width:72%; max-width:22rem; display:grid; gap:8px; }',
+            '.gl-table-skeleton span { display:block; height:8px; border-radius:4px; background:#e2e8f0; }',
+            '.gl-table-skeleton span:last-child { width:65%; }',
+            '.table-loader-spinner { width:2rem; height:2rem; border:3px solid #fed7aa; border-top-color:#ea580c; border-radius:50%; animation:gl-spin .7s linear infinite; }',
+            '.table-loader-text { font-size:13.5px; font-weight:600; color:#475569; }',
+            '.gl-btn-pending { cursor:progress; }',
+            '.gl-btn-loading { pointer-events:auto !important; color:transparent !important; }',
+            '.gl-btn-loading > :not(.gl-btn-feedback) { opacity:0 !important; }',
+            '.gl-btn-feedback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:6px; padding:inherit; pointer-events:none; font-size:inherit; font-weight:inherit; white-space:normal; opacity:1 !important; }',
+            '.gl-btn-spinner { display:inline-block; width:1em; height:1em; flex-shrink:0; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:gl-spin .65s linear infinite; }',
+            '@keyframes gl-spin { to { transform:rotate(360deg); } }',
+            '@keyframes gl-shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }',
+            '.gl-shake { animation:gl-shake .24s ease-in-out !important; }',
+            'html[data-tq-motion="lite"] .global-progress-bar-inner, html[data-tq-motion="reduced"] .global-progress-bar-inner { transition:none; will-change:auto; }',
+            'html[data-tq-motion="lite"] .gl-btn-spinner, html[data-tq-motion="reduced"] .gl-btn-spinner { animation:none !important; }',
+            '@media (prefers-reduced-motion:reduce) { .global-progress-bar, .global-progress-bar-inner, .table-loader-overlay { transition:none; } .gl-btn-spinner, .table-loader-spinner, .gl-shake { animation:none !important; } }'
         ].join('\n');
         document.head.appendChild(style);
     }
 
-    /** Create and inject the loader elements into DOM */
     function ensureElements() {
         injectStyles();
-        if (barEl && document.body && document.body.contains(barEl)) return;
-
+        if (barEl && barEl.isConnected) return;
         barEl = document.getElementById('global-progress-bar');
         if (!barEl) {
             barEl = document.createElement('div');
             barEl.id = 'global-progress-bar';
             barEl.className = 'global-progress-bar';
             barEl.setAttribute('aria-hidden', 'true');
-
             innerEl = document.createElement('div');
             innerEl.className = 'global-progress-bar-inner';
-
-            glowEl = document.createElement('div');
-            glowEl.className = 'global-progress-bar-glow';
-
-            innerEl.appendChild(glowEl);
             barEl.appendChild(innerEl);
         } else {
             innerEl = barEl.querySelector('.global-progress-bar-inner');
-            glowEl = barEl.querySelector('.global-progress-bar-glow');
         }
-
-        if (document.body && !document.body.contains(barEl)) {
-            document.body.appendChild(barEl);
-        }
+        if (document.body && !barEl.isConnected) document.body.appendChild(barEl);
     }
 
-    /** Set the width percentage */
     function setProgress(pct) {
         ensureElements();
-        progress = Math.max(0, Math.min(100, pct));
-        if (innerEl) {
-            innerEl.style.width = progress + '%';
-        }
+        progress = Math.max(0, Math.min(100, Number(pct) || 0));
+        if (innerEl) innerEl.style.transform = 'scaleX(' + (progress / 100) + ')';
     }
 
-    /** Visually render the active progress bar (called only after threshold delay) */
-    function renderStart() {
-        isVisible = true;
-        visibleAt = Date.now();
-        if (barEl) {
-            barEl.classList.remove('is-done');
-            barEl.classList.add('is-active');
-        }
-        setProgress(20 + Math.random() * 15); // Jump to ~20-35%
+    function clearTrickle() {
+        if (trickleTimer !== null) clearInterval(trickleTimer);
+        trickleTimer = null;
+    }
 
-        if (trickleTimer) clearInterval(trickleTimer);
+    function startTrickle() {
+        clearTrickle();
+        var mobile = window.matchMedia && window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)').matches;
+        if (document.hidden || motionMode() !== 'full' || (mobile && !document.documentElement.classList.contains('gl-standalone'))) return;
         trickleTimer = setInterval(function () {
-            if (progress < 85) {
-                var step = (85 - progress) * 0.14;
-                if (step < 0.6) step = 0.6;
-                setProgress(progress + step);
-            }
+            if (motionMode() !== 'full' || document.hidden) { clearTrickle(); return; }
+            if (progress < 85) setProgress(progress + Math.max(.6, (85 - progress) * .14));
         }, 180);
     }
 
-    /**
-     * Start loader with adaptive threshold debouncing.
-     * If the action completes within SHOW_DELAY (< 250ms), the loader is NEVER shown.
-     * If the action takes >= SHOW_DELAY, it smoothly reveals the progress bar.
-     * @param {boolean} [immediate=false] Optional flag to bypass debounce (e.g. for heavy long exports)
-     */
-    function start(immediate) {
-        ensureElements();
-        if (safetyTimer) clearTimeout(safetyTimer);
-
-        if (!isRunning) {
-            isRunning = true;
-            isVisible = false;
-
-            if (showTimer) {
-                clearTimeout(showTimer);
-                showTimer = null;
-            }
-
-            if (immediate || SHOW_DELAY <= 0) {
-                renderStart();
-            } else {
-                showTimer = setTimeout(function () {
-                    if (isRunning && !isVisible) {
-                        renderStart();
-                    }
-                }, SHOW_DELAY);
-            }
-        }
-
-        // Safety watchdog: automatically complete after 12s if request hangs
-        safetyTimer = setTimeout(function () {
-            if (isRunning) {
-                forceDone();
-            }
-        }, 12000);
+    function clearCompletion() {
+        if (finishTimer !== null) clearTimeout(finishTimer);
+        if (fadeTimer !== null) clearTimeout(fadeTimer);
+        finishTimer = fadeTimer = null;
     }
 
-    /**
-     * Complete loader operation.
-     * - If completed in < SHOW_DELAY: cancels timer immediately. No UI flicker whatsoever.
-     * - If displayed: ensures a brief minimum duration (MIN_VISIBLE) so the completion feels smooth.
-     */
+    function clearOperationTimers() {
+        if (showTimer !== null) clearTimeout(showTimer);
+        if (safetyTimer !== null) clearTimeout(safetyTimer);
+        showTimer = safetyTimer = null;
+        clearTrickle();
+    }
+
+    function renderStart() {
+        isVisible = true;
+        visibleAt = Date.now();
+        barEl.classList.remove('is-done');
+        barEl.classList.add('is-active');
+        if (progress === 0 || progress === 100) setProgress(25);
+        startTrickle();
+    }
+
+    function start(immediate) {
+        ensureElements();
+        clearCompletion();
+        if (safetyTimer !== null) clearTimeout(safetyTimer);
+        if (!isRunning) {
+            isRunning = true;
+            if (isVisible || immediate || SHOW_DELAY <= 0) renderStart();
+            else showTimer = setTimeout(function () {
+                showTimer = null;
+                if (isRunning) renderStart();
+            }, SHOW_DELAY);
+        }
+        // This is a visual watchdog only. It must not unlock a still-pending request.
+        safetyTimer = setTimeout(forceDone, 12000);
+    }
+
     function done() {
         if (!isRunning) return;
-
-        if (showTimer) {
-            clearTimeout(showTimer);
-            showTimer = null;
-        }
-        if (safetyTimer) {
-            clearTimeout(safetyTimer);
-            safetyTimer = null;
-        }
-
-        // Fast response: request completed before SHOW_DELAY threshold!
-        if (!isVisible) {
-            isRunning = false;
-            activeRequests = 0;
-            if (trickleTimer) {
-                clearInterval(trickleTimer);
-                trickleTimer = null;
-            }
-            setProgress(0);
-            var fastLoadingBtns = document.querySelectorAll('.gl-btn-loading');
-            for (var f = 0; f < fastLoadingBtns.length; f++) {
-                hideButtonSpinner(fastLoadingBtns[f]);
-            }
-            return;
-        }
-
-        // Slow response: bar was actually visible to user.
-        if (trickleTimer) {
-            clearInterval(trickleTimer);
-            trickleTimer = null;
-        }
-
-        var visibleElapsed = Date.now() - visibleAt;
-        var remainingDelay = (visibleElapsed < MIN_VISIBLE) ? (MIN_VISIBLE - visibleElapsed) : 0;
-
-        setTimeout(function () {
+        isRunning = false;
+        clearOperationTimers();
+        clearCompletion();
+        if (!isVisible) { setProgress(0); return; }
+        var wait = motionMode() === 'full' ? Math.max(0, MIN_VISIBLE - (Date.now() - visibleAt)) : 0;
+        finishTimer = setTimeout(function () {
+            finishTimer = null;
             setProgress(100);
-
-            setTimeout(function () {
-                if (barEl) {
-                    barEl.classList.add('is-done');
-                }
-                setTimeout(function () {
-                    if (barEl) {
-                        barEl.classList.remove('is-active', 'is-done');
-                        setProgress(0);
-                    }
-                    isRunning = false;
-                    isVisible = false;
-                    activeRequests = 0;
-                    var slowLoadingBtns = document.querySelectorAll('.gl-btn-loading');
-                    for (var s = 0; s < slowLoadingBtns.length; s++) {
-                        hideButtonSpinner(slowLoadingBtns[s]);
-                    }
-                }, 280);
-            }, 160);
-        }, remainingDelay);
+            barEl.classList.add('is-done');
+            fadeTimer = setTimeout(function () {
+                fadeTimer = null;
+                barEl.classList.remove('is-active', 'is-done');
+                isVisible = false;
+                setProgress(0);
+            }, motionMode() === 'full' ? 160 : 0);
+        }, wait);
     }
 
     function forceDone() {
-        activeRequests = 0;
-        if (showTimer) {
-            clearTimeout(showTimer);
-            showTimer = null;
-        }
-        if (trickleTimer) {
-            clearInterval(trickleTimer);
-            trickleTimer = null;
-        }
-        if (safetyTimer) {
-            clearTimeout(safetyTimer);
-            safetyTimer = null;
-        }
-        if (barEl) {
-            barEl.classList.remove('is-active', 'is-done');
-        }
+        clearOperationTimers();
+        clearCompletion();
+        if (barEl) barEl.classList.remove('is-active', 'is-done');
         setProgress(0);
-        isRunning = false;
-        isVisible = false;
-
-        var allLoadingBtns = document.querySelectorAll('.gl-btn-loading');
-        for (var a = 0; a < allLoadingBtns.length; a++) {
-            hideButtonSpinner(allLoadingBtns[a]);
-        }
+        isRunning = isVisible = false;
     }
 
-    /** Helper to check if a URL or Request should be ignored */
+    function finishRequest(epoch) {
+        if (epoch !== requestEpoch) return;
+        activeRequests = Math.max(0, activeRequests - 1);
+        if (activeRequests === 0) done();
+    }
+
     function isSilentRequest(url, headers) {
-        if (!url) return false;
-        var urlStr = typeof url === 'string' ? url : (url.url || '');
-
-        // Check silent pattern matches
-        for (var i = 0; i < SILENT_PATTERNS.length; i++) {
-            if (SILENT_PATTERNS[i].test(urlStr)) return true;
-        }
-
-        // Check headers for X-Silent
-        if (headers) {
-            try {
-                if (typeof headers.get === 'function') {
-                    var val = headers.get('X-Silent') || headers.get('x-silent');
-                    if (val === 'true' || val === true) return true;
-                } else if (Array.isArray(headers)) {
-                    for (var h = 0; h < headers.length; h++) {
-                        var k = headers[h][0];
-                        var v = headers[h][1];
-                        if (k && String(k).toLowerCase() === 'x-silent' && (v === 'true' || v === true)) {
-                            return true;
-                        }
-                    }
-                } else if (typeof headers === 'object') {
-                    for (var key in headers) {
-                        if (headers.hasOwnProperty(key) && String(key).toLowerCase() === 'x-silent') {
-                            var ov = String(headers[key]).toLowerCase();
-                            if (ov === 'true' || ov === '1') return true;
-                        }
-                    }
-                }
-            } catch (e) { /* ignore header inspection error */ }
-        }
-
+        var urlStr = typeof url === 'string' ? url : (url && (url.url || url.href) || '');
+        if (SILENT_PATTERNS.some(function (pattern) { return pattern.test(urlStr); })) return true;
+        try {
+            if (headers && typeof headers.get === 'function') return String(headers.get('X-Silent')).toLowerCase() === 'true';
+            if (Array.isArray(headers)) return headers.some(function (pair) { return String(pair[0]).toLowerCase() === 'x-silent' && /^(true|1)$/i.test(String(pair[1])); });
+            if (headers) return Object.keys(headers).some(function (key) { return key.toLowerCase() === 'x-silent' && /^(true|1)$/i.test(String(headers[key])); });
+        } catch (error) { /* Header inspection must never affect a request. */ }
         return false;
     }
 
-    /** Hook into window.fetch safely without altering behavior or arguments */
     function hookFetch() {
         if (typeof window.fetch !== 'function') return;
         var originalFetch = window.fetch;
-
         window.fetch = function (input, init) {
-            var url = (typeof input === 'string') ? input : (input ? input.url : '');
-            var headers = (init && init.headers) ? init.headers : (input && input.headers ? input.headers : null);
-
-            var silent = isSilentRequest(url, headers);
-
-            if (!silent) {
-                activeRequests++;
-                start();
-            }
-
-            return originalFetch.apply(window, arguments)
-                .then(function (response) {
-                    if (!silent) {
-                        activeRequests = Math.max(0, activeRequests - 1);
-                        if (activeRequests === 0) done();
-                    }
-                    return response;
-                })
-                .catch(function (error) {
-                    if (!silent) {
-                        activeRequests = Math.max(0, activeRequests - 1);
-                        if (activeRequests === 0) done();
-                    }
-                    throw error;
-                });
+            var silent = isSilentRequest(input, init && init.headers || input && input.headers);
+            var epoch = requestEpoch;
+            if (!silent) { activeRequests++; start(); }
+            var request;
+            try { request = originalFetch.apply(this, arguments); }
+            catch (error) { if (!silent) finishRequest(epoch); throw error; }
+            return request.then(function (response) {
+                if (!silent) finishRequest(epoch);
+                return response;
+            }, function (error) {
+                if (!silent) finishRequest(epoch);
+                throw error;
+            });
         };
     }
 
-    /** Hook into XMLHttpRequest safely */
     function hookXHR() {
         if (typeof window.XMLHttpRequest !== 'function') return;
-        var originalOpen = XMLHttpRequest.prototype.open;
-        var originalSend = XMLHttpRequest.prototype.send;
-        var originalSetRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-
-        XMLHttpRequest.prototype.open = function (method, url) {
-            this._gl_url = url;
-            this._gl_silent = isSilentRequest(url, null);
+        var proto = window.XMLHttpRequest.prototype;
+        var originalOpen = proto.open;
+        var originalSend = proto.send;
+        var originalHeader = proto.setRequestHeader;
+        proto.open = function (method, url) {
+            this._gl_silent = isSilentRequest(url);
             return originalOpen.apply(this, arguments);
         };
-
-        XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
-            if (header && String(header).toLowerCase() === 'x-silent' && (value === 'true' || value === true)) {
-                this._gl_silent = true;
-            }
-            return originalSetRequestHeader.apply(this, arguments);
+        proto.setRequestHeader = function (header, value) {
+            if (String(header).toLowerCase() === 'x-silent' && /^(true|1)$/i.test(String(value))) this._gl_silent = true;
+            return originalHeader.apply(this, arguments);
         };
-
-        XMLHttpRequest.prototype.send = function () {
+        proto.send = function () {
             var xhr = this;
-            if (!xhr._gl_silent) {
-                activeRequests++;
-                start();
-
-                var completed = false;
-                var onComplete = function () {
-                    if (completed) return;
-                    completed = true;
-                    xhr.removeEventListener('loadend', onComplete);
-                    xhr.removeEventListener('error', onComplete);
-                    xhr.removeEventListener('abort', onComplete);
-                    xhr.removeEventListener('timeout', onComplete);
-                    activeRequests = Math.max(0, activeRequests - 1);
-                    if (activeRequests === 0) done();
-                };
-
-                xhr.addEventListener('loadend', onComplete);
-                xhr.addEventListener('error', onComplete);
-                xhr.addEventListener('abort', onComplete);
-                xhr.addEventListener('timeout', onComplete);
+            var epoch = requestEpoch;
+            var tracked = !xhr._gl_silent;
+            var completed = false;
+            function complete() {
+                if (completed) return;
+                completed = true;
+                xhr.removeEventListener('loadend', complete);
+                if (tracked) finishRequest(epoch);
             }
-            return originalSend.apply(this, arguments);
+            if (tracked) { activeRequests++; start(); xhr.addEventListener('loadend', complete); }
+            try { return originalSend.apply(xhr, arguments); }
+            catch (error) { complete(); throw error; }
         };
     }
 
@@ -499,266 +307,238 @@
     }
 
     /**
-     * Button Spinner Helpers with Adaptive Delay
-     * If the action completes within BUTTON_DELAY (200ms), the button text/layout never flickers.
+     * Lock duplicate activations immediately; animate feedback only after the delay.
+     * Never disable the native submitter or change its name/value. Existing child
+     * nodes and their handlers stay mounted under the absolute feedback overlay.
+     * @param {HTMLElement|null} btn
+     * @param {string} [customLabel]
+     * @param {boolean} [immediate]
      */
     function showButtonSpinner(btn, customLabel, immediate) {
-        if (!btn || btn.classList.contains('gl-btn-loading')) return;
-
-        if (btn._gl_btn_timer) {
-            clearTimeout(btn._gl_btn_timer);
-            btn._gl_btn_timer = null;
-        }
-
+        if (!btn || pendingButtons.has(btn)) return;
+        var state = {
+            busy: btn.getAttribute('aria-busy'),
+            disabled: btn.getAttribute('aria-disabled'),
+            position: btn.style.position,
+            overlay: null,
+            timer: null
+        };
+        pendingButtons.set(btn, state);
+        btn.classList.add('gl-btn-pending');
+        btn.setAttribute('aria-busy', 'true');
+        btn.setAttribute('aria-disabled', 'true');
+        var hasText = Boolean((btn.innerText || btn.textContent || btn.value || '').trim());
+        var label = hasText || customLabel || btn.getAttribute('data-loading-text')
+            ? getButtonLoadingLabel(btn, customLabel) : '';
         function applySpinner() {
-            if (!btn || btn.classList.contains('gl-btn-loading')) return;
+            state.timer = null;
+            if (!btn.isConnected || !pendingButtons.has(btn)) { hideButtonSpinner(btn); return; }
+            // Inputs cannot have children: keep their successful-control value intact.
+            if (btn.tagName === 'INPUT') return;
+            var color = window.getComputedStyle(btn).color;
+            if (window.getComputedStyle(btn).position === 'static') btn.style.position = 'relative';
+            var overlay = document.createElement('span');
+            overlay.className = 'gl-btn-feedback';
+            overlay.style.color = color;
+            overlay.setAttribute('role', 'status');
+            overlay.setAttribute('aria-live', 'polite');
+            var spinner = document.createElement('span');
+            spinner.className = 'gl-btn-spinner';
+            spinner.setAttribute('aria-hidden', 'true');
+            overlay.appendChild(spinner);
+            if (label) overlay.appendChild(document.createTextNode(label));
+            state.overlay = overlay;
+            btn.appendChild(overlay);
             btn.classList.add('gl-btn-loading');
-            btn.setAttribute('data-gl-orig-html', btn.innerHTML);
-
-            var hasVisibleText = Boolean((btn.innerText || btn.textContent || btn.value || '').trim());
-            var isIconOnly = !hasVisibleText && !customLabel && !btn.getAttribute('data-loading-text');
-
-            if (isIconOnly) {
-                btn.innerHTML = '<span class="gl-btn-spinner" style="margin-right:0;" aria-hidden="true"></span>';
-            } else {
-                var label = getButtonLoadingLabel(btn, customLabel);
-                btn.innerHTML = '<span class="gl-btn-spinner" aria-hidden="true"></span> ' + label;
-            }
         }
+        if (immediate || BUTTON_DELAY <= 0) applySpinner();
+        else state.timer = setTimeout(applySpinner, BUTTON_DELAY);
+    }
 
-        if (immediate || BUTTON_DELAY <= 0) {
-            applySpinner();
-        } else {
-            btn._gl_btn_timer = setTimeout(applySpinner, BUTTON_DELAY);
-        }
+    function restoreAttribute(el, name, value) {
+        if (value === null) el.removeAttribute(name);
+        else el.setAttribute(name, value);
     }
 
     function hideButtonSpinner(btn) {
-        if (!btn) return;
-        if (btn._gl_btn_timer) {
-            clearTimeout(btn._gl_btn_timer);
-            btn._gl_btn_timer = null;
-        }
-        if (!btn.classList.contains('gl-btn-loading')) return;
-        var orig = btn.getAttribute('data-gl-orig-html');
-        if (orig !== null) {
-            btn.innerHTML = orig;
-            btn.removeAttribute('data-gl-orig-html');
-        }
-        btn.classList.remove('gl-btn-loading');
+        var state = btn && pendingButtons.get(btn);
+        if (!state) return;
+        if (state.timer !== null) clearTimeout(state.timer);
+        if (state.overlay) state.overlay.remove();
+        btn.style.position = state.position;
+        restoreAttribute(btn, 'aria-busy', state.busy);
+        restoreAttribute(btn, 'aria-disabled', state.disabled);
+        btn.classList.remove('gl-btn-pending', 'gl-btn-loading');
+        pendingButtons.delete(btn);
+        if (btn.form) pendingForms.delete(btn.form);
     }
 
-    /** Table / Card Overlay Loader Helpers with Adaptive Delay */
     function showTableLoader(container, labelText, immediate) {
-        if (!container) return;
-        var el = (typeof container === 'string') ? document.querySelector(container) : container;
+        var el = typeof container === 'string' ? document.querySelector(container) : container;
         if (!el) return;
-
-        if (el._gl_table_timer) {
-            clearTimeout(el._gl_table_timer);
-            el._gl_table_timer = null;
-        }
-
+        tableContainers.add(el);
+        clearTimeout(el._gl_table_timer);
+        clearTimeout(el._gl_table_hide_timer);
+        el._gl_table_hide_timer = null;
         function applyOverlay() {
-            if (!el) return;
-            // Ensure relative positioning
-            var curPos = window.getComputedStyle(el).position;
-            if (!curPos || curPos === 'static') {
+            el._gl_table_timer = null;
+            if (!el.isConnected) { tableContainers.delete(el); return; }
+            if (window.getComputedStyle(el).position === 'static') {
+                el._gl_table_original_position = el.style.position;
                 el.style.position = 'relative';
             }
-
-            var defaultText = 'Loading\u2026';
-            if (el.id && (el.id.indexOf('schedule') !== -1 || el.classList.contains('schedule-card'))) {
-                defaultText = 'Loading schedules\u2026';
-            } else if (el.id && el.id.indexOf('fare') !== -1) {
-                defaultText = 'Loading fares\u2026';
-            } else if (el.id && el.id.indexOf('queue') !== -1) {
-                defaultText = 'Updating queue\u2026';
-            }
-
-            var text = labelText || defaultText;
-
+            var text = labelText || (el.id.indexOf('schedule') !== -1 ? 'Loading schedules\u2026'
+                : el.id.indexOf('fare') !== -1 ? 'Loading fares\u2026'
+                : el.id.indexOf('queue') !== -1 ? 'Updating queue\u2026' : 'Loading\u2026');
             var overlay = el.querySelector('.table-loader-overlay');
             if (!overlay) {
                 overlay = document.createElement('div');
                 overlay.className = 'table-loader-overlay';
-                overlay.innerHTML = '<div class="table-loader-spinner" aria-hidden="true"></div><div class="table-loader-text">' + text + '</div>';
+                var skeleton = document.createElement('div');
+                skeleton.className = 'gl-table-skeleton';
+                skeleton.setAttribute('aria-hidden', 'true');
+                for (var i = 0; i < 3; i++) skeleton.appendChild(document.createElement('span'));
+                var label = document.createElement('div');
+                label.className = 'table-loader-text';
+                label.setAttribute('role', 'status');
+                overlay.appendChild(skeleton);
+                overlay.appendChild(label);
                 el.appendChild(overlay);
-            } else {
-                var textEl = overlay.querySelector('.table-loader-text');
-                if (textEl) textEl.textContent = text;
             }
+            overlay.querySelector('.table-loader-text').textContent = text;
             overlay.style.opacity = '1';
-            overlay.style.display = 'flex';
         }
-
-        if (immediate || TABLE_DELAY <= 0) {
-            applyOverlay();
-        } else {
-            el._gl_table_timer = setTimeout(applyOverlay, TABLE_DELAY);
-        }
+        if (immediate || TABLE_DELAY <= 0) applyOverlay();
+        else el._gl_table_timer = setTimeout(applyOverlay, TABLE_DELAY);
     }
 
-    function hideTableLoader(container) {
-        if (!container) return;
-        var el = (typeof container === 'string') ? document.querySelector(container) : container;
+    function hideTableLoader(container, immediate) {
+        var el = typeof container === 'string' ? document.querySelector(container) : container;
         if (!el) return;
-
-        if (el._gl_table_timer) {
-            clearTimeout(el._gl_table_timer);
-            el._gl_table_timer = null;
-        }
-
+        clearTimeout(el._gl_table_timer);
+        clearTimeout(el._gl_table_hide_timer);
+        el._gl_table_timer = null;
         var overlay = el.querySelector('.table-loader-overlay');
-        if (overlay) {
-            overlay.style.opacity = '0';
-            setTimeout(function () {
-                if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            }, 200);
+        function removeOverlay() {
+            if (overlay) overlay.remove();
+            el._gl_table_hide_timer = null;
+            if (el._gl_table_original_position !== undefined) {
+                el.style.position = el._gl_table_original_position;
+                delete el._gl_table_original_position;
+            }
+            tableContainers.delete(el);
         }
+        if (overlay && !immediate && motionMode() === 'full') {
+            overlay.style.opacity = '0';
+            el._gl_table_hide_timer = setTimeout(removeOverlay, 160);
+        } else removeOverlay();
     }
 
-    /** Intercept Form Submissions & Internal Navigation Links */
+    function resetPage() {
+        requestEpoch++;
+        activeRequests = 0;
+        forceDone();
+        pendingButtons.forEach(function (state, btn) { hideButtonSpinner(btn); });
+        pendingForms.clear();
+        tableContainers.forEach(function (el) { hideTableLoader(el, true); });
+    }
+
     function setupInteractions() {
-        // Form submits (standard POST/GET page transitions)
-        document.addEventListener('submit', function (e) {
-            var form = e.target;
-            if (!form || form.hasAttribute('data-no-loader')) return;
-            if (form.getAttribute('target') === '_blank') return;
-
-            // HTML5 client-side validation check
-            if (typeof form.checkValidity === 'function' && !form.checkValidity()) {
-                return;
+        // Capture suppresses only activations of a button already owned by a pending
+        // operation. The first click and all unrelated event handlers run immediately.
+        document.addEventListener('click', function (event) {
+            var btn = event.target.closest && event.target.closest('.gl-btn-pending');
+            if (btn && pendingButtons.has(btn)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
             }
-
-            var submitBtn = e.submitter || form.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
-
-            // Wait a micro-tick to let custom scripts (e.g. no-change-guard, modal validations) preventDefault
-            setTimeout(function () {
-                if (!e.defaultPrevented) {
-                    try { sessionStorage.setItem('gl_navigating', '1'); } catch (err) {}
-                    start();
-                    if (submitBtn) showButtonSpinner(submitBtn);
-                }
-            }, 40);
+        }, true);
+        document.addEventListener('submit', function (event) {
+            if (pendingForms.has(event.target)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        }, true);
+        document.addEventListener('submit', function (event) {
+            var form = event.target;
+            if (!form || form.hasAttribute('data-no-loader') || form.getAttribute('target') === '_blank') return;
+            // Native validation has already run. Do not re-run checkValidity(),
+            // fire additional invalid events, or override novalidate/formnovalidate.
+            var submitBtn = event.submitter || form.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
+            var target = submitBtn && submitBtn.getAttribute('formtarget') || form.getAttribute('target');
+            var method = submitBtn && submitBtn.getAttribute('formmethod') || form.getAttribute('method');
+            // Named-frame submissions and dialog forms do not navigate this page.
+            if (method && method.toLowerCase() === 'dialog') return;
+            if (target && !/^_(self|parent|top)$/i.test(target) && target !== window.name) return;
+            // This observes cancellation after all synchronous handlers; it does not
+            // defer, prevent, re-dispatch or recreate the original submission.
+            Promise.resolve().then(function () {
+                if (event.defaultPrevented) return;
+                pendingForms.add(form);
+                start();
+                if (submitBtn) showButtonSpinner(submitBtn);
+            });
         }, false);
-
-        // Internal link clicks
-        document.addEventListener('click', function (e) {
-            var a = e.target.closest('a');
-            if (!a || !a.href) return;
-
-            // Exclude links meant for modals, dropdowns, tabs, accordions, downloads, or new tabs
-            if (a.hasAttribute('data-no-loader') || a.hasAttribute('download')) return;
-            if (a.hasAttribute('data-bs-toggle') || a.hasAttribute('data-toggle')) return;
-            if (a.hasAttribute('data-bs-target') || a.hasAttribute('data-target')) return;
-            if (a.target === '_blank') return;
-            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
-
-            var rawHref = a.getAttribute('href') || '';
-            if (!rawHref || rawHref.charAt(0) === '#' || rawHref.indexOf('javascript:') === 0 || rawHref.indexOf('mailto:') === 0 || rawHref.indexOf('tel:') === 0 || rawHref.indexOf('blob:') === 0 || rawHref.indexOf('data:') === 0) {
-                return;
-            }
-
-            // Verify if same origin and actually navigating to a different page/search
+        document.addEventListener('click', function (event) {
+            var a = event.target.closest && event.target.closest('a');
+            if (!a || !a.href || a.hasAttribute('data-no-loader') || a.hasAttribute('download')) return;
+            if (a.hasAttribute('data-bs-toggle') || a.hasAttribute('data-toggle') || a.hasAttribute('data-bs-target') || a.hasAttribute('data-target')) return;
+            if (a.target === '_blank' || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+            var raw = a.getAttribute('href') || '';
+            if (!raw || /^(#|javascript:|mailto:|tel:|blob:|data:)/i.test(raw)) return;
             try {
                 var url = new URL(a.href, window.location.href);
                 if (url.origin !== window.location.origin) return;
-
-                // If identical pathname and search, it's just an in-page anchor jump -> ignore
-                if (url.pathname === window.location.pathname && url.search === window.location.search) {
-                    return;
-                }
-
-                // Check after event dispatch if prevented by custom handler
-                setTimeout(function () {
-                    if (!e.defaultPrevented) {
-                        try { sessionStorage.setItem('gl_navigating', '1'); } catch (err) {}
-                        // Reset any stale loader state from a previous navigation or rapid click
-                        // before starting a new one so pointer-events are never left stuck.
-                        forceDone();
-                        start();
-                    }
-                }, 20);
-            } catch (err) { /* ignore */ }
+                if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+                Promise.resolve().then(function () { if (!event.defaultPrevented) start(); });
+            } catch (error) { /* Not an internal navigation. */ }
         }, false);
-
-        // Handle BFCache restore (Back/Forward navigation restores DOM from memory)
-        window.addEventListener('pageshow', function (e) {
-            if (e.persisted) forceDone();
-        });
-
-        // Clean loader state when the browser is actually leaving the page,
-        // preventing pointer-events from being stuck on the incoming page.
-        window.addEventListener('pagehide', function () {
-            forceDone();
-        });
-        window.addEventListener('beforeunload', function () {
-            forceDone();
+        window.addEventListener('pagehide', resetPage);
+        window.addEventListener('pageshow', function (event) { if (event.persisted) resetPage(); });
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) clearTrickle();
+            else if (isRunning && isVisible) startTrickle();
         });
     }
 
-    // Initialize hooks immediately
     hookFetch();
     hookXHR();
-
     function onInit() {
         var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
             || window.navigator.standalone === true;
         if (standalone) document.documentElement.classList.add('gl-standalone');
         ensureElements();
         setupInteractions();
-        try {
-            // Clean up navigation flag cleanly without replaying a fake progress bar
-            sessionStorage.removeItem('gl_navigating');
-        } catch (err) {}
-
-        // Chrome's installed app has no browser loading bar on its first page.
+        try { window.sessionStorage.removeItem('gl_navigating'); } catch (error) {}
         if (standalone) {
             var firstPage = true;
             try {
-                firstPage = sessionStorage.getItem('gl_standalone_opened') !== '1';
-                sessionStorage.setItem('gl_standalone_opened', '1');
-            } catch (err) {}
+                firstPage = window.sessionStorage.getItem('gl_standalone_opened') !== '1';
+                window.sessionStorage.setItem('gl_standalone_opened', '1');
+            } catch (error) {}
             if (firstPage) {
                 start(true);
-                if (document.readyState === 'complete') {
-                    done();
-                } else {
-                    window.addEventListener('load', done, { once: true });
-                }
+                if (document.readyState === 'complete') done();
+                else window.addEventListener('load', done, { once: true });
             }
         }
     }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onInit, { once: true });
+    else onInit();
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', onInit);
-    } else {
-        onInit();
-    }
-
-    // Expose comprehensive public API
     window.GlobalLoader = {
-        start: start,
-        done: done,
-        set: setProgress,
+        start: start, done: done, set: setProgress,
         isRunning: function () { return isRunning; },
         isVisible: function () { return isVisible; },
         setDelay: function (ms) {
-            if (typeof ms === 'number' && ms >= 0) {
+            if (typeof ms === 'number' && ms >= 0 && Number.isFinite(ms)) {
                 SHOW_DELAY = ms;
-                BUTTON_DELAY = Math.min(ms, 200);
-                TABLE_DELAY = Math.min(ms, 200);
+                BUTTON_DELAY = TABLE_DELAY = Math.min(ms, 200);
             }
         },
         getDelay: function () { return SHOW_DELAY; },
-        addSilentPattern: function (pattern) {
-            if (pattern) SILENT_PATTERNS.push(pattern);
-        },
-        showTableLoader: showTableLoader,
-        hideTableLoader: hideTableLoader,
-        showButtonSpinner: showButtonSpinner,
-        hideButtonSpinner: hideButtonSpinner
+        addSilentPattern: function (pattern) { if (pattern) SILENT_PATTERNS.push(pattern); },
+        showTableLoader: showTableLoader, hideTableLoader: hideTableLoader,
+        showButtonSpinner: showButtonSpinner, hideButtonSpinner: hideButtonSpinner
     };
-
 })(window, document);

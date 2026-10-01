@@ -358,7 +358,7 @@
 <?= view('admin/modals/report_filter', ['destinations' => $destinations ?? [], 'destinationVehicleTypes' => $destinationVehicleTypes ?? [], 'vehicleTypes' => $vehicleTypes ?? []]) ?>
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/queue-sync.js?v=20260928_1') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('historyFilterForm');
@@ -608,3 +608,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+

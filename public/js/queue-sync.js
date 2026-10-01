@@ -33,6 +33,11 @@
     'use strict';
 
     var _config = null;
+    var _generation = 0;
+    var _pollPending = false;
+    var _pollQueued = false;
+    var _pollController = null;
+    var _refreshController = null;
     var _pollTimer = null;
     var _lastIds = {};
     var _paused = false;
@@ -104,6 +109,7 @@
 
     function applyPassengerColor(el, count, capacity) {
         if (!el) return;
+        if (el.classList.contains(getPassengerColorClass(count, capacity)) && !el.classList.contains('text-danger') && !['p-green', 'p-yellow', 'p-orange', 'p-red'].some(function (name) { return el.classList.contains(name); })) return;
         el.classList.remove('passenger-color-green', 'passenger-color-yellow', 'passenger-color-orange', 'passenger-color-red', 'p-green', 'p-yellow', 'p-orange', 'p-red', 'text-danger');
         el.classList.add(getPassengerColorClass(count, capacity));
     }
@@ -117,12 +123,12 @@
         if (span) {
             var colorClass = getPassengerColorClass(count, capacity);
             if (span.classList.contains('passenger-count-num')) {
-                span.textContent = count;
+                if (span.textContent !== String(count)) span.textContent = count;
                 applyPassengerColor(span, count, capacity);
             } else {
                 var innerNum = span.querySelector('.passenger-count-num');
                 if (innerNum) {
-                    innerNum.textContent = count;
+                    if (innerNum.textContent !== String(count)) innerNum.textContent = count;
                     applyPassengerColor(innerNum, count, capacity);
                 } else {
                     if (typeof span.replaceChildren === 'function') {
@@ -397,16 +403,20 @@
         }
 
         _refreshPending = true;
+        var generation = _generation;
+        _refreshController = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
         fetch(_config.refreshUrl, {
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' },
+            signal: _refreshController ? _refreshController.signal : undefined
         })
         .then(function(r) {
             if (!r.ok) throw new Error('Refresh returned HTTP ' + r.status);
             return r.text();
         })
         .then(function(html) {
+            if (!_config || generation !== _generation) return;
             var parser = new DOMParser();
             var newDoc = parser.parseFromString(html, 'text/html');
 
@@ -460,9 +470,11 @@
             }
         })
         .catch(function(err) {
-            console.error('[QueueSync] Refresh error:', err);
+            if (generation === _generation && err.name !== 'AbortError') console.error('[QueueSync] Refresh error:', err);
         })
         .finally(function() {
+            if (generation !== _generation) return;
+            _refreshController = null;
             _refreshPending = false;
             _lastRefreshTime = Date.now();
             if (_refreshQueued) {
@@ -476,13 +488,20 @@
 
     function pollAPI() {
         if (!_config || !_config.apiUrl) return;
+        // Retain one trailing reconciliation instead of overlapping JSON reads.
+        if (_pollPending) { _pollQueued = true; return; }
+        _pollPending = true;
+        var generation = _generation;
+        _pollController = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
         fetch(_config.apiUrl, {
             method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' },
+            signal: _pollController ? _pollController.signal : undefined
         })
         .then(function(r) { return r.json(); })
         .then(function(json) {
+            if (!_config || generation !== _generation) return;
             if (!json.success || !json.queue) return;
 
             if (json.vehicle_type_colors) {
@@ -560,7 +579,16 @@
                 ajaxRefresh();
             }
         })
-        .catch(function() { /* silent fail on poll */ });
+        .catch(function() { /* silent fail on poll */ })
+        .finally(function() {
+            if (generation !== _generation) return;
+            _pollController = null;
+            _pollPending = false;
+            if (_pollQueued) {
+                _pollQueued = false;
+                if (!_paused) pollAPI();
+            }
+        });
     }
 
     /* ── Unified poll/refresh function ── */
@@ -576,7 +604,7 @@
     }
 
     function startPolling() {
-        if (_pollTimer) return;
+        if (_pollTimer || !_config || _paused) return;
         var interval = _config ? (_config.pollInterval || 15000) : 15000;
         _pollTimer = setInterval(function() {
             if (!_paused) {
@@ -614,6 +642,7 @@
     }
 
     function scheduleConnectedRefresh(connectionInfo) {
+        if (!_config || _paused) return;
         _lastPollTimestamp = Date.now();
 
         // Reconcile exactly once after each connection so a change that lands
@@ -635,8 +664,10 @@
     function onVisibilityChange() {
         if (document.hidden) {
             _paused = true;
+            stopPolling();
         } else {
             _paused = false;
+            startPolling();
             // Immediately refresh on return to tab
             doRefresh();
         }
@@ -808,6 +839,38 @@
         resetPollTimer();
     }
 
+    function onOptimisticUpdate(event) {
+        if (_config && event.detail && event.detail.id) _wsUpdatedAt[event.detail.id] = Date.now();
+    }
+
+    function onStorageUpdate(event) {
+        if (!_config || event.key !== 'pttm_queue_sync' || !event.newValue) return;
+        try {
+            var parsed = JSON.parse(event.newValue);
+            if (parsed && parsed.action === 'passenger_change') handleWSMessage({ type: 'queue_update', data: parsed });
+        } catch (error) { /* Ignore unrelated or malformed storage values. */ }
+    }
+
+    function abortReads() {
+        if (_pollController) _pollController.abort();
+        if (_refreshController) _refreshController.abort();
+    }
+
+    function onPageHide(event) {
+        if (event.persisted) {
+            _paused = true;
+            stopPolling();
+            abortReads();
+        } else window.QueueSync.destroy();
+    }
+
+    function onPageShow(event) {
+        if (!event.persisted || !_config) return;
+        _paused = document.hidden;
+        startPolling();
+        if (!_paused) doRefresh();
+    }
+
     /* ── Public API ── */
 
     window.QueueSync = {
@@ -825,18 +888,17 @@
          * @param {Function} [cfg.customRefresh]   - Override the default AJAX refresh entirely
          */
         init: function(cfg) {
+            if (_config) window.QueueSync.destroy();
             _config = cfg || {};
+            _paused = document.hidden;
+            var generation = ++_generation;
 
             // Hook visibility change
             document.addEventListener('visibilitychange', onVisibilityChange);
 
             // Listen for optimistic passenger updates from the debounce module
             // so stale poll data doesn't overwrite them.
-            document.addEventListener('passenger-optimistic-update', function(e) {
-                if (e.detail && e.detail.id) {
-                    _wsUpdatedAt[e.detail.id] = Date.now();
-                }
-            });
+            document.addEventListener('passenger-optimistic-update', onOptimisticUpdate);
 
             // Listen to cross-tab BroadcastChannel for instant queue updates
             try {
@@ -851,19 +913,9 @@
             } catch(e) {}
 
             // Listen to cross-tab storage event as fallback
-            window.addEventListener('storage', function(e) {
-                if (e.key === 'pttm_queue_sync' && e.newValue) {
-                    try {
-                        var parsed = JSON.parse(e.newValue);
-                        if (parsed && parsed.action === 'passenger_change') {
-                            handleWSMessage({
-                                type: 'queue_update',
-                                data: parsed
-                            });
-                        }
-                    } catch(err) {}
-                }
-            });
+            window.addEventListener('storage', onStorageUpdate);
+            window.addEventListener('pagehide', onPageHide);
+            window.addEventListener('pageshow', onPageShow);
 
             // Polling is the recovery path. While WebSocket is connected the
             // loop automatically drops to the low-frequency safety interval.
@@ -872,12 +924,13 @@
             // Initialize WebSocket (fast-path for instant updates)
             if (typeof QueueWS !== 'undefined') {
                 try {
-                    var wsHandler = _config.customWSHandler
-                        ? function(message) {
+                    var wsHandler = function(message) {
+                        if (!_config || generation !== _generation) return;
+                        if (_config.customWSHandler) {
                             _config.customWSHandler(message);
                             resetPollTimer();
-                        }
-                        : handleWSMessage;
+                        } else handleWSMessage(message);
+                    };
 
                     QueueWS.init({
                         onQueueUpdate: wsHandler,
@@ -886,7 +939,7 @@
                         onFareUpdate: wsHandler,
                         onAnnouncementUpdate: wsHandler,
                         onConnected: function(connectionInfo) {
-                            scheduleConnectedRefresh(connectionInfo);
+                            if (_config && generation === _generation) scheduleConnectedRefresh(connectionInfo);
                         }
                     });
                 } catch(e) {
@@ -915,6 +968,11 @@
 
         /** Stop all polling and listeners */
         destroy: function() {
+            _generation++;
+            abortReads();
+            _pollController = _refreshController = null;
+            _pollPending = _pollQueued = _refreshPending = _refreshQueued = false;
+            _lastRefreshTime = _lastPollTimestamp = 0;
             stopPolling();
             if (_connectedRefreshTimer) {
                 clearTimeout(_connectedRefreshTimer);
@@ -926,8 +984,13 @@
                 _queueSyncBc = null;
             }
             document.removeEventListener('visibilitychange', onVisibilityChange);
+            document.removeEventListener('passenger-optimistic-update', onOptimisticUpdate);
+            window.removeEventListener('storage', onStorageUpdate);
+            window.removeEventListener('pagehide', onPageHide);
+            window.removeEventListener('pageshow', onPageShow);
             _config = null;
             _lastIds = {};
+            _wsUpdatedAt = {};
             _lastSyncToken = null;
             _lastStructuralHash = null;
             _hasPolled = false;
@@ -935,3 +998,4 @@
     };
 
 })(window);
+

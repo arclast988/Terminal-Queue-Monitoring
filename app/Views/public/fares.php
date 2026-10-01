@@ -50,7 +50,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
     <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20260929c">
+    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20261001c">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
 
@@ -723,11 +723,13 @@
             }
         }
     </style>
+    <?= $this->include('partials/interaction_assets') ?>
 </head>
 
 <body class="guest-theme">
 
     <?= view('templates/guest_header', [
+        'interaction_assets_loaded' => true,
         'announcements'      => $announcements ?? [],
         'breadcrumb_current' => 'Fares',
     ]) ?>

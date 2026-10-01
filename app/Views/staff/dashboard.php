@@ -578,7 +578,7 @@ if (!empty($recent_departures)) {
 
 <?= $this->include('templates/footer') ?>
 
-<script src="<?= base_url('js/queue-sync.js?v=20260928_1') ?>"></script>
+<script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
 <script>
     let currentVehicleTypeFilter = 'all';
     let currentRouteFilter = 'all';
@@ -709,3 +709,4 @@ if (!empty($recent_departures)) {
         }
     });
 </script>
+

@@ -1,92 +1,126 @@
-/* Shared motion for page changes and overlays. Keep paint-heavy effects off phones. */
+/* Presentation only: inputs, handlers and server-rendered content stay available. */
 @keyframes tq-content-enter {
-  from { opacity: .12; transform: translate3d(0, 10px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+  from { opacity: .65; transform: translate3d(0, 6px, 0); }
+  to { opacity: 1; transform: none; }
 }
-
-@keyframes tq-content-enter-small {
-  from { opacity: .35; transform: translate3d(0, 5px, 0); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
+@keyframes tq-content-fade {
+  from { opacity: .7; }
+  to { opacity: 1; }
 }
-
 @keyframes tq-overlay-enter {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes tq-dialog-enter {
-  from { opacity: .55; transform: translate3d(0, 12px, 0) scale(.98); }
-  to { opacity: 1; transform: translate3d(0, 0, 0); }
-}
-
+/* No permanent promotion of the page, forms, or cards to GPU layers. */
 @media (prefers-reduced-motion: no-preference) {
-  /* The form wrapper enters once; its fields do not each animate in sequence. */
-  body .fade-in:not(.alert-modern):not(.alert):not(.alert-success-banner):not(.alert-error-banner),
-  body .form-entry-page {
-    animation: tq-content-enter .3s cubic-bezier(.2, .8, .2, 1) backwards;
+  html:not([data-tq-motion="lite"]):not([data-tq-motion="reduced"]) body .fade-in:not(.alert-modern):not(.alert):not(.alert-success-banner):not(.alert-error-banner),
+  html[data-tq-motion="full"] body .form-entry-page,
+  html[data-tq-motion="full"] .auth-page .brand,
+  html[data-tq-motion="full"] .auth-page .hero-copy,
+  html[data-tq-motion="full"] .auth-page .auth > .card,
+  html[data-tq-motion="full"] .guest-theme .stat-card,
+  html[data-tq-motion="full"] .guest-theme .queue-section,
+  html[data-tq-motion="full"] .queue-card.card-enter {
+    animation: tq-content-enter .18s cubic-bezier(.2, .8, .2, 1) backwards !important;
+    animation-delay: 0s !important;
   }
 
-  body .form-entry-page .fade-in {
+  body .form-entry-page .fade-in,
+  .auth-page .login-card {
     animation: none !important;
   }
 
-  /* Bootstrap dialogs keep their native show/hide behavior and focus handling. */
-  .modal.fade .modal-dialog {
-    transform: translate3d(0, 12px, 0) scale(.98);
-    transition: transform .25s cubic-bezier(.2, .8, .2, 1);
+  /* Whole login sequence completes in 240 ms; no visibility or focus gates. */
+  html[data-tq-motion="full"] .auth-page .login-card .card-head,
+  html[data-tq-motion="full"] #loginForm .field,
+  html[data-tq-motion="full"] #loginForm .options,
+  html[data-tq-motion="full"] #loginForm > .btn {
+    animation: tq-content-enter .16s cubic-bezier(.2, .8, .2, 1) backwards !important;
+    animation-delay: 0s !important;
   }
-
-  .modal.fade.show .modal-dialog {
-    transform: none;
-  }
-
-  .modal-backdrop.fade {
-    transition: opacity .25s ease;
-  }
-
-  /* Guest support dialogs are shown with a class instead of Bootstrap. */
-  .support-modal-backdrop.active {
-    animation: tq-overlay-enter .22s ease-out backwards;
-  }
-
-  .support-modal-backdrop.active .support-modal {
-    animation: tq-dialog-enter .25s cubic-bezier(.2, .8, .2, 1) backwards;
-  }
-}
-
-@media (max-width: 768px) and (prefers-reduced-motion: no-preference) {
-  body .fade-in:not(.alert-modern):not(.alert):not(.alert-success-banner):not(.alert-error-banner),
-  body .form-entry-page {
-    animation-name: tq-content-enter-small;
-    animation-duration: .24s;
-  }
+  html[data-tq-motion="full"] #loginForm .field:nth-of-type(1) { animation-delay: .02s !important; }
+  html[data-tq-motion="full"] #loginForm .field:nth-of-type(2) { animation-delay: .04s !important; }
+  html[data-tq-motion="full"] #loginForm .options { animation-delay: .06s !important; }
+  html[data-tq-motion="full"] #loginForm > .btn { animation-delay: .08s !important; }
 
   .modal.fade .modal-dialog {
     transform: translate3d(0, 7px, 0) scale(.99);
-    transition-duration: .22s;
+    transition: transform .18s cubic-bezier(.2, .8, .2, 1) !important;
+  }
+  .modal.fade.show .modal-dialog { transform: none; }
+  .modal-backdrop.fade { transition: opacity .16s ease !important; }
+  .support-modal-backdrop.active { animation: tq-overlay-enter .16s ease-out backwards; }
+  .support-modal-backdrop.active .support-modal { animation: tq-content-enter .18s ease-out backwards; }
+}
+
+/* Scope press feedback to buttons; do not animate dimensions or paint effects. */
+body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
+  transition-property: transform, opacity !important;
+  transition-duration: .12s !important;
+  transition-timing-function: cubic-bezier(.2, .8, .2, 1) !important;
+}
+.auth-page :is(.control input, .toggle, .check .box, .forgot) {
+  transition-property: transform, opacity !important;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html[data-tq-motion="full"] body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]):not(:disabled):not([aria-disabled="true"]):hover {
+    transform: translateY(-1px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-tq-motion="full"] body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]):not(:disabled):not([aria-disabled="true"]):active {
+    transform: scale(.985);
   }
 }
 
-/* Blur only stationary desktop backdrops. Mobile gets the inexpensive tint. */
-@media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  body > .modal-backdrop.show,
-  body .sidebar-drawer-overlay.active,
-  body .support-modal-backdrop.active {
-    -webkit-backdrop-filter: blur(2px);
-    backdrop-filter: blur(2px);
-  }
+/* Optional hardware hints select inexpensive fades and static pending markers. */
+html[data-tq-motion="lite"] *,
+html[data-tq-motion="lite"] *::before,
+html[data-tq-motion="lite"] *::after {
+  animation: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  will-change: auto !important;
+}
+html[data-tq-motion="lite"] .fade-in:not(.alert-modern):not(.alert),
+html[data-tq-motion="lite"] .form-entry-page,
+html[data-tq-motion="lite"] .auth-page .brand,
+html[data-tq-motion="lite"] .auth-page .hero-copy,
+html[data-tq-motion="lite"] .auth-page .auth > .card,
+html[data-tq-motion="lite"] .auth-page .login-card .card-head,
+html[data-tq-motion="lite"] #loginForm .field,
+html[data-tq-motion="lite"] #loginForm .options,
+html[data-tq-motion="lite"] #loginForm > .btn,
+html[data-tq-motion="lite"] .queue-card.card-enter {
+  animation: tq-content-fade .1s ease-out backwards !important;
+}
+html[data-tq-motion="lite"] .modal.fade .modal-dialog,
+html[data-tq-motion="lite"] .btn:hover,
+html[data-tq-motion="lite"] .btn:active { transform: none !important; }
+html[data-tq-motion="lite"] :is(.login-card, .modal-backdrop, .support-modal-backdrop, .sidebar-drawer-overlay) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body .fade-in,
-  body .form-entry-page,
-  body .support-modal-backdrop.active,
-  body .support-modal-backdrop.active .support-modal {
+  *, *::before, *::after {
     animation: none !important;
-  }
-
-  .modal.fade .modal-dialog {
-    transform: none !important;
     transition: none !important;
+    scroll-behavior: auto !important;
+    will-change: auto !important;
   }
+  .modal.fade .modal-dialog, .btn:hover, .btn:active { transform: none !important; }
+}
+html[data-tq-motion="reduced"] *,
+html[data-tq-motion="reduced"] *::before,
+html[data-tq-motion="reduced"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+  will-change: auto !important;
+}
+html[data-tq-motion="reduced"] :is(.login-card, .modal-backdrop, .support-modal-backdrop) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }

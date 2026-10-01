@@ -1086,6 +1086,7 @@ $slotsMeta = [
 
 .color-field {
     display: flex;
+    min-width: 0;
     flex-direction: column;
     gap: 5px;
 }
@@ -1098,6 +1099,7 @@ $slotsMeta = [
 
 .color-picker-wrap {
     display: flex;
+    min-width: 0;
     align-items: center;
     gap: 8px;
 }
@@ -1114,6 +1116,7 @@ $slotsMeta = [
 
 .color-picker-wrap input[type="text"] {
     flex: 1;
+    min-width: 0;
     padding: 9px 12px;
     border: 1.5px solid var(--sb-border);
     border-radius: 8px;

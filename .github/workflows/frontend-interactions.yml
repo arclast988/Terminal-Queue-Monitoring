@@ -1,0 +1,58 @@
+name: Frontend interactions
+on:
+  pull_request:
+    branches: [main, master]
+permissions:
+  contents: read
+jobs:
+  interactions:
+    name: Interactions (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Setup PHP for production-view layout fixtures
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - name: Install isolated test tools
+        run: npm ci --prefix tests/frontend --ignore-scripts --no-audit --no-fund
+      - name: Validate typed motion policy and contracts
+        run: npm run --prefix tests/frontend typecheck
+      - name: Check browser script syntax
+        run: |
+          node --check public/assets/js/interaction-motion.js
+          node --check public/assets/js/auth-background.js
+          node --check public/assets/js/global-loader.js
+          node --check public/js/queue-sync.js
+      - name: Run request and lifecycle regressions
+        run: npm test --prefix tests/frontend
+      - name: Install test browser
+        run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Run browser regressions and before-after rendering fixture
+        run: npm run --prefix tests/frontend test:browser
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+          TQ_BASE_REF: c4048e1923aac4452526f7d9b45f7eca5192df8c
+      - name: Run responsive and compatibility checks on production views
+        run: npm run --prefix tests/frontend test:responsive
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+          TQ_RESPONSIVE_BASE_REF: 2cfa15b98ed55fe20128eacfc66577b49cbfc0a5
+      - name: Save rendering metrics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: interaction-rendering-${{ matrix.browser }}
+          path: tests/frontend/artifacts/
+          if-no-files-found: ignore
