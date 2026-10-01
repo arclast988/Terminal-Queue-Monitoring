@@ -83,6 +83,13 @@ html[data-tq-motion="lite"] *::after {
   transition-delay: 0s !important;
   will-change: auto !important;
 }
+/* Live branding is appended later; keep its pseudo-element motion paused. */
+html[data-tq-motion="lite"] body::before,
+html[data-tq-motion="lite"] body::after,
+html[data-tq-motion="reduced"] body::before,
+html[data-tq-motion="reduced"] body::after {
+  animation: none !important;
+}
 html[data-tq-motion="lite"] .fade-in:not(.alert-modern):not(.alert),
 html[data-tq-motion="lite"] .form-entry-page,
 html[data-tq-motion="lite"] .auth-page .brand,
@@ -111,6 +118,8 @@ html[data-tq-motion="lite"] :is(.login-card, .modal-backdrop, .support-modal-bac
     will-change: auto !important;
   }
   .modal.fade .modal-dialog, .btn:hover, .btn:active { transform: none !important; }
+  html body:not(.auth-page)::before,
+  html body::after { animation: none !important; }
 }
 html[data-tq-motion="reduced"] *,
 html[data-tq-motion="reduced"] *::before,

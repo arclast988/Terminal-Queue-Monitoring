@@ -2059,7 +2059,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
+<script src="<?= base_url('js/ws-client.js?v=20261002bg1') ?>"></script>
 <script src="<?= base_url('js/debounce-passengers.js?v=20260920_2') ?>"></script>
 <script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
 <script>

@@ -20,7 +20,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929d">
 <?php if (empty($interaction_assets_loaded)): ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261001c') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002bg1') ?>">
 <?php endif; ?>
 
 <div class="sticky-top-wrapper">

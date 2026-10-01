@@ -925,9 +925,9 @@
     </div>
 
     <?= view('partials/auth_background', ['authSlides' => $loginSlides, 'defaultAuthSlides' => $defaultLoginSlides]) ?>
-    <script src="<?= base_url('assets/js/global-loader.js?v=20261001a') ?>"></script>
+    <script src="<?= base_url('assets/js/global-loader.js?v=20261002btn1') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260928_2') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20261002bg1') ?>"></script>
     <script>
     // Keep the editable login copy in sync with Superadmin's identity settings.
     document.addEventListener('pttm:branding-applied', function (e) {

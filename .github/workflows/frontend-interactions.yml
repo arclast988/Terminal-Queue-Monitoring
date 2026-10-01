@@ -35,15 +35,26 @@ jobs:
           node --check public/assets/js/auth-background.js
           node --check public/assets/js/global-loader.js
           node --check public/js/queue-sync.js
+          node --check public/js/ws-client.js
       - name: Run request and lifecycle regressions
         run: npm test --prefix tests/frontend
       - name: Install test browser
         run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify static backgrounds and live branding in every motion mode
+        run: npm run --prefix tests/frontend test:background
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+          TQ_BG_BASE_REF: 64adc8c9c456bc7888f69db4bd8465bc96b76af0
       - name: Run browser regressions and before-after rendering fixture
         run: npm run --prefix tests/frontend test:browser
         env:
           TQ_BROWSER: ${{ matrix.browser }}
           TQ_BASE_REF: c4048e1923aac4452526f7d9b45f7eca5192df8c
+      - name: Verify pending labels with production theme rules
+        run: npm run --prefix tests/frontend test:pending
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+          TQ_BUTTON_BASE_REF: 64adc8c9c456bc7888f69db4bd8465bc96b76af0
       - name: Run responsive and compatibility checks on production views
         run: npm run --prefix tests/frontend test:responsive
         env:

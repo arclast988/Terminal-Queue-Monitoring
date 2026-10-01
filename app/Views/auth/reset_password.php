@@ -471,9 +471,9 @@
         })();
     </script>
     <?= view('partials/auth_background', ['authSlides' => $authSlides, 'defaultAuthSlides' => $defaultAuthSlides]) ?>
-    <script src="<?= base_url('assets/js/global-loader.js?v=20261001a') ?>"></script>
+    <script src="<?= base_url('assets/js/global-loader.js?v=20261002btn1') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20260927_1') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20261002bg1') ?>"></script>
     <script>
     document.addEventListener('pttm:ws-branding_updated', function (e) {
         if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {

@@ -23,7 +23,13 @@ function csrf_header(): string { return 'X-CSRF-TOKEN'; }
 function app_name(): string { return $GLOBALS['fixtureLong'] ? 'PalomponTerminalMonitoringWithAnUnbrokenLongName' : 'Palompon Terminal'; }
 function app_subtitle(): string { return 'Transit Terminal Monitoring System'; }
 function app_system_title(): string { return app_name(); }
-function app_theme_css(): string { return ''; }
+function get_system_setting(string $key, $default = null) { return $default; }
+if (($argv[3] ?? '') === 'theme') {
+    // Optional real theme rules expose pending-label specificity regressions.
+    require dirname(__DIR__, 2) . '/app/Common.php';
+} else {
+    function app_theme_css(): string { return ''; }
+}
 function app_logo(): string { return '/fixture.svg'; }
 function app_bg_mode(): string { return 'single'; }
 function app_has_custom_bg(): bool { return false; }

@@ -36,12 +36,20 @@ test('an unrelated completed request never unlocks a pending button', async () =
 test('pending feedback keeps button nodes, handlers and native values intact', () => {
   const h = loaded(); const btn = h.document.body.appendChild(new h.Element('button'));
   btn.name = 'action'; btn.value = 'save'; const child = btn.appendChild(new h.Element('span')); child.textContent = 'Save';
+  btn.style.setProperty('color', '#123456', 'important');
+  btn.style.setProperty('-webkit-text-fill-color', '#abcdef');
   let clicks = 0; child.addEventListener('custom', () => clicks++);
   h.window.GlobalLoader.showButtonSpinner(btn, '<Save>', true);
   assert.equal(btn.children[0], child); child.emit('custom'); assert.equal(clicks, 1);
   assert.equal(btn.value, 'save'); assert.equal(btn.disabled, undefined);
+  assert.equal(btn.style.getPropertyValue('color'), 'transparent');
+  assert.equal(btn.style.getPropertyValue('-webkit-text-fill-color'), 'transparent');
   assert.match(btn.querySelector('.gl-btn-feedback').textContent, /<Save>/);
   h.window.GlobalLoader.hideButtonSpinner(btn); assert.equal(btn.children[0], child); assert.equal(btn.children.length, 1);
+  assert.equal(btn.style.getPropertyValue('color'), '#123456');
+  assert.equal(btn.style.getPropertyPriority('color'), 'important');
+  assert.equal(btn.style.getPropertyValue('-webkit-text-fill-color'), '#abcdef');
+  assert.equal(btn.style.getPropertyPriority('-webkit-text-fill-color'), '');
 });
 
 test('canceled submissions stay usable; accepted native forms reject only repeats', async () => {

@@ -1213,6 +1213,7 @@
                         background-repeat: no-repeat !important;
                         background-position: center center !important;
                         background-size: cover !important;
+                        background-image: url('${slides[0]}');
                         opacity: 0.12 !important;
                         animation: palomponBgSlideshowLive ${duration}s infinite ease-in-out !important;
                         z-index: 0 !important;
@@ -1227,6 +1228,7 @@
                         background-repeat: no-repeat !important;
                         background-position: center center !important;
                         background-size: cover !important;
+                        background-image: url('${slides[0]}');
                         opacity: 0.22 !important;
                         animation: palomponBgSlideshowAuthLive ${duration}s infinite ease-in-out !important;
                         z-index: 0 !important;

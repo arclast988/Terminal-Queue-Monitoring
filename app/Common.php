@@ -1050,6 +1050,9 @@ if (! function_exists('app_bg_slideshow_css')) {
         $css .= "    background-repeat: no-repeat !important;\n";
         $css .= "    background-position: center center !important;\n";
         $css .= "    background-size: cover !important;\n";
+        // Keep the first photo when lite/reduced-motion rules disable keyframes.
+        // A normal declaration lets the full-mode slideshow still change photos.
+        $css .= "    background-image: url('" . esc($slideList[0]) . "');\n";
         $css .= "    opacity: {$targetOpacity} !important;\n";
         $css .= "    z-index: 0 !important;\n";
         $css .= "    pointer-events: none !important;\n";

@@ -5,6 +5,8 @@
     "test": "node --test interactions.test.cjs auth-background.test.cjs",
     "test:browser": "node --test interactions.browser.cjs",
     "test:responsive": "node --test responsive.browser.cjs",
+    "test:background": "node --test backgrounds.browser.cjs",
+    "test:pending": "node --test pending-buttons.browser.cjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {

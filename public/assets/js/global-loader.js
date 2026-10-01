@@ -59,7 +59,7 @@
             '.table-loader-spinner { width:2rem; height:2rem; border:3px solid #fed7aa; border-top-color:#ea580c; border-radius:50%; animation:gl-spin .7s linear infinite; }',
             '.table-loader-text { font-size:13.5px; font-weight:600; color:#475569; }',
             '.gl-btn-pending { cursor:progress; }',
-            '.gl-btn-loading { pointer-events:auto !important; color:transparent !important; }',
+            '.gl-btn-loading { pointer-events:auto !important; }',
             '.gl-btn-loading > :not(.gl-btn-feedback) { opacity:0 !important; }',
             '.gl-btn-feedback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:6px; padding:inherit; pointer-events:none; font-size:inherit; font-weight:inherit; white-space:normal; opacity:1 !important; }',
             '.gl-btn-spinner { display:inline-block; width:1em; height:1em; flex-shrink:0; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:gl-spin .65s linear infinite; }',
@@ -321,6 +321,7 @@
             disabled: btn.getAttribute('aria-disabled'),
             position: btn.style.position,
             overlay: null,
+            textStyles: null,
             timer: null
         };
         pendingButtons.set(btn, state);
@@ -339,7 +340,8 @@
             if (window.getComputedStyle(btn).position === 'static') btn.style.position = 'relative';
             var overlay = document.createElement('span');
             overlay.className = 'gl-btn-feedback';
-            overlay.style.color = color;
+            overlay.style.setProperty('color', color, 'important');
+            overlay.style.setProperty('-webkit-text-fill-color', color, 'important');
             overlay.setAttribute('role', 'status');
             overlay.setAttribute('aria-live', 'polite');
             var spinner = document.createElement('span');
@@ -347,6 +349,18 @@
             spinner.setAttribute('aria-hidden', 'true');
             overlay.appendChild(spinner);
             if (label) overlay.appendChild(document.createTextNode(label));
+            // Theme !important rules (including WebKit text fill) can expose raw
+            // text beneath the overlay. Hide its paint without replacing nodes,
+            // changing button dimensions or disabling the native submitter.
+            state.textStyles = ['color', '-webkit-text-fill-color'].map(function (property) {
+                var original = {
+                    property: property,
+                    value: btn.style.getPropertyValue(property),
+                    priority: btn.style.getPropertyPriority(property)
+                };
+                btn.style.setProperty(property, 'transparent', 'important');
+                return original;
+            });
             state.overlay = overlay;
             btn.appendChild(overlay);
             btn.classList.add('gl-btn-loading');
@@ -365,6 +379,10 @@
         if (!state) return;
         if (state.timer !== null) clearTimeout(state.timer);
         if (state.overlay) state.overlay.remove();
+        if (state.textStyles) state.textStyles.forEach(function (original) {
+            if (original.value) btn.style.setProperty(original.property, original.value, original.priority);
+            else btn.style.removeProperty(original.property);
+        });
         btn.style.position = state.position;
         restoreAttribute(btn, 'aria-busy', state.busy);
         restoreAttribute(btn, 'aria-disabled', state.disabled);

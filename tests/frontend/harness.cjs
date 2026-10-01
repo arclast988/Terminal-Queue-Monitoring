@@ -19,9 +19,16 @@ class Events {
   dispatchEvent(event) { this.emit(event.type, event); return true; }
   count(name) { return this.listeners.get(name)?.size || 0; }
 }
+class Style {
+  constructor() { this.position = ''; this.priorities = new Map(); }
+  getPropertyValue(name) { return this[name] || ''; }
+  getPropertyPriority(name) { return this.priorities.get(name) || ''; }
+  setProperty(name, value, priority = '') { this[name] = String(value); this.priorities.set(name, priority); }
+  removeProperty(name) { const value = this.getPropertyValue(name); delete this[name]; this.priorities.delete(name); return value; }
+}
 class Element extends Events {
   constructor(tag = 'div') {
-    super(); this.tagName = tag.toUpperCase(); this.attributes = new Map(); this.children = []; this.style = { position: '' }; this.parentNode = null; this._text = ''; this.form = null;
+    super(); this.tagName = tag.toUpperCase(); this.attributes = new Map(); this.children = []; this.style = new Style(); this.parentNode = null; this._text = ''; this.form = null;
     this.classList = { contains: n => this.classes.has(n), add: (...ns) => ns.forEach(n => this.classes.add(n)), remove: (...ns) => ns.forEach(n => this.classes.delete(n)), toggle: (n, force) => force ? this.classes.add(n) : this.classes.delete(n) };
     this.classes = new Set();
   }
