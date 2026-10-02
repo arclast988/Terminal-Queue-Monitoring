@@ -749,7 +749,9 @@ if (! function_exists('app_logo')) {
                 return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
             }
         }
-        return base_url('images/logo.webp');
+        $relPath = 'images/logo.webp';
+        $mtime = is_file(FCPATH . $relPath) ? @filemtime(FCPATH . $relPath) : null;
+        return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
     }
 }
 
@@ -767,7 +769,9 @@ if (! function_exists('app_bg_image')) {
                 return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
             }
         }
-        return base_url('images/logo.webp');
+        $relPath = 'images/logo.webp';
+        $mtime = is_file(FCPATH . $relPath) ? @filemtime(FCPATH . $relPath) : null;
+        return base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
     }
 }
 

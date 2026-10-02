@@ -551,7 +551,7 @@ class Settings extends BaseController
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'Logo reset to default seal.',
-            'image_url'  => base_url('images/logo.webp'),
+            'image_url'  => app_logo(),
             'data'       => app_full_branding_payload('logo'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
@@ -665,9 +665,9 @@ class Settings extends BaseController
         return $this->response->setJSON([
             'success'              => true,
             'message'              => 'Background picture reset to default.',
-            'image_url'            => base_url('images/logo.webp'),
+            'image_url'            => app_bg_image(),
             'app_bg_mode'          => get_setting('app_bg_mode', 'slideshow'),
-            'app_background_image' => base_url('images/logo.webp'),
+            'app_background_image' => app_bg_image(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
             'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
