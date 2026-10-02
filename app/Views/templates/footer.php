@@ -6,7 +6,7 @@
     <script src="<?= base_url('assets/js/autocomplete-search.js?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/js/autocomplete-search.js') ? filemtime(FCPATH . 'assets/js/autocomplete-search.js') : '20260927_1')) ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('assets/js/no-change-guard.js?v=20260909') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20261002bg1') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>
     <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
 
     <script>
@@ -41,4 +41,3 @@
     </script>
 </body>
 </html>
-

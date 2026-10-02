@@ -10,10 +10,7 @@
     <meta name="csrf-header" content="<?= csrf_header() ?>">
     <meta name="color-scheme" content="only light">
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
-    <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
-    <link rel="apple-touch-icon" href="<?= esc(app_logo()) ?>">
+    <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
