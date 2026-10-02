@@ -75,9 +75,9 @@ body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
 }
 
 /* Optional hardware hints select inexpensive fades and static pending markers. */
-html[data-tq-motion="lite"] *,
-html[data-tq-motion="lite"] *::before,
-html[data-tq-motion="lite"] *::after {
+html[data-tq-motion="lite"] *:not(.marquee):not(.marquee-copy):not(.nav-menu):not(.mobile-nav-overlay),
+html[data-tq-motion="lite"] *:not(.marquee):not(.marquee-copy):not(.nav-menu):not(.mobile-nav-overlay)::before,
+html[data-tq-motion="lite"] *:not(.marquee):not(.marquee-copy):not(.nav-menu):not(.mobile-nav-overlay)::after {
   animation: none !important;
   transition-duration: 0s !important;
   transition-delay: 0s !important;
@@ -111,7 +111,9 @@ html[data-tq-motion="lite"] :is(.login-card, .modal-backdrop, .support-modal-bac
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not(.marquee):not(.marquee-copy),
+  *:not(.marquee):not(.marquee-copy)::before,
+  *:not(.marquee):not(.marquee-copy)::after {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
@@ -121,9 +123,9 @@ html[data-tq-motion="lite"] :is(.login-card, .modal-backdrop, .support-modal-bac
   html body:not(.auth-page)::before,
   html body::after { animation: none !important; }
 }
-html[data-tq-motion="reduced"] *,
-html[data-tq-motion="reduced"] *::before,
-html[data-tq-motion="reduced"] *::after {
+html[data-tq-motion="reduced"] *:not(.marquee):not(.marquee-copy),
+html[data-tq-motion="reduced"] *:not(.marquee):not(.marquee-copy)::before,
+html[data-tq-motion="reduced"] *:not(.marquee):not(.marquee-copy)::after {
   animation: none !important;
   transition: none !important;
   scroll-behavior: auto !important;

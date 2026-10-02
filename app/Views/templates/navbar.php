@@ -9,6 +9,6 @@
 ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/navigation.css?v=20260927a') ?>">
 <?php if (empty($interaction_assets_loaded)): ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002bg1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002m3') ?>">
 <?php endif; ?>
 <?= view('partials/header') ?>

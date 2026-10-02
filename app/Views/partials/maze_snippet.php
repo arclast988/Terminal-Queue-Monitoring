@@ -18,13 +18,13 @@
   var search = (m.location && m.location.search) ? m.location.search : '';
   var hash = (m.location && m.location.hash) ? m.location.hash : '';
   var hasMazeParam = /[?&#](lwt|maze|test)=/i.test(search + hash);
-  var wasActive = false;
-  try {
-    wasActive = !!m.sessionStorage.getItem('maze_test_active') || !!m.sessionStorage.getItem('maze:lwt-start') || !!m.sessionStorage.getItem('maze-us');
-  } catch (err) {}
-
-  var shouldRun = inIframe || hasOpener || isFromMaze || hasMazeParam || wasActive;
-  if (!shouldRun) return;
+  if (!isMazeContext) {
+    try {
+      m.sessionStorage.removeItem('maze_test_active');
+      m.sessionStorage.removeItem('maze-us');
+    } catch (err) {}
+    return;
+  }
 
   try { m.sessionStorage.setItem('maze_test_active', '1'); } catch (err) {}
   var t;

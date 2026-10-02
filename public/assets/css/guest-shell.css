@@ -875,7 +875,7 @@
             visibility: hidden;
             pointer-events: none;
             transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1), visibility 0s linear 0.18s;
-            z-index: 1003;
+            z-index: 1005;
             gap: 12px;
             box-sizing: border-box;
             overflow-x: hidden;
@@ -958,14 +958,8 @@
             z-index: 1004;
         }
         .guest-header .mobile-toggle[aria-expanded="true"] {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .guest-header .mobile-toggle.is-closing {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+            opacity: 1;
+            visibility: visible;
         }
     }
 

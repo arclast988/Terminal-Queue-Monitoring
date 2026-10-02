@@ -18,9 +18,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20260929d">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20261002m3">
 <?php if (empty($interaction_assets_loaded)): ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002bg1') ?>">
+<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002m3') ?>">
 <?php endif; ?>
 
 <div class="sticky-top-wrapper">
@@ -46,13 +46,34 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 ?>
 <div class="advisory-bar">
     <button type="button" class="advisory-icon" onclick="openAnnouncementModal()" title="View announcements" aria-label="View announcements"><i class="fas fa-bullhorn"></i></button>
-    <div class="advisory-text">
+    <div class="advisory-text" onclick="openAnnouncementModal()" style="cursor: pointer;" title="View announcements" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAnnouncementModal();}">
+        <style>
+            @keyframes gh-marquee {
+                0%   { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+                100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+            }
+            @-webkit-keyframes gh-marquee {
+                0%   { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
+                100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
+            }
+            .advisory-bar .marquee {
+                display: inline-flex !important;
+                width: max-content !important;
+                white-space: nowrap !important;
+                will-change: transform !important;
+                -webkit-animation: gh-marquee 30s linear infinite !important;
+                animation: gh-marquee 30s linear infinite !important;
+            }
+            .advisory-bar.modal-ann-open .marquee {
+                -webkit-animation-play-state: paused !important;
+                animation-play-state: paused !important;
+            }
+        </style>
         <div class="marquee" id="guestMarquee">
             <span class="marquee-copy"><?= esc($rawMarqueeText) ?></span>
             <span class="marquee-copy" aria-hidden="true"><?= esc($rawMarqueeText) ?></span>
         </div>
         <script>
-            // GPU-accelerated CSS marquee animation without continuous JS DOM mutations
             (function () {
                 var track = document.getElementById('guestMarquee');
                 var first = track && track.querySelector('.marquee-copy');
@@ -61,7 +82,6 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 var resizeTimer;
 
                 function rebuild() {
-                    // Ensure exactly two equal copies for seamless -50% CSS loop
                     while (track.children.length > 2) track.removeChild(track.lastElementChild);
                     if (track.children.length < 2) {
                         var copy = first.cloneNode(true);
@@ -72,11 +92,13 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                     }
 
                     var bounds = first.getBoundingClientRect();
-                    var segmentWidth = bounds.width || first.offsetWidth || 400;
-                    // ~60px per second scroll speed for smooth readability
-                    var durationSec = Math.max(12, Math.round(segmentWidth / 60));
-                    track.style.animationDuration = durationSec + 's';
-                    track.style.webkitAnimationDuration = durationSec + 's';
+                    var segmentWidth = bounds.width || first.offsetWidth || 350;
+                    var durationSec = Math.max(12, Math.round(segmentWidth / 55));
+                    var durStr = durationSec + 's';
+                    if (track.style.animationDuration !== durStr) {
+                        track.style.setProperty('animation-duration', durStr, 'important');
+                        track.style.setProperty('-webkit-animation-duration', durStr, 'important');
+                    }
                 }
 
                 window.refreshGuestMarquee = rebuild;
@@ -401,30 +423,24 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         var closeSequence = ++guestMenuCloseSequence;
         m.classList.toggle('open', isOpen);
         if (overlay) {
-            if (isOpen) overlay.classList.add('active');
-            else overlay.classList.remove('active');
+            overlay.classList.toggle('active', isOpen);
         }
         if (toggle) {
             toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            toggle.setAttribute('aria-label', 'Open navigation menu');
+            toggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
         }
 
-        if (icon) icon.className = 'fas fa-bars';
-
         if (isOpen) {
+            if (icon) icon.className = 'fas fa-bars';
             if (toggle) toggle.classList.remove('is-closing');
             document.body.style.overflow = 'hidden';
             return;
         }
 
-        // Do not turn the X back into a hamburger while the panel is still
-        // sliding away. That was the blue hamburger seen inside the closing
-        // white drawer on slower phones and Messenger's embedded browser.
-        if (toggle) toggle.classList.add('is-closing');
         var finishClose = function(event) {
             if (event && event.target !== m) return;
-            if (event && event.propertyName !== 'transform') return;
             if (closeSequence !== guestMenuCloseSequence || m.classList.contains('open')) return;
+            if (icon) icon.className = 'fas fa-bars';
             if (toggle) {
                 toggle.classList.remove('is-closing');
                 toggle.blur();
@@ -432,7 +448,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
             document.body.style.overflow = '';
         };
         m.addEventListener('transitionend', finishClose, { once: true });
-        window.setTimeout(finishClose, 240);
+        finishClose();
     }
 
     function toggleMenu() {
@@ -457,8 +473,13 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
     (function () {
         var bar = document.querySelector('.sticky-top-wrapper');
         if (!bar) return;
+        var lastPadding = -1;
         function syncPadding() {
-            document.body.style.paddingTop = bar.offsetHeight + 'px';
+            var h = bar.offsetHeight;
+            if (h !== lastPadding) {
+                lastPadding = h;
+                document.body.style.paddingTop = h + 'px';
+            }
         }
         syncPadding();
         if (window.ResizeObserver) {
