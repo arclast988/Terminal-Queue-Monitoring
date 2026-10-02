@@ -18,7 +18,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20261002m3">
+<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20261003m1">
 <?php if (empty($interaction_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002m3') ?>">
 <?php endif; ?>
@@ -47,28 +47,6 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 <div class="advisory-bar">
     <button type="button" class="advisory-icon" onclick="openAnnouncementModal()" title="View announcements" aria-label="View announcements"><i class="fas fa-bullhorn"></i></button>
     <div class="advisory-text" onclick="openAnnouncementModal()" style="cursor: pointer;" title="View announcements" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAnnouncementModal();}">
-        <style>
-            @keyframes gh-marquee {
-                0%   { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
-                100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
-            }
-            @-webkit-keyframes gh-marquee {
-                0%   { -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0); }
-                100% { -webkit-transform: translate3d(-50%, 0, 0); transform: translate3d(-50%, 0, 0); }
-            }
-            .advisory-bar .marquee {
-                display: inline-flex !important;
-                width: max-content !important;
-                white-space: nowrap !important;
-                will-change: transform !important;
-                -webkit-animation: gh-marquee 30s linear infinite !important;
-                animation: gh-marquee 30s linear infinite !important;
-            }
-            .advisory-bar.modal-ann-open .marquee {
-                -webkit-animation-play-state: paused !important;
-                animation-play-state: paused !important;
-            }
-        </style>
         <div class="marquee" id="guestMarquee">
             <span class="marquee-copy"><?= esc($rawMarqueeText) ?></span>
             <span class="marquee-copy" aria-hidden="true"><?= esc($rawMarqueeText) ?></span>

@@ -115,13 +115,17 @@
         flex: 0 0 auto;
         padding-right: 48px;
     }
-    .marquee {
-        -webkit-animation: gh-marquee 35s linear infinite;
-        animation: gh-marquee 35s linear infinite;
+    .advisory-bar .marquee {
+        display: inline-flex !important;
+        width: max-content !important;
+        white-space: nowrap !important;
+        will-change: transform !important;
+        -webkit-animation: gh-marquee 30s linear infinite !important;
+        animation: gh-marquee 30s linear infinite !important;
     }
     .advisory-bar.modal-ann-open .marquee {
-        -webkit-animation-play-state: paused;
-        animation-play-state: paused;
+        -webkit-animation-play-state: paused !important;
+        animation-play-state: paused !important;
     }
     @media (prefers-reduced-motion: reduce) {
         .ann-modal { animation: none !important; }
