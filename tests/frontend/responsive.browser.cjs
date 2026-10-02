@@ -39,7 +39,7 @@ function fixture(name, long, baseline) {
   return baseline ? html.replace(/responsive\.css[^"']*/g, 'responsive.css?fixture-baseline=1') : html;
 }
 test.before(async () => {
-  const base = process.env.TQ_RESPONSIVE_BASE_REF || '2cfa15b98ed55fe20128eacfc66577b49cbfc0a5';
+  const base = process.env.TQ_RESPONSIVE_BASE_REF || 'c4048e1923aac4452526f7d9b45f7eca5192df8c';
   beforeCSS = execFileSync('git', ['show', base + ':public/assets/css/responsive.css'], { cwd: root, encoding: 'utf8' });
   // Render all fixtures eagerly so missing helper/data assumptions fail visibly.
   for (const name of pages) { fixture(name, false, false); fixture(name, true, false); }
