@@ -47,6 +47,7 @@ test.before(async () => {
     const url = new URL(req.url, 'http://fixture');
     const target = url.pathname;
     if (target === '/fixture.svg') { res.setHeader('Content-Type', 'image/svg+xml'); res.end('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="30" fill="#b71c1c"/></svg>'); return; }
+    if (target === '/images/logo.webp') { res.setHeader('Content-Type', 'image/webp'); res.end(fs.readFileSync(path.join(root, 'public/images/logo.webp'))); return; }
     if (target === '/fixture/bootstrap.css') { res.setHeader('Content-Type', 'text/css'); res.end(fs.readFileSync(path.join(__dirname, 'node_modules/bootstrap/dist/css/bootstrap.min.css'))); return; }
     if (target === '/fixture/bootstrap.js') { res.setHeader('Content-Type', 'text/javascript'); res.end(fs.readFileSync(path.join(__dirname, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js'))); return; }
     if (target.startsWith('/assets/')) {
@@ -398,6 +399,19 @@ test('authentication fields fit small and landscape screens while retaining thei
       });
       assert.ok(entrance <= 300, `${name} entrance ${entrance}ms`);
       checkBounds(await bounds(page, ['.brand', '.brand-name', '.brand-title', '.brand-sub', '.login-card', '.auth > .card', 'form input:not([type="hidden"]):not([type="checkbox"])', 'form button[type="submit"]']), `${name} ${width}x${height}`);
+      if (width === 320 || width === 1440) {
+        const logo = await page.locator('.brand-mark img').evaluate(async img => {
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error('Default WebP logo failed to load'));
+            img.src = '/images/logo.webp';
+          }).finally(() => { img.onload = null; img.onerror = null; });
+          await img.decode();
+          const style = getComputedStyle(img);
+          return { width: img.naturalWidth, height: img.naturalHeight, fit: style.objectFit, radius: style.borderRadius, overflow: getComputedStyle(img.parentElement).overflow };
+        });
+        assert.deepEqual(logo, { width: 1536, height: 1393, fit: 'contain', radius: '0px', overflow: 'visible' }, `${name} default WebP logo ${width}`);
+      }
       const controls = await page.locator('form input:not([type="hidden"]):not([type="checkbox"])').all();
       assert.ok(controls.length);
       for (const input of controls) { await input.focus(); assert.equal(await input.evaluate(el => document.activeElement === el), true); }
@@ -433,6 +447,24 @@ test('guest content and operational table values fit without hiding long data', 
     for (const [width, height] of [[320, 568], [768, 1024], [844, 390], [1280, 800]]) {
       const { page, context, errors } = await open(t, name, width, height);
       checkBounds(await bounds(page, ['body > .container', '.main-content', '.queue-card', '.schedule-card', '.fare-card', '.q-card']), `${name} ${width}`);
+      if (name === 'search') {
+        const departure = await page.locator('.results-table td[data-label="Est. Departure"]').evaluate(td => {
+          const time = td.querySelector('.time-display'), passengers = td.querySelector('.passenger-count-num').parentElement;
+          const range = document.createRange(); range.selectNodeContents(time);
+          const lines = new Set([...range.getClientRects()].filter(r => r.width > 1).map(r => Math.round(r.top)));
+          const cell = td.getBoundingClientRect(), clock = time.getBoundingClientRect(), count = passengers.getBoundingClientRect();
+          return {
+            time: time.textContent.trim(), passengers: passengers.textContent.replace(/\s+/g, ' ').trim(),
+            lines: lines.size, stacked: count.top >= clock.bottom - 1,
+            fits: [clock, count].every(r => r.left >= cell.left - 1 && r.right <= cell.right + 1),
+          };
+        });
+        assert.deepEqual(departure, { time: '9:00 AM', passengers: '8/20 passengers', lines: 1, stacked: true, fits: true }, `search departure ${width}: ${JSON.stringify(departure)}`);
+        if (width === 320) {
+          await page.locator('.results-table td[data-label="Est. Departure"]').scrollIntoViewIfNeeded();
+          await screenshot(page, 'home-search-departure-phone', false);
+        }
+      }
       if (width <= 768 && name.endsWith('schedules') && name !== 'schedules') {
         const result = await page.locator('td[data-label]').evaluateAll(cells => cells.map(td => {
           const label = getComputedStyle(td, '::before');

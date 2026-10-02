@@ -620,6 +620,24 @@
             font-weight: 700;
         }
 
+        /* Group departure details as one value, matching the schedule cards. */
+        .search-departure-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .search-departure-cell .time-display {
+            white-space: nowrap;
+        }
+
+        .search-passengers-text {
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
         .time-display {
             font-size: 16px;
             font-weight: 800;
@@ -803,6 +821,13 @@
                 text-transform: uppercase;
                 text-align: left;
             }
+            .results-table td[data-label="Est. Departure"] {
+                gap: 12px;
+            }
+            .search-departure-cell {
+                align-items: flex-end;
+                text-align: right;
+            }
             .results-section-header { padding: 16px 20px; flex-wrap: wrap; }
             .vehicle-icon { width: 40px; height: 40px; margin-right: 6px; }
         }
@@ -933,14 +958,16 @@
                                 </div>
                             </td>
                             <td data-label="Est. Departure">
-                                <span class="time-display">
-                                    <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'TBA' ?>
-                                </span>
-                                <?php if (!empty($item['capacity'])): ?>
-                                <div style="font-size: 12.5px; color: var(--text-muted); margin-top: 2px;">
-                                    <span class="passenger-count-num <?= passenger_color_class((int)($item['current_passengers'] ?? 0), (int)($item['capacity'] ?? 1)) ?>"><?= $item['current_passengers'] ?? 0 ?></span>/<?= $item['capacity'] ?> passengers
+                                <div class="search-departure-cell">
+                                    <span class="time-display">
+                                        <?= !empty($item['estimated_departure']) ? date('g:i A', strtotime($item['estimated_departure'])) : 'TBA' ?>
+                                    </span>
+                                    <?php if (!empty($item['capacity'])): ?>
+                                    <div class="search-passengers-text">
+                                        <span class="passenger-count-num <?= passenger_color_class((int)($item['current_passengers'] ?? 0), (int)($item['capacity'] ?? 1)) ?>"><?= $item['current_passengers'] ?? 0 ?></span>/<?= $item['capacity'] ?> passengers
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
-                                <?php endif; ?>
                             </td>
                             <td data-label="Status">
                                 <?php if ($item['status'] == 'boarding'): ?>
