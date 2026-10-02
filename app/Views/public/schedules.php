@@ -2,42 +2,7 @@
 <html lang="en">
 
 <head>
-    <!-- Maze Universal Snippet (Deferred Non-Blocking) -->
-    <script>
-    (function (m, a, z, e) {
-      var t, u, v;
-      try { t = m.sessionStorage.getItem('maze-us'); } catch (err) {}
-      if (!t) {
-        t = new Date().getTime();
-        try { m.sessionStorage.setItem('maze-us', t); } catch (err) {}
-      }
-      m.mazeUniversalSnippetApiKey = e;
-
-      u = document.currentScript || (function () {
-        var w = document.getElementsByTagName('script');
-        return w[w.length - 1];
-      })();
-      v = u && u.nonce;
-
-      function injectMaze() {
-        if (m._mazeInjected) return;
-        m._mazeInjected = true;
-        var s = a.createElement('script');
-        s.src = z + '?apiKey=' + e;
-        s.async = true;
-        s.defer = true;
-        if (v) s.setAttribute('nonce', v);
-        (a.head || a.getElementsByTagName('head')[0] || a.documentElement).appendChild(s);
-      }
-
-      if (a.readyState === 'complete') {
-        setTimeout(injectMaze, 60);
-      } else {
-        m.addEventListener('load', function () { setTimeout(injectMaze, 60); }, { once: true });
-      }
-    })(window, document, 'https://snippet.maze.co/maze-universal-loader.js', 'b00dffea-1c8b-4fbb-a3aa-645655850f28');
-    </script>
-    <!-- End Maze Universal Snippet -->
+    <?= view('partials/maze_snippet') ?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
@@ -1306,7 +1271,6 @@
     <?= $this->include('templates/guestfooter') ?>
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
-        <script src="<?= base_url('js/ws-client.js?v=20261002bg1') ?>"></script>
         <script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
         <script>
         var currentType = <?= json_encode((string) ($vehicle_type ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;

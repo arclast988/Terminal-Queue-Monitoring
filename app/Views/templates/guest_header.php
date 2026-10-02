@@ -52,92 +52,45 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
             <span class="marquee-copy" aria-hidden="true"><?= esc($rawMarqueeText) ?></span>
         </div>
         <script>
-            // Fill the bar with repeated copies so an announcement is always visible.
+            // GPU-accelerated CSS marquee animation without continuous JS DOM mutations
             (function () {
                 var track = document.getElementById('guestMarquee');
                 var first = track && track.querySelector('.marquee-copy');
                 if (!track || !first) return;
 
                 var resizeTimer;
-                var BASE_KEY = 'pt_ann_ticker_base_v2';
-                var TEXT_KEY = 'pt_ann_ticker_text_v2';
-                var baseTime = Date.now();
-                var travelWidth = 0;
-                var durationMs = 35000;
-                var started = false;
-                var nextFrame = function (callback) {
-                    if (window.requestAnimationFrame) window.requestAnimationFrame(callback);
-                    else if (window.webkitRequestAnimationFrame) window.webkitRequestAnimationFrame(callback);
-                    else setTimeout(callback, 16);
-                };
 
-                function advance() {
-                    if (!document.hidden && !track.parentElement.parentElement.classList.contains('modal-ann-open')) {
-                        var elapsed = ((Date.now() - baseTime) % durationMs + durationMs) % durationMs;
-                        var offset = -(elapsed / durationMs) * travelWidth;
-                        var transform = 'translate3d(' + offset.toFixed(2) + 'px, 0, 0)';
-                        track.style.webkitTransform = transform;
-                        track.style.transform = transform;
-                    }
-                    nextFrame(advance);
-                }
-
-                function rebuild(reset) {
+                function rebuild() {
+                    // Ensure exactly two equal copies for seamless -50% CSS loop
                     while (track.children.length > 2) track.removeChild(track.lastElementChild);
-                    track.children[1].textContent = first.textContent;
-
-                    var bounds = first.getBoundingClientRect();
-                    var segmentWidth = bounds.width || first.offsetWidth;
-                    var viewportWidth = track.parentElement.clientWidth;
-                    if (!segmentWidth || !viewportWidth) return;
-
-                    // Repeat equal copies until half the track covers the visible bar.
-                    var pairs = Math.max(1, Math.ceil(viewportWidth / segmentWidth));
-                    while (track.children.length < pairs * 2) {
+                    if (track.children.length < 2) {
                         var copy = first.cloneNode(true);
                         copy.setAttribute('aria-hidden', 'true');
                         track.appendChild(copy);
+                    } else if (track.children[1]) {
+                        track.children[1].textContent = first.textContent;
                     }
 
-                    travelWidth = pairs * segmentWidth;
-                    durationMs = Math.max(8000, travelWidth / 60 * 1000);
-                    var now = Date.now();
-                    baseTime = now;
-                    var text = first.textContent;
-                    try {
-                        var savedText = sessionStorage.getItem(TEXT_KEY);
-                        var savedBase = Number(sessionStorage.getItem(BASE_KEY));
-                        if (!reset && savedText === text && savedBase > 0 && savedBase <= now &&
-                                now - savedBase < 15 * 60 * 1000) {
-                            baseTime = savedBase;
-                        }
-                        sessionStorage.setItem(TEXT_KEY, text);
-                        sessionStorage.setItem(BASE_KEY, String(baseTime));
-                    } catch (e) {
-                        // Private browsing can disable storage; the ticker still runs.
-                    }
-
-                    // The script drives the transform. CSS keeps it moving if scripts are unavailable.
-                    track.style.webkitAnimation = 'none';
-                    track.style.animation = 'none';
-                    if (!started) {
-                        started = true;
-                        advance();
-                    }
+                    var bounds = first.getBoundingClientRect();
+                    var segmentWidth = bounds.width || first.offsetWidth || 400;
+                    // ~60px per second scroll speed for smooth readability
+                    var durationSec = Math.max(12, Math.round(segmentWidth / 60));
+                    track.style.animationDuration = durationSec + 's';
+                    track.style.webkitAnimationDuration = durationSec + 's';
                 }
 
                 window.refreshGuestMarquee = rebuild;
-                rebuild(false);
-                window.addEventListener('load', function () { rebuild(false); });
+                rebuild();
+                window.addEventListener('load', rebuild);
                 window.addEventListener('resize', function () {
                     clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(function () { rebuild(false); }, 120);
+                    resizeTimer = setTimeout(rebuild, 150);
                 });
                 if (document.fonts && document.fonts.ready) {
-                    document.fonts.ready.then(function () { rebuild(false); });
+                    document.fonts.ready.then(rebuild);
                 }
                 window.addEventListener('pageshow', function (event) {
-                    if (event.persisted) rebuild(false);
+                    if (event.persisted) rebuild();
                 });
             })();
         </script>
