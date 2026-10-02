@@ -317,12 +317,11 @@
         }
 
         .schedule-search-empty {
-            margin-bottom: 16px;
-            padding: 14px 18px;
-            background: #fff;
-            border-radius: 12px;
+            padding: 40px 24px;
             color: var(--text-muted);
-            box-shadow: var(--shadow-sm);
+            text-align: center;
+            font-size: 15px;
+            font-weight: 500;
         }
         .schedule-search-empty[hidden] { display: none !important; }
 
@@ -560,6 +559,18 @@
             animation-delay: 0.15s;
         }
 
+        .sched-dep-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .sched-dep-cell .time-display {
+            white-space: nowrap;
+        }
+
         .time-display {
             font-size: 16px;
             font-weight: 800;
@@ -568,6 +579,7 @@
             padding: 5px 12px;
             border-radius: 8px;
             display: inline-block;
+            white-space: nowrap;
         }
 
         @keyframes countPulse {
@@ -642,7 +654,7 @@
         .route-info {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 10px;
             min-width: 170px;
             font-size: 14px;
@@ -1150,12 +1162,12 @@
         </div>
 
         <!-- Schedule List -->
-        <div class="schedule-search-empty" id="scheduleSearchEmpty" role="status" hidden>No schedules match your search. Try another route, destination, plate, or vehicle type.</div>
         <div class="schedule-card">
             <div class="card-header">
                 <h3><i class="fas fa-list-alt"></i> Schedule Board</h3>
                 <span class="count-badge" id="scheduleCount"><?= count($schedules) ?> Found</span>
             </div>
+            <div class="schedule-search-empty" id="scheduleSearchEmpty" role="status" hidden>No schedules match your search. Try another route, destination, plate, or vehicle type.</div>
             <?php if (!empty($schedules)): ?>
                 <table class="schedule-table">
                     <thead>
@@ -1343,11 +1355,15 @@
                 if (count) count.textContent = String(routeCounts[dest] || 0);
             });
             var noResults = document.getElementById('scheduleSearchEmpty');
+            var table = document.querySelector('.schedule-table');
             if (noResults) {
                 noResults.hidden = rows.length === 0 || visibleCount > 0;
                 noResults.textContent = q
                     ? 'No schedules match your search. Try another route, destination, plate, or vehicle type.'
                     : 'No schedules match the selected filters.';
+            }
+            if (table) {
+                table.style.display = (rows.length > 0 && visibleCount === 0) ? 'none' : '';
             }
         }
 
@@ -1403,6 +1419,7 @@
 
             if (!tbody) {
                 card.innerHTML = '<div class="card-header"><h3><i class="fas fa-list-alt"></i> Schedule Board</h3><span class="count-badge" id="scheduleCount">' + schedules.length + ' Found</span></div>'
+                    + '<div class="schedule-search-empty" id="scheduleSearchEmpty" role="status" hidden>No schedules match your search. Try another route, destination, plate, or vehicle type.</div>'
                     + '<table class="schedule-table"><thead><tr>'
                     + '<th>Queue #</th><th>Plate Number</th><th>Operator</th><th>Driver</th><th>Type</th><th>Route</th><th>Est. Departure</th><th>Status</th>'
                     + '</tr></thead><tbody id="scheduleTableBody"></tbody></table>';

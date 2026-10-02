@@ -756,6 +756,7 @@ body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.side
     padding: 5px 12px;
     border-radius: 8px;
     display: inline-block;
+    white-space: nowrap;
 }
 
 .time-display.departed {

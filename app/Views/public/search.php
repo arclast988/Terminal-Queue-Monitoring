@@ -606,8 +606,10 @@
         .route-info {
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             gap: 8px;
-            flex-wrap: wrap;
+            white-space: nowrap;
+            flex-wrap: nowrap;
         }
 
         .route-info small {
@@ -646,6 +648,7 @@
             padding: 5px 12px;
             border-radius: 8px;
             display: inline-block;
+            white-space: nowrap;
         }
 
         .status-badge {
