@@ -11,37 +11,7 @@
  *                                page is expected to render its own). Defaults to false.
  *
  * Self-contained: loads the shared guest shell stylesheet and its own script. The page using it must already
- * have <head>
-    <!-- Maze Universal Snippet -->
-    <script>
-    (function (m, a, z, e) {
-      var s, t, u, v;
-      try {
-        t = m.sessionStorage.getItem('maze-us');
-      } catch (err) {}
-
-      if (!t) {
-        t = new Date().getTime();
-        try {
-          m.sessionStorage.setItem('maze-us', t);
-        } catch (err) {}
-      }
-
-      u = document.currentScript || (function () {
-        var w = document.getElementsByTagName('script');
-        return w[w.length - 1];
-      })();
-      v = u && u.nonce;
-
-      s = a.createElement('script');
-      s.src = z + '?apiKey=' + e;
-      s.async = true;
-      if (v) s.setAttribute('nonce', v);
-      a.getElementsByTagName('head')[0].appendChild(s);
-      m.mazeUniversalSnippetApiKey = e;
-    })(window, document, 'https://snippet.maze.co/maze-universal-loader.js', 'b00dffea-1c8b-4fbb-a3aa-645655850f28');
-    </script>
-    <!-- End Maze Universal Snippet --> with Font Awesome + Outfit font + the CSS variables (--primary, --primary-dark,
+ * have <head> with Font Awesome + Outfit font + the CSS variables (--primary, --primary-dark,
  * --text-muted, --shadow-sm, --transition) defined.
  */
 ?>

@@ -2,20 +2,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Maze Universal Snippet -->
+    <!-- Maze Universal Snippet (Deferred Non-Blocking) -->
     <script>
     (function (m, a, z, e) {
-      var s, t, u, v;
-      try {
-        t = m.sessionStorage.getItem('maze-us');
-      } catch (err) {}
-
+      var t, u, v;
+      try { t = m.sessionStorage.getItem('maze-us'); } catch (err) {}
       if (!t) {
         t = new Date().getTime();
-        try {
-          m.sessionStorage.setItem('maze-us', t);
-        } catch (err) {}
+        try { m.sessionStorage.setItem('maze-us', t); } catch (err) {}
       }
+      m.mazeUniversalSnippetApiKey = e;
 
       u = document.currentScript || (function () {
         var w = document.getElementsByTagName('script');
@@ -23,12 +19,22 @@
       })();
       v = u && u.nonce;
 
-      s = a.createElement('script');
-      s.src = z + '?apiKey=' + e;
-      s.async = true;
-      if (v) s.setAttribute('nonce', v);
-      a.getElementsByTagName('head')[0].appendChild(s);
-      m.mazeUniversalSnippetApiKey = e;
+      function injectMaze() {
+        if (m._mazeInjected) return;
+        m._mazeInjected = true;
+        var s = a.createElement('script');
+        s.src = z + '?apiKey=' + e;
+        s.async = true;
+        s.defer = true;
+        if (v) s.setAttribute('nonce', v);
+        (a.head || a.getElementsByTagName('head')[0] || a.documentElement).appendChild(s);
+      }
+
+      if (a.readyState === 'complete') {
+        setTimeout(injectMaze, 60);
+      } else {
+        m.addEventListener('load', function () { setTimeout(injectMaze, 60); }, { once: true });
+      }
     })(window, document, 'https://snippet.maze.co/maze-universal-loader.js', 'b00dffea-1c8b-4fbb-a3aa-645655850f28');
     </script>
     <!-- End Maze Universal Snippet -->
