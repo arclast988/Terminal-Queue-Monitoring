@@ -57,6 +57,17 @@ body.auth-page .brand > :not(.brand-mark) {
     overflow-wrap: anywhere;
 }
 
+/* Keep the original logo artwork visible inside the decorative round frame. */
+body.auth-page .brand-mark {
+    overflow: visible;
+}
+
+body.auth-page .brand-mark img {
+    border-radius: 0;
+    object-fit: contain;
+    object-position: center;
+}
+
 /* Custom modern scrollbar for responsive tables */
 .table-responsive {
     scrollbar-width: thin;
