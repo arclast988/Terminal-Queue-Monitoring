@@ -8,10 +8,7 @@
     <meta name="color-scheme" content="only light">
     <meta name="theme-color" content="#D62828">
     <title>Sign in · <?= esc(app_system_title()) ?></title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
-    <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
-    <link rel="apple-touch-icon" href="<?= esc(app_logo()) ?>">
+    <?= view('partials/app_install') ?>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -900,7 +897,7 @@
     <?= view('partials/auth_background', ['authSlides' => $loginSlides, 'defaultAuthSlides' => $defaultLoginSlides]) ?>
     <script src="<?= base_url('assets/js/global-loader.js?v=20261002btn1') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20261002bg1') ?>"></script>
+    <script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>
     <script>
     // Keep the editable login copy in sync with Superadmin's identity settings.
     document.addEventListener('pttm:branding-applied', function (e) {

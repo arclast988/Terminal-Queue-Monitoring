@@ -6,10 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title><?= esc($title ?? 'Commuter User Guide & Error Help - ' . app_name()) ?></title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/webp" href="<?= base_url('images/logo.webp') ?>">
-    <link rel="shortcut icon" href="<?= base_url('favicon.ico') ?>">
-    <link rel="apple-touch-icon" href="<?= base_url('apple-touch-icon.png') ?>">
+    <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

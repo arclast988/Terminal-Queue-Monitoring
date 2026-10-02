@@ -48,6 +48,11 @@ Options -Indexes
 ServerSignature Off
 # Disable server signature end
 
+# Web app manifests use their own JSON media type.
+<IfModule mod_mime.c>
+    AddType application/manifest+json .webmanifest
+</IfModule>
+
 # Standardize Permissions-Policy to recognized safe standards across all browsers
 <IfModule mod_headers.c>
 	Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"

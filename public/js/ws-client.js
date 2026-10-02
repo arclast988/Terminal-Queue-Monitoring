@@ -404,7 +404,8 @@
             document.querySelectorAll('#site-header img.logo, .site-header img.logo, .guest-header img.logo, .guest-header .logo, .drawer-logo, img.header-logo, img.app-logo, img.report-logo, img.previewLogoImg, img.logo').forEach(function(img) {
                 img.src = logoUrl;
             });
-            document.querySelectorAll("link[rel*='icon']").forEach(function(icon) {
+            // Dedicated app icons must remain square when the display logo changes.
+            document.querySelectorAll("link[rel*='icon']:not([data-app-icon])").forEach(function(icon) {
                 icon.href = logoUrl;
             });
         }

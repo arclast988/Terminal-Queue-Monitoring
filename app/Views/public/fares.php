@@ -7,10 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title>Route Fares · <?= esc(app_system_title()) ?></title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?= esc(app_logo()) ?>">
-    <link rel="shortcut icon" href="<?= esc(app_logo()) ?>">
-    <link rel="apple-touch-icon" href="<?= esc(app_logo()) ?>">
+    <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
