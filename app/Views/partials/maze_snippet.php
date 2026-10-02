@@ -1,33 +1,14 @@
 <?php
 /**
- * Maze Universal Snippet (Remote Testing Mode)
- * Activates exclusively when running inside a Maze test context
- * (embedded iframe on t.maze.co, opened by Maze, or active test session),
- * preventing unnecessary 500KB+ background prompt scripts and DOM observers
- * from executing during standalone mobile browsing.
+ * Maze Universal Snippet (Deferred Non-Blocking)
+ * Loads asynchronously after the page has finished rendering,
+ * ensuring fast initial load while enabling remote usability testing.
  */
 ?>
 <!-- Maze Universal Snippet -->
 <script>
 (function (m, a, z, e) {
-  var inIframe = false;
-  try { inIframe = (m.self !== m.top) || (m.parent !== m); } catch (err) { inIframe = true; }
-  var hasOpener = !!m.opener;
-  var ref = a.referrer || '';
-  var isFromMaze = ref.indexOf('maze.co') !== -1;
-  var search = (m.location && m.location.search) ? m.location.search : '';
-  var hash = (m.location && m.location.hash) ? m.location.hash : '';
-  var hasMazeParam = /[?&#](lwt|maze|test)=/i.test(search + hash);
-  if (!isMazeContext) {
-    try {
-      m.sessionStorage.removeItem('maze_test_active');
-      m.sessionStorage.removeItem('maze-us');
-    } catch (err) {}
-    return;
-  }
-
-  try { m.sessionStorage.setItem('maze_test_active', '1'); } catch (err) {}
-  var t;
+  var t, u, v;
   try { t = m.sessionStorage.getItem('maze-us'); } catch (err) {}
   if (!t) {
     t = new Date().getTime();
@@ -35,11 +16,11 @@
   }
   m.mazeUniversalSnippetApiKey = e;
 
-  var u = document.currentScript || (function () {
+  u = document.currentScript || (function () {
     var w = document.getElementsByTagName('script');
     return w[w.length - 1];
   })();
-  var v = u && u.nonce;
+  v = u && u.nonce;
 
   function injectMaze() {
     if (m._mazeInjected) return;
