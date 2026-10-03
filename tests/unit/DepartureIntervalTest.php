@@ -194,6 +194,24 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame(20, $this->queue->resolveGroupIntervalFromRules(array_reverse($allRules), '10:00:00', 1, [2, 1]));
     }
 
+    public function testDeploymentRepairsStoredSlotsAndPreservesDepartureHistory(): void
+    {
+        $this->addVehicle(2, 1, '2026-10-03 10:20:00');
+        $this->addVehicle(2, 2, '2026-10-03 11:00:00');
+        $departed = $this->addVehicle(2, 0, '2026-10-03 09:00:00');
+        $this->queue->update($departed, ['status' => 'departed', 'departure_time' => '2026-10-03 09:00:00']);
+        $history = $this->queue->find($departed);
+        require_once APPPATH . 'Database/Migrations/2026-10-03-120000_RecalculateDepartureIntervals.php';
+        $migration = new \App\Database\Migrations\RecalculateDepartureIntervals(Database::forge($this->intervalDb));
+        $migration->up();
+        $rows = $this->activeRows();
+        $this->assertSame('2026-10-03 10:20:00', $rows[0]['estimated_departure']);
+        $this->assertGaps($rows, [20]);
+        $this->assertSame($history, $this->queue->find($departed));
+        $migration->up();
+        $this->assertSame($rows, $this->activeRows());
+    }
+
     private function addRule(int $id, int $terminalId, ?int $routeId, int $minutes, string $updatedAt = '2026-10-01 10:00:00'): void
     {
         $this->intervalDb->table('departure_rules')->insert([
