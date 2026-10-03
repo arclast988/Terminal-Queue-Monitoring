@@ -106,6 +106,12 @@ websocket.clientPort = ${WEBSOCKET_PORT}
 websocket.broadcastPort = ${WEBSOCKET_BROADCAST_PORT}
 websocket.maxClients = ${WEBSOCKET_MAX_CLIENTS:-500}
 websocket.allowedOrigins = "$(escape_dotenv "${WEBSOCKET_ALLOWED_ORIGINS:-}")"
+
+cloudinary.cloudName = "$(escape_dotenv "${CLOUDINARY_CLOUD_NAME:-${cloudinary_cloudName:-pkimfmqw}}")"
+cloudinary.apiKey = "$(escape_dotenv "${CLOUDINARY_API_KEY:-${cloudinary_apiKey:-795868726279156}}")"
+cloudinary.apiSecret = "$(escape_dotenv "${CLOUDINARY_API_SECRET:-${cloudinary_apiSecret:-8hwja0wDrOfrALML6PUj9wMjEAM}}")"
+cloudinary.folder = "$(escape_dotenv "${CLOUDINARY_FOLDER:-${cloudinary_folder:-pttm_uploads}}")"
+cloudinary.enabled = ${CLOUDINARY_ENABLED:-true}
 ENVFILE
 
 chown www-data:www-data "$APP_ROOT/.env" 2>/dev/null || true

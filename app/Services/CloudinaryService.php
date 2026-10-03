@@ -18,12 +18,27 @@ class CloudinaryService
     {
         $config ??= config('Cloudinary');
 
-        $this->cloudName     = trim($config->cloudName ?: (string) env('cloudinary.cloudName', ''));
-        $this->apiKey        = trim($config->apiKey ?: (string) env('cloudinary.apiKey', ''));
-        $this->apiSecret     = trim($config->apiSecret ?: (string) env('cloudinary.apiSecret', ''));
-        $this->defaultFolder = trim($config->folder ?: (string) env('cloudinary.folder', 'pttm_uploads'));
+        $cloudName = trim($config->cloudName ?: (string) (env('CLOUDINARY_CLOUD_NAME') ?: env('cloudinary.cloudName', '')));
+        $apiKey    = trim($config->apiKey ?: (string) (env('CLOUDINARY_API_KEY') ?: env('cloudinary.apiKey', '')));
+        $apiSecret = trim($config->apiSecret ?: (string) (env('CLOUDINARY_API_SECRET') ?: env('cloudinary.apiSecret', '')));
+
+        // Automatically parse CLOUDINARY_URL if provided (e.g., cloudinary://api_key:api_secret@cloud_name)
+        $cloudinaryUrl = trim((string) (env('CLOUDINARY_URL') ?: ''));
+        if ($cloudinaryUrl !== '' && ($cloudName === '' || $apiKey === '' || $apiSecret === '')) {
+            $parsed = parse_url($cloudinaryUrl);
+            if ($parsed && isset($parsed['host'])) {
+                $cloudName = $cloudName ?: $parsed['host'];
+                $apiKey    = $apiKey ?: ($parsed['user'] ?? '');
+                $apiSecret = $apiSecret ?: ($parsed['pass'] ?? '');
+            }
+        }
+
+        $this->cloudName     = $cloudName;
+        $this->apiKey        = $apiKey;
+        $this->apiSecret     = $apiSecret;
+        $this->defaultFolder = trim($config->folder ?: (string) (env('CLOUDINARY_FOLDER') ?: env('cloudinary.folder', 'pttm_uploads')));
         $this->timeout       = max(5, (int) ($config->timeout ?: 15));
-        $this->enabled       = (bool) ($config->enabled ?? env('cloudinary.enabled', true));
+        $this->enabled       = (bool) ($config->enabled ?? (env('CLOUDINARY_ENABLED') ?? env('cloudinary.enabled', true)));
     }
 
     /**
