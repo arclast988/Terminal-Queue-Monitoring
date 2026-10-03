@@ -27,7 +27,7 @@ class CloudinarySync extends BaseCommand
         $totalMigrated = 0;
 
         // 1. Sync Vehicles
-        if ($db->tableExists('vehicles')) {
+        if ($db->tableExists('vehicles') && $db->fieldExists('photo', 'vehicles')) {
             $vehicles = $db->table('vehicles')
                 ->where('photo IS NOT NULL')
                 ->where('photo !=', '')
@@ -57,7 +57,7 @@ class CloudinarySync extends BaseCommand
         }
 
         // 2. Sync Vehicle Types
-        if ($db->tableExists('vehicle_types')) {
+        if ($db->tableExists('vehicle_types') && $db->fieldExists('photo', 'vehicle_types')) {
             $types = $db->table('vehicle_types')
                 ->where('photo IS NOT NULL')
                 ->where('photo !=', '')
@@ -87,7 +87,7 @@ class CloudinarySync extends BaseCommand
         }
 
         // 3. Sync Users Profile Avatars
-        if ($db->tableExists('users')) {
+        if ($db->tableExists('users') && $db->fieldExists('profile_image', 'users')) {
             $users = $db->table('users')
                 ->where('profile_image IS NOT NULL')
                 ->where('profile_image !=', '')
@@ -116,7 +116,7 @@ class CloudinarySync extends BaseCommand
         }
 
         // 4. Sync System Settings Media
-        if ($db->tableExists('system_settings')) {
+        if ($db->tableExists('system_settings') && $db->fieldExists('setting_value', 'system_settings')) {
             $settings = $db->table('system_settings')
                 ->where('setting_value IS NOT NULL')
                 ->where('setting_value !=', '')
