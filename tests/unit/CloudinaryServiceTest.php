@@ -45,8 +45,18 @@ final class CloudinaryServiceTest extends CIUnitTestCase
 
     public function testIsConfiguredReturnsTrueWhenCredentialsSet(): void
     {
-        $service = new CloudinaryService();
+        $config = new CloudinaryConfig();
+        $config->cloudName = 'test_cloud';
+        $config->apiKey    = '12345';
+        $config->apiSecret = 'secret_abc';
+        $config->enabled   = true;
+        $service = new CloudinaryService($config);
         $this->assertTrue($service->isConfigured());
+
+        $disabledConfig = clone $config;
+        $disabledConfig->enabled = false;
+        $disabledService = new CloudinaryService($disabledConfig);
+        $this->assertFalse($disabledService->isConfigured());
     }
 
     public function testMediaUrlHelper(): void

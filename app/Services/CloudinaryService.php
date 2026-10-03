@@ -190,16 +190,53 @@ class CloudinaryService
             return '';
         }
 
-        // Match after /upload/ (skipping optional transformation segments and /v\d+/)
-        if (preg_match('#/image/upload/(?:[^/]+/)*(?:v\d+/)?([^?\#]+)#', $url, $matches)) {
-            $pathWithExt = $matches[1];
-            // Remove file extension
-            $pathParts = pathinfo($pathWithExt);
-            $dir = $pathParts['dirname'] !== '.' ? $pathParts['dirname'] . '/' : '';
-            return $dir . $pathParts['filename'];
+        // Strip query string and fragments
+        $pathOnly = parse_url($url, PHP_URL_PATH) ?? $url;
+
+        // Find /image/upload/
+        $uploadMarker = '/image/upload/';
+        $pos = strpos($pathOnly, $uploadMarker);
+        if ($pos === false) {
+            return '';
         }
 
-        return '';
+        $afterUpload = substr($pathOnly, $pos + strlen($uploadMarker));
+        $segments = explode('/', trim($afterUpload, '/'));
+
+        // Skip transformation segments and version segment (e.g. "v1727938492" or "w_200,h_200")
+        $idSegments = [];
+        $versionFound = false;
+
+        foreach ($segments as $seg) {
+            if ($versionFound) {
+                $idSegments[] = $seg;
+                continue;
+            }
+
+            if (preg_match('/^v\d+$/', $seg)) {
+                $versionFound = true;
+                continue;
+            }
+
+            // If no version segment is encountered yet, check if this looks like a transformation
+            // (e.g. contains comma, starts with c_, w_, h_, q_, etc.)
+            if (str_contains($seg, ',') || preg_match('/^[a-z]{1,3}_/', $seg)) {
+                continue;
+            }
+
+            // Otherwise, treat as part of public_id
+            $idSegments[] = $seg;
+        }
+
+        if (empty($idSegments)) {
+            return '';
+        }
+
+        // Remove extension from the last segment
+        $lastIdx = count($idSegments) - 1;
+        $idSegments[$lastIdx] = pathinfo($idSegments[$lastIdx], PATHINFO_FILENAME);
+
+        return implode('/', $idSegments);
     }
 
     /**
