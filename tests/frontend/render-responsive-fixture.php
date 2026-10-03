@@ -6,7 +6,7 @@ declare(strict_types=1);
 define('FCPATH', dirname(__DIR__, 2) . '/public/');
 $fixturePage = $argv[1] ?? 'login';
 $fixtureLong = ($argv[2] ?? '') === 'long';
-$fixtureRole = str_starts_with($fixturePage, 'staff') ? 'staff' : (str_starts_with($fixturePage, 'admin') ? 'admin' : null);
+$fixtureRole = $fixturePage === 'admin-settings' ? 'super_admin' : (str_starts_with($fixturePage, 'staff') ? 'staff' : (str_starts_with($fixturePage, 'admin') ? 'admin' : null));
 set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });

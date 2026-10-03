@@ -499,6 +499,50 @@ test('guest content and operational table values fit without hiding long data', 
   }
 });
 
+test('profile menus remain visible and usable on phone, landscape and desktop layouts', { timeout: 120000 }, async t => {
+  for (const name of ['admin-users', 'admin-settings', 'staff-queue']) {
+    for (const [width, height] of [[320, 568], [390, 844], [844, 390], [1280, 800]]) {
+      for (const mode of ['full', 'lite', 'reduced']) {
+        const { page, context, errors } = await open(t, name, width, height, '', mode);
+        const trigger = page.locator('#userProfileBtn'), menu = page.locator('#userProfileMenu');
+        await trigger.click();
+        assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
+        await menu.waitFor({ state: 'visible' });
+        await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
+        const menuState = await menu.evaluate(el => {
+          const rect = el.getBoundingClientRect(), style = getComputedStyle(el);
+          const x = rect.left + rect.width / 2, y = Math.min(rect.bottom - 8, innerHeight - 8);
+          const hit = document.elementFromPoint(x, y);
+          return { rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }, opacity: style.opacity, hit: !!hit && el.contains(hit) };
+        });
+        assert.equal(menuState.opacity, '1');
+        assert.ok(menuState.rect.left >= 0 && menuState.rect.right <= width && menuState.rect.top >= 0 && menuState.rect.bottom <= height, JSON.stringify({ name, width, height, mode, menuState }));
+        assert.ok(menuState.hit, 'profile menu is clipped or covered: ' + JSON.stringify({ name, width, height, mode, menuState }));
+        const avatar = menu.locator('#btnHeaderAvatarClick');
+        await avatar.click();
+        await menu.locator('#avatarMiniMenu').waitFor({ state: 'visible' });
+        await menu.locator('#miniMenuEditBtn').click({ trial: true });
+        await avatar.click();
+        assert.equal(await menu.locator('#avatarMiniMenu').isVisible(), false);
+        if (width === 390 && mode === 'lite') await screenshot(page, name + '-profile-phone', false);
+        const logout = menu.locator('[data-bs-target="#logoutModal"]');
+        await logout.scrollIntoViewIfNeeded();
+        await logout.click({ trial: true });
+        await page.keyboard.press('Escape');
+        assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+        assert.equal(await menu.isVisible(), false);
+        await trigger.focus(); await page.keyboard.press('Enter');
+        assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
+        await page.mouse.click(1, Math.min(height - 1, 200));
+        assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+        assert.deepEqual(errors, []);
+        report.cases.push({ page: name, control: 'profile', width, height, mode, passed: true });
+        await context.close();
+      }
+    }
+  }
+});
+
 test('low-hardware and reduced-motion policies work in each browser engine', async t => {
   for (const mode of ['lite', 'reduced']) {
     const { page, context, errors } = await open(t, 'login', 390, 844, '', mode);

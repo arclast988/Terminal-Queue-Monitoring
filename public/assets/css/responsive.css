@@ -997,23 +997,23 @@ html body .stats-grid button.stat-card,
     }
 }
 
-/* ---- Mobile slide-out nav: internal scrolling so Login/Logout stays reachable
-       when content exceeds viewport height (zoom-in, small phones, many items). ---- */
+/* ---- Guest slide-out nav: keep Login/Logout reachable on short screens.
+       Management headers contain floating profile menus and must not scroll. ---- */
 @media (max-width: 768px) {
-    .nav-menu {
+    .guest-header .nav-menu {
         overflow-y: auto !important;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
     /* Thin scrollbar inside the slide-out so it doesn't look chunky */
-    .nav-menu::-webkit-scrollbar {
+    .guest-header .nav-menu::-webkit-scrollbar {
         width: 4px;
     }
-    .nav-menu::-webkit-scrollbar-thumb {
+    .guest-header .nav-menu::-webkit-scrollbar-thumb {
         background-color: #cbd5e1;
         border-radius: 2px;
     }
-    .nav-menu::-webkit-scrollbar-track {
+    .guest-header .nav-menu::-webkit-scrollbar-track {
         background: transparent;
     }
 }
