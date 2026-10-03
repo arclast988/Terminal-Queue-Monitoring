@@ -217,12 +217,13 @@ class DepartureRules extends BaseController
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['time' => $msg]);
         }
 
-        // Check for an overlapping rule in the same scope (same route, or terminal-wide default).
+        // Vehicle-type routes sharing a destination use the same rule scope.
         $overlapQuery = $this->ruleModel
             ->where('time_from <', $timeTo)
             ->where('time_to >', $timeFrom);
         if ($routeId !== null) {
-            $overlapQuery->where('route_id', $routeId);
+            $overlapQuery->where('terminal_id', $terminalId)->whereIn('route_id',
+                $this->routeModel->getDestinationRouteIds($terminalId, $route['destination']));
         } else {
             $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
         }
@@ -245,7 +246,7 @@ class DepartureRules extends BaseController
 
         $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . date('H:i', strtotime($timeFrom)) . ' - ' . date('H:i', strtotime($timeTo)) . ', ' . $waitMinutes . ' min).');
 
-        (new \App\Models\QueueModel())->recalculateSchedule();
+        (new \App\Models\QueueModel())->recalculateSchedule(null, true);
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
 
         return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule added successfully.');
@@ -332,13 +333,14 @@ class DepartureRules extends BaseController
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['time' => $msg]);
         }
 
-        // Check for an overlapping rule in the same scope (same route, or terminal-wide default), excluding this rule.
+        // Check the whole destination scope, excluding this rule.
         $overlapQuery = $this->ruleModel
             ->where('time_from <', $timeTo)
             ->where('time_to >', $timeFrom)
             ->where('id !=', $id);
         if ($routeId !== null) {
-            $overlapQuery->where('route_id', $routeId);
+            $overlapQuery->where('terminal_id', $terminalId)->whereIn('route_id',
+                $this->routeModel->getDestinationRouteIds($terminalId, $route['destination']));
         } else {
             $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
         }
@@ -380,7 +382,7 @@ class DepartureRules extends BaseController
 
         $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . date('H:i', strtotime($oldRule['time_from'])) . '-' . date('H:i', strtotime($oldRule['time_to'])) . '). After: ' . $waitMinutes . ' min (' . date('H:i', strtotime($timeFrom)) . '-' . date('H:i', strtotime($timeTo)) . ').');
 
-        (new \App\Models\QueueModel())->recalculateSchedule();
+        (new \App\Models\QueueModel())->recalculateSchedule(null, true);
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
 
         return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule updated successfully.');
@@ -402,7 +404,7 @@ class DepartureRules extends BaseController
             $ruleTime = date('H:i', strtotime($rule['time_from'])) . ' - ' . date('H:i', strtotime($rule['time_to']));
             $ruleLabel = !empty($rule['label']) && $rule['label'] !== '-' ? ' (' . $rule['label'] . ')' : '';
             $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
-            (new \App\Models\QueueModel())->recalculateSchedule();
+            (new \App\Models\QueueModel())->recalculateSchedule(null, true);
             $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
             return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule "' . $ruleTime . $ruleLabel . '" deleted successfully.');
         }
