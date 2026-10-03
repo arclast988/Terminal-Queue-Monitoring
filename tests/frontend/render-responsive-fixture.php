@@ -138,5 +138,7 @@ $views = [
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
 ];
 if (!isset($views[$fixturePage])) throw new InvalidArgumentException('Unknown fixture page');
-echo $fixtureRenderer->render($views[$fixturePage]);
-if ($fixtureRole !== null && !in_array($fixturePage, $managementPages, true)) echo '</div></body></html>';
+$html = $fixtureRenderer->render($views[$fixturePage]);
+if ($fixtureRole !== null && !in_array($fixturePage, $managementPages, true)) $html .= '</div></body></html>';
+require_once dirname(__DIR__, 2) . '/app/Libraries/InitialStyles.php';
+echo \App\Libraries\InitialStyles::prepare($html);

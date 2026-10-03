@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache' => PageCache::class,
         'performance' => PerformanceMetrics::class,
         'auth' => \App\Filters\AuthFilter::class,
+        'initialstyles' => \App\Filters\InitialStylesFilter::class,
     ];
 
     /**
@@ -77,6 +78,7 @@ class Filters extends BaseFilters
             // 'honeypot' removed: the after-filter injects hidden HTML into
             // responses which breaks inline <script> parsing.  The before-
             // filter still validates honeypot fields on form submissions.
+            'initialstyles',
             'secureheaders',
         ],
     ];

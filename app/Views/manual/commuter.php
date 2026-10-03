@@ -9,7 +9,7 @@
     <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
-    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
+    <?= view('partials/font_assets', ['fontIcons' => true]) ?>
 
     <!-- Font Awesome & Bootstrap Icons -->
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
@@ -748,10 +748,14 @@
         }
     }
     </style>
+    <?= $this->include('partials/interaction_assets') ?>
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
 </head>
 <body>
 
     <?= view('templates/guest_header', [
+        'interaction_assets_loaded' => true,
+        'guest_shell_assets_loaded' => true,
         'announcements'      => $announcements ?? [],
         'breadcrumb_current' => 'Commuter User Guide',
     ]) ?>

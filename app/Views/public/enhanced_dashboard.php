@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title><?= esc(app_system_title()) ?></title>
-    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>">
+    <?= view('partials/font_assets', ['fontIcons' => true]) ?>
     <?= view('partials/app_install') ?>
     <!-- Local icon fonts -->
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
@@ -2217,12 +2217,14 @@
 
     </style>
     <?= $this->include('partials/interaction_assets') ?>
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
 </head>
 
 <body class="guest-theme">
 
     <?= view('templates/guest_header', [
         'interaction_assets_loaded' => true,
+        'guest_shell_assets_loaded' => true,
         'announcements' => $announcements ?? [],
     ]) ?>
 

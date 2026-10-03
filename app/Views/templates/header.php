@@ -13,7 +13,7 @@
     <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
-    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
+    <?= view('partials/font_assets', ['fontIcons' => true]) ?>
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">

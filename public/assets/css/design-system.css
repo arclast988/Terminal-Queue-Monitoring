@@ -854,6 +854,17 @@ input[name="operator_name"] {
   text-transform: uppercase !important;
 }
 
+/* Reserve icon boxes so late icon fonts cannot move headings or buttons. */
+:where(button, .btn, .btn-modern, .btn-modern-primary, .btn-modern-secondary, h1, h2, h3, .profile-dropdown-item, .drawer-nav-item) > :is(i.fa, i.fas, i.far, i.fab, i.fa-solid, i.fa-regular, i.fa-brands, i.bi) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25em;
+  height: 1em;
+  flex-shrink: 0;
+  vertical-align: -.125em;
+}
+
 /* ==========================================================================
    13. GLOBAL SLIM TOP PROGRESS BAR & UNIVERSAL SPINNERS
    ========================================================================== */

@@ -10,7 +10,7 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
     <!-- Local fonts -->
-    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
+    <?= view('partials/font_assets', ['fontIcons' => true]) ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/bootstrap-icons/font/bootstrap-icons.css') ?>">
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/design-system.css') ?>">
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/modern-frontend.css') ?>">
@@ -841,11 +841,13 @@
         }
     </style>
     <?= $this->include('partials/interaction_assets') ?>
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
 </head>
 <body class="guest-theme">
 
     <?= view('templates/guest_header', [
         'interaction_assets_loaded' => true,
+        'guest_shell_assets_loaded' => true,
         'announcements'      => $announcements ?? [],
         'breadcrumb_current' => 'Search Results',
     ]) ?>

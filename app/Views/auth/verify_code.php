@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#D62828">
     <title>Verify Code · <?= esc(app_name()) ?></title>
     <?= view('partials/app_install') ?>
-    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
+    <?= view('partials/font_assets', ['fontFamily' => 'Inter']) ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= app_theme_css() ?>
     <style>
