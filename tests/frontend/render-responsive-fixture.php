@@ -30,6 +30,13 @@ if (($argv[3] ?? '') === 'theme') {
 } else {
     function app_theme_css(): string { return ''; }
 }
+if (!function_exists('media_url')) {
+    function media_url(?string $path): string {
+        $path = trim((string) $path);
+        if ($path === '' || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) return $path;
+        return base_url(ltrim(str_replace('\\', '/', $path), '/'));
+    }
+}
 function app_logo(): string { return '/fixture.svg'; }
 function app_bg_mode(): string { return 'single'; }
 function app_has_custom_bg(): bool { return false; }
