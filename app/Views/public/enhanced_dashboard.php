@@ -2766,7 +2766,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
     <!-- WebSocket is the fast path; polling remains the fallback. -->
-    <script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
+    <script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
     <script>
         var _fetchPending = false;
         var _fetchQueued = false;

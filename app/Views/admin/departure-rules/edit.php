@@ -192,7 +192,7 @@
 }
 
 .tp-set-btn:hover {
-    background: #b71c1c;
+    background: var(--primary, #b71c1c);
     color: #ffffff;
 }
 
@@ -330,8 +330,8 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                         </div>
 
                         <div class="mb-4">
-                            <label for="route_id" class="form-label-modern">Destination (Optional)</label>
-                            <select class="select-modern" id="route_id" name="route_id">
+                            <label for="route_id" class="form-label-modern">Destination</label>
+                            <select class="select-modern" id="route_id" name="route_id" <?= $prefix === 'staff' ? 'required' : '' ?>>
                                 <option value="">— No specific destination —</option>
                                 <?php foreach (($routes ?? []) as $r): ?>
                                     <option value="<?= $r['id'] ?>" <?= old('route_id', $rule['route_id'] ?? '') == $r['id'] ? 'selected' : '' ?>>
@@ -339,8 +339,26 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text-modern">Pick a destination for a route-specific interval, or leave blank for a terminal-wide default rule.</div>
+                            <div class="form-text-modern"><?= $prefix === 'staff' ? 'Choose one of your assigned destinations.' : 'Choose a destination, or leave blank for a terminal-wide default.' ?></div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="day_of_week" class="form-label-modern">Day</label>
+                                <select id="day_of_week" name="day_of_week" class="select-modern">
+                                    <option value="">Every day</option>
+                                    <?php foreach ([1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'] as $dayNumber => $dayName): ?>
+                                    <option value="<?= $dayNumber ?>" <?= (string) old('day_of_week', $rule['day_of_week'] ?? '') === (string) $dayNumber ? 'selected' : '' ?>><?= $dayName ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="round_number" class="form-label-modern">Round</label>
+                                <input type="number" id="round_number" name="round_number" class="input-modern" min="1" max="999" step="1" value="<?= esc(old('round_number', $rule['round_number'] ?? '')) ?>" placeholder="All rounds">
+                                <div class="form-text-modern">Leave blank for all rounds. Dispatchers can switch the route's round at any time.</div>
+                            </div>
+                        </div>
+                        <p class="form-text-modern mb-3">For a round that can start at any time, use 00:00–23:59. Day and round rules override the general defaults.</p>
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
@@ -530,6 +548,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 if (!sameScope) continue;
+                if (String(r.day_of_week || '') !== document.getElementById('day_of_week').value
+                    || String(r.round_number || '') !== document.getElementById('round_number').value) continue;
 
                 let rFrom = r.time_from.length === 5 ? r.time_from + ':00' : r.time_from;
                 let rTo = r.time_to.length === 5 ? r.time_to + ':00' : r.time_to;
@@ -556,6 +576,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (terminalSelect) terminalSelect.addEventListener('change', checkContradiction);
     if (routeSelect) routeSelect.addEventListener('change', checkContradiction);
+    document.getElementById('day_of_week').addEventListener('change', checkContradiction);
+    document.getElementById('round_number').addEventListener('input', checkContradiction);
 
     // Form submit guard
     if (form) {

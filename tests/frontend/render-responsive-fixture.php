@@ -100,7 +100,7 @@ $item = [
     'operator_name' => $longValue, 'owner_name' => $longValue, 'driver_name' => $longValue,
     'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'price' => 100,
     'arrival_time' => '2026-10-01 08:00:00', 'estimated_departure' => '2026-10-01 09:00:00',
-    'departure_time' => '2026-10-01 09:00:00',
+    'departure_time' => '2026-10-01 09:00:00', 'boarding_start' => '2026-10-01 08:45:00', 'round_number' => 1,
 ];
 $route = ['id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
@@ -112,6 +112,10 @@ $fixtureData = [
     'title' => 'Fixture', 'body_class' => $fixtureRole . '-theme', 'token' => 'fixture-token', 'error' => null,
     'masked_email' => 'f***@example.com', 'invalid' => false, 'noRoutesAssigned' => false,
     'announcements' => [], 'breadcrumb_current' => 'Home', 'skip_breadcrumb' => true,
+    'queueRoutes' => [
+        ['id'=>1, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>$longValue, 'round_number'=>1, 'round_choices'=>[1,2,3]],
+        ['id'=>2, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>'BATO', 'round_number'=>2, 'round_choices'=>[1,2,3]],
+    ],
     'queue' => [$item], 'active_queue' => [$item], 'vehicles' => [$item], 'schedules' => [$item],
     'recent_departures' => [$item], 'routes' => [$route], 'jeepney_routes' => [$route],
     'van_routes' => [], 'minibus_routes' => [], 'routesByType' => ['jeepney' => [$route]],
@@ -128,6 +132,18 @@ $fixtureData = [
 ];
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];
+if ($fixturePage === 'staff-queue') {
+    $fixtureData['vehicles'] = [$vehicle + ['route_terminal_id'=>1, 'default_route_id'=>1]];
+    if (($argv[4] ?? '') === 'empty') $fixtureData['vehicles'] = [];
+    if (($argv[4] ?? '') === 'fresh') {
+        $newVehicle = $vehicle + ['route_terminal_id'=>1, 'default_route_id'=>2];
+        $newVehicle['id'] = 202;
+        $newVehicle['plate_number'] = 'NEW-789';
+        $newVehicle['route_destination'] = 'BATO';
+        $newVehicle['round_number'] = 2;
+        $fixtureData['vehicles'][] = $newVehicle;
+    }
+}
 $fixtureRenderer = new ResponsiveFixtureRenderer();
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',

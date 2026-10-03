@@ -62,10 +62,45 @@ class WsServe extends BaseCommand
         $masterClients = [$wsServer, $broadcastServer];
         $wsClients = [];
         $lastPing = time();
+        $lastBoardingBoundary = -1;
 
         while (true) {
             // Incomplete handshakes cannot hold a client slot indefinitely.
             $now = time();
+            $boundary = intdiv($now, 300);
+            if ($boundary !== $lastBoardingBoundary) {
+                $lastBoardingBoundary = $boundary;
+                try {
+                    $ids = (new \App\Models\QueueModel())->advanceBoarding($now);
+                    if ($ids) {
+                        // Publish only after advanceBoarding's transaction commits.
+                        $token = microtime(true);
+                        $tokenFile = WRITEPATH . 'sync_token.txt';
+                        $temporary = $tokenFile . '.' . getmypid() . '.tmp';
+                        if (file_put_contents($temporary, (string) $token, LOCK_EX) !== false) rename($temporary, $tokenFile);
+                        try {
+                            cache()->delete('rt_queue_status');
+                            cache()->delete('rt_queue_status_pkg');
+                            cache()->delete('rt_home_status');
+                            cache()->deleteMatching('rt_sched_*');
+                        } catch (\Throwable $cacheError) {
+                            // Cache failures must not prevent delivery of a committed transition.
+                        }
+                        $frame = $this->encode(json_encode([
+                            'broadcast_id' => bin2hex(random_bytes(4)), 'sync_token' => $token,
+                            'type' => 'queue_update', 'data' => ['action' => 'automatic_boarding', 'ids' => $ids],
+                            'timestamp' => date('Y-m-d H:i:s'),
+                        ]));
+                        foreach ($wsClients as $clientId => $client) {
+                            if ($client['handshaken'] && !$this->queueFrame($wsClients[$clientId], $frame)) {
+                                $this->removeClient($clientId, $wsClients, $masterClients);
+                            }
+                        }
+                    }
+                } catch (\Throwable $error) {
+                    log_message('error', 'Automatic boarding failed: {message}', ['message' => $error->getMessage()]);
+                }
+            }
             foreach ($wsClients as $clientId => $client) {
                 if (! $client['handshaken'] && $now - $client['connected_at'] > 10) {
                     $this->removeClient($clientId, $wsClients, $masterClients);

@@ -33,13 +33,13 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->intervalDb->query('CREATE TABLE departure_rules (
             id INTEGER PRIMARY KEY, terminal_id INTEGER, route_id INTEGER,
             time_from TEXT, time_to TEXT, wait_minutes INTEGER, label TEXT,
-            created_at TEXT, updated_at TEXT
+            created_at TEXT, updated_at TEXT, day_of_week INTEGER, round_number INTEGER
         )');
         $this->intervalDb->query('CREATE TABLE queue (
             id INTEGER PRIMARY KEY AUTOINCREMENT, vehicle_id INTEGER,
             route_id INTEGER, status TEXT, position INTEGER, arrival_time TEXT,
             estimated_departure TEXT, departure_time TEXT, current_passengers INTEGER,
-            driver_name TEXT, operator_name TEXT, plate_number TEXT
+            driver_name TEXT, operator_name TEXT, plate_number TEXT, boarding_start TEXT, round_number INTEGER DEFAULT 1
         )');
         $this->intervalDb->table('routes')->insertBatch([
             ['id' => 1, 'terminal_id' => 1, 'destination' => 'ORMOC', 'vehicle_type' => 'van'],
@@ -80,7 +80,7 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $rows = $this->activeRows();
         $this->assertSame([1, 2, 3, 4], array_map('intval', array_column($rows, 'position')));
         $this->assertGaps($rows, [20, 20, 20]);
-        $this->assertEqualsWithDelta($before + 1200, strtotime($rows[0]['estimated_departure']), 2);
+        $this->assertEqualsWithDelta(\App\Models\QueueModel::nextFiveMinuteBoundary($before) + 1200, strtotime($rows[0]['estimated_departure']), 2);
     }
 
     public function testMixedVehicleTypesShareOneTwentyMinuteLine(): void
@@ -162,7 +162,7 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $before = time();
         $this->queue->recalculateSchedule(null, true);
         $rows = $this->activeRows();
-        $this->assertEqualsWithDelta($before + 1200, strtotime($rows[0]['estimated_departure']), 2);
+        $this->assertEqualsWithDelta(QueueModel::nextFiveMinuteBoundary($before) + 1200, strtotime($rows[0]['estimated_departure']), 2);
         $this->assertGaps($rows, [20]);
     }
 
@@ -180,8 +180,8 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->addVehicle(2, 2);
         $this->addVehicle(2, 3);
         $this->queue->recalculateSchedule();
-        $this->assertGaps($this->activeRows(), [20, 20]);
-        $this->assertSame('2026-10-04 00:19:30', $this->activeRows()[1]['estimated_departure']);
+        $this->assertSame('2026-10-04 00:00:00', $this->activeRows()[1]['boarding_start']);
+        $this->assertSame('2026-10-04 00:20:00', $this->activeRows()[1]['estimated_departure']);
     }
 
     public function testLegacyOverlapsResolveConsistentlyAcrossQueueAndDirectLookup(): void
@@ -210,6 +210,115 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame($history, $this->queue->find($departed));
         $migration->up();
         $this->assertSame($rows, $this->activeRows());
+    }
+
+    public function testEarlyDepartureStartsNextBoardingAt0645AndDepartsAt0705(): void
+    {
+        $head = $this->addVehicle(1, 1, '2026-10-05 06:50:00');
+        $next = $this->addVehicle(2, 2, '2026-10-05 07:10:00');
+        $this->queue->update($head, ['status' => 'departed', 'departure_time' => '2026-10-05 06:43:00']);
+        $this->queue->recalculateSchedule(1, true, strtotime('2026-10-05 06:43:00'));
+        $this->assertSame('2026-10-05 06:45:00', $this->queue->find($next)['boarding_start']);
+        $this->assertSame('2026-10-05 07:05:00', $this->queue->find($next)['estimated_departure']);
+        $this->assertSame([], $this->queue->advanceBoarding(strtotime('2026-10-05 06:44:59')));
+        $this->assertSame([$next], $this->queue->advanceBoarding(strtotime('2026-10-05 06:45:00')));
+        $this->queue->recalculateSchedule();
+        $this->assertSame('2026-10-05 07:05:00', $this->queue->find($next)['estimated_departure']);
+        $this->assertSame([], $this->queue->advanceBoarding(strtotime('2026-10-05 06:45:01')));
+    }
+
+    public function testNewQueueUsesFiveMinuteBoundariesAndKeepsItsTimer(): void
+    {
+        $head = $this->addVehicle(2, 1);
+        $this->queue->recalculateSchedule(2, false, null, strtotime('2026-10-05 06:43:37'));
+        $this->assertSame('2026-10-05 06:45:00', $this->queue->find($head)['boarding_start']);
+        $this->assertSame('2026-10-05 07:05:00', $this->queue->find($head)['estimated_departure']);
+        $this->queue->recalculateSchedule(2, false, null, strtotime('2026-10-05 06:44:56'));
+        $this->assertSame('2026-10-05 07:05:00', $this->queue->find($head)['estimated_departure']);
+        $this->assertSame(strtotime('2026-10-05 06:50:00'), QueueModel::nextFiveMinuteBoundary(strtotime('2026-10-05 06:45:01')));
+        $this->assertSame(strtotime('2026-10-05 06:45:00'), QueueModel::nextFiveMinuteBoundary(strtotime('2026-10-05 06:45:00')));
+    }
+
+    public function testDayAndRoundRulesOverrideDefaultsWithoutAffectingOtherDays(): void
+    {
+        $this->addRule(10, 1, 1, 20);
+        $this->addRule(11, 1, 1, 25);
+        $this->addRule(12, 1, 1, 35);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['day_of_week' => 1, 'round_number' => 1]);
+        $this->intervalDb->table('departure_rules')->where('id', 11)->update(['day_of_week' => 1, 'round_number' => 2]);
+        $this->intervalDb->table('departure_rules')->where('id', 12)->update(['day_of_week' => 7, 'round_number' => 3]);
+        $rules = new DepartureRuleModel($this->intervalDb);
+        $this->assertSame(20, $rules->getWaitMinutesForTime('2026-10-05 06:45:00', 1, 2, 1));
+        $this->assertSame(25, $rules->getWaitMinutesForTime('2026-10-05 06:45:00', 1, 2, 2));
+        $this->assertSame(25, $rules->getWaitMinutesForTime('2026-10-05 16:45:00', 1, 2, 2));
+        $this->assertSame(20, $rules->getWaitMinutesForTime('2026-10-06 06:45:00', 1, 2, 2));
+        $this->assertSame(35, $rules->getWaitMinutesForTime('2026-10-04 06:45:00', 1, 2, 3));
+        $this->assertSame(40, $rules->getWaitMinutesForTime('2026-10-05 06:45:00', 1, 3, 2));
+    }
+
+    public function testRoundSwitchPreservesBoardingAndUsesNewRulesForWaitingVehicles(): void
+    {
+        $this->addRule(10, 1, 1, 25);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['day_of_week' => 1, 'round_number' => 2]);
+        $head = $this->addVehicle(1, 1, '2026-10-05 06:50:00');
+        $next = $this->addVehicle(2, 2);
+        $this->queue->update($head, ['status' => 'boarding', 'boarding_start' => '2026-10-05 06:30:00']);
+        $this->queue->update($next, ['round_number' => 2]);
+        $other = $this->addVehicle(3, 1, '2026-10-05 07:30:00');
+        $this->queue->recalculateSchedule(2, true, null, strtotime('2026-10-05 06:43:00'));
+        $this->assertSame('2026-10-05 06:50:00', $this->queue->find($head)['estimated_departure']);
+        $this->assertSame(1, (int) $this->queue->find($head)['round_number']);
+        $this->assertSame('2026-10-05 07:15:00', $this->queue->find($next)['estimated_departure']);
+        $this->assertSame(2, (int) $this->queue->find($next)['round_number']);
+        $this->assertSame('2026-10-05 07:30:00', $this->queue->find($other)['estimated_departure']);
+    }
+
+    public function testMidnightResolvesRulesUsingTheDateOfTheNextBoardingWindow(): void
+    {
+        $this->addRule(10, 1, 1, 25);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['day_of_week' => 2]);
+        $this->addVehicle(1, 1, '2026-10-05 23:55:00');
+        $next = $this->addVehicle(2, 2);
+        $this->queue->recalculateSchedule();
+        $this->assertSame('2026-10-06 00:15:00', $this->queue->find($next)['estimated_departure']);
+        $third = $this->addVehicle(1, 3);
+        $this->queue->recalculateSchedule();
+        $this->assertSame('2026-10-06 00:40:00', $this->queue->find($third)['estimated_departure']);
+    }
+
+    public function testAutomaticBoardingNeverOverlapsALateBoardingVehicle(): void
+    {
+        $head = $this->addVehicle(1, 1, '2026-10-05 06:50:00');
+        $next = $this->addVehicle(2, 2, '2026-10-05 07:10:00');
+        $this->queue->update($head, ['status' => 'boarding', 'boarding_start' => '2026-10-05 06:30:00']);
+        $this->queue->update($next, ['boarding_start' => '2026-10-05 06:50:00']);
+        $this->assertSame([], $this->queue->advanceBoarding(strtotime('2026-10-05 07:00:00')));
+        $this->queue->update($head, ['status' => 'departed']);
+        $this->queue->recalculateSchedule(1, true, strtotime('2026-10-05 07:03:00'));
+        $this->assertSame('2026-10-05 07:05:00', $this->queue->find($next)['boarding_start']);
+        $this->assertSame('2026-10-05 07:25:00', $this->queue->find($next)['estimated_departure']);
+    }
+
+    public function testDispatchMigrationIsIdempotentAndDailyRoundsResetIndependently(): void
+    {
+        require_once APPPATH . 'Database/Migrations/2026-10-03-110000_AddDispatchDaysAndRounds.php';
+        $migration = new \App\Database\Migrations\AddDispatchDaysAndRounds(Database::forge($this->intervalDb));
+        $migration->up();
+        $migration->up();
+        $rounds = new \App\Models\DispatchRoundModel($this->intervalDb);
+        $this->assertSame(1, $rounds->currentRound(1, 'ORMOC'));
+        $rounds->setRound(1, 'ORMOC', 3);
+        $this->assertSame(3, $rounds->currentRound(1, 'ORMOC'));
+        $this->assertSame(1, $rounds->currentRound(2, 'ORMOC'));
+        $this->intervalDb->table('dispatch_rounds')->where('terminal_id', 1)->update(['service_date' => '2026-10-01']);
+        $this->assertSame(1, $rounds->currentRound(1, 'ORMOC'));
+        $waiting = $this->addVehicle(2, 1);
+        $this->queue->update($waiting, ['round_number' => 3]);
+        $now = strtotime(date('Y-m-d') . ' 06:43:00');
+        $this->queue->advanceBoarding($now);
+        $this->assertSame(1, (int) $this->queue->find($waiting)['round_number']);
+        $this->assertSame(date('Y-m-d', $now) . ' 07:05:00', $this->queue->find($waiting)['estimated_departure']);
+        $this->assertSame(20, (new DepartureRuleModel($this->intervalDb))->getWaitMinutesForTime('10:00:00', 1, 2));
     }
 
     private function addRule(int $id, int $terminalId, ?int $routeId, int $minutes, string $updatedAt = '2026-10-01 10:00:00'): void

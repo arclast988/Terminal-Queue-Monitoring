@@ -12,7 +12,7 @@ class DepartureRuleModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $protectFields = true;
-    protected $allowedFields = ['terminal_id', 'route_id', 'time_from', 'time_to', 'wait_minutes', 'label'];
+    protected $allowedFields = ['terminal_id', 'route_id', 'time_from', 'time_to', 'wait_minutes', 'label', 'day_of_week', 'round_number'];
 
     protected $useTimestamps = true;
     protected $dateFormat = 'datetime';
@@ -29,7 +29,7 @@ class DepartureRuleModel extends Model
      *
      * Returns the full rule array, or the default fallback if nothing matches.
      */
-    public function getRuleForTime(string $time, int $terminalId, ?int $routeId = null): array
+    public function getRuleForTime(string $time, int $terminalId, ?int $routeId = null, int $roundNumber = 1): array
     {
         $routeIds = [];
         if ($routeId !== null) {
@@ -44,7 +44,8 @@ class DepartureRuleModel extends Model
             $this->where('terminal_id', $terminalId)->findAll(),
             $time,
             $terminalId,
-            $routeIds
+            $routeIds,
+            $roundNumber
         );
     }
 
@@ -53,15 +54,19 @@ class DepartureRuleModel extends Model
      * rules overlap, the most recently edited rule wins consistently, regardless
      * of which vehicle type happens to be active in the queue.
      */
-    public static function resolveRuleFromRules(array $rules, string $time, int $terminalId, array $routeIds): array
+    public static function resolveRuleFromRules(array $rules, string $time, int $terminalId, array $routeIds, int $roundNumber = 1): array
     {
-        $timeStr = date('H:i:s', strtotime($time));
+        $timestamp = strtotime($time);
+        $timeStr = date('H:i:s', $timestamp);
+        $day = (int) date('N', $timestamp);
         $routeIds = array_map('intval', $routeIds);
         $destinationRule = null;
         $terminalRule = null;
 
         foreach ($rules as $rule) {
             if ((int) ($rule['terminal_id'] ?? 0) !== $terminalId
+                || (!empty($rule['day_of_week']) && (int) $rule['day_of_week'] !== $day)
+                || (!empty($rule['round_number']) && (int) $rule['round_number'] !== $roundNumber)
                 || empty($rule['time_from']) || empty($rule['time_to'])
                 || $rule['time_from'] > $timeStr
                 || ($timeStr >= '23:59:00'
@@ -77,8 +82,12 @@ class DepartureRuleModel extends Model
             }
 
             $matched = $isDestinationRule ? $destinationRule : $terminalRule;
-            if ($matched === null || [($rule['updated_at'] ?? ''), (int) ($rule['id'] ?? 0)]
-                > [($matched['updated_at'] ?? ''), (int) ($matched['id'] ?? 0)]) {
+            $priority = static fn(array $r): array => [
+                (int) !empty($r['day_of_week']) + (int) !empty($r['round_number']),
+                (int) !empty($r['day_of_week']),
+                ($r['updated_at'] ?? ''), (int) ($r['id'] ?? 0),
+            ];
+            if ($matched === null || $priority($rule) > $priority($matched)) {
                 if ($isDestinationRule) {
                     $destinationRule = $rule;
                 } else {
@@ -98,9 +107,9 @@ class DepartureRuleModel extends Model
     /**
      * Get the wait minutes for a given time (optionally route-specific).
      */
-    public function getWaitMinutesForTime(string $time, int $terminalId, ?int $routeId = null): int
+    public function getWaitMinutesForTime(string $time, int $terminalId, ?int $routeId = null, int $roundNumber = 1): int
     {
-        $rule = $this->getRuleForTime($time, $terminalId, $routeId);
+        $rule = $this->getRuleForTime($time, $terminalId, $routeId, $roundNumber);
         return (int) $rule['wait_minutes'];
     }
 }

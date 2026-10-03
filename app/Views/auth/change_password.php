@@ -335,7 +335,7 @@ SVG;
             </div>
 
             <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; justify-content: center; background: #ffffff;">
-                <button type="button" class="btn" id="systemWarningOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: #15803d; border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
+                <button type="button" class="btn" id="systemWarningOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: var(--primary, #15803d); border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
                     OK
                 </button>
             </div>
@@ -379,7 +379,7 @@ SVG;
 }
 
 .avatar-super-admin {
-    background: #B71C1C;
+    background: var(--primary, #B71C1C);
     border: 3px solid rgba(183, 28, 28, 0.2);
 }
 .avatar-admin {
@@ -387,7 +387,7 @@ SVG;
     border: 3px solid rgba(220, 38, 38, 0.15);
 }
 .avatar-dispatcher {
-    background: #15803d;
+    background: var(--primary, #15803d);
     border: 3px solid rgba(21, 128, 61, 0.2);
 }
 
@@ -451,7 +451,7 @@ SVG;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
 }
 .btn-pulse-attention {
-    outline: 2px solid #15803d;
+    outline: 2px solid var(--primary, #15803d);
     outline-offset: 2px;
 }
 
@@ -490,7 +490,7 @@ SVG;
     border: 1px solid #fecaca !important;
 }
 #systemWarningOkBtn:hover {
-    background: #166534 !important;
+    background: var(--primary-dark, #166534) !important;
     color: #ffffff !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 10px rgba(21, 128, 61, 0.35) !important;
@@ -513,13 +513,13 @@ SVG;
     color: #334155 !important;
 }
 #btnSubmitPassword.btn-modern-success.is-valid-form {
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    background: linear-gradient(135deg, var(--primary, #16a34a) 0%, var(--primary, #15803d) 100%) !important;
     color: #ffffff !important;
     border-color: transparent !important;
     box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35) !important;
 }
 #btnSubmitPassword.btn-modern-success.is-valid-form:hover {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    background: linear-gradient(135deg, #22c55e 0%, var(--primary, #16a34a) 100%) !important;
     color: #ffffff !important;
     box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45) !important;
     transform: none;

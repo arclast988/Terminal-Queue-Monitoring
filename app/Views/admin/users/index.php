@@ -974,8 +974,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         color: #fff !important;
     }
     .vf-btn.vf-van.active {
-        background: #c62828 !important;
-        border-color: #c62828 !important;
+        background: var(--primary, #c62828) !important;
+        border-color: var(--primary, #c62828) !important;
         color: #fff !important;
     }
     .vf-btn.vf-dispatcher.active {
@@ -1433,7 +1433,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
 <div class="modal fade" id="userAvatarModal" tabindex="-1" aria-labelledby="userAvatarModalLabel" aria-hidden="true" data-bs-backdrop="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 440px; margin: 1.75rem auto;">
         <div class="modal-content" style="border-radius: 18px; overflow: hidden; border: none; box-shadow: 0 20px 35px -5px rgba(15, 23, 42, 0.25);">
-            <div style="height: 4px; width: 100%; background: linear-gradient(90deg, #b71c1c 0%, #dc2626 50%, #ef4444 100%);"></div>
+            <div style="height: 4px; width: 100%; background: linear-gradient(90deg, var(--primary, #b71c1c) 0%, #dc2626 50%, #ef4444 100%);"></div>
             <div class="modal-header border-0 pb-0 px-4 pt-4" style="border-bottom: none !important; align-items: flex-start;">
                 <h5 class="modal-title fw-bold" id="userAvatarModalLabel" style="font-size: 1.2rem; color: #0f172a;">
                     <i class="bi bi-camera me-2 text-danger"></i>Change Profile Photo
@@ -1469,7 +1469,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                     <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600; padding: 7px 14px;">
                         Cancel
                     </button>
-                    <button type="button" class="btn btn-danger btn-sm" id="modalSaveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 16px; background: linear-gradient(135deg, #b71c1c 0%, #dc2626 100%); border: none;">
+                    <button type="button" class="btn btn-danger btn-sm" id="modalSaveAvatarBtn" style="border-radius: 8px; font-weight: 600; padding: 7px 16px; background: linear-gradient(135deg, var(--primary, #b71c1c) 0%, #dc2626 100%); border: none;">
                         <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Photo
                     </button>
                 </div>

@@ -899,7 +899,7 @@ body.staff-theme .table-dark th,
 body.staff-theme .table-dark td,
 body.staff-theme thead.table-dark th {
     color: #fff !important;
-    background-color: #15803d !important;
+    background-color: var(--primary, #15803d) !important;
 }
 
 /* Alert text is always readable */

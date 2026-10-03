@@ -715,8 +715,8 @@
     }
 
     #manageQueueModal .queue-order-header {
-        background: #15803d !important;
-        border-bottom-color: #166534 !important;
+        background: var(--primary, #15803d) !important;
+        border-bottom-color: var(--primary-dark, #166534) !important;
         color: #ffffff !important;
     }
 
@@ -809,8 +809,8 @@
         justify-content: center;
         flex: 0 0 38px;
         font-weight: 800;
-        color: #166534;
-        background: #dcfce7;
+        color: var(--primary-dark, #166534);
+        background: var(--primary-soft, #dcfce7);
         border: 1px solid #86efac;
     }
 
@@ -834,7 +834,7 @@
         justify-content: center;
         border-radius: 9px;
         border: 1px dashed #86efac;
-        color: #15803d;
+        color: var(--primary, #15803d);
         background: #f0fdf4;
         cursor: grab;
         touch-action: none;
@@ -1071,6 +1071,32 @@ $queueOrderGroups = array_values($queueOrderGroups);
     </div>
 <?php endif; ?>
 
+
+<div class="queue-route-controls card-modern p-3 mb-3" id="queueRouteControls">
+    <div class="d-flex flex-wrap gap-2 align-items-center mb-2" role="group" aria-label="Queue route filter">
+        <strong class="small me-1">Routes:</strong>
+        <button type="button" class="btn btn-sm btn-outline-primary active" data-queue-route="all" aria-pressed="true">All routes</button>
+        <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
+        <button type="button" class="btn btn-sm btn-outline-primary" data-queue-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>" aria-pressed="false"><?= esc(strtoupper($queueRoute['origin'] . ' → ' . $queueRoute['destination'])) ?></button>
+        <?php endforeach; ?>
+    </div>
+    <div id="queueRoundControls" class="d-flex flex-wrap gap-3">
+    <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
+        <label class="small fw-semibold" data-round-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>">
+            <?= esc(strtoupper($queueRoute['destination'])) ?> — active round
+            <select class="form-select form-select-sm mt-1" data-dispatch-round data-route-id="<?= (int) $queueRoute['id'] ?>" aria-label="Active round for <?= esc($queueRoute['destination'], 'attr') ?>">
+            <?php foreach ($queueRoute['round_choices'] as $roundChoice): ?>
+                <option value="<?= $roundChoice ?>" <?= $roundChoice === $queueRoute['round_number'] ? 'selected' : '' ?>>Round <?= $roundChoice ?></option>
+            <?php endforeach; ?>
+            </select>
+        </label>
+    <?php endforeach; ?>
+    </div>
+    <p class="small text-muted mt-2 mb-0">Switch rounds whenever needed. Configure more rounds in <a href="<?= base_url('staff/departure-rules') ?>">Departure Rules</a>. Waiting vehicles use the selected round; a boarding timer keeps its current rule.</p>
+    <div id="queueRoundFeedback" class="small mt-2" role="status"></div>
+</div>
+<div id="queueRouteEmpty" class="alert-modern d-none" role="status">No vehicles are queued for this route.</div>
+
 <div id="undoBannerContainer" class="mb-3" style="display:none;"></div>
 
 <div class="queue-list" id="queue-list">
@@ -1081,11 +1107,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 $isBoarding = $item['status'] === 'boarding';
                 $isWaiting  = $item['status'] === 'waiting';
             ?>
-            <div class="q-card mb-3" id="card-<?= $item['id'] ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
+            <div class="q-card mb-3" id="card-<?= $item['id'] ?>" data-queue-route-key="<?= esc(($item['terminal_id'] ?? 0) . '|' . ($item['destination'] ?? ''), 'attr') ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
 
                 <!-- Header row: position badge + plate + status -->
                 <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
-                    <span class="badge-modern badge-modern-primary">#<?= $item['position'] ?></span>
+                    <span class="badge-modern badge-modern-primary">#<?= $item['position'] ?></span><span class="badge-modern badge-modern-primary">Round <?= (int) ($item['round_number'] ?? 1) ?></span>
                     <?php
                         $vType = $item['vehicle_type'] ?? '';
                         $vtPhoto = vehicle_resolved_photo($item, $vType);
@@ -1130,6 +1156,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <div class="fw-semibold small text-primary">
                             <?= !empty($item['estimated_departure']) ? date('H:i', strtotime($item['estimated_departure'])) : 'TBA' ?>
                         </div>
+                        <?php if (!empty($item['boarding_start']) && $isWaiting): ?><div class="small text-muted">Boarding <?= date('H:i', strtotime($item['boarding_start'])) ?></div><?php endif; ?>
                         <?php if (!empty($item['estimated_departure']) && $item['status'] === 'boarding'): ?>
                             <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
                         <?php endif; ?>
@@ -1234,7 +1261,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
     <?php endif; ?>
 </div>
 
-<?php if (!empty($queueOrderGroups)): ?>
 <!-- Dispatcher Queue Order Modal -->
 <div class="modal fade" id="manageQueueModal" tabindex="-1" aria-labelledby="manageQueueModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -1252,9 +1278,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 <?php if (count($queueOrderGroups) > 1): ?>
                     <div class="mb-3">
                         <label for="queueOrderGroupSelect" class="form-label fw-bold">Queue destination</label>
-                        <select id="queueOrderGroupSelect" class="form-select">
+                        <select id="queueOrderGroupSelect" class="form-select" aria-label="Quick filter queue route">
                             <?php foreach ($queueOrderGroups as $queueOrderGroup): ?>
-                                <option value="<?= esc($queueOrderGroup['panel_id'], 'attr') ?>">
+                                <option value="<?= esc($queueOrderGroup['panel_id'], 'attr') ?>" data-route-key="<?= esc(($queueOrderGroup['items'][0]['terminal_id'] ?? 0) . '|' . $queueOrderGroup['destination'], 'attr') ?>">
                                     <?= esc(strtoupper($queueOrderGroup['origin'])) ?> &rarr; <?= esc(strtoupper($queueOrderGroup['destination'])) ?> (<?= count($queueOrderGroup['items']) ?>)
                                 </option>
                             <?php endforeach; ?>
@@ -1286,7 +1312,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                 <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>" draggable="false">
                                     <span class="queue-order-position">#<?= (int) $queueOrderItem['position'] ?></span>
                                     <div class="queue-order-details flex-grow-1">
-                                        <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?></div>
+                                        <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?> <span class="badge-modern badge-modern-primary">Round <?= (int) ($queueOrderItem['round_number'] ?? 1) ?></span></div>
                                         <div class="small text-muted text-truncate">
                                             <?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?>
                                             <?php if ($isOrderLocked): ?>
@@ -1322,7 +1348,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
         </div>
     </div>
 </div>
-<?php endif; ?>
 
 <!-- Depart Confirmation Modal -->
 <div class="modal fade" id="confirmDepartModal" tabindex="-1" aria-labelledby="confirmDepartModalLabel" aria-hidden="true" data-bs-backdrop="static">
@@ -1440,7 +1465,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         width: 44px;
         height: 44px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+        background: linear-gradient(135deg, var(--primary, #15803d) 0%, var(--primary, #16a34a) 100%);
         color: #ffffff;
         display: flex;
         align-items: center;
@@ -1468,7 +1493,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         min-height: 36px !important;
     }
     #addToQueueModal .input-group:focus-within {
-        border-color: #16a34a !important;
+        border-color: var(--primary, #16a34a) !important;
         box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
     }
     #addToQueueModal .input-group > .input-group-text {
@@ -1529,8 +1554,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
     }
     .vehicle-select-item.is-selected {
         background: #f0fdf4 !important;
-        border-color: #16a34a !important;
-        border-left: 5px solid #15803d !important;
+        border-color: var(--primary, #16a34a) !important;
+        border-left: 5px solid var(--primary, #15803d) !important;
         box-shadow: 0 2px 8px rgba(21, 128, 61, 0.12) !important;
     }
     .dark .vehicle-select-item.is-selected,
@@ -1588,7 +1613,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     .checkbox-order-wrapper .queue-order-num {
         font-size: 11px;
         font-weight: 800;
-        color: #15803d;
+        color: var(--primary, #15803d);
         line-height: 1;
         min-height: 13px;
         margin-bottom: 2px;
@@ -1620,8 +1645,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
     }
 
     .btn-submit-queue {
-        background: #15803d;
-        border: 1px solid #15803d;
+        background: var(--primary, #15803d);
+        border: 1px solid var(--primary, #15803d);
         color: #ffffff;
         font-weight: 700;
         border-radius: 10px;
@@ -1630,8 +1655,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         transition: all 0.15s ease;
     }
     .btn-submit-queue:hover:not(:disabled) {
-        background: #166534;
-        border-color: #166534;
+        background: var(--primary-dark, #166534);
+        border-color: var(--primary-dark, #166534);
         box-shadow: 0 4px 12px rgba(21, 128, 61, 0.35);
         color: #ffffff;
     }
@@ -1882,7 +1907,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <div class="add-queue-heading-copy">
                             <div class="d-flex align-items-center gap-2 add-queue-title-row">
                                 <h5 class="modal-title fw-bold mb-0">Add Vehicles to Queue</h5>
-                                <span class="badge rounded-pill fw-bold" style="font-size: 0.7rem; background: #dcfce7; color: #15803d;">BATCH DISPATCH</span>
+                                <span class="badge rounded-pill fw-bold" style="font-size: 0.7rem; background: var(--primary-soft, #dcfce7); color: var(--primary, #15803d);">BATCH DISPATCH</span>
                             </div>
                             <span class="text-muted small">Select one or more available vehicles to dispatch into the active queue</span>
                         </div>
@@ -1901,6 +1926,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         </div>
                     <?php else: ?>
                         <!-- Quick Actions & Search Filter Bar -->
+                        <label for="addQueueRouteFilter" class="form-label fw-semibold">Quick route filter</label>
+                        <select id="addQueueRouteFilter" class="form-select mb-3">
+                            <option value="all">All routes</option>
+                            <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
+                            <option value="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>"><?= esc(strtoupper($queueRoute['origin'] . ' → ' . $queueRoute['destination'])) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                         <div class="queue-toolbar-card mb-3">
                             <div class="row g-2 align-items-center">
                                 <div class="col-12 col-sm">
@@ -1945,7 +1977,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         $v['operator_name'] ?? ''
                                     ]))));
                                 ?>
-                                <div class="vehicle-select-item" data-search="<?= $searchableText ?>" data-vehicle-id="<?= $v['id'] ?>">
+                                <div class="vehicle-select-item" data-search="<?= $searchableText ?>" data-vehicle-id="<?= $v['id'] ?>" data-queue-route-key="<?= esc(($v['route_terminal_id'] ?? 0) . '|' . ($v['route_destination'] ?? ''), 'attr') ?>">
                                     <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
                                         <div class="checkbox-order-wrapper flex-shrink-0">
                                             <span class="queue-order-num" aria-hidden="true"></span>
@@ -1966,7 +1998,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         <div class="min-w-0 flex-grow-1">
                                             <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <span class="plate-number-box"><?= esc($v['plate_number']) ?></span>
+                                                    <span class="plate-number-box"><?= esc($v['plate_number']) ?> <span class="badge-modern badge-modern-primary">Round <?= (int) ($v['round_number'] ?? 1) ?></span></span>
                                                     <?= vehicle_type_badge($vType) ?>
                                                 </div>
                                                 <div class="flex-shrink-0">
@@ -2007,6 +2039,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         </form>
     </div>
 </div>
+
+<script src="<?= app_asset_url('js/dispatch-queue.js') ?>" defer data-round-url="<?= base_url('staff/queue/round') ?>" data-tick-url="<?= base_url('staff/queue/tick') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
 
 <!-- Change Driver Modal -->
 <div class="modal fade" id="changeDriverModal" tabindex="-1" aria-labelledby="changeDriverModalLabel" aria-hidden="true">
@@ -2057,9 +2091,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>
+<script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= base_url('js/debounce-passengers.js?v=20260920_2') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
+<script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
 <script>
     // Initialize debounced passenger controls
     PassengerDebounce.init({
@@ -2965,6 +2999,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             if (window.QueueOrderManager && window.QueueOrderManager.syncFromDocument) {
                 window.QueueOrderManager.syncFromDocument(newDoc);
             }
+            if (window.DispatchQueue) window.DispatchQueue.sync(newDoc);
         }
     });
     syncQueueHeaderActions();
@@ -3211,6 +3246,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
             });
             selectedOrder = selectedOrder.filter(function(id) { return checkedIds.has(id); });
 
+            selectedCountNum = document.getElementById('selectedCountNum');
+            selectedBadge = document.getElementById('selectedBadge');
             var checkedCount = selectedOrder.length;
             var curSubmit = getSubmitBtn() || submitBtn;
             if (selectedCountNum) selectedCountNum.textContent = checkedCount;
@@ -3353,6 +3390,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         item.style.setProperty('display', 'none', 'important');
                     }
                 });
+                if (window.DispatchQueue) window.DispatchQueue.applyFilters();
             }
         });
 
@@ -3362,6 +3400,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         // boxes + search filter before firing this event.
         document.addEventListener('vehicle-list-refreshed', function() {
             submitBtn = getSubmitBtn() || submitBtn;
+            if (window.DispatchQueue) window.DispatchQueue.applyFilters();
             updateSelectionCount();
         });
 

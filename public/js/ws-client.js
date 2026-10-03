@@ -335,7 +335,7 @@
     function contrastText(hex) {
         var rgb = hexToRgb(hex);
         var yiq = ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
-        return (yiq >= 150) ? '#1c2430' : '#ffffff';
+        return (yiq > 155) ? '#0f172a' : '#ffffff';
     }
     function colorBrightness(hex) {
         var rgb = hexToRgb(hex);
@@ -428,8 +428,8 @@
 
         if (affectsTheme && (data.theme_guest_primary || data.theme_guest_nav_bg || data.theme_guest_nav_text)) {
             var gp_hex = data.theme_guest_primary || getComputedStyle(document.documentElement).getPropertyValue('--guest-primary').trim() || '#C62828';
-            var gp_dark = colorDarken(gp_hex, 0.20);
-            var gp_soft = colorSoft(gp_hex, 0.12);
+            var gp_dark = colorDarken(gp_hex, 0.18);
+            var gp_soft = colorSoft(gp_hex, 0.14);
             var gp_on = contrastText(gp_hex);
             var gn_hex = data.theme_guest_nav_bg || '#ffffff';
             var gt_hex = data.theme_guest_nav_text || '#1c2430';
@@ -740,9 +740,9 @@
         }
 
         if (affectsTheme && (data.theme_staff_primary || data.theme_staff_nav_bg || data.theme_staff_nav_text)) {
-            var sp_hex = data.theme_staff_primary || getComputedStyle(document.documentElement).getPropertyValue('--staff-primary').trim() || '#15803d';
-            var sp_dark = colorDarken(sp_hex, 0.20);
-            var sp_soft = colorSoft(sp_hex, 0.12);
+            var sp_hex = data.theme_staff_primary || getComputedStyle(document.body).getPropertyValue('--staff-primary').trim() || '#15803d';
+            var sp_dark = colorDarken(sp_hex, 0.18);
+            var sp_soft = colorSoft(sp_hex, 0.14);
             var sp_on = contrastText(sp_hex);
             var sn_hex = data.theme_staff_nav_bg || sp_hex;
             var st_hex = data.theme_staff_nav_text || '#ffffff';
@@ -927,9 +927,9 @@
         }
 
         if (affectsTheme && (data.theme_admin_primary || data.theme_admin_nav_bg || data.theme_admin_nav_text)) {
-            var ap_hex = data.theme_admin_primary || getComputedStyle(document.documentElement).getPropertyValue('--admin-primary').trim() || '#B71C1C';
-            var ap_dark = colorDarken(ap_hex, 0.20);
-            var ap_soft = colorSoft(ap_hex, 0.12);
+            var ap_hex = data.theme_admin_primary || getComputedStyle(document.body).getPropertyValue('--admin-primary').trim() || '#B71C1C';
+            var ap_dark = colorDarken(ap_hex, 0.18);
+            var ap_soft = colorSoft(ap_hex, 0.14);
             var ap_on = contrastText(ap_hex);
             var an_hex = data.theme_admin_nav_bg || ap_hex;
             var at_hex = data.theme_admin_nav_text || '#ffffff';

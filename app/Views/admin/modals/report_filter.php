@@ -28,7 +28,7 @@
 }
 .report-filter-modal .form-control:focus,
 .report-filter-modal .form-select:focus {
-    border-color: #C62828 !important;
+    border-color: var(--primary, #C62828) !important;
     box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
 }
 /* Date input styling with calendar icon & watermark cue */
@@ -38,7 +38,7 @@
 }
 .report-date-icon {
     background-color: #f8fafc !important;
-    color: #C62828 !important;
+    color: var(--primary, #C62828) !important;
     border-right: none !important;
     font-size: 0.95rem;
     cursor: pointer;
@@ -53,7 +53,7 @@
 }
 .report-date-group:focus-within .report-date-icon,
 .report-date-group:focus-within .report-date-input {
-    border-color: #C62828 !important;
+    border-color: var(--primary, #C62828) !important;
 }
 .report-date-group:focus-within {
     box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
@@ -97,7 +97,7 @@
 <div class="modal fade report-filter-modal" id="reportFilterModal" tabindex="-1" aria-labelledby="reportFilterModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered report-filter-dialog">
         <div class="modal-content border-0 shadow report-filter-content">
-            <div class="modal-header text-white p-3 report-filter-header" style="background: linear-gradient(135deg, #C62828 0%, #B71C1C 100%) !important; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+            <div class="modal-header text-white p-3 report-filter-header" style="background: linear-gradient(135deg, var(--primary, #C62828) 0%, var(--primary, #B71C1C) 100%) !important; border-top-left-radius: 8px; border-top-right-radius: 8px;">
                 <h5 class="modal-title fw-bold" id="reportFilterModalLabel" style="color: #ffffff !important; display: flex; align-items: center; font-size: 1.15rem;">
                     <i class="fas fa-clock-rotate-left me-2" style="color: #ffffff !important;"></i> Departure Report Configuration
                 </h5>

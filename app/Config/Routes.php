@@ -181,8 +181,15 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->post('queue/undoCancel/(:num)', 'Staff\Queue::undoCancel/$1');
     $routes->post('queue/reorder', 'Staff\Queue::reorder');
 
-    // Departure Rules (staff view-only access)
+    // Departure rules for the dispatcher's assigned destinations.
     $routes->get('departure-rules', 'Admin\DepartureRules::index');
+    $routes->get('departure-rules/create', 'Admin\DepartureRules::create');
+    $routes->post('departure-rules/store', 'Admin\DepartureRules::store');
+    $routes->get('departure-rules/edit/(:num)', 'Admin\DepartureRules::edit/$1');
+    $routes->post('departure-rules/update/(:num)', 'Admin\DepartureRules::update/$1');
+    $routes->post('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
+    $routes->post('queue/round', 'Staff\Queue::setRound');
+    $routes->post('queue/tick', 'Staff\Queue::tick');
 
     // User Manual & Help Guide
     $routes->get('manual', 'Manual::staff');

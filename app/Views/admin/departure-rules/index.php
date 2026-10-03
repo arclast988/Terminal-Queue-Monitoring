@@ -285,7 +285,7 @@
         <i class="bi bi-clock-history"></i>
         Departure Time Rules
     </h1>
-    <?php if (session()->get('role') !== 'staff'): ?>
+    <?php if ($prefix !== 'staff' || !empty($routes)): ?>
     <div>
         <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-rule" class="btn-modern btn-modern-primary">
             <i class="bi bi-plus-circle"></i> Add New Rule
@@ -366,15 +366,12 @@
                     <tr>
                         <th>Terminal</th>
                         <th>Destination</th>
+                        <th>Day / Round</th>
                         <th>Time From (HH:MM)</th>
                         <th>Time To (HH:MM)</th>
                         <th>Wait Time (HH:MM)</th>
                         <th>Label</th>
-                        <?php if (session()->get('role') !== 'staff'): ?>
                         <th>Action</th>
-                        <?php else: ?>
-                        <th>Status</th>
-                        <?php endif; ?>
                     </tr>
                 </thead>
                 <tbody>
@@ -394,6 +391,7 @@
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>
                                 </td>
+                                <td data-label="Day / Round"><span class="badge-modern badge-modern-primary"><?= esc([1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday',7=>'Sunday'][(int) ($rule['day_of_week'] ?? 0)] ?? 'Every day') ?></span><br><span class="small"><?= !empty($rule['round_number']) ? 'Round ' . (int) $rule['round_number'] : 'All rounds' ?></span></td>
                                 <td data-label="Time From (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
                                 <td data-label="Time To (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
                                 <td data-label="Wait Time (HH:MM)">
@@ -409,7 +407,7 @@
                                 <td data-label="Label">
                                     <span style="color: #475569; font-weight: 500; font-size: 13.5px;"><?= esc(!empty($rule['label']) && $rule['label'] !== '-' ? $rule['label'] : '—') ?></span>
                                 </td>
-                                <?php if (session()->get('role') !== 'staff'): ?>
+                                <?php if (!empty($rule['can_manage']) || session()->get('role') !== 'staff'): ?>
                                 <td data-label="Action">
                                     <div class="d-flex gap-2 justify-content-end">
                                         <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm rule-edit-link" title="Edit">
@@ -441,7 +439,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr id="empty-all-rules-row">
-                            <td colspan="7" class="text-center py-5 text-muted empty-state-table">
+                            <td colspan="8" class="text-center py-5 text-muted empty-state-table">
                                 <i class="bi bi-clock-history fs-1 d-block mb-3 opacity-50"></i>
                                 <div class="fw-bold fs-6 empty-state-title">No departure rules configured</div>
                                 <small class="empty-state-subtitle">The terminal default interval (30 minutes) will be used.</small>
@@ -449,11 +447,11 @@
                         </tr>
                     <?php endif; ?>
                     <tr id="empty-filter-row" class="d-none" style="display: none !important;">
-                        <td colspan="7" class="text-center py-5 text-muted empty-state-table">
+                        <td colspan="8" class="text-center py-5 text-muted empty-state-table">
                             <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
                             <div class="fw-bold fs-6 empty-state-title" id="empty-filter-text" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important; max-width: 100% !important;">No departure rules configured for this route</div>
                             <small class="empty-state-subtitle">No custom dispatch interval has been configured for this destination.</small>
-                            <?php if (session()->get('role') !== 'staff'): ?>
+                            <?php if ($prefix !== 'staff' || !empty($routes)): ?>
                             <div class="mt-3">
                                 <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-for-route" class="btn-modern btn-modern-sm btn-modern-primary" style="font-size: 13.5px; font-weight: 700; padding: 7px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px;">
                                     <i class="bi bi-plus-circle" style="font-size: 14px !important; display: inline-block !important; margin: 0 !important; color: #ffffff !important; opacity: 1 !important;"></i> Add Rule For This Route
@@ -590,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php if (session()->get('role') !== 'staff' && !empty($rules)): ?>
+<?php if (!empty($rules)): ?>
 <!-- ══════════════════════════════════════════════════ -->
 <!--  Delete Departure Rule Confirmation Modal          -->
 <!-- ══════════════════════════════════════════════════ -->

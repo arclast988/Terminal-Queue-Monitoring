@@ -801,8 +801,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
 
     /* Active state for "All" */
     .vf-btn.active {
-        background: #C62828 !important;
-        border-color: #C62828 !important;
+        background: var(--primary, #C62828) !important;
+        border-color: var(--primary, #C62828) !important;
         color: #fff !important;
     }
 

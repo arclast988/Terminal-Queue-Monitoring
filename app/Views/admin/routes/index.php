@@ -563,8 +563,8 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         color: #475569 !important;
     }
     #tab-active-routes.active {
-        background: #b71c1c !important;
-        border-color: #b71c1c !important;
+        background: var(--primary, #b71c1c) !important;
+        border-color: var(--primary, #b71c1c) !important;
         color: #fff !important;
         box-shadow: 0 4px 12px rgba(183, 28, 28, 0.25) !important;
     }

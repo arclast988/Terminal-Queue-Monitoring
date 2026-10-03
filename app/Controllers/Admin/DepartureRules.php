@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\DepartureRuleModel;
 use App\Models\TerminalModel;
 use App\Models\RouteModel;
+use App\Models\UserRouteModel;
 
 class DepartureRules extends BaseController
 {
@@ -27,6 +28,39 @@ class DepartureRules extends BaseController
     {
         $role = session()->get('role');
         return ($role === 'staff') ? 'staff' : 'admin';
+    }
+
+    protected function assignedRouteIds(): ?array
+    {
+        return session()->get('role') === 'staff'
+            ? (new UserRouteModel())->getRouteIdsForUser((int) session()->get('id')) : null;
+    }
+
+    private function canManageRule(array $rule): bool
+    {
+        $ids = $this->assignedRouteIds();
+        return $ids === null || (!empty($rule['route_id']) && in_array((int) $rule['route_id'], $ids, true));
+    }
+
+    private function accessibleTerminals(): array
+    {
+        $ids = $this->assignedRouteIds();
+        if ($ids === null) return $this->terminalModel->findAll();
+        if (!$ids) return [];
+        $terminalIds = array_column((new RouteModel())->whereIn('id', $ids)->findAll(), 'terminal_id');
+        return $this->terminalModel->whereIn('id', array_unique($terminalIds))->findAll();
+    }
+
+    private function recalculateRuleScope(int $terminalId, ?int $routeId): void
+    {
+        $queue = new \App\Models\QueueModel();
+        if ($routeId !== null) {
+            $queue->recalculateSchedule($routeId, true);
+        } else {
+            foreach ((new RouteModel())->where('terminal_id', $terminalId)->findAll() as $route) {
+                $queue->recalculateSchedule((int) $route['id'], true);
+            }
+        }
     }
 
     private function normalizeReturnRoute($route): string
@@ -51,6 +85,10 @@ class DepartureRules extends BaseController
      */
     private function getRoutesForDropdown(): array
     {
+        $ids = $this->assignedRouteIds();
+        if ($ids !== null) {
+            $this->routeModel->whereIn('routes.id', $ids ?: [0]);
+        }
         $routes = $this->routeModel
             ->select('MIN(routes.id) as id, routes.destination, routes.terminal_id')
             ->where('routes.status', 'active')
@@ -113,6 +151,15 @@ class DepartureRules extends BaseController
             ->orderBy('departure_rules.time_from', 'ASC')
             ->findAll();
 
+        $ids = $this->assignedRouteIds();
+        if ($ids !== null) {
+            $terminalIds = array_column($this->accessibleTerminals(), 'id');
+            $rules = array_values(array_filter($rules, static fn(array $r): bool =>
+                (!empty($r['route_id']) && in_array((int) $r['route_id'], $ids, true))
+                || (empty($r['route_id']) && in_array((int) $r['terminal_id'], array_map('intval', $terminalIds), true))));
+        }
+        foreach ($rules as &$rule) $rule['can_manage'] = $this->canManageRule($rule);
+        unset($rule);
         $routes = $this->getRoutesForDropdown();
 
         // Extract list of all unique route destinations available (from routes table and departure_rules)
@@ -154,30 +201,32 @@ class DepartureRules extends BaseController
         $data = [
             'title'           => 'Add Departure Rule',
             'prefix'          => $this->getPrefix(),
-            'terminals'       => $this->terminalModel->findAll(),
+            'terminals'       => $this->accessibleTerminals(),
             'routes'          => $this->getRoutesForDropdown(),
             'selectedRouteId' => $selectedRouteId,
             'returnRoute'     => $returnRoute,
             'listUrl'         => $this->listUrlForRoute($returnRoute),
-            'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label')->findAll(),
+            'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, round_number')->findAll(),
         ];
         return view('admin/departure-rules/create', $data);
     }
 
     public function store()
     {
-        // Staff cannot create rules
-        if (session()->get('role') === 'staff') {
-            return redirect()->to('/staff/departure-rules')->with('error', 'You do not have permission to create departure rules.');
-        }
-
         $waitMinutes = $this->parseWaitMinutes();
+        $day = $this->request->getPost('day_of_week');
+        $round = $this->request->getPost('round_number');
+        $day = ($day === null || $day === '') ? null : $day;
+        $round = ($round === null || $round === '') ? null : $round;
 
         $dataToValidate = array_merge($this->request->getPost(), [
             'wait_minutes' => $waitMinutes
         ]);
 
         $rules = [
+            'day_of_week' => 'permit_empty|integer|greater_than_equal_to[1]|less_than_equal_to[7]',
+            'round_number' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[999]',
+            'label' => 'permit_empty|max_length[50]',
             'time_from'    => 'required',
             'time_to'      => 'required',
             'wait_minutes' => 'required|integer|greater_than[0]',
@@ -211,6 +260,9 @@ class DepartureRules extends BaseController
             }
         }
 
+        if (!$this->canManageRule(['route_id' => $routeId])) {
+            return $this->response->setStatusCode(403)->setBody('Choose an assigned destination. Dispatchers cannot change terminal-wide defaults.');
+        }
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
             $msg = 'Time From must be earlier than Time To.';
@@ -227,7 +279,7 @@ class DepartureRules extends BaseController
         } else {
             $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
         }
-        $overlap = $overlapQuery->first();
+        $overlap = $overlapQuery->where('day_of_week', $day)->where('round_number', $round)->first();
         if ($overlap) {
             $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
@@ -240,13 +292,15 @@ class DepartureRules extends BaseController
             'route_id'     => $routeId,
             'time_from'    => $timeFrom,
             'time_to'      => $timeTo,
+            'day_of_week' => $day === null ? null : (int) $day,
+            'round_number' => $round === null ? null : (int) $round,
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
 
         $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . date('H:i', strtotime($timeFrom)) . ' - ' . date('H:i', strtotime($timeTo)) . ', ' . $waitMinutes . ' min).');
 
-        (new \App\Models\QueueModel())->recalculateSchedule(null, true);
+        $this->recalculateRuleScope($terminalId, $routeId);
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
 
         return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule added successfully.');
@@ -254,12 +308,10 @@ class DepartureRules extends BaseController
 
     public function edit($id)
     {
-        // Staff cannot edit rules
-        if (session()->get('role') === 'staff') {
-            return redirect()->to('/staff/departure-rules')->with('error', 'You do not have permission to edit departure rules.');
-        }
-
         $rule = $this->ruleModel->find($id);
+        if ($rule && !$this->canManageRule($rule)) {
+            return $this->response->setStatusCode(403)->setBody('This departure rule is outside your assigned destinations.');
+        }
 
         if (!$rule) {
             return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Rule not found.');
@@ -269,9 +321,9 @@ class DepartureRules extends BaseController
             'title'         => 'Edit Departure Rule',
             'rule'          => $rule,
             'prefix'        => $this->getPrefix(),
-            'terminals'     => $this->terminalModel->findAll(),
+            'terminals'     => $this->accessibleTerminals(),
             'routes'        => $this->getRoutesForDropdown(),
-            'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label')->findAll(),
+            'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, round_number')->findAll(),
             'returnRoute'   => $this->normalizeReturnRoute($this->request->getGet('return_route')),
         ];
 
@@ -282,18 +334,23 @@ class DepartureRules extends BaseController
 
     public function update($id)
     {
-        // Staff cannot update rules
-        if (session()->get('role') === 'staff') {
-            return redirect()->to('/staff/departure-rules')->with('error', 'You do not have permission to edit departure rules.');
-        }
-
+        $existingRule = $this->ruleModel->find($id);
+        if (!$existingRule) return $this->response->setStatusCode(404)->setBody('Rule not found.');
+        if (!$this->canManageRule($existingRule)) return $this->response->setStatusCode(403)->setBody('This departure rule is outside your assigned destinations.');
         $waitMinutes = $this->parseWaitMinutes();
+        $day = $this->request->getPost('day_of_week');
+        $round = $this->request->getPost('round_number');
+        $day = ($day === null || $day === '') ? null : $day;
+        $round = ($round === null || $round === '') ? null : $round;
 
         $dataToValidate = array_merge($this->request->getPost(), [
             'wait_minutes' => $waitMinutes
         ]);
 
         $rules = [
+            'day_of_week' => 'permit_empty|integer|greater_than_equal_to[1]|less_than_equal_to[7]',
+            'round_number' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[999]',
+            'label' => 'permit_empty|max_length[50]',
             'time_from'    => 'required',
             'time_to'      => 'required',
             'wait_minutes' => 'required|integer|greater_than[0]',
@@ -327,6 +384,9 @@ class DepartureRules extends BaseController
             }
         }
 
+        if (!$this->canManageRule(['route_id' => $routeId])) {
+            return $this->response->setStatusCode(403)->setBody('Choose an assigned destination. Dispatchers cannot change terminal-wide defaults.');
+        }
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
             $msg = 'Time From must be earlier than Time To.';
@@ -344,7 +404,7 @@ class DepartureRules extends BaseController
         } else {
             $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
         }
-        $overlap = $overlapQuery->first();
+        $overlap = $overlapQuery->where('day_of_week', $day)->where('round_number', $round)->first();
         if ($overlap) {
             $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
@@ -358,6 +418,8 @@ class DepartureRules extends BaseController
             'route_id'     => $oldRule['route_id'] ?? '',
             'time_from'    => $oldRule['time_from'] ?? '',
             'time_to'      => $oldRule['time_to'] ?? '',
+            'day_of_week' => $oldRule['day_of_week'] ?? '',
+            'round_number' => $oldRule['round_number'] ?? '',
             'wait_minutes' => $oldRule['wait_minutes'] ?? '',
             'label'        => $oldRule['label'] ?? '',
         ], [
@@ -365,6 +427,8 @@ class DepartureRules extends BaseController
             'route_id'     => $routeId ?? '',
             'time_from'    => $timeFrom,
             'time_to'      => $timeTo,
+            'day_of_week' => $day === null ? null : (int) $day,
+            'round_number' => $round === null ? null : (int) $round,
             'wait_minutes' => $waitMinutes,
             'label'        => $label ?? '',
         ])) {
@@ -376,13 +440,19 @@ class DepartureRules extends BaseController
             'route_id'     => $routeId,
             'time_from'    => $timeFrom,
             'time_to'      => $timeTo,
+            'day_of_week' => $day === null ? null : (int) $day,
+            'round_number' => $round === null ? null : (int) $round,
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
 
         $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . date('H:i', strtotime($oldRule['time_from'])) . '-' . date('H:i', strtotime($oldRule['time_to'])) . '). After: ' . $waitMinutes . ' min (' . date('H:i', strtotime($timeFrom)) . '-' . date('H:i', strtotime($timeTo)) . ').');
 
-        (new \App\Models\QueueModel())->recalculateSchedule(null, true);
+        $oldRouteId = !empty($oldRule['route_id']) ? (int) $oldRule['route_id'] : null;
+        if ((int) $oldRule['terminal_id'] !== $terminalId || $oldRouteId !== $routeId) {
+            $this->recalculateRuleScope((int) $oldRule['terminal_id'], $oldRouteId);
+        }
+        $this->recalculateRuleScope($terminalId, $routeId);
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
 
         return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule updated successfully.');
@@ -390,12 +460,10 @@ class DepartureRules extends BaseController
 
     public function delete($id)
     {
-        // Staff cannot delete rules
-        if (session()->get('role') === 'staff') {
-            return redirect()->to('/staff/departure-rules')->with('error', 'You do not have permission to delete departure rules.');
-        }
-
         $rule = $this->ruleModel->find($id);
+        if ($rule && !$this->canManageRule($rule)) {
+            return $this->response->setStatusCode(403)->setBody('This departure rule is outside your assigned destinations.');
+        }
         if (!$rule) {
             return redirect()->to('/' . $this->getPrefix() . '/departure-rules')->with('error', 'Departure rule not found.');
         }
@@ -404,7 +472,7 @@ class DepartureRules extends BaseController
             $ruleTime = date('H:i', strtotime($rule['time_from'])) . ' - ' . date('H:i', strtotime($rule['time_to']));
             $ruleLabel = !empty($rule['label']) && $rule['label'] !== '-' ? ' (' . $rule['label'] . ')' : '';
             $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
-            (new \App\Models\QueueModel())->recalculateSchedule(null, true);
+            $this->recalculateRuleScope((int) $rule['terminal_id'], !empty($rule['route_id']) ? (int) $rule['route_id'] : null);
             $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
             return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule "' . $ruleTime . $ruleLabel . '" deleted successfully.');
         }

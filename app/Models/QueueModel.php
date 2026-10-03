@@ -12,7 +12,7 @@ class QueueModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['vehicle_id', 'driver_name', 'operator_name', 'plate_number', 'route_id', 'status', 'current_passengers', 'position', 'arrival_time', 'estimated_departure', 'departure_time'];
+    protected $allowedFields    = ['vehicle_id', 'driver_name', 'operator_name', 'plate_number', 'route_id', 'status', 'current_passengers', 'position', 'arrival_time', 'estimated_departure', 'departure_time', 'round_number', 'boarding_start'];
 
     // Dates
     protected $useTimestamps = false; // Manually handling arrival_time and departure_time
@@ -79,7 +79,7 @@ class QueueModel extends Model
      * Position is the canonical dispatcher-managed order. Boarding vehicles remain
      * first, followed by waiting vehicles in their saved position order.
      */
-    public function recalculateSchedule(?int $targetRouteId = null, bool $resetWaitingAnchor = false): void
+    public function recalculateSchedule(?int $targetRouteId = null, bool $resetWaitingAnchor = false, ?int $startAfter = null, ?int $now = null): void
     {
         $db = $this->db;
         $db->transStart();
@@ -96,7 +96,7 @@ class QueueModel extends Model
         }
 
         $departureRuleModel = new DepartureRuleModel($db);
-        $now = time();
+        $now ??= time();
 
         // 2. Fetch active queue items with route & terminal details
         $builder = $this->select('queue.*, routes.terminal_id, routes.destination')
@@ -187,29 +187,49 @@ class QueueModel extends Model
                 }
 
                 $prevEstDeparture = null;
+                $anchorStart = null;
+                if (!$resetWaitingAnchor && $startAfter === null) {
+                    foreach ($items as $candidate) {
+                        if (!empty($candidate['boarding_start'])) {
+                            $candidateStart = strtotime($candidate['boarding_start']);
+                            $anchorStart = $anchorStart === null ? $candidateStart : min($anchorStart, $candidateStart);
+                        }
+                    }
+                }
 
                 foreach ($items as $index => $item) {
                     if ($index === 0) {
                         // First active vehicle on this destination
                         if ($item['status'] === 'boarding' && !empty($item['estimated_departure'])) {
                             $estTime = $item['estimated_departure'];
-                        } elseif ($waitingAnchor !== null) {
+                            $legacyInterval = $this->resolveGroupIntervalFromRules($allRules, $estTime, $terminalId, $groupRouteIds, (int) ($item['round_number'] ?? 1));
+                            $boardingStart = !empty($item['boarding_start']) ? strtotime($item['boarding_start']) : strtotime($estTime) - $legacyInterval * 60;
+                        } elseif ($waitingAnchor !== null && !$resetWaitingAnchor && $startAfter === null) {
                             $estTime = date('Y-m-d H:i:s', $waitingAnchor);
+                            $legacyInterval = $this->resolveGroupIntervalFromRules($allRules, $estTime, $terminalId, $groupRouteIds, (int) ($item['round_number'] ?? 1));
+                            $boardingStart = $anchorStart ?? $waitingAnchor - $legacyInterval * 60;
+                            if ($anchorStart !== null) {
+                                $interval = $this->resolveGroupIntervalFromRules($allRules, date('Y-m-d H:i:s', $boardingStart), $terminalId, $groupRouteIds, (int) ($item['round_number'] ?? 1));
+                                $estTime = date('Y-m-d H:i:s', $boardingStart + $interval * 60);
+                            }
                         } else {
-                            $waitMinutes = $this->resolveGroupIntervalFromRules($allRules, date('H:i:s', $now), $terminalId, $groupRouteIds);
-                            $estTime = date('Y-m-d H:i:s', $now + ($waitMinutes * 60));
+                            $boardingStart = self::nextFiveMinuteBoundary($startAfter ?? $now);
+                            $waitMinutes = $this->resolveGroupIntervalFromRules($allRules, date('Y-m-d H:i:s', $boardingStart), $terminalId, $groupRouteIds, (int) ($item['round_number'] ?? 1));
+                            $estTime = date('Y-m-d H:i:s', $boardingStart + ($waitMinutes * 60));
                         }
                     } else {
                         // Subsequent vehicles: offset from previous vehicle's slot using the departure rule active at that previous departure time
-                        $prevTimeStr = date('H:i:s', strtotime($prevEstDeparture));
-                        $waitMinutes = $this->resolveGroupIntervalFromRules($allRules, $prevTimeStr, $terminalId, $groupRouteIds);
-                        $baseTimestamp = strtotime($prevEstDeparture);
-                        $estTime = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes", $baseTimestamp));
+                        $boardingStart = self::nextFiveMinuteBoundary(strtotime($prevEstDeparture));
+                        $waitMinutes = $this->resolveGroupIntervalFromRules($allRules, date('Y-m-d H:i:s', $boardingStart), $terminalId, $groupRouteIds, (int) ($item['round_number'] ?? 1));
+                        $estTime = date('Y-m-d H:i:s', $boardingStart + $waitMinutes * 60);
                     }
 
                     $prevEstDeparture = $estTime;
 
                     $updateData = [];
+                    if (($item['boarding_start'] ?? '') !== date('Y-m-d H:i:s', $boardingStart)) {
+                        $updateData['boarding_start'] = date('Y-m-d H:i:s', $boardingStart);
+                    }
                     if (($item['estimated_departure'] ?? '') !== $estTime) {
                         $updateData['estimated_departure'] = $estTime;
                     }
@@ -250,9 +270,55 @@ class QueueModel extends Model
     /**
      * Resolve departure interval using in-memory pre-loaded rules (eliminates N+1 DB queries).
      */
-    public function resolveGroupIntervalFromRules(array $allRules, string $time, int $terminalId, array $routeIds): int
+    public function resolveGroupIntervalFromRules(array $allRules, string $time, int $terminalId, array $routeIds, int $roundNumber = 1): int
     {
-        return (int) DepartureRuleModel::resolveRuleFromRules($allRules, $time, $terminalId, $routeIds)['wait_minutes'];
+        return (int) DepartureRuleModel::resolveRuleFromRules($allRules, $time, $terminalId, $routeIds, $roundNumber)['wait_minutes'];
+    }
+
+    public static function nextFiveMinuteBoundary(int $timestamp): int
+    {
+        return (int) (ceil($timestamp / 300) * 300);
+    }
+
+    /** Promote only the head of an idle destination; a late vehicle never overlaps it. */
+    public function advanceBoarding(?int $now = null): array
+    {
+        $now ??= time();
+        $this->db->transStart();
+        if (str_contains(strtolower($this->db->DBDriver), 'postgre')) {
+            $key = crc32('queue_recalc_0');
+            $this->db->query('SELECT pg_advisory_xact_lock(?)', [$key > 2147483647 ? $key - 4294967296 : $key]);
+        }
+        // A new operating day returns each route to Round 1. Re-time waiting
+        // vehicles using today's rules while preserving trips already boarding.
+        if ($this->db->tableExists('dispatch_rounds')) {
+            $today = date('Y-m-d', $now);
+            $states = $this->db->table('dispatch_rounds')->where('service_date <', $today)->get()->getResultArray();
+            foreach ($states as $state) {
+                $this->db->table('dispatch_rounds')->where('id', $state['id'])->update(['service_date' => $today, 'round_number' => 1]);
+                $siblings = (new RouteModel($this->db))->getDestinationRouteIds((int) $state['terminal_id'], $state['destination']);
+                if (!$siblings) continue;
+                $this->db->table('queue')->whereIn('route_id', $siblings)->where('status', 'waiting')->update(['round_number' => 1]);
+                $this->recalculateSchedule((int) $siblings[0], true, null, $now);
+            }
+        }
+        $items = $this->select('queue.*, routes.terminal_id, routes.destination')
+            ->join('routes', 'routes.id = queue.route_id')->whereIn('queue.status', ['waiting', 'boarding'])
+            ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
+            ->orderBy('queue.position', 'ASC')->orderBy('queue.id', 'ASC')->findAll();
+        $seen = [];
+        $promoted = [];
+        foreach ($items as $item) {
+            $key = $item['terminal_id'] . '|' . $item['destination'];
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+            if ($item['status'] === 'waiting' && !empty($item['boarding_start']) && strtotime($item['boarding_start']) <= $now) {
+                $this->update($item['id'], ['status' => 'boarding']);
+                $promoted[] = (int) $item['id'];
+            }
+        }
+        $this->db->transComplete();
+        return $this->db->transStatus() ? $promoted : [];
     }
 
     /**

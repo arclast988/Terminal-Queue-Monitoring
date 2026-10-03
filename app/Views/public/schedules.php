@@ -1268,7 +1268,7 @@
     <?= $this->include('templates/guestfooter') ?>
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
-        <script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
+        <script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
         <script>
         var currentType = <?= json_encode((string) ($vehicle_type ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
         var currentDest = <?= json_encode(strtolower((string) ($destination ?? '')), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;

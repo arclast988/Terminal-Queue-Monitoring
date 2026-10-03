@@ -1251,6 +1251,7 @@ body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-con
 }
 
 /* --- Guest Portal Dynamic Theme Tokens --- */
+:root { --guest-primary: {$gp['hex']}; --staff-primary: {$sp['hex']}; --admin-primary: {$ap['hex']}; }
 :root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
     --primary: {$gp['hex']} !important;
     --primary-dark: {$gp['dark']} !important;

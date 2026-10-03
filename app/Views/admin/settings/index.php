@@ -124,7 +124,7 @@ $slotsMeta = [
     flex-shrink: 0 !important;
     flex: 0 0 52px !important;
     border-radius: 14px;
-    background: linear-gradient(135deg, #B71C1C 0%, #ef4444 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     display: flex;
     align-items: center;
     justify-content: center;

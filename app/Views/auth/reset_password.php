@@ -441,7 +441,7 @@
     <?= view('partials/auth_background', ['authSlides' => $authSlides, 'defaultAuthSlides' => $defaultAuthSlides]) ?>
     <script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>
+    <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
     <script>
     document.addEventListener('pttm:ws-branding_updated', function (e) {
         if (e.detail && e.detail.data && typeof window.applyLiveBranding === 'function') {

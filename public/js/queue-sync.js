@@ -246,7 +246,9 @@
                 item.driver_name || '',
                 item.origin || '',
                 item.destination || '',
-                item.estimated_departure || ''
+                item.estimated_departure || '',
+                item.boarding_start || '',
+                item.round_number || 1
             ].join('|');
         });
         parts.sort();
@@ -304,6 +306,12 @@
         var curList = document.getElementById('vehicleListContainer');
         var newList = newDoc.getElementById('vehicleListContainer');
         var curModal = document.getElementById('addToQueueModal');
+        var newModal = newDoc.getElementById('addToQueueModal');
+        if (curModal && newModal) {
+            var form = curModal.querySelector('form');
+            var newForm = newModal.querySelector('form');
+            if (form && newForm) form.classList.toggle('add-queue-modal-empty', newForm.classList.contains('add-queue-modal-empty'));
+        }
 
         // Empty <-> non-empty transition: the list element only exists when
         // vehicles are available, so replace the whole modal body + footer.
@@ -408,6 +416,7 @@
 
         fetch(_config.refreshUrl, {
             method: 'GET',
+            cache: 'no-store',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' },
             signal: _refreshController ? _refreshController.signal : undefined
         })

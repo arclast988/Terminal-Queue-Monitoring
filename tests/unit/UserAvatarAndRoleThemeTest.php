@@ -112,7 +112,7 @@ final class UserAvatarAndRoleThemeTest extends CIUnitTestCase
 
         // Active Routes tab uses Admin Red theme color (#b71c1c / var(--primary-red))
         $this->assertStringContainsString('#tab-active-routes.active', $html);
-        $this->assertStringContainsString('background: #b71c1c !important;', $html);
+        $this->assertStringContainsString('background: var(--primary, #b71c1c) !important;', $html);
         $this->assertStringNotContainsString('#tab-active-routes.active {\n        background: #15803d !important;', $html);
     }
 
@@ -128,7 +128,7 @@ final class UserAvatarAndRoleThemeTest extends CIUnitTestCase
         $this->assertStringNotContainsString('Enter the 6-digit code', $content);
 
         // Dispatcher avatar background is emerald green (#15803d)
-        $this->assertStringContainsString('background: #15803d;', $content);
+        $this->assertStringContainsString('background: var(--primary, #15803d);', $content);
 
         // Zero native alert(...) calls in executable JavaScript
         $codeWithoutComments = preg_replace('#//.*#', '', $content);

@@ -377,7 +377,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20261002a') ?>"></script>
 <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-<script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>
+<script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
 <script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
 <script type="application/json" id="guestManagedContent"><?= json_encode($guestManagedContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>

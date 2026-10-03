@@ -81,14 +81,14 @@
     }
 
     html body .quick-chip:hover {
-        border-color: #b71c1c !important;
-        color: #b71c1c !important;
+        border-color: var(--primary, #b71c1c) !important;
+        color: var(--primary, #b71c1c) !important;
         background: #fef2f2 !important;
     }
 
     html body .quick-chip.active {
-        background: #b71c1c !important;
-        border-color: #b71c1c !important;
+        background: var(--primary, #b71c1c) !important;
+        border-color: var(--primary, #b71c1c) !important;
         color: #ffffff !important;
     }
 
@@ -156,7 +156,7 @@
     </div>
     <div class="col-12 col-md-6 col-xl-3 mb-4">
         <div class="stat-card-modern fade-in">
-            <div class="stat-card-icon" style="background: #fdecea; color: #c62828;">
+            <div class="stat-card-icon" style="background: var(--primary-soft, #fdecea); color: var(--primary, #c62828);">
                 <i class="bi bi-calendar-range"></i>
             </div>
             <div class="stat-card-value"><?= number_format($stats['year'] ?? 0) ?></div>
@@ -356,7 +356,7 @@
 <?= view('admin/modals/report_filter', ['destinations' => $destinations ?? [], 'destinationVehicleTypes' => $destinationVehicleTypes ?? [], 'vehicleTypes' => $vehicleTypes ?? []]) ?>
 <?= view('templates/footer') ?>
 
-<script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
+<script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var form = document.getElementById('historyFilterForm');

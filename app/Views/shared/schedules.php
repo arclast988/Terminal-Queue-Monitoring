@@ -438,8 +438,8 @@
 
 <?= $this->include('templates/footer') ?>
 
-<script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>
-<script src="<?= base_url('js/queue-sync.js?v=20261001a') ?>"></script>
+<script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
+<script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
 <script>
     var currentSharedDestFilter = '<?= esc(strtolower($destination ?? 'all')) ?>';
 

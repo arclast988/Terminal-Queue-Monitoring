@@ -149,3 +149,46 @@ body.staff-theme a:not(.btn):not(.nav-link) {
   color: var(--primary);
 }
 
+/* Brand controls follow the current role, including freshly refreshed content. */
+html body:is(.guest-theme, .admin-theme, .staff-theme) {
+  --bs-primary: var(--primary);
+  --bs-link-color: var(--primary);
+  --bs-link-hover-color: var(--primary-dark);
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) :is(.btn-primary, .btn-modern-primary, .btn-submit-queue, .btn-outline-primary.active, .rule-filter-btn.active, .tab-pill.active, .settings-tab-btn.active) {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--on-primary) !important;
+  -webkit-text-fill-color: var(--on-primary) !important;
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) :is(.btn-primary, .btn-modern-primary, .btn-submit-queue):hover {
+  background: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) :is(.btn-modern-primary, .btn-primary, .btn-submit-queue, .rule-filter-btn.active) :is(i, span) {
+  color: var(--on-primary) !important;
+  -webkit-text-fill-color: var(--on-primary) !important;
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) .btn-outline-primary {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) .btn-outline-primary:hover {
+  color: var(--on-primary) !important;
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) .badge-modern-primary {
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+}
+html body.staff-theme .queue-order-header {
+  background: var(--primary) !important;
+  border-color: var(--primary-dark) !important;
+  color: var(--on-primary) !important;
+}
+html body.staff-theme .queue-order-header * {
+  color: var(--on-primary) !important;
+}
+

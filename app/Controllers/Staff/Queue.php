@@ -9,6 +9,7 @@ use App\Models\RouteModel;
 use App\Models\DepartureRuleModel;
 use App\Models\TerminalModel;
 use App\Models\UserRouteModel;
+use App\Models\DispatchRoundModel;
 
 class Queue extends BaseController
 {
@@ -113,6 +114,7 @@ class Queue extends BaseController
 
     public function index()
     {
+        $this->advanceAutomaticBoarding();
         $assignedRouteIds = $this->getAssignedRouteIds();
 
         // Build queue query
@@ -155,7 +157,7 @@ class Queue extends BaseController
         // Filter vehicles: only show vehicles assigned to dispatcher's routes AND not currently queued
         $freshVehicleModel = new VehicleModel();
         $vehicleBuilder = $freshVehicleModel
-            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination')
+            ->select('vehicles.*, terminals.name as route_origin, routes.terminal_id as route_terminal_id, routes.destination as route_destination')
             ->join('routes', 'routes.id = vehicles.default_route_id', 'left')
             ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
             ->where('vehicles.status', 'active')
@@ -277,14 +279,80 @@ class Queue extends BaseController
             $vehicles = $filteredVehicles;
         }
 
+        $routeBuilder = (new RouteModel())->select('routes.*, terminals.name as origin')
+            ->join('terminals', 'terminals.id = routes.terminal_id')->where('routes.status', 'active');
+        if ($assignedRouteIds !== null) $routeBuilder->whereIn('routes.id', $assignedRouteIds ?: [0]);
+        $queueRoutes = [];
+        $roundModel = new DispatchRoundModel();
+        $allRules = (new DepartureRuleModel())->findAll();
+        $routeRecords = $routeBuilder->orderBy('routes.destination', 'ASC')->findAll();
+        $idsByGroup = [];
+        foreach ($routeRecords as $route) $idsByGroup[$route['terminal_id'] . '|' . $route['destination']][] = (int) $route['id'];
+        foreach ($routeRecords as $route) {
+            $key = $route['terminal_id'] . '|' . $route['destination'];
+            if (isset($queueRoutes[$key])) continue;
+            $round = $roundModel->currentRound((int) $route['terminal_id'], $route['destination']);
+            $route['round_number'] = $round;
+            $routeIds = $idsByGroup[$key];
+            $choices = [1, $round];
+            foreach ($allRules as $rule) {
+                if ((int) $rule['terminal_id'] === (int) $route['terminal_id']
+                    && (empty($rule['route_id']) || in_array((int) $rule['route_id'], $routeIds, true))
+                    && (empty($rule['day_of_week']) || (int) $rule['day_of_week'] === (int) date('N'))
+                    && !empty($rule['round_number'])) $choices[] = (int) $rule['round_number'];
+            }
+            $route['round_choices'] = array_values(array_unique($choices));
+            sort($route['round_choices']);
+            $queueRoutes[$key] = $route;
+        }
+        foreach ($vehicles as &$vehicle) {
+            $vehicle['round_number'] = $queueRoutes[$vehicle['route_terminal_id'] . '|' . $vehicle['route_destination']]['round_number'] ?? 1;
+        }
+        unset($vehicle);
         $data = [
             'title' => 'Queue Management',
+            'queueRoutes' => array_values($queueRoutes),
             'queue' => $queue,
             'vehicles' => $vehicles,
             'noRoutesAssigned' => ($assignedRouteIds !== null && empty($assignedRouteIds)),
         ];
 
+        $this->response->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
         return view('staff/queue/index', $data);
+    }
+
+    private function advanceAutomaticBoarding(): void
+    {
+        $ids = $this->queueModel->advanceBoarding();
+        if ($ids) $this->broadcastUpdate('queue_update', ['action' => 'automatic_boarding', 'ids' => $ids]);
+    }
+
+    public function tick()
+    {
+        $this->advanceAutomaticBoarding();
+        return $this->response->setJSON(['success' => true, 'csrf' => csrf_hash()]);
+    }
+
+    public function setRound()
+    {
+        $routeId = (int) $this->request->getPost('route_id');
+        $round = $this->request->getPost('round_number');
+        if (!$this->hasRouteAccess($routeId)) return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'This route is not assigned to you.']);
+        if (!is_scalar($round) || !preg_match('/^[1-9][0-9]{0,2}$/', (string) $round)) return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Choose a round between 1 and 999.']);
+        $route = $this->routeModel->find($routeId);
+        if (!$route) return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Route not found.']);
+        $db = \Config\Database::connect();
+        $db->transStart();
+        $this->acquireQueueOrderingLock($db);
+        (new DispatchRoundModel($db))->setRound((int) $route['terminal_id'], $route['destination'], (int) $round);
+        $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
+        $db->table('queue')->whereIn('route_id', $siblings)->where('status', 'waiting')->update(['round_number' => (int) $round]);
+        $this->queueModel->recalculateSchedule($routeId, true);
+        $db->transComplete();
+        if (!$db->transStatus()) return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'The round could not be updated.']);
+        $this->logActivity('Change dispatch round', $route['destination'] . ': Round ' . (int) $round . '.');
+        $this->broadcastUpdate('queue_update', ['action' => 'round_changed', 'route_id' => $routeId, 'round_number' => (int) $round]);
+        return $this->response->setJSON(['success' => true, 'csrf' => csrf_hash()]);
     }
 
     public function add()
@@ -442,9 +510,10 @@ class Queue extends BaseController
                 $destinationPositions[$positionKey] = (int) ($lastPosition['position'] ?? 0);
             }
             $nextPosition = $destinationPositions[$positionKey] + 1;
+            $roundNumber = (new DispatchRoundModel($db))->currentRound($terminalId, $route['destination']);
 
             if (!array_key_exists($routeId, $ruleCache)) {
-                $ruleCache[$routeId] = $departureRuleModel->getRuleForTime($currentTime, $terminalId, (int) $routeId);
+                $ruleCache[$routeId] = $departureRuleModel->getRuleForTime(date('Y-m-d H:i:s'), $terminalId, (int) $routeId, $roundNumber);
             }
             $matchedRule = $ruleCache[$routeId];
             $waitMinutes = (int) $matchedRule['wait_minutes'];
@@ -459,6 +528,7 @@ class Queue extends BaseController
                 'operator_name'       => $vehicle['operator_name'] ?? $vehicle['owner_name'] ?? null,
                 'plate_number'        => $vehicle['plate_number'] ?? null,
                 'route_id'            => $routeId,
+                'round_number'        => $roundNumber,
                 'status'              => 'waiting',
                 'position'            => $nextPosition,
                 'arrival_time'        => $arrivalTime,
@@ -566,20 +636,40 @@ class Queue extends BaseController
             // included in active queue calculations, so this cannot occupy an
             // active position while the trip is canceled.
             $data['estimated_departure'] = null;
+            $data['boarding_start'] = null;
         } elseif (in_array($status, ['waiting', 'boarding'], true) && empty($existingItem['estimated_departure'])) {
             // Boarding uses the assigned departure slot. Starting boarding or
             // retrying the status request must not add a second waiting interval.
             $route = $this->routeModel->find($existingItem['route_id']);
             $terminalId = (int) ($route['terminal_id'] ?? 1);
             $routeId = (int) $existingItem['route_id'];
-            $waitMinutes = (new DepartureRuleModel())->getWaitMinutesForTime(date('H:i:s'), $terminalId, $routeId);
-            $data['estimated_departure'] = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
+            $start = QueueModel::nextFiveMinuteBoundary(time());
+            $waitMinutes = (new DepartureRuleModel())->getWaitMinutesForTime(date('Y-m-d H:i:s', $start), $terminalId, $routeId, (int) ($existingItem['round_number'] ?? 1));
+            $data['boarding_start'] = date('Y-m-d H:i:s', $start);
+            $data['estimated_departure'] = date('Y-m-d H:i:s', $start + $waitMinutes * 60);
         }
 
         // Use transaction to prevent race conditions during position reordering
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+
+        // Re-read under the ordering lock so retried departure requests cannot restart the next timer.
+        $lockedItem = $this->queueModel->find($id);
+        if (!$lockedItem || in_array($lockedItem['status'], ['departed', 'canceled'], true)) {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip has already ended. Refresh the queue.']);
+        }
+        if ($status === 'boarding') {
+            $route = $this->routeModel->find($lockedItem['route_id']);
+            $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
+            $head = $this->queueModel->whereIn('route_id', $siblings)->whereIn('status', ['waiting', 'boarding'])
+                ->orderBy("CASE WHEN status = 'boarding' THEN 0 ELSE 1 END", 'ASC')->orderBy('position', 'ASC')->first();
+            if (!$head || (int) $head['id'] !== (int) $id || (!empty($lockedItem['boarding_start']) && strtotime($lockedItem['boarding_start']) > time())) {
+                $db->transRollback();
+                return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'Boarding starts at the scheduled five-minute boundary for the first vehicle in this route.']);
+            }
+        }
 
         $wasActive = in_array($existingItem['status'] ?? '', ['waiting', 'boarding'], true);
         $willBeActive = in_array($status, ['waiting', 'boarding'], true);
@@ -601,7 +691,11 @@ class Queue extends BaseController
 
         // Keep boarding first, preserve the dispatcher order and departure
         // anchor, and renumber the active line after a depart/cancel.
-        $this->queueModel->reorderByDeparture();
+        if ($status === 'departed') {
+            $this->queueModel->recalculateSchedule((int) $existingItem['route_id'], true, strtotime($data['departure_time']));
+        } else {
+            $this->queueModel->reorderByDeparture();
+        }
 
         $db->transComplete();
 
@@ -1018,6 +1112,7 @@ class Queue extends BaseController
 
         $this->queueModel->update($id, [
             'status' => 'waiting',
+            'round_number' => (new DispatchRoundModel($db))->currentRound((int) $route['terminal_id'], $route['destination']),
             'arrival_time' => !empty($queueItem['arrival_time']) ? $queueItem['arrival_time'] : date('Y-m-d H:i:s'),
         ]);
 
