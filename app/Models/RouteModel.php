@@ -20,6 +20,18 @@ class RouteModel extends Model
     protected $updatedField  = '';
 
     /**
+     * All vehicle-type routes sharing one terminal/destination queue line.
+     * Departure rules use a representative route ID for this whole line.
+     */
+    public function getDestinationRouteIds(int $terminalId, string $destination): array
+    {
+        return array_map('intval', $this->where('terminal_id', $terminalId)
+            ->where('destination', $destination)
+            ->orderBy('id', 'ASC')
+            ->findColumn('id') ?: []);
+    }
+
+    /**
      * Scope: join terminals to get origin name.
      * Usage: $routeModel->withOrigin()->findAll()
      */

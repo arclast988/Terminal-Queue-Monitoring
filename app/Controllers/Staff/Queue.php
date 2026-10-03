@@ -452,7 +452,6 @@ class Queue extends BaseController
 
             // Stagger arrival_time by selection order to guarantee FIFO queue ranking
             $arrivalTime = date('Y-m-d H:i:s', $baseArrivalTimestamp + $selectionIndex);
-            $estimatedDeparture = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes", $baseArrivalTimestamp + $selectionIndex));
 
             $queueId = $this->queueModel->insert([
                 'vehicle_id'          => $vehicleId,
@@ -463,7 +462,8 @@ class Queue extends BaseController
                 'status'              => 'waiting',
                 'position'            => $nextPosition,
                 'arrival_time'        => $arrivalTime,
-                'estimated_departure' => $estimatedDeparture,
+                // The shared scheduler assigns this slot after the batch insert.
+                'estimated_departure' => null,
             ]);
 
             $destinationPositions[$positionKey] = $nextPosition;
@@ -566,25 +566,14 @@ class Queue extends BaseController
             // included in active queue calculations, so this cannot occupy an
             // active position while the trip is canceled.
             $data['estimated_departure'] = null;
-        } elseif ($status == 'boarding') {
-            // The departure interval starts NOW (when boarding begins), not when
-            // the vehicle was queued. Re-evaluate the rule for the current time.
-            $qItem      = $this->queueModel->find($id);
-            $route      = $qItem ? $this->routeModel->find($qItem['route_id']) : null;
+        } elseif (in_array($status, ['waiting', 'boarding'], true) && empty($existingItem['estimated_departure'])) {
+            // Boarding uses the assigned departure slot. Starting boarding or
+            // retrying the status request must not add a second waiting interval.
+            $route = $this->routeModel->find($existingItem['route_id']);
             $terminalId = (int) ($route['terminal_id'] ?? 1);
-            $routeId    = $qItem ? (int) $qItem['route_id'] : null;
+            $routeId = (int) $existingItem['route_id'];
             $waitMinutes = (new DepartureRuleModel())->getWaitMinutesForTime(date('H:i:s'), $terminalId, $routeId);
             $data['estimated_departure'] = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
-        } elseif ($status == 'waiting') {
-            // If estimated_departure is empty, calculate it
-            $qItem = $this->queueModel->find($id);
-            if ($qItem && empty($qItem['estimated_departure'])) {
-                $route      = $this->routeModel->find($qItem['route_id']);
-                $terminalId = (int) ($route['terminal_id'] ?? 1);
-                $routeId    = (int) $qItem['route_id'];
-                $waitMinutes = (new DepartureRuleModel())->getWaitMinutesForTime(date('H:i:s'), $terminalId, $routeId);
-                $data['estimated_departure'] = date('Y-m-d H:i:s', strtotime("+$waitMinutes minutes"));
-            }
         }
 
         // Use transaction to prevent race conditions during position reordering
@@ -610,8 +599,8 @@ class Queue extends BaseController
 
         $this->queueModel->update($id, $data);
 
-        // Keep the active queue ordered by departure time (boarding by ETA,
-        // then waiting by arrival). Also renumbers after a depart/cancel.
+        // Keep boarding first, preserve the dispatcher order and departure
+        // anchor, and renumber the active line after a depart/cancel.
         $this->queueModel->reorderByDeparture();
 
         $db->transComplete();
