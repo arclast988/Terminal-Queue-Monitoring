@@ -79,7 +79,7 @@ SVG;
                     <div class="user-avatar-panel">
                         <div id="editUserAvatarPreview" class="user-form-avatar-preview" style="border-color: <?= $avatarBg ?>;">
                             <?php if (!empty($user['profile_image'])): ?>
-                                <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                <img src="<?= esc(media_url($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
                             <?php else: ?>
                                 <?= $defaultAvatarSvg ?>
                             <?php endif; ?>

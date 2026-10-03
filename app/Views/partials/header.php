@@ -228,7 +228,7 @@ SVG;
             <div class="drawer-user-card">
                 <div class="drawer-user-avatar">
                     <?php if ($hasCustomImage): ?>
-                        <img src="<?= base_url(esc($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
+                        <img src="<?= esc(media_url($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
                     <?php else: ?>
                         <?= $identiconSvg ?>
                     <?php endif; ?>

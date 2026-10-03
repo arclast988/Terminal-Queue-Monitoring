@@ -48,7 +48,7 @@ SVG;
     <button class="profile-trigger-btn" id="userProfileBtn" type="button" aria-expanded="false" aria-haspopup="true" title="<?= esc($fullName) ?> (<?= esc($roleLabel) ?>)">
         <div class="profile-avatar-circle" id="navProfileTriggerAvatar">
             <?php if ($hasCustomImage): ?>
-                <img src="<?= base_url(esc($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
+                <img src="<?= esc(media_url($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
             <?php else: ?>
                 <?= $identiconSvg ?>
             <?php endif; ?>
@@ -67,7 +67,7 @@ SVG;
             <div class="profile-header-avatar" id="btnHeaderAvatarClick" role="button" tabindex="0" title="Click to edit or delete photo" aria-label="Profile picture actions" aria-haspopup="true" aria-expanded="false">
                 <div class="profile-avatar-circle profile-avatar-large" id="navProfileHeaderAvatar">
                     <?php if ($hasCustomImage): ?>
-                        <img src="<?= base_url(esc($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
+                        <img src="<?= esc(media_url($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
                     <?php else: ?>
                         <?= $identiconSvg ?>
                     <?php endif; ?>

@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\VehicleTypeModel;
+use App\Services\CloudinaryService;
 
 class VehicleTypes extends BaseController
 {
@@ -61,6 +62,13 @@ class VehicleTypes extends BaseController
             $newFilename = 'vt_' . $slug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
             if ($photoFile->move($uploadDir, $newFilename)) {
                 $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
+                $cloudinary = new CloudinaryService();
+                if ($cloudinary->isConfigured()) {
+                    $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'vehicle_types', 'vt_' . $slug . '_' . time());
+                    if ($cRes && !empty($cRes['secure_url'])) {
+                        $photoRelPath = $cRes['secure_url'];
+                    }
+                }
             } else {
                 return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to save uploaded photo to destination directory.');
             }
@@ -295,21 +303,36 @@ class VehicleTypes extends BaseController
             }
             $newFilename = 'vt_' . $newSlug . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
             if ($photoFile->move($uploadDir, $newFilename)) {
+                $cloudinary = new CloudinaryService();
                 if (! empty($type['photo'])) {
-                    $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
-                    if (is_file($oldFull)) {
-                        @unlink($oldFull);
+                    if (str_starts_with($type['photo'], 'http')) {
+                        $cloudinary->deleteImage($type['photo']);
+                    } else {
+                        $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
+                        if (is_file($oldFull)) {
+                            @unlink($oldFull);
+                        }
                     }
                 }
                 $photoRelPath = 'uploads/vehicle_types/' . $newFilename;
+                if ($cloudinary->isConfigured()) {
+                    $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'vehicle_types', 'vt_' . $newSlug . '_' . time());
+                    if ($cRes && !empty($cRes['secure_url'])) {
+                        $photoRelPath = $cRes['secure_url'];
+                    }
+                }
             } else {
                 return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to save uploaded photo to destination directory.');
             }
         } elseif ($removePhoto === '1' || $removePhoto === 'true') {
             if (! empty($type['photo'])) {
-                $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
-                if (is_file($oldFull)) {
-                    @unlink($oldFull);
+                if (str_starts_with($type['photo'], 'http')) {
+                    (new CloudinaryService())->deleteImage($type['photo']);
+                } else {
+                    $oldFull = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $type['photo']);
+                    if (is_file($oldFull)) {
+                        @unlink($oldFull);
+                    }
                 }
             }
             $photoRelPath = null;
@@ -372,7 +395,7 @@ class VehicleTypes extends BaseController
             'name'     => $name,
             'color'    => $color,
             'icon'     => $icon,
-            'photo'    => $photoRelPath ? base_url($photoRelPath) : null,
+            'photo'    => $photoRelPath ? media_url($photoRelPath) : null,
             'colors'   => get_db_vehicle_types(),
         ]);
 
@@ -388,7 +411,7 @@ class VehicleTypes extends BaseController
                     'slug'  => $newSlug,
                     'color' => $color,
                     'icon'  => $icon,
-                    'photo' => $photoRelPath ? base_url($photoRelPath) : null,
+                    'photo' => $photoRelPath ? media_url($photoRelPath) : null,
                 ],
             ]);
         }

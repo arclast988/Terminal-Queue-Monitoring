@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\SystemSettingModel;
+use App\Services\CloudinaryService;
 
 class Settings extends BaseController
 {
@@ -512,6 +513,13 @@ class Settings extends BaseController
 
         $this->deleteOldMedia('app_logo', $uploadDir);
         $relPath = 'uploads/settings/' . $newFilename;
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'branding', 'logo_' . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
         $model = new SystemSettingModel();
         $model->setSetting('app_logo', $relPath);
         get_all_system_settings(true);
@@ -522,7 +530,7 @@ class Settings extends BaseController
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'System logo updated successfully.',
-            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'image_url'  => media_url($relPath) . (str_starts_with($relPath, 'http') ? '' : '?v=' . time()),
             'data'       => app_full_branding_payload('logo'),
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
@@ -616,6 +624,13 @@ class Settings extends BaseController
         }
 
         $relPath = 'uploads/settings/' . $newFilename;
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'branding', 'bg_' . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
         $model = new SystemSettingModel();
         $this->deleteOldMedia('app_background_image', $uploadDir);
         $model->setSetting('app_background_image', $relPath);
@@ -633,7 +648,7 @@ class Settings extends BaseController
         return $this->response->setJSON([
             'success'              => true,
             'message'              => 'System background picture updated successfully.',
-            'image_url'            => base_url($relPath) . '?v=' . time(),
+            'image_url'            => media_url($relPath) . (str_starts_with($relPath, 'http') ? '' : '?v=' . time()),
             'app_bg_mode'          => $mode ?: get_setting('app_bg_mode', 'slideshow'),
             'app_background_image' => base_url($relPath) . '?v=' . time(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
@@ -801,6 +816,13 @@ class Settings extends BaseController
 
         $this->deleteOldMedia('app_login_card_image', $uploadDir);
         $relPath = 'uploads/settings/' . $newFilename;
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'branding', 'login_card_' . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
         $model = new SystemSettingModel();
         $model->setSetting('app_login_card_image', $relPath);
         get_all_system_settings(true);
@@ -811,7 +833,7 @@ class Settings extends BaseController
         return $this->response->setJSON([
             'success'    => true,
             'message'    => 'Login page hero illustration updated successfully.',
-            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'image_url'  => media_url($relPath) . (str_starts_with($relPath, 'http') ? '' : '?v=' . time()),
             'filename'   => $newFilename,
             'data'       => app_full_branding_payload('identity'),
             'csrf_token' => csrf_token(),
@@ -916,6 +938,13 @@ class Settings extends BaseController
         }
 
         $relPath = 'uploads/settings/' . $newFilename;
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'branding', "bg_slot_{$slot}_" . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
         $model = new SystemSettingModel();
         $this->deleteOldMedia($settingKey, $uploadDir);
         $model->setSetting($settingKey, $relPath);
@@ -928,7 +957,7 @@ class Settings extends BaseController
             'success'    => true,
             'slot'       => $slot,
             'message'    => "Slideshow picture for Slot {$slot} updated successfully.",
-            'image_url'  => base_url($relPath) . '?v=' . time(),
+            'image_url'  => media_url($relPath) . (str_starts_with($relPath, 'http') ? '' : '?v=' . time()),
             'filename'   => $newFilename,
             'csrf_token' => csrf_token(),
             'csrf_hash'  => csrf_hash(),
@@ -1004,6 +1033,13 @@ class Settings extends BaseController
 
         $relPath = 'uploads/settings/' . $newFilename;
         $settingKey = "app_bg_slideshow_{$nextSlot}";
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'branding', "bg_slot_{$nextSlot}_" . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
 
         $model = new SystemSettingModel();
         $model->setSetting($settingKey, $relPath);
@@ -1262,9 +1298,13 @@ class Settings extends BaseController
     {
         $currentPath = get_system_setting($settingKey);
         if (! empty($currentPath)) {
-            $fullPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $currentPath);
-            if (is_file($fullPath) && str_starts_with(realpath($fullPath) ?: '', realpath($uploadDir) ?: '')) {
-                @unlink($fullPath);
+            if (str_starts_with($currentPath, 'http')) {
+                (new CloudinaryService())->deleteImage($currentPath);
+            } else {
+                $fullPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $currentPath);
+                if (is_file($fullPath) && str_starts_with(realpath($fullPath) ?: '', realpath($uploadDir) ?: '')) {
+                    @unlink($fullPath);
+                }
             }
         }
     }

@@ -219,6 +219,26 @@ if (! function_exists('vehicle_resolved_photo')) {
     }
 }
 
+if (! function_exists('media_url')) {
+    /**
+     * Resolves a media asset URL.
+     * If the path is a remote URL (Cloudinary HTTPS or external), returns it directly.
+     * Otherwise returns the local base_url path.
+     */
+    function media_url(?string $path): string
+    {
+        if (empty($path)) {
+            return '';
+        }
+        $trimmed = trim($path);
+        if (str_starts_with($trimmed, 'http://') || str_starts_with($trimmed, 'https://')) {
+            return $trimmed;
+        }
+        $clean = ltrim(str_replace(['\\'], '/', $trimmed), '/');
+        return base_url($clean);
+    }
+}
+
 if (! function_exists('vehicle_type_color')) {
     function vehicle_type_color(?string $type, ?string $customColor = null): string
     {
@@ -743,6 +763,9 @@ if (! function_exists('app_logo')) {
     {
         $customLogo = get_system_setting('app_logo');
         if (! empty($customLogo)) {
+            if (str_starts_with($customLogo, 'http://') || str_starts_with($customLogo, 'https://')) {
+                return $customLogo;
+            }
             $relPath = ltrim(str_replace(['\\'], '/', $customLogo), '/');
             if (is_file(FCPATH . $relPath)) {
                 $mtime = @filemtime(FCPATH . $relPath);
@@ -763,6 +786,9 @@ if (! function_exists('app_bg_image')) {
     {
         $customBg = get_system_setting('app_background_image');
         if (! empty($customBg)) {
+            if (str_starts_with($customBg, 'http://') || str_starts_with($customBg, 'https://')) {
+                return $customBg;
+            }
             $relPath = ltrim(str_replace(['\\'], '/', $customBg), '/');
             if (is_file(FCPATH . $relPath)) {
                 $mtime = @filemtime(FCPATH . $relPath);
@@ -783,6 +809,9 @@ if (! function_exists('app_login_card_image')) {
     {
         $customCard = get_system_setting('app_login_card_image');
         if (! empty($customCard)) {
+            if (str_starts_with($customCard, 'http://') || str_starts_with($customCard, 'https://')) {
+                return $customCard;
+            }
             $relPath = ltrim(str_replace(['\\'], '/', $customCard), '/');
             if (is_file(FCPATH . $relPath)) {
                 $mtime = @filemtime(FCPATH . $relPath);
@@ -795,12 +824,15 @@ if (! function_exists('app_login_card_image')) {
 
 if (! function_exists('app_has_custom_login_card')) {
     /**
-     * True if a custom login card illustration exists on disk.
+     * True if a custom login card illustration exists on disk or remote URL.
      */
     function app_has_custom_login_card(): bool
     {
         $customCard = get_system_setting('app_login_card_image');
         if (! empty($customCard)) {
+            if (str_starts_with($customCard, 'http://') || str_starts_with($customCard, 'https://')) {
+                return true;
+            }
             $relPath = ltrim(str_replace(['\\'], '/', $customCard), '/');
             return is_file(FCPATH . $relPath);
         }
@@ -988,6 +1020,10 @@ if (! function_exists('app_bg_slideshow')) {
         foreach ($activeSlots as $slotIdx) {
             $custom = get_system_setting("app_bg_slideshow_{$slotIdx}");
             if (! empty($custom)) {
+                if (str_starts_with($custom, 'http://') || str_starts_with($custom, 'https://')) {
+                    $urls[$slotIdx] = $custom;
+                    continue;
+                }
                 $relPath = ltrim(str_replace(['\\'], '/', $custom), '/');
                 if (is_file(FCPATH . $relPath)) {
                     $mtime = @filemtime(FCPATH . $relPath);

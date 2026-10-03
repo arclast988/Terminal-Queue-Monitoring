@@ -3027,7 +3027,8 @@
             };
             var posColor = vMeta.color || '#1565c0';
             var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
-            var photoUrl = (item.photo_url || (item.vehicle_photo ? ('/uploads/vehicles/' + item.vehicle_photo) : (item.photo ? ('/uploads/vehicles/' + item.photo) : ''))) || vMeta.photo || '';
+            var rawVehPhoto = item.photo_url || item.vehicle_photo || item.photo || '';
+            var photoUrl = (rawVehPhoto ? (String(rawVehPhoto).startsWith('http') ? rawVehPhoto : ('/' + String(rawVehPhoto).replace(/^\/?/, ''))) : '') || vMeta.photo || '';
             var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
             var posContrast = vMeta.contrast || (typeof getContrastTextColor === 'function' ? getContrastTextColor(posColor) : '#ffffff');
             var isLight = (posContrast === '#0f172a');
@@ -3205,7 +3206,8 @@
                 };
                 var posColor = vMeta.color || '#1565c0';
                 var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
-                var photoUrl = (item.photo_url || (item.vehicle_photo ? ('/uploads/vehicles/' + item.vehicle_photo) : (item.photo ? ('/uploads/vehicles/' + item.photo) : ''))) || vMeta.photo || '';
+                var rawVehPhoto = item.photo_url || item.vehicle_photo || item.photo || '';
+                var photoUrl = (rawVehPhoto ? (String(rawVehPhoto).startsWith('http') ? rawVehPhoto : ('/' + String(rawVehPhoto).replace(/^\/?/, ''))) : '') || vMeta.photo || '';
                 var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
 
                 var currentImg = thumbBox.querySelector('img');

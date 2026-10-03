@@ -60,7 +60,7 @@ SVG;
                     <div class="profile-avatar-wrapper mb-3">
                         <div class="avatar-circle-lg <?= $sessionRole === 'super_admin' ? 'avatar-super-admin' : ($sessionRole === 'admin' ? 'avatar-admin' : 'avatar-dispatcher') ?>">
                             <?php if (!empty($profileImage)): ?>
-                                <img src="<?= base_url(esc($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="avatar-img-lg">
+                                <img src="<?= esc(media_url($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="avatar-img-lg">
                             <?php else: ?>
                                 <?= $defaultAvatarSvg ?>
                             <?php endif; ?>

@@ -69,3 +69,12 @@
 #--------------------------------------------------------------------
 
 # logger.threshold = 4
+
+#--------------------------------------------------------------------
+# CLOUDINARY MEDIA STORAGE
+#--------------------------------------------------------------------
+# cloudinary.cloudName = ''
+# cloudinary.apiKey = ''
+# cloudinary.apiSecret = ''
+# cloudinary.folder = 'pttm_uploads'
+# cloudinary.enabled = true

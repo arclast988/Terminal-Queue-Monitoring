@@ -86,7 +86,7 @@ select.form-select {
             <!-- Vehicle Photo / Emblem Section -->
             <?php
             $vehPhoto = $vehicle['photo'] ?? null;
-            $vehPhotoUrl = !empty($vehPhoto) ? base_url($vehPhoto) : '';
+            $vehPhotoUrl = !empty($vehPhoto) ? media_url($vehPhoto) : '';
             $hasInitialPhoto = !empty($vehPhotoUrl);
             ?>
             <div class="mb-4 p-3 rounded-3" style="background: #f8fafc; border: 1px dashed #cbd5e1;">
@@ -161,7 +161,7 @@ select.form-select {
                             <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                                 <?php 
                                     $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); 
-                                    $optPhoto = !empty($vehicleType['photo']) ? base_url($vehicleType['photo']) : '';
+                                    $optPhoto = !empty($vehicleType['photo']) ? media_url($vehicleType['photo']) : '';
                                     $optIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
                                 ?>
                                 <option value="<?= esc($vehicleType['slug']) ?>" data-color="<?= esc($optCol) ?>" data-photo="<?= esc($optPhoto) ?>" data-icon="<?= esc($optIcon) ?>" <?= (old('type') ?? $vehicle['type']) === $vehicleType['slug'] ? 'selected' : '' ?>><?= esc($vehicleType['name']) ?></option>

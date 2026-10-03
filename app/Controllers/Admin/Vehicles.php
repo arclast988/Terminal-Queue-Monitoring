@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\VehicleModel;
 use App\Models\RouteModel;
 use App\Models\VehicleTypeModel;
+use App\Services\CloudinaryService;
 
 class Vehicles extends BaseController
 {
@@ -227,6 +228,13 @@ class Vehicles extends BaseController
             $newFilename = 'veh_' . strtolower($safePlate) . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
             if ($photoFile->move($uploadDir, $newFilename)) {
                 $photoRelPath = 'uploads/vehicles/' . $newFilename;
+                $cloudinary = new CloudinaryService();
+                if ($cloudinary->isConfigured()) {
+                    $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'vehicles', 'veh_' . strtolower($safePlate) . '_' . time());
+                    if ($cRes && !empty($cRes['secure_url'])) {
+                        $photoRelPath = $cRes['secure_url'];
+                    }
+                }
             } else {
                 return redirect()->back()->withInput()->with('error', 'Failed to save vehicle photo to upload directory.');
             }
@@ -377,10 +385,15 @@ class Vehicles extends BaseController
         // Handle photo upload / removal
         $photoRelPath = $vehicle['photo'] ?? null;
         $photoChanged = false;
+        $cloudinary = new CloudinaryService();
 
         if ($this->request->getPost('remove_photo') == '1') {
-            if (!empty($photoRelPath) && file_exists(FCPATH . $photoRelPath)) {
-                @unlink(FCPATH . $photoRelPath);
+            if (!empty($photoRelPath)) {
+                if (str_starts_with($photoRelPath, 'http')) {
+                    $cloudinary->deleteImage($photoRelPath);
+                } elseif (file_exists(FCPATH . $photoRelPath)) {
+                    @unlink(FCPATH . $photoRelPath);
+                }
             }
             $photoRelPath = null;
             $photoChanged = true;
@@ -407,10 +420,20 @@ class Vehicles extends BaseController
             $safePlate = preg_replace('/[^a-zA-Z0-9]/', '_', $rawPlate);
             $newFilename = 'veh_' . strtolower($safePlate) . '_' . time() . '_' . bin2hex(random_bytes(3)) . '.' . $ext;
             if ($photoFile->move($uploadDir, $newFilename)) {
-                if (!empty($vehicle['photo']) && file_exists(FCPATH . $vehicle['photo'])) {
-                    @unlink(FCPATH . $vehicle['photo']);
+                if (!empty($vehicle['photo'])) {
+                    if (str_starts_with($vehicle['photo'], 'http')) {
+                        $cloudinary->deleteImage($vehicle['photo']);
+                    } elseif (file_exists(FCPATH . $vehicle['photo'])) {
+                        @unlink(FCPATH . $vehicle['photo']);
+                    }
                 }
                 $photoRelPath = 'uploads/vehicles/' . $newFilename;
+                if ($cloudinary->isConfigured()) {
+                    $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'vehicles', 'veh_' . strtolower($safePlate) . '_' . time());
+                    if ($cRes && !empty($cRes['secure_url'])) {
+                        $photoRelPath = $cRes['secure_url'];
+                    }
+                }
                 $photoChanged = true;
             } else {
                 return redirect()->back()->withInput()->with('error', 'Failed to save vehicle photo to upload directory.');
@@ -490,8 +513,12 @@ class Vehicles extends BaseController
             return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
         }
 
-        if (!empty($vehicle['photo']) && file_exists(FCPATH . $vehicle['photo'])) {
-            @unlink(FCPATH . $vehicle['photo']);
+        if (!empty($vehicle['photo'])) {
+            if (str_starts_with($vehicle['photo'], 'http')) {
+                (new CloudinaryService())->deleteImage($vehicle['photo']);
+            } elseif (file_exists(FCPATH . $vehicle['photo'])) {
+                @unlink(FCPATH . $vehicle['photo']);
+            }
         }
 
         $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
@@ -607,8 +634,12 @@ class Vehicles extends BaseController
         } elseif ($action === 'delete') {
             foreach ($vehicles as $v) {
                 if (($v['status'] ?? 'active') === 'archived') {
-                    if (!empty($v['photo']) && file_exists(FCPATH . $v['photo'])) {
-                        @unlink(FCPATH . $v['photo']);
+                    if (!empty($v['photo'])) {
+                        if (str_starts_with($v['photo'], 'http')) {
+                            $cloudinary->deleteImage($v['photo']);
+                        } elseif (file_exists(FCPATH . $v['photo'])) {
+                            @unlink(FCPATH . $v['photo']);
+                        }
                     }
                     $this->vehicleModel->delete($v['id']);
                     $count++;

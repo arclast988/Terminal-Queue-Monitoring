@@ -6,6 +6,7 @@ use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\RouteModel;
 use App\Models\UserRouteModel;
+use App\Services\CloudinaryService;
 
 class Users extends BaseController
 {
@@ -158,6 +159,13 @@ class Users extends BaseController
 
             if ($avatarFile->move($uploadDir, $newFilename)) {
                 $relPath = 'uploads/avatars/' . $newFilename;
+                $cloudinary = new CloudinaryService();
+                if ($cloudinary->isConfigured()) {
+                    $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'avatars', 'avatar_' . $userId . '_' . time());
+                    if ($cRes && !empty($cRes['secure_url'])) {
+                        $relPath = $cRes['secure_url'];
+                    }
+                }
                 $model->update($userId, ['profile_image' => $relPath]);
             }
         }
@@ -606,9 +614,13 @@ class Users extends BaseController
 
         // Delete old custom avatar if it exists
         if (!empty($targetUser['profile_image'])) {
-            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetUser['profile_image']);
-            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
-                @unlink($oldPath);
+            if (str_starts_with($targetUser['profile_image'], 'http')) {
+                (new CloudinaryService())->deleteImage($targetUser['profile_image']);
+            } else {
+                $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetUser['profile_image']);
+                if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                    @unlink($oldPath);
+                }
             }
         }
 
@@ -626,13 +638,20 @@ class Users extends BaseController
         }
 
         $relPath = 'uploads/avatars/' . $newFilename;
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'avatars', 'avatar_' . $id . '_' . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
         $userModel->update($id, ['profile_image' => $relPath]);
 
         if ($currentUserId === (int)$id) {
             session()->set('profile_image', $relPath);
         }
 
-        $imageUrl = base_url($relPath) . '?v=' . time();
+        $imageUrl = media_url($relPath) . (str_starts_with($relPath, 'http') ? '' : '?v=' . time());
 
         $this->broadcastUpdate('user_avatar_updated', [
             'user_id'   => (int)$id,
@@ -689,10 +708,15 @@ class Users extends BaseController
         }
 
         if (!empty($targetUser['profile_image'])) {
-            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
-            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetUser['profile_image']);
-            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
-                @unlink($oldPath);
+            $cloudinary = new CloudinaryService();
+            if (str_starts_with($targetUser['profile_image'], 'http')) {
+                $cloudinary->deleteImage($targetUser['profile_image']);
+            } else {
+                $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+                $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $targetUser['profile_image']);
+                if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                    @unlink($oldPath);
+                }
             }
 
             $userModel->update($id, ['profile_image' => null]);

@@ -417,7 +417,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                 <td data-label="Vehicle Type">
                                     <?php 
                                         $hasVehPhoto = !empty($vehicle['photo']);
-                                        $vehPhotoUrl = $hasVehPhoto ? base_url($vehicle['photo']) : null;
+                                        $vehPhotoUrl = $hasVehPhoto ? media_url($vehicle['photo']) : null;
                                         $typePhotoUrl = vehicle_type_photo($vehicle['type']);
                                         $displayPhoto = $vehPhotoUrl ?: $typePhotoUrl;
                                     ?>
@@ -2624,7 +2624,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                     <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                                         <?php 
                                             $optCol = !empty($vehicleType['color']) ? $vehicleType['color'] : vehicle_type_color($vehicleType['slug']); 
-                                            $optPhoto = !empty($vehicleType['photo']) ? base_url($vehicleType['photo']) : '';
+                                            $optPhoto = !empty($vehicleType['photo']) ? media_url($vehicleType['photo']) : '';
                                             $optIcon = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vehicleType['slug']);
                                         ?>
                                         <option value="<?= esc($vehicleType['slug']) ?>" 
@@ -2731,7 +2731,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <div class="d-flex align-items-center gap-2 gap-sm-3 flex-grow-1" style="min-width: 0;">
                                     <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; color: <?= esc($vtContrast) ?>; <?= $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '' ?> overflow: hidden;">
                                         <?php if (!empty($vt['photo'])): ?>
-                                            <img src="<?= base_url(esc($vt['photo'])) ?>" alt="<?= esc($vt['name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                            <img src="<?= esc(media_url($vt['photo'])) ?>" alt="<?= esc($vt['name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
                                         <?php else: ?>
                                             <i class="fas <?= esc($vtIcon) ?>" style="font-size: 15px; color: <?= esc($vtContrast) ?> !important;"></i>
                                         <?php endif; ?>

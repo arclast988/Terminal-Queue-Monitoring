@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\UserModel;
+use App\Services\CloudinaryService;
 
 class Profile extends BaseController
 {
@@ -74,18 +75,29 @@ class Profile extends BaseController
         }
 
         $relPath = 'uploads/avatars/' . $newFilename;
+        $cloudinary = new CloudinaryService();
+        if ($cloudinary->isConfigured()) {
+            $cRes = $cloudinary->uploadLocalFile($uploadDir . DIRECTORY_SEPARATOR . $newFilename, 'avatars', 'avatar_' . $userId . '_' . time());
+            if ($cRes && !empty($cRes['secure_url'])) {
+                $relPath = $cRes['secure_url'];
+            }
+        }
 
         $userModel->update($userId, ['profile_image' => $relPath]);
         if (!empty($user['profile_image'])) {
-            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $user['profile_image']);
-            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
-                @unlink($oldPath);
+            if (str_starts_with($user['profile_image'], 'http')) {
+                $cloudinary->deleteImage($user['profile_image']);
+            } else {
+                $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $user['profile_image']);
+                if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                    @unlink($oldPath);
+                }
             }
         }
         session()->set('profile_image', $relPath);
         session()->set('profile_image_synced_at', time());
 
-        $imageUrl = base_url($relPath) . '?v=' . time();
+        $imageUrl = media_url($relPath) . (str_starts_with($relPath, 'http') ? '' : '?v=' . time());
 
         $this->broadcastUpdate('user_avatar_updated', [
             'user_id'   => (int)$userId,
@@ -121,10 +133,15 @@ class Profile extends BaseController
         $user = $userModel->find($userId);
 
         if (!empty($user['profile_image'])) {
-            $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
-            $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $user['profile_image']);
-            if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
-                @unlink($oldPath);
+            $cloudinary = new CloudinaryService();
+            if (str_starts_with($user['profile_image'], 'http')) {
+                $cloudinary->deleteImage($user['profile_image']);
+            } else {
+                $uploadDir = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+                $oldPath = FCPATH . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $user['profile_image']);
+                if (is_file($oldPath) && str_starts_with(realpath($oldPath) ?: '', realpath($uploadDir) ?: '')) {
+                    @unlink($oldPath);
+                }
             }
 
             $userModel->update($userId, ['profile_image' => null]);

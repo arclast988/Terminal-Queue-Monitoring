@@ -412,7 +412,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     <div class="d-flex align-items-center user-cell-content">
                                         <div class="avatar-wrapper me-3 <?= $canChangeAvatar ? 'avatar-editable' : '' ?>" id="avatar-wrapper-<?= $user['id'] ?>"
                                             data-user-id="<?= $user['id'] ?>"
-                                            data-img-url="<?= !empty($user['profile_image']) ? base_url(esc($user['profile_image'])) : '' ?>"
+                                            data-img-url="<?= !empty($user['profile_image']) ? esc(media_url($user['profile_image'])) : '' ?>"
                                             data-user-name="<?= esc(addslashes($user['full_name'] ?: $user['username']), 'js') ?>"
                                             data-initials="<?= esc($initials, 'js') ?>"
                                             data-role="<?= esc($user['role'], 'js') ?>"
@@ -420,12 +420,12 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                 role="button"
                                                 tabindex="0"
                                                 title="Click to change profile picture"
-                                                onclick="openAvatarModal(<?= $user['id'] ?>, '<?= esc(addslashes($user['full_name'] ?: $user['username']), 'js') ?>', '<?= !empty($user['profile_image']) ? base_url(esc($user['profile_image'])) : '' ?>', '<?= esc($initials, 'js') ?>', '<?= esc($user['role'], 'js') ?>')"
+                                                onclick="openAvatarModal(<?= $user['id'] ?>, '<?= esc(addslashes($user['full_name'] ?: $user['username']), 'js') ?>', '<?= !empty($user['profile_image']) ? esc(media_url($user['profile_image']), 'js') : '' ?>', '<?= esc($initials, 'js') ?>', '<?= esc($user['role'], 'js') ?>')"
                                                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}"
                                             <?php endif; ?>>
                                             <div class="avatar-circle <?= $user['role'] === 'super_admin' ? 'avatar-super-admin' : ($user['role'] === 'admin' ? 'avatar-admin' : 'avatar-dispatcher') ?>" id="avatar-circle-<?= $user['id'] ?>">
                                                 <?php if (!empty($user['profile_image'])): ?>
-                                                    <img src="<?= base_url(esc($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                                    <img src="<?= esc(media_url($user['profile_image'])) ?>" alt="<?= esc($user['full_name']) ?>" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                                 <?php else: ?>
                                                     <?= $defaultAvatarSvg ?>
                                                 <?php endif; ?>

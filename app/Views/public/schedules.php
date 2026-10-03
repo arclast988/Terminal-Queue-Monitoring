@@ -1440,7 +1440,8 @@
                 var qid = s.queue_id || s.id;
                 var typeMeta = vehicleTypeMeta[s.vehicle_type] || {};
                 var hasCustom = !!(s.has_custom_photo || s.vehicle_photo || s.photo);
-                var photoUrl = (s.photo_url || (s.vehicle_photo ? ('/uploads/vehicles/' + s.vehicle_photo) : (s.photo ? ('/uploads/vehicles/' + s.photo) : ''))) || typeMeta.photo || '';
+                var rawVehPhoto = s.photo_url || s.vehicle_photo || s.photo || '';
+                var photoUrl = (rawVehPhoto ? (String(rawVehPhoto).startsWith('http') ? rawVehPhoto : ('/' + String(rawVehPhoto).replace(/^\/?/, ''))) : '') || typeMeta.photo || '';
                 var typeLabel = typeMeta.name || (s.vehicle_type ? s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); }) : 'Van');
                 var statusClass = statusClassMap[s.status] || 'status-waiting';
                 function escHtml(v) {
