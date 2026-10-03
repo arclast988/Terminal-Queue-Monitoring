@@ -7,7 +7,6 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
 ?>
 <?= view('templates/header', ['title' => $title]) ?>
 
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 <style>
     .help-guide-wrapper {
         width: 95%;

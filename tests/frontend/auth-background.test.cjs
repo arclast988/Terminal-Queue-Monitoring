@@ -70,7 +70,7 @@ test('BFCache suspends listeners and resumes once; normal navigation disposes al
   assert.equal(h.timers.size, 0); assert.equal(h.document.count('visibilitychange'), 0);
   assert.equal(h.document.count('pttm:branding-applied'), 0);
   h.window.emit('pageshow', { persisted: true }); h.window.emit('pageshow', { persisted: true });
-  assert.equal(h.timers.size, 1); assert.equal(h.document.count('visibilitychange'), 1);
+  assert.equal(h.timers.size, 1); assert.equal(h.document.count('visibilitychange'), 2); // background and shared motion policy
   assert.equal(h.document.count('pttm:branding-applied'), 1);
   h.window.emit('pagehide', { persisted: false });
   assert.equal(h.timers.size, 0); assert.equal(h.document.count('visibilitychange'), 0);
@@ -109,8 +109,8 @@ test('live reduced-motion changes cancel frames and legacy media-query listeners
 test('reinitialization replaces the existing controller instead of multiplying timers or listeners', () => {
   const h = fixture();
   const dispose = h.window.TerminalAuthBackground.mount(h.config);
-  assert.equal(h.timers.size, 1); assert.equal(h.document.count('visibilitychange'), 1);
+  assert.equal(h.timers.size, 1); assert.equal(h.document.count('visibilitychange'), 2);
   assert.equal(h.document.count('pttm:branding-applied'), 1);
   h.dispose(); assert.equal(h.timers.size, 1);
-  dispose(); assert.equal(h.timers.size, 0); assert.equal(h.document.count('visibilitychange'), 0);
+  dispose(); assert.equal(h.timers.size, 0); assert.equal(h.document.count('visibilitychange'), 1); // only the shared motion policy remains
 });

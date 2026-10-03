@@ -6,9 +6,10 @@ const path = require('node:path');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const playwright = require('playwright');
+const { assetContentType } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
-const selectors = { guest: '.search-bar button[type="submit"]', login: '#loginForm button[type="submit"]', 'admin-settings': '#formIdentity button[type="submit"]' };
+const selectors = { guest: '.search-bar button[type="submit"]', search: '.search-bar button[type="submit"]', schedules: '.filter-btn[type="submit"]', login: '#loginForm button[type="submit"]', 'admin-settings': '#formIdentity button[type="submit"]' };
 const report = { engine, cases: [], beforeAfter: {} };
 const fixtures = new Map(), requests = [];
 let browser, server, origin, oldLoader;
@@ -38,7 +39,7 @@ test.before(async () => {
     if (url.pathname.startsWith('/assets/')) {
       const file = path.resolve(root, 'public', '.' + url.pathname);
       if (!file.startsWith(path.join(root, 'public') + path.sep) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-      res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : 'text/css');
+      res.setHeader('Content-Type', assetContentType(file));
       res.end(url.pathname === '/assets/js/global-loader.js' && url.searchParams.has('baseline') ? oldLoader : fs.readFileSync(file)); return;
     }
     const name = url.pathname.slice(1);
@@ -119,6 +120,30 @@ test('themed production buttons display one pending label without layout or focu
     if (name === 'guest' && mode === 'lite' && width === 320) await shot(page, selectors[name], 'guest-after-lite');
     assert.deepEqual(await restored(page), { nodes: true, color: true, fill: true, inlineStyle: true, feedback: 0 });
     assert.deepEqual(errors, []); report.cases.push({ page: name, mode, width, passed: true }); await context.close();
+  }
+});
+
+test('search and filter feedback stay centered inside the button on phones and desktop', { timeout: 70000 }, async t => {
+  for (const name of ['guest', 'search', 'schedules']) for (const mode of ['full', 'lite', 'reduced']) for (const width of [320, 390, 1280]) {
+    const { page, context, errors } = await open(t, name, mode, width);
+    await pending(page, selectors[name]);
+    const geometry = await page.evaluate(selector => {
+      const button = document.querySelector(selector), spinner = button.querySelector('.gl-btn-spinner'), label = button.querySelector('.gl-btn-label');
+      // Freeze at a quarter turn so rotation does not expand the measured bounds.
+      const animation = spinner.getAnimations()[0]; if (animation) { animation.pause(); animation.currentTime = 200; }
+      const b = button.getBoundingClientRect(), s = spinner.getBoundingClientRect(), l = label.getBoundingClientRect();
+      return { inside: s.left >= b.left + 4 && l.right <= b.right - 4,
+        vertical: Math.abs((s.top + s.bottom - b.top - b.bottom) / 2),
+        horizontal: Math.abs((s.left + l.right - b.left - b.right) / 2),
+        labelFits: label.scrollWidth <= label.clientWidth + 1,
+        spinnerMargin: getComputedStyle(spinner).marginRight, square: Math.abs(s.width - s.height),
+        labelColor: getComputedStyle(label).color, feedbackColor: getComputedStyle(button.querySelector('.gl-btn-feedback')).color };
+    }, selectors[name]);
+    assert.ok(geometry.inside && geometry.labelFits, JSON.stringify({ name, mode, width, geometry }));
+    assert.ok(geometry.vertical < 1 && geometry.horizontal < 1 && geometry.square < 1, JSON.stringify(geometry));
+    assert.equal(geometry.spinnerMargin, '0px'); assert.equal(geometry.labelColor, geometry.feedbackColor);
+    if (name === 'search' && mode === 'lite' && width === 390) await shot(page, selectors[name], 'search-centered-phone');
+    assert.deepEqual(errors, []); await context.close();
   }
 });
 

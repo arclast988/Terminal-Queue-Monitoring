@@ -1,7 +1,5 @@
 <?= $this->include('templates/header') ?>
 
-<!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
 <style>
 /* Button sizing (always applies) */

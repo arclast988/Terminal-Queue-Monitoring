@@ -7,6 +7,7 @@
     "test:responsive": "node --test responsive.browser.cjs",
     "test:background": "node --test backgrounds.browser.cjs",
     "test:pending": "node --test pending-buttons.browser.cjs",
+    "test:styles": "node --test stylesheets.browser.cjs",
     "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {

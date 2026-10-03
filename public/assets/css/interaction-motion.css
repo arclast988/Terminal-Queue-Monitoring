@@ -14,8 +14,10 @@
 
 /* No permanent promotion of the page, forms, or cards to GPU layers. */
 @media (prefers-reduced-motion: no-preference) {
-  html:not([data-tq-motion="lite"]):not([data-tq-motion="reduced"]) body .fade-in:not(.alert-modern):not(.alert):not(.alert-success-banner):not(.alert-error-banner),
+  html:not([data-tq-motion="lite"], [data-tq-motion="reduced"]) body .fade-in:not(.alert-modern, .alert, .alert-success-banner, .alert-error-banner),
   html[data-tq-motion="full"] body .form-entry-page,
+  html[data-tq-motion="full"] .guest-theme > .hero,
+  html[data-tq-motion="full"] .guest-theme > .container,
   html[data-tq-motion="full"] .auth-page .brand,
   html[data-tq-motion="full"] .auth-page .hero-copy,
   html[data-tq-motion="full"] .auth-page .auth > .card,
@@ -26,9 +28,13 @@
     animation-delay: 0s !important;
   }
 
-  body .form-entry-page .fade-in,
   .auth-page .login-card {
     animation: none !important;
+  }
+
+  /* Fade management pages without moving the fixed dialogs inside them. */
+  html[data-tq-motion="full"] body .main-content {
+    animation: tq-content-fade .12s ease-out backwards !important;
   }
 
   /* Whole login sequence completes in 240 ms; no visibility or focus gates. */
@@ -54,11 +60,20 @@
   .support-modal-backdrop.active .support-modal { animation: tq-content-enter .18s ease-out backwards; }
 }
 
+/* Animate each page once instead of stacking delays on its existing cards. */
+html[data-tq-motion] body :is(.main-content, .form-entry-page) .fade-in:not(.alert-modern, .alert, .alert-success-banner, .alert-error-banner),
+html[data-tq-motion] .guest-theme > .container :is(.results-header, .results-section, .stat-card, .queue-section) {
+  animation: none !important;
+}
+
 /* Scope press feedback to buttons; do not animate dimensions or paint effects. */
 body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
   transition-property: transform, opacity !important;
   transition-duration: .12s !important;
   transition-timing-function: cubic-bezier(.2, .8, .2, 1) !important;
+}
+body :is(.card, .stat-card, .queue-card, .results-section, .search-bar, .nav-menu a) {
+  transition-property: transform, opacity, color, background-color, border-color !important;
 }
 .auth-page :is(.control input, .toggle, .check .box, .forgot) {
   transition-property: transform, opacity !important;
@@ -69,15 +84,15 @@ body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  html[data-tq-motion="full"] body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]):not(:disabled):not([aria-disabled="true"]):active {
+  html:not([data-tq-motion="reduced"]) body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]):not(:disabled):not([aria-disabled="true"]):active {
     transform: scale(.985);
   }
 }
 
-/* Optional hardware hints select inexpensive fades and static pending markers. */
-html[data-tq-motion="lite"] *:not(.marquee):not(.marquee-copy):not(.nav-menu):not(.mobile-nav-overlay),
-html[data-tq-motion="lite"] *:not(.marquee):not(.marquee-copy):not(.nav-menu):not(.mobile-nav-overlay)::before,
-html[data-tq-motion="lite"] *:not(.marquee):not(.marquee-copy):not(.nav-menu):not(.mobile-nav-overlay)::after {
+/* Keep loading feedback alive; limit decorative motion on constrained devices. */
+html[data-tq-motion="lite"] *:not(.marquee, .marquee-copy, .nav-menu, .mobile-nav-overlay, .gl-btn-spinner, .table-loader-spinner, .spinner-border, .spinner-grow, .fa-spin, .fa-pulse, .fa-spin-pulse),
+html[data-tq-motion="lite"] *:not(.marquee, .marquee-copy, .nav-menu, .mobile-nav-overlay, .gl-btn-spinner, .table-loader-spinner, .spinner-border, .spinner-grow, .fa-spin, .fa-pulse, .fa-spin-pulse)::before,
+html[data-tq-motion="lite"] *:not(.marquee, .marquee-copy, .nav-menu, .mobile-nav-overlay, .gl-btn-spinner, .table-loader-spinner, .spinner-border, .spinner-grow, .fa-spin, .fa-pulse, .fa-spin-pulse)::after {
   animation: none !important;
   transition-duration: 0s !important;
   transition-delay: 0s !important;
@@ -92,6 +107,9 @@ html[data-tq-motion="reduced"] body::after {
 }
 html[data-tq-motion="lite"] .fade-in:not(.alert-modern):not(.alert),
 html[data-tq-motion="lite"] .form-entry-page,
+html[data-tq-motion="lite"] body .main-content,
+html[data-tq-motion="lite"] .guest-theme > .hero,
+html[data-tq-motion="lite"] .guest-theme > .container,
 html[data-tq-motion="lite"] .auth-page .brand,
 html[data-tq-motion="lite"] .auth-page .hero-copy,
 html[data-tq-motion="lite"] .auth-page .auth > .card,
@@ -102,12 +120,28 @@ html[data-tq-motion="lite"] #loginForm > .btn,
 html[data-tq-motion="lite"] .queue-card.card-enter {
   animation: tq-content-fade .1s ease-out backwards !important;
 }
-html[data-tq-motion="lite"] .modal.fade .modal-dialog,
-html[data-tq-motion="lite"] .btn:hover,
-html[data-tq-motion="lite"] .btn:active { transform: none !important; }
-html[data-tq-motion="lite"] :is(.login-card, .modal-backdrop, .support-modal-backdrop, .sidebar-drawer-overlay) {
+html[data-tq-motion="lite"] body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
+  transition: transform .1s ease-out, opacity .1s ease-out !important;
+}
+html[data-tq-motion="lite"] .modal.fade .modal-dialog { transform: none !important; }
+html[data-tq-motion="lite"] :is(.modal-backdrop.fade, .support-modal-backdrop) {
+  transition: opacity .1s ease-out !important;
+}
+html[data-tq-motion="lite"] :is(.card, .login-card, .modal-backdrop, .support-modal-backdrop, .sidebar-drawer-overlay, .filter-badge) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+}
+
+/* Small transform-only indicators work for all loading implementations. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-tq-motion="lite"] :is(.gl-btn-spinner, .table-loader-spinner, .spinner-border, .fa-spin, .fa-pulse, .fa-spin-pulse) {
+    animation: gl-spin .8s linear infinite !important;
+  }
+}
+/* This stylesheet is also used before the global loader is loaded. */
+@keyframes gl-spin { to { transform: rotate(360deg); } }
+html[data-tq-page-hidden] :is(.gl-btn-spinner, .table-loader-spinner, .spinner-border, .spinner-grow, .fa-spin, .fa-pulse, .fa-spin-pulse) {
+  animation-play-state: paused !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,7 +1,6 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_3') ?>">
 
 <div class="form-entry-page">
 <div class="page-header-modern fade-in">

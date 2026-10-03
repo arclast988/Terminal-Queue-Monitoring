@@ -13,28 +13,27 @@
     <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
 
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
 
     <!-- Bootstrap (Keep for layout if needed by other pages, but navbar uses custom CSS now) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="<?= app_asset_url('assets/vendor/bootstrap/css/bootstrap.min.css') ?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/bootstrap-icons/font/bootstrap-icons.css') ?>">
 
     <!-- Design system: shared tokens/components, role themes, then the legacy-class bridge -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/design-system.css') ? filemtime(FCPATH . 'assets/css/design-system.css') : '20260926_1')) ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/themes.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/legacy-bridge.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/modern-frontend.css') ? filemtime(FCPATH . 'assets/css/modern-frontend.css') : '20260924_2')) ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/themes.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/legacy-bridge.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/modern-frontend.css') ?>">
 
     <!-- Modern Admin Styling (for logged-in users) - Remove this line to rollback -->
     <?php if (session()->get('isLoggedIn')): ?>
-        <link rel="stylesheet" href="<?= base_url('assets/css/admin-modern.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/admin-modern.css') ? filemtime(FCPATH . 'assets/css/admin-modern.css') : '20260927_1')) ?>">
+        <link rel="stylesheet" href="<?= app_asset_url('assets/css/admin-modern.css') ?>">
     <?php endif; ?>
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/css/responsive.css') ? filemtime(FCPATH . 'assets/css/responsive.css') : '20260925_1')) ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/navigation.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
 
@@ -532,7 +531,7 @@
 
 <body
     class="layout-lock <?= (in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'admin-theme ' : (session()->get('role') === 'staff' ? 'staff-theme ' : 'guest-theme ')) ?><?= esc($body_class ?? '') ?>">
-    <?php $interaction_assets_loaded = true; include __DIR__ . '/navbar.php'; ?>
+    <?php $interaction_assets_loaded = true; $navigation_assets_loaded = true; include __DIR__ . '/navbar.php'; ?>
     <script>
         (function() {
             function syncHeaderHeight() {

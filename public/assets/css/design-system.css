@@ -7,7 +7,6 @@
    Load order: design-system.css -> themes.css (after Bootstrap).
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 /* --------------------------------------------------------------------------
    1. TOKENS
@@ -954,12 +953,14 @@ input[name="operator_name"] {
   display: inline-block;
   width: 1em;
   height: 1em;
-  vertical-align: -0.15em;
+  box-sizing: border-box;
+  vertical-align: middle;
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
-  animation: gl-spin 0.65s linear infinite;
-  margin-right: 6px;
+  animation: gl-spin 0.8s linear infinite;
+  margin: 0;
+  transform-origin: center;
 }
 
 /* Micro-animations: Shake for invalid inputs/warnings */

@@ -374,7 +374,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <!-- ===== Footer CSS ===== -->
 
 <!-- ===== Footer JS ===== -->
-<script src="<?= base_url('assets/js/global-loader.js?v=20261002btn1') ?>"></script>
+<script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20261002a') ?>"></script>
 <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= base_url('js/ws-client.js?v=20261002app1') ?>"></script>

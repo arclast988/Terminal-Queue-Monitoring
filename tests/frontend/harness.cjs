@@ -100,4 +100,7 @@ function harness(options = {}) {
   return { window, document, timers, requests, load, tick, Element, preference };
 }
 async function flush() { for (let i = 0; i < 10; i++) await Promise.resolve(); }
-module.exports = { harness, flush, root };
+function assetContentType(file) {
+  return { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' }[path.extname(file)] || 'application/octet-stream';
+}
+module.exports = { harness, flush, root, assetContentType };

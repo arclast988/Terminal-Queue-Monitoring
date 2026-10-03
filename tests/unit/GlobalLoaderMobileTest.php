@@ -6,14 +6,13 @@ use CodeIgniter\Test\CIUnitTestCase;
 
 final class GlobalLoaderMobileTest extends CIUnitTestCase
 {
-    public function testInstalledMobileAppCanShowTheCustomTopProgressBar(): void
+    public function testPageNavigationFeedbackIsAvailableInMobileBrowsersAndInstalledApps(): void
     {
         $script = file_get_contents(FCPATH . 'assets/js/global-loader.js');
 
         $this->assertNotFalse($script);
-        $this->assertStringContainsString('@media (max-width: 768px), (hover: none) and (pointer: coarse)', $script);
-        $this->assertStringContainsString('.global-progress-bar { display: none !important; }', $script);
-        $this->assertStringContainsString('.gl-standalone .global-progress-bar { display: block !important; }', $script);
+        $this->assertStringNotContainsString('.global-progress-bar { display: none !important; }', $script);
+        $this->assertStringContainsString('gl-progress-sweep', $script);
         $this->assertStringContainsString("window.matchMedia('(display-mode: standalone)').matches", $script);
         $this->assertStringContainsString("sessionStorage.getItem('gl_standalone_opened')", $script);
         $this->assertStringContainsString('.table-loader-overlay {', $script);

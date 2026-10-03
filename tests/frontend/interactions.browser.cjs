@@ -7,9 +7,10 @@ const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const browserType = require('playwright')[engine];
-const { root } = require('./harness.cjs');
+const { root, assetContentType } = require('./harness.cjs');
 const posts = [];
 const nativeRepeatReports = [];
+const navigations = [], navigationReports = [];
 let browser, server, origin;
 const metrics = {};
 const fixture = `<!doctype html><html><head>
@@ -29,6 +30,11 @@ const fixture = `<!doctype html><html><head>
 
 test.before(async () => {
   server = http.createServer((req, res) => {
+    if (req.url === '/slow-navigation') { navigations.push(res); return; }
+    if (req.url === '/navigation-state' && req.method === 'POST') {
+      let body = ''; req.on('data', chunk => body += chunk);
+      req.on('end', () => { navigationReports.push(JSON.parse(body)); res.writeHead(204); res.end(); }); return;
+    }
     if (req.url === '/fixture-native-repeat' && req.method === 'POST') {
       let body = ''; req.on('data', chunk => body += chunk);
       req.on('end', () => { nativeRepeatReports.push(JSON.parse(body)); res.writeHead(204); res.end(); }); return;
@@ -40,7 +46,7 @@ test.before(async () => {
     if (req.url?.startsWith('/assets/')) {
       const file = path.join(root, 'public', req.url.split('?')[0]);
       if (!file.startsWith(path.join(root, 'public') + path.sep) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-      res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : 'text/css'); res.end(fs.readFileSync(file)); return;
+      res.setHeader('Content-Type', assetContentType(file)); res.end(fs.readFileSync(file)); return;
     }
     res.setHeader('Content-Type', 'text/html'); res.end(fixture);
   });
@@ -50,6 +56,7 @@ test.before(async () => {
 });
 test.after(async () => {
   for (const post of posts) if (!post.res.writableEnded) post.res.end('Done');
+  for (const response of navigations) if (!response.writableEnded) response.end('Next page');
   if (browser) await browser.close();
   if (server) {
     server.closeAllConnections();
@@ -155,7 +162,7 @@ test('reduced and lite modes preserve features with the intended motion limits',
       const style = getComputedStyle(btn), spin = getComputedStyle(btn.querySelector('.gl-btn-spinner'));
       return { mode: TerminalMotion.getMode(), animation: style.animationDuration, spinner: spin.animationName, focus: document.activeElement === btn, value: btn.value };
     });
-    assert.equal(result.mode, mode); assert.equal(result.spinner, 'none'); assert.equal(result.focus, true); assert.equal(result.value, 'save');
+    assert.equal(result.mode, mode); assert.equal(result.spinner, mode === 'lite' ? 'gl-spin' : 'none'); assert.equal(result.focus, true); assert.equal(result.value, 'save');
     assert.equal(result.animation, mode === 'lite' ? '0.1s' : '0s'); await context.close();
   }
 });
@@ -170,6 +177,54 @@ test('table skeleton feedback does not block table actions or race on reuse', as
   await page.locator('#tableButton').click();
   assert.equal(await page.evaluate(() => window.tableClicks), 1);
   assert.equal(await page.locator('.table-loader-overlay').count(), 1); await context.close();
+});
+
+test('phone loading indicators keep moving in lite mode and stop for reduced motion', async () => {
+  for (const mode of ['full', 'lite', 'reduced']) {
+    const { page, context, errors } = await pageFor(mode, true);
+    const styles = await page.evaluate(() => {
+      const button = document.querySelector('#submit'); GlobalLoader.showButtonSpinner(button, 'Saving', true); GlobalLoader.start(true);
+      const samples = ['spinner-border', 'table-loader-spinner', 'fa-spin'];
+      const nodes = samples.map(className => { const el = document.createElement('span'); el.className = className; document.body.appendChild(el); return el; });
+      const spinner = button.querySelector('.gl-btn-spinner');
+      return { spinner: getComputedStyle(spinner).animationName, legacy: nodes.map(el => getComputedStyle(el).animationName),
+        barDisplay: getComputedStyle(document.querySelector('#global-progress-bar')).display,
+        sweep: getComputedStyle(document.querySelector('#global-progress-bar'), '::after').animationName };
+    });
+    assert.equal(styles.spinner, mode === 'reduced' ? 'none' : 'gl-spin');
+    assert.notEqual(styles.barDisplay, 'none'); assert.equal(styles.sweep, mode === 'reduced' ? 'none' : 'gl-progress-sweep');
+    if (mode === 'lite') assert.deepEqual(styles.legacy, ['gl-spin', 'gl-spin', 'gl-spin']);
+    if (mode !== 'reduced') {
+      const before = await page.locator('.gl-btn-spinner').evaluate(el => getComputedStyle(el).transform);
+      await page.waitForTimeout(120);
+      const after = await page.locator('.gl-btn-spinner').evaluate(el => getComputedStyle(el).transform);
+      assert.notEqual(after, before);
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    assert.equal(await page.locator('.gl-btn-spinner').evaluate(el => getComputedStyle(el).animationName), 'none');
+    assert.deepEqual(errors, []); await context.close();
+  }
+});
+
+test('a phone shows navigation feedback while a slow destination is still loading', { timeout: 15000 }, async t => {
+  const { page, context, errors } = await pageFor('lite', true);
+  t.after(async () => { for (const response of navigations) if (!response.writableEnded) response.end('Next page'); await context.close(); });
+  const count = navigations.length, reportCount = navigationReports.length;
+  await page.evaluate(() => {
+    const link = document.createElement('a'); link.href = '/slow-navigation'; link.textContent = 'Schedules'; link.id = 'navigation'; document.body.appendChild(link);
+    link.addEventListener('click', () => setTimeout(() => {
+      const bar = document.querySelector('#global-progress-bar');
+      navigator.sendBeacon('/navigation-state', JSON.stringify({ visible: GlobalLoader.isVisible(), mode: TerminalMotion.getMode(),
+        display: getComputedStyle(bar).display, animation: getComputedStyle(bar, '::after').animationName }));
+    }, 80), { once: true });
+  });
+  const box = await page.locator('#navigation').boundingBox(); assert.ok(box);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  for (let i = 0; i < 300 && (navigations.length === count || navigationReports.length === reportCount); i++) await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(navigations.length, count + 1); assert.equal(navigationReports.length, reportCount + 1);
+  assert.deepEqual(navigationReports[reportCount], { visible: true, mode: 'lite', display: 'block', animation: 'gl-progress-sweep' });
+  navigations[count].setHeader('Content-Type', 'text/html'); navigations[count].end('<p>Schedules ready</p>');
+  await page.waitForURL(origin + '/slow-navigation'); assert.deepEqual(errors, []);
 });
 
 test('a new request during completion keeps the progress bar active without unlocking a button', async () => {

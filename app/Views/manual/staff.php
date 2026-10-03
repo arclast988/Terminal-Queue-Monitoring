@@ -1,6 +1,5 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 <style>
     .manual-container {
         width: 92%;

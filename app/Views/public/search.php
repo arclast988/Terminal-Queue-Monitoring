@@ -8,13 +8,13 @@
     <title>Search Results · <?= esc(app_system_title()) ?></title>
     <?= view('partials/app_install') ?>
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20261001c">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <!-- Local fonts -->
+    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/bootstrap-icons/font/bootstrap-icons.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/modern-frontend.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
     <style>

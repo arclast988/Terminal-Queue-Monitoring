@@ -12,7 +12,6 @@
     var requestEpoch = 0;
     var progress = 0;
     var visibleAt = 0;
-    var trickleTimer = null;
     var safetyTimer = null;
     var showTimer = null;
     var finishTimer = null;
@@ -45,13 +44,13 @@
         var style = document.createElement('style');
         style.id = 'global-loader-injected-css';
         style.textContent = [
-            '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
+            '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; overflow:hidden; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
             '.global-progress-bar.is-active { opacity:1; }',
             '.global-progress-bar.is-done { opacity:0; }',
-            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); transition:transform .16s cubic-bezier(.2,.8,.2,1); border-radius:0 3px 3px 0; }',
-            '.global-progress-bar.is-active .global-progress-bar-inner { will-change:transform; }',
-            '@media (max-width: 768px), (hover: none) and (pointer: coarse) { .global-progress-bar { display: none !important; } }',
-            '.gl-standalone .global-progress-bar { display: block !important; }',
+            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); box-shadow:none; transition:transform .16s cubic-bezier(.2,.8,.2,1); border-radius:0 3px 3px 0; }',
+            '@keyframes gl-progress-sweep { from { transform:translateX(-100%); } to { transform:translateX(350%); } }',
+            '@media (prefers-reduced-motion:no-preference) { html:not([data-tq-motion="reduced"]) .global-progress-bar.is-active:not(.is-done)::after { content:""; position:absolute; inset:0 auto 0 0; width:30%; background:linear-gradient(90deg,transparent,#f59e0b,#38bdf8); animation:gl-progress-sweep 1.2s linear infinite !important; } }',
+            'html[data-tq-page-hidden] .global-progress-bar::after { animation-play-state:paused !important; }',
             '.table-loader-overlay { position:absolute; inset:0; min-height:100px; background:rgba(255,255,255,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; z-index:50; border-radius:inherit; pointer-events:none !important; transition:opacity .16s ease; }',
             '.gl-table-skeleton { width:72%; max-width:22rem; display:grid; gap:8px; }',
             '.gl-table-skeleton span { display:block; height:8px; border-radius:4px; background:#e2e8f0; }',
@@ -61,13 +60,15 @@
             '.gl-btn-pending { cursor:progress; }',
             '.gl-btn-loading { pointer-events:auto !important; }',
             '.gl-btn-loading > :not(.gl-btn-feedback) { opacity:0 !important; }',
-            '.gl-btn-feedback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:6px; padding:inherit; pointer-events:none; font-size:inherit; font-weight:inherit; white-space:normal; opacity:1 !important; }',
-            '.gl-btn-spinner { display:inline-block; width:1em; height:1em; flex-shrink:0; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:gl-spin .65s linear infinite; }',
+            '.gl-btn-feedback { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:6px; padding:0 6px; box-sizing:border-box; border-radius:inherit; overflow:hidden; pointer-events:none; font-size:inherit; font-weight:inherit; line-height:1.2; opacity:1 !important; }',
+            '.gl-btn-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }',
+            '.gl-btn-spinner { display:block; box-sizing:border-box; width:1em; height:1em; flex:0 0 1em; margin:0; padding:0; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; transform-origin:center; animation:gl-spin .8s linear infinite; }',
             '@keyframes gl-spin { to { transform:rotate(360deg); } }',
             '@keyframes gl-shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }',
             '.gl-shake { animation:gl-shake .24s ease-in-out !important; }',
             'html[data-tq-motion="lite"] .global-progress-bar-inner, html[data-tq-motion="reduced"] .global-progress-bar-inner { transition:none; will-change:auto; }',
-            'html[data-tq-motion="lite"] .gl-btn-spinner, html[data-tq-motion="reduced"] .gl-btn-spinner { animation:none !important; }',
+            'html[data-tq-motion="reduced"] .gl-btn-spinner { animation:none !important; }',
+            'html[data-tq-page-hidden] .gl-btn-spinner { animation-play-state:paused !important; }',
             '@media (prefers-reduced-motion:reduce) { .global-progress-bar, .global-progress-bar-inner, .table-loader-overlay { transition:none; } .gl-btn-spinner, .table-loader-spinner, .gl-shake { animation:none !important; } }'
         ].join('\n');
         document.head.appendChild(style);
@@ -97,21 +98,6 @@
         if (innerEl) innerEl.style.transform = 'scaleX(' + (progress / 100) + ')';
     }
 
-    function clearTrickle() {
-        if (trickleTimer !== null) clearInterval(trickleTimer);
-        trickleTimer = null;
-    }
-
-    function startTrickle() {
-        clearTrickle();
-        var mobile = window.matchMedia && window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)').matches;
-        if (document.hidden || motionMode() !== 'full' || (mobile && !document.documentElement.classList.contains('gl-standalone'))) return;
-        trickleTimer = setInterval(function () {
-            if (motionMode() !== 'full' || document.hidden) { clearTrickle(); return; }
-            if (progress < 85) setProgress(progress + Math.max(.6, (85 - progress) * .14));
-        }, 180);
-    }
-
     function clearCompletion() {
         if (finishTimer !== null) clearTimeout(finishTimer);
         if (fadeTimer !== null) clearTimeout(fadeTimer);
@@ -122,7 +108,6 @@
         if (showTimer !== null) clearTimeout(showTimer);
         if (safetyTimer !== null) clearTimeout(safetyTimer);
         showTimer = safetyTimer = null;
-        clearTrickle();
     }
 
     function renderStart() {
@@ -131,7 +116,6 @@
         barEl.classList.remove('is-done');
         barEl.classList.add('is-active');
         if (progress === 0 || progress === 100) setProgress(25);
-        startTrickle();
     }
 
     function start(immediate) {
@@ -336,8 +320,9 @@
             if (!btn.isConnected || !pendingButtons.has(btn)) { hideButtonSpinner(btn); return; }
             // Inputs cannot have children: keep their successful-control value intact.
             if (btn.tagName === 'INPUT') return;
-            var color = window.getComputedStyle(btn).color;
-            if (window.getComputedStyle(btn).position === 'static') btn.style.position = 'relative';
+            var buttonStyle = window.getComputedStyle(btn);
+            var color = buttonStyle.color;
+            if (buttonStyle.position === 'static') btn.style.position = 'relative';
             var overlay = document.createElement('span');
             overlay.className = 'gl-btn-feedback';
             overlay.style.setProperty('color', color, 'important');
@@ -348,7 +333,12 @@
             spinner.className = 'gl-btn-spinner';
             spinner.setAttribute('aria-hidden', 'true');
             overlay.appendChild(spinner);
-            if (label) overlay.appendChild(document.createTextNode(label));
+            if (label) {
+                var labelEl = document.createElement('span');
+                labelEl.className = 'gl-btn-label';
+                labelEl.textContent = label;
+                overlay.appendChild(labelEl);
+            }
             // Theme !important rules (including WebKit text fill) can expose raw
             // text beneath the overlay. Hide its paint without replacing nodes,
             // changing button dimensions or disabling the native submitter.
@@ -493,8 +483,8 @@
             Promise.resolve().then(function () {
                 if (event.defaultPrevented) return;
                 pendingForms.add(form);
-                start();
-                if (submitBtn) showButtonSpinner(submitBtn);
+                start(true);
+                if (submitBtn) showButtonSpinner(submitBtn, undefined, true);
             });
         }, false);
         document.addEventListener('click', function (event) {
@@ -508,15 +498,11 @@
                 var url = new URL(a.href, window.location.href);
                 if (url.origin !== window.location.origin) return;
                 if (url.pathname === window.location.pathname && url.search === window.location.search) return;
-                Promise.resolve().then(function () { if (!event.defaultPrevented) start(); });
+                Promise.resolve().then(function () { if (!event.defaultPrevented) start(true); });
             } catch (error) { /* Not an internal navigation. */ }
         }, false);
         window.addEventListener('pagehide', resetPage);
         window.addEventListener('pageshow', function (event) { if (event.persisted) resetPage(); });
-        document.addEventListener('visibilitychange', function () {
-            if (document.hidden) clearTrickle();
-            else if (isRunning && isVisible) startTrickle();
-        });
     }
 
     hookFetch();

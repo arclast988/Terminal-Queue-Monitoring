@@ -6,6 +6,7 @@ const path = require('node:path');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const playwright = require('playwright');
+const { assetContentType } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
@@ -53,7 +54,7 @@ test.before(async () => {
     if (target.startsWith('/assets/')) {
       const file = path.resolve(root, 'public', '.' + target);
       if (!file.startsWith(path.join(root, 'public') + path.sep) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-      res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : 'text/css');
+      res.setHeader('Content-Type', assetContentType(file));
       res.end(target === '/assets/css/responsive.css' && url.searchParams.has('fixture-baseline') ? beforeCSS : fs.readFileSync(file)); return;
     }
     const name = target.slice(1);
@@ -508,7 +509,7 @@ test('low-hardware and reduced-motion policies work in each browser engine', asy
       GlobalLoader.showButtonSpinner(btn, 'Signing in…', true);
       return { focus: document.activeElement === btn, nativeEnabled: !btn.disabled, spinnerAnimation: getComputedStyle(btn.querySelector('.gl-btn-spinner')).animationName };
     });
-    assert.deepEqual(pending, { focus: true, nativeEnabled: true, spinnerAnimation: 'none' });
+    assert.deepEqual(pending, { focus: true, nativeEnabled: true, spinnerAnimation: mode === 'lite' ? 'gl-spin' : 'none' });
     assert.deepEqual(errors, []); await context.close();
   }
 });

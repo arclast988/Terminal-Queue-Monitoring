@@ -7,13 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title><?= esc(app_system_title()) ?></title>
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>">
     <?= view('partials/app_install') ?>
-    <!-- Font Awesome for Icons (using CDN as fallback, assuming FontAwesome is preferred for "classy" UI) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20261001c">
+    <!-- Local icon fonts -->
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
+    <!-- Local fonts -->
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/modern-frontend.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
     <style>

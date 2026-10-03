@@ -1,7 +1,5 @@
 <?= view('templates/header', ['title' => $title]) ?>
 
-<!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
 <style>
 /* Scoped Selection & Bulk Action Rules - Matches App Action Buttons */

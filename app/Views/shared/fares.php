@@ -1,7 +1,5 @@
 <?= $this->include('templates/header') ?>
 
-<!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
 <?php
 $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);

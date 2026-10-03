@@ -14,6 +14,21 @@
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
 
+if (! function_exists('app_asset_url')) {
+    /** Keep cached public assets in sync with their contents after deployment. */
+    function app_asset_url(string $path): string
+    {
+        static $versions = [];
+        $path = ltrim($path, '/');
+        if (!array_key_exists($path, $versions)) {
+            $file = FCPATH . str_replace('/', DIRECTORY_SEPARATOR, $path);
+            $versions[$path] = is_file($file) ? substr(hash_file('sha256', $file), 0, 12) : null;
+        }
+
+        return base_url($path) . ($versions[$path] !== null ? '?v=' . $versions[$path] : '');
+    }
+}
+
 if (! function_exists('vehicle_type_key')) {
     function vehicle_type_key(?string $type): string
     {

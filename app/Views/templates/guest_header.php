@@ -15,12 +15,9 @@
  * --text-muted, --shadow-sm, --transition) defined.
  */
 ?>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= base_url('assets/css/guest-shell.css') ?>?v=20261003m1">
+<link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
 <?php if (empty($interaction_assets_loaded)): ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002m3') ?>">
+<link rel="stylesheet" href="<?= app_asset_url('assets/css/interaction-motion.css') ?>">
 <?php endif; ?>
 
 <div class="sticky-top-wrapper">

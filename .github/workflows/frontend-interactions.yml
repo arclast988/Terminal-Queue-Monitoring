@@ -60,6 +60,10 @@ jobs:
         env:
           TQ_BROWSER: ${{ matrix.browser }}
           TQ_RESPONSIVE_BASE_REF: c4048e1923aac4452526f7d9b45f7eca5192df8c
+      - name: Verify styles and icon fonts with third-party servers blocked
+        run: npm run --prefix tests/frontend test:styles
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
       - name: Save rendering metrics
         if: always()
         uses: actions/upload-artifact@v4

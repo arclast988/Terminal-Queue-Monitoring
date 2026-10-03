@@ -1,7 +1,5 @@
 <?= view('templates/header', ['title' => $title ?? 'Change Password']) ?>
 
-<!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css?v=20260928_2') ?>">
 
 <?php
 $sessionRole = session()->get('role');

@@ -1594,6 +1594,7 @@ body.guest-theme .hero .guest-page-search #guest-results-clear-btn {
 
 body.guest-theme .hero .guest-page-search button[type="submit"] {
     flex-shrink: 0;
+    min-width: 8.5em;
     height: 40px !important;
     padding: 0 18px !important;
     border: 0;

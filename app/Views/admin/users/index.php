@@ -1,7 +1,6 @@
 <?= $this->include('templates/header') ?>
 
 <!-- Modern Frontend Styles -->
-<link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>">
 
 <div class="page-header-modern fade-in">
     <h1 class="page-title-modern">

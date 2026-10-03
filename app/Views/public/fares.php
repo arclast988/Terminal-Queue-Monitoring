@@ -10,17 +10,15 @@
     <?= view('partials/app_install') ?>
 
     <!-- Modern Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="<?= app_asset_url('assets/vendor/fonts/fonts.css') ?>" rel="stylesheet">
 
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
     <!-- Bootstrap Icons (Fallback) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?= base_url('assets/css/design-system.css') ?>?v=20260927b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/modern-frontend.css') ?>?v=20260926b">
-    <link rel="stylesheet" href="<?= base_url('assets/css/responsive.css') ?>?v=20261001c">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/bootstrap-icons/font/bootstrap-icons.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/design-system.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/modern-frontend.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
 

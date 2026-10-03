@@ -7,6 +7,7 @@ const os = require('node:os');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const playwright = require('playwright');
+const { assetContentType } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const report = { engine, cases: [], beforeAfter: {} };
@@ -40,7 +41,7 @@ test.before(async () => {
     if (url.pathname.startsWith('/assets/')) {
       const file = path.resolve(root, 'public', '.' + url.pathname);
       if (!file.startsWith(path.join(root, 'public') + path.sep) || !fs.existsSync(file)) { res.writeHead(404); res.end(); return; }
-      res.setHeader('Content-Type', file.endsWith('.js') ? 'text/javascript' : 'text/css');
+      res.setHeader('Content-Type', assetContentType(file));
       res.end(url.pathname === '/assets/css/interaction-motion.css' && url.searchParams.has('baseline') ? oldMotion : fs.readFileSync(file)); return;
     }
     if (url.pathname !== '/') { res.writeHead(404); res.end(); return; }

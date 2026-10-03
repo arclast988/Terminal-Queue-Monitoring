@@ -7,8 +7,10 @@
  * automatically by body.guest-theme / .admin-theme / .staff-theme).
  */
 ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/navigation.css?v=20260927a') ?>">
+<?php if (empty($navigation_assets_loaded)): ?>
+<link rel="stylesheet" href="<?= app_asset_url('assets/css/navigation.css') ?>">
+<?php endif; ?>
 <?php if (empty($interaction_assets_loaded)): ?>
-<link rel="stylesheet" href="<?= base_url('assets/css/interaction-motion.css?v=20261002m3') ?>">
+<link rel="stylesheet" href="<?= app_asset_url('assets/css/interaction-motion.css') ?>">
 <?php endif; ?>
 <?= view('partials/header') ?>

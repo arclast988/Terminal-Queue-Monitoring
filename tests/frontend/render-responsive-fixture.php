@@ -24,12 +24,11 @@ function app_name(): string { return $GLOBALS['fixtureLong'] ? 'PalomponTerminal
 function app_subtitle(): string { return 'Transit Terminal Monitoring System'; }
 function app_system_title(): string { return app_name(); }
 function get_system_setting(string $key, $default = null) { return $default; }
-if (($argv[3] ?? '') === 'theme') {
-    // Optional real theme rules expose pending-label specificity regressions.
-    require dirname(__DIR__, 2) . '/app/Common.php';
-} else {
+if (($argv[3] ?? '') !== 'theme') {
     function app_theme_css(): string { return ''; }
 }
+// Use the real asset version helper in every production-view fixture.
+require dirname(__DIR__, 2) . '/app/Common.php';
 if (!function_exists('media_url')) {
     function media_url(?string $path): string {
         $path = trim((string) $path);
