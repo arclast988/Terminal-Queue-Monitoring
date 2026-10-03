@@ -40,11 +40,18 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
 
     public function testUpdatedMobileStylesAreCacheBusted(): void
     {
-        $header = file_get_contents(APPPATH . 'Views/templates/header.php');
-        $navbar = file_get_contents(APPPATH . 'Views/templates/navbar.php');
+        $header = view('templates/header', ['title' => 'Mobile styles'], ['saveData' => false]);
+        $navbar = view('templates/navbar', [
+            'navigation_assets_loaded' => false,
+            'interaction_assets_loaded' => false,
+        ], ['saveData' => false]);
 
-        $this->assertStringContainsString('responsive.css?v=', $header);
-        $this->assertMatchesRegularExpression('/navigation\.css\?v=[0-9A-Za-z_-]+/', $navbar);
+        // Check the emitted links against the actual stylesheet contents.
+        $responsiveVersion = substr(hash_file('sha256', FCPATH . 'assets/css/responsive.css'), 0, 12);
+        $navigationVersion = substr(hash_file('sha256', FCPATH . 'assets/css/navigation.css'), 0, 12);
+        $this->assertStringContainsString('responsive.css?v=' . $responsiveVersion, $header);
+        $this->assertStringContainsString('navigation.css?v=' . $navigationVersion, $header);
+        $this->assertStringContainsString('navigation.css?v=' . $navigationVersion, $navbar);
     }
 
     public function testLoggedInHeaderProvidesAResponsivePhilippineClock(): void

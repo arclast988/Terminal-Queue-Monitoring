@@ -10,7 +10,10 @@ class SearchClearAndMarqueeAlignmentTest extends CIUnitTestCase
     {
         $html = view('templates/guest_header', [
             'title' => 'Home',
-        ]);
+            // Exercise the standalone fallback regardless of previous page renders.
+            'guest_shell_assets_loaded' => false,
+            'interaction_assets_loaded' => false,
+        ], ['saveData' => false]);
         $css = file_get_contents(FCPATH . 'assets/css/guest-shell.css');
 
         $this->assertStringContainsString('assets/css/guest-shell.css', $html);
