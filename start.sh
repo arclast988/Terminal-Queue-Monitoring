@@ -154,7 +154,7 @@ else
     echo "[DB] Default demo users skipped. Set RUN_DEFAULT_SEEDERS=true only for a new development database."
 fi
 
-PHP_FPM_BIN="$(command -v php-fpm || command -v php-fpm8.2 || command -v php-fpm82 || true)"
+PHP_FPM_BIN="$(command -v php-fpm || command -v php-fpm8.4 || command -v php-fpm8.3 || command -v php-fpm8.2 || command -v php-fpm84 || command -v php-fpm83 || command -v php-fpm82 || true)"
 if [ -z "$PHP_FPM_BIN" ]; then
     echo "[FATAL] PHP-FPM is not installed in the Railway image."
     exit 1

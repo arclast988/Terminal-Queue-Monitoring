@@ -8,8 +8,13 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Test (PHP ${{ matrix.php-version }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3', '8.4']
 
     services:
       postgres:
@@ -29,7 +34,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
+        php-version: ${{ matrix.php-version }}
         extensions: intl, mbstring, pgsql, pdo_pgsql, sqlite3
         coverage: xdebug
 
@@ -42,8 +47,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ steps.composer-cache.outputs.dir }}
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-composer-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
+          ${{ runner.os }}-composer-${{ matrix.php-version }}-
           ${{ runner.os }}-composer-
 
     - name: Configure Environment

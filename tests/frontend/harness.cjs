@@ -103,4 +103,10 @@ async function flush() { for (let i = 0; i < 10; i++) await Promise.resolve(); }
 function assetContentType(file) {
   return { '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp' }[path.extname(file)] || 'application/octet-stream';
 }
-module.exports = { harness, flush, root, assetContentType };
+function phpBinary() {
+  if (process.env.PHP_BINARY) return process.env.PHP_BINARY;
+  if (process.platform === 'win32' && fs.existsSync('C:\\xampp\\php\\php.exe')) return 'C:\\xampp\\php\\php.exe';
+  return 'php';
+}
+module.exports = { harness, flush, root, assetContentType, phpBinary };
+

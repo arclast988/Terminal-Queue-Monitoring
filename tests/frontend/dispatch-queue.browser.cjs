@@ -6,10 +6,10 @@ const path = require('node:path');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
-const { root, assetContentType } = require('./harness.cjs');
+const { root, assetContentType, phpBinary } = require('./harness.cjs');
 let browser, server, origin, variant = '', roundRequests = [];
 function fixture(name = 'staff-queue', state = '') {
-  return execFileSync(process.env.PHP_BINARY || 'php', [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+  return execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
 }
 function queuePage(state) {
   let html = fixture('staff-queue', state);
