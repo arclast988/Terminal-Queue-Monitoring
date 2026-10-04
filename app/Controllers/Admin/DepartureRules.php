@@ -39,19 +39,34 @@ class DepartureRules extends BaseController
     private function canManageRule(array $rule): bool
     {
         $ids = $this->assignedRouteIds();
-        return $ids === null || (!empty($rule['route_id']) && in_array((int) $rule['route_id'], $ids, true));
+        if ($ids === null) return true;
+        if (!empty($rule['route_id'])) {
+            return in_array((int) $rule['route_id'], $ids, true);
+        }
+
+        return in_array((int) ($rule['terminal_id'] ?? 0), $this->assignedTerminalIds() ?? [], true);
+    }
+
+    protected function assignedTerminalIds(): ?array
+    {
+        $ids = $this->assignedRouteIds();
+        if ($ids === null) return null;
+        if (!$ids) return [];
+
+        return array_values(array_unique(array_map('intval', array_column(
+            $this->routeModel->select('terminal_id')->whereIn('id', $ids)->findAll(), 'terminal_id'
+        ))));
     }
 
     private function accessibleTerminals(): array
     {
-        $ids = $this->assignedRouteIds();
+        $ids = $this->assignedTerminalIds();
         if ($ids === null) return $this->terminalModel->findAll();
         if (!$ids) return [];
-        $terminalIds = array_column((new RouteModel())->whereIn('id', $ids)->findAll(), 'terminal_id');
-        return $this->terminalModel->whereIn('id', array_unique($terminalIds))->findAll();
+        return $this->terminalModel->whereIn('id', $ids)->findAll();
     }
 
-    private function recalculateRuleScope(int $terminalId, ?int $routeId): void
+    protected function recalculateRuleScope(int $terminalId, ?int $routeId): void
     {
         $queue = new \App\Models\QueueModel();
         if ($routeId !== null) {
@@ -260,8 +275,8 @@ class DepartureRules extends BaseController
             }
         }
 
-        if (!$this->canManageRule(['route_id' => $routeId])) {
-            return $this->response->setStatusCode(403)->setBody('Choose an assigned destination. Dispatchers cannot change terminal-wide defaults.');
+        if (!$this->canManageRule(['terminal_id' => $terminalId, 'route_id' => $routeId])) {
+            return $this->response->setStatusCode(403)->setBody('Choose an assigned destination or a terminal where you dispatch.');
         }
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {
@@ -384,8 +399,8 @@ class DepartureRules extends BaseController
             }
         }
 
-        if (!$this->canManageRule(['route_id' => $routeId])) {
-            return $this->response->setStatusCode(403)->setBody('Choose an assigned destination. Dispatchers cannot change terminal-wide defaults.');
+        if (!$this->canManageRule(['terminal_id' => $terminalId, 'route_id' => $routeId])) {
+            return $this->response->setStatusCode(403)->setBody('Choose an assigned destination or a terminal where you dispatch.');
         }
         // Validate time_from < time_to
         if ($timeFrom >= $timeTo) {

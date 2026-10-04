@@ -338,7 +338,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
                         <div class="mb-4">
                             <label for="route_id" class="form-label-modern">Destination</label>
-                            <select class="select-modern" id="route_id" name="route_id" <?= $prefix === 'staff' ? 'required' : '' ?>>
+                            <select class="select-modern" id="route_id" name="route_id">
                                 <option value="">— No specific destination —</option>
                                 <?php foreach (($routes ?? []) as $r): ?>
                                 <option value="<?= $r['id'] ?>" <?= old('route_id', $selectedRouteId ?? '') == $r['id'] ? 'selected' : '' ?>>
@@ -346,7 +346,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                            <div class="form-text-modern"><?= $prefix === 'staff' ? 'Choose one of your assigned destinations.' : 'Choose a destination, or leave blank for a terminal-wide default.' ?></div>
+                            <div class="form-text-modern">Choose a destination, or leave blank for a terminal-wide default.</div>
                         </div>
 
                         <div class="row">

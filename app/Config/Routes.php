@@ -181,7 +181,7 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->post('queue/undoCancel/(:num)', 'Staff\Queue::undoCancel/$1');
     $routes->post('queue/reorder', 'Staff\Queue::reorder');
 
-    // Departure rules for the dispatcher's assigned destinations.
+    // Departure rules for assigned destinations and their terminal-wide defaults.
     $routes->get('departure-rules', 'Admin\DepartureRules::index');
     $routes->get('departure-rules/create', 'Admin\DepartureRules::create');
     $routes->post('departure-rules/store', 'Admin\DepartureRules::store');
