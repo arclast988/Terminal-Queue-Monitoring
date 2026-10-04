@@ -119,6 +119,20 @@ class DepartureRules extends BaseController
         return departure_clock_value($time, $this->getPrefix() === 'staff');
     }
 
+    /** Existing rules for form checks, tagged with their destination round scope. */
+    private function existingRulesForForm(): array
+    {
+        $rules = $this->ruleModel
+            ->select('departure_rules.id, departure_rules.terminal_id, departure_rules.route_id, departure_rules.time_from, departure_rules.time_to, departure_rules.label, departure_rules.day_of_week, departure_rules.days_of_week, departure_rules.round_number, routes.destination as route_destination')
+            ->join('routes', 'routes.id = departure_rules.route_id', 'left')
+            ->findAll();
+        foreach ($rules as &$rule) {
+            $rule['round_scope'] = departure_round_scope((int) $rule['terminal_id'], $rule['route_destination'] ?? null);
+        }
+        unset($rule);
+        return $rules;
+    }
+
     private function parseWaitMinutes(): ?int
     {
         $minutes = $this->request->getPost('wait_minutes');
@@ -191,6 +205,7 @@ class DepartureRules extends BaseController
             ->join('routes', 'routes.id = departure_rules.route_id', 'left')
             ->orderBy('departure_rules.terminal_id', 'ASC')
             ->orderBy('routes.destination', 'ASC')
+            ->orderBy('departure_rules.round_number', 'ASC')
             ->orderBy('departure_rules.time_from', 'ASC')
             ->findAll();
 
@@ -249,7 +264,7 @@ class DepartureRules extends BaseController
             'selectedRouteId' => $selectedRouteId,
             'returnRoute'     => $returnRoute,
             'listUrl'         => $this->listUrlForRoute($returnRoute),
-            'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, days_of_week, round_number')->findAll(),
+            'existingRules'   => $this->existingRulesForForm(),
         ];
         return view('admin/departure-rules/create', $data);
     }
@@ -367,7 +382,7 @@ class DepartureRules extends BaseController
             'prefix'        => $this->getPrefix(),
             'terminals'     => $this->accessibleTerminals(),
             'routes'        => $this->getRoutesForDropdown(),
-            'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, days_of_week, round_number')->findAll(),
+            'existingRules' => $this->existingRulesForForm(),
             'returnRoute'   => $this->normalizeReturnRoute($this->request->getGet('return_route')),
         ];
 
@@ -517,6 +532,7 @@ class DepartureRules extends BaseController
             $ruleTime = operations_time($rule['time_from']) . ' - ' . operations_time($rule['time_to']);
             $ruleLabel = !empty($rule['label']) && $rule['label'] !== '-' ? ' (' . $rule['label'] . ')' : '';
             $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
+            $this->ruleModel->compactRounds((int) $rule['terminal_id'], !empty($rule['route_id']) ? (int) $rule['route_id'] : null);
             $this->recalculateRuleScope((int) $rule['terminal_id'], !empty($rule['route_id']) ? (int) $rule['route_id'] : null);
             $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
             return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule "' . $ruleTime . $ruleLabel . '" deleted successfully.');

@@ -440,6 +440,50 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame(20, (new DepartureRuleModel($this->intervalDb))->getWaitMinutesForTime('10:00:00', 1, 2));
     }
 
+    public function testCompactRoundsClosesGapsAndRemapsDispatchRoundsAndQueue(): void
+    {
+        require_once APPPATH . 'Database/Migrations/2026-10-03-110000_AddDispatchDaysAndRounds.php';
+        (new \App\Database\Migrations\AddDispatchDaysAndRounds(\Config\Database::forge($this->intervalDb)))->up();
+
+        $rules = new DepartureRuleModel($this->intervalDb);
+        $this->intervalDb->table('departure_rules')->emptyTable();
+        $this->intervalDb->table('departure_rules')->insertBatch([
+            ['id' => 10, 'terminal_id' => 1, 'route_id' => 1, 'round_number' => 1, 'time_from' => '05:00:00', 'time_to' => '09:00:00', 'wait_minutes' => 30],
+            ['id' => 20, 'terminal_id' => 1, 'route_id' => 1, 'round_number' => 2, 'time_from' => '09:00:00', 'time_to' => '12:00:00', 'wait_minutes' => 25],
+            ['id' => 30, 'terminal_id' => 1, 'route_id' => 1, 'round_number' => 4, 'time_from' => '12:00:00', 'time_to' => '15:00:00', 'wait_minutes' => 20],
+        ]);
+
+        $rounds = new \App\Models\DispatchRoundModel($this->intervalDb);
+        $rounds->setRound(1, 'ORMOC', 4);
+
+        $veh = $this->addVehicle(1, 1);
+        $this->queue->update($veh, ['round_number' => 4]);
+
+        $rules->compactRounds(1, 1);
+
+        $after = $this->intervalDb->table('departure_rules')->orderBy('id', 'ASC')->get()->getResultArray();
+        $this->assertSame(1, (int) $after[0]['round_number']);
+        $this->assertSame(2, (int) $after[1]['round_number']);
+        $this->assertSame(3, (int) $after[2]['round_number']);
+
+        $this->assertSame(3, $rounds->currentRound(1, 'ORMOC'));
+        $this->assertSame(3, (int) $this->queue->find($veh)['round_number']);
+    }
+
+    public function testDepartureRoundChoicesScopedToDestination(): void
+    {
+        $existing = [
+            ['round_scope' => '1|ORMOC', 'round_number' => 1],
+            ['round_scope' => '1|ORMOC', 'round_number' => 2],
+            ['round_scope' => '1|ORMOC', 'round_number' => 3],
+            ['round_scope' => '1|TACLOBAN', 'round_number' => 1],
+            ['round_scope' => '1|TACLOBAN', 'round_number' => 8],
+        ];
+
+        $this->assertSame([1, 2, 3, 4], departure_round_choices($existing, 1, '1|ORMOC'));
+        $this->assertSame(range(1, 9), departure_round_choices($existing, 1, '1|TACLOBAN'));
+    }
+
     private function addRule(int $id, int $terminalId, ?int $routeId, int $minutes, string $updatedAt = '2026-10-01 10:00:00'): void
     {
         $this->intervalDb->table('departure_rules')->insert([

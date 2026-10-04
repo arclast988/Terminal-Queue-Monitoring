@@ -26,4 +26,37 @@
     });
     boxes.forEach(function (box) { box.addEventListener('change', update); });
     update();
+
+    // Offer only this destination's rounds plus the next one (1, 2, 3 → 1–4).
+    var roundSelect = document.getElementById('round_number');
+    var routeSelect = document.getElementById('route_id');
+    var terminalInput = document.getElementById('terminal_id');
+    if (!roundSelect || !roundSelect.dataset.roundScopes) return;
+    var scopes = [];
+    try { scopes = JSON.parse(roundSelect.dataset.roundScopes) || []; } catch (e) { scopes = []; }
+    var initialRound = Number(roundSelect.value) || 1;
+    function currentScope() {
+        var option = routeSelect && routeSelect.selectedIndex >= 0 ? routeSelect.options[routeSelect.selectedIndex] : null;
+        if (option && option.value && option.dataset.roundScope) return option.dataset.roundScope;
+        return (terminalInput ? terminalInput.value : '') + '|';
+    }
+    function rebuildRounds() {
+        var scope = currentScope();
+        var max = 0;
+        scopes.forEach(function (item) { if (item.s === scope && item.r > max) max = item.r; });
+        var selected = Number(roundSelect.value) || initialRound;
+        var limit = Math.min(999, max + 1);
+        if (selected > limit) selected = limit;
+        roundSelect.innerHTML = '';
+        for (var n = 1; n <= limit; n++) {
+            var opt = document.createElement('option');
+            opt.value = String(n);
+            opt.textContent = 'Round ' + n;
+            if (n === selected) opt.selected = true;
+            roundSelect.appendChild(opt);
+        }
+    }
+    if (routeSelect) routeSelect.addEventListener('change', rebuildRounds);
+    if (terminalInput) terminalInput.addEventListener('change', rebuildRounds);
+    rebuildRounds();
 })();

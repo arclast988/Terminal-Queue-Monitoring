@@ -23,7 +23,8 @@ $roundChoices = departure_round_choices($existingRules ?? [], $selectedRound);
     </fieldset>
     <div class="rule-round-field">
         <label for="round_number" class="form-label-modern">Assign to round <span class="text-danger">*</span></label>
-        <select id="round_number" name="round_number" class="select-modern" data-no-autocomplete required>
+        <?php $roundScopes = array_map(static fn(array $r): array => ['s' => $r['round_scope'] ?? '', 'r' => (int) ($r['round_number'] ?? 1)], $existingRules ?? []); ?>
+        <select id="round_number" name="round_number" class="select-modern" data-no-autocomplete required data-round-scopes="<?= esc(json_encode($roundScopes), 'attr') ?>">
             <?php foreach ($roundChoices as $roundChoice): ?>
             <option value="<?= $roundChoice ?>" <?= $roundChoice === $selectedRound ? 'selected' : '' ?>>Round <?= $roundChoice ?></option>
             <?php endforeach; ?>

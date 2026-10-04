@@ -84,11 +84,24 @@ if (! function_exists('departure_rule_day_label')) {
     }
 }
 
+if (! function_exists('departure_round_scope')) {
+    /** Key shared by all rules whose rounds are numbered together. */
+    function departure_round_scope(int $terminalId, ?string $destination): string
+    {
+        return $terminalId . '|' . strtoupper(trim((string) $destination));
+    }
+}
+
 if (! function_exists('departure_round_choices')) {
-    function departure_round_choices(array $rules, int $currentRound = 1): array
+    /**
+     * Rounds offered in the rule form: the scope's existing rounds plus the next
+     * one. Saved rounds are compacted, so a scope never skips a number.
+     */
+    function departure_round_choices(array $rules, int $currentRound = 1, ?string $scope = null): array
     {
         $choices = [1, max(1, min(999, $currentRound))];
         foreach ($rules as $rule) {
+            if ($scope !== null && ($rule['round_scope'] ?? null) !== $scope) continue;
             $round = (int) ($rule['round_number'] ?? 1);
             if ($round >= 1 && $round <= 999) $choices[] = $round;
         }

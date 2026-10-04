@@ -156,4 +156,70 @@ class DepartureRuleModel extends Model
         $rule = $this->getRuleForTime($time, $terminalId, $routeId, $roundNumber);
         return (int) $rule['wait_minutes'];
     }
+
+    /**
+     * Renumber the rounds of one rule scope so they run 1, 2, 3... without gaps
+     * (e.g. rounds 1, 2, 4 become 1, 2, 3). The scope is a destination (all
+     * vehicle-type routes sharing it) or the terminal-wide defaults. Today's
+     * selected dispatch round and queued trips are remapped with the rules.
+     */
+    public function compactRounds(int $terminalId, ?int $routeId): void
+    {
+        $routeIds = [];
+        $destination = null;
+        if ($routeId !== null) {
+            $routeModel = new RouteModel($this->db);
+            $route = $routeModel->find($routeId);
+            if (!$route) return;
+            $terminalId = (int) $route['terminal_id'];
+            $destination = $route['destination'];
+            $routeIds = array_map('intval', $routeModel->getDestinationRouteIds($terminalId, $destination));
+            if (!$routeIds) return;
+        }
+
+        $builder = $this->db->table($this->table)->select('id, round_number')->where('terminal_id', $terminalId);
+        $routeIds ? $builder->whereIn('route_id', $routeIds) : $builder->where('route_id', null);
+        $rules = $builder->get()->getResultArray();
+
+        $rounds = array_values(array_unique(array_map(static fn(array $r): int => max(1, (int) $r['round_number']), $rules)));
+        sort($rounds);
+        if (count($rounds) <= 1) return;
+
+        $map = [];
+        if ($rounds[0] === 1) {
+            foreach ($rounds as $index => $round) {
+                if ($round !== $index + 1) $map[$round] = $index + 1;
+            }
+        } else {
+            $expected = $rounds[0];
+            foreach ($rounds as $round) {
+                if ($round > $expected) $map[$round] = $expected;
+                $expected++;
+            }
+        }
+        if (!$map) return;
+
+        foreach ($rules as $rule) {
+            $old = max(1, (int) $rule['round_number']);
+            if (isset($map[$old])) {
+                $this->db->table($this->table)->where('id', $rule['id'])->update(['round_number' => $map[$old]]);
+            }
+        }
+
+        if ($destination === null) return;
+        // Ascending order is safe: every mapped value is lower than its source.
+        ksort($map);
+        foreach ($map as $old => $new) {
+            if ($this->db->tableExists('dispatch_rounds')) {
+                $this->db->table('dispatch_rounds')->where('terminal_id', $terminalId)
+                    ->where('destination', $destination)->where('round_number', $old)
+                    ->update(['round_number' => $new]);
+            }
+            if ($this->db->tableExists('queue') && $this->db->fieldExists('round_number', 'queue')) {
+                $this->db->table('queue')->whereIn('route_id', $routeIds)
+                    ->whereIn('status', ['waiting', 'boarding'])->where('round_number', $old)
+                    ->update(['round_number' => $new]);
+            }
+        }
+    }
 }
