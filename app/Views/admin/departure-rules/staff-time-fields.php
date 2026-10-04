@@ -17,7 +17,7 @@ $minutes = (int) ($waitParts[0] ?? 0) * 60 + (int) ($waitParts[1] ?? 0);
                 <!-- Hours Column -->
                 <div class="tp-col">
                     <button type="button" class="tp-btn tp-btn-up" data-tp-action="hour-up" aria-label="Increase hour" tabindex="-1"><i class="bi bi-chevron-up"></i></button>
-                    <input type="text" class="tp-input" data-tp-input="hour" maxlength="2" inputmode="numeric" value="<?= date('g', $clockStamp) ?>" aria-label="Hour">
+                    <input type="text" class="tp-input" id="<?= $field ?>_tp_hour" data-tp-input="hour" maxlength="2" inputmode="numeric" value="<?= date('g', $clockStamp) ?>" aria-label="Hour">
                     <button type="button" class="tp-btn tp-btn-down" data-tp-action="hour-down" aria-label="Decrease hour" tabindex="-1"><i class="bi bi-chevron-down"></i></button>
                 </div>
                 <!-- Separator -->
@@ -25,7 +25,7 @@ $minutes = (int) ($waitParts[0] ?? 0) * 60 + (int) ($waitParts[1] ?? 0);
                 <!-- Minutes Column -->
                 <div class="tp-col">
                     <button type="button" class="tp-btn tp-btn-up" data-tp-action="min-up" aria-label="Increase minute" tabindex="-1"><i class="bi bi-chevron-up"></i></button>
-                    <input type="text" class="tp-input" data-tp-input="min" maxlength="2" inputmode="numeric" value="<?= date('i', $clockStamp) ?>" aria-label="Minute">
+                    <input type="text" class="tp-input" id="<?= $field ?>_tp_min" data-tp-input="min" maxlength="2" inputmode="numeric" value="<?= date('i', $clockStamp) ?>" aria-label="Minute">
                     <button type="button" class="tp-btn tp-btn-down" data-tp-action="min-down" aria-label="Decrease minute" tabindex="-1"><i class="bi bi-chevron-down"></i></button>
                 </div>
                 <!-- AM/PM Column -->

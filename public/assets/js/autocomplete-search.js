@@ -597,6 +597,13 @@
             // Create visible search input field
             const searchInput = document.createElement('input');
             searchInput.type = 'text';
+            if (selectEl.id) {
+                searchInput.id = selectEl.id + '_autocomplete_search';
+            } else if (selectEl.name) {
+                searchInput.id = selectEl.name.replace(/[^a-zA-Z0-9_-]/g, '_') + '_autocomplete_search';
+            } else {
+                searchInput.id = 'autocomplete_search_' + Math.random().toString(36).slice(2, 9);
+            }
             let inputClass = (selectEl.className || 'form-control')
                 .replace(/\bform-select\b/g, 'form-control')
                 .replace(/\bform-select-modern\b/g, 'form-control-modern')

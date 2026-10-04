@@ -319,12 +319,13 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
                         <div class="mb-4">
-                            <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
                             <?php if ($onlyTerminal): ?>
                                 <?php $singleTerminal = reset($terminals); ?>
-                                <input type="text" class="input-modern" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--surface-sunken, #f8fafc); cursor: not-allowed;">
+                                <label for="terminal_name_display" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
+                                <input type="text" id="terminal_name_display" class="input-modern" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--surface-sunken, #f8fafc); cursor: not-allowed;">
                                 <input type="hidden" name="terminal_id" id="terminal_id" value="<?= $singleTerminal['id'] ?>">
                             <?php else: ?>
+                                <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
                                 <select class="select-modern" id="terminal_id" name="terminal_id" required>
                                     <option value="">— Select Terminal —</option>
                                     <?php foreach ($terminals as $t): ?>
@@ -626,10 +627,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let hhInput = document.createElement('input');
         hhInput.type = 'text';
+        hhInput.id = (input.id || 'time') + '_popover_hh';
         hhInput.className = 'tp-input';
         hhInput.maxLength = 2;
         hhInput.inputMode = 'numeric';
         hhInput.placeholder = 'HH';
+        hhInput.setAttribute('aria-label', (input.id || 'Time') + ' hours');
         hhCol.appendChild(hhInput);
 
         let hhDownBtn = document.createElement('button');
@@ -662,10 +665,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let mmInput = document.createElement('input');
         mmInput.type = 'text';
+        mmInput.id = (input.id || 'time') + '_popover_mm';
         mmInput.className = 'tp-input';
         mmInput.maxLength = 2;
         mmInput.inputMode = 'numeric';
         mmInput.placeholder = 'MM';
+        mmInput.setAttribute('aria-label', (input.id || 'Time') + ' minutes');
         mmCol.appendChild(mmInput);
 
         let mmDownBtn = document.createElement('button');

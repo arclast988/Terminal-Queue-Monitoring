@@ -800,10 +800,10 @@ $isManager = $isAdmin;
 
           <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Terminal</label>
+            <label for="<?= $onlyTerminal ? 'add_fare_terminal_name' : 'add_fare_terminal_id' ?>" class="form-label fw-semibold">Terminal</label>
             <?php if ($onlyTerminal): ?>
               <?php $singleTerminal = reset($terminals); ?>
-              <input type="text" class="form-control" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
+              <input type="text" id="add_fare_terminal_name" class="form-control" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
               <input type="hidden" name="terminal_id" id="add_fare_terminal_id" value="<?= $singleTerminal['id'] ?>">
             <?php else: ?>
               <select name="terminal_id" id="add_fare_terminal_id" class="form-select" required>
@@ -893,10 +893,10 @@ $isManager = $isAdmin;
 
           <?php $onlyTerminalEdit = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Terminal</label>
+            <label for="<?= $onlyTerminalEdit ? 'edit_fare_terminal_name' : 'edit_fare_terminal' ?>" class="form-label fw-semibold">Terminal</label>
             <?php if ($onlyTerminalEdit): ?>
               <?php $singleTerminalEdit = reset($terminals); ?>
-              <input type="text" class="form-control" value="<?= esc($singleTerminalEdit['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
+              <input type="text" id="edit_fare_terminal_name" class="form-control" value="<?= esc($singleTerminalEdit['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
               <input type="hidden" name="terminal_id" id="edit_fare_terminal" value="<?= $singleTerminalEdit['id'] ?>">
             <?php else: ?>
               <select name="terminal_id" id="edit_fare_terminal" class="form-select" required>
@@ -1008,10 +1008,10 @@ $isManager = $isAdmin;
           <?= csrf_field() ?>
           <?php $onlyTerminalDisc = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Terminal</label>
+            <label for="<?= $onlyTerminalDisc ? 'add_terminal_disc_name' : 'add_terminal_id' ?>" class="form-label fw-semibold">Terminal</label>
             <?php if ($onlyTerminalDisc): ?>
               <?php $singleTerminalDisc = reset($terminals); ?>
-              <input type="text" class="form-control" value="<?= esc($singleTerminalDisc['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
+              <input type="text" id="add_terminal_disc_name" class="form-control" value="<?= esc($singleTerminalDisc['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
               <input type="hidden" name="terminal_id" id="add_terminal_id" value="<?= $singleTerminalDisc['id'] ?>">
             <?php else: ?>
               <select name="terminal_id" id="add_terminal_id" class="form-select" required>
