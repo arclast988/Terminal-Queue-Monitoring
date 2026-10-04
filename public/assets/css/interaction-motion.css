@@ -1,18 +1,24 @@
 /* Presentation only: inputs, handlers and server-rendered content stay available. */
 @view-transition { navigation: auto; }
-@keyframes tq-page-out { to { opacity: 0; } }
 @keyframes tq-page-in { from { opacity: 0; } }
 
-/* One short cross-fade for normal same-origin navigation, without a click delay. */
+/* Keep a solid outgoing snapshot beneath the incoming page. Fading both
+   snapshots with normal blending exposes the canvas as a white flash. */
 ::view-transition-group(root) { animation-duration: .15s; }
+::view-transition-image-pair(root) { isolation: isolate; }
 ::view-transition-old(root) {
-  animation: tq-page-out .15s ease-out both;
+  animation: none;
+  opacity: 1;
+  mix-blend-mode: normal;
 }
 ::view-transition-new(root) {
   animation: tq-page-in .15s ease-out both;
+  mix-blend-mode: normal;
 }
+html[data-tq-motion="lite"]::view-transition-group(root),
+html[data-tq-motion="lite"]::view-transition-new(root) { animation-duration: .1s; }
 @media (prefers-reduced-motion: reduce) {
-  @view-transition { navigation: none; }
+  /* Retain the old frame until first paint, with no movement or fading. */
   ::view-transition-group(root),
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }

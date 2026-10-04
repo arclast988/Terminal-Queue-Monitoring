@@ -22,7 +22,7 @@ let browser, server, origin;
 test.before(async () => {
   if (!nativeOnly) return;
   for (const [url, name] of routes) {
-    const html = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+    const html = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme', 'custom-theme'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     // Render the real page heads/navigation; isolate animation from live queue polling.
     // Keep the production policy in its original parser-blocking head position.
     const isolated = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, script => script.includes('window.TerminalMotion') ? script : '');
@@ -56,11 +56,11 @@ test.after(async () => {
   if (server) await new Promise(resolve => server.close(resolve));
 });
 
-async function open(t, mode = 'full') {
+async function open(t, mode = 'full', captureFrames = false) {
   const context = await browser.newContext({ viewport: { width: 1365, height: 900 }, reducedMotion: mode === 'reduced' ? 'reduce' : 'no-preference' });
   t.after(() => context.close());
   await context.route('**/*', route => route.request().url().startsWith(origin) || route.request().url().startsWith('data:') ? route.continue() : route.abort());
-  await context.addInitScript(mode => {
+  await context.addInitScript(({ mode, captureFrames }) => {
     Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { get: () => mode === 'lite' ? 2 : 8 });
     Object.defineProperty(Navigator.prototype, 'deviceMemory', { get: () => mode === 'lite' ? 2 : 8 });
     window.transitionRecords = [];
@@ -69,12 +69,18 @@ async function open(t, mode = 'full') {
       event.viewTransition.ready.then(() => {
         const record = {
           duration: getComputedStyle(document.documentElement, '::view-transition-new(root)').animationDuration,
+          oldOpacity: getComputedStyle(document.documentElement, '::view-transition-old(root)').opacity,
+          oldAnimation: getComputedStyle(document.documentElement, '::view-transition-old(root)').animationName,
           entry: document.querySelector('.main-content, .auth .card, .login-card .card-head, .guest-theme > .container') && getComputedStyle(document.querySelector('.main-content, .auth .card, .login-card .card-head, .guest-theme > .container')).animationName,
         };
         window.transitionRecords.push(record);
+        if (captureFrames) {
+          window.heldTransitions = document.getAnimations().filter(animation => animation.effect?.target === document.documentElement);
+          window.heldTransitions.forEach(animation => { animation.pause(); animation.currentTime = 0; });
+        }
       }, error => window.transitionRecords.push({ skipped: true, reason: error.message }));
     });
-  }, mode);
+  }, { mode, captureFrames });
   const page = await context.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message));
   return { page, errors };
@@ -92,6 +98,8 @@ test('public, authentication and management navigation uses one short native pag
     const record = await page.evaluate(() => window.transitionRecords.find(record => record.duration));
     assert.ok(record, JSON.stringify(await page.evaluate(() => window.transitionRecords)));
     assert.equal(record.duration, '0.15s', `${from} → ${to}`);
+    assert.equal(record.oldOpacity, '1', `${from} → ${to}: never expose a blank canvas`);
+    assert.equal(record.oldAnimation, 'none', `${from} → ${to}: keep the outgoing frame solid`);
     assert.equal(record.entry, 'none', `${from} → ${to}: avoid stacked entry animations`);
     assert.equal(await page.locator('html').getAttribute('data-tq-navigation-reveal'), '');
     // Content does not launch another entrance after the snapshot disappears.
@@ -101,19 +109,57 @@ test('public, authentication and management navigation uses one short native pag
   assert.deepEqual(errors, []);
 });
 
-test('reduced motion and constrained devices keep usable native navigation without snapshots', { timeout: 15000, skip: !nativeOnly }, async t => {
+test('reduced motion and constrained devices keep the old frame until the destination is ready', { timeout: 15000, skip: !nativeOnly }, async t => {
   for (const mode of ['reduced', 'lite']) {
     const { page, errors } = await open(t, mode);
     await page.goto(origin + '/guest');
     await page.locator('a[href="/login"]:visible').first().click();
     await page.waitForURL(origin + '/login');
     assert.equal(await page.locator('html').getAttribute('data-tq-motion'), mode);
-    assert.equal(await page.locator('html').getAttribute('data-tq-navigation-reveal'), null);
+    assert.equal(await page.locator('html').getAttribute('data-tq-navigation-reveal'), '');
+    await page.waitForFunction(() => window.transitionRecords.length > 0);
+    const record = await page.evaluate(() => window.transitionRecords[0]);
+    assert.equal(record.duration, mode === 'lite' ? '0.1s' : '0s');
+    assert.equal(record.oldOpacity, '1');
+    assert.equal(record.entry, 'none');
     await page.locator('#username').fill('dispatcher@example.com');
     assert.equal(await page.locator('#username').inputValue(), 'dispatcher@example.com');
-    assert.ok(await page.evaluate(() => window.transitionRecords.every(record => record.skipped)));
+    assert.ok(await page.evaluate(() => window.transitionRecords.every(record => !record.skipped)));
     assert.deepEqual(errors, []);
   }
+});
+
+test('the dispatcher header never brightens or disappears between rendered transition frames', { timeout: 15000, skip: !nativeOnly }, async t => {
+  const { page, errors } = await open(t, 'full', true);
+  await page.goto(origin + '/staff/dashboard');
+  await page.locator('a[href="/staff/queue"]:visible').first().click();
+  await page.waitForURL(origin + '/staff/queue');
+  await page.waitForFunction(() => window.heldTransitions?.length > 0);
+  let previousOpacity = 0;
+  for (const time of [0, 37.5, 75, 112.5, 150]) {
+    const opacity = await page.evaluate(time => {
+      window.heldTransitions.forEach(animation => animation.currentTime = time);
+      return {
+        old: getComputedStyle(document.documentElement, '::view-transition-old(root)').opacity,
+        incoming: Number(getComputedStyle(document.documentElement, '::view-transition-new(root)').opacity),
+      };
+    }, time);
+    assert.equal(opacity.old, '1', `old frame at ${time}ms`);
+    assert.ok(opacity.incoming >= previousOpacity && opacity.incoming <= 1);
+    previousOpacity = opacity.incoming;
+    const png = await page.screenshot({ animations: 'allow' });
+    // Sample an unchanged part of the actual production header. A transparent
+    // outgoing frame would blend this blue area toward the white page canvas.
+    const pixel = await page.evaluate(async png => {
+      const image = new Image(); image.src = 'data:image/png;base64,' + png; await image.decode();
+      const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+      const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
+      return Array.from(context.getImageData(700, 20, 1, 1).data);
+    }, png.toString('base64'));
+    assert.deepEqual(pixel, [22, 78, 99, 255], `header pixels at ${time}ms`);
+  }
+  await page.evaluate(() => window.heldTransitions.forEach(animation => animation.finish()));
+  assert.deepEqual(errors, []);
 });
 
 test('browser history preserves form values and clears pending feedback after a page fade', { timeout: 15000, skip: !nativeOnly }, async t => {
