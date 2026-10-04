@@ -776,18 +776,18 @@ body.staff-theme .logo-text p {
 }
 
 .profile-role-pill.pill-super_admin {
-  background: #B71C1C;
-  color: #ffffff;
+  background: var(--admin-primary, #B71C1C);
+  color: var(--admin-on-primary, #ffffff);
 }
 
 .profile-role-pill.pill-admin {
-  background: #dc2626;
-  color: #ffffff;
+  background: var(--admin-primary, #B71C1C);
+  color: var(--admin-on-primary, #ffffff);
 }
 
 .profile-role-pill.pill-staff {
-  background: #15803d;
-  color: #ffffff;
+  background: var(--staff-primary, #15803d);
+  color: var(--staff-on-primary, #ffffff);
 }
 
 /* Card Sections & Items */
@@ -871,6 +871,11 @@ body.staff-theme .logo-text p {
 .chip-amber  { background: #fef3c7; color: #b45309; }
 .chip-purple { background: #f3e8ff; color: #7e22ce; }
 .chip-green  { background: #dcfce7; color: #15803d; }
+.profile-badge-chip.chip-theme {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  -webkit-text-fill-color: var(--primary-dark);
+}
 
 .profile-dropdown-footer {
   padding: 4px 8px 8px;
@@ -1134,37 +1139,37 @@ body.drawer-open {
 
 /* Active item matching admin brand active pill */
 .drawer-nav-item.active {
-  background: #fee2e2 !important;
-  color: #b91c1c !important;
+  background: var(--primary-soft) !important;
+  color: var(--primary-dark) !important;
   font-weight: 700;
 }
 
 .drawer-nav-item.active i {
-  color: #b91c1c !important;
+  color: var(--primary-dark) !important;
 }
 
 /* Dispatcher (Staff) Theme Overrides for Drawer */
 body.staff-theme .drawer-brand-subtitle {
-  color: #15803d !important;
+  color: var(--primary) !important;
 }
 
 body.staff-theme .drawer-nav-item:hover {
-  background: #f0fdf4 !important;
-  color: #15803d !important;
+  background: var(--primary-soft) !important;
+  color: var(--primary-dark) !important;
 }
 
 body.staff-theme .drawer-nav-item:hover i {
-  color: #15803d !important;
+  color: var(--primary-dark) !important;
 }
 
 body.staff-theme .drawer-nav-item.active {
-  background: #dcfce7 !important;
-  color: #15803d !important;
+  background: var(--primary-soft) !important;
+  color: var(--primary-dark) !important;
   font-weight: 700;
 }
 
 body.staff-theme .drawer-nav-item.active i {
-  color: #15803d !important;
+  color: var(--primary-dark) !important;
 }
 
 /* Drawer Footer */

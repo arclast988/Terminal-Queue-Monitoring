@@ -744,6 +744,8 @@
             var sp_dark = colorDarken(sp_hex, 0.18);
             var sp_soft = colorSoft(sp_hex, 0.14);
             var sp_on = contrastText(sp_hex);
+            document.documentElement.style.setProperty('--staff-primary', sp_hex, 'important');
+            document.documentElement.style.setProperty('--staff-on-primary', sp_on, 'important');
             var sn_hex = data.theme_staff_nav_bg || sp_hex;
             var st_hex = data.theme_staff_nav_text || '#ffffff';
             var sn_bright = colorBrightness(sn_hex);
@@ -762,6 +764,7 @@
                     '--primary-red-light': sp_soft,
                     '--on-primary': sp_on,
                     '--staff-primary': sp_hex,
+                    '--staff-on-primary': sp_on,
                     '--nav-bg': sn_hex,
                     '--nav-text': st_hex,
                     '--nav-text-soft': st_soft,
@@ -891,21 +894,21 @@
                     -webkit-text-fill-color: ${st_hex} !important;
                 }
                 body.staff-theme .drawer-brand-subtitle {
-                    color: ${sp_hex} !important;
+                    color: var(--primary) !important;
                 }
                 body.staff-theme .drawer-nav-item:hover {
-                    background: ${sp_soft} !important;
-                    color: ${sp_hex} !important;
+                    background: var(--primary-soft) !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.staff-theme .drawer-nav-item:hover i {
-                    color: ${sp_hex} !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.staff-theme .drawer-nav-item.active {
-                    background: ${sp_soft} !important;
-                    color: ${sp_hex} !important;
+                    background: var(--primary-soft) !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.staff-theme .drawer-nav-item.active i {
-                    color: ${sp_hex} !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.staff-theme .logout-stripe {
                     background: linear-gradient(90deg, ${sp_hex} 0%, ${sp_dark} 100%) !important;
@@ -931,6 +934,8 @@
             var ap_dark = colorDarken(ap_hex, 0.18);
             var ap_soft = colorSoft(ap_hex, 0.14);
             var ap_on = contrastText(ap_hex);
+            document.documentElement.style.setProperty('--admin-primary', ap_hex, 'important');
+            document.documentElement.style.setProperty('--admin-on-primary', ap_on, 'important');
             var an_hex = data.theme_admin_nav_bg || ap_hex;
             var at_hex = data.theme_admin_nav_text || '#ffffff';
             var an_bright = colorBrightness(an_hex);
@@ -949,6 +954,7 @@
                     '--primary-red-light': ap_soft,
                     '--on-primary': ap_on,
                     '--admin-primary': ap_hex,
+                    '--admin-on-primary': ap_on,
                     '--sb-primary': ap_hex,
                     '--sb-primary-hover': ap_dark,
                     '--nav-bg': an_hex,
@@ -1082,21 +1088,21 @@
                     -webkit-text-fill-color: ${at_hex} !important;
                 }
                 body.admin-theme .drawer-brand-subtitle {
-                    color: ${ap_hex} !important;
+                    color: var(--primary) !important;
                 }
                 body.admin-theme .drawer-nav-item:hover {
-                    background: ${ap_soft} !important;
-                    color: ${ap_hex} !important;
+                    background: var(--primary-soft) !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.admin-theme .drawer-nav-item:hover i {
-                    color: ${ap_hex} !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.admin-theme .drawer-nav-item.active {
-                    background: ${ap_soft} !important;
-                    color: ${ap_hex} !important;
+                    background: var(--primary-soft) !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.admin-theme .drawer-nav-item.active i {
-                    color: ${ap_hex} !important;
+                    color: var(--primary-dark) !important;
                 }
                 body.admin-theme .logout-stripe {
                     background: linear-gradient(90deg, ${ap_hex} 0%, ${ap_dark} 100%) !important;

@@ -49,6 +49,24 @@
 
     window.TerminalMotion = Object.freeze({ getMode: getMode });
     subscribe();
+    // Native page navigation keeps the old page visible while the response loads.
+    // The browser owns routing, form submission, history and transition timing.
+    window.addEventListener('pageswap', function (event) {
+        if (!event.viewTransition) return;
+        // A skipped/expired snapshot rejects ready; navigation still succeeds.
+        event.viewTransition.ready.catch(function () {});
+        if (getMode() !== 'full') event.viewTransition.skipTransition();
+    });
+    window.addEventListener('pagereveal', function (event) {
+        if (!event.viewTransition) return;
+        event.viewTransition.ready.catch(function () {});
+        if (getMode() !== 'full') {
+            event.viewTransition.skipTransition();
+            return;
+        }
+        // Retain for this document so entry animations do not restart after the fade.
+        root.setAttribute('data-tq-navigation-reveal', '');
+    });
     window.addEventListener('pagehide', unsubscribe);
     window.addEventListener('pageshow', function (event) {
         if (event.persisted) subscribe();

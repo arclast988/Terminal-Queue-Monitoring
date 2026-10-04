@@ -1371,7 +1371,11 @@ body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-con
 }
 
 /* --- Guest Portal Dynamic Theme Tokens --- */
-:root { --guest-primary: {$gp['hex']}; --staff-primary: {$sp['hex']}; --admin-primary: {$ap['hex']}; }
+:root {
+    --guest-primary: {$gp['hex']};
+    --staff-primary: {$sp['hex']}; --staff-on-primary: {$sp['on']};
+    --admin-primary: {$ap['hex']}; --admin-on-primary: {$ap['on']};
+}
 :root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
     --primary: {$gp['hex']} !important;
     --primary-dark: {$gp['dark']} !important;
@@ -1925,21 +1929,21 @@ body.staff-theme .user-profile-dropdown {
     border-left-color: {$sn['divider']} !important;
 }
 body.staff-theme .drawer-brand-subtitle {
-    color: {$sp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.staff-theme .drawer-nav-item:hover {
-    background: {$sp['soft']} !important;
-    color: {$sp['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
 }
 body.staff-theme .drawer-nav-item:hover i {
-    color: {$sp['hex']} !important;
+    color: var(--primary-dark) !important;
 }
 body.staff-theme .drawer-nav-item.active {
-    background: {$sp['soft']} !important;
-    color: {$sp['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
 }
 body.staff-theme .drawer-nav-item.active i {
-    color: {$sp['hex']} !important;
+    color: var(--primary-dark) !important;
 }
 body.staff-theme .logout-stripe {
     background: linear-gradient(90deg, {$sp['hex']} 0%, {$sp['dark']} 100%) !important;
@@ -2194,21 +2198,21 @@ body.admin-theme .user-profile-dropdown {
     border-left-color: {$an['divider']} !important;
 }
 body.admin-theme .drawer-brand-subtitle {
-    color: {$ap['hex']} !important;
+    color: var(--primary) !important;
 }
 body.admin-theme .drawer-nav-item:hover {
-    background: {$ap['soft']} !important;
-    color: {$ap['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
 }
 body.admin-theme .drawer-nav-item:hover i {
-    color: {$ap['hex']} !important;
+    color: var(--primary-dark) !important;
 }
 body.admin-theme .drawer-nav-item.active {
-    background: {$ap['soft']} !important;
-    color: {$ap['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
 }
 body.admin-theme .drawer-nav-item.active i {
-    color: {$ap['hex']} !important;
+    color: var(--primary-dark) !important;
 }
 body.admin-theme .logout-stripe {
     background: linear-gradient(90deg, {$ap['hex']} 0%, {$ap['dark']} 100%) !important;

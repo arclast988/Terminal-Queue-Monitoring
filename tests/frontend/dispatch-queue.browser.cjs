@@ -449,6 +449,45 @@ test('saved and live role themes recolor route tabs, queue headers and primary c
   }
 });
 
+test('account badges and drawer colors follow saved and live role themes with readable text', async () => {
+  const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, { recursive: true });
+  for (const [name, color] of [['staff-queue', 'rgb(21, 94, 117)'], ['admin-settings', 'rgb(112, 64, 176)'], ['admin-users', 'rgb(112, 64, 176)']]) {
+    const page = await browser.newPage({ viewport: { width: 1365, height: 900 } });
+    const errors = []; page.on('pageerror', e => errors.push(e.message));
+    const html = fixture(name, 'custom-theme').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, script => script.includes('var profileBtn') || script.includes('window.TerminalMotion') ? script : '');
+    await page.route('**/profile-themed', route => route.fulfill({ contentType: 'text/html', body: html }));
+    await page.goto(origin + '/profile-themed');
+    await page.locator('#userProfileBtn').click();
+    const role = page.locator('#userProfileMenu .profile-role-pill');
+    assert.equal(await role.evaluate(el => getComputedStyle(el).backgroundColor), color, name);
+    assert.equal(await role.evaluate(el => getComputedStyle(el).color), 'rgb(255, 255, 255)');
+    const chips = page.locator('#userProfileMenu .profile-badge-chip');
+    assert.ok(await chips.count());
+    const expected = await page.locator('body').evaluate(el => ({ soft: getComputedStyle(el).getPropertyValue('--primary-soft').trim(), dark: getComputedStyle(el).getPropertyValue('--primary-dark').trim() }));
+    for (const chip of await chips.all()) {
+      const styles = await chip.evaluate(el => ({ background: getComputedStyle(el).backgroundColor, color: getComputedStyle(el).color }));
+      assert.equal(styles.background, expected.soft);
+      assert.notEqual(styles.color, 'rgb(21, 128, 61)');
+    }
+    await page.screenshot({ path: path.join(directory, 'profile-theme-' + name + '.png'), clip: { x: 950, y: 0, width: 415, height: 530 } });
+    await page.addScriptTag({ url: origin + '/js/ws-client.js' });
+    await page.evaluate(() => applyLiveBranding({ category: 'theme', theme_staff_primary: '#fbbf24', theme_staff_nav_bg: '#164e63', theme_staff_nav_text: '#ffffff', theme_admin_primary: '#fbbf24', theme_admin_nav_bg: '#563084', theme_admin_nav_text: '#ffffff' }));
+    assert.equal(await role.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(251, 191, 36)');
+    assert.equal(await role.evaluate(el => getComputedStyle(el).color), 'rgb(15, 23, 42)');
+    if (name === 'admin-users') {
+      assert.equal(await page.locator('#users-table .pill-staff').first().evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(251, 191, 36)');
+    }
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.locator('#userProfileBtn').click();
+    await page.locator('#siteNavHamburgerBtn').click();
+    await page.locator('.drawer-nav-item').first().hover();
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.drawer-nav-item')).color === 'rgb(206, 157, 30)');
+    assert.equal(await page.locator('.drawer-user-card .profile-role-pill').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(251, 191, 36)');
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    assert.deepEqual(errors, []); await page.close();
+  }
+});
+
 test('mobile queue dialogs keep their headers clear and selection cards include all trip details', async () => {
   variant = 'many';
   for (const {width,height} of [{width:320,height:568},{width:360,height:640},{width:375,height:667},{width:414,height:736},{width:667,height:375},{width:768,height:667},{width:1280,height:800}]) {

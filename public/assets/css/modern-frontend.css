@@ -1710,23 +1710,23 @@ input[name="operator_name"] {
 }
 
 .profile-role-pill.pill-super_admin {
-    background: #B71C1C !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    background: var(--admin-primary, #B71C1C) !important;
+    color: var(--admin-on-primary, #ffffff) !important;
+    -webkit-text-fill-color: var(--admin-on-primary, #ffffff) !important;
     border: none !important;
 }
 
 .profile-role-pill.pill-admin {
-    background: #dc2626 !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    background: var(--admin-primary, #B71C1C) !important;
+    color: var(--admin-on-primary, #ffffff) !important;
+    -webkit-text-fill-color: var(--admin-on-primary, #ffffff) !important;
     border: none !important;
 }
 
 .profile-role-pill.pill-staff {
-    background: #15803d !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    background: var(--staff-primary, #15803d) !important;
+    color: var(--staff-on-primary, #ffffff) !important;
+    -webkit-text-fill-color: var(--staff-on-primary, #ffffff) !important;
     border: none !important;
 }
 

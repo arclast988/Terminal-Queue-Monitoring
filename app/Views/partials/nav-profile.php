@@ -117,7 +117,7 @@ SVG;
             <a href="<?= base_url('staff/departures') ?>" class="profile-dropdown-item" role="menuitem">
                 <i class="fas fa-clock-rotate-left"></i>
                 <span class="item-text">Today Departures</span>
-                <span class="profile-badge-chip chip-green">Today</span>
+                <span class="profile-badge-chip chip-theme">Today</span>
             </a>
         </div>
         <div class="profile-dropdown-divider"></div>
@@ -127,7 +127,7 @@ SVG;
             <a href="<?= base_url('change-password') ?>" class="profile-dropdown-item" role="menuitem">
                 <i class="fas fa-key"></i>
                 <span class="item-text">Change Password</span>
-                <span class="profile-badge-chip chip-green">Auth</span>
+                <span class="profile-badge-chip chip-theme">Auth</span>
             </a>
         </div>
 
@@ -141,12 +141,12 @@ SVG;
             <a href="<?= base_url('admin/settings') ?>" class="profile-dropdown-item" role="menuitem">
                 <i class="fas fa-palette"></i>
                 <span class="item-text">System Themes</span>
-                <span class="profile-badge-chip chip-amber">Super Admin</span>
+                <span class="profile-badge-chip chip-theme">Super Admin</span>
             </a>
             <a href="<?= base_url('admin/settings/content') ?>" class="profile-dropdown-item" role="menuitem">
                 <i class="fas fa-pen-to-square"></i>
                 <span class="item-text">Content Manager</span>
-                <span class="profile-badge-chip chip-amber">Super Admin</span>
+                <span class="profile-badge-chip chip-theme">Super Admin</span>
             </a>
         </div>
 
@@ -159,7 +159,7 @@ SVG;
             <a href="<?= base_url($isAdmin ? 'admin/help' : 'staff/help') ?>" class="profile-dropdown-item" role="menuitem">
                 <i class="fas fa-circle-question"></i>
                 <span class="item-text">Help Guide</span>
-                <span class="profile-badge-chip chip-green">Guide</span>
+                <span class="profile-badge-chip chip-theme">Guide</span>
             </a>
         </div>
 

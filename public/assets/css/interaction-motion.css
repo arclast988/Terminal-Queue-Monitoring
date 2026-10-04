@@ -1,4 +1,24 @@
 /* Presentation only: inputs, handlers and server-rendered content stay available. */
+@view-transition { navigation: auto; }
+@keyframes tq-page-out { to { opacity: 0; } }
+@keyframes tq-page-in { from { opacity: 0; } }
+
+/* One short cross-fade for normal same-origin navigation, without a click delay. */
+::view-transition-group(root) { animation-duration: .15s; }
+::view-transition-old(root) {
+  animation: tq-page-out .15s ease-out both;
+}
+::view-transition-new(root) {
+  animation: tq-page-in .15s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
+}
+@media print { @view-transition { navigation: none; } }
+
 @keyframes tq-content-enter {
   from { opacity: .65; transform: translate3d(0, 6px, 0); }
   to { opacity: 1; transform: none; }
@@ -168,4 +188,15 @@ html[data-tq-motion="reduced"] *:not(.marquee):not(.marquee-copy)::after {
 html[data-tq-motion="reduced"] :is(.login-card, .modal-backdrop, .support-modal-backdrop) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+}
+
+/* A browser page fade already reveals this content; avoid a second entrance. */
+html[data-tq-navigation-reveal] body :is(.fade-in, .form-entry-page, .main-content),
+html[data-tq-navigation-reveal] .guest-theme > :is(.hero, .container),
+html[data-tq-navigation-reveal] .guest-theme :is(.stat-card, .queue-section),
+html[data-tq-navigation-reveal] .auth-page :is(.brand, .hero-copy, .auth > .card, .login-card .card-head),
+html[data-tq-navigation-reveal] #loginForm :is(.field, .options),
+html[data-tq-navigation-reveal] #loginForm > .btn,
+html[data-tq-navigation-reveal] .queue-card.card-enter {
+  animation: none !important;
 }

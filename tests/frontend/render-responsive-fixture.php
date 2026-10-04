@@ -24,7 +24,13 @@ function csrf_header(): string { return 'X-CSRF-TOKEN'; }
 function app_name(): string { return $GLOBALS['fixtureLong'] ? 'PalomponTerminalMonitoringWithAnUnbrokenLongName' : 'Palompon Terminal'; }
 function app_subtitle(): string { return 'Transit Terminal Monitoring System'; }
 function app_system_title(): string { return app_name(); }
-function get_system_setting(string $key, $default = null) { return $default; }
+function get_system_setting(string $key, $default = null) {
+    $theme = ($GLOBALS['argv'][4] ?? '') === 'custom-theme' ? [
+        'theme_staff_primary'=>'#155e75', 'theme_staff_nav_bg'=>'#164e63',
+        'theme_admin_primary'=>'#7040b0', 'theme_admin_nav_bg'=>'#563084',
+    ] : [];
+    return $theme[$key] ?? $default;
+}
 if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content'], true)) {
     // Keep the real footer/modals while stubbing only managed settings/config.
     final class FixtureContentManagement { public static function fields(): array { return []; } }
