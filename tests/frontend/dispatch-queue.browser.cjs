@@ -238,6 +238,8 @@ test('queue route dropdowns support typing and clearing on desktop and small scr
       if(select==='#queueRoundRouteFilter')assert.equal(await page.locator('[data-dispatch-round]:visible').count(),2);
       await input.fill('bato');await page.waitForFunction(id=>document.querySelector(id).closest('.autocomplete-wrapper').querySelectorAll('.autocomplete-item').length===1,select);
       await wrapper.locator('.autocomplete-item').filter({hasText:'BATO'}).waitFor();
+      const clearBounds=await wrapper.evaluate(el=>{const input=el.querySelector('input[type="text"]').getBoundingClientRect(),clear=el.querySelector('.autocomplete-clear-btn').getBoundingClientRect();return {inputTop:input.top,inputBottom:input.bottom,clearTop:clear.top,clearBottom:clear.bottom};});
+      assert.ok(clearBounds.clearTop>=clearBounds.inputTop && clearBounds.clearBottom<=clearBounds.inputBottom);
       if(select==='#addQueueRouteFilter') {
         await page.evaluate(()=>QueueSync.refresh(true));
         await page.waitForResponse(response=>response.url().endsWith('/staff/queue') && response.request().method()==='GET');
