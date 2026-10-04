@@ -295,12 +295,6 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
             <?= $this->include('partials/flash_notices') ?>
 
-            <!-- Live Client-side Contradiction Warning -->
-            <div id="rule-contradiction-alert" class="alert-modern alert-modern-danger mb-4" style="display: none;">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <span id="rule-contradiction-msg"></span>
-            </div>
-
             <div class="card-modern fade-in">
                 <div class="card-header-modern">
                     <span class="card-title-modern"><i class="bi bi-gear me-2"></i> Rule Configuration</span>
@@ -344,6 +338,10 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                         </div>
 
                         <?= view('admin/departure-rules/day-round-fields', ['rule' => $rule, 'existingRules' => $existingRules ?? []]) ?>
+
+                        <div id="rule-contradiction-alert" class="departure-rule-conflict mb-4" style="display:none" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i><span id="rule-contradiction-msg"></span>
+                        </div>
 
                         <?php if (($prefix ?? 'admin') === 'staff'): ?>
                         <?= view('admin/departure-rules/staff-time-fields', ['rule' => $rule, 'defaultWaitValue' => $defaultWaitValue, 'existingRules' => $existingRules ?? []]) ?>

@@ -70,9 +70,10 @@ final class StaffTodayDeparturesTest extends CIUnitTestCase
     {
         service('renderer')->resetData();
         \Config\Services::resetSingle('pager');
+        $this->response = service('response', null, false);
+        $this->withUri('http://localhost/staff/departures'.($method === 'report' ? '/print' : '').'?'.http_build_query($query));
         $this->request->setGlobal('get',$query);
-        return $this->withUri('http://localhost/staff/departures'.($method === 'report' ? '/print' : '').'?'.http_build_query($query))
-            ->controller(Departures::class)->execute($method)->response();
+        return $this->controller(Departures::class)->execute($method)->response();
     }
 
     public function testTodayPagePaginatesAllAssignedDeparturesAndShowsFullDayTotals(): void
@@ -102,6 +103,19 @@ final class StaffTodayDeparturesTest extends CIUnitTestCase
         foreach (['TODAY-01','TODAY-35','ASSIGNED-SIBLING','MIDNIGHT-ROLLOVER','37 Departures','Today only','/staff/departures'] as $text) $this->assertStringContainsString($text,$html);
         foreach (['YESTERDAY-TRIP','TOMORROW-TRIP','UNASSIGNED-ROUTE','UNASSIGNED-TERMINAL','WAITING-TRIP','NEXT-DAY-ROLLOVER','/admin/history'] as $text) $this->assertStringNotContainsString($text,$html);
         $this->assertStringContainsString(history_departure_time($this->today.' 00:00:00','M d, Y'),$html);
+    }
+
+    public function testPaginationAppearsOnlyWhenTheFilteredResultsNeedAnotherPage(): void
+    {
+        $html = $this->page('index')->getBody();
+        $this->assertSame(2, service('pager')->getPageCount());
+        $hasPagination = static fn(string $body): bool => (bool) preg_match('/<nav\b[^>]*class="[^"]*modern-pagination-nav/', $body);
+        $this->assertTrue($hasPagination($html), 'A second page must have pagination controls.');
+        foreach (['TODAY-01', 'NO-SUCH-TRIP'] as $query) {
+            $body = $this->page('index', ['q'=>$query])->getBody();
+            $this->assertLessThanOrEqual(1, service('pager')->getPageCount(), 'The filtered results need at most one page.');
+            $this->assertFalse($hasPagination($body), 'A single page must have no pagination controls.');
+        }
     }
 
     public function testSearchAndReportFiltersPreserveSnapshotDetailsAndAssignmentRestrictions(): void

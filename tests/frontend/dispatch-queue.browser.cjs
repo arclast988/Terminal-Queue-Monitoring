@@ -377,23 +377,27 @@ test('single active rules are displayed without a dropdown on desktop and phones
   }
 });
 
-test('editing a destination with one configured round hides unused rounds; creation marks the next as new',async()=>{
+test('a destination with a missing first round can be corrected and creation fills the gap independently',async()=>{
   for(const width of [375,1280]) {
     const page=await browser.newPage({viewport:{width,height:900}});
     await page.goto(origin+'/fixtures/staff-rule-edit?state=scoped-rounds');
     assert.equal(await page.locator('#route_id').inputValue(),'2');
-    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['2']);
-    assert.equal(await page.locator('#round_number').isVisible(),false);
-    assert.equal(await page.locator('#round_number_display').inputValue(),'Round 2');
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2']);
+    assert.equal(await page.locator('#round_number').isVisible(),true);
     assert.equal(await page.locator('#departureRuleForm').evaluate(form=>new FormData(form).get('round_number')),'2');
     await page.locator('#route_id').selectOption('1');
     assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2','3']);
     await page.locator('#route_id').selectOption('2');
-    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['2']);
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2']);
+    await page.locator('#round_number').selectOption('1');
+    assert.equal(await page.locator('#rule-contradiction-alert').isVisible(),false);
     await page.goto(origin+'/fixtures/staff-rule-create?state=scoped-rounds');
-    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.textContent.trim())),['Round 2','New round 3']);
-    await page.locator('#round_number').selectOption('3');
-    assert.equal(await page.locator('#departureRuleForm').evaluate(form=>new FormData(form).get('round_number')),'3');
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.textContent.trim())),['New round 1','Round 2']);
+    assert.equal(await page.locator('#departureRuleForm').evaluate(form=>new FormData(form).get('round_number')),'1');
+    await page.locator('#route_id').selectOption('1');
+    assert.equal(await page.locator('#round_number').inputValue(),'4');
+    await page.locator('#route_id').selectOption('2');
+    assert.equal(await page.locator('#round_number').inputValue(),'1');
     await page.close();
   }
 });
@@ -406,6 +410,7 @@ test('guest Active now badge moves to the dispatcher-selected round in the open 
   await page.goto(origin+'/guest-rounds');
   await page.locator('#routeAverageCard').click();
   await page.waitForSelector('#routeAverageModal.is-open');
+  assert.match(await page.locator('.route-average-header').innerText(),/Only rules marked Active Now are currently used/);
   assert.equal(await page.locator('#routeAverageList .badge-active-now').count(),1);
   assert.match(await page.locator('[data-rule-id="1"]').innerText(),/Active Now/i);
   assert.doesNotMatch(await page.locator('[data-rule-id="2"]').innerText(),/Active Now/i);
@@ -540,7 +545,8 @@ test('dispatcher clocks, forms and schedule labels use AM/PM while administrator
   assert.equal(await page.locator('#time_to').inputValue(),'5:00 PM');
   async function setClock(field,hour,minute,period) {
     await page.locator(`[data-clock-field="${field}"] [data-clock-toggle]`).click();
-    await page.locator('#'+field+'Hour').selectOption(hour);await page.locator('#'+field+'Minute').selectOption(minute);await page.locator('#'+field+'Period').selectOption(period);
+    await page.locator('#'+field+'_tp_hour').fill(hour);await page.locator('#'+field+'_tp_min').fill(minute);
+    await page.locator('#'+field+'Picker [data-period="'+period+'"]').click();
     await page.locator('#'+field+'Picker [data-clock-set]').click();
   }
   await setClock('time_from','12','00','PM');await setClock('time_to','11','59','PM');
@@ -549,11 +555,35 @@ test('dispatcher clocks, forms and schedule labels use AM/PM while administrator
   await page.locator('#time_from').pressSequentially('sdsadsas111111');
   assert.equal(await page.locator('#time_from').inputValue(),'12:00 PM');
   await setClock('time_from','11','59','PM');
-  assert.equal(await page.locator('#departureRuleForm').evaluate(form=>form.checkValidity()),false);
+  assert.match(await page.locator('#rule-contradiction-alert').innerText(),/End time must be later/);
+  const prevented = await page.locator('#departureRuleForm').evaluate(form=>!form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+  assert.equal(prevented,true);
+  assert.equal(await page.locator('.dispatch-time-picker:visible').count(),0);
   for(const name of ['admin-schedules','admin-rules']) {
     await page.unroute('**/time-fixture');await page.route('**/time-fixture',route=>route.fulfill({contentType:'text/html',body:fixture(name)}));await page.goto(origin+'/time-fixture');
     assert.match(await page.locator('body').innerText(),/HH:MM/);
     assert.doesNotMatch(await page.locator('.operations-header-clock').first().innerText(),/AM|PM/);
   }
   await page.close();
+});
+
+test('an occupied round shows a persistent inline warning and blocks submission without opening a clock', async () => {
+  for (const width of [375,1365]) {
+    const page = await browser.newPage({viewport:{width,height:800}});
+    await page.goto(origin+'/fixtures/staff-rule-edit?state=conflicting-round');
+    await page.locator('#round_number').selectOption('3');
+    assert.match(await page.locator('#rule-contradiction-alert').innerText(),/Round 3 already has a rule/);
+    let posted=0;await page.route('**/staff/departure-rules/update/**',route=>{posted++;return route.fulfill({status:200,body:'Saved'});});
+    await page.locator('#departureRuleForm button[type="submit"]').click();
+    assert.equal(posted,0);
+    assert.equal(await page.locator('.dispatch-time-picker:visible').count(),0);
+    assert.equal(await page.locator('#departureRuleForm :invalid').count(),0);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    await page.waitForTimeout(5000);
+    assert.equal(await page.locator('#rule-contradiction-alert').isVisible(),true);
+    await page.screenshot({path:path.join(__dirname,'artifacts','occupied-round-warning-'+width+'.png')});
+    await page.locator('#round_number').selectOption('1');
+    assert.equal(await page.locator('#rule-contradiction-alert').isVisible(),false);
+    await page.close();
+  }
 });

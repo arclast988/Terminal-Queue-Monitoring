@@ -230,34 +230,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         <?php if (session()->getFlashdata('contact_error')): ?>
         <div class="alert-error-banner"><i class="fas fa-times-circle"></i> <?= session()->getFlashdata('contact_error') ?></div>
         <?php endif; ?>
-        <form action="<?= base_url('contact/send') ?>" method="post">
-            <?= csrf_field() ?>
-            <input type="hidden" name="type" value="report">
-            <div class="form-group">
-                <label>Your Name *</label>
-                <input type="text" name="name" placeholder="e.g. Juan Dela Cruz" required>
-            </div>
-            <div class="form-group">
-                <label>Your Email *</label>
-                <input type="email" name="email" placeholder="your@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Issue Type</label>
-                <select name="subject">
-                    <option>Incorrect schedule or departure time</option>
-                    <option>Missing vehicle from queue</option>
-                    <option>Website display / technical problem</option>
-                    <option>Incorrect fare information / overcharging</option>
-                    <option>Lost and found inquiry</option>
-                    <option>Other operational issue</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Describe the Issue *</label>
-                <textarea name="message" placeholder="Please provide plate number, destination, date/time, and a brief description..." required></textarea>
-            </div>
-            <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Submit Report</button>
-        </form>
+        <?= view('partials/guest-contact-form', ['type' => 'report']) ?>
     </div>
 </div>
 
@@ -273,27 +246,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         <div class="alert-error-banner"><i class="fas fa-times-circle"></i> <?= session()->getFlashdata('contact_error') ?></div>
         <?php endif; ?>
         <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message to <?= esc(app_name()) ?> Terminal administration. We are committed to safe, reliable public transport.</p>
-        <form action="<?= base_url('contact/send') ?>" method="post">
-            <?= csrf_field() ?>
-            <input type="hidden" name="type" value="contact">
-            <div class="form-group">
-                <label>Your Name *</label>
-                <input type="text" name="name" placeholder="e.g. Maria Santos" required>
-            </div>
-            <div class="form-group">
-                <label>Your Email *</label>
-                <input type="email" name="email" placeholder="your@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Subject</label>
-                <input type="text" name="subject" placeholder="e.g. Inquiring about special holiday trip schedules">
-            </div>
-            <div class="form-group">
-                <label>Message *</label>
-                <textarea name="message" placeholder="Write your inquiry or feedback here..." required></textarea>
-            </div>
-            <button type="submit" class="submit-btn"><i class="fas fa-paper-plane"></i> Send Message</button>
-        </form>
+        <?= view('partials/guest-contact-form', ['type' => 'contact']) ?>
     </div>
 </div>
 

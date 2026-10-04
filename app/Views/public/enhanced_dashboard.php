@@ -2474,6 +2474,7 @@
                 <div>
                     <h3 class="route-average-title" id="routeAverageTitle">Departure Time Rules</h3>
                     <p class="route-average-subtitle">Scheduled departure intervals configured for <?= esc(preg_match('/terminal\b/i', app_name()) ? app_name() : app_name() . ' Terminal') ?>.</p>
+                    <p class="route-average-subtitle mb-0">Only rules marked <strong>Active Now</strong> are currently used for departures.</p>
                 </div>
                 <button type="button" class="route-average-close" id="routeAverageClose" onclick="closeRouteAverageModal()" aria-label="Close departure rules modal">
                     <i class="fas fa-times"></i>

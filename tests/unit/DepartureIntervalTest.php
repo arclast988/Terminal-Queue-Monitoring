@@ -544,9 +544,10 @@ final class DepartureIntervalTest extends CIUnitTestCase
         ];
 
         $this->assertSame([1, 2, 3, 4], departure_round_choices($existing, 1, '1|ORMOC'));
-        $this->assertSame([1, 8, 9], departure_round_choices($existing, 1, '1|TACLOBAN'));
+        $this->assertSame([1, 2, 8], departure_round_choices($existing, 1, '1|TACLOBAN'));
         $this->assertSame([1, 8], departure_round_choices($existing, 1, '1|TACLOBAN', false));
         $this->assertSame([2], departure_round_choices([['round_scope'=>'1|TACLOBAN','round_number'=>2]], 2, '1|TACLOBAN', false));
+        $this->assertSame([1, 2], departure_round_choices([['round_scope'=>'1|TACLOBAN','round_number'=>2]], 0, '1|TACLOBAN'));
         $this->assertSame([1], departure_round_choices($existing, 0, '1|OTHER'));
         $existing[] = ['round_scope'=>'1|','round_number'=>5];
         $this->assertSame([1, 5, 8], departure_round_choices($existing, 1, '1|TACLOBAN', false));

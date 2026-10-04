@@ -178,11 +178,10 @@
             }
         });
         function validate() {
-            var fromChoice = document.getElementById('time_fromMinute'), toChoice = document.getElementById('time_toMinute');
-            fromChoice.setCustomValidity(''); toChoice.setCustomValidity('');
             if (alert) alert.style.display = 'none';
-            var start = minutes(from.value), end = minutes(to.value), issue = '', target = toChoice;
-            if (from.value && start === null) { issue = 'Choose a valid start time.'; target = fromChoice; }
+            var start = minutes(from.value), end = minutes(to.value), issue = '';
+            var target = to.closest('[data-clock-field]').querySelector('[data-clock-toggle]');
+            if (from.value && start === null) { issue = 'Choose a valid start time.'; target = from.closest('[data-clock-field]').querySelector('[data-clock-toggle]'); }
             else if (to.value && end === null) issue = 'Enter a valid end time, such as 5:00 PM.';
             else if (start !== null && end !== null) {
                 if (start >= end) issue = 'End time must be later than start time.';
@@ -190,17 +189,22 @@
                     var days = Array.from(form.querySelectorAll('[name="days_of_week[]"]:checked')).map(box => Number(box.value));
                     var route = form.elements.route_id.value, terminal = form.elements.terminal_id.value;
                     var round = form.elements.round_number.value;
+                    var routeOption = form.elements.route_id.options[form.elements.route_id.selectedIndex];
+                    var scope = route && routeOption ? routeOption.dataset.roundScope : terminal + '|';
                     var overlap = existing.find(rule => {
                         var ruleDays = rule.days_of_week ? String(rule.days_of_week).split(',').map(Number) : rule.day_of_week ? [Number(rule.day_of_week)] : [1,2,3,4,5,6,7];
                         return Number(rule.id) !== Number(section.dataset.ruleId) && String(rule.round_number || 1) === round
-                            && (route ? String(rule.route_id) === route : !rule.route_id && String(rule.terminal_id) === terminal)
+                            && (rule.round_scope ? rule.round_scope === scope : (route ? String(rule.route_id) === route : !rule.route_id && String(rule.terminal_id) === terminal))
                             && (days.length === 7) === (ruleDays.length === 7) && days.some(day => ruleDays.includes(day))
                             && savedMinutes(rule.time_from) < end && savedMinutes(rule.time_to) > start;
                     });
-                    if (overlap) issue = 'This time window overlaps another rule for the selected days and round. Adjust the time or edit that rule.';
+                    if (overlap) {
+                        issue = 'Round ' + round + ' already has a rule for ' + (route ? routeOption.textContent.trim() : 'all routes at this terminal') + ' at this time on the selected days. Choose another round or change the days or times.';
+                        target = form.elements.round_number.hidden ? document.getElementById('round_number_display') : form.elements.round_number;
+                    }
                 }
             }
-            if (issue) { target.setCustomValidity(issue); if (message) message.textContent = issue; if (alert) alert.style.display = 'flex'; }
+            if (issue) { if (message) message.textContent = issue; if (alert) alert.style.display = 'flex'; }
             return issue ? target : null;
         }
         form.addEventListener('input', validate);
@@ -211,7 +215,11 @@
         }, true);
         form.addEventListener('submit', function (event) {
             var invalid = validate();
-            if (invalid) { event.preventDefault(); openPicker(invalid.closest('[data-clock-field]')); invalid.focus(); invalid.reportValidity(); }
+            if (invalid) {
+                event.preventDefault(); closePickers();
+                invalid.focus({ preventScroll: true });
+                if (alert) alert.scrollIntoView({ block: 'center' });
+            }
         });
         validate();
     });

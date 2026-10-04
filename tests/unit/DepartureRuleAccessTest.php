@@ -324,4 +324,17 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
             ->controller(ScopedDepartureRulesHarness::class)->execute('update', 99);
         $this->assertSame(404, $result->response()->getStatusCode());
     }
+
+    public function testFirstRoundCanBeCorrectedWithoutConflictingWithAnotherDestination(): void
+    {
+        ScopedDepartureRulesHarness::$assignedIds = [1,2,3];
+        ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id',1)->update(['round_number'=>1]);
+        $this->postRule(['route_id'=>'3', 'round_number'=>'1']);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('update',3);
+        $this->assertSame(302,$result->response()->getStatusCode());
+        $saved = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id',3)->get()->getRowArray();
+        $this->assertSame(1,(int)$saved['round_number']);
+        $this->assertSame(3,(int)$saved['route_id']);
+        $this->assertSame([[1,3]],ScopedDepartureRulesHarness::$recalculations);
+    }
 }

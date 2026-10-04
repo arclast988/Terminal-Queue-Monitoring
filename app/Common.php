@@ -95,7 +95,7 @@ if (! function_exists('departure_round_scope')) {
 if (! function_exists('departure_round_choices')) {
     /**
      * Offer configured rounds for this destination and its terminal defaults.
-     * Only the add form offers the next round; editing must not invent rounds.
+     * The add form offers the first unused number, starting at Round 1.
      */
     function departure_round_choices(array $rules, int $currentRound = 0, ?string $scope = null, bool $allowNew = true): array
     {
@@ -106,7 +106,11 @@ if (! function_exists('departure_round_choices')) {
             $round = (int) ($rule['round_number'] ?? 1);
             if ($round >= 1 && $round <= 999) $choices[] = $round;
         }
-        if ($allowNew) $choices[] = $choices ? min(999, max($choices) + 1) : 1;
+        if ($allowNew) {
+            for ($next = 1; $next <= 999; $next++) {
+                if (!in_array($next, $choices, true)) { $choices[] = $next; break; }
+            }
+        }
         $choices = array_values(array_unique($choices));
         sort($choices);
         return $choices;

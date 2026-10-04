@@ -169,6 +169,15 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
         foreach ([1,2,3] as $round) $fixtureData['existingRules'][] = array_replace($fixtureData['rule'], ['id'=>10+$round,'route_id'=>1,'route_destination'=>'ORMOC','round_scope'=>'1|ORMOC','round_number'=>$round]);
         $fixtureData['selectedRouteId'] = 2;
     }
+    if (($argv[4] ?? '') === 'conflicting-round') {
+        $fixtureData['existingRules'][] = array_replace($fixtureData['rule'], ['id'=>3, 'round_number'=>3]);
+    }
+}
+if ($fixturePage === 'guest-contact-verification') {
+    $fixtureData['pending'] = ['id'=>str_repeat('a',64), 'type'=>'report', 'name'=>'Guest Passenger',
+        'email'=>'guest-passenger-with-a-long-address@example.com', 'subject'=>'Website display / technical problem',
+        'message'=>'<script>Text must stay text</script>', 'verified'=>($argv[4] ?? '') === 'verified'];
+    $fixtureData['resendWait'] = 60;
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
@@ -224,6 +233,7 @@ $fixtureRenderer = new ResponsiveFixtureRenderer();
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
+    'guest-contact-verification' => 'public/contact-verification',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-routes' => 'admin/routes/index',

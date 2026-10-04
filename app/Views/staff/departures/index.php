@@ -1,4 +1,4 @@
-<?= view('templates/header', ['title' => $title]) ?>
+<?= view('templates/header', ['title' => $title, 'pageStyles' => ['assets/css/today-departures.css']]) ?>
 
 <div class="page-header-modern fade-in flex-wrap gap-3">
     <div>
@@ -8,9 +8,9 @@
     <a class="btn-modern btn-modern-primary" href="<?= esc(base_url('staff/departures/print') . '?' . http_build_query(array_filter($filters, static fn($value) => $value !== ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text"></i> Generate Report</a>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-6"><div class="stat-card-modern success-accent"><div class="stat-card-value"><?= (int) ($stats['departures'] ?? 0) ?></div><div class="stat-card-label">Departures today</div></div></div>
-    <div class="col-6"><div class="stat-card-modern success-accent"><div class="stat-card-value"><?= (int) ($stats['passengers'] ?? 0) ?></div><div class="stat-card-label">Passengers today</div></div></div>
+<div class="row g-3 mb-4 today-departure-stats">
+    <div class="col-6"><div class="stat-card-modern success-accent h-100"><div class="stat-card-icon" aria-hidden="true"><i class="bi bi-bus-front"></i></div><div class="stat-card-value"><?= (int) ($stats['departures'] ?? 0) ?></div><div class="stat-card-label">Departures today</div></div></div>
+    <div class="col-6"><div class="stat-card-modern success-accent h-100"><div class="stat-card-icon" aria-hidden="true"><i class="bi bi-people"></i></div><div class="stat-card-value"><?= (int) ($stats['passengers'] ?? 0) ?></div><div class="stat-card-label">Passengers today</div></div></div>
 </div>
 
 <form action="<?= base_url('staff/departures') ?>" method="get" class="modern-card shadow-modern mb-3">
@@ -69,6 +69,6 @@
         </table>
     </div>
 </div>
-<?php if ($pager): ?><div class="mt-3"><?= $pager->links() ?></div><?php endif; ?>
+<?php if ($pager && $pager->getPageCount() > 1): ?><div class="mt-3"><?= $pager->links() ?></div><?php endif; ?>
 
 <?= view('templates/footer') ?>

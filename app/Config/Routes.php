@@ -29,6 +29,10 @@ $routes->get('fares', 'Fares::index');
 $routes->get('api/fares', 'Fares::apiData');
 $routes->get('history', 'History::index', ['filter' => 'auth:admin,staff']);
 $routes->post('contact/send', 'Contact::send');
+$routes->get('contact/verify', 'Contact::verification');
+$routes->post('contact/verify', 'Contact::verify');
+$routes->post('contact/resend', 'Contact::resend');
+$routes->post('contact/edit', 'Contact::edit');
 $routes->get('manual', 'Manual::index');
 $routes->get('user-manual', 'Manual::index');
 

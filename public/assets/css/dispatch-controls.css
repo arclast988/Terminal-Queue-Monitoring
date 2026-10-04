@@ -10,6 +10,8 @@
 .rule-day-option:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
 .rule-days-summary { margin: 10px 0 0; color: var(--text-muted, #64748b); font-size: 12px; line-height: 1.5; }
 .rule-round-field select { min-height: 44px; width: 100%; }
+.departure-rule-conflict { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border: 1px solid #fdba74; border-radius: 10px; background: #fff7ed; color: #9a3412; font-size: 14px; line-height: 1.6; }
+.departure-rule-conflict > i { flex-shrink: 0; margin-top: 2px; }
 .rule-days-label { display: inline-block; white-space: normal; max-width: 240px; line-height: 1.5; }
 .dispatch-time-wrap { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 44px; min-width: 0; }
 .dispatch-time-wrap > .input-modern { min-width: 0; border-radius: 8px 0 0 8px; cursor: pointer; }

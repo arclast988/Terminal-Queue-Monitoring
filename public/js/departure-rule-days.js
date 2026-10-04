@@ -27,7 +27,7 @@
     boxes.forEach(function (box) { box.addEventListener('change', update); });
     update();
 
-    // Editing shows configured rounds. Adding explicitly offers a new round.
+    // Adding fills gaps; editing can correct a missing first round.
     var roundSelect = document.getElementById('round_number');
     var routeSelect = document.getElementById('route_id');
     var terminalInput = document.getElementById('terminal_id');
@@ -38,6 +38,7 @@
     var display = document.getElementById('round_number_display');
     var label = document.getElementById('round_number_label');
     var creating = roundSelect.dataset.roundCreate === 'true';
+    var previousScope = null;
     function currentScope() {
         var option = routeSelect && routeSelect.selectedIndex >= 0 ? routeSelect.options[routeSelect.selectedIndex] : null;
         if (option && option.value && option.dataset.roundScope) return option.dataset.roundScope;
@@ -55,11 +56,16 @@
         }
         configured = Array.from(new Set(configured)).sort(function (a, b) { return a - b; });
         var choices = configured.slice();
-        var newRound = choices.length ? Math.min(999, choices[choices.length - 1] + 1) : 1;
-        if (creating && choices.indexOf(newRound) === -1) choices.push(newRound);
+        var newRound = 1;
+        while (newRound <= 999 && choices.indexOf(newRound) !== -1) newRound++;
+        if (creating && newRound <= 999) choices.push(newRound);
+        if (!creating && choices.length && choices.indexOf(1) === -1) choices.push(1);
         if (!choices.length) choices.push(1);
+        choices.sort(function (a, b) { return a - b; });
         var selected = Number(roundSelect.value) || initialRound;
+        if (creating && previousScope !== null && previousScope !== scope && newRound <= 999) selected = newRound;
         if (choices.indexOf(selected) === -1) selected = choices[0];
+        previousScope = scope;
         roundSelect.innerHTML = '';
         choices.forEach(function (n) {
             var opt = document.createElement('option');

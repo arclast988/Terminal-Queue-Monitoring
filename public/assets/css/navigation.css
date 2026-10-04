@@ -1486,27 +1486,6 @@ body.staff-theme .drawer-nav-item.active i {
   .mobile-nav-overlay.active { display: block; }
 }
 
-/* The dispatcher has an extra departures link; use the drawer before branding gets squeezed. */
-@media (min-width: 1281px) and (max-width: 1500px) {
-  body.staff-theme #site-header .nav-menu > a,
-  body.staff-theme #site-header .nav-menu > .dropdown {
-    display: none !important;
-  }
-
-  body.staff-theme #site-header .nav-hamburger-btn {
-    display: flex !important;
-  }
-
-  body.staff-theme .sidebar-drawer,
-  body.staff-theme .sidebar-drawer-overlay {
-    display: block !important;
-  }
-
-  body.staff-theme .sidebar-drawer {
-    display: flex !important;
-  }
-}
-
 /* Logged-in tablet headers keep the original desktop-style composition.
    Only the header height grows so the 68px seal stays fully contained. */
 @media (min-width: 769px) and (max-width: 1280px) {

@@ -17,6 +17,16 @@ $formRoundScope = departure_round_scope($formTerminalId, $formDestination);
 $preservedRound = $isCreatingRound ? 0 : $selectedRound;
 $configuredRounds = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, false);
 $roundChoices = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, $isCreatingRound);
+// Allow a saved higher-numbered first rule to be corrected without offering
+// unconfigured higher rounds in the dispatcher's active-rule selector.
+if (!$isCreatingRound && $roundChoices && !in_array(1, $roundChoices, true)) {
+    $roundChoices[] = 1;
+    sort($roundChoices);
+}
+if ($isCreatingRound && old('round_number') === null) {
+    $newChoices = array_values(array_diff($roundChoices, $configuredRounds));
+    if ($newChoices) $selectedRound = $newChoices[0];
+}
 if (!in_array($selectedRound, $roundChoices, true)) $selectedRound = $roundChoices[0];
 $singleRound = count($roundChoices) === 1;
 ?>
@@ -46,7 +56,7 @@ $singleRound = count($roundChoices) === 1;
             <?php endforeach; ?>
         </select>
         <input id="round_number_display" class="input-modern <?= $singleRound ? '' : 'd-none' ?>" <?= $singleRound ? '' : 'hidden' ?> type="text" value="Round <?= $selectedRound ?>" readonly>
-        <p class="form-text-modern mt-2 mb-0">This rule applies when the dispatcher selects this round in Queue Management.</p>
+        <p class="form-text-modern mt-2 mb-0">Rounds are numbered separately for each destination. This rule applies when the dispatcher selects this round in Queue Management.</p>
     </div>
 </div>
 <script src="<?= app_asset_url('js/departure-rule-days.js') ?>" defer></script>

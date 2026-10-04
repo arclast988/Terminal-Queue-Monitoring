@@ -158,7 +158,10 @@ class Home extends BaseController
             ->select('departure_rules.*, terminals.name as terminal_name, routes.destination as route_destination')
             ->join('terminals', 'terminals.id = departure_rules.terminal_id', 'left')
             ->join('routes', 'routes.id = departure_rules.route_id', 'left')
+            ->orderBy('departure_rules.round_number', 'ASC')
+            ->orderBy('routes.destination', 'ASC')
             ->orderBy('departure_rules.time_from', 'ASC')
+            ->orderBy('departure_rules.id', 'ASC')
             ->findAll();
 
         $today = date('Y-m-d');

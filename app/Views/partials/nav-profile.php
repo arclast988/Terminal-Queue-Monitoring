@@ -112,6 +112,15 @@ SVG;
         <div class="profile-dropdown-divider"></div>
 
         <?php if ($sessionRole === 'staff'): ?>
+        <div class="profile-dropdown-section">
+            <div class="profile-section-label">Operations</div>
+            <a href="<?= base_url('staff/departures') ?>" class="profile-dropdown-item" role="menuitem">
+                <i class="fas fa-clock-rotate-left"></i>
+                <span class="item-text">Today Departures</span>
+                <span class="profile-badge-chip chip-green">Today</span>
+            </a>
+        </div>
+        <div class="profile-dropdown-divider"></div>
         <!-- Account & Security (Dispatcher only) -->
         <div class="profile-dropdown-section">
             <div class="profile-section-label">Account & Security</div>
