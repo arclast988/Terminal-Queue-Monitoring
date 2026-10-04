@@ -7,6 +7,7 @@ const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const { chromium } = require('playwright');
 const { root, assetContentType, phpBinary } = require('./harness.cjs');
+const nativeOnly = (process.env.TQ_BROWSER || 'chromium') === 'chromium';
 const routes = new Map([
   ['/guest', 'guest'], ['/fares', 'fares'], ['/schedules', 'schedules'],
   ['/login', 'login'], ['/forgot-password', 'forgot'],
@@ -19,6 +20,7 @@ const navigationReports = [];
 let browser, server, origin;
 
 test.before(async () => {
+  if (!nativeOnly) return;
   for (const [url, name] of routes) {
     const html = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     // Render the real page heads/navigation; isolate animation from live queue polling.
@@ -51,7 +53,7 @@ test.before(async () => {
 test.after(async () => {
   for (const response of pending) if (!response.writableEnded) response.end(fixtures.get('/schedules'));
   await browser?.close(); server?.closeAllConnections();
-  await new Promise(resolve => server?.close(resolve));
+  if (server) await new Promise(resolve => server.close(resolve));
 });
 
 async function open(t, mode = 'full') {
@@ -78,7 +80,7 @@ async function open(t, mode = 'full') {
   return { page, errors };
 }
 
-test('public, authentication and management navigation uses one short native page fade', { timeout: 30000 }, async t => {
+test('public, authentication and management navigation uses one short native page fade', { timeout: 30000, skip: !nativeOnly }, async t => {
   const { page, errors } = await open(t);
   for (const [from, to] of [['/guest', '/fares'], ['/fares', '/schedules'], ['/guest', '/login'], ['/login', '/forgot-password'], ['/staff/dashboard', '/staff/queue'], ['/admin/dashboard', '/admin/routes']]) {
     t.diagnostic(`${from} → ${to}`);
@@ -99,7 +101,7 @@ test('public, authentication and management navigation uses one short native pag
   assert.deepEqual(errors, []);
 });
 
-test('reduced motion and constrained devices keep usable native navigation without snapshots', { timeout: 15000 }, async t => {
+test('reduced motion and constrained devices keep usable native navigation without snapshots', { timeout: 15000, skip: !nativeOnly }, async t => {
   for (const mode of ['reduced', 'lite']) {
     const { page, errors } = await open(t, mode);
     await page.goto(origin + '/guest');
@@ -114,7 +116,7 @@ test('reduced motion and constrained devices keep usable native navigation witho
   }
 });
 
-test('browser history preserves form values and clears pending feedback after a page fade', { timeout: 15000 }, async t => {
+test('browser history preserves form values and clears pending feedback after a page fade', { timeout: 15000, skip: !nativeOnly }, async t => {
   const { page, errors } = await open(t);
   await page.goto(origin + '/login');
   await page.locator('#username').fill('saved@example.com');
@@ -129,7 +131,7 @@ test('browser history preserves form values and clears pending feedback after a 
   assert.deepEqual(errors, []);
 });
 
-test('a slow destination leaves the current page readable and starts its request immediately', { timeout: 15000 }, async t => {
+test('a slow destination leaves the current page readable and starts its request immediately', { timeout: 15000, skip: !nativeOnly }, async t => {
   const { page, errors } = await open(t);
   t.after(() => { for (const response of pending) if (!response.writableEnded) response.end(fixtures.get('/schedules')); });
   await page.goto(origin + '/guest');
