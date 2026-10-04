@@ -161,11 +161,35 @@ class Home extends BaseController
             ->orderBy('departure_rules.time_from', 'ASC')
             ->findAll();
 
-        $activeRules = \App\Models\DepartureRuleModel::activeRuleDestinations(
-            $rules, date('Y-m-d H:i:s'),
-            (new \App\Models\RouteModel())->findAll(),
-            (new \App\Models\DispatchRoundModel())->findAll()
-        );
+        $today = date('Y-m-d');
+        $queuedDestinations = (new \App\Models\QueueModel())
+            ->select('routes.destination')
+            ->join('routes', 'routes.id = queue.route_id')
+            ->whereIn('queue.status', ['waiting', 'boarding'])
+            ->findAll();
+        $roundStatesToday = (new \App\Models\DispatchRoundModel())
+            ->where('service_date', $today)
+            ->findAll();
+
+        $activeDestMap = [];
+        foreach ($queuedDestinations as $q) {
+            if (!empty($q['destination'])) {
+                $activeDestMap[strtoupper(trim($q['destination']))] = true;
+            }
+        }
+
+        $allRoutes = (new \App\Models\RouteModel())->findAll();
+        $operatingRoutes = !empty($activeDestMap)
+            ? array_values(array_filter($allRoutes, static fn($r) => isset($activeDestMap[strtoupper(trim($r['destination'] ?? ''))])))
+            : [];
+
+        $activeRules = !empty($operatingRoutes)
+            ? \App\Models\DepartureRuleModel::activeRuleDestinations(
+                $rules, date('Y-m-d H:i:s'),
+                $operatingRoutes,
+                $roundStatesToday
+            )
+            : [];
 
         $formatted = [];
         foreach ($rules as $rule) {

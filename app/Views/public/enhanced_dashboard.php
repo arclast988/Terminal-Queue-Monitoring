@@ -2473,7 +2473,7 @@
             <div class="route-average-header">
                 <div>
                     <h3 class="route-average-title" id="routeAverageTitle">Departure Time Rules</h3>
-                    <p class="route-average-subtitle">Scheduled departure intervals configured for <?= esc(app_name()) ?> Terminal.</p>
+                    <p class="route-average-subtitle">Scheduled departure intervals configured for <?= esc(preg_match('/terminal\b/i', app_name()) ? app_name() : app_name() . ' Terminal') ?>.</p>
                 </div>
                 <button type="button" class="route-average-close" id="routeAverageClose" onclick="closeRouteAverageModal()" aria-label="Close departure rules modal">
                     <i class="fas fa-times"></i>
@@ -2566,11 +2566,23 @@
                                         if (empty($rule['route_destination']) && !empty($rule['is_active_now']) && !empty($rule['active_destinations'])) {
                                             $scopeLabel = 'Terminal-wide';
                                         }
+                                        $metaParts = [];
+                                        if (!empty($rule['round_number'])) {
+                                            $metaParts[] = 'Round ' . (int) $rule['round_number'];
+                                        }
+                                        if (!empty($rule['days_label'])) {
+                                            $metaParts[] = esc($rule['days_label']);
+                                        }
+                                        $rawLabel = trim((string) ($rule['label'] ?? ''));
+                                        if ($rawLabel !== '' && !in_array(strtolower($rawLabel), ['standard schedule', 'standard', 'round schedule', '-'], true)) {
+                                            $metaParts[] = esc($rawLabel);
+                                        }
+                                        $metaParts[] = $scopeLabel;
                                     ?>
                                     <div class="route-average-count">
-                                        Round <?= (int) ($rule['round_number'] ?? 1) ?> &bull; <?= esc($rule['days_label'] ?? 'Every day') ?> &bull; <?= esc($rule['label']) ?> &bull; <?= $scopeLabel ?>
+                                        <?= implode(' &bull; ', $metaParts) ?>
                                     </div>
-                                    <?php if (!empty($rule['is_active_now']) && !empty($rule['active_destinations'])): ?>
+                                    <?php if (!empty($rule['is_active_now']) && !empty($rule['active_destinations']) && empty($rule['route_destination'])): ?>
                                     <div class="route-average-count">Active for <?= esc(implode(', ', $rule['active_destinations'])) ?></div>
                                     <?php endif; ?>
                                 </div>
@@ -2936,13 +2948,23 @@
                 if ((!rule.route_destination || scopeText === 'All Routes') && rule.is_active_now && Array.isArray(rule.active_destinations) && rule.active_destinations.length) {
                     scopeText = 'Terminal-wide';
                 }
+                var metaParts = ['Round ' + (rule.round_number || 1)];
+                if (rule.days_label) {
+                    metaParts.push(rule.days_label);
+                }
+                var rawLabel = (rule.label || '').trim();
+                if (rawLabel && !['standard schedule', 'standard', 'round schedule', '-'].includes(rawLabel.toLowerCase())) {
+                    metaParts.push(rawLabel);
+                }
+                metaParts.push(scopeText);
+
                 var labelScope = document.createElement('div');
                 labelScope.className = 'route-average-count';
-                labelScope.textContent = 'Round ' + (rule.round_number || 1) + ' \u2022 ' + (rule.days_label || 'Every day') + ' \u2022 ' + (rule.label || 'Standard') + ' \u2022 ' + scopeText;
+                labelScope.textContent = metaParts.join(' \u2022 ');
 
                 leftWrap.appendChild(timeRow);
                 leftWrap.appendChild(labelScope);
-                if (rule.is_active_now && Array.isArray(rule.active_destinations) && rule.active_destinations.length) {
+                if (rule.is_active_now && Array.isArray(rule.active_destinations) && rule.active_destinations.length && !rule.route_destination) {
                     var activeScope = document.createElement('div');
                     activeScope.className = 'route-average-count';
                     activeScope.textContent = 'Active for ' + rule.active_destinations.join(', ');
