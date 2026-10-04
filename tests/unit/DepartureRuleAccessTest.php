@@ -251,6 +251,15 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $this->assertSame(6, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
         $this->assertSame('Monday–Wednesday', departure_rule_day_label($saved));
     }
+    public function testDispatcherSavesAmPmTimesAndMinuteIntervals(): void
+    {
+        $this->postRule(['time_from'=>'12:00 AM','time_to'=>'11:59 PM','wait_minutes'=>'25','wait_duration'=>'','round_number'=>'3']);
+        $this->withUri('http://localhost/staff/departure-rules/store')->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $saved=ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('round_number',3)->get()->getRowArray();
+        $this->assertSame('00:00:00',$saved['time_from']);
+        $this->assertSame('23:59:00',$saved['time_to']);
+        $this->assertSame(25,(int)$saved['wait_minutes']);
+    }
 
     public function testUpdatingDaysKeepsTheExplicitRuleRoundAndEditCheckboxes(): void
     {

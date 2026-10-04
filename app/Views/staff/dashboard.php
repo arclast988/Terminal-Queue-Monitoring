@@ -274,7 +274,7 @@ if (!empty($recent_departures)) {
                             <td data-label="Departure Time">
                                 <span class="badge-modern badge-modern-info">
                                     <i class="bi bi-clock me-1"></i>
-                                    <?= date('H:i', strtotime($dept['departure_time'])) ?>
+                                    <?= operations_recorded_departure($dept['departure_time']) ?>
                                 </span>
                             </td>
                             <td data-label="Status">

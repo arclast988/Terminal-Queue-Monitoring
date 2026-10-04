@@ -28,7 +28,7 @@ class Queue extends BaseController
      * Get the assigned route IDs for the current user.
      * Returns null for admin (unrestricted), or array of route_ids for staff.
      */
-    private function getAssignedRouteIds(): ?array
+    protected function getAssignedRouteIds(): ?array
     {
         if (in_array(session()->get('role'), ['super_admin', 'admin'], true)) {
             return null; // Admin sees everything
@@ -661,6 +661,10 @@ class Queue extends BaseController
 
         // Re-read under the ordering lock so retried departure requests cannot restart the next timer.
         $lockedItem = $this->queueModel->find($id);
+        if ($lockedItem && $lockedItem['status'] === $status && in_array($status, ['boarding', 'departed', 'canceled'], true)) {
+            $db->transRollback();
+            return $this->response->setJSON(['success' => true, 'status' => $status, 'id' => (int) $id, 'message' => 'Trip already updated.']);
+        }
         if (!$lockedItem || in_array($lockedItem['status'], ['departed', 'canceled'], true)) {
             $db->transRollback();
             return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip has already ended. Refresh the queue.']);
@@ -670,10 +674,16 @@ class Queue extends BaseController
             $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
             $head = $this->queueModel->whereIn('route_id', $siblings)->whereIn('status', ['waiting', 'boarding'])
                 ->orderBy("CASE WHEN status = 'boarding' THEN 0 ELSE 1 END", 'ASC')->orderBy('position', 'ASC')->first();
-            if (!$head || (int) $head['id'] !== (int) $id || (!empty($lockedItem['boarding_start']) && strtotime($lockedItem['boarding_start']) > time())) {
+            if (!$head || (int) $head['id'] !== (int) $id) {
                 $db->transRollback();
-                return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'Boarding starts at the scheduled five-minute boundary for the first vehicle in this route.']);
+                return $this->response->setStatusCode(409)->setJSON(['success' => false, 'variant' => 'warning', 'message' => 'Another vehicle is ahead in this route. Boarding will start automatically when it is this vehicle’s turn.']);
             }
+            // A dispatcher may start the next vehicle now during busy periods.
+            // Automatic boarding still follows the five-minute schedule.
+            $manualStart = time();
+            $interval = (new DepartureRuleModel())->getWaitMinutesForTime(date('Y-m-d H:i:s', $manualStart), (int) $route['terminal_id'], (int) $lockedItem['route_id'], (int) ($lockedItem['round_number'] ?? 1));
+            $data['boarding_start'] = date('Y-m-d H:i:s', $manualStart);
+            $data['estimated_departure'] = date('Y-m-d H:i:s', $manualStart + $interval * 60);
         }
 
         $wasActive = in_array($existingItem['status'] ?? '', ['waiting', 'boarding'], true);
@@ -748,6 +758,61 @@ class Queue extends BaseController
         $ref = $this->request->getVar('ref');
         $redirectUrl = $ref === 'dashboard' ? 'staff/dashboard' : 'staff/queue';
         return redirect()->to(base_url($redirectUrl))->with('success', 'Status updated.');
+    }
+
+    /** Cancel exactly the reviewed selection in one transaction. */
+    public function cancelSelected()
+    {
+        try {
+            $payload = str_contains($this->request->getHeaderLine('Content-Type'), 'application/json')
+                ? $this->request->getJSON(true) : $this->request->getPost();
+        } catch (\Throwable $error) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'The trip selection could not be read. Refresh the queue and try again.']);
+        }
+        $rawIds = $payload['queue_ids'] ?? [];
+        if (!is_array($rawIds) || !$rawIds || count($rawIds) > 1000) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Select at least one trip to cancel.']);
+        }
+        foreach ($rawIds as $id) {
+            if (!is_scalar($id) || !preg_match('/^[1-9]\d*$/', (string) $id)) {
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'The selection contains an invalid trip.']);
+            }
+        }
+        $ids = array_values(array_unique(array_map('intval', $rawIds)));
+        $db = \Config\Database::connect();
+        $db->transBegin();
+        try {
+            $this->acquireQueueOrderingLock($db);
+            $items = $this->queueModel->whereIn('id', $ids)->findAll();
+            if (count($items) !== count($ids)) {
+                $db->transRollback();
+                return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'The queue has changed. Refresh the selection and try again.']);
+            }
+            foreach ($items as $item) {
+                if (!$this->hasRouteAccess((int) $item['route_id'])) {
+                    $db->transRollback();
+                    return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => 'You can only cancel trips on your assigned routes.']);
+                }
+                // A repeated request for an already canceled selection is safe.
+                if (!in_array($item['status'], ['waiting', 'boarding', 'canceled'], true)) {
+                    $db->transRollback();
+                    return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'A selected trip has already departed. Refresh the selection and try again.']);
+                }
+            }
+            $this->queueModel->whereIn('id', $ids)->set([
+                'status' => 'canceled', 'estimated_departure' => null, 'boarding_start' => null,
+            ])->update();
+            $this->queueModel->reorderByDeparture();
+            if (!$db->transStatus()) throw new \RuntimeException('Selected cancellation transaction failed.');
+            $db->transCommit();
+        } catch (\Throwable $error) {
+            $db->transRollback();
+            log_message('error', 'Selected trip cancellation failed: {error}', ['error' => $error->getMessage()]);
+            return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'The selected trips could not be canceled. Please try again.']);
+        }
+        $this->logActivity('Cancel Selected Trips', 'Canceled queue trips: ' . implode(', ', $ids));
+        $this->broadcastUpdate('queue_update', ['action' => 'selected_cancel', 'queue_ids' => $ids, 'status' => 'canceled']);
+        return $this->response->setJSON(['success' => true, 'queue_ids' => $ids, 'message' => count($ids) . ' trip' . (count($ids) === 1 ? '' : 's') . ' canceled.']);
     }
 
     /**

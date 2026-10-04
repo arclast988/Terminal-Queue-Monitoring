@@ -39,3 +39,59 @@ button.queue-route-chip.active { background: var(--primary); border-color: var(-
     .queue-round-origin { font-size: 11px; margin-left: 0; }
     .queue-control-footer { align-items: flex-start; font-size: 11px; }
 }
+/* Queue feedback stays in the page flow and never covers the navigation. */
+.queue-action-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid #fecaca;
+    border-left: 4px solid #dc2626;
+    border-radius: 12px;
+    background: #fff1f2;
+    color: #991b1b;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    scroll-margin-top: 110px;
+}
+.queue-action-notice[hidden], .queue-cancel-item[hidden] { display: none !important; }
+.queue-action-notice > div { flex: 1; min-width: 0; }
+.queue-action-notice p { margin: 2px 0 0; }
+.queue-notice-warning { border-color: #fde68a; border-left-color: #b45309; background: #fffbeb; color: #92400e; }
+.queue-notice-success { border-color: #bbf7d0; border-left-color: #15803d; background: #f0fdf4; color: #166534; }
+.queue-notice-close { border: 0; background: transparent; color: inherit; font-size: 24px; line-height: 1; padding: 0 4px; }
+#cancelSelectionModal .modal-content { display: flex; flex-direction: column; max-height: min(90dvh, 800px); overflow: hidden; border-radius: 18px; }
+#cancelSelectionModal .modal-header, #cancelSelectionModal .modal-footer { flex-shrink: 0; position: static; }
+#cancelSelectionModal .modal-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; }
+#cancelSelectionModal .queue-selection-header { background: var(--primary, #15803d) !important; color: white !important; align-items: flex-start; gap: 12px; }
+#cancelSelectionModal .queue-selection-header h5, #cancelSelectionModal .queue-selection-header p { color: white !important; -webkit-text-fill-color: white !important; }
+#cancelSelectionModal .queue-selection-header .btn-close { margin: 0; flex-shrink: 0; opacity: 1; }
+#cancelSelectedSubmit { background: #dc2626 !important; border-color: #dc2626 !important; color: white !important; }
+#cancelSelectedSubmit:disabled { opacity: 0.5; }
+.queue-selection-tools { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.queue-selection-tools > div { flex: 1; min-width: 180px; }
+.queue-select-visible { display: flex; align-items: center; gap: 8px; font-size: 14px; padding-bottom: 10px; }
+.queue-cancel-list { display: flex; flex-direction: column; gap: 14px; }
+.queue-cancel-item { display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--border, #dbe3ec); border-radius: 12px; padding: 16px; background: var(--surface, white); cursor: pointer; }
+.queue-cancel-item:has(input:checked) { border-color: var(--primary, #15803d); background: var(--primary-soft, #f0fdf4); }
+.queue-cancel-item input, .queue-select-visible input { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; accent-color: var(--primary, #15803d); }
+.queue-cancel-copy { min-width: 0; flex: 1; }
+.queue-cancel-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 12px; }
+.queue-cancel-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 0; font-size: 13px; }
+.queue-cancel-details dt { font-weight: 400; color: var(--text-muted, #64748b); }
+.queue-cancel-details dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; color: var(--text-main, #1e293b); }
+.queue-cancel-destination { grid-column: 1 / -1; }
+.queue-selection-footer { gap: 8px; }
+.queue-selection-footer > span { margin-right: auto; }
+@media (max-width: 768px) {
+    .queue-header-actions #cancelSelectionBtn { flex-basis: 100%; }
+    .queue-cancel-item { padding: 12px; gap: 10px; }
+    .queue-cancel-details { grid-template-columns: 1fr; }
+    .queue-selection-footer > span { flex-basis: 100%; margin: 0; }
+    .queue-selection-footer .btn-modern { flex: 1 1 auto; min-width: 0; justify-content: center; }
+    .undo-banner-content { align-items: flex-start !important; gap: 12px !important; }
+    .undo-banner-actions { flex-wrap: wrap; }
+    .queue-action-notice { padding: 12px; scroll-margin-top: 90px; }
+}

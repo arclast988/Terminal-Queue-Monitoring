@@ -68,8 +68,8 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('id="profileOperationsHeaderClock"', $profile);
         $this->assertStringContainsString("document.querySelectorAll('.operations-header-clock')", $header);
         $this->assertStringContainsString("timeZone: 'Asia/Manila'", $header);
-        $this->assertStringContainsString("hourCycle: 'h23'", $header);
-        $this->assertStringContainsString("date('H:i')", $header);
+        $this->assertStringContainsString('hour12: isDispatcher', $header);
+        $this->assertStringContainsString('operations_time()', $header);
         $this->assertStringNotContainsString('operations-header-timezone', $header);
         $this->assertStringNotContainsString('compactClockMedia', $header);
         $this->assertLessThan(strpos($header, '</nav>'), strpos($header, 'class="operations-header-time"'));

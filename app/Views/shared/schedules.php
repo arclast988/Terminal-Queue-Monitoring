@@ -317,7 +317,7 @@
                         <th>Driver</th>
                         <th>Type</th>
                         <th>Route</th>
-                        <th>Est. Departure (HH:MM)</th>
+                        <th><?= session()->get('role') === 'staff' ? 'Estimated departure (AM/PM)' : 'Est. Departure (HH:MM)' ?></th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -374,16 +374,16 @@
                                         <strong><?= strtoupper(esc($s['destination'])) ?></strong>
                                     </div>
                                 </td>
-                                <td data-label="Est. Departure (HH:MM)">
+                                <td data-label="<?= session()->get('role') === 'staff' ? 'Estimated departure (AM/PM)' : 'Est. Departure (HH:MM)' ?>">
                                     <?php if ($s['status'] === 'departed' && $s['departure_time']): ?>
                                         <span class="badge-modern badge-modern-info">
-                                            <?= date('H:i', strtotime($s['departure_time'])) ?>
+                                            <?= operations_time($s['departure_time']) ?>
                                         </span>
                                         <small class="text-muted d-block mt-1">Departed</small>
                                     <?php else: ?>
                                         <div class="sched-dep-cell" id="shared-dep-cell-<?= $qid ?>">
                                             <span class="badge-modern badge-modern-primary" id="shared-dep-time-<?= $qid ?>">
-                                                <?= !empty($s['estimated_departure']) ? date('H:i', strtotime($s['estimated_departure'])) : 'TBA' ?>
+                                                <?= !empty($s['estimated_departure']) ? operations_time($s['estimated_departure']) : 'TBA' ?>
                                             </span>
                                             <small class="sched-passengers-text text-muted" id="shared-passengers-text-<?= $qid ?>">
                                                 <span id="passenger-count-<?= $qid ?>" class="passenger-count-num <?= passenger_color_class((int)$s['current_passengers'], (int)$s['capacity']) ?>"><?= $s['current_passengers'] ?></span>/<?= $s['capacity'] ?> passengers

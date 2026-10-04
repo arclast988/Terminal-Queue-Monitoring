@@ -240,7 +240,7 @@
                                 <td data-label="Departure Time">
                                     <div style="white-space: nowrap;">
                                         <span style="font-weight: 700; color: var(--text-main); font-size: 13px;">
-                                            <i class="bi bi-clock me-1 text-muted"></i><?= history_departure_time($item['departure_time']) ?>
+                                            <i class="bi bi-clock me-1 text-muted"></i><?= operations_recorded_departure($item['departure_time']) ?>
                                         </span>
                                         <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                                             <i class="bi bi-calendar3 me-1"></i><?= history_departure_time($item['departure_time'], 'M d, Y') ?>

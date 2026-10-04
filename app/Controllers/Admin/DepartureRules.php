@@ -116,16 +116,15 @@ class DepartureRules extends BaseController
 
     private function normalizeClockTime(?string $time): ?string
     {
-        $time = trim((string) $time);
-        if (!preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $time)) {
-            return null;
-        }
-
-        return $time . ':00';
+        return departure_clock_value($time, $this->getPrefix() === 'staff');
     }
 
     private function parseWaitMinutes(): ?int
     {
+        $minutes = $this->request->getPost('wait_minutes');
+        if ($this->getPrefix() === 'staff' && $minutes !== null) {
+            return is_scalar($minutes) && preg_match('/^[1-9]\d*$/', (string) $minutes) && (int) $minutes <= 1439 ? (int) $minutes : null;
+        }
         $duration = trim((string) $this->request->getPost('wait_duration'));
         if ($duration !== '') {
             if (!preg_match('/^(?:[01]?\d|2[0-3]):[0-5]\d$/', $duration)) {
@@ -287,7 +286,7 @@ class DepartureRules extends BaseController
         $timeTo     = $this->normalizeClockTime($this->request->getPost('time_to'));
 
         if ($timeFrom === null || $timeTo === null) {
-            $msg = 'Time From and Time To must use 24-hour HH:MM format.';
+            $msg = $this->getPrefix() === 'staff' ? 'Enter start and end times with AM or PM, such as 5:00 AM.' : 'Time From and Time To must use 24-hour HH:MM format.';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', [
                 'time' => $msg
             ]);
@@ -325,7 +324,7 @@ class DepartureRules extends BaseController
         }
         $overlap = $this->findDayOverlap($overlapQuery->where('round_number', $round)->findAll(), $days);
         if ($overlap) {
-            $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
+            $msg = 'This time range overlaps with an existing rule: ' . operations_time($overlap['time_from']) . ' - ' . operations_time($overlap['time_to']) . ' (' . ($overlap['label'] ?? 'No label') . ').';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
         }
 
@@ -343,7 +342,7 @@ class DepartureRules extends BaseController
             'label'        => $label
         ]);
 
-        $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . date('H:i', strtotime($timeFrom)) . ' - ' . date('H:i', strtotime($timeTo)) . ', ' . $waitMinutes . ' min).');
+        $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . operations_time($timeFrom) . ' - ' . operations_time($timeTo) . ', ' . $waitMinutes . ' min).');
 
         $this->recalculateRuleScope($terminalId, $routeId);
         $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
@@ -412,7 +411,7 @@ class DepartureRules extends BaseController
         $timeTo     = $this->normalizeClockTime($this->request->getPost('time_to'));
 
         if ($timeFrom === null || $timeTo === null) {
-            $msg = 'Time From and Time To must use 24-hour HH:MM format.';
+            $msg = $this->getPrefix() === 'staff' ? 'Enter start and end times with AM or PM, such as 5:00 AM.' : 'Time From and Time To must use 24-hour HH:MM format.';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', [
                 'time' => $msg
             ]);
@@ -451,7 +450,7 @@ class DepartureRules extends BaseController
         }
         $overlap = $this->findDayOverlap($overlapQuery->where('round_number', $round)->findAll(), $days);
         if ($overlap) {
-            $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
+            $msg = 'This time range overlaps with an existing rule: ' . operations_time($overlap['time_from']) . ' - ' . operations_time($overlap['time_to']) . ' (' . ($overlap['label'] ?? 'No label') . ').';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
         }
 
@@ -492,7 +491,7 @@ class DepartureRules extends BaseController
             'label'        => $label
         ]);
 
-        $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . date('H:i', strtotime($oldRule['time_from'])) . '-' . date('H:i', strtotime($oldRule['time_to'])) . '). After: ' . $waitMinutes . ' min (' . date('H:i', strtotime($timeFrom)) . '-' . date('H:i', strtotime($timeTo)) . ').');
+        $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . operations_time($oldRule['time_from']) . '-' . operations_time($oldRule['time_to']) . '). After: ' . $waitMinutes . ' min (' . operations_time($timeFrom) . '-' . operations_time($timeTo) . ').');
 
         $oldRouteId = !empty($oldRule['route_id']) ? (int) $oldRule['route_id'] : null;
         if ((int) $oldRule['terminal_id'] !== $terminalId || $oldRouteId !== $routeId) {
@@ -515,7 +514,7 @@ class DepartureRules extends BaseController
         }
 
         if ($this->ruleModel->delete($id)) {
-            $ruleTime = date('H:i', strtotime($rule['time_from'])) . ' - ' . date('H:i', strtotime($rule['time_to']));
+            $ruleTime = operations_time($rule['time_from']) . ' - ' . operations_time($rule['time_to']);
             $ruleLabel = !empty($rule['label']) && $rule['label'] !== '-' ? ' (' . $rule['label'] . ')' : '';
             $this->logActivity('Delete departure rule', 'Deleted departure rule: ' . $rule['time_from'] . ' - ' . $rule['time_to'] . '.');
             $this->recalculateRuleScope((int) $rule['terminal_id'], !empty($rule['route_id']) ? (int) $rule['route_id'] : null);

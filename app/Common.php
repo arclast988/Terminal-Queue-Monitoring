@@ -1,5 +1,29 @@
 <?php
 
+/** Display clock times in the format used by the current operations role. */
+function operations_time(?string $value = null): string
+{
+    $timestamp = $value === null ? time() : strtotime($value);
+    if ($timestamp === false) return 'TBA';
+    return date(session()->get('role') === 'staff' ? 'g:i A' : 'H:i', $timestamp);
+}
+
+function operations_recorded_departure(?string $value): string
+{
+    return history_departure_time($value, session()->get('role') === 'staff' ? 'g:i A' : 'H:i');
+}
+
+/** Strict clock parsing; AM/PM inputs are enabled only for dispatcher forms. */
+function departure_clock_value(?string $value, bool $allowAmPm = false): ?string
+{
+    $value = trim((string) $value);
+    if ($allowAmPm && preg_match('/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/i', $value, $parts)) {
+        $hour = (int) $parts[1] % 12 + (strtoupper($parts[3]) === 'PM' ? 12 : 0);
+        return sprintf('%02d:%s:00', $hour, $parts[2]);
+    }
+    return preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $value) ? $value . ':00' : null;
+}
+
 /**
  * The goal of this file is to allow developers a location
  * where they can overwrite core procedural functions and

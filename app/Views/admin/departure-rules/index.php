@@ -367,9 +367,9 @@
                         <th>Terminal</th>
                         <th>Destination</th>
                         <th>Day / Round</th>
-                        <th>Time From (HH:MM)</th>
-                        <th>Time To (HH:MM)</th>
-                        <th>Wait Time (HH:MM)</th>
+                        <th><?= ($prefix ?? 'admin') === 'staff' ? 'Start time (AM/PM)' : 'Time From (HH:MM)' ?></th>
+                        <th><?= ($prefix ?? 'admin') === 'staff' ? 'End time (AM/PM)' : 'Time To (HH:MM)' ?></th>
+                        <th><?= ($prefix ?? 'admin') === 'staff' ? 'Interval (minutes)' : 'Wait Time (HH:MM)' ?></th>
                         <th>Label</th>
                         <th>Action</th>
                     </tr>
@@ -392,16 +392,16 @@
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Day / Round"><span class="badge-modern badge-modern-primary rule-days-label"><?= esc(departure_rule_day_label($rule)) ?></span><br><span class="small">Round <?= (int) ($rule['round_number'] ?? 1) ?></span></td>
-                                <td data-label="Time From (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
-                                <td data-label="Time To (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
-                                <td data-label="Wait Time (HH:MM)">
+                                <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'Start time (AM/PM)' : 'Time From (HH:MM)' ?>"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= operations_time($rule['time_from']) ?></span></td>
+                                <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'End time (AM/PM)' : 'Time To (HH:MM)' ?>"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= operations_time($rule['time_to']) ?></span></td>
+                                <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'Interval (minutes)' : 'Wait Time (HH:MM)' ?>">
                                     <?php
                                         $mins = (int)$rule['wait_minutes'];
                                         $h = floor($mins / 60);
                                         $m = $mins % 60;
                                     ?>
                                     <span class="badge-modern badge-modern-info" style="font-weight: 700; font-size: 13px;">
-                                        <i class="bi bi-hourglass-split me-1"></i><?= sprintf('%02d:%02d', $h, $m) ?>
+                                        <i class="bi bi-hourglass-split me-1"></i><?= ($prefix ?? 'admin') === 'staff' ? $mins . ' min' : sprintf('%02d:%02d', $h, $m) ?>
                                     </span>
                                 </td>
                                 <td data-label="Label">
@@ -421,7 +421,7 @@
                                                     formId: 'delete-rule-form-<?= $rule['id'] ?>',
                                                     ruleId: '<?= $rule['id'] ?>',
                                                     destination: '<?= esc(addslashes(!empty($rule['route_destination']) && $rule['route_destination'] !== '-' ? strtoupper($rule['route_destination']) : 'TERMINAL DEFAULT')) ?>',
-                                                    timeWindow: '<?= esc(addslashes(date('H:i', strtotime($rule['time_from'])) . ' - ' . date('H:i', strtotime($rule['time_to'])))) ?>',
+                                                    timeWindow: '<?= esc(addslashes(operations_time($rule['time_from']) . ' - ' . operations_time($rule['time_to']))) ?>',
                                                     label: '<?= esc(addslashes(!empty($rule['label']) && $rule['label'] !== '-' ? $rule['label'] : '')) ?>',
                                                     waitMinutes: '<?= (int)($rule['wait_minutes'] ?? 0) ?>'
                                                 })">

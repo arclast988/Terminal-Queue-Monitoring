@@ -351,6 +351,9 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
                         <?= view('admin/departure-rules/day-round-fields', ['rule' => [], 'existingRules' => $existingRules ?? []]) ?>
 
+                        <?php if (($prefix ?? 'admin') === 'staff'): ?>
+                        <?= view('admin/departure-rules/staff-time-fields', ['rule' => [], 'defaultWaitValue' => $defaultWaitValue, 'existingRules' => $existingRules ?? []]) ?>
+                        <?php else: ?>
                         <div class="row">
                             <div class="col-md-6 mb-4">
                                 <label for="time_from" class="form-label-modern">Time From (HH:MM) <span class="text-danger">*</span></label>
@@ -396,6 +399,8 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                             </div>
                         </div>
 
+                        <?php endif; ?>
+
                         <div class="d-flex gap-2 mt-5 flex-wrap departure-rule-form-actions form-entry-actions">
                             <button type="submit" class="btn btn-modern btn-modern-primary" id="btn-save-rule">
                                 <i class="bi bi-save"></i> Save Rule
@@ -413,6 +418,9 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
 
 <?= view('templates/footer') ?>
 
+<?php if (($prefix ?? 'admin') === 'staff'): ?>
+<script src="<?= app_asset_url('js/dispatch-rule-times.js') ?>" defer></script>
+<?php else: ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const existingRules = <?= json_encode($existingRules ?? []) ?>;
@@ -843,3 +851,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<?php endif; ?>

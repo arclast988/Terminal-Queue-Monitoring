@@ -144,6 +144,14 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];
 if ($fixturePage === 'staff-queue') {
+    if (($argv[4] ?? '') === 'many') {
+        $fixtureData['queue'] = [];
+        for ($position = 1; $position <= 10; $position++) {
+            $trip = array_replace($item, ['id'=>100+$position, 'position'=>$position, 'plate_number'=>'TRIP-'.$position, 'status'=>$position === 1 ? 'boarding' : 'waiting']);
+            if ($position > 5) $trip['destination'] = 'BATO';
+            $fixtureData['queue'][] = $trip;
+        }
+    }
     $fixtureData['vehicles'] = [$vehicle + ['route_terminal_id'=>1, 'default_route_id'=>1]];
     if (($argv[4] ?? '') === 'empty') $fixtureData['vehicles'] = [];
     if (($argv[4] ?? '') === 'fresh') {

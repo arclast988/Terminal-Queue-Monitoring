@@ -8,6 +8,12 @@ Queue Operations contains route filter pills and a card for each destination sho
 
 Automatic boarding starts at a five-minute clock boundary: :00, :05, :10, :15, and so on. If a vehicle departs at 06:43, the next vehicle's boarding starts at 06:45. With a 20-minute rule it departs at 07:05. A late boarding vehicle continues to occupy the head of the route until the dispatcher records its departure. Boarding never overlaps another boarding vehicle in that route.
 
+Dispatchers can use **Start boarding now** for the next vehicle at any minute during busy periods. This starts its timer immediately using the active round's departure interval. Repeated clicks do not restart a timer, and a vehicle cannot skip another vehicle already ahead. Automatic boarding remains on the five-minute grid.
+
+Dispatcher clocks, queues, schedules, announcements, history, and departure rule forms display AM/PM. Dispatcher rule forms use an interval in minutes; administrators retain 24-hour clock and duration inputs. Stored timestamps continue to use the normal database format.
+
+**Select trips to cancel** opens a route-filtered checklist with vehicle type, plate, operator, driver, and destination. Only checked trips are canceled. The whole selection is validated under the queue ordering lock; stale or unauthorized selections cannot partially cancel trips. Retried cancellations succeed without affecting other vehicles. Queue feedback appears in the page or current dialog with a dismiss control, preserves server explanations, and always releases pending buttons on failure.
+
 New vehicle registrations appear in an open Add to Queue dialog without losing existing selections or search/filter values. Dispatchers can create, edit, and delete rules for their assigned destinations and terminal-wide defaults at the terminals where they dispatch. The same rule forms and actions are available to dispatchers, administrators, and superadministrators.
 
 Departure History and its printed reports round departure timestamps up to five-minute clock marks. For example, 07:22 is recorded in history as 07:25; 07:25:00 stays 07:25. The displayed date and date filters follow the rounded time when a departure crosses midnight. The original timestamp remains available internally for boarding schedules, cooldowns, and retention; existing history receives the same display without changing stored records.

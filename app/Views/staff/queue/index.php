@@ -703,6 +703,9 @@
     }
 
     #manageQueueModal .modal-content {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 0;
         border: 0;
         border-radius: 18px;
         overflow: hidden;
@@ -710,8 +713,18 @@
     }
 
     #manageQueueModal .modal-body {
-        overflow-y: auto;
-        min-height: 0;
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        min-height: 0 !important;
+        padding-top: 1rem !important;
+        scroll-padding-top: 1rem;
+    }
+
+    #manageQueueModal .modal-header,
+    #manageQueueModal .modal-footer {
+        flex: 0 0 auto !important;
+        position: static !important;
+        margin: 0 !important;
     }
 
     #manageQueueModal .queue-order-header {
@@ -773,6 +786,7 @@
     }
 
     .queue-order-item {
+        flex-shrink: 0;
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -922,6 +936,11 @@
 
         #manageQueueModal .modal-body {
             padding: 0.75rem !important;
+            padding-top: 1rem !important;
+        }
+
+        #manageQueueModal .queue-order-list {
+            gap: 0.85rem;
         }
 
         #manageQueueModal .queue-order-note {
@@ -979,7 +998,7 @@
         .queue-order-moves {
             grid-column: 2;
             display: grid;
-            grid-template-columns: repeat(3, 42px);
+            grid-template-columns: repeat(3, 44px);
             justify-content: end;
             gap: 0.45rem;
             width: 100%;
@@ -988,8 +1007,8 @@
 
         .queue-order-drag-handle,
         .queue-order-move {
-            width: 42px;
-            height: 40px;
+            width: 44px;
+            height: 44px;
         }
 
         #manageQueueModal .modal-footer {
@@ -1033,6 +1052,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
         <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageQueueModal" id="manageQueueBtn">
             <i class="bi bi-list-ol"></i> Manage Queue
         </button>
+        <button type="button" class="btn-modern btn-modern-outline btn-modern-danger" data-bs-toggle="modal" data-bs-target="#cancelSelectionModal" id="cancelSelectionBtn">
+            <i class="bi bi-check2-square"></i> Select trips to cancel
+        </button>
         <?php endif; ?>
         <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
             <i class="bi bi-plus-lg"></i> Add Vehicle to Queue
@@ -1060,7 +1082,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 <?php if (session()->getFlashdata('warning')): ?>
     <div class="alert-modern alert-modern-warning fade-in">
         <i class="bi bi-exclamation-triangle-fill alert-modern-icon"></i>
-        <div><strong>Already Queued!</strong> <?= esc(session()->getFlashdata('warning')) ?></div>
+        <div><strong>Queue notice</strong><br><?= esc(session()->getFlashdata('warning')) ?></div>
     </div>
 <?php endif; ?>
 
@@ -1072,6 +1094,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 <?php endif; ?>
 
 
+<div id="queueActionFeedback" class="queue-action-notice" role="alert" hidden></div>
 <div class="queue-route-controls card-modern mb-3" id="queueRouteControls">
     <div class="queue-control-filter">
         <span class="queue-control-label"><i class="bi bi-funnel"></i> Filter route</span>
@@ -1101,6 +1124,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     <?php endforeach; ?>
     </div>
     <div class="queue-control-footer"><span>Switch the active rule whenever needed.</span><a href="<?= base_url('staff/departure-rules') ?>"><i class="bi bi-sliders"></i> Manage rules</a></div>
+    <p class="small text-muted mt-2 mb-0">Boarding starts automatically on five-minute marks. Use “Start boarding now” for the next vehicle when you need an earlier start.</p>
     <div id="queueRoundFeedback" class="small mt-2" role="status"></div>
 </div>
 <div id="queueRouteEmpty" class="alert-modern d-none" role="status">No vehicles are queued for this route.</div>
@@ -1157,14 +1181,14 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     </div>
                     <div class="col-6 py-1">
                         <div class="text-muted small">Arrived</div>
-                        <div class="fw-semibold small"><?= date('H:i', strtotime($item['arrival_time'])) ?></div>
+                        <div class="fw-semibold small"><?= operations_time($item['arrival_time']) ?></div>
                     </div>
                     <div class="col-6 py-1">
-                        <div class="text-muted small">Est. departure (HH:MM)</div>
+                        <div class="text-muted small">Estimated departure (AM/PM)</div>
                         <div class="fw-semibold small text-primary">
-                            <?= !empty($item['estimated_departure']) ? date('H:i', strtotime($item['estimated_departure'])) : 'TBA' ?>
+                            <?= !empty($item['estimated_departure']) ? operations_time($item['estimated_departure']) : 'TBA' ?>
                         </div>
-                        <?php if (!empty($item['boarding_start']) && $isWaiting): ?><div class="small text-muted">Boarding <?= date('H:i', strtotime($item['boarding_start'])) ?></div><?php endif; ?>
+                        <?php if (!empty($item['boarding_start']) && $isWaiting): ?><div class="small text-muted">Boarding <?= operations_time($item['boarding_start']) ?></div><?php endif; ?>
                         <?php if (!empty($item['estimated_departure']) && $item['status'] === 'boarding'): ?>
                             <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
                         <?php endif; ?>
@@ -1236,7 +1260,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <button type="button"
                             data-action="update-status" data-id="<?= $item['id'] ?>" data-status="boarding"
                             class="btn-modern btn-modern-primary flex-fill" style="white-space:nowrap;">
-                            Start Boarding
+                            Start boarding now
                         </button>
                     <?php elseif ($isBoarding): ?>
                         <button type="button" class="btn-modern btn-modern-success flex-fill" style="white-space:nowrap;"
@@ -1384,6 +1408,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     </div>
 </div>
 
+<?= view('staff/queue/cancel-selection', ['queue' => $queue ?? [], 'queueRoutes' => $queueRoutes ?? []]) ?>
 <!-- Cancel Trip Confirmation Modal -->
 <div class="modal fade" id="cancelTripModal" tabindex="-1" aria-labelledby="cancelTripModalLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -1396,6 +1421,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 <p class="text-muted small mb-4" style="line-height: 1.5;">
                     This will remove the vehicle from the active queue and notify waiting passengers.
                 </p>
+                <div id="cancelTripFeedback" class="queue-action-notice text-start" role="alert" hidden></div>
                 <div class="d-flex gap-2 justify-content-center">
                     <button type="button" class="btn-modern btn-modern-outline btn-modern-sm flex-fill" data-bs-dismiss="modal" id="keepTripBtn">
                         Keep Trip
@@ -2048,6 +2074,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     </div>
 </div>
 
+<script src="<?= app_asset_url('js/queue-actions.js') ?>" data-cancel-url="<?= base_url('staff/queue/cancel-selected') ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
 <script src="<?= app_asset_url('js/dispatch-queue.js') ?>" defer data-round-url="<?= base_url('staff/queue/round') ?>" data-tick-url="<?= base_url('staff/queue/tick') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
 
 <!-- Change Driver Modal -->
@@ -2463,7 +2490,10 @@ $queueOrderGroups = array_values($queueOrderGroups);
     }
 
     function updateStatus(id, status, modalId, btn) {
+        if (btn && btn.disabled) return;
+        var originalButton = btn ? btn.innerHTML : '';
         if (btn) {
+            btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
             btn.classList.add('disabled');
         }
@@ -2478,24 +2508,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         var updateUrl = '<?= base_url('staff/queue/update') ?>/' + id + '/' + status;
 
-        var csrfToken = '';
-        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
-
-        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
-        if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
-
-        fetch(updateUrl, { method: 'POST', headers: headers })
-        .then(function(response) {
-            if (!response.ok) {
-                return response.text().then(function(body) {
-                    var msg = 'Status update failed (HTTP ' + response.status + ')';
-                    try { var j = JSON.parse(body); if (j.message) msg = j.message; } catch(e) {}
-                    throw new Error(msg);
-                });
-            }
-            return response.json();
-        })
+        QueueActions.request(updateUrl)
         .then(function(data) {
             if (!data.success) {
                 throw new Error(data.message || 'Status update failed');
@@ -2514,12 +2527,10 @@ $queueOrderGroups = array_values($queueOrderGroups);
         })
         .catch(function(error) {
             console.error('[Queue] Status update error:', error);
-            // Show visible error to user
-            var alertHtml = '<div class="alert-modern alert-modern-danger fade-in" style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;max-width:500px;box-shadow:0 4px 20px rgba(0,0,0,0.2);">' +
-                '<i class="bi bi-x-circle-fill alert-modern-icon"></i>' +
-                '<div><strong>Error:</strong> ' + (error.message || 'Failed to update status') + '</div></div>';
-            document.body.insertAdjacentHTML('beforeend', alertHtml);
-            setTimeout(function() { window.location.reload(); }, 3000);
+            QueueActions.notice(status === 'boarding' ? 'Boarding not ready' : 'Could not update the trip', error.message, error.variant || 'danger');
+            if (window.QueueSync) window.QueueSync.refresh();
+        }).finally(function() {
+            if (btn) { btn.disabled = false; btn.classList.remove('disabled'); btn.innerHTML = originalButton; }
         });
     }
 
@@ -2590,6 +2601,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     function openCancelModal(id, plate, type) {
         currentCancelQueueId = id;
+        document.getElementById('cancelTripFeedback').hidden = true;
         currentCancelPlate = plate;
         currentCancelType = type;
 
@@ -2627,7 +2639,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     var confirmCancelBtn = document.getElementById('confirmCancelTripBtn');
     if (confirmCancelBtn) {
         confirmCancelBtn.addEventListener('click', function() {
-            if (!currentCancelQueueId) return;
+            if (!currentCancelQueueId || confirmCancelBtn.disabled) return;
 
             confirmCancelBtn.disabled = true;
             confirmCancelBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Canceling...';
@@ -2639,24 +2651,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
             var modal = (typeof bootstrap !== 'undefined' && cancelTripModalEl)
                 ? (bootstrap.Modal.getInstance(cancelTripModalEl) || bootstrap.Modal.getOrCreateInstance(cancelTripModalEl))
                 : null;
-            if (modal) modal.hide();
-
             var updateUrl = '<?= base_url('staff/queue/update') ?>/' + queueId + '/canceled';
 
-            var csrfToken = '';
-            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-            if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
-
-            var headers = { 'X-Requested-With': 'XMLHttpRequest' };
-            if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
-
-            fetch(updateUrl, { method: 'POST', headers: headers })
-            .then(function(response) {
-                if (!response.ok) {
-                    throw new Error('Trip cancellation failed');
-                }
-                return response.json();
-            })
+            QueueActions.request(updateUrl)
             .then(function(data) {
                 if (!data.success) {
                     throw new Error(data.message || 'Trip cancellation failed');
@@ -2667,18 +2664,16 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 if (window.QueueSync) {
                     window.QueueSync.refresh();
                 }
+                if (modal) modal.hide();
                 showUndoBanner(queueId, plateNumber, vehicleType, 10000);
             })
             .catch(function(err) {
                 console.error('[Queue] Cancel error:', err);
-                if (typeof window.showSystemAlert === 'function') {
-                    window.showSystemAlert({ title: 'Cancel Trip Failed', message: err.message || 'Failed to cancel trip.', variant: 'danger' });
-                }
-                if (window.QueueSync) {
-                    window.QueueSync.refresh();
-                } else {
-                    window.location.reload();
-                }
+                QueueActions.notice('Could not cancel this trip', err.message, err.variant || 'danger', document.getElementById('cancelTripFeedback'));
+                if (window.QueueSync) window.QueueSync.refresh();
+            }).finally(function() {
+                confirmCancelBtn.disabled = false;
+                confirmCancelBtn.textContent = 'Cancel trip';
             });
         });
     }
@@ -2735,7 +2730,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     '</div>' +
                     '<div class="undo-banner-actions">' +
                         '<button type="button" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill shadow-sm btn-undo-action" id="undoTripBtn" data-id="' + queueId + '">' +
-                            '<i class="bi bi-arrow-counterclockwise me-1"></i>Click to Undo / Restore <span id="undoSecondsBadge" class="badge bg-dark bg-opacity-25 ms-1">10s</span>' +
+                            '<i class="bi bi-arrow-counterclockwise me-1"></i>Restore trip <span id="undoSecondsBadge" class="badge bg-dark bg-opacity-25 ms-1">10s</span>' +
                         '</button>' +
                         '<button type="button" class="btn-close btn-close-sm undo-banner-close" id="closeUndoBannerBtn" aria-label="Dismiss"></button>' +
                     '</div>' +
@@ -2800,18 +2795,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             undoBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Restoring...';
         }
 
-        var csrfToken = '';
-        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        if (csrfMeta) csrfToken = csrfMeta.getAttribute('content');
-
-        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
-        if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
-
-        fetch('<?= base_url('staff/queue/undoCancel') ?>/' + queueId, {
-            method: 'POST',
-            headers: headers
-        })
-        .then(function(r) { return r.json(); })
+        QueueActions.request('<?= base_url('staff/queue/undoCancel') ?>/' + queueId)
         .then(function(data) {
             try { sessionStorage.removeItem('pendingUndoTrip'); } catch(e) {}
 
@@ -2856,9 +2840,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         })
         .catch(function(err) {
             console.error('[Queue] Undo error:', err);
-            if (typeof window.showSystemAlert === 'function') {
-                window.showSystemAlert({ title: 'Network Error', message: 'Network error while restoring trip.', variant: 'danger' });
-            }
+            QueueActions.notice('Could not restore this trip', err.message, err.variant || 'danger');
             hideUndoBanner();
         });
     }
@@ -3008,6 +2990,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 window.QueueOrderManager.syncFromDocument(newDoc);
             }
             if (window.DispatchQueue) window.DispatchQueue.sync(newDoc);
+            if (window.QueueActions) window.QueueActions.sync(newDoc);
         }
     });
     syncQueueHeaderActions();

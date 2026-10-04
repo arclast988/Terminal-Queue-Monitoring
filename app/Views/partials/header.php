@@ -56,7 +56,7 @@ SVG;
         <?php if ($isAdmin || $role === 'staff'): ?>
             <div class="operations-header-time" title="Current Philippine time" aria-label="Current Philippine time">
                 <i class="fas fa-clock" aria-hidden="true"></i>
-                <time id="operationsHeaderClock" class="operations-header-clock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= date('H:i') ?></time>
+                <time id="operationsHeaderClock" class="operations-header-clock" datetime="<?= date(DATE_ATOM) ?>" aria-live="off"><?= operations_time() ?></time>
             </div>
         <?php endif; ?>
     </div>
@@ -258,12 +258,12 @@ SVG;
         if (!clocks.length) return;
 
         var clockTimer = null;
-        var formatter = new Intl.DateTimeFormat('en-GB', {
+        var isDispatcher = <?= json_encode($role === 'staff') ?>;
+        var formatter = new Intl.DateTimeFormat(isDispatcher ? 'en-US' : 'en-GB', {
             timeZone: 'Asia/Manila',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false,
-            hourCycle: 'h23'
+            hour12: isDispatcher
         });
 
         function updateClock() {
