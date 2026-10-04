@@ -29,6 +29,38 @@ if (! function_exists('app_asset_url')) {
     }
 }
 
+if (! function_exists('history_departure_time')) {
+    /** Record history on five-minute clock marks while retaining the actual queue timestamp. */
+    function history_departure_time(?string $departure, string $format = 'H:i'): string
+    {
+        $timestamp = $departure === null || trim($departure) === '' ? false : strtotime($departure);
+        if ($timestamp === false) {
+            return '—';
+        }
+
+        return date($format, (int) (ceil($timestamp / 300) * 300));
+    }
+}
+
+if (! function_exists('history_departure_date_boundary')) {
+    /** Raw timestamps above this boundary round into the selected history date. */
+    function history_departure_date_boundary(string $date, bool $nextDay = false): ?string
+    {
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date)) {
+            return null;
+        }
+        $day = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+        if ($day === false || $day->format('Y-m-d') !== $date) {
+            return null;
+        }
+        if ($nextDay) {
+            $day = $day->modify('+1 day');
+        }
+
+        return date('Y-m-d H:i:s', $day->getTimestamp() - 300);
+    }
+}
+
 if (! function_exists('vehicle_type_key')) {
     function vehicle_type_key(?string $type): string
     {

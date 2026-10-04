@@ -10,6 +10,8 @@ Automatic boarding starts at a five-minute clock boundary: :00, :05, :10, :15, a
 
 New vehicle registrations appear in an open Add to Queue dialog without losing existing selections or search/filter values. Dispatchers can create, edit, and delete rules for their assigned destinations; terminal defaults remain controlled by administrators.
 
+Departure History and its printed reports round departure timestamps up to five-minute clock marks. For example, 07:22 is recorded in history as 07:25; 07:25:00 stays 07:25. The displayed date and date filters follow the rounded time when a departure crosses midnight. The original timestamp remains available internally for boarding schedules, cooldowns, and retention; existing history receives the same display without changing stored records.
+
 ## Deployment
 
 Run `php spark migrate` before serving the updated application, and restart the existing `ws:serve` process. The migration adds day/round fields, boarding windows, and persisted route round selections, then recalculates waiting vehicles on the five-minute grid. Departed history and ongoing boarding timers are preserved. The WebSocket server advances boarding at clock boundaries; dispatcher pages also provide a fallback while open. Updated scripts and styles use content-based asset versions.

@@ -724,9 +724,9 @@
                     <?php foreach ($results as $row): ?>
                         <tr>
                             <td style="white-space: nowrap;">
-                                <div style="font-weight: 700; color: #0f172a;"><?= date('M d, Y', strtotime($row['departure_time'])) ?></div>
+                                <div style="font-weight: 700; color: #0f172a;"><?= history_departure_time($row['departure_time'], 'M d, Y') ?></div>
                                 <div style="color: #64748b; font-size: 11.5px; font-weight: 500; font-family: monospace; margin-top: 2px;">
-                                    <i class="far fa-clock"></i> <?= date('H:i', strtotime($row['departure_time'])) ?>
+                                    <i class="far fa-clock"></i> <?= history_departure_time($row['departure_time']) ?>
                                 </div>
                             </td>
                             <td>

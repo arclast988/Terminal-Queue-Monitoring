@@ -20,19 +20,20 @@ class History extends BaseController
         $destFilter = $this->request->getGet('destination');
         $typeFilter = $this->request->getGet('vehicle_type');
 
-        $todayStart = date('Y-m-d 00:00:00');
-        $todayEnd   = date('Y-m-d 23:59:59');
-        $monthStart = date('Y-m-01 00:00:00');
-        $yearStart  = date('Y-01-01 00:00:00');
+        // Date totals follow the five-minute time shown in history, including midnight rollover.
+        $todayStart = history_departure_date_boundary(date('Y-m-d'));
+        $todayEnd   = history_departure_date_boundary(date('Y-m-d'), true);
+        $monthStart = history_departure_date_boundary(date('Y-m-01'));
+        $yearStart  = history_departure_date_boundary(date('Y-01-01'));
 
         // --- Stats (single query with sargable range predicates) ---
         $db = \Config\Database::connect();
         $statsResult = $db->table('queue')
             ->select("
                 COUNT(*) as total,
-                SUM(CASE WHEN departure_time >= '{$todayStart}' AND departure_time <= '{$todayEnd}' THEN 1 ELSE 0 END) as today,
-                SUM(CASE WHEN departure_time >= '{$monthStart}' THEN 1 ELSE 0 END) as month,
-                SUM(CASE WHEN departure_time >= '{$yearStart}' THEN 1 ELSE 0 END) as year
+                SUM(CASE WHEN departure_time > '{$todayStart}' AND departure_time <= '{$todayEnd}' THEN 1 ELSE 0 END) as today,
+                SUM(CASE WHEN departure_time > '{$monthStart}' THEN 1 ELSE 0 END) as month,
+                SUM(CASE WHEN departure_time > '{$yearStart}' THEN 1 ELSE 0 END) as year
             ")
             ->where('status', 'departed')
             ->where('departure_time IS NOT NULL')
@@ -142,11 +143,13 @@ class History extends BaseController
         }
 
         if ($fromDate) {
-            $builder->where('queue.departure_time >=', $fromDate . ' 00:00:00');
+            $boundary = history_departure_date_boundary($fromDate);
+            if ($boundary !== null) $builder->where('queue.departure_time >', $boundary);
         }
 
         if ($toDate) {
-            $builder->where('queue.departure_time <=', $toDate . ' 23:59:59');
+            $boundary = history_departure_date_boundary($toDate, true);
+            if ($boundary !== null) $builder->where('queue.departure_time <=', $boundary);
         }
 
         if ($destination) {
