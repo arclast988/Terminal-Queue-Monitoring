@@ -1,2 +1,19 @@
 User-agent: *
-Disallow: 
+Disallow: /admin
+Disallow: /staff
+Disallow: /api
+Disallow: /auth
+Disallow: /profile
+Disallow: /contact
+Disallow: /history
+Disallow: /login
+Disallow: /logout
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-reset-code
+Disallow: /submit-reset-code
+Disallow: /resend-reset-code
+Disallow: /send-reset-code
+Disallow: /change-password
+Disallow: /send-change-password-code
+Disallow: /verify-change-password-code

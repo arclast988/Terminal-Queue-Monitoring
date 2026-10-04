@@ -4,7 +4,7 @@ $prefix = $isReport ? 'guestReport' : 'guestContact';
 $oldValue = static fn(string $field): string => old('type') === $type && is_string(old($field, null, false)) ? old($field, null, false) : '';
 $issueTypes = ['Incorrect schedule or departure time', 'Missing vehicle from queue', 'Website display / technical problem', 'Incorrect fare information / overcharging', 'Lost and found inquiry', 'Other operational issue'];
 ?>
-<form action="<?= base_url('contact/send') ?>" method="post">
+<form action="<?= base_url('contact/send') ?>" method="post" data-contact-async data-no-loader>
     <?= csrf_field() ?>
     <input type="hidden" name="type" value="<?= $type ?>">
     <div class="form-group">
@@ -31,4 +31,5 @@ $issueTypes = ['Incorrect schedule or departure time', 'Missing vehicle from que
     </div>
     <p style="font-size:13px;color:#64748b;margin-bottom:16px;">We’ll email you a verification code before sending your <?= $isReport ? 'report' : 'message' ?> to terminal management.</p>
     <button type="submit" class="submit-btn"><i class="fas fa-envelope-circle-check"></i> Continue to email verification</button>
+    <button type="button" class="contact-verification-secondary contact-resume" data-contact-resume hidden>Continue verification</button>
 </form>

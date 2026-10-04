@@ -14,6 +14,7 @@
     <!-- Local fonts -->
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/design-system.css') ?>">
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/modern-frontend.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/contact-verification.css') ?>">
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>

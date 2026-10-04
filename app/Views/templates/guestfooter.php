@@ -250,6 +250,8 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
     </div>
 </div>
 
+<?= view('partials/guest-contact-verification-modal') ?>
+
 <!-- 4. FAQ Modal -->
 <div id="faqModal" class="support-modal-backdrop">
     <div class="support-modal">
@@ -333,6 +335,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
 <script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
+<script src="<?= app_asset_url('assets/js/contact-verification.js') ?>" defer></script>
 <script type="application/json" id="guestManagedContent"><?= json_encode($guestManagedContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
 let savedSupportScrollY = 0;
@@ -347,6 +350,7 @@ function openSupportModal(modalId){
         // Save current scroll position before opening
         savedSupportScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
         modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
         document.documentElement.style.overflow = 'hidden';
     }
 }
@@ -355,6 +359,7 @@ function closeSupportModal(modalId){
     const modal = document.getElementById(modalId);
     if(modal){
         modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
         if(!document.querySelector('.support-modal-backdrop.active')){
             document.documentElement.style.overflow = '';
             document.body.style.overflow = '';
@@ -415,7 +420,9 @@ function toggleHelpAccordion(headerEl) {
 // Auto-open support modal if query parameter exists (e.g. redirected from /manual)
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('help')) {
+    if (urlParams.has('contact_verify')) {
+        openSupportModal('guestContactVerificationModal');
+    } else if (urlParams.has('help')) {
         openSupportModal('helpModal');
     } else if (urlParams.has('faq')) {
         openSupportModal('faqModal');

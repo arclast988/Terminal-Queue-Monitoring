@@ -56,7 +56,7 @@ final class GuestContactVerificationTest extends CIUnitTestCase
         return array_replace(['type'=>'contact', 'name'=>'Guest Passenger', 'email'=>'guest@example.com', 'subject'=>'Trip inquiry', 'message'=>'Please check my trip.'], $overrides);
     }
 
-    private function action(string $method, array $post=[])
+    private function action(string $method, array $post=[], bool $json=false)
     {
         service('renderer')->resetData();
         $this->response = service('response', null, false);
@@ -64,13 +64,14 @@ final class GuestContactVerificationTest extends CIUnitTestCase
         $this->request->setMethod($method === 'verification' ? 'GET' : 'POST');
         $this->request->setGlobal('post', $post);
         $this->request->setGlobal('server', ['REMOTE_ADDR'=>'192.0.2.25']);
+        if ($json) $this->request->setHeader('Accept', 'application/json');
         return $this->controller(GuestContactHarness::class)->execute($method)->response();
     }
 
     private function start(array $overrides=[]): array
     {
         $response = $this->action('send', $this->draft($overrides));
-        $this->assertStringEndsWith('/contact/verify', $response->getHeaderLine('Location'));
+        $this->assertStringEndsWith('/guest?contact_verify=1', $response->getHeaderLine('Location'));
         return session()->get('guest_contact_pending');
     }
 
@@ -239,20 +240,65 @@ final class GuestContactVerificationTest extends CIUnitTestCase
         $this->assertCount(0, GuestContactHarness::$mail);
     }
 
-    public function testVerificationPageEscapesTheSavedMessageAndDoesNotExposeTheCodeHash(): void
+    public function testVerificationModalEscapesTheSavedMessageAndDoesNotExposeTheCodeHash(): void
     {
         $pending = $this->start(['message'=>'<img src=x onerror=alert(1)>']);
-        $response = $this->action('verification');
+        $response = $this->action('verification', [], true);
         $this->assertSame(200, $response->getStatusCode());
         $this->assertStringContainsString('no-store', $response->getHeaderLine('Cache-Control'));
-        $body = $response->getBody();
+        $body = json_decode($response->getBody(), true)['html'];
         $this->assertStringContainsString('&lt;img src=x onerror=alert(1)&gt;', $body);
         $this->assertStringNotContainsString($pending['code_hash'], $body);
         $this->assertStringContainsString('guestContactCode', $body);
         GuestContactHarness::$outcomes = [false];
         $this->action('verify', ['draft_id'=>$pending['id'], 'code'=>$this->code()]);
-        $body = $this->action('verification')->getBody();
+        $body = json_decode($this->action('verification', [], true)->getBody(), true)['html'];
         $this->assertStringNotContainsString('id="guestContactCode"', $body);
         $this->assertStringContainsString('Send message', $body);
+    }
+
+    public function testJsonFlowReturnsModalErrorsSavedDraftAndFreshCsrfWithoutRedirects(): void
+    {
+        cache()->clean();
+        $response = $this->action('send', $this->draft(['type'=>'report']), true);
+        $data = json_decode($response->getBody(), true);
+        $this->assertSame('verify', $data['stage']);
+        $this->assertSame('report', $data['type']);
+        $this->assertSame(csrf_token(), $data['csrf']['name']);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{64}$/', $data['csrf']['hash']);
+        $this->assertSame('', $response->getHeaderLine('Location'));
+        $pending = session()->get('guest_contact_pending');
+        $data = json_decode($this->action('verify', ['draft_id'=>$pending['id'], 'code'=>'123'], true)->getBody(), true);
+        $this->assertFalse($data['success']);
+        $this->assertStringContainsString('complete six-digit', $data['html']);
+        $data = json_decode($this->action('edit', ['draft_id'=>$pending['id']], true)->getBody(), true);
+        $this->assertSame('form', $data['stage']);
+        $this->assertSame($this->draft(['type'=>'report']), $data['draft']);
+        $this->assertArrayNotHasKey('code_hash', $data['draft']);
+        $this->assertNull(session()->get('guest_contact_pending'));
+    }
+
+    public function testLegacyVerificationLinkReturnsToTheGuestModal(): void
+    {
+        cache()->clean();
+        $this->start();
+        $response = $this->action('verification');
+        $this->assertStringEndsWith('/guest?contact_verify=1', $response->getHeaderLine('Location'));
+    }
+
+    public function testVerifiedDeliveryRetriesAreBoundedEvenWhenTransportFails(): void
+    {
+        cache()->clean();
+        $pending = $this->start();
+        GuestContactHarness::$outcomes = [false,false,false];
+        for ($attempt=0; $attempt<4; $attempt++) {
+            $this->action('verify', ['draft_id'=>$pending['id'], 'code'=>$this->code()], true);
+        }
+        $this->assertCount(4, GuestContactHarness::$mail);
+        $this->assertTrue(session()->get('guest_contact_pending')['verified']);
+        GuestContactHarness::$clock += 301;
+        $data = json_decode($this->action('verify', ['draft_id'=>$pending['id']], true)->getBody(), true);
+        $this->assertSame('complete', $data['stage']);
+        $this->assertNull(session()->get('guest_contact_pending'));
     }
 }

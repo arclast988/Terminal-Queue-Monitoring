@@ -25,6 +25,12 @@ function app_name(): string { return $GLOBALS['fixtureLong'] ? 'PalomponTerminal
 function app_subtitle(): string { return 'Transit Terminal Monitoring System'; }
 function app_system_title(): string { return app_name(); }
 function get_system_setting(string $key, $default = null) { return $default; }
+if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content'], true)) {
+    // Keep the real footer/modals while stubbing only managed settings/config.
+    final class FixtureContentManagement { public static function fields(): array { return []; } }
+    class_alias(FixtureContentManagement::class, 'Config\\ContentManagement');
+    function config(string $name): object { return (object) ['recipients'=>'management@example.com']; }
+}
 if (($argv[3] ?? '') !== 'theme') {
     function app_theme_css(): string { return ''; }
 }
@@ -74,6 +80,7 @@ function session(): object {
                 'role' => $GLOBALS['fixtureRole'],
                 'full_name' => 'Fixture Dispatcher',
                 'username' => 'fixture-user',
+                'guest_contact_pending' => ($GLOBALS['fixtureState'] ?? '') === 'empty' ? null : ($GLOBALS['fixtureData']['pending'] ?? null),
                 default => null,
             };
         }
@@ -83,7 +90,7 @@ function session(): object {
 final class ResponsiveFixtureRenderer {
     public function render(string $name, array $data = []): string {
         // Management fixtures include the real footer and Bootstrap/support modals.
-        if ($name === 'templates/guestfooter' || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true))) return '';
+        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-verification') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true))) return '';
         extract($GLOBALS['fixtureData']);
         extract($data, EXTR_OVERWRITE);
         ob_start();
@@ -173,11 +180,13 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
         $fixtureData['existingRules'][] = array_replace($fixtureData['rule'], ['id'=>3, 'round_number'=>3]);
     }
 }
-if ($fixturePage === 'guest-contact-verification') {
+if (in_array($fixturePage, ['guest-contact-verification','guest-contact-verification-content'], true)) {
+    $fixtureState = $argv[4] ?? '';
     $fixtureData['pending'] = ['id'=>str_repeat('a',64), 'type'=>'report', 'name'=>'Guest Passenger',
         'email'=>'guest-passenger-with-a-long-address@example.com', 'subject'=>'Website display / technical problem',
-        'message'=>'<script>Text must stay text</script>', 'verified'=>($argv[4] ?? '') === 'verified'];
+        'message'=>'<script>Text must stay text</script>', 'verified'=>$fixtureState === 'verified', 'expires_at'=>time()+600, 'sent_at'=>time()];
     $fixtureData['resendWait'] = 60;
+    if ($fixtureState === 'error') $fixtureData['error'] = 'Incorrect code. 4 attempts remaining.';
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
@@ -233,7 +242,8 @@ $fixtureRenderer = new ResponsiveFixtureRenderer();
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
-    'guest-contact-verification' => 'public/contact-verification',
+    'guest-contact-verification' => 'public/enhanced_dashboard',
+    'guest-contact-verification-content' => 'partials/guest-contact-verification',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-routes' => 'admin/routes/index',

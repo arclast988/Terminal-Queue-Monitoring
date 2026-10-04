@@ -32,15 +32,15 @@ class Contact extends BaseController
             'code_hash' => password_hash($code, PASSWORD_DEFAULT), 'verified' => false,
             'expires_at' => $this->now() + 600, 'sent_at' => $this->now(), 'attempts' => 0,
         ]);
-        return redirect()->to(base_url('contact/verify'));
+        return $this->verificationResponse();
     }
 
     public function verification()
     {
         if (($pending = $this->pending()) === null) return $this->expired();
-        $this->response->setHeader('Cache-Control', 'no-store');
-        return view('public/contact-verification', ['title' => 'Verify your email', 'pending' => $pending,
-            'resendWait' => max(0, $pending['sent_at'] + 60 - $this->now())]);
+        if ($this->wantsJson()) return $this->verificationResponse();
+        session()->keepFlashdata(['contact_verify_notice', 'contact_verify_error']);
+        return redirect()->to($this->verificationUrl());
     }
 
     public function verify()
@@ -64,10 +64,7 @@ class Contact extends BaseController
             $pending['code_hash'] = null;
             session()->set(self::PENDING, $pending);
         }
-        $cache = cache();
-        $rateKey = 'contact_rate_limit_' . hash('sha256', $this->request->getIPAddress());
-        $attempts = (int) $cache->get($rateKey);
-        if ($attempts >= 3) return $this->verificationError('Too many messages sent. Please wait five minutes before trying again.');
+        if (!$this->reserveMessageRequest()) return $this->verificationError('Too many messages sent. Please wait five minutes before trying again.');
         $report = $pending['type'] === 'report';
         $subjectLine = '[' . app_acronym() . ($report ? ' Report Issue] ' : ' Contact Us] ')
             . ($pending['subject'] ?: ($report ? 'Issue reported via website' : 'Message from website'));
@@ -80,8 +77,10 @@ class Contact extends BaseController
             session()->set(self::PENDING, $pending);
             return $this->verificationError('Your email is verified, but the message could not be sent. Try Send message again, or contact the terminal office directly.');
         }
-        $cache->save($rateKey, $attempts + 1, 300);
-        return redirect()->to($this->formUrl($pending['type']))->with('contact_success', 'Your email was verified and your message has been sent to terminal management.');
+        $success = 'Your email was verified and your message has been sent to terminal management.';
+        session()->remove(['_ci_old_input', 'contact_verify_notice', 'contact_verify_error']);
+        if ($this->wantsJson()) return $this->jsonResponse(['success'=>true, 'stage'=>'complete', 'type'=>$pending['type'], 'message'=>$success]);
+        return redirect()->to($this->formUrl($pending['type']))->with('contact_success', $success);
     }
 
     public function resend()
@@ -98,7 +97,7 @@ class Contact extends BaseController
         $pending['expires_at'] = $this->now() + 600;
         // Resending must not reset the number of wrong guesses.
         session()->set(self::PENDING, $pending);
-        return redirect()->to(base_url('contact/verify'))->with('contact_verify_notice', 'A new code has been sent. Use the latest code in your email.');
+        return $this->verificationResponse(null, 'A new code has been sent. Use the latest code in your email.');
     }
 
     public function edit()
@@ -155,7 +154,37 @@ class Contact extends BaseController
 
     private function verificationError(string $message)
     {
-        return redirect()->to(base_url('contact/verify'))->with('contact_verify_error', $message);
+        return $this->verificationResponse($message);
+    }
+
+    private function verificationUrl(): string
+    {
+        return base_url('guest') . '?contact_verify=1';
+    }
+
+    private function wantsJson(): bool
+    {
+        return $this->request->isAJAX() || str_contains(strtolower($this->request->getHeaderLine('Accept')), 'application/json');
+    }
+
+    private function jsonResponse(array $payload)
+    {
+        return $this->response->setHeader('Cache-Control', 'no-store')->setJSON($payload + ['csrf'=>['name'=>csrf_token(), 'hash'=>csrf_hash()]]);
+    }
+
+    private function verificationResponse(?string $error = null, ?string $notice = null)
+    {
+        $pending = $this->pending();
+        if ($pending === null) return $this->expired();
+        if ($this->wantsJson()) {
+            return $this->jsonResponse(['success'=>$error === null, 'stage'=>'verify', 'type'=>$pending['type'],
+                'html'=>view('partials/guest-contact-verification', ['pending'=>$pending, 'error'=>$error, 'notice'=>$notice,
+                    'resendWait'=>max(0, $pending['sent_at'] + 60 - $this->now())])]);
+        }
+        $response = redirect()->to($this->verificationUrl());
+        if ($error !== null) $response->with('contact_verify_error', $error);
+        if ($notice !== null) $response->with('contact_verify_notice', $notice);
+        return $response;
     }
 
     private function formUrl(string $type): string
@@ -167,6 +196,8 @@ class Contact extends BaseController
     {
         $input = array_intersect_key($draft, array_flip(['type', 'name', 'email', 'subject', 'message']));
         session()->setFlashdata('_ci_old_input', ['get' => [], 'post' => $input]);
+        if ($this->wantsJson()) return $this->jsonResponse(['success'=>$error === null, 'stage'=>'form',
+            'type'=>($draft['type'] ?? '') === 'report' ? 'report' : 'contact', 'draft'=>$input, 'message'=>$error]);
         $response = redirect()->to($this->formUrl($draft['type'] ?? 'contact'));
         return $error === null ? $response : $response->with('contact_error', $error);
     }
@@ -174,9 +205,14 @@ class Contact extends BaseController
     /** Limit email deliveries across sessions by address and IP before sending. */
     private function reserveCodeRequest(string $email): ?string
     {
-        $cache = cache();
         $keys = ['ip' => 'contact_code_ip_' . hash('sha256', $this->request->getIPAddress()),
             'email' => 'contact_code_email_' . hash('sha256', strtolower($email))];
+        return \App\Libraries\RateLimitLock::run(array_values($keys), fn () => $this->reserveCodeRequestLocked($keys));
+    }
+
+    private function reserveCodeRequestLocked(array $keys): ?string
+    {
+        $cache = cache();
         $records = [];
         foreach ($keys as $scope => $key) {
             $record = $cache->get($key);
@@ -188,8 +224,29 @@ class Contact extends BaseController
         foreach ($keys as $scope => $key) {
             $records[$scope]['count']++;
             $records[$scope]['last_at'] = $this->now();
-            $cache->save($key, $records[$scope], max(1, $records[$scope]['expires_at'] - $this->now()));
+            if (!$cache->save($key, $records[$scope], max(1, $records[$scope]['expires_at'] - $this->now()))) {
+                throw new \RuntimeException('Contact protection storage is unavailable.');
+            }
         }
         return null;
+    }
+
+    private function reserveMessageRequest(): bool
+    {
+        $key = 'contact_rate_limit_' . hash('sha256', $this->request->getIPAddress());
+        return \App\Libraries\RateLimitLock::run([$key], function () use ($key): bool {
+            $cache = cache();
+            $record = $cache->get($key);
+            if (!is_array($record) || ($record['expires_at'] ?? 0) <= $this->now()) {
+                $record = ['count'=>0, 'expires_at'=>$this->now()+300];
+            }
+            if ($record['count'] >= 3) return false;
+            $record['count']++;
+            // Reserve before SMTP, including failed transport attempts.
+            if (!$cache->save($key, $record, max(1, $record['expires_at']-$this->now()))) {
+                throw new \RuntimeException('Contact protection storage is unavailable.');
+            }
+            return true;
+        });
     }
 }

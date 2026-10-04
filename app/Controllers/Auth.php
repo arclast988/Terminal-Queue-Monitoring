@@ -20,10 +20,23 @@ class Auth extends BaseController
 
     public function login()
     {
+        return \App\Libraries\RateLimitLock::run([$this->cacheKey()], fn () => $this->attemptLogin());
+    }
+
+    private function attemptLogin()
+    {
         $session = session();
+        // Check before account lookup or password hashing, including real users.
+        if ($this->isIpLocked()) {
+            $remaining = $this->getIpLockoutRemaining();
+            $session->setFlashdata('error', "Too many failed attempts. Try again in {$remaining}.");
+            return redirect()->to('/login');
+        }
         $model = new UserModel();
-        $username = trim((string) $this->request->getVar('username'));
-        $password = (string) $this->request->getVar('password');
+        $username = $this->request->getPost('username');
+        $password = $this->request->getPost('password');
+        $username = is_string($username) ? trim($username) : '';
+        $password = is_string($password) ? $password : '';
 
         $user = $model->where('username', $username)
             ->orWhere('email', $username)
@@ -31,11 +44,13 @@ class Auth extends BaseController
 
         if ($user) {
             if (($user['status'] ?? 'active') === 'archived') {
+                $this->trackIpAttempt();
                 $session->setFlashdata('error', 'This account has been deactivated. Please contact the administrator.');
                 return redirect()->to('/login');
             }
 
             if ($this->isUserLocked($user)) {
+                $this->trackIpAttempt();
                 $remaining = $this->getLockoutRemaining($user['locked_until']);
                 $session->setFlashdata('error', "Account locked. Try again in {$remaining}.");
                 return redirect()->to('/login');
@@ -43,7 +58,7 @@ class Auth extends BaseController
 
             // Reset attempt counter if previous lockout expired
             if (!empty($user['locked_until']) && strtotime($user['locked_until']) <= time()) {
-                $model->update($user['id'], [
+                $model->where('locked_until <=', date('Y-m-d H:i:s'))->update($user['id'], [
                     'login_attempts' => 0,
                     'locked_until'   => null,
                 ]);
@@ -58,8 +73,6 @@ class Auth extends BaseController
                     'login_attempts' => 0,
                     'locked_until' => null,
                 ]);
-                $cache = \Config\Services::cache();
-                $cache->delete($this->cacheKey());
 
                 $ses_data = [
                     'id' => $user['id'],
@@ -79,24 +92,21 @@ class Auth extends BaseController
                 return $this->redirectBasedOnRole();
             }
 
-            $attempts = (int) ($user['login_attempts'] ?? 0) + 1;
-            $data = ['login_attempts' => $attempts];
+            $this->trackIpAttempt();
+            // Increment in the database so failures from different IPs cannot
+            // overwrite one another's account counter.
+            $model->builder()->where('id', $user['id'])
+                ->set('login_attempts', 'COALESCE(login_attempts, 0) + 1', false)->update();
+            $attempts = (int) $model->find($user['id'])['login_attempts'];
             if ($attempts >= self::MAX_ATTEMPTS) {
-                $data['locked_until'] = date('Y-m-d H:i:s', time() + self::LOCKOUT_SECONDS);
+                $model->update($user['id'], ['locked_until' => date('Y-m-d H:i:s', time() + self::LOCKOUT_SECONDS)]);
             }
-            $model->update($user['id'], $data);
 
             $msg = $attempts >= self::MAX_ATTEMPTS
                 ? "Account locked due to too many failed attempts. Try again in 15 minutes."
                 : 'Invalid username or password.';
 
             $session->setFlashdata('error', $msg);
-            return redirect()->to('/login');
-        }
-
-        if ($this->isIpLocked()) {
-            $remaining = $this->getIpLockoutRemaining();
-            $session->setFlashdata('error', "Too many failed attempts. Try again in {$remaining}.");
             return redirect()->to('/login');
         }
 
@@ -195,7 +205,9 @@ class Auth extends BaseController
             $entry['locked_until'] = $now + self::LOCKOUT_SECONDS;
         }
 
-        $cache->save($key, $entry, self::LOCKOUT_SECONDS * 2);
+        if (!$cache->save($key, $entry, self::LOCKOUT_SECONDS * 2)) {
+            throw new \RuntimeException('Login protection storage is unavailable.');
+        }
     }
 
     public function forgotPassword()

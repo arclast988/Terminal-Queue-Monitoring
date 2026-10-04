@@ -33,7 +33,7 @@ test.before(async () => {
     else send();
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); origin = 'http://127.0.0.1:' + server.address().port;
-  browser = await playwright[engine].launch({ headless: true }); report.browserVersion = browser.version();
+  browser = await playwright[engine].launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? {channel:process.env.TQ_BROWSER_CHANNEL} : {}) }); report.browserVersion = browser.version();
 });
 
 test('late icon fonts keep headings and button geometry stable', { timeout: 60000 }, async t => {
