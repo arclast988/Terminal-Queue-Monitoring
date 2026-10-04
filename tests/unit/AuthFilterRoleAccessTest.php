@@ -6,8 +6,22 @@ use App\Filters\AuthFilter;
 use CodeIgniter\HTTP\RedirectResponse;
 use CodeIgniter\Test\CIUnitTestCase;
 
+class RoleAccessAuthFilter extends AuthFilter
+{
+    protected function loadAccount(int $userId): ?array
+    {
+        return ['status' => 'active', 'role' => session()->get('role'), 'password_hash' => 'test-password-hash'];
+    }
+}
+
 final class AuthFilterRoleAccessTest extends CIUnitTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        service('session')->set(['id' => 42, 'auth_password_fingerprint' => hash('sha256', 'test-password-hash')]);
+    }
+
     public function testSuperAdminCannotAccessStaffOnlyRoutes(): void
     {
         service('session')->set([
@@ -15,7 +29,7 @@ final class AuthFilterRoleAccessTest extends CIUnitTestCase
             'role' => 'super_admin',
         ]);
 
-        $result = (new AuthFilter())->before(service('request'), ['staff']);
+        $result = (new RoleAccessAuthFilter())->before(service('request'), ['staff']);
 
         $this->assertInstanceOf(RedirectResponse::class, $result);
         $this->assertStringEndsWith('/admin/dashboard', $result->getHeaderLine('Location'));
@@ -29,8 +43,8 @@ final class AuthFilterRoleAccessTest extends CIUnitTestCase
             'role' => 'super_admin',
         ]);
 
-        $this->assertNull((new AuthFilter())->before(service('request'), ['admin']));
-        $this->assertNull((new AuthFilter())->before(service('request'), ['admin', 'staff']));
+        $this->assertNull((new RoleAccessAuthFilter())->before(service('request'), ['admin']));
+        $this->assertNull((new RoleAccessAuthFilter())->before(service('request'), ['admin', 'staff']));
     }
 
     public function testDispatcherRetainsStaffOnlyAccess(): void
@@ -40,7 +54,7 @@ final class AuthFilterRoleAccessTest extends CIUnitTestCase
             'role' => 'staff',
         ]);
 
-        $this->assertNull((new AuthFilter())->before(service('request'), ['staff']));
+        $this->assertNull((new RoleAccessAuthFilter())->before(service('request'), ['staff']));
     }
 
     public function testAdminRemainsBlockedFromStaffOnlyRoutes(): void
@@ -52,7 +66,7 @@ final class AuthFilterRoleAccessTest extends CIUnitTestCase
 
         $this->assertInstanceOf(
             RedirectResponse::class,
-            (new AuthFilter())->before(service('request'), ['staff'])
+            (new RoleAccessAuthFilter())->before(service('request'), ['staff'])
         );
     }
 

@@ -329,7 +329,11 @@ class Users extends BaseController
             return $this->noChangesResponse();
         }
 
-        $model->update($id, $data);
+        $updated = $model->update($id, $data);
+        if ($updated && !empty($data['password_hash']) && (int) session()->get('id') === (int) $id) {
+            session()->set('auth_password_fingerprint', hash('sha256', $data['password_hash']));
+            session()->regenerate(true);
+        }
 
         // Sync route assignments
         if ($role === 'staff') {

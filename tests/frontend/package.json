@@ -2,7 +2,7 @@
   "name": "terminal-interaction-regressions",
   "private": true,
   "scripts": {
-    "test": "node --test interactions.test.cjs auth-background.test.cjs",
+    "test": "node --test interactions.test.cjs auth-background.test.cjs session-guard.test.cjs",
     "test:browser": "node --test interactions.browser.cjs",
     "test:responsive": "node --test responsive.browser.cjs",
     "test:background": "node --test backgrounds.browser.cjs",

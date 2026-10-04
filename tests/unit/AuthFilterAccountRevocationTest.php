@@ -15,12 +15,13 @@ final class AuthFilterAccountRevocationTest extends CIUnitTestCase
             'id' => 42,
             'role' => 'admin',
             'profile_image_synced_at' => time() - 61,
+            'auth_password_fingerprint' => hash('sha256', 'valid-password-hash'),
         ]);
 
         $filter = new class extends AuthFilter {
             protected function loadAccount(int $userId): ?array
             {
-                return ['status' => 'archived', 'role' => 'admin', 'profile_image' => null];
+                return ['status' => 'archived', 'role' => 'admin', 'profile_image' => null, 'password_hash' => 'valid-password-hash'];
             }
         };
 
@@ -38,12 +39,13 @@ final class AuthFilterAccountRevocationTest extends CIUnitTestCase
             'id' => 42,
             'role' => 'admin',
             'profile_image_synced_at' => time() - 61,
+            'auth_password_fingerprint' => hash('sha256', 'valid-password-hash'),
         ]);
 
         $filter = new class extends AuthFilter {
             protected function loadAccount(int $userId): ?array
             {
-                return ['status' => 'active', 'role' => 'staff', 'profile_image' => null];
+                return ['status' => 'active', 'role' => 'staff', 'profile_image' => null, 'password_hash' => 'valid-password-hash'];
             }
         };
 

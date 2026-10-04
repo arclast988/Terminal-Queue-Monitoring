@@ -68,6 +68,7 @@ class Auth extends BaseController
                     'full_name' => $user['full_name'],
                     'profile_image' => $user['profile_image'] ?? null,
                     'profile_image_synced_at' => time(),
+                    'auth_password_fingerprint' => hash('sha256', $user['password_hash']),
                     'isLoggedIn' => TRUE
                 ];
                 $session->set($ses_data);
@@ -836,12 +837,17 @@ class Auth extends BaseController
             return redirect()->to('/change-password')->withInput();
         }
 
-        // 4. Update password
-        $userModel->update($user['id'], [
-            'password_hash'  => password_hash($newPassword, PASSWORD_DEFAULT),
+        // Keep only the session that completed the verified password change.
+        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        if (!$userModel->update($user['id'], [
+            'password_hash'  => $passwordHash,
             'login_attempts' => 0,
             'locked_until'   => null,
-        ]);
+        ])) {
+            return redirect()->to('/change-password')->with('error', 'Your password could not be changed. Please try again.');
+        }
+        $session->set('auth_password_fingerprint', hash('sha256', $passwordHash));
+        $session->regenerate(true);
 
         $db->table('password_reset_tokens')->where('id', $record->id)->update([
             'used'     => 1,
@@ -877,6 +883,12 @@ class Auth extends BaseController
                 </p>
             </div>
         </div>';
+    }
+
+    public function sessionStatus()
+    {
+        return $this->response->setHeader('Cache-Control', 'no-store')
+            ->setJSON(['success' => true, 'authenticated' => true]);
     }
 
     public function logout()
