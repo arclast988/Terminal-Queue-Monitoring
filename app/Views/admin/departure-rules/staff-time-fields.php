@@ -14,16 +14,42 @@ $minutes = (int) ($waitParts[0] ?? 0) * 60 + (int) ($waitParts[1] ?? 0);
             <input type="text" class="input-modern" id="<?= $field ?>" name="<?= $field ?>" value="<?= esc(date('g:i A', $clockStamp)) ?>" readonly required aria-describedby="<?= $field ?>Help" data-clock-display>
             <button type="button" class="dispatch-time-button" data-clock-toggle aria-label="Set <?= strtolower($caption) ?>" aria-controls="<?= $field ?>Picker" aria-expanded="false"><i class="bi bi-clock" aria-hidden="true"></i></button>
             <div class="dispatch-time-picker" id="<?= $field ?>Picker" role="group" aria-label="<?= $caption ?> picker" hidden>
-                <div><label for="<?= $field ?>Hour">Hour</label><select id="<?= $field ?>Hour" class="form-select" data-clock-hour data-no-autocomplete>
-                    <?php for ($hour = 1; $hour <= 12; $hour++): ?><option value="<?= $hour ?>" <?= (int) date('g', $clockStamp) === $hour ? 'selected' : '' ?>><?= $hour ?></option><?php endfor; ?>
-                </select></div>
-                <div><label for="<?= $field ?>Minute">Minute</label><select id="<?= $field ?>Minute" class="form-select" data-clock-minute data-no-autocomplete>
-                    <?php for ($minute = 0; $minute < 60; $minute++): ?><option value="<?= sprintf('%02d', $minute) ?>" <?= (int) date('i', $clockStamp) === $minute ? 'selected' : '' ?>><?= sprintf('%02d', $minute) ?></option><?php endfor; ?>
-                </select></div>
-                <div><label for="<?= $field ?>Period">AM / PM</label><select id="<?= $field ?>Period" class="form-select" data-clock-period data-no-autocomplete>
-                    <?php foreach (['AM', 'PM'] as $period): ?><option value="<?= $period ?>" <?= date('A', $clockStamp) === $period ? 'selected' : '' ?>><?= $period ?></option><?php endforeach; ?>
-                </select></div>
-                <button type="button" class="btn-modern btn-modern-primary btn-modern-sm" data-clock-set><i class="bi bi-check2" aria-hidden="true"></i> Set time</button>
+                <!-- Hours Column -->
+                <div class="tp-col">
+                    <button type="button" class="tp-btn tp-btn-up" data-tp-action="hour-up" aria-label="Increase hour" tabindex="-1"><i class="bi bi-chevron-up"></i></button>
+                    <input type="text" class="tp-input" data-tp-input="hour" maxlength="2" inputmode="numeric" value="<?= date('g', $clockStamp) ?>" aria-label="Hour">
+                    <button type="button" class="tp-btn tp-btn-down" data-tp-action="hour-down" aria-label="Decrease hour" tabindex="-1"><i class="bi bi-chevron-down"></i></button>
+                </div>
+                <!-- Separator -->
+                <span class="tp-sep">:</span>
+                <!-- Minutes Column -->
+                <div class="tp-col">
+                    <button type="button" class="tp-btn tp-btn-up" data-tp-action="min-up" aria-label="Increase minute" tabindex="-1"><i class="bi bi-chevron-up"></i></button>
+                    <input type="text" class="tp-input" data-tp-input="min" maxlength="2" inputmode="numeric" value="<?= date('i', $clockStamp) ?>" aria-label="Minute">
+                    <button type="button" class="tp-btn tp-btn-down" data-tp-action="min-down" aria-label="Decrease minute" tabindex="-1"><i class="bi bi-chevron-down"></i></button>
+                </div>
+                <!-- AM/PM Column -->
+                <div class="tp-period-col">
+                    <button type="button" class="tp-period-btn <?= date('A', $clockStamp) === 'AM' ? 'active' : '' ?>" data-tp-action="period" data-period="AM" aria-pressed="<?= date('A', $clockStamp) === 'AM' ? 'true' : 'false' ?>">AM</button>
+                    <button type="button" class="tp-period-btn <?= date('A', $clockStamp) === 'PM' ? 'active' : '' ?>" data-tp-action="period" data-period="PM" aria-pressed="<?= date('A', $clockStamp) === 'PM' ? 'true' : 'false' ?>">PM</button>
+                </div>
+                <!-- Set Button -->
+                <button type="button" class="tp-set-btn" data-clock-set aria-label="Set time">
+                    <i class="bi bi-check2"></i>
+                    <span>Set</span>
+                </button>
+                <!-- Hidden synchronized select elements for test & form compatibility -->
+                <div class="tp-hidden-selects" aria-hidden="true">
+                    <select id="<?= $field ?>Hour" class="form-select" data-clock-hour data-no-autocomplete tabindex="-1">
+                        <?php for ($hour = 1; $hour <= 12; $hour++): ?><option value="<?= $hour ?>" <?= (int) date('g', $clockStamp) === $hour ? 'selected' : '' ?>><?= $hour ?></option><?php endfor; ?>
+                    </select>
+                    <select id="<?= $field ?>Minute" class="form-select" data-clock-minute data-no-autocomplete tabindex="-1">
+                        <?php for ($minute = 0; $minute < 60; $minute++): ?><option value="<?= sprintf('%02d', $minute) ?>" <?= (int) date('i', $clockStamp) === $minute ? 'selected' : '' ?>><?= sprintf('%02d', $minute) ?></option><?php endfor; ?>
+                    </select>
+                    <select id="<?= $field ?>Period" class="form-select" data-clock-period data-no-autocomplete tabindex="-1">
+                        <?php foreach (['AM', 'PM'] as $period): ?><option value="<?= $period ?>" <?= date('A', $clockStamp) === $period ? 'selected' : '' ?>><?= $period ?></option><?php endforeach; ?>
+                    </select>
+                </div>
             </div>
         </div>
         <div id="<?= $field ?>Help" class="form-text-modern">Use the clock button to set the time.</div>

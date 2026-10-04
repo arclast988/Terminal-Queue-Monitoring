@@ -1206,14 +1206,24 @@ class Queue extends BaseController
             ->findAll();
 
         $activeIds = array_map(static fn(array $item): int => (int) $item['id'], $activeItems);
-        $boardingCount = count(array_filter($activeItems, static fn(array $item): bool => $item['status'] === 'boarding'));
         $savedPosition = (int) ($queueItem['position'] ?? 0);
         $insertIndex = $savedPosition > 0 ? min($savedPosition - 1, count($activeIds)) : count($activeIds);
-        $insertIndex = max($boardingCount, $insertIndex);
         array_splice($activeIds, $insertIndex, 0, [(int) $id]);
+
+        // If the restored trip returns to the head of the destination queue (position 1),
+        // ensure any vehicle that temporarily began boarding while this trip was canceled is returned to waiting.
+        if ($insertIndex === 0) {
+            foreach ($activeItems as $activeItem) {
+                if ($activeItem['status'] === 'boarding') {
+                    $this->queueModel->update($activeItem['id'], ['status' => 'waiting']);
+                }
+            }
+        }
 
         $this->queueModel->update($id, [
             'status' => 'waiting',
+            'boarding_start' => null,
+            'estimated_departure' => null,
             'round_number' => (new DispatchRoundModel($db))->currentRound((int) $route['terminal_id'], $route['destination']),
             'arrival_time' => !empty($queueItem['arrival_time']) ? $queueItem['arrival_time'] : date('Y-m-d H:i:s'),
         ]);
@@ -1222,8 +1232,9 @@ class Queue extends BaseController
             $this->queueModel->update($queueId, ['position' => $index + 1]);
         }
 
-        // Recalculate queue positions and departure times
-        $this->queueModel->reorderByDeparture();
+        // Recalculate schedule starting from now on the 5-minute grid so the restored
+        // vehicle and active line receive fresh departure times instead of stale overdue anchors.
+        $this->queueModel->recalculateSchedule((int) $queueItem['route_id'], true);
 
         $db->transComplete();
 

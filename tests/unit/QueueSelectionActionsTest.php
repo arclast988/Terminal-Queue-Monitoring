@@ -189,6 +189,51 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame(200,$response->getStatusCode());
         $this->assertSame($after,QueueSelectionHarness::$db->table('queue')->where('id',2)->get()->getRowArray());
     }
+    public function testUndoCancelRestoresToSavedPositionAndUpdatesScheduleWithoutOldOverdueData(): void
+    {
+        $request = service('request')->setMethod('POST')->setHeader('X-Requested-With', 'XMLHttpRequest')->setBody('');
+        $oldTime = date('Y-m-d H:i:s', time() - 7200); // 2 hours overdue
+
+        QueueSelectionHarness::$db->table('queue')->where('id', 1)->update([
+            'status' => 'boarding',
+            'boarding_start' => date('Y-m-d H:i:s', time() - 8400),
+            'estimated_departure' => $oldTime,
+        ]);
+        QueueSelectionHarness::$db->table('queue')->where('id', 2)->update([
+            'status' => 'waiting',
+            'boarding_start' => date('Y-m-d H:i:s', time() - 7200),
+            'estimated_departure' => date('Y-m-d H:i:s', time() - 6000),
+        ]);
+
+        // Cancel vehicle 1
+        $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('updateStatus', 1, 'canceled');
+        // Vehicle 2 is now head of queue and begins boarding
+        QueueSelectionHarness::$db->table('queue')->where('id', 2)->update(['status' => 'boarding']);
+
+        // Undo cancel on vehicle 1
+        $response = $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('undoCancel', 1)->response();
+        $this->assertSame(200, $response->getStatusCode());
+        $data = json_decode($response->getBody(), true);
+        $this->assertTrue($data['success']);
+
+        $v1 = QueueSelectionHarness::$db->table('queue')->where('id', 1)->get()->getRowArray();
+        $v2 = QueueSelectionHarness::$db->table('queue')->where('id', 2)->get()->getRowArray();
+
+        // 1. Vehicle 1 must be restored to its original position 1, NOT pushed to the last part
+        $this->assertSame(1, (int) $v1['position']);
+        $this->assertSame('waiting', $v1['status']);
+
+        // 2. Vehicle 2 must shift to position 2 and be waiting (not boarding ahead of position 1)
+        $this->assertSame(2, (int) $v2['position']);
+        $this->assertSame('waiting', $v2['status']);
+
+        // 3. The time must be updated to upcoming 5-minute schedule, NOT collect old overdue time
+        $this->assertGreaterThanOrEqual(time(), strtotime($v1['boarding_start']));
+        $this->assertGreaterThan(time(), strtotime($v1['estimated_departure']));
+        $this->assertGreaterThan(strtotime($v1['estimated_departure']), strtotime($v2['estimated_departure']));
+        $this->assertSame(0, (int) date('i', strtotime($v1['boarding_start'])) % 5);
+        $this->assertSame(0, (int) date('i', strtotime($v2['boarding_start'])) % 5);
+    }
     public function testManualBoardingStartsImmediatelyAndRetainsTheRuleInterval(): void
     {
         QueueSelectionHarness::$db->table('queue')->where('id',1)->update(['status'=>'waiting','boarding_start'=>date('Y-m-d').' 23:55:00']);

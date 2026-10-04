@@ -426,7 +426,7 @@
                 left: 0;
                 right: 0;
                 z-index: 9999999 !important;
-                max-height: 230px;
+                max-height: 320px;
                 overflow-y: auto;
                 display: none;
                 background-color: #ffffff;
@@ -722,7 +722,7 @@
                 min-width: max(100%, 260px);
                 max-width: min(380px, 92vw);
                 z-index: 9999999 !important;
-                max-height: 240px;
+                max-height: 320px;
                 overflow-y: auto;
                 overflow-x: hidden;
                 display: none;

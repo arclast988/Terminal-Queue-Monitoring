@@ -2261,8 +2261,10 @@ $queueOrderGroups = array_values($queueOrderGroups);
         modalEl.addEventListener('change', function(event) {
             if (!event.target || event.target.id !== 'queueOrderGroupSelect') return;
             var groupSelect = event.target;
-            if (!groupSelect.value && groupSelect.options.length) groupSelect.value = groupSelect.options[0].value;
-            if (groupSelect.syncAutocompleteValue) groupSelect.syncAutocompleteValue();
+            if (!groupSelect.value) {
+                // Route was cleared or erased: do not force text back into the search input so user can search or pick
+                return;
+            }
             modalEl.querySelectorAll('.queue-order-panel').forEach(function(panel) {
                 panel.classList.toggle('d-none', panel.id !== groupSelect.value);
             });

@@ -24,29 +24,158 @@
                 wrap.querySelector('.dispatch-time-picker').hidden = true;
             });
         }
+        function syncWrap(wrap) {
+            var display = wrap.querySelector('[data-clock-display]');
+            var selH = wrap.querySelector('[data-clock-hour]');
+            var selM = wrap.querySelector('[data-clock-minute]');
+            var selP = wrap.querySelector('[data-clock-period]');
+            var inH = wrap.querySelector('[data-tp-input="hour"]');
+            var inM = wrap.querySelector('[data-tp-input="min"]');
+            var periodBtns = wrap.querySelectorAll('[data-tp-action="period"]');
+
+            var h = '12', m = '00', p = 'AM';
+            var parts = display && display.value ? display.value.match(/^(\d+):(\d{2}) (AM|PM)$/i) : null;
+            if (parts) {
+                h = String(Number(parts[1]));
+                m = parts[2];
+                p = parts[3].toUpperCase();
+            } else if (selH && selM && selP) {
+                h = selH.value;
+                m = selM.value;
+                p = selP.value;
+            }
+            if (inH) inH.value = h;
+            if (inM) inM.value = m;
+            if (selH) selH.value = h;
+            if (selM) selM.value = m;
+            if (selP) selP.value = p;
+            periodBtns.forEach(function (btn) {
+                var isActive = btn.getAttribute('data-period') === p;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', String(isActive));
+            });
+        }
+
+        section.querySelectorAll('[data-clock-field]').forEach(function (wrap) {
+            syncWrap(wrap);
+            var selH = wrap.querySelector('[data-clock-hour]');
+            var selM = wrap.querySelector('[data-clock-minute]');
+            var selP = wrap.querySelector('[data-clock-period]');
+            [selH, selM, selP].forEach(function (sel) {
+                if (sel) sel.addEventListener('change', function () { syncWrap(wrap); });
+            });
+            var inH = wrap.querySelector('[data-tp-input="hour"]');
+            var inM = wrap.querySelector('[data-tp-input="min"]');
+            if (inH) {
+                inH.addEventListener('change', function () {
+                    var val = parseInt(inH.value, 10);
+                    if (isNaN(val) || val < 1) val = 1;
+                    if (val > 12) val = 12;
+                    inH.value = String(val);
+                    if (selH) selH.value = String(val);
+                });
+            }
+            if (inM) {
+                inM.addEventListener('change', function () {
+                    var val = parseInt(inM.value, 10);
+                    if (isNaN(val) || val < 0) val = 0;
+                    if (val > 59) val = 59;
+                    inM.value = String(val).padStart(2, '0');
+                    if (selM) selM.value = inM.value;
+                });
+            }
+        });
+
         section.addEventListener('click', function (event) {
             var wrap = event.target.closest('[data-clock-field]');
             if (!wrap) return;
+            var picker = wrap.querySelector('.dispatch-time-picker');
+
             if (event.target.closest('[data-clock-toggle], [data-clock-display]')) {
-                if (!wrap.querySelector('.dispatch-time-picker').hidden) { closePickers(); return; }
-                var parts = wrap.querySelector('[data-clock-display]').value.match(/^(\d+):(\d{2}) (AM|PM)$/);
-                if (parts) {
-                    wrap.querySelector('[data-clock-hour]').value = String(Number(parts[1]));
-                    wrap.querySelector('[data-clock-minute]').value = parts[2];
-                    wrap.querySelector('[data-clock-period]').value = parts[3];
-                }
-                openPicker(wrap); wrap.querySelector('[data-clock-hour]').focus();
+                if (!picker.hidden) { closePickers(); return; }
+                syncWrap(wrap);
+                openPicker(wrap);
+                var inH = wrap.querySelector('[data-tp-input="hour"]');
+                if (inH) inH.focus();
+                return;
             }
+
+            var inH = wrap.querySelector('[data-tp-input="hour"]');
+            var inM = wrap.querySelector('[data-tp-input="min"]');
+            var selH = wrap.querySelector('[data-clock-hour]');
+            var selM = wrap.querySelector('[data-clock-minute]');
+            var selP = wrap.querySelector('[data-clock-period]');
+
+            var actionBtn = event.target.closest('[data-tp-action]');
+            if (actionBtn) {
+                var act = actionBtn.getAttribute('data-tp-action');
+                if (act === 'hour-up') {
+                    var h = parseInt(inH.value, 10) || 12;
+                    h = h >= 12 ? 1 : h + 1;
+                    inH.value = String(h);
+                    if (selH) selH.value = String(h);
+                } else if (act === 'hour-down') {
+                    var h = parseInt(inH.value, 10) || 1;
+                    h = h <= 1 ? 12 : h - 1;
+                    inH.value = String(h);
+                    if (selH) selH.value = String(h);
+                } else if (act === 'min-up') {
+                    var m = parseInt(inM.value, 10) || 0;
+                    m = (m + 1) % 60;
+                    inM.value = String(m).padStart(2, '0');
+                    if (selM) selM.value = inM.value;
+                } else if (act === 'min-down') {
+                    var m = parseInt(inM.value, 10) || 0;
+                    m = (m - 1 + 60) % 60;
+                    inM.value = String(m).padStart(2, '0');
+                    if (selM) selM.value = inM.value;
+                } else if (act === 'period') {
+                    var p = actionBtn.getAttribute('data-period');
+                    wrap.querySelectorAll('[data-tp-action="period"]').forEach(function (btn) {
+                        var isActive = btn === actionBtn;
+                        btn.classList.toggle('active', isActive);
+                        btn.setAttribute('aria-pressed', String(isActive));
+                    });
+                    if (selP) selP.value = p;
+                }
+                return;
+            }
+
             if (event.target.closest('[data-clock-set]')) {
                 var display = wrap.querySelector('[data-clock-display]');
-                display.value = wrap.querySelector('[data-clock-hour]').value + ':' + wrap.querySelector('[data-clock-minute]').value + ' ' + wrap.querySelector('[data-clock-period]').value;
-                closePickers(); display.dispatchEvent(new Event('change', {bubbles:true}));
+                var curH = inH ? (parseInt(inH.value, 10) || 12) : 12;
+                if (curH < 1) curH = 1;
+                if (curH > 12) curH = 12;
+                var curM = inM ? (parseInt(inM.value, 10) || 0) : 0;
+                if (curM < 0) curM = 0;
+                if (curM > 59) curM = 59;
+                var activePeriodBtn = wrap.querySelector('.tp-period-btn.active');
+                var curP = activePeriodBtn ? activePeriodBtn.getAttribute('data-period') : (selP ? selP.value : 'AM');
+
+                var formattedMinute = String(curM).padStart(2, '0');
+                if (inH) inH.value = String(curH);
+                if (inM) inM.value = formattedMinute;
+                if (selH) selH.value = String(curH);
+                if (selM) selM.value = formattedMinute;
+                if (selP) selP.value = curP;
+
+                display.value = curH + ':' + formattedMinute + ' ' + curP;
+                closePickers();
+                display.dispatchEvent(new Event('change', { bubbles: true }));
                 wrap.querySelector('[data-clock-toggle]').focus();
             }
         });
         document.addEventListener('click', function (event) { if (!event.target.closest('[data-clock-field]')) closePickers(); });
         section.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') { closePickers(); var wrap = event.target.closest('[data-clock-field]'); if (wrap) wrap.querySelector('[data-clock-toggle]').focus(); }
+            if (event.key === 'Enter') {
+                var wrap = event.target.closest('[data-clock-field]');
+                if (wrap && !wrap.querySelector('.dispatch-time-picker').hidden) {
+                    event.preventDefault();
+                    var setBtn = wrap.querySelector('[data-clock-set]');
+                    if (setBtn) setBtn.click();
+                }
+            }
         });
         function validate() {
             var fromChoice = document.getElementById('time_fromMinute'), toChoice = document.getElementById('time_toMinute');

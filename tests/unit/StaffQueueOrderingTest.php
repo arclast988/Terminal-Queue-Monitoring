@@ -29,7 +29,7 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString('Keep the old position as the restore slot', $controller);
         $this->assertStringContainsString('$savedPosition = (int) ($queueItem[\'position\'] ?? 0);', $controller);
         $this->assertStringContainsString('array_splice($activeIds, $insertIndex, 0, [(int) $id]);', $controller);
-        $this->assertStringContainsString('$insertIndex = max($boardingCount, $insertIndex);', $controller);
+        $this->assertStringContainsString('$insertIndex = $savedPosition > 0 ? min($savedPosition - 1, count($activeIds)) : count($activeIds);', $controller);
     }
 
     public function testQueuePositionIsCanonicalAndBoardingStaysFirst(): void

@@ -2561,8 +2561,14 @@
                                             </span>
                                         <?php endif; ?>
                                     </div>
+                                    <?php
+                                        $scopeLabel = esc($rule['route_scope'] ?? 'All Routes');
+                                        if (empty($rule['route_destination']) && !empty($rule['is_active_now']) && !empty($rule['active_destinations'])) {
+                                            $scopeLabel = 'Terminal-wide';
+                                        }
+                                    ?>
                                     <div class="route-average-count">
-                                        Round <?= (int) ($rule['round_number'] ?? 1) ?> &bull; <?= esc($rule['days_label'] ?? 'Every day') ?> &bull; <?= esc($rule['label']) ?> &bull; <?= esc($rule['route_scope']) ?>
+                                        Round <?= (int) ($rule['round_number'] ?? 1) ?> &bull; <?= esc($rule['days_label'] ?? 'Every day') ?> &bull; <?= esc($rule['label']) ?> &bull; <?= $scopeLabel ?>
                                     </div>
                                     <?php if (!empty($rule['is_active_now']) && !empty($rule['active_destinations'])): ?>
                                     <div class="route-average-count">Active for <?= esc(implode(', ', $rule['active_destinations'])) ?></div>
@@ -2926,9 +2932,13 @@
                     timeRow.appendChild(activeBadge);
                 }
 
+                var scopeText = rule.route_scope || 'All Routes';
+                if ((!rule.route_destination || scopeText === 'All Routes') && rule.is_active_now && Array.isArray(rule.active_destinations) && rule.active_destinations.length) {
+                    scopeText = 'Terminal-wide';
+                }
                 var labelScope = document.createElement('div');
                 labelScope.className = 'route-average-count';
-                labelScope.textContent = 'Round ' + (rule.round_number || 1) + ' \u2022 ' + (rule.days_label || 'Every day') + ' \u2022 ' + (rule.label || 'Standard') + ' \u2022 ' + (rule.route_scope || 'All Routes');
+                labelScope.textContent = 'Round ' + (rule.round_number || 1) + ' \u2022 ' + (rule.days_label || 'Every day') + ' \u2022 ' + (rule.label || 'Standard') + ' \u2022 ' + scopeText;
 
                 leftWrap.appendChild(timeRow);
                 leftWrap.appendChild(labelScope);
