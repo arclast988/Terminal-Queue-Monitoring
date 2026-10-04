@@ -2549,7 +2549,7 @@
                                 }
                                 $destSlug = (!empty($rDest) && strtolower($rDest) !== 'all routes') ? strtolower($rDest) : 'general';
                             ?>
-                            <div class="route-average-item <?= !empty($rule['is_active_now']) ? 'is-active-rule' : '' ?>" data-rule-dest="<?= esc($destSlug, 'attr') ?>" data-rule-route="<?= esc($rule['route_scope'] ?? 'All Routes', 'attr') ?>">
+                            <div class="route-average-item <?= !empty($rule['is_active_now']) ? 'is-active-rule' : '' ?>" data-rule-id="<?= (int) ($rule['id'] ?? 0) ?>" data-rule-dest="<?= esc($destSlug, 'attr') ?>" data-rule-route="<?= esc($rule['route_scope'] ?? 'All Routes', 'attr') ?>">
                                 <div style="min-width: 0; flex: 1;">
                                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                         <div class="route-average-route">
@@ -2562,8 +2562,11 @@
                                         <?php endif; ?>
                                     </div>
                                     <div class="route-average-count">
-                                        <?= esc($rule['label']) ?> &bull; <?= esc($rule['route_scope']) ?>
+                                        Round <?= (int) ($rule['round_number'] ?? 1) ?> &bull; <?= esc($rule['days_label'] ?? 'Every day') ?> &bull; <?= esc($rule['label']) ?> &bull; <?= esc($rule['route_scope']) ?>
                                     </div>
+                                    <?php if (!empty($rule['is_active_now']) && !empty($rule['active_destinations'])): ?>
+                                    <div class="route-average-count">Active for <?= esc(implode(', ', $rule['active_destinations'])) ?></div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="route-average-time"><?= esc($rule['interval_label']) ?></div>
                             </div>
@@ -2890,6 +2893,7 @@
             rows.forEach(function (rule) {
                 var item = document.createElement('div');
                 item.className = 'route-average-item' + (rule.is_active_now ? ' is-active-rule' : '');
+                item.setAttribute('data-rule-id', String(rule.id || 0));
 
                 item.setAttribute('data-rule-dest', ruleDestinationKey(rule));
                 item.setAttribute('data-rule-route', rule.route_scope || 'All Routes');
@@ -2924,10 +2928,16 @@
 
                 var labelScope = document.createElement('div');
                 labelScope.className = 'route-average-count';
-                labelScope.textContent = (rule.label || 'Standard') + ' \u2022 ' + (rule.route_scope || 'All Routes');
+                labelScope.textContent = 'Round ' + (rule.round_number || 1) + ' \u2022 ' + (rule.days_label || 'Every day') + ' \u2022 ' + (rule.label || 'Standard') + ' \u2022 ' + (rule.route_scope || 'All Routes');
 
                 leftWrap.appendChild(timeRow);
                 leftWrap.appendChild(labelScope);
+                if (rule.is_active_now && Array.isArray(rule.active_destinations) && rule.active_destinations.length) {
+                    var activeScope = document.createElement('div');
+                    activeScope.className = 'route-average-count';
+                    activeScope.textContent = 'Active for ' + rule.active_destinations.join(', ');
+                    leftWrap.appendChild(activeScope);
+                }
 
                 var rightWrap = document.createElement('div');
                 rightWrap.className = 'route-average-time';

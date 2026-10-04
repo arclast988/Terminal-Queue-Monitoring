@@ -12,11 +12,48 @@
             return match ? (Number(match[1]) % 12 + (match[3].toUpperCase() === 'PM' ? 12 : 0)) * 60 + Number(match[2]) : null;
         }
         function savedMinutes(value) { var parts = value.split(':'); return Number(parts[0]) * 60 + Number(parts[1]); }
+        function openPicker(wrap) {
+            section.querySelectorAll('[data-clock-field]').forEach(function (other) {
+                other.querySelector('[data-clock-toggle]').setAttribute('aria-expanded', String(other === wrap));
+                other.querySelector('.dispatch-time-picker').hidden = other !== wrap;
+            });
+        }
+        function closePickers() {
+            section.querySelectorAll('[data-clock-field]').forEach(function (wrap) {
+                wrap.querySelector('[data-clock-toggle]').setAttribute('aria-expanded', 'false');
+                wrap.querySelector('.dispatch-time-picker').hidden = true;
+            });
+        }
+        section.addEventListener('click', function (event) {
+            var wrap = event.target.closest('[data-clock-field]');
+            if (!wrap) return;
+            if (event.target.closest('[data-clock-toggle], [data-clock-display]')) {
+                if (!wrap.querySelector('.dispatch-time-picker').hidden) { closePickers(); return; }
+                var parts = wrap.querySelector('[data-clock-display]').value.match(/^(\d+):(\d{2}) (AM|PM)$/);
+                if (parts) {
+                    wrap.querySelector('[data-clock-hour]').value = String(Number(parts[1]));
+                    wrap.querySelector('[data-clock-minute]').value = parts[2];
+                    wrap.querySelector('[data-clock-period]').value = parts[3];
+                }
+                openPicker(wrap); wrap.querySelector('[data-clock-hour]').focus();
+            }
+            if (event.target.closest('[data-clock-set]')) {
+                var display = wrap.querySelector('[data-clock-display]');
+                display.value = wrap.querySelector('[data-clock-hour]').value + ':' + wrap.querySelector('[data-clock-minute]').value + ' ' + wrap.querySelector('[data-clock-period]').value;
+                closePickers(); display.dispatchEvent(new Event('change', {bubbles:true}));
+                wrap.querySelector('[data-clock-toggle]').focus();
+            }
+        });
+        document.addEventListener('click', function (event) { if (!event.target.closest('[data-clock-field]')) closePickers(); });
+        section.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') { closePickers(); var wrap = event.target.closest('[data-clock-field]'); if (wrap) wrap.querySelector('[data-clock-toggle]').focus(); }
+        });
         function validate() {
-            from.setCustomValidity(''); to.setCustomValidity('');
+            var fromChoice = document.getElementById('time_fromMinute'), toChoice = document.getElementById('time_toMinute');
+            fromChoice.setCustomValidity(''); toChoice.setCustomValidity('');
             if (alert) alert.style.display = 'none';
-            var start = minutes(from.value), end = minutes(to.value), issue = '', target = to;
-            if (from.value && start === null) { issue = 'Enter a valid start time, such as 5:00 AM.'; target = from; }
+            var start = minutes(from.value), end = minutes(to.value), issue = '', target = toChoice;
+            if (from.value && start === null) { issue = 'Choose a valid start time.'; target = fromChoice; }
             else if (to.value && end === null) issue = 'Enter a valid end time, such as 5:00 PM.';
             else if (start !== null && end !== null) {
                 if (start >= end) issue = 'End time must be later than start time.';
@@ -39,10 +76,14 @@
         }
         form.addEventListener('input', validate);
         form.addEventListener('change', validate);
-        [from, to].forEach(input => input.addEventListener('blur', function () {
-            if (minutes(input.value) !== null) input.value = input.value.trim().replace(/\s*(am|pm)$/i, (_, period) => ' ' + period.toUpperCase());
-            validate();
-        }));
-        form.addEventListener('submit', function (event) { var invalid = validate(); if (invalid) { event.preventDefault(); invalid.focus(); invalid.reportValidity(); } });
+        form.addEventListener('invalid', function (event) {
+            var wrap = event.target.closest('[data-clock-field]');
+            if (wrap) openPicker(wrap);
+        }, true);
+        form.addEventListener('submit', function (event) {
+            var invalid = validate();
+            if (invalid) { event.preventDefault(); openPicker(invalid.closest('[data-clock-field]')); invalid.focus(); invalid.reportValidity(); }
+        });
+        validate();
     });
 })();

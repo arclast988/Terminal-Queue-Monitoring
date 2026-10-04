@@ -142,8 +142,16 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
     $fixtureData['destinationsMap'] = ['ORMOC'=>1, 'TACLOBAN'=>2];
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
+if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
+    foreach ([1=>20, 2=>25] as $round=>$minutes) {
+        $fixtureData['departure_rules'][] = ['id'=>$round,'label'=>'Round schedule','round_number'=>$round,'days_label'=>'Every day','time_range'=>'12:00 AM – 11:59 PM','wait_minutes'=>$minutes,'interval_label'=>'Every '.$minutes.' min','route_scope'=>'All Routes','route_destination'=>null,'is_active_now'=>$round===1,'active_destinations'=>$round===1?['ORMOC']:[]];
+    }
+}
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];
 if ($fixturePage === 'staff-queue') {
+    if (($argv[4] ?? '') === 'unconfigured-round') {
+        unset($fixtureData['queueRoutes'][1]['round_intervals'][2], $fixtureData['queueRoutes'][1]['round_intervals'][3]);
+    }
     if (($argv[4] ?? '') === 'many') {
         $fixtureData['queue'] = [];
         for ($position = 1; $position <= 10; $position++) {

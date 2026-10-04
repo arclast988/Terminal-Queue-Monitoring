@@ -1052,9 +1052,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
         <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageQueueModal" id="manageQueueBtn">
             <i class="bi bi-list-ol"></i> Manage Queue
         </button>
-        <button type="button" class="btn-modern btn-modern-outline btn-modern-danger" data-bs-toggle="modal" data-bs-target="#cancelSelectionModal" id="cancelSelectionBtn">
-            <i class="bi bi-check2-square"></i> Select trips to cancel
-        </button>
         <?php endif; ?>
         <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
             <i class="bi bi-plus-lg"></i> Add Vehicle to Queue
@@ -1105,28 +1102,18 @@ $queueOrderGroups = array_values($queueOrderGroups);
         <?php endforeach; ?>
         </div>
     </div>
-    <div id="queueRoundControls" class="queue-round-grid">
-    <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
-        <div class="queue-round-card" data-round-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>">
-            <div>
-                <div class="queue-round-destination"><i class="bi bi-geo-alt"></i><?= esc(strtoupper($queueRoute['destination'])) ?></div>
-                <span class="queue-round-origin">From <?= esc($queueRoute['origin']) ?></span>
-            </div>
-            <div class="queue-round-choice">
-            <label for="dispatch-round-<?= (int) $queueRoute['id'] ?>">Active departure rule</label>
-            <select id="dispatch-round-<?= (int) $queueRoute['id'] ?>" class="form-select" data-no-autocomplete data-dispatch-round data-route-id="<?= (int) $queueRoute['id'] ?>" aria-label="Active round for <?= esc($queueRoute['destination'], 'attr') ?>">
-            <?php foreach ($queueRoute['round_choices'] as $roundChoice): ?>
-                <option value="<?= $roundChoice ?>" <?= $roundChoice === $queueRoute['round_number'] ? 'selected' : '' ?>>Round <?= $roundChoice ?><?= isset($queueRoute['round_intervals'][$roundChoice]) ? ' · ' . (int) $queueRoute['round_intervals'][$roundChoice] . ' min' : '' ?></option>
-            <?php endforeach; ?>
-            </select>
-            </div>
-        </div>
-    <?php endforeach; ?>
+    <?php if (empty($noRoutesAssigned)): ?>
+    <div class="queue-selection-actions">
+        <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" data-bs-toggle="modal" data-bs-target="#cancelSelectionModal" id="cancelSelectionBtn" <?= empty($queueOrderGroups) ? 'disabled' : '' ?>>
+            <i class="bi bi-check2-square"></i> Select trips to cancel
+        </button>
+        <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" data-bs-toggle="modal" data-bs-target="#queueRoundModal" id="queueRoundBtn">
+            <i class="bi bi-arrow-repeat"></i> Round
+        </button>
     </div>
-    <div class="queue-control-footer"><span>Switch the active rule whenever needed.</span><a href="<?= base_url('staff/departure-rules') ?>"><i class="bi bi-sliders"></i> Manage rules</a></div>
-    <p class="small text-muted mt-2 mb-0">Boarding starts automatically on five-minute marks. Use “Start boarding now” for the next vehicle when you need an earlier start.</p>
-    <div id="queueRoundFeedback" class="small mt-2" role="status"></div>
+    <?php endif; ?>
 </div>
+<?= view('staff/queue/round-selection', ['queueRoutes' => $queueRoutes ?? []]) ?>
 <div id="queueRouteEmpty" class="alert-modern d-none" role="status">No vehicles are queued for this route.</div>
 
 <div id="undoBannerContainer" class="mb-3" style="display:none;"></div>
@@ -2954,6 +2941,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
         if (curActions && newActions) {
             curActions.innerHTML = newActions.innerHTML;
         }
+        var cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+        var newCancelSelectionBtn = newDoc ? newDoc.getElementById('cancelSelectionBtn') : null;
+        if (cancelSelectionBtn && newCancelSelectionBtn) cancelSelectionBtn.disabled = newCancelSelectionBtn.disabled;
 
         // Defensive check: If there are 0 queue cards (or empty state is showing), ensure Manage Queue button is hidden
         var queueCards = document.querySelectorAll('#queue-list .q-card');

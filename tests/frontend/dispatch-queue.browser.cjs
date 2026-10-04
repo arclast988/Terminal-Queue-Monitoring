@@ -71,6 +71,14 @@ test('editing restores checked days and the assigned round with usable desktop a
     await page.locator('#ruleDays').scrollIntoViewIfNeeded();
     const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, {recursive:true});
     await page.screenshot({path:path.join(directory, `departure-rule-days-${width}.png`)});
+    await page.locator('[data-clock-field="time_from"] [data-clock-toggle]').click();
+    assert.equal(await page.locator('#time_fromPicker').isVisible(),true);
+    const bounds=await page.locator('#time_fromPicker').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right}));
+    assert.ok(bounds.left>=0 && bounds.right<=width);
+    await page.locator('#time_fromHour').selectOption('6');await page.locator('#time_fromMinute').selectOption('15');await page.locator('#time_fromPeriod').selectOption('AM');
+    await page.locator('#time_fromPicker [data-clock-set]').click();assert.equal(await page.locator('#time_from').inputValue(),'6:15 AM');
+    assert.equal(await page.locator('#time_from').isEditable(),false);
+    if(width===375) {await page.locator('[data-clock-field="time_to"] [data-clock-toggle]').click();await page.screenshot({path:path.join(directory,'dispatcher-time-picker-mobile.png')});}
     await page.close();
   }
 });
@@ -86,18 +94,46 @@ test('dispatcher rule list displays grouped days and edit/delete for terminal de
   await page.close();
 });
 
-test('queue route controls show rule intervals and fit desktop and mobile screens', async () => {
+test('compact route filters and Round dialog fit phones, landscape and desktop screens', async () => {
   variant = 'fresh';
-  for (const width of [375, 1280]) {
-    const page = await browser.newPage({viewport:{width,height:900}});
+  for (const {width,height} of [{width:320,height:568},{width:360,height:640},{width:375,height:667},{width:414,height:736},{width:667,height:375},{width:768,height:667},{width:1280,height:800}]) {
+    const page = await browser.newPage({viewport:{width,height}});
     await page.goto(origin + '/staff/queue');
-    assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 2);
-    assert.match(await page.locator('[data-route-id="2"] option:checked').innerText(), /Round 2 · 25 min/);
+    assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 0);
+    assert.equal(await page.locator('#queueRouteControls [data-dispatch-round]').count(),0);
+    assert.ok(await page.locator('#queueRouteControls').evaluate(el=>el.getBoundingClientRect().height<160));
+    assert.equal(await page.locator('#queueRouteControls #cancelSelectionBtn').count(),1);
+    assert.equal(await page.locator('#queueRouteControls #queueRoundBtn').count(),1);
+    assert.doesNotMatch(await page.locator('#cancelSelectionBtn').getAttribute('class'),/btn-modern-danger/);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    const buttons=await page.locator('.queue-selection-actions').evaluate(el=>{
+      const select=el.querySelector('#cancelSelectionBtn').getBoundingClientRect(),round=el.querySelector('#queueRoundBtn').getBoundingClientRect();
+      return {selectBottom:select.bottom,roundTop:round.top,roundBottom:round.bottom,roundHeight:round.height};
+    });
+    assert.ok(buttons.roundTop<buttons.selectBottom && buttons.roundBottom>buttons.selectBottom-1);
+    assert.ok(buttons.roundHeight>=33 && buttons.roundHeight<42);
     const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, {recursive:true});
-    await page.screenshot({path:path.join(directory, `queue-route-controls-${width}.png`)});
+    if(width===375 || width===1280)await page.screenshot({path:path.join(directory, `queue-route-controls-${width}.png`)});
     await page.locator('[data-queue-route="1|BATO"]').click();
+    await page.locator('#queueRoundBtn').click();
+    await page.waitForSelector('#queueRoundModal.show');
+    assert.equal(await page.locator('#queueRoundRouteFilter').inputValue(),'1|BATO');
     assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 1);
+    assert.match(await page.locator('[data-route-id="2"] option:checked').innerText(), /Round 2 · 25 min/);
+    await page.locator('#queueRoundRouteFilter').selectOption('all');
+    assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 2);
+    assert.equal(await page.locator('#queueRoundModal .modal-header').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(21, 128, 61)');
+    const bounds=await page.locator('#queueRoundModal').evaluate(el=>{
+      const header=el.querySelector('.modal-header').getBoundingClientRect(),body=el.querySelector('.modal-body').getBoundingClientRect(),footer=el.querySelector('.modal-footer').getBoundingClientRect();
+      return {headerTop:header.top,headerBottom:header.bottom,bodyTop:body.top,bodyBottom:body.bottom,footerTop:footer.top,footerBottom:footer.bottom};
+    });
+    assert.ok(bounds.headerTop>=0 && bounds.bodyTop>=bounds.headerBottom-1);
+    assert.ok(bounds.bodyBottom<=bounds.footerTop+1 && bounds.footerBottom<=height);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    if(width===375 || width===1280)await page.screenshot({path:path.join(directory, `queue-round-modal-${width}.png`)});
+    await page.locator('#queueRoundModal button').filter({hasText:'Done'}).click();
+    await page.waitForSelector('#queueRoundModal.show',{state:'hidden'});
+    assert.equal(await page.locator('[data-queue-route="1|BATO"]').getAttribute('aria-pressed'),'true');
     await page.close();
   }
 });
@@ -135,6 +171,7 @@ test('route filters survive refreshes and switching rounds submits the route and
   await page.locator('[data-queue-route="1|BATO"]').click();
   assert.equal(await page.locator('#queue-list .q-card:not(.d-none)').count(), 0);
   assert.equal(await page.locator('#queueRouteEmpty').isVisible(), true);
+  await page.locator('#queueRoundBtn').click();
   await page.locator('[data-dispatch-round][data-route-id="2"]').selectOption('3');
   await page.waitForFunction(() => document.getElementById('queueRoundFeedback').textContent.includes('Round updated'));
   const request = roundRequests.find(r => r.path.endsWith('/round'));
@@ -143,10 +180,60 @@ test('route filters survive refreshes and switching rounds submits the route and
   await page.evaluate(() => QueueSync.refresh(true)); await page.waitForTimeout(650);
   assert.equal(await page.locator('[data-queue-route="1|BATO"]').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#queue-list .q-card:not(.d-none)').count(), 0);
+  assert.equal(await page.locator('#queueRoundModal.show').count(),1);
+  assert.equal(await page.locator('#queueRoundRouteFilter').inputValue(),'1|BATO');
+  await page.locator('#queueRoundModal .btn-close').click();
   await page.locator('[data-bs-target="#addToQueueModal"]').click();
   assert.equal(await page.locator('#addQueueRouteFilter').inputValue(), '1|BATO');
   assert.equal(await page.locator('.vehicle-select-item:not(.d-none)').count(), 1);
   await page.close();
+});
+
+test('Round dialog restores the active choice and releases controls after a failed update', async()=>{
+  variant='fresh';const page=await browser.newPage({viewport:{width:320,height:568}});
+  await page.route('**/staff/queue/round',route=>route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({success:false,message:'This round is no longer available. Review the departure rules.'})}));
+  await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();
+  const select=page.locator('[data-dispatch-round][data-route-id="2"]');
+  await select.selectOption('3');await page.waitForSelector('#queueRoundFeedback:not([hidden])');
+  assert.match(await page.locator('#queueRoundFeedback').innerText(),/no longer available/);
+  assert.equal(await select.inputValue(),'2');
+  assert.equal(await page.locator('#queueRoundModal.show').count(),1);
+  assert.equal(await page.locator('[data-dispatch-round]:disabled').count(),0);
+  await page.close();
+});
+
+test('Round dialog never presents the fallback interval as a configured departure rule',async()=>{
+  variant='unconfigured-round';const page=await browser.newPage({viewport:{width:375,height:667}});
+  await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();
+  const choice=page.locator('[data-route-id="2"] option[value="2"]');
+  assert.match(await choice.innerText(),/Round 2 · No active rule/);
+  assert.notEqual(await choice.getAttribute('disabled'),null);
+  assert.doesNotMatch(await page.locator('[data-round-route="1|BATO"]').innerText(),/30 min/);
+  assert.match(await page.locator('[data-round-route="1|BATO"]').innerText(),/No rule is configured/);
+  await page.close();
+});
+
+test('guest Active now badge moves to the dispatcher-selected round in the open mobile dialog',async()=>{
+  const page=await browser.newPage({viewport:{width:375,height:667}}),errors=[];page.on('pageerror',error=>errors.push(error.message));
+  let selected=1;
+  await page.route('**/guest-rounds',route=>route.fulfill({contentType:'text/html',body:fixture('guest','guest-rounds')}));
+  await page.route('**/status?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({active_queue:[],routes:[],sync_token:'round-'+selected,departure_rules:[1,2].map(round=>({id:round,label:'Round schedule',round_number:round,days_label:'Every day',time_range:'12:00 AM – 11:59 PM',wait_minutes:round===1?20:25,interval_label:'Every '+(round===1?20:25)+' min',route_scope:'All Routes',route_destination:null,is_active_now:round===selected,active_destinations:round===selected?['ORMOC']:[]}))})}));
+  await page.goto(origin+'/guest-rounds');
+  await page.locator('#routeAverageCard').click();
+  await page.waitForSelector('#routeAverageModal.is-open');
+  assert.equal(await page.locator('#routeAverageList .badge-active-now').count(),1);
+  assert.match(await page.locator('[data-rule-id="1"]').innerText(),/Active Now/i);
+  assert.doesNotMatch(await page.locator('[data-rule-id="2"]').innerText(),/Active Now/i);
+  selected=2;await page.evaluate(()=>QueueSync.refresh(true));
+  await page.waitForSelector('[data-rule-id="2"].is-active-rule');
+  assert.equal(await page.locator('#routeAverageList .badge-active-now').count(),1);
+  assert.doesNotMatch(await page.locator('[data-rule-id="1"]').innerText(),/Active Now/i);
+  assert.match(await page.locator('[data-rule-id="2"]').innerText(),/Round 2/i);
+  assert.match(await page.locator('[data-rule-id="2"]').innerText(),/Active for ORMOC/i);
+  assert.equal(await page.locator('#routeAverageModal.is-open').count(),1);
+  assert.ok(await page.locator('.route-average-dialog').evaluate(el=>el.getBoundingClientRect().width<=innerWidth));
+  const directory=path.join(__dirname,'artifacts');fs.mkdirSync(directory,{recursive:true});await page.screenshot({path:path.join(directory,'guest-selected-round-mobile.png')});
+  assert.deepEqual(errors,[]);await page.close();
 });
 
 test('saved and live role themes recolor route tabs, queue headers and primary controls', async () => {
@@ -266,11 +353,18 @@ test('dispatcher clocks, forms and schedule labels use AM/PM while administrator
   await page.goto(origin+'/fixtures/staff-rule-edit');
   assert.equal(await page.locator('#time_from').inputValue(),'5:00 AM');
   assert.equal(await page.locator('#time_to').inputValue(),'5:00 PM');
-  await page.locator('#time_from').fill('12:00 PM');await page.locator('#time_to').fill('11:59 PM');
+  async function setClock(field,hour,minute,period) {
+    await page.locator(`[data-clock-field="${field}"] [data-clock-toggle]`).click();
+    await page.locator('#'+field+'Hour').selectOption(hour);await page.locator('#'+field+'Minute').selectOption(minute);await page.locator('#'+field+'Period').selectOption(period);
+    await page.locator('#'+field+'Picker [data-clock-set]').click();
+  }
+  await setClock('time_from','12','00','PM');await setClock('time_to','11','59','PM');
   await page.locator('#wait_minutes').fill('25');
   assert.equal(await page.locator('#departureRuleForm').evaluate(form=>form.checkValidity()),true);
-  await page.locator('#time_from').fill('13:00 PM');
-  assert.equal(await page.locator('#time_from').evaluate(input=>input.checkValidity()),false);
+  await page.locator('#time_from').pressSequentially('sdsadsas111111');
+  assert.equal(await page.locator('#time_from').inputValue(),'12:00 PM');
+  await setClock('time_from','11','59','PM');
+  assert.equal(await page.locator('#departureRuleForm').evaluate(form=>form.checkValidity()),false);
   for(const name of ['admin-schedules','admin-rules']) {
     await page.unroute('**/time-fixture');await page.route('**/time-fixture',route=>route.fulfill({contentType:'text/html',body:fixture(name)}));await page.goto(origin+'/time-fixture');
     assert.match(await page.locator('body').innerText(),/HH:MM/);

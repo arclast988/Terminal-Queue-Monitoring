@@ -2,6 +2,7 @@
     'use strict';
     var script = document.currentScript;
     var routeFilter = 'all';
+    var roundFilter = 'all';
     var addFilter = 'all';
     var posting = false;
     var csrfName = script.dataset.csrfName;
@@ -17,8 +18,10 @@
         var empty = document.getElementById('queueRouteEmpty');
         if (empty) empty.classList.toggle('d-none', routeFilter === 'all' || visible > 0);
         document.querySelectorAll('[data-round-route]').forEach(function (row) {
-            row.classList.toggle('d-none', routeFilter !== 'all' && row.dataset.roundRoute !== routeFilter);
+            row.classList.toggle('d-none', roundFilter !== 'all' && row.dataset.roundRoute !== roundFilter);
         });
+        var roundRoute = document.getElementById('queueRoundRouteFilter');
+        if (roundRoute) roundRoute.value = roundFilter;
         var select = document.getElementById('addQueueRouteFilter');
         if (select && Array.from(select.options).some(function (option) { return option.value === addFilter; })) select.value = addFilter;
         var addRoute = select ? select.value : routeFilter;
@@ -56,10 +59,15 @@
     async function post(url, values) {
         var body = new URLSearchParams(values || {});
         body.set(csrfName, csrfValue);
-        var response = await fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }, body: body });
-        var result = await response.json();
+        var result;
+        if (url === script.dataset.roundUrl && window.QueueActions) {
+            result = await window.QueueActions.request(url, body);
+        } else {
+            var response = await fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' }, body: body });
+            result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.message || 'The queue could not be updated.');
+        }
         if (result.csrf) csrfValue = result.csrf;
-        if (!response.ok || !result.success) throw new Error(result.message || 'The queue could not be updated.');
         if (window.QueueSync) window.QueueSync.refresh(true);
         return result;
     }
@@ -68,7 +76,8 @@
         // Use server HTML parsed into inert nodes. Round options consist only of text/selects.
         var source = newDoc.getElementById('queueRoundControls');
         var target = document.getElementById('queueRoundControls');
-        if (source && target && !posting && window.DOMPurify) {
+        var choosingRound = document.activeElement && document.activeElement.matches('[data-dispatch-round]');
+        if (source && target && !posting && !choosingRound && window.DOMPurify) {
             var clean = window.DOMPurify.sanitize(source.cloneNode(true), { IN_PLACE: true });
             target.replaceChildren.apply(target, Array.from(clean.childNodes));
         }
@@ -84,24 +93,39 @@
             addFilter = event.target.value;
             applyFilters();
         }
+        if (event.target.id === 'queueRoundRouteFilter') {
+            roundFilter = event.target.value;
+            applyFilters();
+        }
         var select = event.target.closest('[data-dispatch-round]');
         if (!select || posting) return;
         var feedback = document.getElementById('queueRoundFeedback');
+        var previousRound = select.dataset.currentRound;
         posting = true;
-        select.disabled = true;
+        document.querySelectorAll('[data-dispatch-round]').forEach(function (choice) { choice.disabled = true; });
         try {
             await post(script.dataset.roundUrl, { route_id: select.dataset.routeId, round_number: select.value });
-            if (feedback) feedback.textContent = 'Round updated. Waiting vehicles now use this round’s departure rule.';
+            select.dataset.currentRound = select.value;
+            if (window.QueueActions) window.QueueActions.notice('Round updated', 'Waiting vehicles now use this round’s departure rule.', 'success', feedback);
         } catch (error) {
-            if (feedback) feedback.textContent = error.message;
+            select.value = previousRound;
+            if (window.QueueActions) window.QueueActions.notice('Round could not be changed', error.message, error.variant || 'danger', feedback);
             if (window.QueueSync) window.QueueSync.refresh(true);
         } finally {
             posting = false;
-            select.disabled = false;
+            document.querySelectorAll('[data-dispatch-round]').forEach(function (choice) { choice.disabled = false; });
             if (window.QueueSync) window.QueueSync.refresh(true);
         }
     });
     document.addEventListener('vehicle-list-refreshed', applyFilters);
+    document.addEventListener('show.bs.modal', function (event) {
+        if (event.target.id === 'queueRoundModal') {
+            roundFilter = routeFilter;
+            var feedback = document.getElementById('queueRoundFeedback');
+            if (feedback) feedback.hidden = true;
+            applyFilters();
+        }
+    });
     document.addEventListener('shown.bs.modal', function (event) {
         if (event.target.id === 'addToQueueModal') {
             selectRoute(routeFilter, true);

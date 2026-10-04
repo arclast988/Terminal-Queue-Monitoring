@@ -273,6 +273,86 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame('2026-10-05 07:30:00', $this->queue->find($other)['estimated_departure']);
     }
 
+    public function testExplicitRoundUsesItsConfiguredIntervalWhenSwitchedOutsideItsTimeWindow(): void
+    {
+        $this->addRule(10, 1, 1, 25);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update([
+            'days_of_week' => '1', 'round_number' => 2, 'time_from' => '12:00:00', 'time_to' => '17:00:00',
+        ]);
+        $rules = new DepartureRuleModel($this->intervalDb);
+        foreach (['06:45:00', '12:30:00', '20:00:00'] as $clock) {
+            $matched = $rules->getRuleForTime('2026-10-05 ' . $clock, 1, 2, 2);
+            $this->assertSame(10, (int) $matched['id']);
+            $this->assertSame(25, (int) $matched['wait_minutes']);
+        }
+        $this->assertSame(20, $rules->getWaitMinutesForTime('2026-10-06 06:45:00', 1, 2, 2));
+        $next = $this->addVehicle(2, 1);
+        $this->queue->update($next, ['round_number' => 2]);
+        $this->queue->recalculateSchedule(2, true, null, strtotime('2026-10-05 06:43:00'));
+        $row = $this->queue->find($next);
+        $this->assertSame('2026-10-05 06:45:00', $row['boarding_start']);
+        $this->assertSame('2026-10-05 07:10:00', $row['estimated_departure']);
+    }
+
+    public function testRoundPrefersSpecificDaysAndMatchingWindowsBeforeTheMostRecentRule(): void
+    {
+        foreach ([10 => 20, 11 => 25, 12 => 35] as $id => $minutes) {
+            $this->addRule($id, 1, 1, $minutes, '2026-10-03 10:00:00');
+            $this->intervalDb->table('departure_rules')->where('id', $id)->update(['round_number' => 2]);
+        }
+        $this->intervalDb->table('departure_rules')->where('id', 11)->update(['days_of_week'=>'1','time_from'=>'05:00:00','time_to'=>'12:00:00']);
+        $this->intervalDb->table('departure_rules')->where('id', 12)->update(['days_of_week'=>'1','time_from'=>'12:00:00','time_to'=>'17:00:00','updated_at'=>'2026-10-04 10:00:00']);
+        $rules = new DepartureRuleModel($this->intervalDb);
+        $this->assertSame(25, $rules->getWaitMinutesForTime('2026-10-05 06:45:00', 1, 2, 2));
+        $this->assertSame(35, $rules->getWaitMinutesForTime('2026-10-05 14:45:00', 1, 2, 2));
+        $this->assertSame(35, $rules->getWaitMinutesForTime('2026-10-05 20:45:00', 1, 2, 2));
+        $this->assertSame(20, $rules->getWaitMinutesForTime('2026-10-06 06:45:00', 1, 2, 2));
+    }
+
+    public function testGuestActiveRuleFollowsSelectedRoundAndSelectedDays(): void
+    {
+        $this->intervalDb->table('departure_rules')->whereIn('id', [1, 2])->update(['round_number'=>1]);
+        $this->addRule(10, 1, 1, 25);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['days_of_week'=>'1','round_number'=>2,'time_from'=>'12:00:00','time_to'=>'17:00:00']);
+        $routes=$this->intervalDb->table('routes')->whereIn('id',[1,2])->get()->getResultArray();
+        $rules=(new DepartureRuleModel($this->intervalDb))->findAll();
+        $states=[['terminal_id'=>1,'destination'=>'ORMOC','service_date'=>'2026-10-05','round_number'=>2]];
+        $this->assertSame([10=>['ORMOC']],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 06:45:00',$routes,$states));
+        $this->assertSame([10=>['ORMOC']],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 20:45:00',$routes,$states));
+        $states[0]['round_number']=1;
+        $this->assertSame([1=>['ORMOC']],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 06:45:00',$routes,$states));
+        $states[0]['round_number']=2;$states[0]['service_date']='2026-10-06';
+        $this->assertSame([],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-06 06:45:00',$routes,$states));
+    }
+
+    public function testGuestTerminalDefaultsAreActiveOnlyForDestinationsUsingTheirSelectedRound(): void
+    {
+        $this->intervalDb->table('departure_rules')->whereIn('id',[1,2])->update(['round_number'=>1]);
+        $this->addRule(10,1,null,25);
+        $this->intervalDb->table('departure_rules')->where('id',10)->update(['round_number'=>2]);
+        $rules=(new DepartureRuleModel($this->intervalDb))->findAll();
+        $routes=$this->intervalDb->table('routes')->where('terminal_id',1)->get()->getResultArray();
+        $states=[['terminal_id'=>1,'destination'=>'ORMOC','service_date'=>'2026-10-05','round_number'=>2]];
+        $this->assertSame([10=>['ORMOC'],2=>['PALOMPON']],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 06:45:00',$routes,$states));
+        $states[0]['service_date']='2026-10-04';
+        $this->assertSame([1=>['ORMOC'],2=>['PALOMPON']],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 06:45:00',$routes,$states));
+    }
+
+    public function testGuestDoesNotMarkOverriddenDuplicateRulesOrInactiveDestinationsAsActive(): void
+    {
+        $this->addRule(10,1,1,25);
+        $this->addRule(11,1,1,35,'2026-10-05 05:00:00');
+        $this->intervalDb->table('departure_rules')->whereIn('id',[10,11])->update(['round_number'=>2]);
+        $rules=(new DepartureRuleModel($this->intervalDb))->findAll();
+        $routes=$this->intervalDb->table('routes')->whereIn('id',[1,2])->get()->getResultArray();
+        // A rule assigned to the inactive vehicle-type route still serves its active destination sibling.
+        $routes[0]['status']='inactive';$routes[1]['status']='active';
+        $states=[['terminal_id'=>1,'destination'=>'ORMOC','service_date'=>'2026-10-05','round_number'=>2]];
+        $this->assertSame([11=>['ORMOC']],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 06:45:00',$routes,$states));
+        $routes[1]['status']='inactive';
+        $this->assertSame([],DepartureRuleModel::activeRuleDestinations($rules,'2026-10-05 06:45:00',$routes,$states));
+    }
+
     public function testOneRuleMatchesSeveralCheckedDaysAndItsAssignedRound(): void
     {
         $this->addRule(10, 1, 1, 20);

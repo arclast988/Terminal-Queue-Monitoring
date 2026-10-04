@@ -161,7 +161,11 @@ class Home extends BaseController
             ->orderBy('departure_rules.time_from', 'ASC')
             ->findAll();
 
-        $currentTime = date('H:i:s');
+        $activeRules = \App\Models\DepartureRuleModel::activeRuleDestinations(
+            $rules, date('Y-m-d H:i:s'),
+            (new \App\Models\RouteModel())->findAll(),
+            (new \App\Models\DispatchRoundModel())->findAll()
+        );
 
         $formatted = [];
         foreach ($rules as $rule) {
@@ -169,16 +173,7 @@ class Home extends BaseController
             $timeTo = !empty($rule['time_to']) ? date('g:i A', strtotime($rule['time_to'])) : 'Anytime';
             $waitMins = (int) ($rule['wait_minutes'] ?? 30);
 
-            $isActive = false;
-            if (!empty($rule['time_from']) && !empty($rule['time_to'])) {
-                $from = $rule['time_from'];
-                $to = $rule['time_to'];
-                if ($to >= '23:59:00') {
-                    $isActive = ($currentTime >= $from);
-                } else {
-                    $isActive = ($currentTime >= $from && $currentTime < $to);
-                }
-            }
+            $activeDestinations = $activeRules[(int) $rule['id']] ?? [];
 
             $destName = !empty($rule['route_destination']) ? strtoupper(trim($rule['route_destination'])) : null;
             $destSlug = !empty($destName) ? strtolower($destName) : 'general';
@@ -202,7 +197,10 @@ class Home extends BaseController
                 'route_slug' => $destSlug,
                 'route_id' => $rule['route_id'] ?? null,
                 'terminal_name' => $rule['terminal_name'] ?? 'Central Terminal',
-                'is_active_now' => $isActive,
+                'round_number' => (int) ($rule['round_number'] ?? 1),
+                'days_label' => departure_rule_day_label($rule),
+                'active_destinations' => $activeDestinations,
+                'is_active_now' => !empty($activeDestinations),
             ];
         }
 

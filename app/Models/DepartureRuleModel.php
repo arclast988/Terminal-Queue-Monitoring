@@ -26,6 +26,8 @@ class DepartureRuleModel extends Model
      *   1. A rule for any route sharing the requested destination and terminal.
      *   2. A terminal-wide default rule (route_id IS NULL) for $terminalId covering $time.
      *   3. A hard-coded default (30 minutes).
+     * Explicit rounds can be selected at any time: if no time window matches,
+     * use that round's configured rule for the selected day and route.
      *
      * Returns the full rule array, or the default fallback if nothing matches.
      */
@@ -62,16 +64,25 @@ class DepartureRuleModel extends Model
         $routeIds = array_map('intval', $routeIds);
         $destinationRule = null;
         $terminalRule = null;
+        $destinationRoundRule = null;
+        $terminalRoundRule = null;
+        $priority = static fn(array $r): array => [
+            (int) (count(departure_rule_days($r)) < 7) + (int) !empty($r['round_number']),
+            (int) (count(departure_rule_days($r)) < 7),
+            ($r['updated_at'] ?? ''), (int) ($r['id'] ?? 0),
+        ];
+        $withinWindow = static fn(array $r): bool => $r['time_from'] <= $timeStr
+            && ($timeStr >= '23:59:00' ? $r['time_to'] >= '23:59:00' : $r['time_to'] > $timeStr);
+        $roundPriority = static fn(array $r): array => [
+            (int) (count(departure_rule_days($r)) < 7), (int) $withinWindow($r),
+            ($r['updated_at'] ?? ''), (int) ($r['id'] ?? 0),
+        ];
 
         foreach ($rules as $rule) {
             if ((int) ($rule['terminal_id'] ?? 0) !== $terminalId
                 || !in_array($day, departure_rule_days($rule), true)
                 || (!empty($rule['round_number']) && (int) $rule['round_number'] !== $roundNumber)
-                || empty($rule['time_from']) || empty($rule['time_to'])
-                || $rule['time_from'] > $timeStr
-                || ($timeStr >= '23:59:00'
-                    ? $rule['time_to'] < '23:59:00'
-                    : $rule['time_to'] <= $timeStr)) {
+                || empty($rule['time_from']) || empty($rule['time_to'])) {
                 continue;
             }
 
@@ -81,12 +92,15 @@ class DepartureRuleModel extends Model
                 continue;
             }
 
+            if (!empty($rule['round_number'])) {
+                $roundMatched = $isDestinationRule ? $destinationRoundRule : $terminalRoundRule;
+                if ($roundMatched === null || $roundPriority($rule) > $roundPriority($roundMatched)) {
+                    if ($isDestinationRule) $destinationRoundRule = $rule;
+                    else $terminalRoundRule = $rule;
+                }
+            }
+            if (!$withinWindow($rule)) continue;
             $matched = $isDestinationRule ? $destinationRule : $terminalRule;
-            $priority = static fn(array $r): array => [
-                (int) (count(departure_rule_days($r)) < 7) + (int) !empty($r['round_number']),
-                (int) (count(departure_rule_days($r)) < 7),
-                ($r['updated_at'] ?? ''), (int) ($r['id'] ?? 0),
-            ];
             if ($matched === null || $priority($rule) > $priority($matched)) {
                 if ($isDestinationRule) {
                     $destinationRule = $rule;
@@ -96,7 +110,7 @@ class DepartureRuleModel extends Model
             }
         }
 
-        return $destinationRule ?? $terminalRule ?? [
+        return $destinationRoundRule ?? $destinationRule ?? $terminalRoundRule ?? $terminalRule ?? [
             'wait_minutes' => 30,
             'label' => 'Default (no rule matched)',
             'time_from' => null,
@@ -105,8 +119,38 @@ class DepartureRuleModel extends Model
     }
 
     /**
-     * Get the wait minutes for a given time (optionally route-specific).
+     * Determine the rules actually used by the selected round in each route group.
      */
+    public static function activeRuleDestinations(array $rules, string $time, array $routes, array $roundStates): array
+    {
+        $date = date('Y-m-d', strtotime($time));
+        $rounds = [];
+        foreach ($roundStates as $state) {
+            if ($state['service_date'] === $date) $rounds[$state['terminal_id'] . '|' . $state['destination']] = (int) $state['round_number'];
+        }
+        $groups = [];
+        foreach ($routes as $route) {
+            $key = $route['terminal_id'] . '|' . $route['destination'];
+            $groups[$key]['terminal_id'] = (int) $route['terminal_id'];
+            $groups[$key]['destination'] = $route['destination'];
+            $groups[$key]['ids'][] = (int) $route['id'];
+            $groups[$key]['has_active'] = ($groups[$key]['has_active'] ?? false) || ($route['status'] ?? 'active') === 'active';
+        }
+        $active = [];
+        foreach ($groups as $key => $group) {
+            if (!$group['has_active']) continue;
+            $matched = self::resolveRuleFromRules($rules, $time, $group['terminal_id'], $group['ids'], $rounds[$key] ?? 1);
+            if (!empty($matched['id'])) $active[(int) $matched['id']][] = strtoupper($group['destination']);
+        }
+        foreach ($active as &$destinations) {
+            $destinations = array_values(array_unique($destinations));
+            sort($destinations);
+        }
+        unset($destinations);
+        return $active;
+    }
+
+    /** Get the wait minutes for a given time (optionally route-specific). */
     public function getWaitMinutesForTime(string $time, int $terminalId, ?int $routeId = null, int $roundNumber = 1): int
     {
         $rule = $this->getRuleForTime($time, $terminalId, $routeId, $roundNumber);

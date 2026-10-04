@@ -40,6 +40,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $db->query('CREATE TABLE routes (id INTEGER PRIMARY KEY, terminal_id INTEGER, destination TEXT, status TEXT)');
         $db->query('CREATE TABLE vehicles (id INTEGER PRIMARY KEY, plate_number TEXT, driver_name TEXT, operator_name TEXT, owner_name TEXT, type TEXT, photo TEXT, capacity INTEGER)');
         $db->query('CREATE TABLE departure_rules (id INTEGER PRIMARY KEY, terminal_id INTEGER, route_id INTEGER, time_from TEXT, time_to TEXT, wait_minutes INTEGER, day_of_week INTEGER, days_of_week TEXT, round_number INTEGER)');
+        $db->query('CREATE TABLE dispatch_rounds (id INTEGER PRIMARY KEY, terminal_id INTEGER, destination TEXT, service_date TEXT, round_number INTEGER)');
         $db->query('CREATE TABLE queue (id INTEGER PRIMARY KEY, vehicle_id INTEGER, route_id INTEGER, status TEXT, position INTEGER, arrival_time TEXT, estimated_departure TEXT, departure_time TEXT, boarding_start TEXT, round_number INTEGER, current_passengers INTEGER, plate_number TEXT, operator_name TEXT, driver_name TEXT)');
         $db->table('terminals')->insert(['id'=>1,'name'=>'VILLABA','capacity'=>50]);
         foreach ([1=>'ORMOC', 2=>'TACLOBAN', 3=>'OTHER'] as $id=>$destination) $db->table('routes')->insert(['id'=>$id,'terminal_id'=>1,'destination'=>$destination,'status'=>'active']);
@@ -59,6 +60,31 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
     {
         return $this->withBody(json_encode(['queue_ids'=>$ids]))->withResponse(service('response',null,false))->withRequest(service('request')->setMethod('POST')->setHeader('X-Requested-With','XMLHttpRequest')->setHeader('Content-Type','application/json'))
             ->controller(QueueSelectionHarness::class)->execute('cancelSelected')->response();
+    }
+    private function switchRound(int $round)
+    {
+        $this->request->setMethod('POST')->setHeader('Content-Type','application/x-www-form-urlencoded')->setGlobal('post',['route_id'=>'1','round_number'=>(string)$round]);
+        return $this->withBody('route_id=1&round_number='.$round)->controller(QueueSelectionHarness::class)->execute('setRound')->response();
+    }
+    public function testRoundWithoutAConfiguredRuleIsRejectedWithoutChangingTheQueue(): void
+    {
+        $before=QueueSelectionHarness::$db->table('queue')->get()->getResultArray();
+        $response=$this->switchRound(2);
+        $this->assertSame(409,$response->getStatusCode());
+        $this->assertStringContainsString('No departure rule is configured', $response->getBody());
+        $this->assertSame($before, QueueSelectionHarness::$db->table('queue')->get()->getResultArray());
+        $this->assertSame(0,QueueSelectionHarness::$db->table('dispatch_rounds')->countAllResults());
+    }
+    public function testRoundSwitchUsesTheConfiguredIntervalAtAnyTimeAndPreservesBoarding(): void
+    {
+        QueueSelectionHarness::$db->table('departure_rules')->insert(['id'=>10,'terminal_id'=>1,'route_id'=>1,'time_from'=>'00:00:00','time_to'=>'00:01:00','wait_minutes'=>25,'days_of_week'=>(string)date('N'),'round_number'=>2]);
+        $boarding=QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray();
+        $this->assertSame(200,$this->switchRound(2)->getStatusCode());
+        $this->assertSame($boarding,QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray());
+        $waiting=QueueSelectionHarness::$db->table('queue')->where('id',2)->get()->getRowArray();
+        $this->assertSame(2,(int)$waiting['round_number']);
+        $this->assertSame(1500,strtotime($waiting['estimated_departure'])-strtotime($waiting['boarding_start']));
+        $this->assertSame(2,(int)QueueSelectionHarness::$db->table('dispatch_rounds')->get()->getRowArray()['round_number']);
     }
     public function testSelectedCancellationKeepsUnselectedTripsAndRestorePositions(): void
     {

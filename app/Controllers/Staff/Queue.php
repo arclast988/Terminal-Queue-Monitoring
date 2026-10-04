@@ -286,14 +286,12 @@ class Queue extends BaseController
         $roundModel = new DispatchRoundModel();
         $allRules = (new DepartureRuleModel())->findAll();
         $routeRecords = $routeBuilder->orderBy('routes.destination', 'ASC')->findAll();
-        $idsByGroup = [];
-        foreach ($routeRecords as $route) $idsByGroup[$route['terminal_id'] . '|' . $route['destination']][] = (int) $route['id'];
         foreach ($routeRecords as $route) {
             $key = $route['terminal_id'] . '|' . $route['destination'];
             if (isset($queueRoutes[$key])) continue;
             $round = $roundModel->currentRound((int) $route['terminal_id'], $route['destination']);
             $route['round_number'] = $round;
-            $routeIds = $idsByGroup[$key];
+            $routeIds = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
             $choices = [1, $round];
             foreach ($allRules as $rule) {
                 if ((int) $rule['terminal_id'] === (int) $route['terminal_id']
@@ -306,7 +304,8 @@ class Queue extends BaseController
             $route['round_intervals'] = [];
             foreach ($route['round_choices'] as $choice) {
                 $matched = DepartureRuleModel::resolveRuleFromRules($allRules, date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeIds, $choice);
-                $route['round_intervals'][$choice] = (int) $matched['wait_minutes'];
+                // A fallback interval is not a departure rule configured by the dispatcher.
+                if (!empty($matched['id'])) $route['round_intervals'][$choice] = (int) $matched['wait_minutes'];
             }
             $queueRoutes[$key] = $route;
         }
@@ -349,6 +348,11 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+        $matched = (new DepartureRuleModel($db))->getRuleForTime(date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeId, (int) $round);
+        if (empty($matched['id'])) {
+            $db->transComplete();
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'variant' => 'warning', 'message' => 'No departure rule is configured for this route and round today. Check its selected days and route in Departure Rules.']);
+        }
         (new DispatchRoundModel($db))->setRound((int) $route['terminal_id'], $route['destination'], (int) $round);
         $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
         $db->table('queue')->whereIn('route_id', $siblings)->where('status', 'waiting')->update(['round_number' => (int) $round]);
