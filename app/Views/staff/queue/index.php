@@ -1127,7 +1127,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
     <?php endif; ?>
 </div>
 <?= view('staff/queue/round-selection', ['queueRoutes' => $queueRoutes ?? []]) ?>
-<div id="queueRouteEmpty" class="alert-modern d-none" role="status">No vehicles are queued for this route.</div>
+<div id="queueRouteEmpty" class="queue-route-empty d-none" role="status" aria-atomic="true">
+    <span class="queue-route-empty-icon" aria-hidden="true"><i class="bi bi-bus-front"></i></span>
+    <div class="queue-route-empty-copy">
+        <h2>No vehicles queued</h2>
+        <p>This route has no active trips. Choose another route or add a vehicle to get started.</p>
+    </div>
+</div>
 
 <div id="undoBannerContainer" class="mb-3" style="display:none;"></div>
 

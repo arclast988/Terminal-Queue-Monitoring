@@ -287,6 +287,44 @@ button.queue-route-chip.active .chip-count {
 .queue-control-footer a { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-weight: 600; }
 .queue-selection-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .queue-selection-actions .btn-modern { font-size: 12px; padding: 7px 10px; min-height: 34px; border-radius: 6px; white-space: nowrap; }
+/* Empty routes are a persistent status, readable over the terminal photo. */
+.queue-route-empty {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-left: 4px solid var(--primary, #15803d);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+.queue-route-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--primary-soft, #f0fdf4);
+    color: var(--primary, #15803d);
+    font-size: 24px;
+}
+.queue-route-empty-copy { min-width: 0; }
+.queue-route-empty-copy h2 {
+    margin: 0 0 5px;
+    color: var(--text-main, #1e293b);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+.queue-route-empty-copy p {
+    margin: 0;
+    color: var(--text-muted, #475569);
+    font-size: 14px;
+    line-height: 1.6;
+}
 #queueRoundModal .modal-content { display: flex; flex-direction: column; max-height: min(90dvh, 800px); overflow: hidden; border-radius: 18px; }
 #queueRoundModal .modal-header, #queueRoundModal .modal-footer { flex-shrink: 0; position: static; }
 #queueRoundModal .modal-body { min-height: 0; flex: 1 1 auto; overflow-y: auto; }
@@ -303,6 +341,10 @@ button.queue-route-chip.active .chip-count {
     .queue-control-label { margin-bottom: 6px; }
     .queue-selection-actions { margin-left: auto; }
     .queue-route-chips { margin: 0 -4px; padding: 4px 18px 8px 4px; }
+    .queue-route-empty { align-items: flex-start; padding: 16px; gap: 12px; }
+    .queue-route-empty-icon { flex-basis: 42px; height: 42px; border-radius: 11px; font-size: 21px; }
+    .queue-route-empty-copy h2 { font-size: 16px; }
+    .queue-route-empty-copy p { font-size: 13px; }
     .queue-round-grid { grid-template-columns: 1fr; }
     .queue-round-card { grid-template-columns: 1fr; gap: 12px; padding: 14px; }
     .queue-round-destination { font-size: 12px; }
