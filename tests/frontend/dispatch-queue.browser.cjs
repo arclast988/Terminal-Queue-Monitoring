@@ -463,12 +463,13 @@ test('account badges and drawer colors follow saved and live role themes with re
     assert.equal(await role.evaluate(el => getComputedStyle(el).color), 'rgb(255, 255, 255)');
     const chips = page.locator('#userProfileMenu .profile-badge-chip');
     assert.ok(await chips.count());
-    const expected = await page.locator('body').evaluate(el => ({ soft: getComputedStyle(el).getPropertyValue('--primary-soft').trim(), dark: getComputedStyle(el).getPropertyValue('--primary-dark').trim() }));
+    const expected = await page.locator('body').evaluate(el => ({ soft: getComputedStyle(el).getPropertyValue('--primary-soft').trim() }));
     for (const chip of await chips.all()) {
       const styles = await chip.evaluate(el => ({ background: getComputedStyle(el).backgroundColor, color: getComputedStyle(el).color }));
       assert.equal(styles.background, expected.soft);
       assert.notEqual(styles.color, 'rgb(21, 128, 61)');
     }
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('#userProfileMenu')).opacity === '1');
     await page.screenshot({ path: path.join(directory, 'profile-theme-' + name + '.png'), clip: { x: 950, y: 0, width: 415, height: 530 } });
     await page.addScriptTag({ url: origin + '/js/ws-client.js' });
     await page.evaluate(() => applyLiveBranding({ category: 'theme', theme_staff_primary: '#fbbf24', theme_staff_nav_bg: '#164e63', theme_staff_nav_text: '#ffffff', theme_admin_primary: '#fbbf24', theme_admin_nav_bg: '#563084', theme_admin_nav_text: '#ffffff' }));
