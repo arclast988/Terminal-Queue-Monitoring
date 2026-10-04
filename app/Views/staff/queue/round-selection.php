@@ -19,7 +19,11 @@
                 <div id="queueRoundFeedback" class="queue-action-notice" role="status" hidden></div>
                 <div id="queueRoundControls" class="queue-round-grid">
                 <?php foreach ($queueRoutes as $queueRoute): ?>
-                    <?php $currentRoundActive = isset($queueRoute['round_intervals'][$queueRoute['round_number']]); ?>
+                    <?php
+                        $currentRoundActive = isset($queueRoute['round_intervals'][$queueRoute['round_number']]);
+                        $availableRounds = $queueRoute['round_intervals'];
+                        $onlyRound = count($availableRounds) === 1 ? (int) array_key_first($availableRounds) : null;
+                    ?>
                     <div class="queue-round-card" data-round-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>">
                         <div>
                             <div class="queue-round-destination"><i class="bi bi-geo-alt"></i><?= esc(strtoupper($queueRoute['destination'])) ?></div>
@@ -27,6 +31,14 @@
                         </div>
                         <div class="queue-round-choice">
                             <label for="dispatch-round-<?= (int) $queueRoute['id'] ?>">Active departure rule</label>
+                            <?php if ($onlyRound !== null): ?>
+                            <div id="dispatch-round-<?= (int) $queueRoute['id'] ?>" class="queue-round-value">Round <?= $onlyRound ?> · <?= (int) $availableRounds[$onlyRound] ?> min</div>
+                            <?php if (!$currentRoundActive): ?>
+                            <button type="button" class="btn-modern btn-modern-primary btn-modern-sm mt-2" data-dispatch-round data-route-id="<?= (int) $queueRoute['id'] ?>" data-current-round="" value="<?= $onlyRound ?>">Use Round <?= $onlyRound ?></button>
+                            <?php endif; ?>
+                            <?php elseif (empty($availableRounds)): ?>
+                            <div id="dispatch-round-<?= (int) $queueRoute['id'] ?>" class="queue-round-value text-muted" data-round-unavailable="true">No rounds available now</div>
+                            <?php else: ?>
                             <select id="dispatch-round-<?= (int) $queueRoute['id'] ?>" class="form-select" data-no-autocomplete data-dispatch-round data-route-id="<?= (int) $queueRoute['id'] ?>" data-current-round="<?= $currentRoundActive ? (int) $queueRoute['round_number'] : '' ?>" data-round-unavailable="<?= empty($queueRoute['round_intervals']) ? 'true' : 'false' ?>" <?= empty($queueRoute['round_intervals']) ? 'disabled' : '' ?> aria-label="Active round for <?= esc($queueRoute['destination'], 'attr') ?>">
                             <?php if (!$currentRoundActive): ?>
                                 <option value="" selected disabled><?= empty($queueRoute['round_intervals']) ? 'No rounds available now' : 'Choose an available round' ?></option>
@@ -36,8 +48,9 @@
                                 <option value="<?= (int) $roundChoice ?>" <?= $roundChoice === $queueRoute['round_number'] ? 'selected' : '' ?>>Round <?= (int) $roundChoice ?> · <?= (int) $queueRoute['round_intervals'][$roundChoice] ?> min</option>
                             <?php endforeach; ?>
                             </select>
+                            <?php endif; ?>
                             <?php if (!$currentRoundActive): ?>
-                            <p class="small text-warning mb-0 mt-2"><?= empty($queueRoute['round_intervals']) ? 'No departure rule is active for this route right now.' : 'Choose a round that is active now.' ?></p>
+                            <p class="small text-warning mb-0 mt-2"><?= empty($queueRoute['round_intervals']) ? 'No departure rule is active for this route right now.' : ($onlyRound !== null ? 'Use this round to apply its departure rule.' : 'Choose a round that is active now.') ?></p>
                             <?php endif; ?>
                         </div>
                     </div>

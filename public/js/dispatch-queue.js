@@ -97,7 +97,7 @@
     }
 
     function sync(newDoc) {
-        // Use server HTML parsed into inert nodes. Round options consist only of text/selects.
+        // Use server HTML parsed into inert nodes for the currently available rounds.
         var source = newDoc.getElementById('queueRoundControls');
         var target = document.getElementById('queueRoundControls');
         var choosingRound = document.activeElement && document.activeElement.matches('[data-dispatch-round]');
@@ -111,6 +111,8 @@
     document.addEventListener('click', function (event) {
         var button = event.target.closest('[data-queue-route]');
         if (button) selectRoute(button.dataset.queueRoute);
+        var roundButton = event.target.closest('button[data-dispatch-round]');
+        if (roundButton) roundButton.dispatchEvent(new Event('change', { bubbles: true }));
     });
     document.addEventListener('change', async function (event) {
         if (event.target.id === 'addQueueRouteFilter') {
@@ -132,7 +134,7 @@
             select.dataset.currentRound = select.value;
             if (window.QueueActions) window.QueueActions.notice('Round updated', 'Active vehicles now use this round’s departure rule. Boarding timers keep the time already elapsed.', 'success', feedback);
         } catch (error) {
-            select.value = previousRound;
+            if (select.tagName === 'SELECT') select.value = previousRound;
             if (window.QueueActions) window.QueueActions.notice('Round could not be changed', error.message, error.variant || 'danger', feedback);
             if (window.QueueSync) window.QueueSync.refresh(true);
         } finally {

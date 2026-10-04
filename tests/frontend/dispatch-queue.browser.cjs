@@ -21,7 +21,7 @@ test.before(async () => {
   server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://fixture');
     if (/^\/fixtures\/staff-rule-(create|edit)$/.test(url.pathname) || url.pathname === '/fixtures/staff-rules') {
-      res.setHeader('Content-Type', 'text/html'); return res.end(fixture(url.pathname.split('/').pop()));
+      res.setHeader('Content-Type', 'text/html'); return res.end(fixture(url.pathname.split('/').pop(), url.searchParams.get('state') || ''));
     }
     if (url.pathname === '/staff/queue') { res.setHeader('Content-Type', 'text/html'); return res.end(queuePage(variant)); }
     if (url.pathname === '/api/queue-status') { res.setHeader('Content-Type', 'application/json'); return res.end(JSON.stringify({ success: true, queue: [], sync_token: 'fixture' })); }
@@ -75,7 +75,7 @@ test('editing restores checked days and the assigned round with usable desktop a
     assert.equal(await page.locator('#time_fromPicker').isVisible(),true);
     const bounds=await page.locator('#time_fromPicker').evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right}));
     assert.ok(bounds.left>=0 && bounds.right<=width);
-    await page.locator('#time_fromHour').selectOption('6');await page.locator('#time_fromMinute').selectOption('15');await page.locator('#time_fromPeriod').selectOption('AM');
+    await page.locator('#time_from_tp_hour').fill('6');await page.locator('#time_from_tp_min').fill('15');await page.locator('#time_fromPicker [data-period="AM"]').click();
     await page.locator('#time_fromPicker [data-clock-set]').click();assert.equal(await page.locator('#time_from').inputValue(),'6:15 AM');
     assert.equal(await page.locator('#time_from').isEditable(),false);
     if(width===375) {await page.locator('[data-clock-field="time_to"] [data-clock-toggle]').click();await page.screenshot({path:path.join(directory,'dispatcher-time-picker-mobile.png')});}
@@ -290,9 +290,19 @@ test('cancel vehicle search combines with routes and selects only matching trips
   for(const [width,height] of [[320,568],[375,667],[667,375],[1280,800]]) {
     const page=await browser.newPage({viewport:{width,height}}),errors=[];
     page.on('pageerror',error=>errors.push(error.message));
-    await page.goto(origin+'/staff/queue');await page.locator('#cancelSelectionBtn').click();
+    await page.goto(origin+'/staff/queue');
+    await page.addScriptTag({url:origin+'/assets/js/autocomplete-search.js'});
+    await page.locator('#cancelSelectionBtn').click();
     await page.waitForSelector('#cancelSelectionModal.show');
     const search=page.locator('#cancelVehicleSearch'),shown=page.locator('.queue-cancel-item:not([hidden])');
+    const routeWrapper=page.locator('.autocomplete-wrapper').filter({has:page.locator('#cancelRouteFilter')});
+    assert.equal(await routeWrapper.locator('input[type="text"]').isVisible(),true);
+    assert.equal(await page.locator('.queue-cancel-search-field .autocomplete-clear-btn').count(),0);
+    const searchSpacing=await search.evaluate(input=>{
+      const icon=input.parentElement.querySelector('.bi-search').getBoundingClientRect(),field=input.getBoundingClientRect();
+      return {textLeft:field.left+parseFloat(getComputedStyle(input).paddingLeft),iconRight:icon.right,centerOffset:(icon.top+icon.bottom-field.top-field.bottom)/2};
+    });
+    assert.ok(searchSpacing.textLeft>=searchSpacing.iconRight+4 && Math.abs(searchSpacing.centerOffset)<2,JSON.stringify(searchSpacing));
     assert.equal(await shown.count(),10);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(width===375 || width===1280)await page.screenshot({path:path.join(__dirname,'artifacts','cancel-vehicle-search-'+width+'.png')});
@@ -302,7 +312,8 @@ test('cancel vehicle search combines with routes and selects only matching trips
     await search.fill('trip-4');assert.equal(await shown.count(),1);
     await page.locator('#cancelSelectVisible').check();
     assert.deepEqual(await page.locator('[name="cancel_queue_ids[]"]:checked').evaluateAll(boxes=>boxes.map(box=>box.value)),['104']);
-    await page.locator('#cancelRouteFilter').selectOption('1|BATO');
+    await routeWrapper.locator('input[type="text"]').fill('bato');
+    await routeWrapper.locator('.autocomplete-item').filter({hasText:'BATO'}).click();
     assert.equal(await shown.count(),0);
     assert.equal(await page.locator('#cancelSelectVisible').isDisabled(),true);
     assert.match(await page.locator('#cancelSelectionEmpty').innerText(),/No trips match your search for this route/);
@@ -311,7 +322,7 @@ test('cancel vehicle search combines with routes and selects only matching trips
     assert.equal(await search.inputValue(),'');assert.equal(await shown.count(),5);
     await page.locator('#cancelSelectVisible').check();
     assert.deepEqual(await page.locator('[name="cancel_queue_ids[]"]:checked').evaluateAll(boxes=>boxes.map(box=>box.value)),['104','106','107','108','109','110']);
-    await page.locator('#cancelRouteFilter').selectOption('all');
+    await routeWrapper.locator('.autocomplete-clear-btn').click();
     assert.equal(await shown.count(),10);
     assert.match(await page.locator('#cancelSelectionCount').innerText(),/6 trips selected/);
     assert.equal(await page.locator('#cancelSelectVisible').evaluate(box=>box.indeterminate),true);
@@ -319,15 +330,18 @@ test('cancel vehicle search combines with routes and selects only matching trips
   }
 });
 
-test('Round dialog never presents the fallback interval as a configured departure rule',async()=>{
+test('a single available round offers a direct apply button without a dropdown or fallback interval',async()=>{
   variant='unconfigured-round';const page=await browser.newPage({viewport:{width:375,height:667}});
   await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();
-  const select=page.locator('[data-dispatch-round][data-route-id="2"]');
-  assert.equal(await select.locator('option[value="2"]').count(),0);
-  assert.equal(await select.inputValue(),'');
-  assert.match(await select.locator('option:checked').innerText(),/Choose an available round/);
+  const card=page.locator('[data-round-route="1|BATO"]');
+  assert.equal(await card.locator('select').count(),0);
+  const button=card.getByRole('button',{name:'Use Round 1',exact:true});
+  assert.equal(await button.isVisible(),true);
+  assert.match(await card.locator('.queue-round-value').innerText(),/Round 1 · 20 min/);
   assert.doesNotMatch(await page.locator('[data-round-route="1|BATO"]').innerText(),/30 min/);
-  assert.match(await page.locator('[data-round-route="1|BATO"]').innerText(),/Choose a round that is active now/);
+  roundRequests=[];await button.click();
+  await page.waitForFunction(()=>document.getElementById('queueRoundFeedback').textContent.includes('Round updated'));
+  assert.equal(roundRequests.find(request=>request.path.endsWith('/round')).body.get('round_number'),'1');
   await page.close();
 });
 
@@ -336,17 +350,52 @@ test('expired rounds are absent and routes with no active hours stay disabled af
   const page=await browser.newPage({viewport:{width:375,height:667}});
   await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();
   const active=page.locator('[data-dispatch-round][data-route-id="1"]');
-  const unavailable=page.locator('[data-dispatch-round][data-route-id="2"]');
+  const unavailable=page.locator('[data-round-route="1|BATO"] [data-round-unavailable="true"]');
   assert.deepEqual(await active.locator('option').evaluateAll(options=>options.map(option=>option.value)),['','2','3']);
   assert.match(await active.locator('option:checked').innerText(),/Choose an available round/);
-  assert.equal(await unavailable.isDisabled(),true);
-  assert.match(await unavailable.locator('option:checked').innerText(),/No rounds available now/);
+  assert.equal(await page.locator('[data-round-route="1|BATO"] select, [data-round-route="1|BATO"] button').count(),0);
+  assert.match(await unavailable.innerText(),/No rounds available now/);
   await active.selectOption('2');
   await page.waitForFunction(()=>document.getElementById('queueRoundFeedback').textContent.includes('Round updated'));
   assert.equal(roundRequests.find(request=>request.path.endsWith('/round')).body.get('round_number'),'2');
-  assert.equal(await unavailable.isDisabled(),true);
+  assert.match(await unavailable.innerText(),/No rounds available now/);
   assert.equal(await active.isEnabled(),true);
   await page.close();
+});
+
+test('single active rules are displayed without a dropdown on desktop and phones',async()=>{
+  variant='single-round';
+  for(const width of [320,375,1280]) {
+    const page=await browser.newPage({viewport:{width,height:800}});
+    await page.goto(origin+'/staff/queue');await page.addScriptTag({url:origin+'/assets/js/autocomplete-search.js'});await page.locator('#queueRoundBtn').click();
+    await page.waitForSelector('#queueRoundModal.show');
+    assert.equal(await page.locator('#queueRoundControls select, #queueRoundControls button').count(),0);
+    assert.match(await page.locator('[data-round-route="1|BATO"] .queue-round-value').innerText(),/Round 2 · 100 min/);
+    assert.ok(await page.locator('#queueRoundControls').evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+    if(width===375) await page.screenshot({path:path.join(__dirname,'artifacts','single-active-departure-rule.png')});
+    await page.close();
+  }
+});
+
+test('editing a destination with one configured round hides unused rounds; creation marks the next as new',async()=>{
+  for(const width of [375,1280]) {
+    const page=await browser.newPage({viewport:{width,height:900}});
+    await page.goto(origin+'/fixtures/staff-rule-edit?state=scoped-rounds');
+    assert.equal(await page.locator('#route_id').inputValue(),'2');
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['2']);
+    assert.equal(await page.locator('#round_number').isVisible(),false);
+    assert.equal(await page.locator('#round_number_display').inputValue(),'Round 2');
+    assert.equal(await page.locator('#departureRuleForm').evaluate(form=>new FormData(form).get('round_number')),'2');
+    await page.locator('#route_id').selectOption('1');
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2','3']);
+    await page.locator('#route_id').selectOption('2');
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['2']);
+    await page.goto(origin+'/fixtures/staff-rule-create?state=scoped-rounds');
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.textContent.trim())),['Round 2','New round 3']);
+    await page.locator('#round_number').selectOption('3');
+    assert.equal(await page.locator('#departureRuleForm').evaluate(form=>new FormData(form).get('round_number')),'3');
+    await page.close();
+  }
 });
 
 test('guest Active now badge moves to the dispatcher-selected round in the open mobile dialog',async()=>{

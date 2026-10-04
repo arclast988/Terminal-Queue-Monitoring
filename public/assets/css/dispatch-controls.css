@@ -332,6 +332,7 @@ button.queue-route-chip.active .chip-count {
 #queueRoundModal .queue-round-header h5, #queueRoundModal .queue-round-header p { color: white !important; -webkit-text-fill-color: white !important; }
 #queueRoundModal .queue-round-header .btn-close { margin: 0; flex-shrink: 0; opacity: 1; }
 #queueRoundModal .queue-round-choice select, #queueRoundRouteFilter { min-height: 44px; }
+.queue-round-value { min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--surface-sunken, #f8fafc); color: var(--text-main, #1e293b); font-size: 14px; font-weight: 600; }
 @media (max-width: 768px) {
     .departure-rule-schedule { grid-template-columns: 1fr; gap: 18px; }
     .dispatch-time-picker { position: absolute; right: 0; top: calc(100% + 4px); width: auto; max-width: calc(100vw - 32px); margin-top: 0; }
@@ -385,7 +386,7 @@ button.queue-route-chip.active .chip-count {
 .queue-selection-tools > div { flex: 1; min-width: 180px; }
 .queue-cancel-search-field { position: relative; }
 .queue-cancel-search-field > .bi-search { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-muted, #64748b); pointer-events: none; }
-.queue-cancel-search-field input { min-height: 44px; padding-left: 38px; padding-right: 38px; }
+#cancelSelectionModal .queue-cancel-search-field input { min-height: 44px; padding-left: 38px !important; padding-right: 38px !important; }
 .queue-cancel-search-field input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .queue-cancel-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted, #64748b); }
 .queue-cancel-search-clear[hidden] { display: none; }

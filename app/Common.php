@@ -94,18 +94,22 @@ if (! function_exists('departure_round_scope')) {
 
 if (! function_exists('departure_round_choices')) {
     /**
-     * Rounds offered in the rule form: the scope's existing rounds plus the next
-     * one. Saved rounds are compacted, so a scope never skips a number.
+     * Offer configured rounds for this destination and its terminal defaults.
+     * Only the add form offers the next round; editing must not invent rounds.
      */
-    function departure_round_choices(array $rules, int $currentRound = 1, ?string $scope = null): array
+    function departure_round_choices(array $rules, int $currentRound = 0, ?string $scope = null, bool $allowNew = true): array
     {
-        $choices = [1, max(1, min(999, $currentRound))];
+        $choices = $currentRound > 0 ? [min(999, $currentRound)] : [];
+        $terminalScope = $scope === null ? null : explode('|', $scope, 2)[0] . '|';
         foreach ($rules as $rule) {
-            if ($scope !== null && ($rule['round_scope'] ?? null) !== $scope) continue;
+            if ($scope !== null && !in_array($rule['round_scope'] ?? null, [$scope, $terminalScope], true)) continue;
             $round = (int) ($rule['round_number'] ?? 1);
             if ($round >= 1 && $round <= 999) $choices[] = $round;
         }
-        return range(1, min(999, max($choices) + 1));
+        if ($allowNew) $choices[] = $choices ? min(999, max($choices) + 1) : 1;
+        $choices = array_values(array_unique($choices));
+        sort($choices);
+        return $choices;
     }
 }
 

@@ -11,6 +11,9 @@ $isActive = static fn (string $path): string => url_is($path) ? 'active' : '';
 <a href="<?= base_url('staff/queue') ?>" class="<?= $isActive('staff/queue*') ?>">
     <i class="fas fa-list-ol"></i> Queue Management
 </a>
+<a href="<?= base_url('staff/departures') ?>" class="<?= $isActive('staff/departures*') ?>">
+    <i class="fas fa-clock-rotate-left"></i> Today Departures
+</a>
 <a href="<?= base_url('staff/departure-rules') ?>" class="<?= $isActive('staff/departure-rules*') ?>">
     <i class="fas fa-clock"></i> Departure Rules
 </a>

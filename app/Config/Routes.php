@@ -172,6 +172,8 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
 
 $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->get('dashboard', 'Staff\Dashboard::index');
+    $routes->get('departures', 'Staff\Departures::index');
+    $routes->get('departures/print', 'Staff\Departures::report');
 
     // Queue
     $routes->get('queue', 'Staff\Queue::index');

@@ -27,7 +27,7 @@
     boxes.forEach(function (box) { box.addEventListener('change', update); });
     update();
 
-    // Offer only this destination's rounds plus the next one (1, 2, 3 → 1–4).
+    // Editing shows configured rounds. Adding explicitly offers a new round.
     var roundSelect = document.getElementById('round_number');
     var routeSelect = document.getElementById('route_id');
     var terminalInput = document.getElementById('terminal_id');
@@ -35,6 +35,9 @@
     var scopes = [];
     try { scopes = JSON.parse(roundSelect.dataset.roundScopes) || []; } catch (e) { scopes = []; }
     var initialRound = Number(roundSelect.value) || 1;
+    var display = document.getElementById('round_number_display');
+    var label = document.getElementById('round_number_label');
+    var creating = roundSelect.dataset.roundCreate === 'true';
     function currentScope() {
         var option = routeSelect && routeSelect.selectedIndex >= 0 ? routeSelect.options[routeSelect.selectedIndex] : null;
         if (option && option.value && option.dataset.roundScope) return option.dataset.roundScope;
@@ -42,19 +45,38 @@
     }
     function rebuildRounds() {
         var scope = currentScope();
-        var max = 0;
-        scopes.forEach(function (item) { if (item.s === scope && item.r > max) max = item.r; });
+        var terminalScope = scope.split('|')[0] + '|';
+        var configured = [];
+        scopes.forEach(function (item) {
+            if ((item.s === scope || item.s === terminalScope) && item.r >= 1 && item.r <= 999) configured.push(item.r);
+        });
+        if (scope === roundSelect.dataset.roundOriginalScope && Number(roundSelect.dataset.roundOriginal) > 0) {
+            configured.push(Number(roundSelect.dataset.roundOriginal));
+        }
+        configured = Array.from(new Set(configured)).sort(function (a, b) { return a - b; });
+        var choices = configured.slice();
+        var newRound = choices.length ? Math.min(999, choices[choices.length - 1] + 1) : 1;
+        if (creating && choices.indexOf(newRound) === -1) choices.push(newRound);
+        if (!choices.length) choices.push(1);
         var selected = Number(roundSelect.value) || initialRound;
-        var limit = Math.min(999, max + 1);
-        if (selected > limit) selected = limit;
+        if (choices.indexOf(selected) === -1) selected = choices[0];
         roundSelect.innerHTML = '';
-        for (var n = 1; n <= limit; n++) {
+        choices.forEach(function (n) {
             var opt = document.createElement('option');
             opt.value = String(n);
-            opt.textContent = 'Round ' + n;
+            opt.textContent = (creating && configured.indexOf(n) === -1 ? 'New round ' : 'Round ') + n;
             if (n === selected) opt.selected = true;
             roundSelect.appendChild(opt);
+        });
+        var single = choices.length === 1;
+        roundSelect.hidden = single;
+        roundSelect.classList.toggle('d-none', single);
+        if (display) {
+            display.hidden = !single;
+            display.classList.toggle('d-none', !single);
+            display.value = roundSelect.options[roundSelect.selectedIndex].textContent;
         }
+        if (label) label.htmlFor = single ? 'round_number_display' : 'round_number';
     }
     if (routeSelect) routeSelect.addEventListener('change', rebuildRounds);
     if (terminalInput) terminalInput.addEventListener('change', rebuildRounds);

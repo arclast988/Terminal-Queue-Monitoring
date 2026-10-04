@@ -176,6 +176,10 @@ SVG;
                     <i class="fas fa-list-ol"></i>
                     <span>Queue Management</span>
                 </a>
+                <a href="<?= base_url('staff/departures') ?>" class="drawer-nav-item <?= $isActive('staff/departures*') ?>">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <span>Today Departures</span>
+                </a>
                 <a href="<?= base_url('staff/departure-rules') ?>" class="drawer-nav-item <?= $isActive('staff/departure-rules*') ?>">
                     <i class="fas fa-clock"></i>
                     <span>Departure Rules</span>

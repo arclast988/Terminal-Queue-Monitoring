@@ -5,6 +5,7 @@ declare(strict_types=1);
 // These helpers exist only in this CLI test process; app helpers are untouched.
 define('FCPATH', dirname(__DIR__, 2) . '/public/');
 $fixturePage = $argv[1] ?? 'login';
+if (in_array($fixturePage, ['staff-departures', 'staff-departures-report', 'staff-dashboard'], true)) date_default_timezone_set('Asia/Manila');
 $fixtureLong = ($argv[2] ?? '') === 'long';
 $fixtureRole = $fixturePage === 'admin-settings' ? 'super_admin' : (str_starts_with($fixturePage, 'staff') ? 'staff' : (str_starts_with($fixturePage, 'admin') ? 'admin' : null));
 set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
@@ -102,7 +103,7 @@ $item = [
     'arrival_time' => '2026-10-01 08:00:00', 'estimated_departure' => '2026-10-01 09:00:00',
     'departure_time' => '2026-10-01 09:00:00', 'boarding_start' => '2026-10-01 08:45:00', 'round_number' => 1,
 ];
-$route = ['id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
+$route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
 $managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
@@ -128,18 +129,46 @@ $fixtureData = [
     'logs' => [$user + ['action' => 'Updated queue', 'details' => $longValue, 'timestamp' => '2026-10-01 08:00:00']],
     'actions' => [['action' => 'Updated queue']], 'stats' => [], 'pager' => null,
     'from_date' => '', 'to_date' => '', 'action_type' => '', 'user_id' => '', 'settings' => [], 'prefix' => 'admin',
+    'today' => date('Y-m-d'), 'filters' => ['q'=>'', 'destination'=>'', 'vehicle_type'=>''],
     'groupedRoutes' => [['terminal_name' => 'Palompon', 'destination' => $longValue, 'status' => 'active', 'items' => [$route + ['terminal_id' => 1]]]],
 ];
+if (in_array($fixturePage, ['staff-departures', 'staff-departures-report'], true)) {
+    $fixtureData['departures'] = [];
+    for ($id = 1; $id <= 37; $id++) {
+        $fixtureData['departures'][] = array_replace($item, ['id'=>$id, 'plate_number'=>'TODAY-'.sprintf('%02d',$id),
+            'operator_name'=>'Operator '.$id, 'driver_name'=>'Driver '.$id, 'status'=>'departed',
+            'departure_time'=>date('Y-m-d').' 20:55:00']);
+    }
+    $fixtureData['results'] = $fixtureData['departures'];
+    $fixtureData['stats'] = ['departures'=>37, 'passengers'=>370];
+    $fixtureData['title'] = 'Today Departures';
+    if ($fixturePage === 'staff-departures-report') {
+        $fixtureData['title'] = "Today's Departure Report";
+        $fixtureData['report_heading'] = "Today's Departure Report";
+        $fixtureData['today_only_report'] = true;
+        $fixtureData['from_date'] = $fixtureData['to_date'] = date('Y-m-d');
+        $fixtureData['return_url'] = '/staff/departures';
+    }
+}
+if ($fixturePage === 'staff-dashboard') $fixtureData['active_queue_count'] = 1;
 if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules'], true)) {
     $fixtureData['prefix'] = 'staff';
     $fixtureData['title'] = 'Departure Rules';
     $fixtureData['returnRoute'] = 'all';
     $fixtureData['listUrl'] = '/staff/departure-rules';
     $fixtureData['selectedRouteId'] = null;
-    $fixtureData['rule'] = ['id'=>1, 'terminal_id'=>1, 'route_id'=>null, 'time_from'=>'05:00:00', 'time_to'=>'17:00:00', 'wait_minutes'=>20, 'label'=>'Morning', 'day_of_week'=>null, 'days_of_week'=>'1,2,3', 'round_number'=>1, 'terminal_name'=>'Villaba', 'route_destination'=>null, 'can_manage'=>true];
+    $fixtureData['rule'] = ['id'=>1, 'terminal_id'=>1, 'route_id'=>null, 'time_from'=>'05:00:00', 'time_to'=>'17:00:00', 'wait_minutes'=>20, 'label'=>'Morning', 'day_of_week'=>null, 'days_of_week'=>'1,2,3', 'round_number'=>1, 'terminal_name'=>'Villaba', 'route_destination'=>null, 'round_scope'=>'1|', 'can_manage'=>true];
     $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'round_number'=>2, 'days_of_week'=>'1,4,7', 'wait_minutes'=>25, 'label'=>'Afternoon'])];
     $fixtureData['rules'] = $fixtureData['existingRules'];
     $fixtureData['destinationsMap'] = ['ORMOC'=>1, 'TACLOBAN'=>2];
+    if (($argv[4] ?? '') === 'scoped-rounds') {
+        $fixtureData['terminals'] = [['id'=>1,'name'=>'Villaba']];
+        $fixtureData['routes'] = [['id'=>1,'terminal_id'=>1,'destination'=>'ORMOC'], ['id'=>2,'terminal_id'=>1,'destination'=>'TACLOBAN']];
+        $fixtureData['rule'] = array_replace($fixtureData['rule'], ['route_id'=>2,'route_destination'=>'TACLOBAN','round_scope'=>'1|TACLOBAN','round_number'=>2]);
+        $fixtureData['existingRules'] = [$fixtureData['rule']];
+        foreach ([1,2,3] as $round) $fixtureData['existingRules'][] = array_replace($fixtureData['rule'], ['id'=>10+$round,'route_id'=>1,'route_destination'=>'ORMOC','round_scope'=>'1|ORMOC','round_number'=>$round]);
+        $fixtureData['selectedRouteId'] = 2;
+    }
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
@@ -157,6 +186,10 @@ if ($fixturePage === 'staff-queue') {
     }
     if (($argv[4] ?? '') === 'unconfigured-round') {
         unset($fixtureData['queueRoutes'][1]['round_intervals'][2], $fixtureData['queueRoutes'][1]['round_intervals'][3]);
+    }
+    if (($argv[4] ?? '') === 'single-round') {
+        $fixtureData['queueRoutes'][0]['round_intervals'] = [1=>20];
+        $fixtureData['queueRoutes'][1]['round_intervals'] = [2=>100];
     }
     if (($argv[4] ?? '') === 'expired-round') {
         unset($fixtureData['queueRoutes'][0]['round_intervals'][1]);
@@ -192,6 +225,7 @@ $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
+    'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',

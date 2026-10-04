@@ -306,12 +306,11 @@ class Queue extends BaseController
             $round = $roundModel->currentRound((int) $route['terminal_id'], $route['destination']);
             $route['round_number'] = $round;
             $routeIds = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
-            $choices = [1, $round];
+            $choices = [];
             foreach ($allRules as $rule) {
                 if ((int) $rule['terminal_id'] === (int) $route['terminal_id']
                     && (empty($rule['route_id']) || in_array((int) $rule['route_id'], $routeIds, true))
-                    && in_array((int) date('N'), departure_rule_days($rule), true)
-                    && !empty($rule['round_number'])) $choices[] = (int) $rule['round_number'];
+                    && in_array((int) date('N'), departure_rule_days($rule), true)) $choices[] = max(1, (int) ($rule['round_number'] ?? 1));
             }
             $route['round_choices'] = array_values(array_unique($choices));
             sort($route['round_choices']);

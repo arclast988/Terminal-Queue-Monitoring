@@ -127,7 +127,10 @@ if (!empty($recent_departures)) {
 }
 ?>
 
-<h4 class="mt-5 mb-3 fade-in" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Departures</h4>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-5 mb-3 fade-in">
+    <h4 class="mb-0" style="font-size: 20px; font-weight: 700; color: var(--text-main, #1e293b);">Recent Departures Today</h4>
+    <a href="<?= base_url('staff/departures') ?>" class="btn-modern btn-modern-outline btn-modern-sm"><i class="bi bi-clock-history"></i> View all today departures</a>
+</div>
 
 <!-- Search Bar and Vehicle Type Filters -->
 <div class="modern-card shadow-modern fade-in mb-3">

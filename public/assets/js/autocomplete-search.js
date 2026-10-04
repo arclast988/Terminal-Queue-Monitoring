@@ -969,7 +969,7 @@
             if (inputEl.closest('.autocomplete-wrapper')) return;
             const parent = inputEl.parentElement;
             if (!parent) return;
-            const existingBtn = parent.querySelector('.btn-clear-search, .guest-clear-search-btn, .fare-search-clear, .autocomplete-clear-btn');
+            const existingBtn = parent.querySelector('.btn-clear-search, .guest-clear-search-btn, .fare-search-clear, .autocomplete-clear-btn, .queue-cancel-search-clear');
             if (existingBtn) return;
 
             const computedPos = window.getComputedStyle(parent).position;

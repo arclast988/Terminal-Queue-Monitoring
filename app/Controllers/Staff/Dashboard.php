@@ -57,8 +57,8 @@ class Dashboard extends BaseController
         ')
                                     ->withFullJoins()
                                     ->where('queue.status', 'departed')
-                                    ->where('queue.departure_time >=', date('Y-m-d 00:00:00'))
-                                    ->where('queue.departure_time <=', date('Y-m-d 23:59:59'));
+                                    ->where('queue.departure_time >', history_departure_date_boundary(date('Y-m-d')))
+                                    ->where('queue.departure_time <=', history_departure_date_boundary(date('Y-m-d'), true));
         if ($assignedRouteIds !== null) {
             if (!empty($assignedRouteIds)) {
                 $departBuilder->whereIn('queue.route_id', $assignedRouteIds);

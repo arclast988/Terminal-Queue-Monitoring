@@ -2,7 +2,23 @@
 $selectedDays = old('days_of_week', departure_rule_days($rule ?? []));
 $selectedDays = is_array($selectedDays) ? array_map('intval', $selectedDays) : departure_rule_days($rule ?? []);
 $selectedRound = max(1, (int) old('round_number', $rule['round_number'] ?? 1));
-$roundChoices = departure_round_choices($existingRules ?? [], $selectedRound);
+$isCreatingRound = empty($rule['id']);
+$formRouteId = old('route_id', $rule['route_id'] ?? $selectedRouteId ?? '');
+$formTerminalId = (int) old('terminal_id', $rule['terminal_id'] ?? (count($terminals ?? []) === 1 ? $terminals[0]['id'] : 0));
+$formDestination = null;
+foreach ($routes ?? [] as $formRoute) {
+    if ($formRouteId !== '' && (int) $formRoute['id'] === (int) $formRouteId) {
+        $formDestination = $formRoute['destination'];
+        $formTerminalId = (int) $formRoute['terminal_id'];
+        break;
+    }
+}
+$formRoundScope = departure_round_scope($formTerminalId, $formDestination);
+$preservedRound = $isCreatingRound ? 0 : $selectedRound;
+$configuredRounds = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, false);
+$roundChoices = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, $isCreatingRound);
+if (!in_array($selectedRound, $roundChoices, true)) $selectedRound = $roundChoices[0];
+$singleRound = count($roundChoices) === 1;
 ?>
 <div class="departure-rule-schedule mb-4">
     <fieldset class="rule-days-fieldset" id="ruleDays" aria-describedby="ruleDaysSummary">
@@ -22,13 +38,14 @@ $roundChoices = departure_round_choices($existingRules ?? [], $selectedRound);
         <p class="rule-days-summary" id="ruleDaysSummary" aria-live="polite"><?= esc(departure_rule_day_label(['days_of_week' => $selectedDays])) ?></p>
     </fieldset>
     <div class="rule-round-field">
-        <label for="round_number" class="form-label-modern">Assign to round <span class="text-danger">*</span></label>
+        <label for="<?= $singleRound ? 'round_number_display' : 'round_number' ?>" class="form-label-modern" id="round_number_label">Assign to round <span class="text-danger">*</span></label>
         <?php $roundScopes = array_map(static fn(array $r): array => ['s' => $r['round_scope'] ?? '', 'r' => (int) ($r['round_number'] ?? 1)], $existingRules ?? []); ?>
-        <select id="round_number" name="round_number" class="select-modern" data-no-autocomplete required data-round-scopes="<?= esc(json_encode($roundScopes), 'attr') ?>">
+        <select id="round_number" name="round_number" class="select-modern <?= $singleRound ? 'd-none' : '' ?>" <?= $singleRound ? 'hidden' : '' ?> data-no-autocomplete required data-round-scopes="<?= esc(json_encode($roundScopes), 'attr') ?>" data-round-create="<?= $isCreatingRound ? 'true' : 'false' ?>" data-round-original="<?= $preservedRound ?>" data-round-original-scope="<?= esc($formRoundScope, 'attr') ?>">
             <?php foreach ($roundChoices as $roundChoice): ?>
-            <option value="<?= $roundChoice ?>" <?= $roundChoice === $selectedRound ? 'selected' : '' ?>>Round <?= $roundChoice ?></option>
+            <option value="<?= $roundChoice ?>" <?= $roundChoice === $selectedRound ? 'selected' : '' ?>><?= $isCreatingRound && !in_array($roundChoice, $configuredRounds, true) ? 'New round' : 'Round' ?> <?= $roundChoice ?></option>
             <?php endforeach; ?>
         </select>
+        <input id="round_number_display" class="input-modern <?= $singleRound ? '' : 'd-none' ?>" <?= $singleRound ? '' : 'hidden' ?> type="text" value="Round <?= $selectedRound ?>" readonly>
         <p class="form-text-modern mt-2 mb-0">This rule applies when the dispatcher selects this round in Queue Management.</p>
     </div>
 </div>
