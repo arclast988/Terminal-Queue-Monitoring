@@ -44,6 +44,11 @@ Options -Indexes
 	ErrorDocument 404 index.php
 </IfModule>
 
+# Block direct access to markdown, typescript definitions, and log files
+<FilesMatch "(?i)\.(md|d\.ts|sql|bak|log)$">
+    Require all denied
+</FilesMatch>
+
 # Disable server signature start
 ServerSignature Off
 # Disable server signature end

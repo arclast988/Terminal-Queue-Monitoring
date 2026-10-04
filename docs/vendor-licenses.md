@@ -1,3 +1,5 @@
+# Vendor Assets & Licenses
+
 These dependencies are served with the application so layout, buttons, icons,
 and typography do not depend on third-party CDN requests at runtime.
 

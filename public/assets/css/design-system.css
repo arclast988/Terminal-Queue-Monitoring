@@ -1,11 +1,4 @@
-/* ==========================================================================
-   Palompon Terminal Monitoring System — Design System
-   --------------------------------------------------------------------------
-   Shared tokens + components for ALL areas (guest, admin, dispatcher).
-   Role palettes live in themes.css and override the accent tokens via
-   body.guest-theme / body.admin-theme / body.staff-theme.
-   Load order: design-system.css -> themes.css (after Bootstrap).
-   ========================================================================== */
+/* Palompon Terminal Monitoring System - Design System */
 
 
 /* --------------------------------------------------------------------------

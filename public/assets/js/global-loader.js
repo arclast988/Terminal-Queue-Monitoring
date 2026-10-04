@@ -2,7 +2,6 @@
  * Non-blocking progress and pending feedback. All request arguments, response
  * identities, native form fields and existing button child nodes are preserved.
  * Visual timers never release an API-owned pending button or reset request counts.
- * The existing GlobalLoader API is retained; see interaction-contracts.d.ts.
  */
 (function (window, document) {
     'use strict';
@@ -30,7 +29,7 @@
     var SILENT_PATTERNS = [
         /\/api\/queue-status/i, /\/status(\?|$)/i, /\/schedules\/status/i,
         /\/api\/fares/i, /\/api\/announcements/i, /\/api\/check-vehicle-availability/i,
-        /\/admin\/vehicles\/check-plate/i, /\/ws(\/|$)/i,
+        /\/ws(\/|$)/i,
         /[?&]silent=1/i, /[?&]silent=true/i
     ];
 

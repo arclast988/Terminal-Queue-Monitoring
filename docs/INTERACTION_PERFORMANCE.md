@@ -23,7 +23,7 @@ The shared policy is inlined from `public/assets/js/interaction-motion.js` by `a
 - [Shared CSS](../public/assets/css/interaction-motion.css)
 - [Progress, pending buttons and skeleton helpers](../public/assets/js/global-loader.js)
 - [Queue request/lifecycle handling](../public/js/queue-sync.js)
-- [Typed public UI and queue API contracts](../public/assets/types/interaction-contracts.d.ts)
+- [Typed UI and queue API contracts](../types/interaction-contracts.d.ts)
 
 The application remains PHP/CodeIgniter and vanilla JavaScript. TypeScript checks the new motion policy and public contract declarations. Test tools are isolated in `tests/frontend`; there are no new runtime dependencies.
 

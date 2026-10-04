@@ -7,5 +7,5 @@
     "lib": ["ES2022", "DOM"],
     "target": "ES2022"
   },
-  "files": ["../../public/assets/js/interaction-motion.js", "../../public/assets/js/auth-background.js", "../../public/assets/types/interaction-contracts.d.ts"]
+  "files": ["../../public/assets/js/interaction-motion.js", "../../public/assets/js/auth-background.js", "../../types/interaction-contracts.d.ts"]
 }

@@ -6,7 +6,7 @@
     /** @type {(() => void) | null} */
     var unmount = null;
 
-    /** @param {import('../types/interaction-contracts').AuthBackgroundConfig} config */
+    /** @param {import('../../../types/interaction-contracts').AuthBackgroundConfig} config */
     function mount(config) {
         if (unmount) unmount();
         var container = document.getElementById('authBgSlideshow');
@@ -99,7 +99,7 @@
 
         /** @param {Event} event */
         function onBranding(event) {
-            var data = /** @type {CustomEvent<import('../types/interaction-contracts').AuthBackgroundUpdate>} */ (event).detail || {};
+            var data = /** @type {CustomEvent<import('../../../types/interaction-contracts').AuthBackgroundUpdate>} */ (event).detail || {};
             if (data.category && data.category !== 'background' && data.category !== 'all') return;
             if (!data.app_bg_mode && !data.app_bg_slideshow && !data.app_background_image) return;
             var single = data.app_bg_mode === 'single';

@@ -1556,7 +1556,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
             icon.style.display = 'inline-block';
             icon.innerHTML = '<i class="bi bi-arrow-repeat" style="color: #6c757d;"></i>';
             icon.classList.add('spinning');
-            var url = baseUrl + '?plate=' + encodeURIComponent(plate);
+            var url = baseUrl + '?plate=' + encodeURIComponent(plate) + '&silent=1';
             if (excludeId > 0) url += '&exclude_id=' + excludeId;
 
             var xhr = new XMLHttpRequest();

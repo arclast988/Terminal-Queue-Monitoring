@@ -538,7 +538,7 @@ function updateEditTypeFallback(select) {
         icon.classList.add('spinning');
 
         plateCheckTimer = setTimeout(function() {
-            var url = baseUrl + '?plate=' + encodeURIComponent(plate) + '&exclude_id=' + excludeId;
+            var url = baseUrl + '?plate=' + encodeURIComponent(plate) + '&exclude_id=' + excludeId + '&silent=1';
 
             plateCheckXhr = new XMLHttpRequest();
             plateCheckXhr.open('GET', url, true);
