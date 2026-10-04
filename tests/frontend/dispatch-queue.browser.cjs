@@ -20,6 +20,9 @@ test.before(async () => {
   browser = await chromium.launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}) });
   server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://fixture');
+    if (/^\/fixtures\/staff-rule-(create|edit)$/.test(url.pathname) || url.pathname === '/fixtures/staff-rules') {
+      res.setHeader('Content-Type', 'text/html'); return res.end(fixture(url.pathname.split('/').pop()));
+    }
     if (url.pathname === '/staff/queue') { res.setHeader('Content-Type', 'text/html'); return res.end(queuePage(variant)); }
     if (url.pathname === '/api/queue-status') { res.setHeader('Content-Type', 'application/json'); return res.end(JSON.stringify({ success: true, queue: [], sync_token: 'fixture' })); }
     if (url.pathname === '/staff/queue/round' || url.pathname === '/staff/queue/tick') {
@@ -35,6 +38,69 @@ test.before(async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); origin = 'http://127.0.0.1:' + server.address().port;
 });
 test.after(async () => { await browser?.close(); await new Promise(resolve => server?.close(resolve)); });
+
+test('checked weekdays keep one explicit round and display consecutive or separate day labels', async () => {
+  const page = await browser.newPage(); const errors = []; page.on('pageerror', e => errors.push(e.message));
+  await page.goto(origin + '/fixtures/staff-rule-create');
+  await page.locator('#ruleEveryDay').uncheck();
+  for (const day of ['1', '2', '3']) await page.locator(`input[name="days_of_week[]"][value="${day}"]`).check();
+  assert.equal(await page.locator('#ruleDaysSummary').innerText(), 'Monday–Wednesday');
+  await page.locator('input[name="days_of_week[]"][value="2"]').uncheck();
+  await page.locator('input[name="days_of_week[]"][value="3"]').uncheck();
+  for (const day of ['4', '7']) await page.locator(`input[name="days_of_week[]"][value="${day}"]`).check();
+  assert.equal(await page.locator('#ruleDaysSummary').innerText(), 'Monday, Thursday, Sunday');
+  await page.locator('#round_number').selectOption('2');
+  const submitted = await page.locator('#departureRuleForm').evaluate(form => {
+    const data = new FormData(form); return { days: data.getAll('days_of_week[]'), round: data.get('round_number') };
+  });
+  assert.deepEqual(submitted, {days:['1','4','7'], round:'2'});
+  assert.equal(await page.locator('#round_number').isVisible(), true);
+  assert.equal(await page.locator('#ruleDays .autocomplete-wrapper').count(), 0);
+  assert.deepEqual(errors, []);
+  await page.close();
+});
+
+test('editing restores checked days and the assigned round with usable desktop and mobile layouts', async () => {
+  for (const width of [375, 1280]) {
+    const page = await browser.newPage({viewport:{width,height:900}});
+    await page.goto(origin + '/fixtures/staff-rule-edit');
+    assert.deepEqual(await page.locator('input[name="days_of_week[]"]:checked').evaluateAll(boxes => boxes.map(box => box.value)), ['1','2','3']);
+    assert.equal(await page.locator('#round_number').inputValue(), '1');
+    assert.equal(await page.locator('#round_number').isVisible(), true);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await page.locator('#ruleDays').scrollIntoViewIfNeeded();
+    const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, {recursive:true});
+    await page.screenshot({path:path.join(directory, `departure-rule-days-${width}.png`)});
+    await page.close();
+  }
+});
+
+test('dispatcher rule list displays grouped days and edit/delete for terminal defaults', async () => {
+  const page = await browser.newPage();
+  await page.goto(origin + '/fixtures/staff-rules');
+  assert.match(await page.locator('#departure-rules-table').innerText(), /Monday–Wednesday/i);
+  assert.match(await page.locator('#departure-rules-table').innerText(), /Monday, Thursday, Sunday/i);
+  assert.doesNotMatch(await page.locator('#departure-rules-table').innerText(), /View Only|All rounds/);
+  assert.equal(await page.locator('.rule-edit-link').count(), 2);
+  assert.equal(await page.locator('form[action*="/departure-rules/delete/"]').count(), 2);
+  await page.close();
+});
+
+test('queue route controls show rule intervals and fit desktop and mobile screens', async () => {
+  variant = 'fresh';
+  for (const width of [375, 1280]) {
+    const page = await browser.newPage({viewport:{width,height:900}});
+    await page.goto(origin + '/staff/queue');
+    assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 2);
+    assert.match(await page.locator('[data-route-id="2"] option:checked').innerText(), /Round 2 · 25 min/);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, {recursive:true});
+    await page.screenshot({path:path.join(directory, `queue-route-controls-${width}.png`)});
+    await page.locator('[data-queue-route="1|BATO"]').click();
+    assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 1);
+    await page.close();
+  }
+});
 
 test('new registration appears in an open empty Add to Queue dialog and works immediately', async () => {
   variant = 'empty';

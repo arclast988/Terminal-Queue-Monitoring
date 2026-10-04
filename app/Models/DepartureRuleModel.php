@@ -12,7 +12,7 @@ class DepartureRuleModel extends Model
     protected $returnType = 'array';
     protected $useSoftDeletes = false;
     protected $protectFields = true;
-    protected $allowedFields = ['terminal_id', 'route_id', 'time_from', 'time_to', 'wait_minutes', 'label', 'day_of_week', 'round_number'];
+    protected $allowedFields = ['terminal_id', 'route_id', 'time_from', 'time_to', 'wait_minutes', 'label', 'day_of_week', 'days_of_week', 'round_number'];
 
     protected $useTimestamps = true;
     protected $dateFormat = 'datetime';
@@ -65,7 +65,7 @@ class DepartureRuleModel extends Model
 
         foreach ($rules as $rule) {
             if ((int) ($rule['terminal_id'] ?? 0) !== $terminalId
-                || (!empty($rule['day_of_week']) && (int) $rule['day_of_week'] !== $day)
+                || !in_array($day, departure_rule_days($rule), true)
                 || (!empty($rule['round_number']) && (int) $rule['round_number'] !== $roundNumber)
                 || empty($rule['time_from']) || empty($rule['time_to'])
                 || $rule['time_from'] > $timeStr
@@ -83,8 +83,8 @@ class DepartureRuleModel extends Model
 
             $matched = $isDestinationRule ? $destinationRule : $terminalRule;
             $priority = static fn(array $r): array => [
-                (int) !empty($r['day_of_week']) + (int) !empty($r['round_number']),
-                (int) !empty($r['day_of_week']),
+                (int) (count(departure_rule_days($r)) < 7) + (int) !empty($r['round_number']),
+                (int) (count(departure_rule_days($r)) < 7),
                 ($r['updated_at'] ?? ''), (int) ($r['id'] ?? 0),
             ];
             if ($matched === null || $priority($rule) > $priority($matched)) {

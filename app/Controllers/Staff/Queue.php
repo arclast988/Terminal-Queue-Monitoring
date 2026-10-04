@@ -298,11 +298,16 @@ class Queue extends BaseController
             foreach ($allRules as $rule) {
                 if ((int) $rule['terminal_id'] === (int) $route['terminal_id']
                     && (empty($rule['route_id']) || in_array((int) $rule['route_id'], $routeIds, true))
-                    && (empty($rule['day_of_week']) || (int) $rule['day_of_week'] === (int) date('N'))
+                    && in_array((int) date('N'), departure_rule_days($rule), true)
                     && !empty($rule['round_number'])) $choices[] = (int) $rule['round_number'];
             }
             $route['round_choices'] = array_values(array_unique($choices));
             sort($route['round_choices']);
+            $route['round_intervals'] = [];
+            foreach ($route['round_choices'] as $choice) {
+                $matched = DepartureRuleModel::resolveRuleFromRules($allRules, date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeIds, $choice);
+                $route['round_intervals'][$choice] = (int) $matched['wait_minutes'];
+            }
             $queueRoutes[$key] = $route;
         }
         foreach ($vehicles as &$vehicle) {

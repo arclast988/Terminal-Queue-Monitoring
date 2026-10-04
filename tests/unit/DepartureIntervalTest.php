@@ -33,7 +33,7 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->intervalDb->query('CREATE TABLE departure_rules (
             id INTEGER PRIMARY KEY, terminal_id INTEGER, route_id INTEGER,
             time_from TEXT, time_to TEXT, wait_minutes INTEGER, label TEXT,
-            created_at TEXT, updated_at TEXT, day_of_week INTEGER, round_number INTEGER
+            created_at TEXT, updated_at TEXT, day_of_week INTEGER, days_of_week TEXT, round_number INTEGER
         )');
         $this->intervalDb->query('CREATE TABLE queue (
             id INTEGER PRIMARY KEY AUTOINCREMENT, vehicle_id INTEGER,
@@ -271,6 +271,45 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame('2026-10-05 07:15:00', $this->queue->find($next)['estimated_departure']);
         $this->assertSame(2, (int) $this->queue->find($next)['round_number']);
         $this->assertSame('2026-10-05 07:30:00', $this->queue->find($other)['estimated_departure']);
+    }
+
+    public function testOneRuleMatchesSeveralCheckedDaysAndItsAssignedRound(): void
+    {
+        $this->addRule(10, 1, 1, 20);
+        $this->addRule(11, 1, 1, 25);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['days_of_week' => '1,2,3', 'round_number' => 1]);
+        $this->intervalDb->table('departure_rules')->where('id', 11)->update(['days_of_week' => '1,4,7', 'round_number' => 2]);
+        $rules = new DepartureRuleModel($this->intervalDb);
+        foreach (['2026-10-05', '2026-10-06', '2026-10-07'] as $date) {
+            $this->assertSame(20, $rules->getWaitMinutesForTime($date . ' 10:00:00', 1, 2, 1));
+        }
+        foreach (['2026-10-05', '2026-10-08', '2026-10-11'] as $date) {
+            $this->assertSame(25, $rules->getWaitMinutesForTime($date . ' 10:00:00', 1, 2, 2));
+        }
+        $this->assertSame(20, $rules->getWaitMinutesForTime('2026-10-06 10:00:00', 1, 2, 2));
+        $this->assertSame('Monday–Wednesday', departure_rule_day_label(['days_of_week' => '1,2,3']));
+        $this->assertSame('Monday, Thursday, Sunday', departure_rule_day_label(['days_of_week' => '1,4,7']));
+        $this->assertSame('Every day', departure_rule_day_label([]));
+        $this->assertSame('Thursday', departure_rule_day_label(['day_of_week' => 4]));
+    }
+
+    public function testWeekdayMigrationPreservesLegacyDaysAndBoardingTimes(): void
+    {
+        Database::forge($this->intervalDb)->dropColumn('departure_rules', 'days_of_week');
+        $this->intervalDb->table('departure_rules')->where('id', 1)->update(['day_of_week' => 1]);
+        $head = $this->addVehicle(1, 1, '2026-10-05 06:50:00');
+        $this->queue->update($head, ['status' => 'boarding', 'boarding_start' => '2026-10-05 06:30:00']);
+        require_once APPPATH . 'Database/Migrations/2026-10-04-130000_AddDepartureRuleWeekdays.php';
+        $migration = new \App\Database\Migrations\AddDepartureRuleWeekdays(Database::forge($this->intervalDb));
+        $migration->up();
+        $migration->up();
+        $this->assertTrue($this->intervalDb->fieldExists('days_of_week', 'departure_rules'));
+        $rule = $this->intervalDb->table('departure_rules')->where('id', 1)->get()->getRowArray();
+        $this->assertSame(1, (int) $rule['day_of_week']);
+        $this->assertSame(1, (int) $rule['round_number']);
+        $this->assertSame([1], departure_rule_days($rule));
+        $this->assertSame('2026-10-05 06:50:00', $this->queue->find($head)['estimated_departure']);
+        $this->assertSame('2026-10-05 06:30:00', $this->queue->find($head)['boarding_start']);
     }
 
     public function testMidnightResolvesRulesUsingTheDateOfTheNextBoardingWindow(): void

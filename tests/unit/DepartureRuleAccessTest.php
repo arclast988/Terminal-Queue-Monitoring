@@ -53,6 +53,7 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        service('validation')->reset();
         ScopedDepartureRulesHarness::$testDb = Database::connect([
             'DBDriver' => 'SQLite3', 'database' => ':memory:', 'DBPrefix' => '', 'DBDebug' => true,
         ], false);
@@ -79,7 +80,7 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         ScopedDepartureRulesHarness::$testDb->query('CREATE TABLE departure_rules (
             id INTEGER PRIMARY KEY AUTOINCREMENT, terminal_id INTEGER, route_id INTEGER,
             time_from TEXT DEFAULT "05:00:00", time_to TEXT DEFAULT "17:00:00", wait_minutes INTEGER DEFAULT 20,
-            label TEXT DEFAULT "All Day", day_of_week INTEGER, round_number INTEGER DEFAULT 2,
+            label TEXT DEFAULT "All Day", day_of_week INTEGER, days_of_week TEXT, round_number INTEGER DEFAULT 2,
             created_at TEXT, updated_at TEXT
         )');
         ScopedDepartureRulesHarness::$testDb->table('departure_rules')->insertBatch([
@@ -229,12 +230,83 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
 
     private function postRule(array $overrides = []): void
     {
+        service('validation')->reset();
         $this->request->setMethod('POST');
         $this->request->setGlobal('post', array_replace([
             'terminal_id' => '1', 'route_id' => '', 'time_from' => '05:00', 'time_to' => '17:00',
             'wait_duration' => '00:25', 'day_of_week' => '', 'round_number' => '2', 'label' => 'Afternoon',
             'return_route' => 'default',
         ], $overrides));
+    }
+
+    public function testCheckedDaysAreStoredTogetherOnOneRule(): void
+    {
+        $this->postRule(['day_selection' => '1', 'days_of_week' => ['3', '1', '2', '2'], 'round_number' => '3']);
+        $result = $this->withUri('http://localhost/staff/departure-rules/store')
+            ->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $saved = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('round_number', 3)->get()->getRowArray();
+        $this->assertSame('1,2,3', $saved['days_of_week']);
+        $this->assertNull($saved['day_of_week']);
+        $this->assertSame(6, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+        $this->assertSame('Monday–Wednesday', departure_rule_day_label($saved));
+    }
+
+    public function testUpdatingDaysKeepsTheExplicitRuleRoundAndEditCheckboxes(): void
+    {
+        $this->postRule(['day_selection' => '1', 'days_of_week' => ['1', '4', '7']]);
+        $result = $this->withUri('http://localhost/staff/departure-rules/update/4')
+            ->controller(ScopedDepartureRulesHarness::class)->execute('update', 4);
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $saved = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 4)->get()->getRowArray();
+        $this->assertSame('1,4,7', $saved['days_of_week']);
+        $this->assertSame(2, (int) $saved['round_number']);
+        $this->assertSame('Monday, Thursday, Sunday', departure_rule_day_label($saved));
+        $this->response = service('response', null, false);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('edit', 4);
+        $document = new \DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        try {
+            $document->loadHTML($result->response()->getBody());
+            $xpath = new \DOMXPath($document);
+            $selected = $xpath->query('//input[@name="days_of_week[]" and @checked]');
+            $this->assertSame(['1', '4', '7'], array_map(static fn($input) => $input->getAttribute('value'), iterator_to_array($selected)));
+            $this->assertSame('2', $xpath->query('//select[@name="round_number"]/option[@selected]')->item(0)->getAttribute('value'));
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
+    }
+
+    public function testInvalidOrEmptyDaysAndBlankRoundDoNotSaveARule(): void
+    {
+        foreach ([[], ['8'], ['Monday'], '1'] as $days) {
+            $this->postRule(['day_selection' => '1', 'days_of_week' => $days, 'round_number' => '3']);
+            $this->response = service('response', null, false);
+            $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+            $this->assertSame(302, $result->response()->getStatusCode());
+            $this->assertSame(5, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+        }
+        $this->postRule(['round_number' => '']);
+        $this->response = service('response', null, false);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $this->assertSame(5, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+    }
+
+    public function testOverlappingCheckedDaysAreRejectedButSeparateDaysCanShareARound(): void
+    {
+        ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 4)->update(['days_of_week' => '1,2,3']);
+        $this->postRule(['day_selection' => '1', 'days_of_week' => ['2', '4']]);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $this->assertSame(5, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+        $this->assertStringContainsString('overlaps', session()->getFlashdata('error'));
+        $this->postRule(['day_selection' => '1', 'days_of_week' => ['4', '7']]);
+        $this->response = service('response', null, false);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $this->assertSame(6, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
     }
 
     public function testUpdatingAMissingRuleReturns404(): void

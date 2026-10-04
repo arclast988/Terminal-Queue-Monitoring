@@ -155,6 +155,35 @@ class DepartureRules extends BaseController
         return $waitMinutes > 0 ? $waitMinutes : null;
     }
 
+    private function parseRuleDays(): ?array
+    {
+        $selected = $this->request->getPost('days_of_week');
+        if ($selected !== null || $this->request->getPost('day_selection') === '1') {
+            if (!is_array($selected) || !$selected) return null;
+            foreach ($selected as $day) {
+                if (!is_scalar($day) || !preg_match('/^[1-7]$/', (string) $day)) return null;
+            }
+            $days = array_values(array_unique(array_map('intval', $selected)));
+            sort($days);
+            return $days;
+        }
+        // Accept the old single-day request format while existing clients refresh.
+        $day = $this->request->getPost('day_of_week');
+        if ($day === null || $day === '') return range(1, 7);
+        return is_scalar($day) && preg_match('/^[1-7]$/', (string) $day) ? [(int) $day] : null;
+    }
+
+    private function findDayOverlap(array $candidates, array $days): ?array
+    {
+        foreach ($candidates as $candidate) {
+            $existingDays = departure_rule_days($candidate);
+            // Preserve specific-day overrides of an every-day fallback.
+            if ((count($days) === 7) !== (count($existingDays) === 7)) continue;
+            if (array_intersect($days, $existingDays)) return $candidate;
+        }
+        return null;
+    }
+
     public function index()
     {
         $rules = $this->ruleModel
@@ -221,7 +250,7 @@ class DepartureRules extends BaseController
             'selectedRouteId' => $selectedRouteId,
             'returnRoute'     => $returnRoute,
             'listUrl'         => $this->listUrlForRoute($returnRoute),
-            'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, round_number')->findAll(),
+            'existingRules'   => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, days_of_week, round_number')->findAll(),
         ];
         return view('admin/departure-rules/create', $data);
     }
@@ -229,18 +258,18 @@ class DepartureRules extends BaseController
     public function store()
     {
         $waitMinutes = $this->parseWaitMinutes();
-        $day = $this->request->getPost('day_of_week');
+        $days = $this->parseRuleDays();
+        if ($days === null) return redirect()->back()->withInput()->with('error', 'Select at least one valid day.');
+        $day = count($days) === 1 ? $days[0] : null;
         $round = $this->request->getPost('round_number');
-        $day = ($day === null || $day === '') ? null : $day;
-        $round = ($round === null || $round === '') ? null : $round;
 
         $dataToValidate = array_merge($this->request->getPost(), [
-            'wait_minutes' => $waitMinutes
+            'wait_minutes' => $waitMinutes, 'day_of_week' => $day
         ]);
 
         $rules = [
             'day_of_week' => 'permit_empty|integer|greater_than_equal_to[1]|less_than_equal_to[7]',
-            'round_number' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[999]',
+            'round_number' => 'required|integer|greater_than[0]|less_than_equal_to[999]',
             'label' => 'permit_empty|max_length[50]',
             'time_from'    => 'required',
             'time_to'      => 'required',
@@ -294,7 +323,7 @@ class DepartureRules extends BaseController
         } else {
             $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
         }
-        $overlap = $overlapQuery->where('day_of_week', $day)->where('round_number', $round)->first();
+        $overlap = $this->findDayOverlap($overlapQuery->where('round_number', $round)->findAll(), $days);
         if ($overlap) {
             $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
@@ -308,7 +337,8 @@ class DepartureRules extends BaseController
             'time_from'    => $timeFrom,
             'time_to'      => $timeTo,
             'day_of_week' => $day === null ? null : (int) $day,
-            'round_number' => $round === null ? null : (int) $round,
+            'days_of_week' => count($days) === 7 ? null : implode(',', $days),
+            'round_number' => (int) $round,
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
@@ -338,7 +368,7 @@ class DepartureRules extends BaseController
             'prefix'        => $this->getPrefix(),
             'terminals'     => $this->accessibleTerminals(),
             'routes'        => $this->getRoutesForDropdown(),
-            'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, round_number')->findAll(),
+            'existingRules' => $this->ruleModel->select('id, terminal_id, route_id, time_from, time_to, label, day_of_week, days_of_week, round_number')->findAll(),
             'returnRoute'   => $this->normalizeReturnRoute($this->request->getGet('return_route')),
         ];
 
@@ -353,18 +383,18 @@ class DepartureRules extends BaseController
         if (!$existingRule) return $this->response->setStatusCode(404)->setBody('Rule not found.');
         if (!$this->canManageRule($existingRule)) return $this->response->setStatusCode(403)->setBody('This departure rule is outside your assigned destinations.');
         $waitMinutes = $this->parseWaitMinutes();
-        $day = $this->request->getPost('day_of_week');
+        $days = $this->parseRuleDays();
+        if ($days === null) return redirect()->back()->withInput()->with('error', 'Select at least one valid day.');
+        $day = count($days) === 1 ? $days[0] : null;
         $round = $this->request->getPost('round_number');
-        $day = ($day === null || $day === '') ? null : $day;
-        $round = ($round === null || $round === '') ? null : $round;
 
         $dataToValidate = array_merge($this->request->getPost(), [
-            'wait_minutes' => $waitMinutes
+            'wait_minutes' => $waitMinutes, 'day_of_week' => $day
         ]);
 
         $rules = [
             'day_of_week' => 'permit_empty|integer|greater_than_equal_to[1]|less_than_equal_to[7]',
-            'round_number' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[999]',
+            'round_number' => 'required|integer|greater_than[0]|less_than_equal_to[999]',
             'label' => 'permit_empty|max_length[50]',
             'time_from'    => 'required',
             'time_to'      => 'required',
@@ -419,7 +449,7 @@ class DepartureRules extends BaseController
         } else {
             $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
         }
-        $overlap = $overlapQuery->where('day_of_week', $day)->where('round_number', $round)->first();
+        $overlap = $this->findDayOverlap($overlapQuery->where('round_number', $round)->findAll(), $days);
         if ($overlap) {
             $msg = 'This time range overlaps with an existing rule: ' . date('H:i', strtotime($overlap['time_from'])) . ' - ' . date('H:i', strtotime($overlap['time_to'])) . ' (' . ($overlap['label'] ?? 'No label') . ').';
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
@@ -433,7 +463,7 @@ class DepartureRules extends BaseController
             'route_id'     => $oldRule['route_id'] ?? '',
             'time_from'    => $oldRule['time_from'] ?? '',
             'time_to'      => $oldRule['time_to'] ?? '',
-            'day_of_week' => $oldRule['day_of_week'] ?? '',
+            'days_of_week' => departure_rule_days($oldRule),
             'round_number' => $oldRule['round_number'] ?? '',
             'wait_minutes' => $oldRule['wait_minutes'] ?? '',
             'label'        => $oldRule['label'] ?? '',
@@ -442,8 +472,8 @@ class DepartureRules extends BaseController
             'route_id'     => $routeId ?? '',
             'time_from'    => $timeFrom,
             'time_to'      => $timeTo,
-            'day_of_week' => $day === null ? null : (int) $day,
-            'round_number' => $round === null ? null : (int) $round,
+            'days_of_week' => $days,
+            'round_number' => (int) $round,
             'wait_minutes' => $waitMinutes,
             'label'        => $label ?? '',
         ])) {
@@ -456,7 +486,8 @@ class DepartureRules extends BaseController
             'time_from'    => $timeFrom,
             'time_to'      => $timeTo,
             'day_of_week' => $day === null ? null : (int) $day,
-            'round_number' => $round === null ? null : (int) $round,
+            'days_of_week' => count($days) === 7 ? null : implode(',', $days),
+            'round_number' => (int) $round,
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);

@@ -1,4 +1,4 @@
-<?= view('templates/header', ['title' => $title]) ?>
+<?= view('templates/header', ['title' => $title, 'pageStyles' => ['assets/css/dispatch-controls.css']]) ?>
 
 
 <style>
@@ -1072,27 +1072,35 @@ $queueOrderGroups = array_values($queueOrderGroups);
 <?php endif; ?>
 
 
-<div class="queue-route-controls card-modern p-3 mb-3" id="queueRouteControls">
-    <div class="d-flex flex-wrap gap-2 align-items-center mb-2" role="group" aria-label="Queue route filter">
-        <strong class="small me-1">Routes:</strong>
-        <button type="button" class="btn btn-sm btn-outline-primary active" data-queue-route="all" aria-pressed="true">All routes</button>
+<div class="queue-route-controls card-modern mb-3" id="queueRouteControls">
+    <div class="queue-control-filter">
+        <span class="queue-control-label"><i class="bi bi-funnel"></i> Filter route</span>
+        <div class="queue-route-chips" role="group" aria-label="Queue route filter">
+        <button type="button" class="queue-route-chip btn-outline-primary active" data-queue-route="all" aria-pressed="true"><i class="bi bi-grid"></i> All routes</button>
         <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
-        <button type="button" class="btn btn-sm btn-outline-primary" data-queue-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>" aria-pressed="false"><?= esc(strtoupper($queueRoute['origin'] . ' → ' . $queueRoute['destination'])) ?></button>
+        <button type="button" class="queue-route-chip btn-outline-primary" data-queue-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>" aria-pressed="false"><i class="bi bi-geo-alt"></i> <?= esc(strtoupper($queueRoute['destination'])) ?></button>
         <?php endforeach; ?>
+        </div>
     </div>
-    <div id="queueRoundControls" class="d-flex flex-wrap gap-3">
+    <div id="queueRoundControls" class="queue-round-grid">
     <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
-        <label class="small fw-semibold" data-round-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>">
-            <?= esc(strtoupper($queueRoute['destination'])) ?> — active round
-            <select class="form-select form-select-sm mt-1" data-dispatch-round data-route-id="<?= (int) $queueRoute['id'] ?>" aria-label="Active round for <?= esc($queueRoute['destination'], 'attr') ?>">
+        <div class="queue-round-card" data-round-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>">
+            <div>
+                <div class="queue-round-destination"><i class="bi bi-geo-alt"></i><?= esc(strtoupper($queueRoute['destination'])) ?></div>
+                <span class="queue-round-origin">From <?= esc($queueRoute['origin']) ?></span>
+            </div>
+            <div class="queue-round-choice">
+            <label for="dispatch-round-<?= (int) $queueRoute['id'] ?>">Active departure rule</label>
+            <select id="dispatch-round-<?= (int) $queueRoute['id'] ?>" class="form-select" data-no-autocomplete data-dispatch-round data-route-id="<?= (int) $queueRoute['id'] ?>" aria-label="Active round for <?= esc($queueRoute['destination'], 'attr') ?>">
             <?php foreach ($queueRoute['round_choices'] as $roundChoice): ?>
-                <option value="<?= $roundChoice ?>" <?= $roundChoice === $queueRoute['round_number'] ? 'selected' : '' ?>>Round <?= $roundChoice ?></option>
+                <option value="<?= $roundChoice ?>" <?= $roundChoice === $queueRoute['round_number'] ? 'selected' : '' ?>>Round <?= $roundChoice ?><?= isset($queueRoute['round_intervals'][$roundChoice]) ? ' · ' . (int) $queueRoute['round_intervals'][$roundChoice] . ' min' : '' ?></option>
             <?php endforeach; ?>
             </select>
-        </label>
+            </div>
+        </div>
     <?php endforeach; ?>
     </div>
-    <p class="small text-muted mt-2 mb-0">Switch rounds whenever needed. Configure more rounds in <a href="<?= base_url('staff/departure-rules') ?>">Departure Rules</a>. Waiting vehicles use the selected round; a boarding timer keeps its current rule.</p>
+    <div class="queue-control-footer"><span>Switch the active rule whenever needed.</span><a href="<?= base_url('staff/departure-rules') ?>"><i class="bi bi-sliders"></i> Manage rules</a></div>
     <div id="queueRoundFeedback" class="small mt-2" role="status"></div>
 </div>
 <div id="queueRouteEmpty" class="alert-modern d-none" role="status">No vehicles are queued for this route.</div>

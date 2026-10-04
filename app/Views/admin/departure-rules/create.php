@@ -1,4 +1,4 @@
-<?= view('templates/header', ['title' => $title]) ?>
+<?= view('templates/header', ['title' => $title, 'pageStyles' => ['assets/css/dispatch-controls.css']]) ?>
 
 
 <style>
@@ -349,23 +349,7 @@ $defaultWaitValue = old('wait_duration') ?? sprintf('%02d:%02d', $defaultHours, 
                             <div class="form-text-modern">Choose a destination, or leave blank for a terminal-wide default.</div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label for="day_of_week" class="form-label-modern">Day</label>
-                                <select id="day_of_week" name="day_of_week" class="select-modern">
-                                    <option value="">Every day</option>
-                                    <?php foreach ([1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'] as $dayNumber => $dayName): ?>
-                                    <option value="<?= $dayNumber ?>" <?= (string) old('day_of_week', $rule['day_of_week'] ?? '') === (string) $dayNumber ? 'selected' : '' ?>><?= $dayName ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <label for="round_number" class="form-label-modern">Round</label>
-                                <input type="number" id="round_number" name="round_number" class="input-modern" min="1" max="999" step="1" value="<?= esc(old('round_number', $rule['round_number'] ?? '')) ?>" placeholder="All rounds">
-                                <div class="form-text-modern">Leave blank for all rounds. Dispatchers can switch the route's round at any time.</div>
-                            </div>
-                        </div>
-                        <p class="form-text-modern mb-3">For a round that can start at any time, use 00:00–23:59. Day and round rules override the general defaults.</p>
+                        <?= view('admin/departure-rules/day-round-fields', ['rule' => [], 'existingRules' => $existingRules ?? []]) ?>
 
                         <div class="row">
                             <div class="col-md-6 mb-4">
@@ -556,8 +540,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 if (!sameScope) continue;
-                if (String(r.day_of_week || '') !== document.getElementById('day_of_week').value
-                    || String(r.round_number || '') !== document.getElementById('round_number').value) continue;
+                const selectedDays = Array.from(document.querySelectorAll('#ruleDays input[name="days_of_week[]"]:checked')).map(box => Number(box.value));
+                const existingDays = r.days_of_week ? String(r.days_of_week).split(',').map(Number) : (r.day_of_week ? [Number(r.day_of_week)] : [1,2,3,4,5,6,7]);
+                if (String(r.round_number || 1) !== document.getElementById('round_number').value
+                    || (selectedDays.length === 7) !== (existingDays.length === 7)
+                    || !selectedDays.some(day => existingDays.includes(day))) continue;
 
                 let rFrom = r.time_from.length === 5 ? r.time_from + ':00' : r.time_from;
                 let rTo = r.time_to.length === 5 ? r.time_to + ':00' : r.time_to;
@@ -584,8 +571,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (terminalSelect) terminalSelect.addEventListener('change', checkContradiction);
     if (routeSelect) routeSelect.addEventListener('change', checkContradiction);
-    document.getElementById('day_of_week').addEventListener('change', checkContradiction);
-    document.getElementById('round_number').addEventListener('input', checkContradiction);
+    document.getElementById('ruleDays').addEventListener('change', checkContradiction);
+    document.getElementById('round_number').addEventListener('change', checkContradiction);
 
     // Form submit guard
     if (form) {

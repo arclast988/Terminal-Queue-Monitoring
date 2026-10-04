@@ -15,7 +15,7 @@ function base_url(string $path = ''): string { return '/' . ltrim($path, '/'); }
 function current_url(): string { return '/guest'; }
 function uri_string(): string { return 'guest'; }
 function url_is(string $path): bool { return false; }
-function old(string $key): string { return ''; }
+function old(string $key, $default = null) { return $default; }
 function csrf_field(): string { return '<input type="hidden" name="csrf_fixture" value="unchanged">'; }
 function csrf_token(): string { return 'csrf_fixture'; }
 function csrf_hash(): string { return 'unchanged'; }
@@ -113,8 +113,8 @@ $fixtureData = [
     'masked_email' => 'f***@example.com', 'invalid' => false, 'noRoutesAssigned' => false,
     'announcements' => [], 'breadcrumb_current' => 'Home', 'skip_breadcrumb' => true,
     'queueRoutes' => [
-        ['id'=>1, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>$longValue, 'round_number'=>1, 'round_choices'=>[1,2,3]],
-        ['id'=>2, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>'BATO', 'round_number'=>2, 'round_choices'=>[1,2,3]],
+        ['id'=>1, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>$longValue, 'round_number'=>1, 'round_choices'=>[1,2,3], 'round_intervals'=>[1=>20,2=>25,3=>30]],
+        ['id'=>2, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>'BATO', 'round_number'=>2, 'round_choices'=>[1,2,3], 'round_intervals'=>[1=>20,2=>25,3=>30]],
     ],
     'queue' => [$item], 'active_queue' => [$item], 'vehicles' => [$item], 'schedules' => [$item],
     'recent_departures' => [$item], 'routes' => [$route], 'jeepney_routes' => [$route],
@@ -130,6 +130,17 @@ $fixtureData = [
     'from_date' => '', 'to_date' => '', 'action_type' => '', 'user_id' => '', 'settings' => [], 'prefix' => 'admin',
     'groupedRoutes' => [['terminal_name' => 'Palompon', 'destination' => $longValue, 'status' => 'active', 'items' => [$route + ['terminal_id' => 1]]]],
 ];
+if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules'], true)) {
+    $fixtureData['prefix'] = 'staff';
+    $fixtureData['title'] = 'Departure Rules';
+    $fixtureData['returnRoute'] = 'all';
+    $fixtureData['listUrl'] = '/staff/departure-rules';
+    $fixtureData['selectedRouteId'] = null;
+    $fixtureData['rule'] = ['id'=>1, 'terminal_id'=>1, 'route_id'=>null, 'time_from'=>'05:00:00', 'time_to'=>'17:00:00', 'wait_minutes'=>20, 'label'=>'Morning', 'day_of_week'=>null, 'days_of_week'=>'1,2,3', 'round_number'=>1, 'terminal_name'=>'Villaba', 'route_destination'=>null, 'can_manage'=>true];
+    $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'round_number'=>2, 'days_of_week'=>'1,4,7', 'wait_minutes'=>25, 'label'=>'Afternoon'])];
+    $fixtureData['rules'] = $fixtureData['existingRules'];
+    $fixtureData['destinationsMap'] = ['ORMOC'=>1, 'TACLOBAN'=>2];
+}
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];
 if ($fixturePage === 'staff-queue') {
@@ -152,6 +163,7 @@ $views = [
     'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
+    'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',
 ];
 if (!isset($views[$fixturePage])) throw new InvalidArgumentException('Unknown fixture page');
 $html = $fixtureRenderer->render($views[$fixturePage]);

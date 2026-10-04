@@ -1,0 +1,41 @@
+.departure-rule-schedule { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(180px, 1fr); gap: 24px; align-items: start; }
+.rule-days-fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.rule-days-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.rule-days-heading legend { float: none; width: auto; font-size: 14px; }
+.rule-every-day { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; color: var(--text-muted, #64748b); cursor: pointer; }
+.rule-days-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.rule-day-option { display: flex; align-items: center; gap: 9px; min-height: 42px; padding: 9px 11px; border: 1px solid var(--border, #e2e8f0); border-radius: 9px; background: var(--surface, #fff); color: var(--text-main, #1e293b); font-size: 13px; font-weight: 500; cursor: pointer; }
+.rule-day-option:has(input:checked) { border-color: var(--primary); background: var(--primary-soft, #eaf5ee); color: var(--primary); }
+.rule-day-option input, .rule-every-day input { width: 17px; height: 17px; margin: 0; accent-color: var(--primary); flex-shrink: 0; }
+.rule-day-option:focus-within { outline: 2px solid var(--primary); outline-offset: 2px; }
+.rule-days-summary { margin: 10px 0 0; color: var(--text-muted, #64748b); font-size: 12px; line-height: 1.5; }
+.rule-round-field select { min-height: 44px; width: 100%; }
+.rule-days-label { display: inline-block; white-space: normal; max-width: 240px; line-height: 1.5; }
+.queue-route-controls { padding: 20px; background: var(--surface, #fff); }
+.queue-control-filter { display: flex; align-items: center; gap: 18px; padding-bottom: 16px; margin-bottom: 16px; border-bottom: 1px solid var(--border, #e2e8f0); }
+.queue-control-label { flex-shrink: 0; display: flex; align-items: center; gap: 7px; color: var(--text-muted, #64748b); font-size: 12px; font-weight: 700; }
+.queue-route-chips { display: flex; gap: 8px; min-width: 0; overflow-x: auto; padding: 2px; scrollbar-width: thin; }
+button.queue-route-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 8px 15px; border: 1px solid var(--border, #e2e8f0); border-radius: 999px; background: var(--surface, #fff); color: var(--primary); font-size: 12px; font-weight: 700; white-space: nowrap; }
+button.queue-route-chip.active { background: var(--primary); border-color: var(--primary); color: var(--on-primary, #fff); }
+.queue-round-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+.queue-round-card { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(150px, .85fr); align-items: center; gap: 16px; padding: 15px; border: 1px solid var(--border, #e2e8f0); border-radius: 12px; background: var(--surface, #fff); }
+.queue-round-destination { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; color: var(--text-main, #1e293b); overflow-wrap: anywhere; }
+.queue-round-destination i { color: var(--primary); }
+.queue-round-origin { display: block; margin: 4px 0 0 25px; color: var(--text-muted, #64748b); font-size: 12px; overflow-wrap: anywhere; }
+.queue-round-choice label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 600; color: var(--text-muted, #64748b); }
+.queue-round-choice select { min-height: 42px; width: 100%; border-color: var(--border, #e2e8f0); border-radius: 8px; background-color: var(--surface, #fff); color: var(--text-main, #1e293b); font-size: 13px; }
+.queue-control-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; font-size: 12px; color: var(--text-muted, #64748b); }
+.queue-control-footer a { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; font-weight: 600; }
+#queueRoundFeedback:empty { display: none; }
+@media (max-width: 768px) {
+    .departure-rule-schedule { grid-template-columns: 1fr; gap: 18px; }
+    .queue-route-controls { padding: 14px; }
+    .queue-control-filter { display: block; padding-bottom: 12px; margin-bottom: 12px; }
+    .queue-control-label { margin-bottom: 9px; }
+    .queue-route-chips { margin: 0 -2px; }
+    .queue-round-grid { grid-template-columns: 1fr; }
+    .queue-round-card { grid-template-columns: minmax(0, 1fr) minmax(135px, 1fr); gap: 10px; padding: 12px; }
+    .queue-round-destination { font-size: 12px; }
+    .queue-round-origin { font-size: 11px; margin-left: 0; }
+    .queue-control-footer { align-items: flex-start; font-size: 11px; }
+}

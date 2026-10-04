@@ -1,4 +1,4 @@
-<?= view('templates/header', ['title' => $title]) ?>
+<?= view('templates/header', ['title' => $title, 'pageStyles' => ['assets/css/dispatch-controls.css']]) ?>
 
 
 <style>
@@ -391,7 +391,7 @@
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Day / Round"><span class="badge-modern badge-modern-primary"><?= esc([1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday',7=>'Sunday'][(int) ($rule['day_of_week'] ?? 0)] ?? 'Every day') ?></span><br><span class="small"><?= !empty($rule['round_number']) ? 'Round ' . (int) $rule['round_number'] : 'All rounds' ?></span></td>
+                                <td data-label="Day / Round"><span class="badge-modern badge-modern-primary rule-days-label"><?= esc(departure_rule_day_label($rule)) ?></span><br><span class="small">Round <?= (int) ($rule['round_number'] ?? 1) ?></span></td>
                                 <td data-label="Time From (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_from'])) ?></span></td>
                                 <td data-label="Time To (HH:MM)"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= date('H:i', strtotime($rule['time_to'])) ?></span></td>
                                 <td data-label="Wait Time (HH:MM)">

@@ -29,6 +29,49 @@ if (! function_exists('app_asset_url')) {
     }
 }
 
+if (! function_exists('departure_rule_days')) {
+    function departure_rule_days(array $rule): array
+    {
+        $stored = $rule['days_of_week'] ?? null;
+        if ($stored === null || $stored === '') {
+            return empty($rule['day_of_week']) ? range(1, 7) : [(int) $rule['day_of_week']];
+        }
+        $days = array_values(array_unique(array_map('intval', is_array($stored) ? $stored : explode(',', $stored))));
+        $days = array_values(array_filter($days, static fn(int $day): bool => $day >= 1 && $day <= 7));
+        sort($days);
+        return $days;
+    }
+}
+
+if (! function_exists('departure_rule_day_label')) {
+    function departure_rule_day_label(array $rule): string
+    {
+        $days = departure_rule_days($rule);
+        if ($days === range(1, 7)) return 'Every day';
+        $names = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+        $parts = [];
+        for ($i = 0; $i < count($days); $i++) {
+            $start = $days[$i];
+            $end = $start;
+            while (isset($days[$i + 1]) && $days[$i + 1] === $end + 1) $end = $days[++$i];
+            $parts[] = $start === $end ? $names[$start] : $names[$start] . '–' . $names[$end];
+        }
+        return implode(', ', $parts);
+    }
+}
+
+if (! function_exists('departure_round_choices')) {
+    function departure_round_choices(array $rules, int $currentRound = 1): array
+    {
+        $choices = [1, max(1, min(999, $currentRound))];
+        foreach ($rules as $rule) {
+            $round = (int) ($rule['round_number'] ?? 1);
+            if ($round >= 1 && $round <= 999) $choices[] = $round;
+        }
+        return range(1, min(999, max($choices) + 1));
+    }
+}
+
 if (! function_exists('history_departure_time')) {
     /** Record history on five-minute clock marks while retaining the actual queue timestamp. */
     function history_departure_time(?string $departure, string $format = 'H:i'): string

@@ -34,6 +34,9 @@
     <?php endif; ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/navigation.css') ?>">
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
+    <?php foreach (($pageStyles ?? []) as $pageStyle): ?>
+    <link rel="stylesheet" href="<?= app_asset_url($pageStyle) ?>">
+    <?php endforeach; ?>
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
 
