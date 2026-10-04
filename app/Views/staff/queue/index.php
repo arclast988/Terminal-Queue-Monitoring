@@ -1094,11 +1094,22 @@ $queueOrderGroups = array_values($queueOrderGroups);
 <div id="queueActionFeedback" class="queue-action-notice" role="alert" hidden></div>
 <div class="queue-route-controls card-modern mb-3" id="queueRouteControls">
     <div class="queue-control-filter">
-        <span class="queue-control-label"><i class="bi bi-funnel"></i> Filter route</span>
+        <span class="queue-control-label"><i class="bi bi-funnel-fill"></i> Route:</span>
         <div class="queue-route-chips" role="group" aria-label="Queue route filter">
-        <button type="button" class="queue-route-chip btn-outline-primary active" data-queue-route="all" aria-pressed="true"><i class="bi bi-grid"></i> All routes</button>
+        <button type="button" class="queue-route-chip active" data-queue-route="all" aria-pressed="true"><i class="bi bi-grid-fill"></i> All routes <span class="chip-count"><?= !empty($queue) ? count($queue) : 0 ?></span></button>
         <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
-        <button type="button" class="queue-route-chip btn-outline-primary" data-queue-route="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>" aria-pressed="false"><i class="bi bi-geo-alt"></i> <?= esc(strtoupper($queueRoute['destination'])) ?></button>
+            <?php
+                $rk = $queueRoute['terminal_id'] . '|' . $queueRoute['destination'];
+                $rCount = 0;
+                if (!empty($queue)) {
+                    foreach ($queue as $qItem) {
+                        if ((($qItem['terminal_id'] ?? 0) . '|' . ($qItem['destination'] ?? '')) === $rk) {
+                            $rCount++;
+                        }
+                    }
+                }
+            ?>
+        <button type="button" class="queue-route-chip" data-queue-route="<?= esc($rk, 'attr') ?>" aria-pressed="false"><i class="bi bi-geo-alt-fill"></i> <?= esc(strtoupper($queueRoute['destination'])) ?> <span class="chip-count"><?= $rCount ?></span></button>
         <?php endforeach; ?>
         </div>
     </div>
@@ -1331,14 +1342,18 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                 <div class="queue-order-item" data-queue-id="<?= (int) $queueOrderItem['id'] ?>" data-status="<?= esc($queueOrderItem['status'] ?? '', 'attr') ?>" draggable="false">
                                     <span class="queue-order-position">#<?= (int) $queueOrderItem['position'] ?></span>
                                     <div class="queue-order-details flex-grow-1">
-                                        <div class="fw-bold text-truncate"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?> <span class="badge-modern badge-modern-primary">Round <?= (int) ($queueOrderItem['round_number'] ?? 1) ?></span></div>
-                                        <div class="small text-muted text-truncate">
-                                            <?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?>
+                                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                            <span class="fw-bold" style="font-size: 14.5px; color: var(--text-main, #1e293b);"><?= esc($queueOrderItem['plate_number'] ?? 'Vehicle') ?></span>
                                             <?php if ($isOrderLocked): ?>
-                                                <span class="badge bg-success ms-1 queue-order-boarding-badge" data-queue-status-badge><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
+                                                <span class="badge bg-success queue-order-boarding-badge" data-queue-status-badge><i class="bi bi-lock-fill me-1"></i>BOARDING</span>
                                             <?php else: ?>
-                                                <span class="badge bg-warning-subtle text-warning-emphasis ms-1" data-queue-status-badge>WAITING</span>
+                                                <span class="badge bg-warning-subtle text-warning-emphasis" data-queue-status-badge>WAITING</span>
                                             <?php endif; ?>
+                                        </div>
+                                        <div class="small text-muted d-flex align-items-center gap-2 flex-wrap">
+                                            <span><?= esc(vehicle_type_label($queueOrderItem['vehicle_type'] ?? '')) ?></span>
+                                            <span class="text-secondary opacity-50">&bull;</span>
+                                            <span class="badge-modern badge-modern-primary" style="font-size: 11px; padding: 1px 7px;">Round <?= (int) ($queueOrderItem['round_number'] ?? 1) ?></span>
                                         </div>
                                     </div>
                                     <div class="queue-order-moves">
@@ -2197,7 +2212,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             if (status === 'boarding') {
                 item.classList.remove('d-none');
                 if (badge) {
-                    badge.className = 'badge bg-success ms-1 queue-order-boarding-badge';
+                    badge.className = 'badge bg-success queue-order-boarding-badge';
                     badge.innerHTML = '<i class="bi bi-lock-fill me-1"></i>BOARDING';
                     badge.setAttribute('data-queue-status-badge', '');
                 }
@@ -2205,7 +2220,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             } else if (status === 'waiting') {
                 item.classList.remove('d-none');
                 if (badge) {
-                    badge.className = 'badge bg-warning-subtle text-warning-emphasis ms-1';
+                    badge.className = 'badge bg-warning-subtle text-warning-emphasis';
                     badge.textContent = 'WAITING';
                     badge.setAttribute('data-queue-status-badge', '');
                 }

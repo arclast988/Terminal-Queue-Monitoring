@@ -18,10 +18,22 @@
 
     function applyFilters() {
         var visible = 0;
+        var routeCounts = {};
+        var totalQueued = 0;
         document.querySelectorAll('#queue-list .q-card[data-queue-route-key]').forEach(function (card) {
-            var show = routeFilter === 'all' || card.dataset.queueRouteKey === routeFilter;
+            var rk = card.dataset.queueRouteKey;
+            routeCounts[rk] = (routeCounts[rk] || 0) + 1;
+            totalQueued++;
+            var show = routeFilter === 'all' || rk === routeFilter;
             card.classList.toggle('d-none', !show);
             if (show) visible++;
+        });
+        document.querySelectorAll('[data-queue-route]').forEach(function (btn) {
+            var countEl = btn.querySelector('.chip-count');
+            if (countEl) {
+                var rk = btn.dataset.queueRoute;
+                countEl.textContent = rk === 'all' ? totalQueued : (routeCounts[rk] || 0);
+            }
         });
         var empty = document.getElementById('queueRouteEmpty');
         if (empty) empty.classList.toggle('d-none', routeFilter === 'all' || visible > 0);

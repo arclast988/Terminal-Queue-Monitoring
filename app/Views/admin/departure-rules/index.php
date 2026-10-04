@@ -140,6 +140,35 @@
     white-space: nowrap;
 }
 
+.rule-day-round-cell {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+}
+
+.rule-round-text {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted, #64748b);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .rule-day-round-cell {
+        align-items: flex-end;
+        text-align: right;
+        max-width: 65%;
+    }
+    .rule-day-round-cell .rule-days-label {
+        white-space: normal;
+        text-align: right;
+        word-break: break-word;
+        line-height: 1.35;
+    }
+}
+
 #departure-rules-table {
     table-layout: auto;
     width: 100%;
@@ -391,7 +420,12 @@
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Day / Round"><span class="badge-modern badge-modern-primary rule-days-label"><?= esc(departure_rule_day_label($rule)) ?></span><br><span class="small">Round <?= (int) ($rule['round_number'] ?? 1) ?></span></td>
+                                <td data-label="Day / Round">
+                                    <div class="rule-day-round-cell">
+                                        <span class="badge-modern badge-modern-primary rule-days-label"><?= esc(departure_rule_day_label($rule)) ?></span>
+                                        <span class="rule-round-text">Round <?= (int) ($rule['round_number'] ?? 1) ?></span>
+                                    </div>
+                                </td>
                                 <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'Start time (AM/PM)' : 'Time From (HH:MM)' ?>"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= operations_time($rule['time_from']) ?></span></td>
                                 <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'End time (AM/PM)' : 'Time To (HH:MM)' ?>"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= operations_time($rule['time_to']) ?></span></td>
                                 <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'Interval (minutes)' : 'Wait Time (HH:MM)' ?>">
