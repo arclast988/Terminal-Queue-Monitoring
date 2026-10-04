@@ -71,7 +71,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $before=QueueSelectionHarness::$db->table('queue')->get()->getResultArray();
         $response=$this->switchRound(2);
         $this->assertSame(409,$response->getStatusCode());
-        $this->assertStringContainsString('No departure rule is configured', $response->getBody());
+        $this->assertStringContainsString('No departure rule is active', $response->getBody());
         $this->assertSame($before, QueueSelectionHarness::$db->table('queue')->get()->getResultArray());
         $this->assertSame(0,QueueSelectionHarness::$db->table('dispatch_rounds')->countAllResults());
     }
@@ -94,9 +94,24 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertStringNotContainsString('<script>', $data['html']);
         $this->assertSame($before, $db->table('queue')->get()->getResultArray());
     }
-    public function testRoundSwitchUsesTheConfiguredIntervalAtAnyTimeAndPreservesElapsedBoardingTime(): void
+    public function testRoundOutsideScheduledHoursIsRejectedWithoutChangingTripsOrRoundState(): void
     {
-        QueueSelectionHarness::$db->table('departure_rules')->insert(['id'=>10,'terminal_id'=>1,'route_id'=>1,'time_from'=>'00:00:00','time_to'=>'00:01:00','wait_minutes'=>25,'days_of_week'=>(string)date('N'),'round_number'=>2]);
+        $db = QueueSelectionHarness::$db;
+        // Pick a valid window that cannot include the current clock time.
+        [$from, $to] = date('H:i:s') < '12:00:00' ? ['12:00:00', '17:00:00'] : ['05:00:00', '08:00:00'];
+        $db->table('departure_rules')->insert(['id'=>10, 'terminal_id'=>1, 'route_id'=>1, 'time_from'=>$from, 'time_to'=>$to, 'wait_minutes'=>25, 'days_of_week'=>'1,2,3,4,5,6,7', 'round_number'=>2]);
+        $db->table('dispatch_rounds')->insert(['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC', 'service_date'=>date('Y-m-d'), 'round_number'=>1]);
+        $trips = $db->table('queue')->get()->getResultArray();
+        $states = $db->table('dispatch_rounds')->get()->getResultArray();
+        $response = $this->switchRound(2);
+        $this->assertSame(409, $response->getStatusCode());
+        $this->assertStringContainsString('scheduled hours', $response->getBody());
+        $this->assertSame($trips, $db->table('queue')->get()->getResultArray());
+        $this->assertSame($states, $db->table('dispatch_rounds')->get()->getResultArray());
+    }
+    public function testActiveRoundSwitchPreservesElapsedBoardingTime(): void
+    {
+        QueueSelectionHarness::$db->table('departure_rules')->insert(['id'=>10,'terminal_id'=>1,'route_id'=>1,'time_from'=>'00:00:00','time_to'=>'23:59:00','wait_minutes'=>25,'days_of_week'=>'1,2,3,4,5,6,7','round_number'=>2]);
         $boarding=QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray();
         $this->assertSame(200,$this->switchRound(2)->getStatusCode());
         $updated=QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray();

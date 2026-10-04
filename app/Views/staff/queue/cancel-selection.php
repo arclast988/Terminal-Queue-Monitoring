@@ -10,6 +10,14 @@
                     <div><label class="form-label-modern" for="cancelRouteFilter">Filter route</label><select id="cancelRouteFilter" class="form-select" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter route"><option value="all">All routes</option>
                         <?php foreach (($queueRoutes ?? []) as $route): ?><option value="<?= esc($route['terminal_id'] . '|' . $route['destination'], 'attr') ?>"><?= esc($route['origin'] . ' → ' . $route['destination']) ?></option><?php endforeach; ?>
                     </select></div>
+                    <div class="queue-cancel-search">
+                        <label class="form-label-modern" for="cancelVehicleSearch">Search vehicles</label>
+                        <div class="queue-cancel-search-field">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <input type="search" id="cancelVehicleSearch" class="form-control" placeholder="Plate, type, operator or driver…" autocomplete="off">
+                            <button type="button" id="clearCancelVehicleSearch" class="queue-cancel-search-clear" aria-label="Clear vehicle search" hidden><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+                        </div>
+                    </div>
                     <label class="queue-select-visible"><input type="checkbox" id="cancelSelectVisible"> Select all shown</label>
                 </div>
                 <div id="cancelSelectionFeedback" class="queue-action-notice" role="alert" hidden></div>

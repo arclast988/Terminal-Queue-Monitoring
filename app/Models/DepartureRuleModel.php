@@ -26,8 +26,8 @@ class DepartureRuleModel extends Model
      *   1. A rule for any route sharing the requested destination and terminal.
      *   2. A terminal-wide default rule (route_id IS NULL) for $terminalId covering $time.
      *   3. A hard-coded default (30 minutes).
-     * Explicit rounds can be selected at any time: if no time window matches,
-     * use that round's configured rule for the selected day and route.
+     * Every rule, including an explicit round, must cover the selected day
+     * and time. An expired round cannot override a currently active rule.
      *
      * Returns the full rule array, or the default fallback if nothing matches.
      */
@@ -64,8 +64,6 @@ class DepartureRuleModel extends Model
         $routeIds = array_map('intval', $routeIds);
         $destinationRule = null;
         $terminalRule = null;
-        $destinationRoundRule = null;
-        $terminalRoundRule = null;
         $priority = static fn(array $r): array => [
             (int) (count(departure_rule_days($r)) < 7) + (int) !empty($r['round_number']),
             (int) (count(departure_rule_days($r)) < 7),
@@ -73,10 +71,6 @@ class DepartureRuleModel extends Model
         ];
         $withinWindow = static fn(array $r): bool => $r['time_from'] <= $timeStr
             && ($timeStr >= '23:59:00' ? $r['time_to'] >= '23:59:00' : $r['time_to'] > $timeStr);
-        $roundPriority = static fn(array $r): array => [
-            (int) (count(departure_rule_days($r)) < 7), (int) $withinWindow($r),
-            ($r['updated_at'] ?? ''), (int) ($r['id'] ?? 0),
-        ];
 
         foreach ($rules as $rule) {
             if ((int) ($rule['terminal_id'] ?? 0) !== $terminalId
@@ -92,13 +86,6 @@ class DepartureRuleModel extends Model
                 continue;
             }
 
-            if (!empty($rule['round_number'])) {
-                $roundMatched = $isDestinationRule ? $destinationRoundRule : $terminalRoundRule;
-                if ($roundMatched === null || $roundPriority($rule) > $roundPriority($roundMatched)) {
-                    if ($isDestinationRule) $destinationRoundRule = $rule;
-                    else $terminalRoundRule = $rule;
-                }
-            }
             if (!$withinWindow($rule)) continue;
             $matched = $isDestinationRule ? $destinationRule : $terminalRule;
             if ($matched === null || $priority($rule) > $priority($matched)) {
@@ -110,7 +97,7 @@ class DepartureRuleModel extends Model
             }
         }
 
-        return $destinationRoundRule ?? $destinationRule ?? $terminalRoundRule ?? $terminalRule ?? [
+        return $destinationRule ?? $terminalRule ?? [
             'wait_minutes' => 30,
             'label' => 'Default (no rule matched)',
             'time_from' => null,

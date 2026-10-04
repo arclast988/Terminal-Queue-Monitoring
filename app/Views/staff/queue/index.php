@@ -1514,6 +1514,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     #addToQueueModal .add-queue-toolbar {
         display: grid;
         grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr);
+        align-items: end;
         gap: 8px;
         padding: 8px 10px !important;
         margin-bottom: 12px !important;
@@ -1522,6 +1523,15 @@ $queueOrderGroups = array_values($queueOrderGroups);
     #addToQueueModal .add-queue-route-filter,
     #addToQueueModal .add-queue-search {
         min-width: 0;
+    }
+
+    #addToQueueModal .add-queue-filter-label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--text-muted, #475569);
     }
 
     #addToQueueModal .add-queue-selection-actions {
@@ -2021,7 +2031,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <!-- Quick Actions & Search Filter Bar -->
                         <div class="queue-toolbar-card add-queue-toolbar">
                             <div class="add-queue-route-filter">
-                                <label for="addQueueRouteFilter" class="visually-hidden">Quick route filter</label>
+                                <label for="addQueueRouteFilter" class="add-queue-filter-label">Filter Route</label>
                                 <select id="addQueueRouteFilter" class="form-select" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter available vehicles by route">
                                     <option value="all">All routes</option>
                                     <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>

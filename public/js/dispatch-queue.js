@@ -137,7 +137,7 @@
             if (window.QueueSync) window.QueueSync.refresh(true);
         } finally {
             posting = false;
-            document.querySelectorAll('[data-dispatch-round]').forEach(function (choice) { choice.disabled = false; });
+            document.querySelectorAll('[data-dispatch-round]').forEach(function (choice) { choice.disabled = choice.dataset.roundUnavailable === 'true'; });
             if (window.QueueSync) window.QueueSync.refresh(true);
         }
     });
@@ -152,6 +152,7 @@
             var feedback = document.getElementById('queueRoundFeedback');
             if (feedback) feedback.hidden = true;
             applyFilters();
+            if (window.QueueSync) window.QueueSync.refresh(true);
         }
     });
     document.addEventListener('shown.bs.modal', function (event) {

@@ -158,11 +158,21 @@ if ($fixturePage === 'staff-queue') {
     if (($argv[4] ?? '') === 'unconfigured-round') {
         unset($fixtureData['queueRoutes'][1]['round_intervals'][2], $fixtureData['queueRoutes'][1]['round_intervals'][3]);
     }
-    if (($argv[4] ?? '') === 'many') {
+    if (($argv[4] ?? '') === 'expired-round') {
+        unset($fixtureData['queueRoutes'][0]['round_intervals'][1]);
+        $fixtureData['queueRoutes'][0]['round_intervals'][2] = 100;
+        $fixtureData['queueRoutes'][1]['round_intervals'] = [];
+    }
+    if (in_array(($argv[4] ?? ''), ['many', 'search-many'], true)) {
         $fixtureData['queue'] = [];
         for ($position = 1; $position <= 10; $position++) {
             $trip = array_replace($item, ['id'=>100+$position, 'position'=>$position, 'plate_number'=>'TRIP-'.$position, 'status'=>$position === 1 ? 'boarding' : 'waiting']);
             if ($position > 5) $trip['destination'] = 'BATO';
+            if (($argv[4] ?? '') === 'search-many') {
+                $trip['operator_name'] = 'Operator ' . $position;
+                $trip['driver_name'] = 'Driver ' . $position;
+                $trip['vehicle_type'] = $position % 2 === 0 ? 'van' : 'minibus';
+            }
             $fixtureData['queue'][] = $trip;
         }
     }

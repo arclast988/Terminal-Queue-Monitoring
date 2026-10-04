@@ -366,7 +366,7 @@ class Queue extends BaseController
         $matched = $ruleModel->getRuleForTime(date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeId, (int) $round);
         if (empty($matched['id'])) {
             $db->transComplete();
-            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'variant' => 'warning', 'message' => 'No departure rule is configured for this route and round today. Check its selected days and route in Departure Rules.']);
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'variant' => 'warning', 'message' => 'No departure rule is active for this route and round right now. Check its scheduled hours, selected days and route in Departure Rules.']);
         }
         (new DispatchRoundModel($db))->setRound((int) $route['terminal_id'], $route['destination'], (int) $round);
         $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);

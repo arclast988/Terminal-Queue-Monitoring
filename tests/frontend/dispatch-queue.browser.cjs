@@ -264,6 +264,7 @@ test('cancel selection refresh loads directly, keeps choices and recovers from f
   });
   await page.goto(origin+'/staff/queue');await page.locator('#cancelSelectionBtn').click();
   for(const id of ['101','102'])await page.locator(`[name="cancel_queue_ids[]"][value="${id}"]`).check();
+  await page.locator('#cancelVehicleSearch').fill('trip-1');
   await page.locator('#refreshCancelSelection').click();
   assert.equal(await page.locator('#refreshCancelSelection').innerText(),'Refreshing…');
   assert.equal(await page.locator('#refreshCancelSelection').isDisabled(),true);
@@ -272,6 +273,8 @@ test('cancel selection refresh loads directly, keeps choices and recovers from f
   assert.equal(await page.locator('[name="cancel_queue_ids[]"]:checked').count(),1);
   assert.match(await page.locator('#cancelSelectionFeedback').innerText(),/no longer active/);
   assert.match(await page.locator('#cancelSelectionList').innerText(),/Updated driver/);
+  assert.equal(await page.locator('#cancelVehicleSearch').inputValue(),'trip-1');
+  assert.equal(await page.locator('.queue-cancel-item:not([hidden])').count(),1);
   assert.equal(await page.locator('#cancelSelectedSubmit').isEnabled(),true);
   fail=true;await page.locator('#refreshCancelSelection').click();
   await page.waitForFunction(()=>document.getElementById('cancelSelectionFeedback').textContent.includes('Could not refresh'));
@@ -282,14 +285,67 @@ test('cancel selection refresh loads directly, keeps choices and recovers from f
   await page.close();
 });
 
+test('cancel vehicle search combines with routes and selects only matching trips on phones and desktop',async()=>{
+  variant='search-many';
+  for(const [width,height] of [[320,568],[375,667],[667,375],[1280,800]]) {
+    const page=await browser.newPage({viewport:{width,height}}),errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(origin+'/staff/queue');await page.locator('#cancelSelectionBtn').click();
+    await page.waitForSelector('#cancelSelectionModal.show');
+    const search=page.locator('#cancelVehicleSearch'),shown=page.locator('.queue-cancel-item:not([hidden])');
+    assert.equal(await shown.count(),10);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    if(width===375 || width===1280)await page.screenshot({path:path.join(__dirname,'artifacts','cancel-vehicle-search-'+width+'.png')});
+    for(const [query,count] of [['VAN',5],['operator 7',1],['Driver 2',1]]) {
+      await search.fill(query);assert.equal(await shown.count(),count);
+    }
+    await search.fill('trip-4');assert.equal(await shown.count(),1);
+    await page.locator('#cancelSelectVisible').check();
+    assert.deepEqual(await page.locator('[name="cancel_queue_ids[]"]:checked').evaluateAll(boxes=>boxes.map(box=>box.value)),['104']);
+    await page.locator('#cancelRouteFilter').selectOption('1|BATO');
+    assert.equal(await shown.count(),0);
+    assert.equal(await page.locator('#cancelSelectVisible').isDisabled(),true);
+    assert.match(await page.locator('#cancelSelectionEmpty').innerText(),/No trips match your search for this route/);
+    assert.equal(await page.locator('[name="cancel_queue_ids[]"][value="104"]').isChecked(),true);
+    await page.locator('#clearCancelVehicleSearch').click();
+    assert.equal(await search.inputValue(),'');assert.equal(await shown.count(),5);
+    await page.locator('#cancelSelectVisible').check();
+    assert.deepEqual(await page.locator('[name="cancel_queue_ids[]"]:checked').evaluateAll(boxes=>boxes.map(box=>box.value)),['104','106','107','108','109','110']);
+    await page.locator('#cancelRouteFilter').selectOption('all');
+    assert.equal(await shown.count(),10);
+    assert.match(await page.locator('#cancelSelectionCount').innerText(),/6 trips selected/);
+    assert.equal(await page.locator('#cancelSelectVisible').evaluate(box=>box.indeterminate),true);
+    assert.deepEqual(errors,[]);await page.close();
+  }
+});
+
 test('Round dialog never presents the fallback interval as a configured departure rule',async()=>{
   variant='unconfigured-round';const page=await browser.newPage({viewport:{width:375,height:667}});
   await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();
-  const choice=page.locator('[data-route-id="2"] option[value="2"]');
-  assert.match(await choice.innerText(),/Round 2 · No active rule/);
-  assert.notEqual(await choice.getAttribute('disabled'),null);
+  const select=page.locator('[data-dispatch-round][data-route-id="2"]');
+  assert.equal(await select.locator('option[value="2"]').count(),0);
+  assert.equal(await select.inputValue(),'');
+  assert.match(await select.locator('option:checked').innerText(),/Choose an available round/);
   assert.doesNotMatch(await page.locator('[data-round-route="1|BATO"]').innerText(),/30 min/);
-  assert.match(await page.locator('[data-round-route="1|BATO"]').innerText(),/No rule is configured/);
+  assert.match(await page.locator('[data-round-route="1|BATO"]').innerText(),/Choose a round that is active now/);
+  await page.close();
+});
+
+test('expired rounds are absent and routes with no active hours stay disabled after another route changes',async()=>{
+  variant='expired-round';roundRequests=[];
+  const page=await browser.newPage({viewport:{width:375,height:667}});
+  await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();
+  const active=page.locator('[data-dispatch-round][data-route-id="1"]');
+  const unavailable=page.locator('[data-dispatch-round][data-route-id="2"]');
+  assert.deepEqual(await active.locator('option').evaluateAll(options=>options.map(option=>option.value)),['','2','3']);
+  assert.match(await active.locator('option:checked').innerText(),/Choose an available round/);
+  assert.equal(await unavailable.isDisabled(),true);
+  assert.match(await unavailable.locator('option:checked').innerText(),/No rounds available now/);
+  await active.selectOption('2');
+  await page.waitForFunction(()=>document.getElementById('queueRoundFeedback').textContent.includes('Round updated'));
+  assert.equal(roundRequests.find(request=>request.path.endsWith('/round')).body.get('round_number'),'2');
+  assert.equal(await unavailable.isDisabled(),true);
+  assert.equal(await active.isEnabled(),true);
   await page.close();
 });
 

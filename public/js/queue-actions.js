@@ -53,8 +53,15 @@
     function updateSelection() {
         if (!modal) return;
         var route = modal.querySelector('#cancelRouteFilter').value || 'all';
+        var search = modal.querySelector('#cancelVehicleSearch');
+        var query = search.value.trim().toLowerCase();
+        var terms = query ? query.split(/\s+/) : [];
         var rows = Array.from(modal.querySelectorAll('.queue-cancel-item'));
-        rows.forEach(row=>{row.hidden=route !== 'all' && row.dataset.cancelRoute !== route;});
+        rows.forEach(row=>{
+            var details = row.textContent.toLowerCase();
+            row.hidden = (route !== 'all' && row.dataset.cancelRoute !== route) || !terms.every(term=>details.includes(term));
+        });
+        modal.querySelector('#clearCancelVehicleSearch').hidden = !search.value;
         var visible = rows.filter(row=>!row.hidden).map(row=>row.querySelector('input'));
         var checkedVisible = visible.filter(box=>box.checked);
         var selectAll = modal.querySelector('#cancelSelectVisible');
@@ -65,7 +72,9 @@
         modal.querySelector('#cancelSelectionCount').textContent = count + ' trip' + (count === 1 ? '' : 's') + ' selected';
         var submit = modal.querySelector('#cancelSelectedSubmit'); submit.disabled = !count || busy || refreshing;
         submit.textContent = busy ? 'Canceling…' : count ? 'Cancel ' + count + ' selected trip' + (count === 1 ? '' : 's') : 'Cancel selected trips';
-        modal.querySelector('#cancelSelectionEmpty').hidden = visible.length > 0;
+        var empty = modal.querySelector('#cancelSelectionEmpty');
+        empty.hidden = visible.length > 0;
+        empty.textContent = query ? (route === 'all' ? 'No trips match your search.' : 'No trips match your search for this route.') : 'No active trips for this route.';
     }
     function sync(newDoc) {
         if (!modal || !newDoc || modal.classList.contains('show') || refreshing) return;
@@ -110,6 +119,11 @@
         }
     }
     if (modal) {
+        modal.querySelector('#cancelVehicleSearch').addEventListener('input',updateSelection);
+        modal.querySelector('#clearCancelVehicleSearch').addEventListener('click',function(){
+            var search = modal.querySelector('#cancelVehicleSearch');
+            search.value = ''; search.focus(); updateSelection();
+        });
         modal.addEventListener('change',function(event){
             if (event.target.id === 'cancelSelectVisible') modal.querySelectorAll('.queue-cancel-item:not([hidden]) input').forEach(box=>{box.checked=event.target.checked;});
             updateSelection();
@@ -117,6 +131,7 @@
         modal.addEventListener('show.bs.modal',function(){
             modal.querySelectorAll('[name="cancel_queue_ids[]"]').forEach(box=>{box.checked=false;});
             modal.querySelector('#cancelSelectionFeedback').hidden=true;
+            modal.querySelector('#cancelVehicleSearch').value = '';
             var active = document.querySelector('[data-queue-route][aria-pressed="true"]');
             var filter = modal.querySelector('#cancelRouteFilter');
             filter.value = active ? active.dataset.queueRoute : 'all'; if (!filter.value) filter.value='all';
@@ -129,7 +144,7 @@
             if (busy || refreshing || !selection().length) return;
             var ids=selection(), body=new URLSearchParams(); ids.forEach(id=>body.append('queue_ids[]',id));
             busy=true; updateSelection();
-            modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection').forEach(el=>{el.disabled=true;});
+            modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection,#clearCancelVehicleSearch').forEach(el=>{el.disabled=true;});
             try {
                 var data=await request(script.dataset.cancelUrl,body);
                 (data.queue_ids || ids).forEach(id=>{if(window.QueueOrderManager)window.QueueOrderManager.setStatus(id,'canceled');});
@@ -137,7 +152,7 @@
                 notice('Trips canceled',data.message,'success');
                 if(window.QueueSync)window.QueueSync.refresh(true);
             } catch(error){notice('Could not cancel the selection',error.message,error.variant,modal.querySelector('#cancelSelectionFeedback'));}
-            finally {busy=false;modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection').forEach(el=>{el.disabled=false;});updateSelection();}
+            finally {busy=false;modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection,#clearCancelVehicleSearch').forEach(el=>{el.disabled=false;});updateSelection();}
         });
         updateSelection();
     }
