@@ -145,10 +145,10 @@ class DepartureRuleModel extends Model
     }
 
     /**
-     * Renumber the rounds of one rule scope so they run 1, 2, 3... without gaps
-     * (e.g. rounds 1, 2, 4 become 1, 2, 3). The scope is a destination (all
-     * vehicle-type routes sharing it) or the terminal-wide defaults. Today's
-     * selected dispatch round and queued trips are remapped with the rules.
+     * Renumber a destination's rounds to 1, 2, 3... across its vehicle types.
+     * Terminal-wide defaults close gaps while retaining their starting number.
+     * The selected dispatch round and active trips are remapped with destination
+     * rules; completed trips and schedule timestamps retain their values.
      */
     public function compactRounds(int $terminalId, ?int $routeId): void
     {
@@ -170,22 +170,20 @@ class DepartureRuleModel extends Model
 
         $rounds = array_values(array_unique(array_map(static fn(array $r): int => max(1, (int) $r['round_number']), $rules)));
         sort($rounds);
-        if (count($rounds) <= 1) return;
+        if (!$rounds) return;
 
         $map = [];
-        if ($rounds[0] === 1) {
-            foreach ($rounds as $index => $round) {
-                if ($round !== $index + 1) $map[$round] = $index + 1;
-            }
-        } else {
-            $expected = $rounds[0];
-            foreach ($rounds as $round) {
-                if ($round > $expected) $map[$round] = $expected;
-                $expected++;
-            }
+        // A destination's first rule is Round 1, including a lone legacy
+        // Round 2. Terminal defaults keep their starting number because
+        // destination rules can reference those shared round numbers.
+        $firstRound = $destination !== null ? 1 : $rounds[0];
+        foreach ($rounds as $index => $round) {
+            $expected = $firstRound + $index;
+            if ($round !== $expected) $map[$round] = $expected;
         }
         if (!$map) return;
 
+        $this->db->transStart();
         foreach ($rules as $rule) {
             $old = max(1, (int) $rule['round_number']);
             if (isset($map[$old])) {
@@ -193,7 +191,10 @@ class DepartureRuleModel extends Model
             }
         }
 
-        if ($destination === null) return;
+        if ($destination === null) {
+            $this->db->transComplete();
+            return;
+        }
         // Ascending order is safe: every mapped value is lower than its source.
         ksort($map);
         foreach ($map as $old => $new) {
@@ -208,5 +209,6 @@ class DepartureRuleModel extends Model
                     ->update(['round_number' => $new]);
             }
         }
+        $this->db->transComplete();
     }
 }

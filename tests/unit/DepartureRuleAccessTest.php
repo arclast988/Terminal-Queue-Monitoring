@@ -337,4 +337,27 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $this->assertSame(3,(int)$saved['route_id']);
         $this->assertSame([[1,3]],ScopedDepartureRulesHarness::$recalculations);
     }
+
+    public function testSavingAFirstDestinationRuleAlwaysStartsAtRoundOne(): void
+    {
+        ScopedDepartureRulesHarness::$assignedIds = [1, 2, 3];
+        ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 3)->delete();
+        $this->postRule(['route_id' => '3', 'round_number' => '2']);
+        $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $saved = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('route_id', 3)->get()->getRowArray();
+        $this->assertSame(1, (int) $saved['round_number']);
+        $this->assertSame(25, (int) $saved['wait_minutes']);
+        $other = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 1)->get()->getRowArray();
+        $this->assertSame(2, (int) $other['round_number']);
+    }
+
+    public function testEditingALoneDestinationRuleCorrectsItsStartingNumber(): void
+    {
+        ScopedDepartureRulesHarness::$assignedIds = [1, 2, 3];
+        $this->postRule(['route_id' => '3', 'round_number' => '2']);
+        $this->controller(ScopedDepartureRulesHarness::class)->execute('update', 3);
+        $saved = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 3)->get()->getRowArray();
+        $this->assertSame(1, (int) $saved['round_number']);
+        $this->assertSame(25, (int) $saved['wait_minutes']);
+    }
 }

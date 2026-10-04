@@ -356,6 +356,7 @@ class DepartureRules extends BaseController
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
+        if ($routeId !== null) $this->ruleModel->compactRounds($terminalId, $routeId);
 
         $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . operations_time($timeFrom) . ' - ' . operations_time($timeTo) . ', ' . $waitMinutes . ' min).');
 
@@ -505,11 +506,13 @@ class DepartureRules extends BaseController
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
+        if ($routeId !== null) $this->ruleModel->compactRounds($terminalId, $routeId);
 
         $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . operations_time($oldRule['time_from']) . '-' . operations_time($oldRule['time_to']) . '). After: ' . $waitMinutes . ' min (' . operations_time($timeFrom) . '-' . operations_time($timeTo) . ').');
 
         $oldRouteId = !empty($oldRule['route_id']) ? (int) $oldRule['route_id'] : null;
         if ((int) $oldRule['terminal_id'] !== $terminalId || $oldRouteId !== $routeId) {
+            if ($oldRouteId !== null) $this->ruleModel->compactRounds((int) $oldRule['terminal_id'], $oldRouteId);
             $this->recalculateRuleScope((int) $oldRule['terminal_id'], $oldRouteId);
         }
         $this->recalculateRuleScope($terminalId, $routeId);

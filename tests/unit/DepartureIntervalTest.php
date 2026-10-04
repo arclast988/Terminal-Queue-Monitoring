@@ -554,6 +554,55 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame([], departure_round_choices($existing, 0, '2|TACLOBAN', false));
     }
 
+    public function testDestinationRoundMigrationStartsALoneRuleAtOneWithoutChangingItsSchedule(): void
+    {
+        require_once APPPATH . 'Database/Migrations/2026-10-03-110000_AddDispatchDaysAndRounds.php';
+        (new \App\Database\Migrations\AddDispatchDaysAndRounds(Database::forge($this->intervalDb)))->up();
+        $this->intervalDb->table('routes')->where('id', 3)->update(['destination' => 'TACLOBAN']);
+        $this->addRule(10, 1, 3, 100);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['round_number' => 2]);
+        $this->intervalDb->table('departure_rules')->where('id', 2)->update(['round_number' => 2]);
+        $rounds = new \App\Models\DispatchRoundModel($this->intervalDb);
+        $rounds->setRound(1, 'TACLOBAN', 2);
+        $boarding = $this->addVehicle(3, 1, '2026-10-05 08:55:00');
+        $waiting = $this->addVehicle(3, 2, '2026-10-05 10:35:00');
+        $departed = $this->addVehicle(3, 3, '2026-10-05 07:15:00');
+        $this->queue->update($boarding, ['status' => 'boarding', 'round_number' => 2, 'boarding_start' => '2026-10-05 07:15:00']);
+        $this->queue->update($waiting, ['round_number' => 2]);
+        $this->queue->update($departed, ['status' => 'departed', 'round_number' => 2, 'departure_time' => '2026-10-05 07:15:00']);
+        $before = array_map(fn(int $id): array => $this->queue->find($id), [$boarding, $waiting, $departed]);
+
+        require_once APPPATH . 'Database/Migrations/2026-10-05-000000_StartDestinationRoundsAtOne.php';
+        $migration = new \App\Database\Migrations\StartDestinationRoundsAtOne(Database::forge($this->intervalDb));
+        $migration->up();
+        $migration->up();
+
+        $rules = new DepartureRuleModel($this->intervalDb);
+        $this->assertSame(1, (int) $rules->find(10)['round_number']);
+        $this->assertSame(100, $rules->getWaitMinutesForTime('2026-10-05 08:00:00', 1, 3, 1));
+        $this->assertSame(1, $rounds->currentRound(1, 'TACLOBAN'));
+        foreach ([$boarding, $waiting] as $index => $id) {
+            $expected = array_replace($before[$index], ['round_number' => 1]);
+            $this->assertEquals($expected, $this->queue->find($id));
+        }
+        $this->assertSame($before[2], $this->queue->find($departed));
+        $this->assertSame(2, (int) $rules->find(2)['round_number'], 'Shared terminal defaults retain their referenced round numbers.');
+        $this->assertSame(20, $rules->getWaitMinutesForTime('2026-10-05 08:00:00', 1, 1, 1));
+    }
+
+    public function testDestinationRoundsStartingAboveOneAreRemappedTogetherAcrossVehicleTypes(): void
+    {
+        $this->intervalDb->table('departure_rules')->emptyTable();
+        $this->addRule(10, 1, 1, 100);
+        $this->addRule(20, 1, 2, 30);
+        $this->intervalDb->table('departure_rules')->where('id', 10)->update(['round_number' => 2]);
+        $this->intervalDb->table('departure_rules')->where('id', 20)->update(['round_number' => 4]);
+        (new DepartureRuleModel($this->intervalDb))->compactRounds(1, 2);
+        $rows = $this->intervalDb->table('departure_rules')->orderBy('id')->get()->getResultArray();
+        $this->assertSame([1, 2], array_map('intval', array_column($rows, 'round_number')));
+        $this->assertSame([100, 30], array_map('intval', array_column($rows, 'wait_minutes')));
+    }
+
     private function addRule(int $id, int $terminalId, ?int $routeId, int $minutes, string $updatedAt = '2026-10-01 10:00:00'): void
     {
         $this->intervalDb->table('departure_rules')->insert([
