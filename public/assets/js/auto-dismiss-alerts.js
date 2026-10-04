@@ -8,7 +8,7 @@
     function initAutoDismissAlerts() {
         // Select all flash and system alert elements (excluding permanent banners like retention-pill)
         var alerts = document.querySelectorAll(
-            '.alert-modern, .alert-success-banner, .alert-error-banner, .alert:not(.alert-permanent):not(.retention-pill):not([data-permanent="true"])'
+            '.alert-modern, .alert-success-banner, .alert-error-banner, .contact-verification-notice, .alert:not(.alert-permanent):not(.retention-pill):not([data-permanent="true"])'
         );
 
         alerts.forEach(function (alert) {
@@ -17,7 +17,7 @@
             alert.dataset.dismissInit = 'true';
 
             // Add close button if not already present and not inside a form field validation
-            if (!alert.querySelector('.alert-close-btn') && !alert.querySelector('.btn-close')) {
+            if (!alert.classList.contains('contact-verification-notice') && !alert.querySelector('.alert-close-btn') && !alert.querySelector('.btn-close')) {
                 var closeBtn = document.createElement('button');
                 closeBtn.type = 'button';
                 closeBtn.className = 'alert-close-btn';
@@ -98,6 +98,28 @@
         document.addEventListener('DOMContentLoaded', initAutoDismissAlerts);
     } else {
         initAutoDismissAlerts();
+    }
+
+    // Watch for dynamically added notifications (e.g. modals, AJAX forms)
+    if (window.MutationObserver) {
+        var alertObserver = new MutationObserver(function (mutations) {
+            for (var m = 0; m < mutations.length; m++) {
+                if (mutations[m].addedNodes.length > 0) {
+                    initAutoDismissAlerts();
+                    break;
+                }
+            }
+        });
+        var startAlertObserver = function () {
+            if (document.body) {
+                alertObserver.observe(document.body, { childList: true, subtree: true });
+            }
+        };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startAlertObserver);
+        } else {
+            startAlertObserver();
+        }
     }
 
     // Export globally in case dynamic alerts are created via JS

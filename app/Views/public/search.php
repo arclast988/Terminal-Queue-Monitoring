@@ -867,6 +867,7 @@
                     aria-label="Search vehicle status"
                     value="<?= esc($search) ?>"
                     autocomplete="off"
+                    required
                     <?= empty($search) ? 'autofocus' : '' ?>
                     id="guest-results-search-input"
                     oninput="toggleGuestResultsClear(this.value)"
@@ -881,6 +882,7 @@
 
     <!-- Main Content -->
     <div class="container">
+        <?= view('partials/flash_notices') ?>
 
         <div class="back-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
             <a href="<?= base_url('guest') ?>" class="back-link">
@@ -1026,6 +1028,27 @@
                 input.focus();
             }
         }
+
+        (function() {
+            var searchForm = document.querySelector('.search-container form.guest-page-search');
+            if (searchForm) {
+                var searchInput = searchForm.querySelector('input[name="q"]');
+                searchForm.addEventListener('submit', function(e) {
+                    if (searchInput && !searchInput.value.trim()) {
+                        e.preventDefault();
+                        searchInput.value = '';
+                        searchInput.focus();
+                        searchInput.setCustomValidity('Please enter a plate, driver, or place to search.');
+                        searchInput.reportValidity();
+                    }
+                });
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        searchInput.setCustomValidity('');
+                    });
+                }
+            }
+        })();
     </script>
 </body>
 </html>

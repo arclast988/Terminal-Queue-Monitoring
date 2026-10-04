@@ -2247,6 +2247,7 @@
     </section>
 
     <div class="container">
+        <?= view('partials/flash_notices') ?>
         <!-- Stats Summary -->
         <div class="stats-grid guest-stats-grid">
             <div class="stat-card">
@@ -3789,6 +3790,27 @@
                 input.focus();
             }
         }
+
+        (function() {
+            var heroForm = document.querySelector('.search-container form.guest-page-search');
+            if (heroForm) {
+                var heroInput = heroForm.querySelector('input[name="q"]');
+                heroForm.addEventListener('submit', function(e) {
+                    if (heroInput && !heroInput.value.trim()) {
+                        e.preventDefault();
+                        heroInput.value = '';
+                        heroInput.focus();
+                        heroInput.setCustomValidity('Please enter a plate, driver, or place to search.');
+                        heroInput.reportValidity();
+                    }
+                });
+                if (heroInput) {
+                    heroInput.addEventListener('input', function() {
+                        heroInput.setCustomValidity('');
+                    });
+                }
+            }
+        })();
     </script>
 </body>
 

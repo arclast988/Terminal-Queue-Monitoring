@@ -39,6 +39,24 @@
         var focus = content.querySelector('[role="alert"], #guestContactCode, button[type="submit"]');
         if (focus) { if (focus.getAttribute('role') === 'alert') focus.tabIndex = -1; focus.focus({preventScroll:true}); }
     }
+    function scheduleNoticeDismiss(notice) {
+        if (!notice || notice.dataset.dismissScheduled === 'true') return;
+        notice.dataset.dismissScheduled = 'true';
+        var timer = null;
+        var startDismiss = function () {
+            timer = setTimeout(function () {
+                if (notice && notice.parentNode && !notice.classList.contains('alert-dismissing')) {
+                    notice.classList.add('alert-dismissing');
+                    setTimeout(function () {
+                        if (notice.parentNode) notice.parentNode.removeChild(notice);
+                    }, 450);
+                }
+            }, 4500);
+        };
+        notice.addEventListener('mouseenter', function () { if (timer) clearTimeout(timer); });
+        notice.addEventListener('mouseleave', function () { startDismiss(); });
+        startDismiss();
+    }
     function feedback(target, message, error) {
         target.querySelectorAll('[data-contact-feedback]').forEach(function (notice) { notice.remove(); });
         if (!message) return;
@@ -50,6 +68,7 @@
         var heading = target.querySelector('h3');
         if (heading) heading.after(notice); else target.prepend(notice);
         notice.focus({preventScroll:true});
+        scheduleNoticeDismiss(notice);
     }
     function source(type) { return document.getElementById(type === 'report' ? 'reportModal' : 'contactModal'); }
     function updateCsrf(csrf) {
@@ -63,6 +82,7 @@
             content.innerHTML = payload.html;
             modal.dataset.pendingType = payload.type;
             syncResume(); openVerification();
+            content.querySelectorAll('.contact-verification-notice').forEach(scheduleNoticeDismiss);
         } else if (payload.stage === 'form' || payload.stage === 'complete') {
             returnFocus = null;
             var heading = document.createElement('h3');
@@ -129,5 +149,6 @@
         else { clearInterval(timer); if (returnFocus && returnFocus.isConnected) returnFocus.focus({preventScroll:true}); }
     }).observe(modal, {attributes:true, attributeFilter:['class']});
     updateResend(); syncResume();
+    document.querySelectorAll('.contact-verification-notice').forEach(scheduleNoticeDismiss);
     if (active()) openVerification();
 })();

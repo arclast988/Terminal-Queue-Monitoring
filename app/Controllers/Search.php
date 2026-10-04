@@ -12,7 +12,7 @@ class Search extends BaseController
         $search = trim((string) $this->request->getGet('q'));
 
         if ($search === '') {
-            return redirect()->to('/guest');
+            return redirect()->to('/guest')->with('warning', 'Please enter a search term.');
         }
 
         $queueModel = new QueueModel();

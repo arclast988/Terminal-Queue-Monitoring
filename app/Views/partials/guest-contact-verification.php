@@ -5,10 +5,10 @@
 <p class="contact-verification-intro">Enter the six-digit code sent to <strong class="contact-verification-email"><?= esc($pending['email']) ?></strong>. Your <?= $pending['type'] === 'report' ? 'report' : 'message' ?> will be sent after verification.</p>
 <?php endif; ?>
 <?php if (!empty($notice)): ?>
-<div class="contact-verification-notice" role="status"><?= esc($notice) ?></div>
+<div class="contact-verification-notice" role="status" data-auto-dismiss="4500"><?= esc($notice) ?></div>
 <?php endif; ?>
 <?php if (!empty($error)): ?>
-<div class="contact-verification-notice is-error" role="alert"><?= esc($error) ?></div>
+<div class="contact-verification-notice is-error" role="alert" data-auto-dismiss="4500"><?= esc($error) ?></div>
 <?php endif; ?>
 <form method="post" action="<?= base_url('contact/verify') ?>" id="guestContactVerifyForm" data-contact-async data-no-loader>
     <?= csrf_field() ?>
