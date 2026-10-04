@@ -1296,8 +1296,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
             <div class="modal-body p-3 p-md-4">
                 <?php if (count($queueOrderGroups) > 1): ?>
                     <div class="mb-3">
-                        <label for="queueOrderGroupSelect" class="form-label fw-bold">Queue destination</label>
-                        <select id="queueOrderGroupSelect" class="form-select" aria-label="Quick filter queue route">
+                        <label for="queueOrderGroupSelect" class="form-label fw-bold">Filter route</label>
+                        <select id="queueOrderGroupSelect" class="form-select" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter queue route">
                             <?php foreach ($queueOrderGroups as $queueOrderGroup): ?>
                                 <option value="<?= esc($queueOrderGroup['panel_id'], 'attr') ?>" data-route-key="<?= esc(($queueOrderGroup['items'][0]['terminal_id'] ?? 0) . '|' . $queueOrderGroup['destination'], 'attr') ?>">
                                     <?= esc(strtoupper($queueOrderGroup['origin'])) ?> &rarr; <?= esc(strtoupper($queueOrderGroup['destination'])) ?> (<?= count($queueOrderGroup['items']) ?>)
@@ -1948,7 +1948,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     <?php else: ?>
                         <!-- Quick Actions & Search Filter Bar -->
                         <label for="addQueueRouteFilter" class="form-label fw-semibold">Quick route filter</label>
-                        <select id="addQueueRouteFilter" class="form-select mb-3">
+                        <select id="addQueueRouteFilter" class="form-select mb-3" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter available vehicles by route">
                             <option value="all">All routes</option>
                             <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
                             <option value="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>"><?= esc(strtoupper($queueRoute['origin'] . ' → ' . $queueRoute['destination'])) ?></option>
@@ -2061,7 +2061,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     </div>
 </div>
 
-<script src="<?= app_asset_url('js/queue-actions.js') ?>" data-cancel-url="<?= base_url('staff/queue/cancel-selected') ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
+<script src="<?= app_asset_url('js/queue-actions.js') ?>" data-cancel-url="<?= base_url('staff/queue/cancel-selected') ?>" data-refresh-url="<?= base_url('staff/queue/cancel-selection') ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
 <script src="<?= app_asset_url('js/dispatch-queue.js') ?>" defer data-round-url="<?= base_url('staff/queue/round') ?>" data-tick-url="<?= base_url('staff/queue/tick') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
 
 <!-- Change Driver Modal -->
@@ -2261,6 +2261,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         modalEl.addEventListener('change', function(event) {
             if (!event.target || event.target.id !== 'queueOrderGroupSelect') return;
             var groupSelect = event.target;
+            if (!groupSelect.value && groupSelect.options.length) groupSelect.value = groupSelect.options[0].value;
+            if (groupSelect.syncAutocompleteValue) groupSelect.syncAutocompleteValue();
             modalEl.querySelectorAll('.queue-order-panel').forEach(function(panel) {
                 panel.classList.toggle('d-none', panel.id !== groupSelect.value);
             });

@@ -7,22 +7,14 @@
             </div>
             <div class="modal-body">
                 <div class="queue-selection-tools">
-                    <div><label class="form-label-modern" for="cancelRouteFilter">Filter route</label><select id="cancelRouteFilter" class="form-select" data-no-autocomplete><option value="all">All routes</option>
+                    <div><label class="form-label-modern" for="cancelRouteFilter">Filter route</label><select id="cancelRouteFilter" class="form-select" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter route"><option value="all">All routes</option>
                         <?php foreach (($queueRoutes ?? []) as $route): ?><option value="<?= esc($route['terminal_id'] . '|' . $route['destination'], 'attr') ?>"><?= esc($route['origin'] . ' → ' . $route['destination']) ?></option><?php endforeach; ?>
                     </select></div>
                     <label class="queue-select-visible"><input type="checkbox" id="cancelSelectVisible"> Select all shown</label>
                 </div>
                 <div id="cancelSelectionFeedback" class="queue-action-notice" role="alert" hidden></div>
                 <div class="queue-cancel-list" id="cancelSelectionList">
-                <?php foreach (($queue ?? []) as $trip): ?>
-                    <label class="queue-cancel-item" data-cancel-route="<?= esc($trip['terminal_id'] . '|' . $trip['destination'], 'attr') ?>">
-                        <input type="checkbox" name="cancel_queue_ids[]" value="<?= (int) $trip['id'] ?>" aria-label="Select <?= esc($trip['plate_number'], 'attr') ?> for cancellation">
-                        <div class="queue-cancel-copy">
-                            <div class="queue-cancel-heading"><strong><?= esc($trip['plate_number']) ?></strong><span class="badge-modern badge-modern-primary"><?= esc(vehicle_type_label($trip['vehicle_type'] ?? '')) ?></span><span class="small text-muted"><?= ($trip['status'] ?? '') === 'boarding' ? 'Boarding' : 'Waiting' ?></span></div>
-                            <dl class="queue-cancel-details"><div><dt>Operator</dt><dd><?= esc($trip['operator_name'] ?: ($trip['owner_name'] ?? '—')) ?></dd></div><div><dt>Driver</dt><dd><?= esc($trip['driver_name'] ?: '—') ?></dd></div><div class="queue-cancel-destination"><dt>Destination</dt><dd><?= esc($trip['origin'] . ' → ' . $trip['destination']) ?></dd></div></dl>
-                        </div>
-                    </label>
-                <?php endforeach; ?>
+                <?= view('staff/queue/cancel-list', ['queue' => $queue ?? []]) ?>
                 </div>
                 <p id="cancelSelectionEmpty" class="small text-muted text-center p-3" hidden>No active trips for this route.</p>
             </div>

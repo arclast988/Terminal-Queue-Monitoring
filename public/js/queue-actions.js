@@ -48,11 +48,11 @@
         container.append(icon,copy,close);
         container.scrollIntoView({block:'nearest',behavior:'smooth'});
     }
-    var modal = document.getElementById('cancelSelectionModal'), needsSelectionRefresh = false, busy = false;
+    var modal = document.getElementById('cancelSelectionModal'), refreshing = false, busy = false;
     function selection() { return modal ? Array.from(modal.querySelectorAll('[name="cancel_queue_ids[]"]:checked')).map(box=>box.value) : []; }
     function updateSelection() {
         if (!modal) return;
-        var route = modal.querySelector('#cancelRouteFilter').value;
+        var route = modal.querySelector('#cancelRouteFilter').value || 'all';
         var rows = Array.from(modal.querySelectorAll('.queue-cancel-item'));
         rows.forEach(row=>{row.hidden=route !== 'all' && row.dataset.cancelRoute !== route;});
         var visible = rows.filter(row=>!row.hidden).map(row=>row.querySelector('input'));
@@ -63,15 +63,51 @@
         selectAll.disabled = !visible.length || busy;
         var count = selection().length;
         modal.querySelector('#cancelSelectionCount').textContent = count + ' trip' + (count === 1 ? '' : 's') + ' selected';
-        var submit = modal.querySelector('#cancelSelectedSubmit'); submit.disabled = !count || busy;
+        var submit = modal.querySelector('#cancelSelectedSubmit'); submit.disabled = !count || busy || refreshing;
         submit.textContent = busy ? 'Canceling…' : count ? 'Cancel ' + count + ' selected trip' + (count === 1 ? '' : 's') : 'Cancel selected trips';
         modal.querySelector('#cancelSelectionEmpty').hidden = visible.length > 0;
     }
     function sync(newDoc) {
-        if (!modal || !newDoc || (modal.classList.contains('show') && !needsSelectionRefresh)) return;
+        if (!modal || !newDoc || modal.classList.contains('show') || refreshing) return;
         var source = newDoc.getElementById('cancelSelectionList');
         if (source) modal.querySelector('#cancelSelectionList').replaceChildren(...Array.from(source.children).map(row=>row.cloneNode(true)));
-        needsSelectionRefresh=false; updateSelection();
+        updateSelection();
+    }
+    async function refreshSelection() {
+        if (refreshing || busy) return;
+        refreshing = true;
+        var button = modal.querySelector('#refreshCancelSelection'), list = modal.querySelector('#cancelSelectionList');
+        button.disabled = true; button.textContent = 'Refreshing…'; list.setAttribute('aria-busy', 'true');
+        modal.querySelector('#cancelSelectionFeedback').hidden = true;
+        updateSelection();
+        var controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 15000);
+        try {
+            var response = await fetch(script.dataset.refreshUrl, {
+                cache: 'no-store', headers: {'X-Requested-With':'XMLHttpRequest'}, signal:controller.signal
+            });
+            var data = null;
+            try { data = await response.json(); } catch (_) {}
+            if (!response.ok || !data || !data.success || typeof data.html !== 'string') {
+                throw new Error(response.redirected ? 'Your session has ended. Sign in again to refresh the trips.'
+                    : data && data.message || 'The latest trips could not be loaded. Try refreshing again.');
+            }
+            // Preserve the current selection, including changes made while loading.
+            var checked = new Set(selection());
+            var template = document.createElement('template');
+            template.innerHTML = window.DOMPurify.sanitize(data.html);
+            list.replaceChildren(template.content);
+            list.querySelectorAll('[name="cancel_queue_ids[]"]').forEach(box => { box.checked = checked.has(box.value); });
+            var removed = checked.size - selection().length;
+            notice('Selection refreshed', removed ? removed + ' selected trip' + (removed === 1 ? ' is' : 's are') + ' no longer active and ' + (removed === 1 ? 'was' : 'were') + ' removed. Your other selections were kept.'
+                : 'The latest active trips are loaded. Your selections were kept.', 'success', modal.querySelector('#cancelSelectionFeedback'));
+        } catch (error) {
+            var message = error.name === 'AbortError' || error instanceof TypeError
+                ? 'The connection was interrupted. Your selections were kept. Try refreshing again.' : error.message;
+            notice('Could not refresh the trips', message, 'danger', modal.querySelector('#cancelSelectionFeedback'));
+        } finally {
+            clearTimeout(timeout); refreshing = false;
+            button.disabled = false; button.textContent = 'Refresh selection'; list.removeAttribute('aria-busy'); updateSelection();
+        }
     }
     if (modal) {
         modal.addEventListener('change',function(event){
@@ -84,12 +120,13 @@
             var active = document.querySelector('[data-queue-route][aria-pressed="true"]');
             var filter = modal.querySelector('#cancelRouteFilter');
             filter.value = active ? active.dataset.queueRoute : 'all'; if (!filter.value) filter.value='all';
+            if (filter.syncAutocompleteValue) filter.syncAutocompleteValue();
             updateSelection();
         });
         modal.addEventListener('hidden.bs.modal',function(){if(window.QueueSync)window.QueueSync.refresh(true);});
-        modal.querySelector('#refreshCancelSelection').addEventListener('click',function(){needsSelectionRefresh=true;if(window.QueueSync)window.QueueSync.refresh(true);});
+        modal.querySelector('#refreshCancelSelection').addEventListener('click',refreshSelection);
         modal.querySelector('#cancelSelectedSubmit').addEventListener('click',async function(){
-            if (busy || !selection().length) return;
+            if (busy || refreshing || !selection().length) return;
             var ids=selection(), body=new URLSearchParams(); ids.forEach(id=>body.append('queue_ids[]',id));
             busy=true; updateSelection();
             modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection').forEach(el=>{el.disabled=true;});

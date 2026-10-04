@@ -202,6 +202,84 @@ test('Round dialog restores the active choice and releases controls after a fail
   await page.close();
 });
 
+test('switching to a forty-minute round refreshes the overdue boarding countdown immediately', async()=>{
+  variant='round-overdue';const page=await browser.newPage({viewport:{width:375,height:667}});
+  await page.route('**/staff/queue/round',async route=>{
+    variant='round-extended';await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({success:true,csrf:'unchanged'})});
+  });
+  await page.goto(origin+'/staff/queue');
+  await page.waitForFunction(()=>document.querySelector('.countdown-timer').textContent.includes('overdue'));
+  await page.locator('#queueRoundBtn').click();
+  await page.locator('[data-dispatch-round][data-route-id="1"]').selectOption('2');
+  await page.waitForFunction(()=>/^[^]*\b(9|10)m/.test(document.querySelector('.countdown-timer').textContent) && !document.querySelector('.countdown-timer').textContent.includes('overdue'));
+  assert.match(await page.locator('#queue-list .q-card').first().innerText(),/Round 2/i);
+  await page.close();
+});
+
+test('queue route dropdowns support typing and clearing on desktop and small screens',async()=>{
+  variant='many';
+  for(const {width,height} of [{width:320,height:568},{width:375,height:667},{width:667,height:375},{width:1280,height:800}]) {
+    const page=await browser.newPage({viewport:{width,height}});const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    await page.goto(origin+'/staff/queue');await page.addScriptTag({url:origin+'/assets/js/autocomplete-search.js'});
+    for(const [button,modal,select] of [['#manageQueueBtn','#manageQueueModal','#queueOrderGroupSelect'],['#cancelSelectionBtn','#cancelSelectionModal','#cancelRouteFilter'],['#queueRoundBtn','#queueRoundModal','#queueRoundRouteFilter'],['[data-bs-target="#addToQueueModal"]','#addToQueueModal','#addQueueRouteFilter']]) {
+      await page.evaluate(selector=>{const el=document.querySelector(selector);delete el.dataset.testShown;el.addEventListener('shown.bs.modal',()=>{el.dataset.testShown='yes';},{once:true});},modal);
+      await page.locator(button).click();await page.waitForFunction(selector=>document.querySelector(selector).dataset.testShown==='yes',modal);
+      const wrapper=page.locator('.autocomplete-wrapper').filter({has:page.locator(select)});
+      const input=wrapper.locator('input[type="text"]');await input.fill('bato');
+      await page.waitForFunction(id=>document.querySelector(id).closest('.autocomplete-wrapper').querySelectorAll('.autocomplete-item').length===1,select);
+      await wrapper.locator('.autocomplete-item').filter({hasText:'BATO'}).click();
+      assert.match(await input.inputValue(),/BATO/);
+      if(select==='#queueOrderGroupSelect')assert.match(await page.locator('#manageQueueModal .queue-order-panel:not(.d-none)').innerText(),/BATO/);
+      if(select==='#cancelRouteFilter')assert.equal(await page.locator('.queue-cancel-item:not([hidden])').count(),5);
+      if(select==='#queueRoundRouteFilter')assert.equal(await page.locator('[data-dispatch-round]:visible').count(),1);
+      await wrapper.locator('.autocomplete-clear-btn').click();
+      if(select==='#queueOrderGroupSelect')assert.equal(await page.locator('#manageQueueModal .queue-order-panel:not(.d-none)').count(),1);
+      if(select==='#cancelRouteFilter')assert.equal(await page.locator('.queue-cancel-item:not([hidden])').count(),10);
+      if(select==='#queueRoundRouteFilter')assert.equal(await page.locator('[data-dispatch-round]:visible').count(),2);
+      await input.fill('bato');await page.waitForFunction(id=>document.querySelector(id).closest('.autocomplete-wrapper').querySelectorAll('.autocomplete-item').length===1,select);
+      await wrapper.locator('.autocomplete-item').filter({hasText:'BATO'}).waitFor();
+      if(select==='#addQueueRouteFilter') {
+        await page.evaluate(()=>QueueSync.refresh(true));
+        await page.waitForResponse(response=>response.url().endsWith('/staff/queue') && response.request().method()==='GET');
+        assert.equal(await input.inputValue(),'bato');
+      }
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      const bounds=await wrapper.evaluate(el=>({left:el.getBoundingClientRect().left,right:el.getBoundingClientRect().right}));
+      assert.ok(bounds.left>=0 && bounds.right<=width);
+      if(width===375 && modal==='#manageQueueModal')await page.screenshot({path:path.join(__dirname,'artifacts','manage-queue-search-mobile.png')});
+      await page.locator(modal+' .btn-close').click();await page.waitForSelector(modal+'.show',{state:'hidden'});
+    }
+    assert.deepEqual(errors,[]);await page.close();
+  }
+});
+
+test('cancel selection refresh loads directly, keeps choices and recovers from failures',async()=>{
+  variant='many';const page=await browser.newPage({viewport:{width:375,height:667}});let calls=0,fail=false;
+  await page.route('**/staff/queue/cancel-selection',async route=>{
+    calls++;await new Promise(resolve=>setTimeout(resolve,200));
+    const html='<label class="queue-cancel-item" data-cancel-route="1|Ormoc City"><input name="cancel_queue_ids[]" type="checkbox" value="101"><span>TRIP-1 Updated driver</span></label>';
+    await route.fulfill({status:fail?503:200,contentType:'application/json',body:JSON.stringify(fail?{success:false,message:'Please try refreshing again.'}:{success:true,html})});
+  });
+  await page.goto(origin+'/staff/queue');await page.locator('#cancelSelectionBtn').click();
+  for(const id of ['101','102'])await page.locator(`[name="cancel_queue_ids[]"][value="${id}"]`).check();
+  await page.locator('#refreshCancelSelection').click();
+  assert.equal(await page.locator('#refreshCancelSelection').innerText(),'Refreshing…');
+  assert.equal(await page.locator('#refreshCancelSelection').isDisabled(),true);
+  assert.equal(await page.locator('#cancelSelectedSubmit').isDisabled(),true);
+  await page.waitForFunction(()=>document.getElementById('cancelSelectionFeedback').textContent.includes('Selection refreshed'));
+  assert.equal(await page.locator('[name="cancel_queue_ids[]"]:checked').count(),1);
+  assert.match(await page.locator('#cancelSelectionFeedback').innerText(),/no longer active/);
+  assert.match(await page.locator('#cancelSelectionList').innerText(),/Updated driver/);
+  assert.equal(await page.locator('#cancelSelectedSubmit').isEnabled(),true);
+  fail=true;await page.locator('#refreshCancelSelection').click();
+  await page.waitForFunction(()=>document.getElementById('cancelSelectionFeedback').textContent.includes('Could not refresh'));
+  assert.equal(await page.locator('[name="cancel_queue_ids[]"]:checked').count(),1);
+  assert.equal(await page.locator('#refreshCancelSelection').isEnabled(),true);
+  assert.equal(await page.locator('#cancelSelectedSubmit').isEnabled(),true);
+  assert.equal(calls,2);assert.equal(await page.locator('#cancelSelectionList').getAttribute('aria-busy'),null);
+  await page.close();
+});
+
 test('Round dialog never presents the fallback interval as a configured departure rule',async()=>{
   variant='unconfigured-round';const page=await browser.newPage({viewport:{width:375,height:667}});
   await page.goto(origin+'/staff/queue');await page.locator('#queueRoundBtn').click();

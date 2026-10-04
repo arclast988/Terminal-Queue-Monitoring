@@ -8,6 +8,14 @@
     var csrfName = script.dataset.csrfName;
     var csrfValue = script.dataset.csrfValue;
 
+    function syncRouteInput(select) {
+        if (!select || !select.syncAutocompleteValue) return;
+        var wrapper = select.closest('.autocomplete-wrapper');
+        // A live queue refresh must not erase a route search being typed.
+        if (wrapper && wrapper.contains(document.activeElement)) return;
+        select.syncAutocompleteValue();
+    }
+
     function applyFilters() {
         var visible = 0;
         document.querySelectorAll('#queue-list .q-card[data-queue-route-key]').forEach(function (card) {
@@ -21,9 +29,13 @@
             row.classList.toggle('d-none', roundFilter !== 'all' && row.dataset.roundRoute !== roundFilter);
         });
         var roundRoute = document.getElementById('queueRoundRouteFilter');
-        if (roundRoute) roundRoute.value = roundFilter;
+        if (roundRoute) {
+            roundRoute.value = roundFilter;
+            syncRouteInput(roundRoute);
+        }
         var select = document.getElementById('addQueueRouteFilter');
         if (select && Array.from(select.options).some(function (option) { return option.value === addFilter; })) select.value = addFilter;
+        syncRouteInput(select);
         var addRoute = select ? select.value : routeFilter;
         var search = document.getElementById('vehicleModalSearch');
         var query = search ? search.value.trim().toLowerCase() : '';
@@ -90,11 +102,11 @@
     });
     document.addEventListener('change', async function (event) {
         if (event.target.id === 'addQueueRouteFilter') {
-            addFilter = event.target.value;
+            addFilter = event.target.value || 'all';
             applyFilters();
         }
         if (event.target.id === 'queueRoundRouteFilter') {
-            roundFilter = event.target.value;
+            roundFilter = event.target.value || 'all';
             applyFilters();
         }
         var select = event.target.closest('[data-dispatch-round]');
@@ -106,7 +118,7 @@
         try {
             await post(script.dataset.roundUrl, { route_id: select.dataset.routeId, round_number: select.value });
             select.dataset.currentRound = select.value;
-            if (window.QueueActions) window.QueueActions.notice('Round updated', 'Waiting vehicles now use this round’s departure rule.', 'success', feedback);
+            if (window.QueueActions) window.QueueActions.notice('Round updated', 'Active vehicles now use this round’s departure rule. Boarding timers keep the time already elapsed.', 'success', feedback);
         } catch (error) {
             select.value = previousRound;
             if (window.QueueActions) window.QueueActions.notice('Round could not be changed', error.message, error.variant || 'danger', feedback);
@@ -117,7 +129,11 @@
             if (window.QueueSync) window.QueueSync.refresh(true);
         }
     });
-    document.addEventListener('vehicle-list-refreshed', applyFilters);
+    document.addEventListener('vehicle-list-refreshed', function () {
+        var modal = document.getElementById('addToQueueModal');
+        if (modal && window.initLocationAutocomplete) window.initLocationAutocomplete(modal);
+        applyFilters();
+    });
     document.addEventListener('show.bs.modal', function (event) {
         if (event.target.id === 'queueRoundModal') {
             roundFilter = routeFilter;

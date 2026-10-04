@@ -614,7 +614,8 @@
             else if (fieldName.includes('vehicle_type') || (fieldName.includes('type') && !fieldName.includes('action'))) placeholderText = 'Search vehicle type...';
             else if (fieldName.includes('status')) placeholderText = 'Search status...';
             else if (fieldName.includes('destination')) placeholderText = 'Search destination...';
-            searchInput.placeholder = placeholderText;
+            searchInput.placeholder = selectEl.dataset.autocompletePlaceholder || placeholderText;
+            if (selectEl.hasAttribute('aria-label')) searchInput.setAttribute('aria-label', selectEl.getAttribute('aria-label'));
             searchInput.autocomplete = 'off';
             searchInput.style.paddingRight = '32px';
 
@@ -897,7 +898,13 @@
             }, INPUT_DEBOUNCE_MS));
 
             searchInput.addEventListener('blur', () => {
-                closeDropdown(wrapper, dropdown);
+                if (selectEl.hasAttribute('data-queue-route-search')) {
+                    // Inline mobile menus change a centered dialog's height. Let
+                    // the clicked close/action button receive mouseup before it moves.
+                    setTimeout(() => {
+                        if (document.activeElement !== searchInput) closeDropdown(wrapper, dropdown);
+                    }, 150);
+                } else closeDropdown(wrapper, dropdown);
             });
 
             selectEl.addEventListener('change', () => {

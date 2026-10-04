@@ -10,7 +10,7 @@
             </div>
             <div class="modal-body">
                 <label class="form-label-modern" for="queueRoundRouteFilter">Filter route</label>
-                <select id="queueRoundRouteFilter" class="form-select mb-3" data-no-autocomplete>
+                <select id="queueRoundRouteFilter" class="form-select mb-3" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter route">
                     <option value="all">All routes</option>
                     <?php foreach ($queueRoutes as $queueRoute): ?>
                     <option value="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>"><?= esc($queueRoute['origin'] . ' → ' . $queueRoute['destination']) ?></option>
@@ -38,7 +38,7 @@
                     </div>
                 <?php endforeach; ?>
                 </div>
-                <p class="queue-round-help mb-0 mt-3">Changes apply immediately to waiting vehicles. Vehicles already boarding keep their current timer. Automatic boarding continues every five minutes; use “Start boarding now” when you need an earlier start.</p>
+                <p class="queue-round-help mb-0 mt-3">Changes apply to waiting and boarding vehicles. Boarding timers use the new interval from their original start time. Automatic boarding continues every five minutes; use “Start boarding now” when you need an earlier start.</p>
             </div>
             <div class="modal-footer">
                 <a class="btn-modern btn-modern-outline btn-modern-sm" href="<?= base_url('staff/departure-rules') ?>"><i class="bi bi-sliders"></i> Manage rules</a>

@@ -149,6 +149,12 @@ if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
 }
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];
 if ($fixturePage === 'staff-queue') {
+    if (in_array(($argv[4] ?? ''), ['round-overdue', 'round-extended'], true)) {
+        $extended = ($argv[4] ?? '') === 'round-extended';
+        $fixtureData['queue'][0] = array_replace($item, ['status'=>'boarding', 'round_number'=>$extended ? 2 : 1, 'boarding_start'=>date('Y-m-d H:i:s', time()-1800), 'estimated_departure'=>date('Y-m-d H:i:s', time()+($extended ? 600 : -600))]);
+        $fixtureData['queueRoutes'][0]['round_number'] = $extended ? 2 : 1;
+        $fixtureData['queueRoutes'][0]['round_intervals'][2] = 40;
+    }
     if (($argv[4] ?? '') === 'unconfigured-round') {
         unset($fixtureData['queueRoutes'][1]['round_intervals'][2], $fixtureData['queueRoutes'][1]['round_intervals'][3]);
     }

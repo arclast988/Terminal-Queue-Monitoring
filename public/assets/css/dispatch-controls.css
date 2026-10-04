@@ -92,6 +92,9 @@ button.queue-route-chip.active { background: var(--primary); border-color: var(-
 #cancelSelectedSubmit:disabled { opacity: 0.5; }
 .queue-selection-tools { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .queue-selection-tools > div { flex: 1; min-width: 180px; }
+/* Keep route results inside the scrolling dialog on short/mobile screens. */
+.modal .autocomplete-wrapper:has([data-queue-route-search]) .autocomplete-dropdown { position: static !important; margin-top: 6px; width: 100%; }
+.modal .autocomplete-wrapper:has([data-queue-route-search]) input[type="text"] { min-height: 44px; }
 .queue-select-visible { display: flex; align-items: center; gap: 8px; font-size: 14px; padding-bottom: 10px; }
 .queue-cancel-list { display: flex; flex-direction: column; gap: 14px; }
 .queue-cancel-item { display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--border, #dbe3ec); border-radius: 12px; padding: 16px; background: var(--surface, white); cursor: pointer; }

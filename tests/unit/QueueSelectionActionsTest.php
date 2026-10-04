@@ -75,16 +75,69 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame($before, QueueSelectionHarness::$db->table('queue')->get()->getResultArray());
         $this->assertSame(0,QueueSelectionHarness::$db->table('dispatch_rounds')->countAllResults());
     }
-    public function testRoundSwitchUsesTheConfiguredIntervalAtAnyTimeAndPreservesBoarding(): void
+    public function testSelectionRefreshReturnsOnlyActiveAssignedTripsAndEscapesDetails(): void
+    {
+        $db = QueueSelectionHarness::$db;
+        $db->table('queue')->where('id', 2)->update(['status' => 'departed']);
+        $db->table('queue')->where('id', 1)->update(['plate_number' => 'TRIP-ONE', 'operator_name' => '<script>alert(1)</script>', 'driver_name' => 'Snapshot Driver']);
+        $before = $db->table('queue')->get()->getResultArray();
+        $response = $this->controller(QueueSelectionHarness::class)->execute('cancelSelection')->response();
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertStringContainsString('no-store', $response->getHeaderLine('Cache-Control'));
+        $data = json_decode($response->getBody(), true);
+        $this->assertTrue($data['success']);
+        $this->assertStringContainsString('value="1"', $data['html']);
+        $this->assertStringContainsString('value="3"', $data['html']);
+        $this->assertStringNotContainsString('value="2"', $data['html']);
+        $this->assertStringNotContainsString('value="4"', $data['html']);
+        foreach (['TRIP-ONE', 'Snapshot Driver', 'Minibus', 'VILLABA', 'ORMOC', 'TACLOBAN', '&lt;SCRIPT&gt;'] as $detail) $this->assertStringContainsString($detail, $data['html']);
+        $this->assertStringNotContainsString('<script>', $data['html']);
+        $this->assertSame($before, $db->table('queue')->get()->getResultArray());
+    }
+    public function testRoundSwitchUsesTheConfiguredIntervalAtAnyTimeAndPreservesElapsedBoardingTime(): void
     {
         QueueSelectionHarness::$db->table('departure_rules')->insert(['id'=>10,'terminal_id'=>1,'route_id'=>1,'time_from'=>'00:00:00','time_to'=>'00:01:00','wait_minutes'=>25,'days_of_week'=>(string)date('N'),'round_number'=>2]);
         $boarding=QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray();
         $this->assertSame(200,$this->switchRound(2)->getStatusCode());
-        $this->assertSame($boarding,QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray());
+        $updated=QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray();
+        $this->assertSame($boarding['boarding_start'],$updated['boarding_start']);
+        $this->assertSame('boarding',$updated['status']);
+        $this->assertSame(2,(int)$updated['round_number']);
+        $this->assertSame(1500,strtotime($updated['estimated_departure'])-strtotime($updated['boarding_start']));
         $waiting=QueueSelectionHarness::$db->table('queue')->where('id',2)->get()->getRowArray();
         $this->assertSame(2,(int)$waiting['round_number']);
         $this->assertSame(1500,strtotime($waiting['estimated_departure'])-strtotime($waiting['boarding_start']));
         $this->assertSame(2,(int)QueueSelectionHarness::$db->table('dispatch_rounds')->get()->getRowArray()['round_number']);
+    }
+    public function testSwitchingFromTwentyToFortyMinutesRemovesAnOutdatedOverdueTimer(): void
+    {
+        $db=QueueSelectionHarness::$db;
+        foreach ([1=>20,2=>40] as $round=>$minutes) $db->table('departure_rules')->insert(['id'=>10+$round,'terminal_id'=>1,'route_id'=>1,'time_from'=>'00:00:00','time_to'=>'23:59:00','wait_minutes'=>$minutes,'days_of_week'=>(string)date('N'),'round_number'=>$round]);
+        $now=time();$start=date('Y-m-d H:i:s',$now-1800);
+        $db->table('queue')->where('id',1)->update(['boarding_start'=>$start,'estimated_departure'=>date('Y-m-d H:i:s',$now-600)]);
+        $other=$db->table('queue')->where('id',3)->get()->getRowArray();
+        $this->assertSame(200,$this->switchRound(2)->getStatusCode());
+        $boarding=$db->table('queue')->where('id',1)->get()->getRowArray();
+        $this->assertSame($start,$boarding['boarding_start']);
+        $this->assertSame(2400,strtotime($boarding['estimated_departure'])-strtotime($start));
+        $this->assertEqualsWithDelta(600,strtotime($boarding['estimated_departure'])-time(),2);
+        $this->assertSame($other,$db->table('queue')->where('id',3)->get()->getRowArray());
+        $waiting=$db->table('queue')->where('id',2)->get()->getRowArray();
+        $this->assertSame(2400,strtotime($waiting['estimated_departure'])-strtotime($waiting['boarding_start']));
+        $this->assertSame(0,(int)date('i',strtotime($waiting['boarding_start']))%5);
+        $this->assertSame(200,$this->switchRound(2)->getStatusCode());
+        $this->assertSame($boarding,$db->table('queue')->where('id',1)->get()->getRowArray());
+    }
+    public function testShorterRoundRetainsElapsedTimeAndLegacyRowsRecoverTheirOriginalStart(): void
+    {
+        $db=QueueSelectionHarness::$db;
+        foreach ([1=>40,2=>20] as $round=>$minutes) $db->table('departure_rules')->insert(['id'=>10+$round,'terminal_id'=>1,'route_id'=>1,'time_from'=>'00:00:00','time_to'=>'23:59:00','wait_minutes'=>$minutes,'days_of_week'=>'1,2,3,4,5,6,7','round_number'=>$round]);
+        $now=time();$start=date('Y-m-d H:i:s',$now-1800);
+        $db->table('queue')->where('id',1)->update(['boarding_start'=>null,'estimated_departure'=>date('Y-m-d H:i:s',$now+600)]);
+        $this->assertSame(200,$this->switchRound(2)->getStatusCode());
+        $boarding=$db->table('queue')->where('id',1)->get()->getRowArray();
+        $this->assertSame($start,$boarding['boarding_start']);
+        $this->assertSame(date('Y-m-d H:i:s',$now-600),$boarding['estimated_departure']);
     }
     public function testSelectedCancellationKeepsUnselectedTripsAndRestorePositions(): void
     {

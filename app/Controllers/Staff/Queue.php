@@ -112,11 +112,18 @@ class Queue extends BaseController
         return null;
     }
 
-    public function index()
+    /** Read only the active trips the current dispatcher is allowed to manage. */
+    public function cancelSelection()
     {
-        $this->advanceAutomaticBoarding();
-        $assignedRouteIds = $this->getAssignedRouteIds();
+        $queue = $this->activeSelectionRows($this->getAssignedRouteIds());
+        return $this->response->setHeader('Cache-Control', 'no-store')->setJSON([
+            'success' => true,
+            'html' => view('staff/queue/cancel-list', ['queue' => $queue]),
+        ]);
+    }
 
+    private function activeSelectionRows(?array $assignedRouteIds): array
+    {
         // Build queue query
         $builder = $this->queueModel->select('
             queue.*, 
@@ -143,11 +150,18 @@ class Queue extends BaseController
             }
         }
 
-        $queue = $builder
+        return $builder
             ->orderBy('routes.destination', 'ASC')
             ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
             ->orderBy('queue.position', 'ASC')
             ->findAll();
+    }
+
+    public function index()
+    {
+        $this->advanceAutomaticBoarding();
+        $assignedRouteIds = $this->getAssignedRouteIds();
+        $queue = $this->activeSelectionRows($assignedRouteIds);
 
         // Get list of vehicle_ids that are currently active in queue (waiting or boarding)
         $activeQueuedVehicleIds = $this->queueModel
@@ -348,14 +362,28 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
-        $matched = (new DepartureRuleModel($db))->getRuleForTime(date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeId, (int) $round);
+        $ruleModel = new DepartureRuleModel($db);
+        $matched = $ruleModel->getRuleForTime(date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeId, (int) $round);
         if (empty($matched['id'])) {
             $db->transComplete();
             return $this->response->setStatusCode(409)->setJSON(['success' => false, 'variant' => 'warning', 'message' => 'No departure rule is configured for this route and round today. Check its selected days and route in Departure Rules.']);
         }
         (new DispatchRoundModel($db))->setRound((int) $route['terminal_id'], $route['destination'], (int) $round);
         $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
-        $db->table('queue')->whereIn('route_id', $siblings)->where('status', 'waiting')->update(['round_number' => (int) $round]);
+        $boardingTrips = $this->queueModel->whereIn('route_id', $siblings)->where('status', 'boarding')->findAll();
+        foreach ($boardingTrips as $trip) {
+            $start = !empty($trip['boarding_start']) ? strtotime($trip['boarding_start']) : false;
+            if ($start === false) {
+                // Recover the original start for legacy rows with only a departure target.
+                $oldMinutes = $ruleModel->getWaitMinutesForTime($trip['estimated_departure'] ?: date('Y-m-d H:i:s'), (int) $route['terminal_id'], (int) $trip['route_id'], (int) ($trip['round_number'] ?? 1));
+                $start = !empty($trip['estimated_departure']) ? strtotime($trip['estimated_departure']) - $oldMinutes * 60 : time();
+            }
+            $this->queueModel->update($trip['id'], [
+                'boarding_start' => date('Y-m-d H:i:s', $start),
+                'estimated_departure' => date('Y-m-d H:i:s', $start + (int) $matched['wait_minutes'] * 60),
+            ]);
+        }
+        $db->table('queue')->whereIn('route_id', $siblings)->whereIn('status', ['waiting', 'boarding'])->update(['round_number' => (int) $round]);
         $this->queueModel->recalculateSchedule($routeId, true);
         $db->transComplete();
         if (!$db->transStatus()) return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => 'The round could not be updated.']);
