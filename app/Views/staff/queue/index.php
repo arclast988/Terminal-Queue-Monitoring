@@ -122,6 +122,8 @@
         display: flex !important;
         flex-direction: column !important;
         max-height: calc(100vh - 2rem) !important;
+        max-height: calc(100dvh - 2rem) !important;
+        min-height: 0 !important;
         pointer-events: auto !important;
         width: 95% !important;
         max-width: 720px !important;
@@ -1444,9 +1446,15 @@ $queueOrderGroups = array_values($queueOrderGroups);
         box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.25) !important;
         overflow: hidden;
         border: 1px solid var(--border, #cbd5e1) !important;
-        max-height: min(92vh, 840px) !important;
+        max-height: min(calc(100vh - 2rem), 840px) !important;
+        max-height: min(calc(100dvh - 2rem), 840px) !important;
         display: flex !important;
         flex-direction: column !important;
+    }
+
+    #addToQueueModal .modal-content:not(.add-queue-modal-empty) {
+        height: min(calc(100vh - 2rem), 840px);
+        height: min(calc(100dvh - 2rem), 840px);
     }
 
     /* Single-scrollbar modal: header/footer stay fixed, ONLY the vehicle
@@ -1460,6 +1468,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         overflow-y: hidden !important;
         overflow-x: hidden !important;
         min-height: 0 !important;
+        max-height: none !important;
+        padding: 12px 16px !important;
         display: flex !important;
         flex-direction: column !important;
     }
@@ -1470,13 +1480,15 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     #addToQueueModal .vehicle-select-list {
         flex: 1 1 auto !important;
-        min-height: 90px !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin-bottom: 0 !important;
     }
 
     #addToQueueModal .modal-header {
         background: var(--surface, #ffffff);
         border-bottom: 1px solid var(--border, #e2e8f0) !important;
-        padding: 1.25rem 1.5rem !important;
+        padding: 12px 16px !important;
     }
 
     #addToQueueModal .add-queue-heading,
@@ -1486,6 +1498,42 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     #addToQueueModal .add-queue-title-row {
         min-width: 0;
+        flex-wrap: wrap;
+    }
+
+    #addToQueueModal .modal-footer {
+        padding: 10px 16px !important;
+    }
+
+    #addToQueueModal .add-queue-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr);
+        gap: 8px;
+        padding: 8px 10px !important;
+        margin-bottom: 12px !important;
+    }
+
+    #addToQueueModal .add-queue-route-filter,
+    #addToQueueModal .add-queue-search {
+        min-width: 0;
+    }
+
+    #addToQueueModal .add-queue-selection-actions {
+        grid-column: 1 / -1;
+        flex-wrap: nowrap;
+    }
+
+    #addToQueueModal .add-queue-toolbar .form-select,
+    #addToQueueModal .add-queue-toolbar .autocomplete-wrapper > input[type="text"] {
+        height: 44px !important;
+        min-height: 44px !important;
+        margin-bottom: 0 !important;
+    }
+
+    @media (max-height: 720px) {
+        #addToQueueModal .modal-header .text-muted.small {
+            display: none !important;
+        }
     }
 
     #addToQueueModal .add-queue-empty-state {
@@ -1525,8 +1573,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         display: flex !important;
         align-items: stretch !important;
         overflow: hidden;
-        height: 36px !important;
-        min-height: 36px !important;
+        height: 44px !important;
+        min-height: 44px !important;
     }
     #addToQueueModal .input-group:focus-within {
         border-color: var(--primary, #16a34a) !important;
@@ -1793,14 +1841,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
             border-radius: 12px !important;
             flex-shrink: 0 !important;
         }
-        #addToQueueModal .queue-toolbar-card .row {
-            --bs-gutter-y: 6px !important;
-            --bs-gutter-x: 6px !important;
-        }
-        #addToQueueModal .queue-toolbar-card .row > [class*="col-"] {
-            flex: 0 0 100% !important;
-            max-width: 100% !important;
-        }
         #addToQueueModal #selectAllVehiclesBtn,
         #addToQueueModal #deselectAllVehiclesBtn {
             white-space: nowrap !important;
@@ -1875,6 +1915,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
             display: flex !important;
             flex-direction: row !important;
+            flex-wrap: nowrap !important;
             align-items: center !important;
             gap: 8px !important;
             flex-shrink: 0 !important;
@@ -1905,6 +1946,16 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     /* Extra optimization for phones: full screen edge-to-edge modal sheet */
     @media (max-width: 575.98px) {
+        #addToQueueModal .add-queue-toolbar {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        #addToQueueModal .add-queue-title-row .badge {
+            display: none !important;
+        }
+        #addToQueueModal .modal-footer #submitToQueueBtn {
+            min-width: 0;
+            white-space: normal !important;
+        }
         #addToQueueModal.fade.show {
             padding: 0 !important;
         }
@@ -1962,34 +2013,32 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         </div>
                     <?php else: ?>
                         <!-- Quick Actions & Search Filter Bar -->
-                        <label for="addQueueRouteFilter" class="form-label fw-semibold">Quick route filter</label>
-                        <select id="addQueueRouteFilter" class="form-select mb-3" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter available vehicles by route">
-                            <option value="all">All routes</option>
-                            <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
-                            <option value="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>"><?= esc(strtoupper($queueRoute['origin'] . ' → ' . $queueRoute['destination'])) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="queue-toolbar-card mb-3">
-                            <div class="row g-2 align-items-center">
-                                <div class="col-12 col-sm">
-                                    <div class="input-group position-relative">
-                                        <span class="input-group-text text-muted">
-                                            <i class="bi bi-search"></i>
-                                        </span>
-                                        <input type="text" id="vehicleModalSearch" class="form-control search-input-modern" placeholder="Search plate, type, route, driver..." autocomplete="off">
-                                        <button type="button" class="btn-clear-search" id="clearVehicleModalSearch" style="display: none !important; right: 10px;" title="Clear search">
-                                            <i class="bi bi-x-circle-fill"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-sm-auto d-flex justify-content-end gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
-                                        <i class="bi bi-check-all fs-6"></i> Select All
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3 d-flex align-items-center gap-1" id="deselectAllVehiclesBtn" style="border-radius: 8px;">
-                                        <i class="bi bi-x-circle"></i> Clear
-                                    </button>
-                                </div>
+                        <div class="queue-toolbar-card add-queue-toolbar">
+                            <div class="add-queue-route-filter">
+                                <label for="addQueueRouteFilter" class="visually-hidden">Quick route filter</label>
+                                <select id="addQueueRouteFilter" class="form-select" data-queue-route-search data-autocomplete-placeholder="Search route…" aria-label="Filter available vehicles by route">
+                                    <option value="all">All routes</option>
+                                    <?php foreach (($queueRoutes ?? []) as $queueRoute): ?>
+                                    <option value="<?= esc($queueRoute['terminal_id'] . '|' . $queueRoute['destination'], 'attr') ?>"><?= esc(strtoupper($queueRoute['origin'] . ' → ' . $queueRoute['destination'])) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="input-group position-relative add-queue-search">
+                                <span class="input-group-text text-muted">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" id="vehicleModalSearch" class="form-control search-input-modern" placeholder="Search plate, type, route, driver..." aria-label="Search available vehicles" autocomplete="off">
+                                <button type="button" class="btn-clear-search" id="clearVehicleModalSearch" style="display: none !important; right: 10px;" title="Clear search">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 add-queue-selection-actions">
+                                <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
+                                    <i class="bi bi-check-all fs-6"></i> Select All
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3 d-flex align-items-center gap-1" id="deselectAllVehiclesBtn" style="border-radius: 8px;">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </button>
                             </div>
                         </div>
 
