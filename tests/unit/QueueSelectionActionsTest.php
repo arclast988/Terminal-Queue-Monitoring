@@ -103,7 +103,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame($boarding['boarding_start'],$updated['boarding_start']);
         $this->assertSame('boarding',$updated['status']);
         $this->assertSame(2,(int)$updated['round_number']);
-        $this->assertSame(1500,strtotime($updated['estimated_departure'])-strtotime($updated['boarding_start']));
+        $this->assertSame(QueueModel::departureAfterInterval(strtotime($updated['boarding_start']), 25), strtotime($updated['estimated_departure']));
         $waiting=QueueSelectionHarness::$db->table('queue')->where('id',2)->get()->getRowArray();
         $this->assertSame(2,(int)$waiting['round_number']);
         $this->assertSame(1500,strtotime($waiting['estimated_departure'])-strtotime($waiting['boarding_start']));
@@ -119,8 +119,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame(200,$this->switchRound(2)->getStatusCode());
         $boarding=$db->table('queue')->where('id',1)->get()->getRowArray();
         $this->assertSame($start,$boarding['boarding_start']);
-        $this->assertSame(2400,strtotime($boarding['estimated_departure'])-strtotime($start));
-        $this->assertEqualsWithDelta(600,strtotime($boarding['estimated_departure'])-time(),2);
+        $this->assertSame(QueueModel::nextFiveMinuteBoundary($now + 600), strtotime($boarding['estimated_departure']));
         $this->assertSame($other,$db->table('queue')->where('id',3)->get()->getRowArray());
         $waiting=$db->table('queue')->where('id',2)->get()->getRowArray();
         $this->assertSame(2400,strtotime($waiting['estimated_departure'])-strtotime($waiting['boarding_start']));
@@ -137,7 +136,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame(200,$this->switchRound(2)->getStatusCode());
         $boarding=$db->table('queue')->where('id',1)->get()->getRowArray();
         $this->assertSame($start,$boarding['boarding_start']);
-        $this->assertSame(date('Y-m-d H:i:s',$now-600),$boarding['estimated_departure']);
+        $this->assertSame(date('Y-m-d H:i:s', QueueModel::nextFiveMinuteBoundary($now-600)), $boarding['estimated_departure']);
     }
     public function testSelectedCancellationKeepsUnselectedTripsAndRestorePositions(): void
     {
@@ -234,7 +233,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame(0, (int) date('i', strtotime($v1['boarding_start'])) % 5);
         $this->assertSame(0, (int) date('i', strtotime($v2['boarding_start'])) % 5);
     }
-    public function testManualBoardingStartsImmediatelyAndRetainsTheRuleInterval(): void
+    public function testManualBoardingStartsImmediatelyAndAddsTimeToTheNextDepartureSlot(): void
     {
         QueueSelectionHarness::$db->table('queue')->where('id',1)->update(['status'=>'waiting','boarding_start'=>date('Y-m-d').' 23:55:00']);
         $request=service('request')->setMethod('POST')->setHeader('X-Requested-With','XMLHttpRequest')->setBody('');
@@ -247,7 +246,13 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertSame('boarding',$row['status']);
         $this->assertGreaterThanOrEqual($before,strtotime($row['boarding_start']));
         $this->assertLessThanOrEqual(time(),strtotime($row['boarding_start']));
-        $this->assertSame(1800,strtotime($row['estimated_departure'])-strtotime($row['boarding_start']));
+        $departure = strtotime($row['estimated_departure']);
+        $start = strtotime($row['boarding_start']);
+        $this->assertSame(QueueModel::nextFiveMinuteBoundary($start + 1800), $departure);
+        $this->assertGreaterThanOrEqual(1800, $departure - $start);
+        $this->assertLessThan(2100, $departure - $start);
+        $this->assertSame(0, (int) date('i', $departure) % 5);
+        $this->assertSame('00', date('s', $departure));
         $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('updateStatus',1,'boarding');
         $this->assertSame($row,QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray());
     }

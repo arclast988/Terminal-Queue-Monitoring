@@ -380,7 +380,7 @@ class Queue extends BaseController
             }
             $this->queueModel->update($trip['id'], [
                 'boarding_start' => date('Y-m-d H:i:s', $start),
-                'estimated_departure' => date('Y-m-d H:i:s', $start + (int) $matched['wait_minutes'] * 60),
+                'estimated_departure' => date('Y-m-d H:i:s', QueueModel::departureAfterInterval($start, (int) $matched['wait_minutes'])),
             ]);
         }
         $db->table('queue')->whereIn('route_id', $siblings)->whereIn('status', ['waiting', 'boarding'])->update(['round_number' => (int) $round]);
@@ -683,7 +683,7 @@ class Queue extends BaseController
             $start = QueueModel::nextFiveMinuteBoundary(time());
             $waitMinutes = (new DepartureRuleModel())->getWaitMinutesForTime(date('Y-m-d H:i:s', $start), $terminalId, $routeId, (int) ($existingItem['round_number'] ?? 1));
             $data['boarding_start'] = date('Y-m-d H:i:s', $start);
-            $data['estimated_departure'] = date('Y-m-d H:i:s', $start + $waitMinutes * 60);
+            $data['estimated_departure'] = date('Y-m-d H:i:s', QueueModel::departureAfterInterval($start, $waitMinutes));
         }
 
         // Use transaction to prevent race conditions during position reordering
@@ -711,11 +711,12 @@ class Queue extends BaseController
                 return $this->response->setStatusCode(409)->setJSON(['success' => false, 'variant' => 'warning', 'message' => 'Another vehicle is ahead in this route. Boarding will start automatically when it is this vehicle’s turn.']);
             }
             // A dispatcher may start the next vehicle now during busy periods.
-            // Automatic boarding still follows the five-minute schedule.
+            // Keep the actual start, then add the full interval and any extra
+            // wait needed to reach a five-minute departure slot.
             $manualStart = time();
             $interval = (new DepartureRuleModel())->getWaitMinutesForTime(date('Y-m-d H:i:s', $manualStart), (int) $route['terminal_id'], (int) $lockedItem['route_id'], (int) ($lockedItem['round_number'] ?? 1));
             $data['boarding_start'] = date('Y-m-d H:i:s', $manualStart);
-            $data['estimated_departure'] = date('Y-m-d H:i:s', $manualStart + $interval * 60);
+            $data['estimated_departure'] = date('Y-m-d H:i:s', QueueModel::departureAfterInterval($manualStart, $interval));
         }
 
         $wasActive = in_array($existingItem['status'] ?? '', ['waiting', 'boarding'], true);

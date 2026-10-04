@@ -239,6 +239,44 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->assertSame(strtotime('2026-10-05 06:45:00'), QueueModel::nextFiveMinuteBoundary(strtotime('2026-10-05 06:45:00')));
     }
 
+    public function testManualStartMinutesRoundDepartureUpAndIncludeTheExtraCountdownTime(): void
+    {
+        foreach (range(0, 59) as $minute) {
+            $start = strtotime(sprintf('2026-10-05 19:%02d:00', $minute));
+            $extraMinutes = (5 - $minute % 5) % 5;
+            $departure = QueueModel::departureAfterInterval($start, 90);
+            $this->assertSame($start + (90 + $extraMinutes) * 60, $departure);
+            $this->assertSame(0, (int) date('i', $departure) % 5);
+            $this->assertSame('00', date('s', $departure));
+        }
+        $this->assertSame('2026-10-05 20:55:00', date('Y-m-d H:i:s', QueueModel::departureAfterInterval(strtotime('2026-10-05 19:22:00'), 90)));
+        $this->assertSame('2026-10-06 00:05:00', date('Y-m-d H:i:s', QueueModel::departureAfterInterval(strtotime('2026-10-05 23:34:01'), 30)));
+        $this->assertSame('2026-10-05 07:00:00', date('Y-m-d H:i:s', QueueModel::departureAfterInterval(strtotime('2026-10-05 06:25:01'), 30)));
+        $this->assertSame('2026-10-05 06:40:00', date('Y-m-d H:i:s', QueueModel::departureAfterInterval(strtotime('2026-10-05 06:30:00'), 7)));
+    }
+
+    public function testDeploymentRoundsExistingBoardingDepartureAndFollowingVehiclesOnlyOnce(): void
+    {
+        $head = $this->addVehicle(2, 1, '2026-10-05 20:52:00');
+        $this->queue->update($head, ['status' => 'boarding', 'boarding_start' => '2026-10-05 20:32:00']);
+        $next = $this->addVehicle(2, 2, '2026-10-05 21:12:00');
+        $departed = $this->addVehicle(2, 0, '2026-10-05 20:17:00');
+        $this->queue->update($departed, ['status' => 'departed', 'departure_time' => '2026-10-05 20:17:00']);
+        $history = $this->queue->find($departed);
+        require_once APPPATH . 'Database/Migrations/2026-10-04-200000_AlignActiveDepartureSlots.php';
+        $migration = new \App\Database\Migrations\AlignActiveDepartureSlots(Database::forge($this->intervalDb));
+        $migration->up();
+        $this->assertSame('2026-10-05 20:32:00', $this->queue->find($head)['boarding_start']);
+        $this->assertSame('2026-10-05 20:55:00', $this->queue->find($head)['estimated_departure']);
+        $this->assertSame('2026-10-05 20:55:00', $this->queue->find($next)['boarding_start']);
+        $this->assertSame('2026-10-05 21:15:00', $this->queue->find($next)['estimated_departure']);
+        $rows = $this->activeRows();
+        $migration->up();
+        $this->queue->recalculateSchedule();
+        $this->assertSame($rows, $this->activeRows());
+        $this->assertSame($history, $this->queue->find($departed));
+    }
+
     public function testDayAndRoundRulesOverrideDefaultsWithoutAffectingOtherDays(): void
     {
         $this->addRule(10, 1, 1, 20);

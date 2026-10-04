@@ -71,7 +71,8 @@ class QueueModel extends Model
     /**
      * Recalculate estimated departure times and positions for all active queue items.
      * Items are grouped per terminal and destination. For each queue line:
-     *   - Boarding vehicles (if any) stay first. Preserve their departure slot.
+     *   - Boarding vehicles (if any) stay first. Preserve their departure slot,
+     *     rounded up to a five-minute boundary when repairing legacy times.
      *   - Preserve the earliest waiting slot across routine queue mutations so
      *     adding/reordering vehicles cannot restart the line's countdown.
      *   - Waiting vehicles are assigned sequential departure slots calculated by adding
@@ -224,6 +225,10 @@ class QueueModel extends Model
                         $estTime = date('Y-m-d H:i:s', $boardingStart + $waitMinutes * 60);
                     }
 
+                    // Manual boarding can start at any minute, but departure
+                    // slots always end on :00, :05, :10, etc. Round only once
+                    // so routine refreshes cannot extend the countdown again.
+                    $estTime = date('Y-m-d H:i:s', self::nextFiveMinuteBoundary(strtotime($estTime)));
                     $prevEstDeparture = $estTime;
 
                     $updateData = [];
@@ -278,6 +283,12 @@ class QueueModel extends Model
     public static function nextFiveMinuteBoundary(int $timestamp): int
     {
         return (int) (ceil($timestamp / 300) * 300);
+    }
+
+    /** Keep the full boarding interval, then wait until the next departure slot. */
+    public static function departureAfterInterval(int $boardingStart, int $waitMinutes): int
+    {
+        return self::nextFiveMinuteBoundary($boardingStart + $waitMinutes * 60);
     }
 
     /** Promote only the head of an idle destination; a late vehicle never overlaps it. */
