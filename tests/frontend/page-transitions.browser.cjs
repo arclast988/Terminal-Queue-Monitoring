@@ -263,7 +263,9 @@ test('public, authentication and management navigation uses one short native pag
     assert.equal(record.duration, '0.15s', `${from} → ${to}`);
     assert.equal(record.oldOpacity, '1', `${from} → ${to}: never expose a blank canvas`);
     assert.equal(record.oldAnimation, 'none', `${from} → ${to}: keep the outgoing frame solid`);
-    assert.equal(record.entry, 'none', `${from} → ${to}: avoid stacked entry animations`);
+    // pagereveal can precede body parsing on faster runners. Inspect the actual
+    // destination content once it exists, independently of snapshot readiness.
+    assert.equal(await page.locator('.main-content, .auth .card, .login-card .card-head, .guest-theme > .container').first().evaluate(el => getComputedStyle(el).animationName), 'none', `${from} → ${to}: avoid stacked entry animations`);
     assert.equal(await page.locator('html').getAttribute('data-tq-navigation-reveal'), '');
     // Content does not launch another entrance after the snapshot disappears.
     await page.waitForFunction(() => !document.documentElement.getAnimations({ subtree: true }).some(animation => animation.animationName === 'tq-page-in'));
@@ -284,7 +286,7 @@ test('reduced motion and constrained devices keep the old frame until the destin
     const record = await page.evaluate(() => window.transitionRecords[0]);
     assert.equal(record.duration, mode === 'lite' ? '0.1s' : '0s');
     assert.equal(record.oldOpacity, '1');
-    assert.equal(record.entry, 'none');
+    assert.equal(await page.locator('.login-card .card-head').evaluate(el => getComputedStyle(el).animationName), 'none');
     await page.locator('#username').fill('dispatcher@example.com');
     assert.equal(await page.locator('#username').inputValue(), 'dispatcher@example.com');
     assert.ok(await page.evaluate(() => window.transitionRecords.every(record => !record.skipped)));
@@ -319,7 +321,10 @@ test('the dispatcher header never brightens or disappears between rendered trans
       const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
       return Array.from(context.getImageData(700, 20, 1, 1).data);
     }, png.toString('base64'));
-    assert.deepEqual(pixel, [22, 78, 99, 255], `header pixels at ${time}ms`);
+    // Linux and Windows compositors can round a blended channel by one level.
+    // A fade into a white canvas differs by dozens of levels and still fails.
+    assert.equal(pixel[3], 255, `opaque header at ${time}ms`);
+    assert.ok(pixel.slice(0, 3).every((channel, index) => Math.abs(channel - [22, 78, 99][index]) <= 1), `header pixels at ${time}ms: ${pixel}`);
   }
   await page.evaluate(() => window.heldTransitions.forEach(animation => animation.finish()));
   assert.deepEqual(errors, []);

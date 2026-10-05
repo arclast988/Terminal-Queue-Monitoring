@@ -48,7 +48,7 @@ test.before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = 'http://127.0.0.1:' + server.address().port;
-  browser = await playwright[engine].launch({ headless: true }); report.browserVersion = browser.version();
+  browser = await playwright[engine].launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? {channel:process.env.TQ_BROWSER_CHANNEL} : {}), ...(process.env.TQ_BROWSER_EXECUTABLE ? {executablePath:process.env.TQ_BROWSER_EXECUTABLE} : {}) }); report.browserVersion = browser.version();
 });
 test.after(async () => {
   for (const request of requests) if (!request.res.writableEnded) request.res.end('Done');
@@ -135,7 +135,7 @@ test('search and filter feedback stay centered inside the button on phones and d
       return { inside: s.left >= b.left + 4 && l.right <= b.right - 4,
         vertical: Math.abs((s.top + s.bottom - b.top - b.bottom) / 2),
         horizontal: Math.abs((s.left + l.right - b.left - b.right) / 2),
-        labelFits: label.scrollWidth <= label.clientWidth + 1,
+        labelFits: label.scrollWidth <= label.clientWidth + 1, labelWidth:label.clientWidth, textWidth:label.scrollWidth, font:getComputedStyle(label).font,
         spinnerMargin: getComputedStyle(spinner).marginRight, square: Math.abs(s.width - s.height),
         labelColor: getComputedStyle(label).color, feedbackColor: getComputedStyle(button.querySelector('.gl-btn-feedback')).color };
     }, selectors[name]);

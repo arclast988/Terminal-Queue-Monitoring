@@ -52,7 +52,7 @@ test.before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
-  browser = await browserType.launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}) });
+  browser = await browserType.launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}), ...(process.env.TQ_BROWSER_EXECUTABLE ? { executablePath:process.env.TQ_BROWSER_EXECUTABLE } : {}) });
 });
 test.after(async () => {
   for (const post of posts) if (!post.res.writableEnded) post.res.end('Done');
@@ -195,10 +195,18 @@ test('phone loading indicators keep moving in lite mode and stop for reduced mot
     assert.notEqual(styles.barDisplay, 'none'); assert.equal(styles.sweep, mode === 'reduced' ? 'none' : 'gl-progress-sweep');
     if (mode === 'lite') assert.deepEqual(styles.legacy, ['gl-spin', 'gl-spin', 'gl-spin']);
     if (mode !== 'reduced') {
-      const before = await page.locator('.gl-btn-spinner').evaluate(el => getComputedStyle(el).transform);
-      await page.waitForTimeout(120);
-      const after = await page.locator('.gl-btn-spinner').evaluate(el => getComputedStyle(el).transform);
-      assert.notEqual(after, before);
+      const rotation = await page.locator('.gl-btn-spinner').evaluate(async el => {
+        const animation = el.getAnimations()[0]; await animation.ready;
+        const running = animation.playState === 'running';
+        // Sample the animation timeline deterministically; a busy headless
+        // compositor may not paint within an arbitrary 120 ms sleep.
+        animation.pause(); animation.currentTime = 0;
+        const before = getComputedStyle(el).transform;
+        animation.currentTime = 200;
+        const after = getComputedStyle(el).transform;
+        animation.play(); return { running, before, after };
+      });
+      assert.equal(rotation.running, true); assert.notEqual(rotation.after, rotation.before);
     }
     await page.emulateMedia({ reducedMotion: 'reduce' });
     assert.equal(await page.locator('.gl-btn-spinner').evaluate(el => getComputedStyle(el).animationName), 'none');
