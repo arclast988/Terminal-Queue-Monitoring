@@ -51,12 +51,22 @@
         var addRoute = select ? select.value : routeFilter;
         var search = document.getElementById('vehicleModalSearch');
         var query = search ? search.value.trim().toLowerCase() : '';
+        var visibleCount = 0;
         document.querySelectorAll('#vehicleListContainer .vehicle-select-item').forEach(function (card) {
             var show = (addRoute === 'all' || card.dataset.queueRouteKey === addRoute)
                 && (!query || (card.dataset.search || '').toLowerCase().includes(query));
             card.classList.toggle('d-none', !show);
             card.style.setProperty('display', show ? 'flex' : 'none', 'important');
+            if (show) visibleCount++;
         });
+        var emptyNotice = document.getElementById('noMatchingVehiclesNotice');
+        if (emptyNotice) {
+            emptyNotice.style.setProperty('display', visibleCount === 0 ? 'block' : 'none', 'important');
+        }
+        var selectAllBtn = document.getElementById('selectAllVehiclesBtn');
+        if (selectAllBtn) {
+            selectAllBtn.disabled = (visibleCount === 0);
+        }
     }
 
     function selectRoute(key, preserveAdd) {

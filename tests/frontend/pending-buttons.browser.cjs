@@ -6,7 +6,7 @@ const path = require('node:path');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const playwright = require('playwright');
-const { assetContentType } = require('./harness.cjs');
+const { assetContentType, phpBinary } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const selectors = { guest: '.search-bar button[type="submit"]', search: '.search-bar button[type="submit"]', schedules: '.filter-btn[type="submit"]', login: '#loginForm button[type="submit"]', 'admin-settings': '#formIdentity button[type="submit"]' };
@@ -15,7 +15,7 @@ const fixtures = new Map(), requests = [];
 let browser, server, origin, oldLoader;
 function fixture(name, baseline) {
   if (!fixtures.has(name)) {
-    const rendered = execFileSync('php', [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+    const rendered = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     // Keep production markup and real generated theme CSS. Network/navigation
     // contracts are covered separately; these fixtures isolate button rendering.
     let html = rendered.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');

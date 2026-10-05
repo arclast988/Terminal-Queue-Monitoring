@@ -699,6 +699,13 @@ class Routes extends BaseController
         $terminalId  = $route['terminal_id'];
         $destination = $route['destination'];
 
+        $groupRoutes = $this->routeModel
+            ->where('terminal_id', $terminalId)
+            ->where('destination', $destination)
+            ->findAll();
+
+        $this->unassignVehiclesFromRoutes(array_column($groupRoutes, 'id'));
+
         $this->routeModel
             ->where('terminal_id', $terminalId)
             ->where('destination', $destination)
@@ -770,6 +777,11 @@ class Routes extends BaseController
             foreach ($routes as $route) {
                 $terminalId  = $route['terminal_id'];
                 $destination = $route['destination'];
+                $groupRoutes = $this->routeModel
+                    ->where('terminal_id', $terminalId)
+                    ->where('destination', $destination)
+                    ->findAll();
+                $this->unassignVehiclesFromRoutes(array_column($groupRoutes, 'id'));
                 $this->routeModel
                     ->where('terminal_id', $terminalId)
                     ->where('destination', $destination)

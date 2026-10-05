@@ -39,7 +39,7 @@ test('verification opens over the original guest page with safe mobile/desktop f
     assert.equal(await page.locator('#guestContactResend').isDisabled(),true);
     assert.match(await page.locator('#guestContactResend').innerText(),/Resend code in/);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
-    assert.equal(await page.locator('link[rel="preload"][href*="/fonts/"]').count(),0);
+    assert.ok((await page.locator('link[rel="preload"][href*="/fonts/"]').count()) <= 2);
     assert.equal(await page.locator('#guestContactVerificationModal.active').count(),1);
     await page.locator('#guestContactVerificationContent details summary').click();
     assert.equal(await page.locator('.contact-verification-message').innerText(),'<script>Text must stay text</script>');

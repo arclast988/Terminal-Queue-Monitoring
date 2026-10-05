@@ -441,7 +441,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     </div>
                                 </td>
                                 <td data-label="Assigned Route">
-                                    <?php if (!empty($vehicle['route_destination'])):
+                                    <?php if (!empty($vehicle['route_destination']) && ($vehicle['route_status'] ?? 'active') === 'active'):
                                         $routeLabel = strtoupper(esc($vehicle['route_origin'])) . ' → ' . strtoupper(esc($vehicle['route_destination']));
                                     ?>
                                         <div class="route-info">
@@ -449,7 +449,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                             <span><?= $routeLabel ?></span>
                                         </div>
                                     <?php else: ?>
-                                        <span class="badge-modern badge-modern-warning">Not Assigned</span>
+                                        <span class="badge-modern badge-modern-warning">No Route</span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Capacity"><strong><?= $vehicle['capacity'] ?></strong></td>
@@ -469,6 +469,11 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                 </td>
                                 <td data-label="Action" style="white-space: nowrap;">
                                     <div class="d-flex gap-2 justify-content-end flex-nowrap">
+                                        <?php 
+                                            $modalRouteLabel = (!empty($vehicle['route_destination']) && ($vehicle['route_status'] ?? 'active') === 'active')
+                                                ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination'])
+                                                : 'No Route';
+                                        ?>
                                         <?php if (($vehicle['status'] ?? 'active') === 'archived'): ?>
                                             <button type="button" class="btn-modern btn-modern-sm btn-action-activate" title="Activate vehicle"
                                                 onclick="showActivateVehicleModal({
@@ -478,7 +483,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                     typeColor: '<?= esc(addslashes(vehicle_type_color($vehicle['type']))) ?>',
                                                     driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
                                                     operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
-                                                    route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
+                                                    route: '<?= esc(addslashes($modalRouteLabel)) ?>'
                                                 })">
                                                 <i class="bi bi-check-circle"></i> <span class="action-label">Activate</span>
                                             </button>
@@ -498,7 +503,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                         typeColor: '<?= esc(addslashes(vehicle_type_color($vehicle['type']))) ?>',
                                                         driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
                                                         operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
-                                                        route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
+                                                        route: '<?= esc(addslashes($modalRouteLabel)) ?>'
                                                     })">
                                                     <i class="bi bi-trash"></i> <span class="action-label">Delete</span>
                                                 </button>
@@ -516,7 +521,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                     typeColor: '<?= esc(addslashes(vehicle_type_color($vehicle['type']))) ?>',
                                                     driverName: '<?= esc(addslashes($vehicle['driver_name'] ?? '')) ?>',
                                                     operatorName: '<?= esc(addslashes($vehicle['operator_name'] ?? '')) ?>',
-                                                    route: '<?= esc(addslashes(!empty($vehicle['route_destination']) ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination']) : '')) ?>'
+                                                    route: '<?= esc(addslashes($modalRouteLabel)) ?>'
                                                 })">
                                                 <i class="bi bi-pause-circle"></i> <span class="action-label">Deactivate</span>
                                             </button>

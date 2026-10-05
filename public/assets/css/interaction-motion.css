@@ -9,7 +9,7 @@ html[data-tq-motion="full"] body:not(.auth-page)::before,
 html[data-tq-motion="full"] body::after {
   animation-delay: var(--tq-background-delay, 0s) !important;
 }
-@keyframes tq-page-in { from { opacity: 0; } }
+@keyframes tq-page-in { from { opacity: .95; } }
 
 /* Keep a solid outgoing snapshot beneath the incoming page. Fading both
    snapshots with normal blending exposes the canvas as a white flash. */
@@ -86,13 +86,13 @@ html[data-tq-motion="lite"]::view-transition-new(root) { animation-duration: .1s
   html[data-tq-motion="full"] #loginForm > .btn { animation-delay: .08s !important; }
 
   .modal.fade .modal-dialog {
-    transform: translate3d(0, 7px, 0) scale(.99);
-    transition: transform .18s cubic-bezier(.2, .8, .2, 1) !important;
+    transform: translate3d(0, 6px, 0) scale(.99);
+    transition: transform .12s cubic-bezier(.2, .8, .2, 1) !important;
   }
   .modal.fade.show .modal-dialog { transform: none; }
-  .modal-backdrop.fade { transition: opacity .16s ease !important; }
-  .support-modal-backdrop.active { animation: tq-overlay-enter .16s ease-out backwards; }
-  .support-modal-backdrop.active .support-modal { animation: tq-content-enter .18s ease-out backwards; }
+  .modal-backdrop.fade { transition: opacity .08s ease !important; }
+  .support-modal-backdrop.active { animation: tq-overlay-enter .14s ease-out backwards; }
+  .support-modal-backdrop.active .support-modal { animation: tq-content-enter .14s ease-out backwards; }
 }
 
 /* Animate each page once instead of stacking delays on its existing cards. */

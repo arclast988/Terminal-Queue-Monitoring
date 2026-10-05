@@ -681,7 +681,7 @@
                 searchInput.dispatchEvent(new Event('input', { bubbles: true }));
                 setTimeout(() => {
                     isClearing = false;
-                }, 250);
+                }, 40);
             }
 
             clearBtn.addEventListener('click', (e) => {
@@ -930,11 +930,17 @@
             });
 
             searchInput.addEventListener('input', () => {
+                if (searchInput.value && searchInput.value.trim() !== '') {
+                    isClearing = false;
+                }
                 toggleClearBtn();
             });
 
             searchInput.addEventListener('input', debounce(() => {
                 if (isClearing) return;
+                if (!searchInput.value || searchInput.value.trim() === '') {
+                    return;
+                }
                 if (document.activeElement !== searchInput) return;
                 renderSelectDropdown(searchInput.value);
             }, INPUT_DEBOUNCE_MS));
