@@ -26,7 +26,7 @@ class Vehicles extends BaseController
         // Join routes to get assigned route info - only active routes display as assigned
         $vehicles = $this->vehicleModel
             ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.vehicle_type as route_vehicle_type, routes.status as route_status')
-            ->join('routes', 'routes.id = vehicles.default_route_id AND routes.status = "active"', 'left')
+            ->join('routes', "routes.id = vehicles.default_route_id AND routes.status = 'active'", 'left')
             ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
             ->orderBy('vehicles.created_at', 'DESC')
             ->findAll();
