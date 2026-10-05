@@ -216,6 +216,11 @@
                 display: none !important;
             }
 
+            .autocomplete-wrapper input.is-invalid,
+            .autocomplete-wrapper input:invalid {
+                background-image: none !important;
+            }
+
             .autocomplete-clear-btn {
                 position: absolute !important;
                 right: 12px !important;
@@ -641,23 +646,48 @@
                 }
             }
 
+            let isClearing = false;
+
+            clearBtn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
             clearBtn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
             });
 
-            clearBtn.addEventListener('click', (e) => {
+            clearBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                clearSelection();
+            }, { passive: false });
+
+            function clearSelection() {
+                isClearing = true;
                 selectEl.value = '';
                 searchInput.value = '';
                 searchInput.style.color = '';
                 searchInput.style.borderColor = '';
+                searchInput.classList.remove('is-invalid');
+                if (typeof selectEl.setCustomValidity === 'function') {
+                    selectEl.setCustomValidity('');
+                }
                 toggleClearBtn();
                 closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));
                 selectEl.dispatchEvent(new Event('change', { bubbles: true }));
                 searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+                setTimeout(() => {
+                    isClearing = false;
+                }, 250);
+            }
+
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                clearSelection();
             });
 
             function isPlaceholderOption(option) {
@@ -874,6 +904,10 @@
                     searchInput.style.color = optColor || '';
                     searchInput.style.borderColor = optColor || '';
                 }
+                searchInput.classList.remove('is-invalid');
+                if (typeof selectEl.setCustomValidity === 'function') {
+                    selectEl.setCustomValidity('');
+                }
                 toggleClearBtn();
                 closeDropdown(wrapper, dropdown);
                 selectEl.dispatchEvent(new Event('input', { bubbles: true }));
@@ -900,11 +934,34 @@
             });
 
             searchInput.addEventListener('input', debounce(() => {
+                if (isClearing) return;
                 if (document.activeElement !== searchInput) return;
                 renderSelectDropdown(searchInput.value);
             }, INPUT_DEBOUNCE_MS));
 
             searchInput.addEventListener('blur', () => {
+                if (isClearing) return;
+                const query = (searchInput.value || '').trim().toUpperCase();
+                const available = getAvailableOptions().filter(o => !o.isPlaceholder);
+                if (query) {
+                    const exactMatch = available.find(o => o.text.toUpperCase() === query);
+                    if (exactMatch) {
+                        selectEl.value = exactMatch.value;
+                        searchInput.value = exactMatch.text;
+                        searchInput.classList.remove('is-invalid');
+                        if (typeof selectEl.setCustomValidity === 'function') {
+                            selectEl.setCustomValidity('');
+                        }
+                    } else if (!selectEl.value) {
+                        searchInput.value = '';
+                        toggleClearBtn();
+                    } else {
+                        updateInputValue();
+                    }
+                } else {
+                    selectEl.value = '';
+                    updateInputValue();
+                }
                 if (selectEl.hasAttribute('data-queue-route-search')) {
                     // Inline mobile menus change a centered dialog's height. Let
                     // the clicked close/action button receive mouseup before it moves.
@@ -991,19 +1048,34 @@
             }
             updateBtn();
 
+            clearBtn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
             clearBtn.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
             });
 
-            clearBtn.addEventListener('click', (e) => {
+            clearBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                clearSearchInput();
+            }, { passive: false });
+
+            function clearSearchInput() {
                 inputEl.value = '';
                 updateBtn();
                 inputEl.dispatchEvent(new Event('input', { bubbles: true }));
                 inputEl.dispatchEvent(new Event('change', { bubbles: true }));
                 inputEl.focus();
+            }
+
+            clearBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                clearSearchInput();
             });
 
             inputEl.addEventListener('input', updateBtn);

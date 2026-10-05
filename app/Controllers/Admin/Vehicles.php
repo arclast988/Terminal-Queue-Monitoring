@@ -58,12 +58,12 @@ class Vehicles extends BaseController
             ]);
         }
 
-        if (strlen($plate) < 5) {
+        if (strlen($plate) < 4) {
             return $this->response->setJSON([
                 'valid'     => false,
                 'available' => false,
                 'status'    => 'too_short',
-                'message'   => 'Plate number must be at least 5 characters.',
+                'message'   => 'Plate number must be at least 4 characters.',
             ]);
         }
 
@@ -109,10 +109,10 @@ class Vehicles extends BaseController
 
         $rules = [
             'plate_number'  => [
-                'rules'  => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number]',
+                'rules'  => 'required|min_length[4]|max_length[20]|is_unique[vehicles.plate_number]',
                 'errors' => [
                     'required'   => 'Please enter a plate number.',
-                    'min_length' => 'Plate number must be at least 5 characters.',
+                    'min_length' => 'Plate number must be at least 4 characters.',
                     'max_length' => 'Plate number cannot exceed 20 characters.',
                     'is_unique'  => 'This plate number is already registered. Please enter a different plate number.',
                 ],
@@ -290,10 +290,10 @@ class Vehicles extends BaseController
 
         $rules = [
             'plate_number'  => [
-                'rules'  => 'required|min_length[5]|max_length[20]|is_unique[vehicles.plate_number,id,' . $id . ']',
+                'rules'  => 'required|min_length[4]|max_length[20]|is_unique[vehicles.plate_number,id,' . $id . ']',
                 'errors' => [
                     'required'   => 'Please enter a plate number.',
-                    'min_length' => 'Plate number must be at least 5 characters.',
+                    'min_length' => 'Plate number must be at least 4 characters.',
                     'max_length' => 'Plate number cannot exceed 20 characters.',
                     'is_unique'  => 'This plate number is already registered to another vehicle.',
                 ],

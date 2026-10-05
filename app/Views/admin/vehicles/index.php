@@ -1522,10 +1522,10 @@ table:not(.selection-mode-active) .bulk-select-cell {
         }
 
         // Immediate client-side length check
-        if (plate.length < 5) {
+        if (plate.length < 4) {
             feedback.style.display = 'block';
             feedback.className = 'plate-validation-feedback feedback-error';
-            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Must be at least 5 characters';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Must be at least 4 characters';
             input.classList.add('plate-invalid');
             icon.style.display = 'inline-block';
             icon.innerHTML = '<i class="bi bi-exclamation-circle" style="color: #dc3545;"></i>';
@@ -1616,8 +1616,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
                     if (feedback) {
                         feedback.style.display = 'block';
                         feedback.className = 'plate-validation-feedback feedback-error';
-                        if (input && input.value.trim().length < 5) {
-                            feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Plate number must be at least 5 characters';
+                        if (input && input.value.trim().length < 4) {
+                            feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Plate number must be at least 4 characters';
                         } else {
                             feedback.innerHTML = '<i class="bi bi-exclamation-triangle me-1"></i>Please fix the plate number before submitting';
                         }
@@ -1681,6 +1681,16 @@ table:not(.selection-mode-active) .bulk-select-cell {
         var fields = ['plate_number', 'operator_name', 'driver_name'];
         fields.forEach(function(id) {
             var input = root.querySelector ? root.querySelector('#' + id) : document.getElementById(id);
+            var clearBtn = root.querySelector ? root.querySelector('#' + id + '_clear') : document.getElementById(id + '_clear');
+            if (clearBtn && !clearBtn.dataset.preventBound) {
+                clearBtn.dataset.preventBound = '1';
+                clearBtn.addEventListener('pointerdown', function(e) {
+                    e.preventDefault();
+                });
+                clearBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                });
+            }
             if (input) {
                 window.toggleFieldClearBtn(input, id + '_clear');
                 if (!input.dataset.clearBtnBound) {
@@ -1708,29 +1718,70 @@ table:not(.selection-mode-active) .bulk-select-cell {
         function filterRoutes() {
             if (!typeSelect || !routeSelect) return;
             var selectedType = typeSelect.value;
+            var currentOpt = routeSelect.options[routeSelect.selectedIndex];
+            var currentText = (currentOpt && currentOpt.value) ? currentOpt.text.trim() : '';
+            if (!currentText) {
+                var sInput = document.getElementById('route_id_autocomplete_search');
+                if (sInput && sInput.value) currentText = sInput.value.trim();
+            }
+
             var options = routeSelect.querySelectorAll('option[data-type]');
+            var matchedOpt = null;
             options.forEach(function (opt) {
                 if (selectedType && opt.getAttribute('data-type') === selectedType) {
                     opt.style.display = '';
                     opt.disabled = false;
+                    if (currentText && opt.text.trim().toUpperCase() === currentText.toUpperCase()) {
+                        matchedOpt = opt;
+                    }
                 } else {
                     opt.style.display = 'none';
                     opt.disabled = true;
                     if (opt.selected) opt.selected = false;
                 }
             });
+
+            if (matchedOpt) {
+                matchedOpt.selected = true;
+                routeSelect.value = matchedOpt.value;
+            } else {
+                routeSelect.value = '';
+            }
+
             // Update placeholder text based on whether a type is selected
             var placeholder = routeSelect.querySelector('option[value=""]');
             if (placeholder) {
                 placeholder.textContent = selectedType ? '-- Select Destination --' : '-- Select Type First --';
             }
-            routeSelect.dispatchEvent(new Event('change'));
+
+            routeSelect.dispatchEvent(new Event('input', { bubbles: true }));
+            routeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            if (typeof routeSelect.syncAutocompleteValue === 'function') {
+                routeSelect.syncAutocompleteValue();
+            }
+
+            var sInput = document.getElementById('route_id_autocomplete_search');
+            if (sInput) {
+                if (matchedOpt) {
+                    sInput.value = matchedOpt.text.trim();
+                    sInput.classList.remove('is-invalid');
+                } else {
+                    sInput.value = '';
+                    sInput.placeholder = selectedType ? '-- Select Destination --' : '-- Select Type First --';
+                }
+                var clearBtn = sInput.parentElement ? sInput.parentElement.querySelector('.autocomplete-clear-btn') : null;
+                if (clearBtn) {
+                    clearBtn.style.display = (sInput.value && sInput.value.trim() !== '') ? 'inline-flex' : 'none';
+                }
+            }
+            if (typeof routeSelect.setCustomValidity === 'function') {
+                routeSelect.setCustomValidity('');
+            }
         }
 
         filterRoutes();
         if (typeSelect) {
             typeSelect.addEventListener('change', function() {
-                if (routeSelect) routeSelect.value = '';
                 filterRoutes();
             });
         }

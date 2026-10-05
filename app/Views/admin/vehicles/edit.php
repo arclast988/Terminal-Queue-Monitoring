@@ -234,17 +234,29 @@ document.addEventListener('DOMContentLoaded', function() {
     var currentRouteId = '<?= old('route_id') ?? $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '' ?>';
 
     function filterRoutes() {
+        if (!typeSelect || !routeSelect) return;
         var selectedType = typeSelect.value;
+        var currentOpt = routeSelect.options[routeSelect.selectedIndex];
+        var currentText = (currentOpt && currentOpt.value) ? currentOpt.text.trim() : '';
+        if (!currentText) {
+            var searchInput = document.getElementById('route_id_autocomplete_search');
+            if (searchInput && searchInput.value) {
+                currentText = searchInput.value.trim();
+            }
+        }
+
         var options = routeSelect.querySelectorAll('option[data-type]');
-        var hasSelected = false;
+        var matchedOpt = null;
+        var exactIdMatch = null;
 
         options.forEach(function(opt) {
-            if (opt.getAttribute('data-type') === selectedType) {
+            if (selectedType && opt.getAttribute('data-type') === selectedType) {
                 opt.style.display = '';
                 opt.disabled = false;
-                if (opt.value === currentRouteId) {
-                    opt.selected = true;
-                    hasSelected = true;
+                if (currentRouteId && opt.value === String(currentRouteId)) {
+                    exactIdMatch = opt;
+                } else if (currentText && opt.text.trim().toUpperCase() === currentText.toUpperCase()) {
+                    matchedOpt = opt;
                 }
             } else {
                 opt.style.display = 'none';
@@ -253,14 +265,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        if (!hasSelected) {
+        var chosen = exactIdMatch || matchedOpt;
+        if (chosen) {
+            chosen.selected = true;
+            routeSelect.value = chosen.value;
+            currentRouteId = chosen.value;
+        } else {
             routeSelect.value = '';
+            currentRouteId = '';
+        }
+
+        var placeholder = routeSelect.querySelector('option[value=""]');
+        if (placeholder) {
+            placeholder.textContent = selectedType ? '-- Select Destination --' : '-- Select Type First --';
+        }
+
+        // Notify autocomplete and native form checks
+        routeSelect.dispatchEvent(new Event('input', { bubbles: true }));
+        routeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        if (typeof routeSelect.syncAutocompleteValue === 'function') {
+            routeSelect.syncAutocompleteValue();
+        }
+
+        var autoSearchInput = document.getElementById('route_id_autocomplete_search');
+        if (autoSearchInput) {
+            if (chosen) {
+                autoSearchInput.value = chosen.text.trim();
+                autoSearchInput.classList.remove('is-invalid');
+            } else {
+                autoSearchInput.value = '';
+                autoSearchInput.placeholder = selectedType ? '-- Select Destination --' : '-- Select Type First --';
+            }
+            var clearBtn = autoSearchInput.parentElement ? autoSearchInput.parentElement.querySelector('.autocomplete-clear-btn') : null;
+            if (clearBtn) {
+                clearBtn.style.display = (autoSearchInput.value && autoSearchInput.value.trim() !== '') ? 'inline-flex' : 'none';
+            }
+        }
+        if (typeof routeSelect.setCustomValidity === 'function') {
+            routeSelect.setCustomValidity('');
         }
     }
 
     filterRoutes();
     typeSelect.addEventListener('change', function() {
-        currentRouteId = '';
         filterRoutes();
     });
 
@@ -508,10 +555,10 @@ function updateEditTypeFallback(select) {
             return;
         }
 
-        if (plate.length < 5) {
+        if (plate.length < 4) {
             feedback.style.display = 'block';
             feedback.className = 'plate-validation-feedback feedback-error';
-            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Must be at least 5 characters';
+            feedback.innerHTML = '<i class="bi bi-info-circle me-1"></i>Must be at least 4 characters';
             input.classList.add('plate-invalid');
             icon.style.display = 'inline-block';
             icon.innerHTML = '<i class="bi bi-exclamation-circle" style="color: #dc3545;"></i>';
@@ -638,6 +685,16 @@ function updateEditTypeFallback(select) {
         var fields = ['plate_number', 'operator_name', 'driver_name'];
         fields.forEach(function(id) {
             var input = root.querySelector ? root.querySelector('#' + id) : document.getElementById(id);
+            var clearBtn = root.querySelector ? root.querySelector('#' + id + '_clear') : document.getElementById(id + '_clear');
+            if (clearBtn && !clearBtn.dataset.preventBound) {
+                clearBtn.dataset.preventBound = '1';
+                clearBtn.addEventListener('pointerdown', function(e) {
+                    e.preventDefault();
+                });
+                clearBtn.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                });
+            }
             if (input) {
                 window.toggleFieldClearBtn(input, id + '_clear');
                 if (!input.dataset.clearBtnBound) {

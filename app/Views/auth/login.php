@@ -60,7 +60,7 @@
 
         body {
             font-family: var(--font);
-            background: transparent;
+            background-color: var(--bg);
             color: var(--text);
             min-height: 100vh;
             min-height: 100dvh;
