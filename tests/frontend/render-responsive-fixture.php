@@ -8,6 +8,7 @@ $fixturePage = $argv[1] ?? 'login';
 if (in_array($fixturePage, ['staff-departures', 'staff-departures-report', 'staff-dashboard'], true)) date_default_timezone_set('Asia/Manila');
 $fixtureLong = ($argv[2] ?? '') === 'long';
 $fixtureRole = $fixturePage === 'admin-settings' ? 'super_admin' : (str_starts_with($fixturePage, 'staff') ? 'staff' : (str_starts_with($fixturePage, 'admin') ? 'admin' : null));
+if (($argv[6] ?? '') === 'super_admin' && str_starts_with($fixturePage, 'admin')) $fixtureRole = 'super_admin';
 set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });

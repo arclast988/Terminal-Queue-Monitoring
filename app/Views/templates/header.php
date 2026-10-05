@@ -9,6 +9,8 @@
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
     <meta name="csrf-header" content="<?= csrf_header() ?>">
     <meta name="color-scheme" content="only light">
+    <!-- Capture a complete destination, rather than its header-only first chunk. -->
+    <link rel="expect" href="#tq-main-content-ready" blocking="render">
 
     <?= view('partials/app_install') ?>
 

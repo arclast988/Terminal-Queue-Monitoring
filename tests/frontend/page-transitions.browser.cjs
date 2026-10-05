@@ -22,11 +22,12 @@ const slideshowFixtures = new Map();
 const pending = [];
 const navigationReports = [];
 let browser, server, origin;
+let streamSettings = false, settingsPrefixArrived, settingsResponse, settingsTail;
 
 test.before(async () => {
   for (const [url, name] of routes) {
     for (const slideshow of [false, true]) {
-    const html = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme', 'custom-theme', slideshow ? 'slideshow' : ''], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+    const html = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme', 'custom-theme', slideshow ? 'slideshow' : '', 'super_admin'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     // Render the real page heads/navigation; isolate animation from live queue polling.
     // Keep the production policy in its original parser-blocking head position.
     const isolated = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, script => {
@@ -46,7 +47,16 @@ test.before(async () => {
         navigationReports.push(JSON.parse(body)); res.statusCode = 204; res.end();
       }); return;
     }
-    if (routes.has(url.pathname)) { res.setHeader('Content-Type', 'text/html'); return res.end((url.searchParams.has('slideshow') ? slideshowFixtures : fixtures).get(url.pathname)); }
+    if (routes.has(url.pathname)) {
+      res.setHeader('Content-Type', 'text/html');
+      const html = (url.searchParams.has('slideshow') ? slideshowFixtures : fixtures).get(url.pathname);
+      if (streamSettings && url.pathname === '/admin/settings') {
+        const split = html.indexOf('<div class="settings-page">');
+        settingsResponse = res; settingsTail = html.slice(split);
+        res.write(html.slice(0, split)); settingsPrefixArrived?.(); return;
+      }
+      return res.end(html);
+    }
     if (/^\/fixture(?:-second|-third)?\.svg$/.test(url.pathname)) {
       res.setHeader('Content-Type', 'image/svg+xml');
       return res.end('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="30" fill="#b71c1c"/></svg>');
@@ -60,6 +70,7 @@ test.before(async () => {
   browser = await browserType.launch({ headless: true, ...(nativeOnly && process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}), ...(process.env.TQ_BROWSER_EXECUTABLE ? { executablePath:process.env.TQ_BROWSER_EXECUTABLE } : {}) });
 });
 test.after(async () => {
+  if (settingsResponse && !settingsResponse.writableEnded) settingsResponse.end(settingsTail);
   for (const response of pending) if (!response.writableEnded) response.end(fixtures.get('/schedules'));
   await browser?.close(); server?.closeAllConnections();
   if (server) await new Promise(resolve => server.close(resolve));
@@ -109,6 +120,37 @@ async function navigate(page, to) {
   await page.locator(`#site-header a[href="${to}"]:visible, .sticky-top-wrapper a[href="${to}"]:visible, #siteSidebarDrawer a[href="${to}"]:visible`).first().click();
   await page.waitForURL(origin + to);
 }
+
+test('opening System Themes from the profile waits for the complete selected panel before revealing it', { skip: !nativeOnly, timeout:30000 }, async t => {
+  const { page, context, errors } = await open(t);
+  await context.addInitScript(() => localStorage.setItem('sb_active_tab', 'themes'));
+  await page.goto(origin + '/admin/dashboard');
+  await page.locator('#userProfileBtn').click();
+  await page.locator('#userProfileMenu').waitFor({state:'visible'});
+  const prefix = new Promise(resolve => { settingsPrefixArrived = resolve; });
+  streamSettings = true;
+  try {
+    const click = page.locator('#userProfileMenu a[href="/admin/settings"]').click({noWaitAfter:true});
+    await prefix;
+    await page.waitForURL(origin + '/admin/settings', {waitUntil:'commit'});
+    await page.waitForFunction(() => Array.isArray(window.transitionRecords), null, {polling:20});
+    // Hold the HTML body after the header, reproducing an incremental response.
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator('.settings-page').count(), 0);
+    assert.equal(await page.evaluate(() => window.transitionRecords.length), 0, 'do not snapshot a header-only destination');
+    settingsResponse.end(settingsTail);
+    await click; await page.waitForLoadState('load');
+    await page.waitForFunction(() => window.transitionRecords.some(record => record.duration));
+    const record = await page.evaluate(() => window.transitionRecords.find(record => record.duration));
+    assert.equal(record.entry, 'none', 'the full page already exists when its snapshot is captured');
+    assert.deepEqual(await page.locator('.settings-page .tab-content').evaluateAll(panels => panels.filter(panel => getComputedStyle(panel).display !== 'none').map(panel => panel.id)), ['tab-themes']);
+    assert.equal(await page.locator('.main-content').evaluate(el => getComputedStyle(el).animationName), 'none');
+    assert.deepEqual(errors, []);
+  } finally {
+    streamSettings = false; settingsPrefixArrived = null;
+    if (settingsResponse && !settingsResponse.writableEnded) settingsResponse.end(settingsTail);
+  }
+});
 
 test('the original fonts stay consistent on a cold load, refresh and another page', { skip: !nativeOnly, timeout: 30000 }, async t => {
   const { page, context, errors } = await open(t);

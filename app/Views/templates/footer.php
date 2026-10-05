@@ -1,4 +1,5 @@
     </div>
+    <span id="tq-main-content-ready" hidden></span>
     <?= view('partials/support-modals') ?>
     <?= view('partials/footer') ?>
     <script src="<?= app_asset_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>

@@ -135,11 +135,12 @@ test('search and filter feedback stay centered inside the button on phones and d
       return { inside: s.left >= b.left + 4 && l.right <= b.right - 4,
         vertical: Math.abs((s.top + s.bottom - b.top - b.bottom) / 2),
         horizontal: Math.abs((s.left + l.right - b.left - b.right) / 2),
-        labelFits: label.scrollWidth <= label.clientWidth + 1, labelWidth:label.clientWidth, textWidth:label.scrollWidth, font:getComputedStyle(label).font,
+        labelFits: label.scrollWidth <= label.clientWidth + 1, labelWidth:label.clientWidth, textWidth:label.scrollWidth, font:getComputedStyle(label).font, fontFamily:getComputedStyle(label).fontFamily,
         spinnerMargin: getComputedStyle(spinner).marginRight, square: Math.abs(s.width - s.height),
         labelColor: getComputedStyle(label).color, feedbackColor: getComputedStyle(button.querySelector('.gl-btn-feedback')).color };
     }, selectors[name]);
     assert.ok(geometry.inside && geometry.labelFits, JSON.stringify({ name, mode, width, geometry }));
+    if (name !== 'schedules') assert.match(geometry.fontFamily, /Outfit/, 'search feedback uses the original page font');
     assert.ok(geometry.vertical < 1 && geometry.horizontal < 1 && geometry.square < 1, JSON.stringify(geometry));
     assert.equal(geometry.spinnerMargin, '0px'); assert.equal(geometry.labelColor, geometry.feedbackColor);
     if (name === 'search' && mode === 'lite' && width === 390) await shot(page, selectors[name], 'search-centered-phone');
