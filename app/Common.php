@@ -2529,6 +2529,9 @@ if (! function_exists('app_has_custom_bg')) {
     {
         $customBg = get_system_setting('app_background_image');
         if (! empty($customBg)) {
+            if (str_starts_with($customBg, 'http://') || str_starts_with($customBg, 'https://')) {
+                return true;
+            }
             $relPath = ltrim(str_replace(['\\'], '/', $customBg), '/');
             return is_file(FCPATH . $relPath);
         }
@@ -2541,6 +2544,9 @@ if (! function_exists('app_has_custom_logo')) {
     {
         $customLogo = get_system_setting('app_logo');
         if (! empty($customLogo)) {
+            if (str_starts_with($customLogo, 'http://') || str_starts_with($customLogo, 'https://')) {
+                return true;
+            }
             $relPath = ltrim(str_replace(['\\'], '/', $customLogo), '/');
             return is_file(FCPATH . $relPath);
         }
