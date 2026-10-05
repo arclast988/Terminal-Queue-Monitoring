@@ -278,7 +278,12 @@ body.staff-theme .logo-text p {
 .dropdown { position: relative; display: inline-block; }
 
 .dropdown-content {
-  display: none;
+  display: block;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity .16s ease-out, transform .16s ease-out, visibility 0s linear .16s;
   position: absolute;
   background: var(--surface, #fff);
   min-width: 190px;
@@ -346,13 +351,23 @@ body.staff-theme .logo-text p {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .dropdown:hover .dropdown-content { display: block; }
+  .dropdown:hover .dropdown-content {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition-delay: 0s;
+  }
 }
 
 /* Dropdowns also open on click/tap (toggled via JS .mobile-open) */
 .dropdown.mobile-open .dropdown-content,
 .nav-menu .dropdown.mobile-open .dropdown-content {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition-delay: 0s;
 }
 
 .dropbtn {
@@ -480,7 +495,12 @@ body.staff-theme .logo-text p {
   border: 1px solid #d0d7de;
   border-radius: 14px;
   box-shadow: 0 16px 40px -8px rgba(15, 23, 42, .24), 0 0 0 1px rgba(15, 23, 42, .06);
-  display: none;
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity .16s ease-out, transform .16s ease-out, visibility 0s linear .16s;
   flex-direction: column;
   z-index: 100200;
   overflow-x: hidden;
@@ -490,19 +510,11 @@ body.staff-theme .logo-text p {
 }
 
 .user-profile-dropdown.open .profile-dropdown-card {
-  display: flex;
-  animation: profileCardEnter .2s cubic-bezier(.16, 1, .3, 1) forwards;
-}
-
-@keyframes profileCardEnter {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) scale(.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition-delay: 0s;
 }
 
 /* Card Header */
@@ -944,7 +956,7 @@ body.staff-theme .logo-text p {
   display: flex;
   flex-direction: column;
   transform: translate3d(-105%, 0, 0);
-  transition: transform .22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform .18s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear .18s;
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
   font-family: var(--font-body, 'Outfit', sans-serif);
   box-sizing: border-box;
@@ -957,6 +969,7 @@ body.staff-theme .logo-text p {
 .sidebar-drawer.open {
   transform: translate3d(0, 0, 0);
   visibility: visible;
+  transition-delay: 0s;
 }
 
 @media (min-width: 1281px) {
@@ -1683,8 +1696,8 @@ body.staff-theme .drawer-nav-item.active i {
     position: fixed !important;
     top: calc(var(--site-header-height, 74px) + 4px) !important;
     right: 12px !important;
-    width: min(330px, calc(100vw - 24px)) !important;
-    max-width: calc(100vw - 24px) !important;
+    width: min(330px, calc(var(--tq-viewport-width, 100vw) - 24px)) !important;
+    max-width: calc(var(--tq-viewport-width, 100vw) - 24px) !important;
   }
 }
 
@@ -1911,8 +1924,8 @@ body.staff-theme .drawer-nav-item.active i {
 
   .profile-dropdown-card {
     right: 8px !important;
-    width: calc(100vw - 16px) !important;
-    max-width: calc(100vw - 16px) !important;
+    width: calc(var(--tq-viewport-width, 100vw) - 24px) !important;
+    max-width: calc(var(--tq-viewport-width, 100vw) - 24px) !important;
   }
 
   .nav-menu {
@@ -2095,7 +2108,7 @@ body.staff-theme .nav-menu .dropdown-content a {
   text-decoration: none !important;
   transition: background-color 0.15s ease, color 0.15s ease !important;
   opacity: 1 !important;
-  visibility: visible !important;
+  visibility: inherit !important;
 }
 
 .dropdown-content a i,
@@ -2111,7 +2124,7 @@ body.staff-theme .nav-menu .dropdown-content a i {
   font-size: 14px !important;
   text-align: center !important;
   opacity: 1 !important;
-  visibility: visible !important;
+  visibility: inherit !important;
 }
 
 .dropdown-content a:hover,

@@ -711,12 +711,12 @@ table:not(.selection-mode-active) .bulk-select-cell {
     /* Focus effects across the search capsule */
     .vehicle-search-group:focus-within .input-group-text {
         border-color: var(--primary, #c62828) !important;
-        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.08) !important;
+        box-shadow: 0 4px 12px var(--primary-soft) !important;
     }
     
     .vehicle-search-group:focus-within .vehicle-search-input {
         border-color: var(--primary, #c62828) !important;
-        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.08) !important;
+        box-shadow: 0 4px 12px var(--primary-soft) !important;
         outline: none !important;
     }
 
@@ -773,7 +773,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15) !important;
     }
     .vf-btn#filter-btn-all.active:hover {
-        box-shadow: 0 4px 12px rgba(198, 40, 40, 0.25) !important;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 25%, transparent) !important;
     }
     .vf-btn.vf-active-status.active:hover {
         box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25) !important;

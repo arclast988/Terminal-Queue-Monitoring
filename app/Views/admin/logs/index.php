@@ -123,7 +123,7 @@
     html body .quick-chip:hover {
         border-color: var(--primary, #b71c1c) !important;
         color: var(--primary, #b71c1c) !important;
-        background: #fef2f2 !important;
+        background: var(--primary-soft, #fef2f2) !important;
     }
 
     html body .quick-chip.active {

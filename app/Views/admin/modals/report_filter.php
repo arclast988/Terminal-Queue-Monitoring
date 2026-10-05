@@ -29,7 +29,7 @@
 .report-filter-modal .form-control:focus,
 .report-filter-modal .form-select:focus {
     border-color: var(--primary, #C62828) !important;
-    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
+    box-shadow: 0 0 0 0.2rem var(--primary-soft) !important;
 }
 /* Date input styling with calendar icon & watermark cue */
 .report-date-group {
@@ -56,7 +56,7 @@
     border-color: var(--primary, #C62828) !important;
 }
 .report-date-group:focus-within {
-    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12) !important;
+    box-shadow: 0 0 0 0.2rem var(--primary-soft) !important;
     border-radius: 6px;
 }
 .report-date-group .form-control:focus {

@@ -495,7 +495,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
     .route-search-group:focus-within .input-group-text,
     .route-search-group:focus-within .route-search-input {
         border-color: var(--primary, #b71c1c);
-        box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.12);
+        box-shadow: 0 0 0 3px var(--primary-soft);
     }
     .btn-clear-search {
         position: absolute;
@@ -566,7 +566,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         background: var(--primary, #b71c1c) !important;
         border-color: var(--primary, #b71c1c) !important;
         color: #fff !important;
-        box-shadow: 0 4px 12px rgba(183, 28, 28, 0.25) !important;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 25%, transparent) !important;
     }
     #tab-active-routes.active i {
         color: #fff !important;

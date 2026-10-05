@@ -96,6 +96,20 @@ test('hardware and live reduced-motion preferences change presentation without t
   assert.equal(h.document.documentElement.getAttribute('data-tq-motion'), 'reduced');
 });
 
+test('reload and history timing suppress entrances before paint, including engines with late timing entries', () => {
+  for (const type of [1, 2]) {
+    const h = harness();
+    h.window.performance = { getEntriesByType: () => [], navigation: { type } };
+    h.load('public/assets/js/interaction-motion.js');
+    assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-reveal'), '');
+    assert.equal(h.timers.size, 0);
+  }
+  const h = harness();
+  h.window.performance = { getEntriesByType: () => [], navigation: { type:0 } };
+  h.load('public/assets/js/interaction-motion.js');
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-reveal'), null);
+});
+
 test('navigation feedback starts immediately without deferring or intercepting the link', async () => {
   const h = loaded({ cores: 2, mobile: true });
   const link = h.document.body.appendChild(new h.Element('a'));

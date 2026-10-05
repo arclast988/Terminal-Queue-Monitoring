@@ -1148,13 +1148,13 @@ button:focus-visible,
 .form-control:focus,
 .form-select:focus {
     border-color: var(--primary, #C62828);
-    box-shadow: 0 0 0 0.2rem rgba(198, 40, 40, 0.12);
+    box-shadow: 0 0 0 0.2rem var(--primary-soft);
 }
 
 body.staff-theme .form-control:focus,
 body.staff-theme .form-select:focus {
     border-color: var(--primary, #1565c0);
-    box-shadow: 0 0 0 0.2rem rgba(21, 101, 192, 0.12);
+    box-shadow: 0 0 0 0.2rem var(--primary-soft);
 }
 
 /* ---- 2. Consistent component shape and depth ---- */
@@ -1407,12 +1407,12 @@ body.staff-theme .form-select:focus {
    admin and staff pages, plus theme-aware focus colors.
    ================================================================= */
 
-/* Theme-aware focus colors for modern inputs (staff theme is blue) */
+/* Modern inputs use the configured role color. */
 body.staff-theme .input-modern:focus,
 body.staff-theme .form-control-modern:focus,
 body.staff-theme .form-select-modern:focus {
-    border-color: var(--primary-blue, #1565c0);
-    box-shadow: 0 0 0 4px rgba(21, 101, 192, 0.1);
+    border-color: var(--primary, #15803d);
+    box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
 /* Modern buttons: consistent icon + label alignment everywhere */
@@ -2608,10 +2608,10 @@ a[title*="delete" i]:hover .bi,
 
   html body table.table-modern tbody tr td .badge-modern-super-admin,
   html body table.table-modern tbody tr td .badge-modern-super-admin * {
-    background: #B71C1C !important;
-    background-color: #B71C1C !important;
-    color: #ffffff !important;
-    -webkit-text-fill-color: #ffffff !important;
+    background: var(--admin-primary, #B71C1C) !important;
+    background-color: var(--admin-primary, #B71C1C) !important;
+    color: var(--admin-on-primary, #ffffff) !important;
+    -webkit-text-fill-color: var(--admin-on-primary, #ffffff) !important;
     font-weight: 700 !important;
     font-size: 12px !important;
     padding: 4px 10px !important;
@@ -3151,12 +3151,12 @@ a[title*="delete" i]:hover .bi,
 
   .fare-search-group:focus-within {
     border-color: var(--primary, #15803d) !important;
-    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.12) !important;
+    box-shadow: 0 0 0 3px var(--primary-soft) !important;
   }
 
   body.admin-theme .fare-search-group:focus-within {
     border-color: var(--primary, #b71c1c) !important;
-    box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.12) !important;
+    box-shadow: 0 0 0 3px var(--primary-soft) !important;
   }
 
   .fare-search-icon {

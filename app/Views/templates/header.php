@@ -39,6 +39,9 @@
     <?php endforeach; ?>
     <?= vehicle_type_colors_css() ?>
     <?= app_theme_css() ?>
+    <?php if (!empty($pageHeadPartial)): ?>
+    <?= view($pageHeadPartial) ?>
+    <?php endif; ?>
 
 
     <style>
@@ -540,6 +543,9 @@
             function syncHeaderHeight() {
                 var hdr = document.getElementById('site-header');
                 if (hdr && hdr.offsetHeight > 0) {
+                    // The root clientWidth includes a reserved scrollbar gutter
+                    // in some browsers; the header measures the usable width.
+                    document.documentElement.style.setProperty('--tq-viewport-width', Math.min(document.documentElement.clientWidth, hdr.getBoundingClientRect().width) + 'px');
                     var isMobile = window.innerWidth <= 768;
                     var maxCap = isMobile ? 82 : 84;
                     var h = Math.min(Math.max(hdr.offsetHeight || 52, 48), maxCap);

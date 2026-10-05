@@ -1,4 +1,4 @@
-<?= $this->include('templates/header') ?>
+<?= view('templates/header', ['pageHeadPartial' => 'admin/settings/initial_tab']) ?>
 
 <?php
 $s = $settings ?? [];
@@ -52,10 +52,10 @@ $slotsMeta = [
    Superadmin System Themes & Customization Modern Styles
    ========================================================================== */
 
-:root {
+.settings-page {
     --sb-primary: var(--primary, #B71C1C);
     --sb-primary-hover: var(--primary-dark, #991b1b);
-    --sb-primary-light: rgba(183, 28, 28, 0.08);
+    --sb-primary-light: var(--primary-soft, #fbe9e9);
     --sb-surface: #ffffff;
     --sb-surface-subtle: #f8fafc;
     --sb-border: #e2e8f0;
@@ -102,7 +102,7 @@ $slotsMeta = [
     right: -10%;
     width: 280px;
     height: 280px;
-    background: radial-gradient(circle, rgba(183, 28, 28, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, var(--sb-primary-light) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -129,8 +129,8 @@ $slotsMeta = [
     align-items: center;
     justify-content: center;
     font-size: 24px;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(183, 28, 28, 0.35);
+    color: var(--on-primary, #ffffff);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--sb-primary) 35%, transparent);
 }
 
 .settings-header-card h1 {
@@ -163,15 +163,22 @@ $slotsMeta = [
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
+    background: var(--sb-primary-light);
+    color: var(--primary-dark, #7f1212);
+    border: 1px solid color-mix(in srgb, var(--sb-primary) 25%, transparent);
     font-size: 11.5px;
     font-weight: 700;
     padding: 6px 14px;
     border-radius: 20px;
     letter-spacing: 0.4px;
     text-transform: uppercase;
+}
+
+.sa-badge i { color: inherit; }
+.settings-header-icon i { color: var(--on-primary, #ffffff); }
+.add-slot-card:hover {
+    border-color: var(--sb-primary) !important;
+    background: var(--sb-primary-light) !important;
 }
 
 .sa-link-btn {
@@ -244,10 +251,10 @@ $slotsMeta = [
 
 .settings-tab:hover {
     color: var(--sb-primary, #B71C1C);
-    background: #fef2f2;
-    border-color: #fca5a5;
+    background: var(--sb-primary-light);
+    border-color: var(--sb-primary);
     transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(183, 28, 28, 0.12);
+    box-shadow: 0 2px 6px var(--sb-primary-light);
 }
 
 .settings-tab:hover i {
@@ -256,15 +263,15 @@ $slotsMeta = [
 }
 
 .settings-tab.active {
-    color: #ffffff !important;
+    color: var(--on-primary, #ffffff) !important;
     background: var(--sb-primary, #B71C1C) !important;
     border-color: var(--sb-primary, #B71C1C) !important;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(183, 28, 28, 0.32);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--sb-primary) 32%, transparent);
 }
 
 .settings-tab.active i {
-    color: #ffffff !important;
+    color: var(--on-primary, #ffffff) !important;
 }
 
 /* Tab Panels */
@@ -274,12 +281,10 @@ $slotsMeta = [
 
 .tab-content.active {
     display: block;
-    animation: sbFadeIn 0.25s ease-out;
 }
 
-@keyframes sbFadeIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
+.tab-content.tab-enter {
+    animation: tq-content-fade .12s ease-out;
 }
 
 /* Cards */
@@ -380,7 +385,7 @@ $slotsMeta = [
 .form-input:focus {
     outline: none;
     border-color: var(--sb-primary);
-    box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.1);
+    box-shadow: 0 0 0 3px var(--sb-primary-light);
     background: #ffffff;
 }
 
@@ -455,7 +460,7 @@ $slotsMeta = [
 
 .btn-save i {
     font-size: 14px;
-    color: #ffffff !important;
+    color: var(--on-primary, #ffffff) !important;
 }
 
 .form-action-row {
@@ -573,7 +578,7 @@ $slotsMeta = [
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--sb-primary, #B71C1C) 0%, #ef4444 50%, var(--sb-primary, #B71C1C) 100%);
+    background: linear-gradient(90deg, var(--sb-primary) 0%, var(--primary-dark) 50%, var(--sb-primary) 100%);
 }
 
 .footer-preview-about h4 {
@@ -639,7 +644,7 @@ $slotsMeta = [
 
 .bg-mode-card.active {
     border-color: var(--sb-primary);
-    background: rgba(183, 28, 28, 0.02);
+    background: var(--sb-primary-light);
     box-shadow: 0 0 0 1px var(--sb-primary);
 }
 
@@ -679,7 +684,7 @@ $slotsMeta = [
 
 .upload-zone:hover, .upload-zone.drag-over {
     border-color: var(--sb-primary);
-    background: rgba(183, 28, 28, 0.03);
+    background: var(--sb-primary-light);
     transform: translateY(-1px);
 }
 
@@ -1516,7 +1521,7 @@ $slotsMeta = [
                 <span id="logoIdleNotice" style="font-size: 12.5px; color: var(--sb-text-muted); margin-right: auto;">
                     <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i> Select or drop a new seal image above, then click Save Logo.
                 </span>
-                <button type="button" id="btnSaveLogo" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25); opacity: 0.65;" disabled>
+                <button type="button" id="btnSaveLogo" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px color-mix(in srgb, var(--sb-primary) 25%, transparent); opacity: 0.65;" disabled>
                     <i class="fas fa-save"></i> Save Logo
                 </button>
             </div>
@@ -1559,7 +1564,7 @@ $slotsMeta = [
                     <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i>
                     Click to persist your background mode and broadcast live to all active screens.
                 </span>
-                <button type="button" id="btnSaveBgSettings" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25);">
+                <button type="button" id="btnSaveBgSettings" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px color-mix(in srgb, var(--sb-primary) 25%, transparent);">
                     <i class="fas fa-save"></i> Save Background & Display Mode
                 </button>
             </div>
@@ -1623,10 +1628,10 @@ $slotsMeta = [
                     <?php endforeach; ?>
 
                     <!-- Dedicated Card to Add Slot 6+ Photos -->
-                    <div class="slideshow-slot-card add-slot-card" id="addSlotCard" onclick="document.getElementById('newSlotFileInput').click();" style="border: 2px dashed #cbd5e1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; min-height:240px; background:#f8fafc; border-radius:12px; transition:all 0.2s ease;" onmouseover="this.style.borderColor='#b71c1c'; this.style.background='#fff5f5';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';">
+                    <div class="slideshow-slot-card add-slot-card" id="addSlotCard" onclick="document.getElementById('newSlotFileInput').click();" style="border: 2px dashed #cbd5e1; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; min-height:240px; background:#f8fafc; border-radius:12px; transition:all 0.2s ease;">
                         <input type="file" id="newSlotFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;" onchange="handleAddNewSlot(this);">
                         <div style="text-align:center; padding:20px;">
-                            <div style="width:52px; height:52px; border-radius:50%; background:#fee2e2; color:#b71c1c; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px; box-shadow:0 2px 8px rgba(183,28,28,0.15);">
+                            <div style="width:52px; height:52px; border-radius:50%; background:var(--sb-primary-light); color:var(--sb-primary); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:22px; box-shadow:0 2px 8px var(--sb-primary-light);">
                                 <i class="fas fa-plus"></i>
                             </div>
                             <h5 style="margin:0 0 6px 0; font-size:15px; font-weight:700; color:#0f172a;">Add Slideshow Photo</h5>
@@ -1706,7 +1711,7 @@ $slotsMeta = [
                 <span id="loginCardIdleNotice" style="font-size: 12.5px; color: var(--sb-text-muted); margin-right: auto;">
                     <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i> Select or drop artwork above, then click Save Login Hero Illustration.
                 </span>
-                <button type="button" id="btnSaveLoginCard" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px rgba(183, 28, 28, 0.25); opacity: 0.65;" disabled>
+                <button type="button" id="btnSaveLoginCard" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px color-mix(in srgb, var(--sb-primary) 25%, transparent); opacity: 0.65;" disabled>
                     <i class="fas fa-save"></i> Save Login Hero Illustration
                 </button>
             </div>
@@ -2151,17 +2156,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var tabs = document.querySelectorAll('.settings-tab');
     var contents = document.querySelectorAll('.tab-content');
 
-    function switchTab(tabId, pushHash) {
+    function switchTab(tabId, pushHash, animate) {
         if (!tabId) tabId = 'identity';
         var activeBtn = document.getElementById('tabBtn-' + tabId);
         var activeContent = document.getElementById('tab-' + tabId);
         if (!activeBtn || !activeContent) return;
 
         tabs.forEach(function(t) { t.classList.remove('active'); });
-        contents.forEach(function(c) { c.classList.remove('active'); });
+        contents.forEach(function(c) { c.classList.remove('active', 'tab-enter'); });
 
         activeBtn.classList.add('active');
         activeContent.classList.add('active');
+        if (animate) activeContent.classList.add('tab-enter');
+        document.documentElement.removeAttribute('data-settings-initial-tab');
 
         try {
             localStorage.setItem('sb_active_tab', tabId);
@@ -2173,7 +2180,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     tabs.forEach(function(tab) {
         tab.addEventListener('click', function() {
-            switchTab(tab.dataset.tab, true);
+            switchTab(tab.dataset.tab, true, true);
         });
     });
 

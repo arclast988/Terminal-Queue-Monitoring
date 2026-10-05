@@ -96,7 +96,7 @@
     width: 72px;
     height: 72px;
     overflow: hidden;
-    border: 2px solid #15803d;
+    border: 2px solid var(--primary, #15803d);
     border-radius: 50%;
     background: #f1f5f9;
     box-shadow: 0 2px 8px rgba(15, 23, 42, .1);
@@ -539,12 +539,12 @@ body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.side
 .btn-modern-primary {
     background: var(--gradient-red);
     color: white;
-    box-shadow: 0 4px 14px rgba(198, 40, 40, 0.35);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
 .btn-modern-primary:hover {
     background: linear-gradient(135deg, var(--primary-red-light) 0%, var(--primary-red) 100%);
-    box-shadow: 0 6px 20px rgba(198, 40, 40, 0.45);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 45%, transparent);
     transform: translateY(-2px);
 }
 
@@ -888,7 +888,7 @@ body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.side
 .form-select-modern:focus {
     outline: none;
     border-color: var(--primary-red);
-    box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
+    box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
 .input-group-modern:focus-within .input-group-text-modern {
@@ -906,7 +906,7 @@ body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.side
 .input-group-modern:focus-within .select-modern,
 .input-group-modern:focus-within .form-select-modern {
     border-color: var(--primary-red);
-    box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
+    box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
 .input-modern::placeholder,
@@ -1258,7 +1258,7 @@ textarea::placeholder {
    ================================================================= */
 
 body.admin-theme .stat-card-modern::before {
-    background: linear-gradient(90deg, #ef4444, #dc2626);
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
 }
 
 body.admin-theme .btn-modern-primary {
@@ -1286,15 +1286,15 @@ body.admin-theme .stat-card-link:hover {
    ================================================================= */
 
 body.staff-theme .stat-card-modern::before {
-    background: linear-gradient(90deg, #22c55e, #16a34a);
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
 }
 
 body.staff-theme .btn-modern-primary {
-    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
 body.staff-theme .btn-modern-primary:hover {
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    background: var(--primary-dark);
 }
 
 body.staff-theme .page-title-modern i {
@@ -1414,7 +1414,7 @@ body.staff-theme .logout-btn-custom,
 
 .radio-card-input:checked + .radio-card-content {
     border-color: var(--primary-red);
-    background: #fdecea;
+    background: var(--primary-soft, #fdecea);
 }
 
 .radio-card-input:checked + .radio-card-content .radio-card-label {
@@ -1611,10 +1611,10 @@ ul.pagination li a:hover,
 .pagination .page-link:hover,
 .pagination-modern .page-link:hover {
     border-color: var(--primary-red, #b91c1c) !important;
-    background: #fef2f2 !important;
+    background: var(--primary-soft, #fef2f2) !important;
     color: var(--primary-red, #b91c1c) !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 10px rgba(185, 28, 28, 0.15) !important;
+    box-shadow: 0 4px 10px var(--primary-soft) !important;
 }
 
 .pagination li.active a,
@@ -1628,7 +1628,7 @@ ul.pagination li.active span,
     border-color: var(--primary-red, #b91c1c) !important;
     color: #ffffff !important;
     -webkit-text-fill-color: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(185, 28, 28, 0.35) !important;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent) !important;
     cursor: default !important;
     transform: none !important;
 }

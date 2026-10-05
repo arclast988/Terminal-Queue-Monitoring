@@ -1,5 +1,14 @@
 name: Frontend interactions
 on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'public/**'
+      - 'app/Common.php'
+      - 'app/Views/**'
+      - 'tests/frontend/**'
+      - 'types/**'
+      - '.github/workflows/frontend-interactions.yml'
   pull_request:
     branches: [main, master]
 permissions:
@@ -8,7 +17,7 @@ jobs:
   interactions:
     name: Interactions (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +59,9 @@ jobs:
         env:
           TQ_BROWSER: ${{ matrix.browser }}
           TQ_BASE_REF: c4048e1923aac4452526f7d9b45f7eca5192df8c
+      - name: Verify saved and live role colors on production controls
+        if: matrix.browser == 'chromium'
+        run: node --test --test-name-pattern='settings badges|account badges|saved and live role' tests/frontend/dispatch-queue.browser.cjs
       - name: Verify pending labels with production theme rules
         run: npm run --prefix tests/frontend test:pending
         env:

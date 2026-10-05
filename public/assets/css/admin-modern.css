@@ -418,7 +418,7 @@ body.admin-theme .page-hero .subtitle {
 .form-control:focus,
 .form-select:focus {
     border-color: var(--primary) !important;
-    box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.15) !important;
+    box-shadow: 0 0 0 2px var(--primary-soft) !important;
     pointer-events: auto !important;
 }
 

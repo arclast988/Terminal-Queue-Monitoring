@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= esc($title) ?></title>
-    <?= view('partials/font_assets', ['fontIcons' => true]) ?>
+    <?= view('partials/font_assets', ['fontFamily' => 'Outfit', 'fontIcons' => true]) ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
     <style>
         *, *::before, *::after {

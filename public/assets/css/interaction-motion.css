@@ -1,5 +1,11 @@
 /* Presentation only: inputs, handlers and server-rendered content stay available. */
 @view-transition { navigation: auto; }
+/* Short/long pages and scroll-locked menus keep the same content width. */
+html { scrollbar-gutter: stable; }
+html[data-tq-motion="full"] body:not(.auth-page)::before,
+html[data-tq-motion="full"] body::after {
+  animation-delay: var(--tq-background-delay, 0s) !important;
+}
 @keyframes tq-page-in { from { opacity: 0; } }
 
 /* Keep a solid outgoing snapshot beneath the incoming page. Fading both
@@ -156,6 +162,29 @@ html[data-tq-motion="lite"] :is(.modal-backdrop.fade, .support-modal-backdrop) {
 html[data-tq-motion="lite"] :is(.card, .login-card, .modal-backdrop, .support-modal-backdrop, .sidebar-drawer-overlay, .filter-badge) {
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+}
+
+/* Lightweight menus remain reversible even on constrained devices. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-tq-motion="lite"] .profile-dropdown-card,
+  html[data-tq-motion="lite"] .nav-menu .dropdown-content {
+    transition: opacity .1s ease-out, transform .1s ease-out, visibility 0s linear .1s !important;
+  }
+  html[data-tq-motion="lite"] .user-profile-dropdown.open .profile-dropdown-card,
+  html[data-tq-motion="lite"] .nav-menu .dropdown.mobile-open .dropdown-content {
+    transition-delay: 0s !important;
+  }
+  html[data-tq-motion="lite"] .sidebar-drawer {
+    transition: transform .14s ease-out, visibility 0s linear .14s !important;
+  }
+  html[data-tq-motion="lite"] .sidebar-drawer.open { transition-delay: 0s !important; }
+  html[data-tq-motion="lite"] .sidebar-drawer-overlay {
+    transition: opacity .1s ease-out, visibility 0s linear .1s !important;
+  }
+  html[data-tq-motion="lite"] .sidebar-drawer-overlay.active { transition-delay: 0s !important; }
+  @media (hover: hover) and (pointer: fine) {
+    html[data-tq-motion="lite"] .nav-menu .dropdown:hover .dropdown-content { transition-delay: 0s !important; }
+  }
 }
 
 /* Small transform-only indicators work for all loading implementations. */

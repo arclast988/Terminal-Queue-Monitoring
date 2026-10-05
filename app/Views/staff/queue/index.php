@@ -811,9 +811,9 @@
     .queue-order-item.is-dragging {
         cursor: grabbing;
         opacity: 1;
-        border-color: #22c55e;
-        box-shadow: 0 10px 24px rgba(21, 128, 61, 0.18);
-        background: #f0fdf4;
+        border-color: var(--primary);
+        box-shadow: 0 10px 24px var(--primary-soft);
+        background: var(--primary-soft);
     }
 
     .queue-order-position {
@@ -827,7 +827,7 @@
         font-weight: 800;
         color: var(--primary-dark, #166534);
         background: var(--primary-soft, #dcfce7);
-        border: 1px solid #86efac;
+        border: 1px solid var(--primary-soft);
     }
 
     #manageQueueModal .queue-order-boarding-badge,
@@ -849,9 +849,9 @@
         align-items: center;
         justify-content: center;
         border-radius: 9px;
-        border: 1px dashed #86efac;
+        border: 1px dashed var(--primary);
         color: var(--primary, #15803d);
-        background: #f0fdf4;
+        background: var(--primary-soft);
         cursor: grab;
         touch-action: none;
         user-select: none;
@@ -1570,7 +1570,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 30%, transparent);
         flex-shrink: 0;
     }
 
@@ -1594,7 +1594,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     }
     #addToQueueModal .input-group:focus-within {
         border-color: var(--primary, #16a34a) !important;
-        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
+        box-shadow: 0 0 0 3px var(--primary-soft) !important;
     }
     #addToQueueModal .input-group > .input-group-text {
         border: none !important;
@@ -1653,16 +1653,16 @@ $queueOrderGroups = array_values($queueOrderGroups);
         border-color: var(--border-strong, #cbd5e1) !important;
     }
     .vehicle-select-item.is-selected {
-        background: #f0fdf4 !important;
+        background: var(--primary-soft) !important;
         border-color: var(--primary, #16a34a) !important;
         border-left: 5px solid var(--primary, #15803d) !important;
-        box-shadow: 0 2px 8px rgba(21, 128, 61, 0.12) !important;
+        box-shadow: 0 2px 8px var(--primary-soft) !important;
     }
     .dark .vehicle-select-item.is-selected,
     [data-bs-theme="dark"] .vehicle-select-item.is-selected {
-        background: rgba(20, 83, 45, 0.3) !important;
-        border-color: #22c55e !important;
-        border-left-color: #4ade80 !important;
+        background: color-mix(in srgb, var(--primary) 30%, transparent) !important;
+        border-color: var(--primary) !important;
+        border-left-color: var(--primary) !important;
     }
 
     .plate-number-box {
@@ -1751,14 +1751,14 @@ $queueOrderGroups = array_values($queueOrderGroups);
         font-weight: 700;
         border-radius: 10px;
         padding: 0.6rem 1.3rem;
-        box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
+        box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 25%, transparent);
         transition: all 0.15s ease;
     }
     .btn-submit-queue:hover:not(:disabled) {
         background: var(--primary-dark, #166534);
         border-color: var(--primary-dark, #166534);
-        box-shadow: 0 4px 12px rgba(21, 128, 61, 0.35);
-        color: #ffffff;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 35%, transparent);
+        color: var(--on-primary, #ffffff);
     }
     .btn-submit-queue:disabled {
         background: #cbd5e1;

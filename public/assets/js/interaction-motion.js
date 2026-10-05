@@ -28,6 +28,20 @@
         else root.removeAttribute('data-tq-page-hidden');
     }
 
+    // Keep decorative photos on the same timeline across pages and refreshes.
+    // Storage is optional; private/blocked storage must never affect navigation.
+    function applyBackgroundPhase() {
+        try {
+            var now = Date.now();
+            var epoch = Number(window.sessionStorage.getItem('tq-background-epoch'));
+            if (!Number.isFinite(epoch) || epoch <= 0 || epoch > now) {
+                epoch = now;
+                window.sessionStorage.setItem('tq-background-epoch', String(epoch));
+            }
+            root.style.setProperty('--tq-background-delay', '-' + ((now - epoch) / 1000) + 's');
+        } catch (error) { /* Static backgrounds and input remain available. */ }
+    }
+
     function subscribe() {
         applyPreference();
         applyVisibility();
@@ -49,13 +63,31 @@
 
     window.TerminalMotion = Object.freeze({ getMode: getMode });
     subscribe();
+    applyBackgroundPhase();
+    // Reload timing is not exposed early by every browser. Remember only the
+    // public path (never query parameters) so revisits also render fully painted.
+    try {
+        var path = window.location.pathname;
+        if (path) {
+            if (window.sessionStorage.getItem('tq-last-document-path') === path) {
+                root.setAttribute('data-tq-navigation-reveal', '');
+            }
+            window.sessionStorage.setItem('tq-last-document-path', path);
+        }
+    } catch (error) { /* Optional presentation state only. */ }
     // Avoid another entry fade on browsers without native page snapshots too.
     // Set this in the head, before the destination content can be painted.
     try {
-        if (document.referrer && new URL(document.referrer).origin === window.location.origin) {
+        var navigation = window.performance && /** @type {PerformanceNavigationTiming|undefined} */ (window.performance.getEntriesByType('navigation')[0]);
+        // Some engines publish the modern entry only after load. The legacy
+        // navigation type is already available while parsing the head.
+        var legacyType = window.performance && window.performance.navigation && window.performance.navigation.type;
+        if ((navigation && (navigation.type === 'reload' || navigation.type === 'back_forward'))
+            || legacyType === 1 || legacyType === 2
+            || (document.referrer && new URL(document.referrer).origin === window.location.origin)) {
             root.setAttribute('data-tq-navigation-reveal', '');
         }
-    } catch (error) { /* An absent/invalid referrer needs no fallback. */ }
+    } catch (error) { /* Older browsers may omit navigation timing/referrers. */ }
     // Native page navigation keeps the old page visible while the response loads.
     // The browser owns routing, form submission, history and transition timing.
     window.addEventListener('pageswap', function (event) {

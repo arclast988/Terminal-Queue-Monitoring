@@ -28,7 +28,7 @@ function fixture(name, long, baseline) {
       scripts = [header.slice(header.indexOf('var guestMenuCloseSequence = 0;'), header.lastIndexOf('</script>'))];
     } else {
       // Header handlers remain real; queue API actions are covered by existing tests.
-      scripts = scriptsOf(rendered).filter(s => s.includes('initOperationsHeaderClock'));
+      scripts = scriptsOf(rendered).filter(s => s.includes('initOperationsHeaderClock') || s.includes('syncHeaderHeight'));
     }
     let html = rendered.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '');
     html = html.replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/bootstrap@5\.3\.0\/dist\/css\/bootstrap\.min\.css/g, '/fixture/bootstrap.css');
@@ -63,7 +63,7 @@ test.before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
-  browser = await playwright[engine].launch({ headless: true });
+  browser = await playwright[engine].launch({ headless: true, ...(engine === 'chromium' && process.env.TQ_BROWSER_CHANNEL ? { channel:process.env.TQ_BROWSER_CHANNEL } : {}) });
   report.browserVersion = browser.version();
 });
 test.after(async () => {
@@ -513,7 +513,7 @@ test('profile menus remain visible and usable on phone, landscape and desktop la
           const rect = el.getBoundingClientRect(), style = getComputedStyle(el);
           const x = rect.left + rect.width / 2, y = Math.min(rect.bottom - 8, innerHeight - 8);
           const hit = document.elementFromPoint(x, y);
-          return { rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }, opacity: style.opacity, hit: !!hit && el.contains(hit) };
+          return { rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }, opacity: style.opacity, hit: !!hit && el.contains(hit), viewport: { client: document.documentElement.clientWidth, css: getComputedStyle(document.documentElement).getPropertyValue('--tq-viewport-width'), header: document.querySelector('#site-header').getBoundingClientRect().width } };
         });
         assert.equal(menuState.opacity, '1');
         assert.ok(menuState.rect.left >= 0 && menuState.rect.right <= width && menuState.rect.top >= 0 && menuState.rect.bottom <= height, JSON.stringify({ name, width, height, mode, menuState }));
@@ -530,6 +530,7 @@ test('profile menus remain visible and usable on phone, landscape and desktop la
         await logout.click({ trial: true });
         await page.keyboard.press('Escape');
         assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+        await menu.waitFor({ state:'hidden' });
         assert.equal(await menu.isVisible(), false);
         await trigger.focus(); await page.keyboard.press('Enter');
         assert.equal(await trigger.getAttribute('aria-expanded'), 'true');

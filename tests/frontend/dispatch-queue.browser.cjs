@@ -20,6 +20,10 @@ test.before(async () => {
   browser = await chromium.launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}) });
   server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://fixture');
+    if (url.pathname === '/fixture.svg') {
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.end('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="30" fill="#475569"/></svg>');
+    }
     if (/^\/fixtures\/staff-rule-(create|edit)$/.test(url.pathname) || url.pathname === '/fixtures/staff-rules') {
       res.setHeader('Content-Type', 'text/html'); return res.end(fixture(url.pathname.split('/').pop(), url.searchParams.get('state') || ''));
     }
@@ -485,6 +489,81 @@ test('account badges and drawer colors follow saved and live role themes with re
     await page.waitForFunction(() => getComputedStyle(document.querySelector('.drawer-nav-item')).color === 'rgb(206, 157, 30)');
     assert.equal(await page.locator('.drawer-user-card .profile-role-pill').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(251, 191, 36)');
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    assert.deepEqual(errors, []); await page.close();
+  }
+});
+
+test('settings badges, hover highlights, focus rings and queue selections follow saved and live colors', { timeout:90000 }, async t => {
+  for (const name of ['admin-settings', 'admin-routes', 'admin-vehicles', 'admin-history', 'admin-logs', 'staff-queue']) {
+    const page = await browser.newPage({ viewport:{ width:1365, height:900 } });
+    const errors = []; page.on('pageerror', e => errors.push(e.message));
+    const html = fixture(name, 'custom-theme').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, script => script.includes('window.TerminalMotion') ? script : '');
+    await page.route('**/theme-controls', route => route.fulfill({ contentType:'text/html', body:html }));
+    await page.goto(origin + '/theme-controls');
+    await page.addScriptTag({ url:origin + '/js/ws-client.js' });
+    for (const live of [false, true]) {
+      t.diagnostic(`${name}: ${live ? 'live' : 'saved'} theme`);
+      if (live) await page.evaluate(() => applyLiveBranding({ category:'theme', theme_staff_primary:'#fbbf24', theme_staff_nav_bg:'#164e63', theme_staff_nav_text:'#ffffff', theme_admin_primary:'#fbbf24', theme_admin_nav_bg:'#563084', theme_admin_nav_text:'#ffffff' }));
+      await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
+      const colors = await page.evaluate(() => {
+        const body = getComputedStyle(document.body), probe = document.createElement('span');
+        document.body.append(probe);
+        const resolve = token => { probe.style.color = body.getPropertyValue(token); return getComputedStyle(probe).color; };
+        const values = { primary:resolve('--primary'), dark:resolve('--primary-dark'), soft:resolve('--primary-soft'), on:resolve('--on-primary') };
+        probe.remove(); return values;
+      });
+      if (name === 'admin-settings') {
+        assert.equal(await page.locator('.sa-badge').evaluate(el => getComputedStyle(el).color), colors.dark);
+        assert.equal(await page.locator('.sa-badge i').evaluate(el => getComputedStyle(el).color), colors.dark);
+        assert.equal(await page.locator('.sa-badge').evaluate(el => getComputedStyle(el).backgroundColor), colors.soft);
+        assert.equal(await page.locator('.settings-header-icon i').evaluate(el => getComputedStyle(el).color), colors.on);
+        assert.equal(await page.locator('.settings-tab.active i').evaluate(el => getComputedStyle(el).color), colors.on);
+        await page.locator('.settings-tab:not(.active)').first().hover();
+        await page.waitForFunction(soft => getComputedStyle(document.querySelector('.settings-tab:hover')).backgroundColor === soft, colors.soft);
+        await page.locator('#tab-identity .form-input').first().focus();
+        await page.waitForFunction(soft => getComputedStyle(document.querySelector('#tab-identity .form-input')).boxShadow.includes(soft), colors.soft);
+        assert.ok((await page.locator('#tab-identity .form-input').first().evaluate(el => getComputedStyle(el).boxShadow)).includes(colors.soft));
+        await page.evaluate(() => {
+          document.querySelector('#tab-identity').classList.remove('active');
+          document.querySelector('#tab-media').classList.add('active');
+          document.querySelector('#sectionSlideshowManager').style.display = 'block';
+        });
+        await page.locator('#addSlotCard').hover();
+        await page.waitForFunction(primary => getComputedStyle(document.querySelector('#addSlotCard')).borderTopColor === primary, colors.primary);
+        assert.equal(await page.locator('#addSlotCard .fa-plus').evaluate(el => getComputedStyle(el).color), colors.primary);
+        await page.evaluate(() => {
+          document.querySelector('#tab-media').classList.remove('active');
+          document.querySelector('#tab-identity').classList.add('active');
+        });
+        await page.locator('.settings-header-card').scrollIntoViewIfNeeded();
+        if (live) {
+          const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, {recursive:true});
+          const card = await page.locator('.settings-header-card').boundingBox();
+          const tabs = await page.locator('.settings-tabs-wrapper').boundingBox();
+          await page.screenshot({ path:path.join(directory, 'superadmin-theme-controls.png'), clip:{ x:card.x, y:card.y, width:card.width, height:tabs.y + tabs.height - card.y } });
+        }
+      } else if (name === 'staff-queue') {
+        // Use the real selection markup/styles without sending queue mutations.
+        await page.evaluate(() => {
+          document.querySelector('#addToQueueModal').classList.add('show');
+          document.querySelector('#addToQueueModal').style.display = 'block';
+          document.querySelector('.vehicle-select-item').classList.add('is-selected');
+        });
+        assert.equal(await page.locator('.vehicle-select-item.is-selected').first().evaluate(el => getComputedStyle(el).backgroundColor), colors.soft);
+        assert.equal(await page.locator('.vehicle-select-item.is-selected').first().evaluate(el => getComputedStyle(el).borderLeftColor), colors.primary);
+        await page.locator('#vehicleModalSearch').focus();
+        await page.waitForFunction(soft => getComputedStyle(document.querySelector('#vehicleModalSearch').closest('.input-group')).boxShadow.includes(soft), colors.soft);
+        assert.ok((await page.locator('#vehicleModalSearch').evaluate(el => getComputedStyle(el.closest('.input-group')).boxShadow)).includes(colors.soft));
+      } else if (name === 'admin-history' || name === 'admin-logs') {
+        await page.locator('.quick-chip:not(.active)').first().hover();
+        await page.waitForFunction(soft => getComputedStyle(document.querySelector('.quick-chip:hover')).backgroundColor === soft, colors.soft);
+      } else {
+        const field = page.locator(name === 'admin-routes' ? '.route-search-input' : '.vehicle-search-input');
+        await field.focus();
+        await field.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
+        assert.ok((await field.evaluate(el => getComputedStyle(el).boxShadow)).includes(colors.soft), name);
+      }
+    }
     assert.deepEqual(errors, []); await page.close();
   }
 });

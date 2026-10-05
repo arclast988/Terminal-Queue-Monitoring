@@ -33,7 +33,7 @@ test.before(async () => {
     else send();
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve)); origin = 'http://127.0.0.1:' + server.address().port;
-  browser = await playwright[engine].launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? {channel:process.env.TQ_BROWSER_CHANNEL} : {}) }); report.browserVersion = browser.version();
+  browser = await playwright[engine].launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? {channel:process.env.TQ_BROWSER_CHANNEL} : {}), ...(process.env.TQ_BROWSER_EXECUTABLE ? {executablePath:process.env.TQ_BROWSER_EXECUTABLE} : {}) }); report.browserVersion = browser.version();
 });
 
 test('late icon fonts keep headings and button geometry stable', { timeout: 60000 }, async t => {
@@ -103,7 +103,7 @@ test('admin, dispatcher and guest styles work with third-party servers blocked',
   }
 });
 
-test('slow text fonts do not restyle or resize already visible controls', { timeout: 60000 }, async t => {
+test('slow text fonts load the original typography and keep it consistent on refresh', { timeout: 60000 }, async t => {
   for (const name of ['login', 'guest', 'search', 'admin-users', 'admin-settings', 'staff-queue']) {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } }); t.after(() => context.close());
     const page = await context.newPage(), requests = new Map();
@@ -128,19 +128,24 @@ test('slow text fonts do not restyle or resize already visible controls', { time
         if (document.querySelector('link[href*="/fontawesome/"]')) await document.fonts.load('900 16px "Font Awesome 6 Free"', '\uf0c9');
         if (document.querySelector('link[href*="/bootstrap-icons/"]')) await document.fonts.load('16px "bootstrap-icons"', '\uf138');
       });
-      // Capture controls after an actual paint, while HTTP font responses are held.
+      // The page stays usable while its prioritized text fonts are downloading.
       if (engine === 'chromium') await page.waitForFunction(() => performance.getEntriesByType('paint').some(entry => entry.name === 'first-contentful-paint'));
       await page.waitForTimeout(250);
-      const before = await measure(); assert.ok(before.length, name);
+      assert.ok((await measure()).length, name);
       const family = name === 'login' ? 'Inter' : 'Outfit';
       assert.equal(await page.evaluate(family => document.fonts.check('400 16px "' + family + '"'), family), false, name);
       releaseFonts();
       await page.waitForFunction(() => performance.getEntriesByType('resource').some(entry => entry.name.includes('/assets/vendor/fonts/') && entry.name.includes('.woff2')));
       await page.evaluate(() => document.fonts.ready);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-      const after = await measure(); assert.deepEqual(after, before, name + ' changed after late fonts arrived');
+      assert.equal(await page.evaluate(family => document.fonts.check('400 16px "' + family + '"'), family), true, name);
+      const loaded = await measure();
       assert.ok([...requests.values()].every(count => count === 1), name + ' downloaded a preload twice');
-      report.cases.push({ page: name, slowFonts: true, stableControls: true, preloadsReused: true });
+      slowFontGate = null;
+      await page.reload(); await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      assert.deepEqual(await measure(), loaded, name + ' changed typography on refresh');
+      report.cases.push({ page: name, slowFonts: true, consistentTypography: true, preloadsReused: true });
     } finally { releaseFonts(); slowFontGate = null; await context.close(); }
   }
 });
