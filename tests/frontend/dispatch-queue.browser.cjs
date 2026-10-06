@@ -390,7 +390,8 @@ test('a destination with a missing first round can be corrected and creation fil
     assert.equal(await page.locator('#round_number').isVisible(),true);
     assert.equal(await page.locator('#departureRuleForm').evaluate(form=>new FormData(form).get('round_number')),'2');
     await page.locator('#route_id').selectOption('1');
-    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2','3']);
+    assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2','3','4']);
+    assert.equal(await page.locator('#round_number').inputValue(),'4');
     await page.locator('#route_id').selectOption('2');
     assert.deepEqual(await page.locator('#round_number option').evaluateAll(options=>options.map(option=>option.value)),['1','2']);
     await page.locator('#round_number').selectOption('1');

@@ -14,16 +14,26 @@ foreach ($routes ?? [] as $formRoute) {
     }
 }
 $formRoundScope = departure_round_scope($formTerminalId, $formDestination);
-$preservedRound = $isCreatingRound ? 0 : $selectedRound;
+$originalRoundScope = $formRoundScope;
+$originalRound = $isCreatingRound ? 0 : max(1, (int) ($rule['round_number'] ?? 1));
+foreach ($existingRules ?? [] as $savedRoundRule) {
+    if (!$isCreatingRound && (int) $savedRoundRule['id'] === (int) $rule['id']) {
+        $originalRoundScope = $savedRoundRule['round_scope'] ?? $formRoundScope;
+        break;
+    }
+}
+// A moved rule can add a round at its new destination, including after validation.
+$allowNewRound = $isCreatingRound || $formRoundScope !== $originalRoundScope;
+$preservedRound = $allowNewRound ? 0 : $selectedRound;
 $configuredRounds = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, false);
-$roundChoices = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, $isCreatingRound);
+$roundChoices = departure_round_choices($existingRules ?? [], $preservedRound, $formRoundScope, $allowNewRound);
 // Allow a saved higher-numbered first rule to be corrected without offering
 // unconfigured higher rounds in the dispatcher's active-rule selector.
-if (!$isCreatingRound && $roundChoices && !in_array(1, $roundChoices, true)) {
+if (!$allowNewRound && $roundChoices && !in_array(1, $roundChoices, true)) {
     $roundChoices[] = 1;
     sort($roundChoices);
 }
-if ($isCreatingRound && old('round_number') === null) {
+if ($allowNewRound && old('round_number') === null) {
     $newChoices = array_values(array_diff($roundChoices, $configuredRounds));
     if ($newChoices) $selectedRound = $newChoices[0];
 }
@@ -50,9 +60,9 @@ $singleRound = count($roundChoices) === 1;
     <div class="rule-round-field">
         <label for="<?= $singleRound ? 'round_number_display' : 'round_number' ?>" class="form-label-modern" id="round_number_label">Assign to round <span class="text-danger">*</span></label>
         <?php $roundScopes = array_map(static fn(array $r): array => ['s' => $r['round_scope'] ?? '', 'r' => (int) ($r['round_number'] ?? 1)], $existingRules ?? []); ?>
-        <select id="round_number" name="round_number" class="select-modern <?= $singleRound ? 'd-none' : '' ?>" <?= $singleRound ? 'hidden' : '' ?> data-no-autocomplete required data-round-scopes="<?= esc(json_encode($roundScopes), 'attr') ?>" data-round-create="<?= $isCreatingRound ? 'true' : 'false' ?>" data-round-original="<?= $preservedRound ?>" data-round-original-scope="<?= esc($formRoundScope, 'attr') ?>">
+        <select id="round_number" name="round_number" class="select-modern <?= $singleRound ? 'd-none' : '' ?>" <?= $singleRound ? 'hidden' : '' ?> data-no-autocomplete required data-round-scopes="<?= esc(json_encode($roundScopes), 'attr') ?>" data-round-create="<?= $isCreatingRound ? 'true' : 'false' ?>" data-round-original="<?= $originalRound ?>" data-round-original-scope="<?= esc($originalRoundScope, 'attr') ?>">
             <?php foreach ($roundChoices as $roundChoice): ?>
-            <option value="<?= $roundChoice ?>" <?= $roundChoice === $selectedRound ? 'selected' : '' ?>><?= $isCreatingRound && !in_array($roundChoice, $configuredRounds, true) ? 'New round' : 'Round' ?> <?= $roundChoice ?></option>
+            <option value="<?= $roundChoice ?>" <?= $roundChoice === $selectedRound ? 'selected' : '' ?>><?= $allowNewRound && !in_array($roundChoice, $configuredRounds, true) ? 'New round' : 'Round' ?> <?= $roundChoice ?></option>
             <?php endforeach; ?>
         </select>
         <input id="round_number_display" class="input-modern <?= $singleRound ? '' : 'd-none' ?>" <?= $singleRound ? '' : 'hidden' ?> type="text" value="Round <?= $selectedRound ?>" readonly>

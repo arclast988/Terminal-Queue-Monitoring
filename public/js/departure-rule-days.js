@@ -27,7 +27,7 @@
     boxes.forEach(function (box) { box.addEventListener('change', update); });
     update();
 
-    // Adding fills gaps; editing can correct a missing first round.
+    // Adding or moving a rule fills gaps in the selected destination's rounds.
     var roundSelect = document.getElementById('round_number');
     var routeSelect = document.getElementById('route_id');
     var terminalInput = document.getElementById('terminal_id');
@@ -56,21 +56,25 @@
         }
         configured = Array.from(new Set(configured)).sort(function (a, b) { return a - b; });
         var choices = configured.slice();
+        var allowNewRound = creating || scope !== roundSelect.dataset.roundOriginalScope;
         var newRound = 1;
         while (newRound <= 999 && choices.indexOf(newRound) !== -1) newRound++;
-        if (creating && newRound <= 999) choices.push(newRound);
-        if (!creating && choices.length && choices.indexOf(1) === -1) choices.push(1);
+        if (allowNewRound && newRound <= 999) choices.push(newRound);
+        if (!allowNewRound && choices.length && choices.indexOf(1) === -1) choices.push(1);
         if (!choices.length) choices.push(1);
         choices.sort(function (a, b) { return a - b; });
         var selected = Number(roundSelect.value) || initialRound;
-        if (creating && previousScope !== null && previousScope !== scope && newRound <= 999) selected = newRound;
+        if (previousScope !== null && previousScope !== scope) {
+            if (allowNewRound && newRound <= 999) selected = newRound;
+            else if (!creating && scope === roundSelect.dataset.roundOriginalScope) selected = Number(roundSelect.dataset.roundOriginal) || initialRound;
+        }
         if (choices.indexOf(selected) === -1) selected = choices[0];
         previousScope = scope;
         roundSelect.innerHTML = '';
         choices.forEach(function (n) {
             var opt = document.createElement('option');
             opt.value = String(n);
-            opt.textContent = (creating && configured.indexOf(n) === -1 ? 'New round ' : 'Round ') + n;
+            opt.textContent = (allowNewRound && configured.indexOf(n) === -1 ? 'New round ' : 'Round ') + n;
             if (n === selected) opt.selected = true;
             roundSelect.appendChild(opt);
         });
@@ -83,6 +87,7 @@
             display.value = roundSelect.options[roundSelect.selectedIndex].textContent;
         }
         if (label) label.htmlFor = single ? 'round_number_display' : 'round_number';
+        roundSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
     if (routeSelect) routeSelect.addEventListener('change', rebuildRounds);
     if (terminalInput) terminalInput.addEventListener('change', rebuildRounds);
