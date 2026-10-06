@@ -891,6 +891,35 @@ body > *:not(.support-modal-backdrop):not(.modal-backdrop):not(.modal):not(.side
     box-shadow: 0 0 0 4px var(--primary-soft);
 }
 
+/* Keep the month hint readable regardless of the native date input's locale. */
+.filter-date-field {
+    position: relative;
+}
+
+.filter-date-hint {
+    display: none;
+    position: absolute;
+    left: 16px;
+    right: 44px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ffffff;
+    color: #64748b;
+    -webkit-text-fill-color: #64748b;
+    font-size: 14px;
+    line-height: 1.6;
+    pointer-events: none;
+}
+
+.filter-date-field:not(.has-value):not(:focus-within) .filter-date-hint {
+    display: block;
+}
+
+.filter-date-field:not(.has-value):not(:focus-within) input::-webkit-datetime-edit {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+}
+
 .input-group-modern:focus-within .input-group-text-modern {
     border-color: var(--primary-red);
     color: var(--primary-red);
