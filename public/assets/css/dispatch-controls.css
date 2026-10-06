@@ -29,11 +29,14 @@
     z-index: 1050;
     padding: 0.5rem 0.65rem;
     box-sizing: border-box;
+    width: 19rem;
+    max-width: 100%;
 }
 .dispatch-time-picker:not([hidden]) {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto auto;
     align-items: center;
-    gap: 0.45rem;
+    gap: 0.35rem;
     animation: tpFadeIn 0.15s ease-out;
 }
 .dispatch-time-picker[hidden] {
@@ -48,10 +51,11 @@
     flex-direction: column;
     align-items: center;
     gap: 3px;
+    min-width: 0;
 }
 .dispatch-time-picker .tp-btn {
-    width: 48px;
-    height: 36px;
+    width: 100%;
+    height: 44px;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     background: #f8fafc;
@@ -81,8 +85,9 @@
     pointer-events: none;
 }
 .dispatch-time-picker .tp-input {
-    width: 48px;
-    height: 38px;
+    width: 100%;
+    min-width: 0;
+    height: 44px;
     border: 1.5px solid #cbd5e1;
     border-radius: 6px;
     text-align: center;
@@ -97,6 +102,22 @@
     box-sizing: border-box;
     transition: border-color 0.15s, box-shadow 0.15s;
     -moz-appearance: textfield;
+}
+/* The shared mobile input reset adds padding that clips two-digit values.
+   Both 12-hour and 24-hour pickers need the full width for their digits. */
+.dispatch-time-picker .tp-input,
+.military-time-popover .tp-input {
+    padding: 0 !important;
+    min-height: 44px !important;
+    font-size: 1.25rem !important;
+    line-height: 1.2;
+}
+.military-time-popover .tp-input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px var(--primary-soft) !important;
+}
+.military-time-wrap:focus-within .military-time-btn {
+    border-color: var(--primary) !important;
 }
 .dispatch-time-picker .tp-input::-webkit-inner-spin-button,
 .dispatch-time-picker .tp-input::-webkit-outer-spin-button {
@@ -123,7 +144,7 @@
 }
 .dispatch-time-picker .tp-period-btn {
     width: 44px;
-    height: 36px;
+    height: 44px;
     border: 1.5px solid #cbd5e1;
     border-radius: 6px;
     background: #f8fafc;
@@ -146,7 +167,7 @@
 .dispatch-time-picker .tp-set-btn {
     align-self: stretch;
     min-height: 98px;
-    padding: 0 14px;
+    padding: 0 10px;
     border: none;
     border-radius: 8px;
     background: var(--primary, #15803d);
@@ -337,7 +358,6 @@ button.queue-route-chip.active .chip-count {
 .queue-round-value { min-height: 44px; display: flex; align-items: center; padding: 10px 12px; border-radius: 8px; background: var(--surface-sunken, #f8fafc); color: var(--text-main, #1e293b); font-size: 14px; font-weight: 600; }
 @media (max-width: 768px) {
     .departure-rule-schedule { grid-template-columns: 1fr; gap: 18px; }
-    .dispatch-time-picker { position: absolute; right: 0; top: calc(100% + 4px); width: auto; max-width: calc(100vw - 32px); margin-top: 0; }
     .queue-route-controls { padding: 12px; flex-wrap: wrap; gap: 10px; }
     .queue-control-filter { display: block; flex-basis: 100%; }
     .queue-control-label { margin-bottom: 6px; }
@@ -352,6 +372,16 @@ button.queue-route-chip.active .chip-count {
     .queue-round-destination { font-size: 12px; }
     .queue-round-origin { font-size: 11px; margin-left: 0; }
     .queue-control-footer { align-items: flex-start; font-size: 11px; }
+}
+@media (max-width: 360px) {
+    .dispatch-time-picker:not([hidden]) {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    }
+    .dispatch-time-picker .tp-set-btn {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        min-height: 44px;
+    }
 }
 /* Queue feedback stays in the page flow and never covers the navigation. */
 .queue-action-notice {

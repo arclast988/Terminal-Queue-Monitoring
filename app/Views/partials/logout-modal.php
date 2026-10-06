@@ -66,21 +66,22 @@ $roleLabel = match($userRole) {
 .logout-stripe {
     height: 4px;
     width: 100%;
-    background: linear-gradient(90deg, #dc2626 0%, #ef4444 50%, #f97316 100%);
+    background: var(--primary);
 }
 
-.logout-icon-wrapper {
+#logoutModal .logout-icon-wrapper {
     width: 68px;
     height: 68px;
     margin: 4px auto 18px auto;
     border-radius: 50%;
-    background: #fef2f2;
-    color: #dc2626;
+    background: var(--primary-soft);
+    color: var(--primary-dark) !important;
+    -webkit-text-fill-color: var(--primary-dark) !important;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 28px;
-    box-shadow: 0 0 0 8px #fff1f2;
+    box-shadow: 0 0 0 8px var(--primary-soft);
     transition: transform 0.3s ease;
 }
 
@@ -125,9 +126,10 @@ $roleLabel = match($userRole) {
     flex-shrink: 0;
 }
 
-.logout-role-tag {
-    background: #fee2e2;
-    color: #b91c1c;
+#logoutModal .logout-role-tag {
+    background: var(--primary-soft);
+    color: var(--primary-dark) !important;
+    -webkit-text-fill-color: var(--primary-dark) !important;
     font-size: 0.725rem;
     font-weight: 700;
     padding: 2px 8px;
@@ -170,14 +172,15 @@ $roleLabel = match($userRole) {
 
 .logout-btn-confirm {
     flex: 1 !important;
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
-    color: #ffffff !important;
+    background: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
     border: 0 !important;
     padding: 10px 18px !important;
     border-radius: 10px !important;
     font-weight: 600 !important;
     font-size: 0.9rem !important;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28) !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18) !important;
     transition: all 0.2s ease !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -187,9 +190,9 @@ $roleLabel = match($userRole) {
 
 .logout-btn-confirm:hover,
 .logout-btn-confirm:focus {
-    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.38) !important;
+    background: var(--primary-dark) !important;
+    color: var(--on-primary) !important;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.24) !important;
     transform: translateY(-1px);
 }
 
@@ -213,32 +216,6 @@ body.modal-open #logoutModal,
     }
 }
 
-/* --- Dispatcher (staff) green-themed overrides --- */
-body.staff-theme .logout-stripe {
-    background: linear-gradient(90deg, #15803d 0%, #16a34a 50%, #10b981 100%);
-}
-
-body.staff-theme .logout-icon-wrapper {
-    background: #dcfce7;
-    color: #15803d;
-    box-shadow: 0 0 0 8px #f0fdf4;
-}
-
-body.staff-theme .logout-role-tag {
-    background: #dcfce7;
-    color: #166534;
-}
-
-body.staff-theme .logout-btn-confirm {
-    background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
-    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.28) !important;
-}
-
-body.staff-theme .logout-btn-confirm:hover,
-body.staff-theme .logout-btn-confirm:focus {
-    background: linear-gradient(135deg, #166534 0%, #14532d 100%) !important;
-    box-shadow: 0 6px 16px rgba(21, 128, 61, 0.38) !important;
-}
 </style>
 
 <script>

@@ -910,12 +910,6 @@
                 body.staff-theme .drawer-nav-item.active i {
                     color: var(--primary-dark) !important;
                 }
-                body.staff-theme .logout-stripe {
-                    background: linear-gradient(90deg, ${sp_hex} 0%, ${sp_dark} 100%) !important;
-                }
-                body.staff-theme .logout-btn-confirm {
-                    background: linear-gradient(135deg, ${sp_hex} 0%, ${sp_dark} 100%) !important;
-                }
                 body.staff-theme .autocomplete-item:hover,
                 body.staff-theme .autocomplete-item.active-item {
                     background-color: ${sp_soft} !important;
@@ -1103,12 +1097,6 @@
                 }
                 body.admin-theme .drawer-nav-item.active i {
                     color: var(--primary-dark) !important;
-                }
-                body.admin-theme .logout-stripe {
-                    background: linear-gradient(90deg, ${ap_hex} 0%, ${ap_dark} 100%) !important;
-                }
-                body.admin-theme .logout-btn-confirm {
-                    background: linear-gradient(135deg, ${ap_hex} 0%, ${ap_dark} 100%) !important;
                 }
                 body.admin-theme .nav-tabs .nav-link.active,
                 body.admin-theme .nav-pills .nav-link.active,

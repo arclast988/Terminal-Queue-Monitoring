@@ -45,7 +45,7 @@
                 <p id="systemAlertMessage" style="font-size: 0.95rem; color: #334155; line-height: 1.5; margin: 0 auto; max-width: 290px;"></p>
             </div>
             <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; justify-content: center; background: #ffffff;">
-                <button type="button" class="btn" id="systemAlertOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: #15803d; border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
+                <button type="button" class="btn btn-primary" id="systemAlertOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease;">
                     OK
                 </button>
             </div>

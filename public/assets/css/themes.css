@@ -170,11 +170,26 @@ html body:is(.guest-theme, .admin-theme, .staff-theme) :is(.btn-modern-primary, 
   -webkit-text-fill-color: var(--on-primary) !important;
 }
 html body:is(.guest-theme, .admin-theme, .staff-theme) .btn-outline-primary {
-  color: var(--primary);
-  border-color: var(--primary);
+  --bs-btn-color: var(--primary);
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-hover-color: var(--on-primary);
+  --bs-btn-hover-bg: var(--primary);
+  --bs-btn-hover-border-color: var(--primary);
+  --bs-btn-active-color: var(--on-primary);
+  --bs-btn-active-bg: var(--primary);
+  --bs-btn-active-border-color: var(--primary);
+  --bs-btn-disabled-color: var(--primary);
+  --bs-btn-disabled-border-color: var(--primary);
+  color: var(--primary) !important;
+  -webkit-text-fill-color: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
-html body:is(.guest-theme, .admin-theme, .staff-theme) .btn-outline-primary:hover {
+html body:is(.guest-theme, .admin-theme, .staff-theme) .btn-outline-primary:focus-visible {
+  box-shadow: 0 0 0 0.25rem var(--primary-soft) !important;
+}
+html body:is(.guest-theme, .admin-theme, .staff-theme) .btn-outline-primary:is(:hover, :active, :focus-visible, .active, .show) {
   color: var(--on-primary) !important;
+  -webkit-text-fill-color: var(--on-primary) !important;
   background: var(--primary) !important;
   border-color: var(--primary) !important;
 }
@@ -191,4 +206,3 @@ html body.staff-theme .queue-order-header {
 html body.staff-theme .queue-order-header * {
   color: var(--on-primary) !important;
 }
-

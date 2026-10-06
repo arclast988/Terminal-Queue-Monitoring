@@ -97,7 +97,7 @@ function session(): object {
 final class ResponsiveFixtureRenderer {
     public function render(string $name, array $data = []): string {
         // Management fixtures include the real footer and Bootstrap/support modals.
-        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-verification') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true))) return '';
+        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-verification') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true) && ($GLOBALS['argv'][7] ?? '') !== 'shared-dialogs')) return '';
         extract($GLOBALS['fixtureData']);
         extract($data, EXTR_OVERWRITE);
         ob_start();
@@ -165,11 +165,11 @@ if (in_array($fixturePage, ['staff-departures', 'staff-departures-report'], true
     }
 }
 if ($fixturePage === 'staff-dashboard') $fixtureData['active_queue_count'] = 1;
-if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules'], true)) {
-    $fixtureData['prefix'] = 'staff';
+if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules', 'admin-rule-create', 'admin-rule-edit'], true)) {
+    $fixtureData['prefix'] = str_starts_with($fixturePage, 'staff') ? 'staff' : 'admin';
     $fixtureData['title'] = 'Departure Rules';
     $fixtureData['returnRoute'] = 'all';
-    $fixtureData['listUrl'] = '/staff/departure-rules';
+    $fixtureData['listUrl'] = '/' . $fixtureData['prefix'] . '/departure-rules';
     $fixtureData['selectedRouteId'] = null;
     $fixtureData['rule'] = ['id'=>1, 'terminal_id'=>1, 'route_id'=>null, 'time_from'=>'05:00:00', 'time_to'=>'17:00:00', 'wait_minutes'=>20, 'label'=>'Morning', 'day_of_week'=>null, 'days_of_week'=>'1,2,3', 'round_number'=>1, 'terminal_name'=>'Villaba', 'route_destination'=>null, 'round_scope'=>'1|', 'can_manage'=>true];
     $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'round_number'=>2, 'days_of_week'=>'1,4,7', 'wait_minutes'=>25, 'label'=>'Afternoon'])];
@@ -257,6 +257,7 @@ $views = [
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
     'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',
+    'admin-rule-create' => 'admin/departure-rules/create', 'admin-rule-edit' => 'admin/departure-rules/edit',
 ];
 if (!isset($views[$fixturePage])) throw new InvalidArgumentException('Unknown fixture page');
 $html = $fixtureRenderer->render($views[$fixturePage]);
