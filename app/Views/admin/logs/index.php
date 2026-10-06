@@ -212,12 +212,18 @@
                 </div>
             </div>
             <div class="col-12 col-lg-2 col-md-3">
-                <label class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> From Date</label>
-                <input type="date" class="input-modern" name="from_date" id="fromDate" value="<?= esc($from_date ?? '') ?>">
+                <label for="fromDate" class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> From Date</label>
+                <div class="filter-date-field <?= !empty($from_date) ? 'has-value' : '' ?>">
+                    <input type="date" class="input-modern" name="from_date" id="fromDate" value="<?= esc($from_date ?? '') ?>" aria-describedby="fromDateHint">
+                    <span class="filter-date-hint" id="fromDateHint">dd/mm/yyyy</span>
+                </div>
             </div>
             <div class="col-12 col-lg-2 col-md-3">
-                <label class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> To Date</label>
-                <input type="date" class="input-modern" name="to_date" id="toDate" value="<?= esc($to_date ?? '') ?>">
+                <label for="toDate" class="form-label-modern"><i class="bi bi-calendar-event me-1"></i> To Date</label>
+                <div class="filter-date-field <?= !empty($to_date) ? 'has-value' : '' ?>">
+                    <input type="date" class="input-modern" name="to_date" id="toDate" value="<?= esc($to_date ?? '') ?>" aria-describedby="toDateHint">
+                    <span class="filter-date-hint" id="toDateHint">dd/mm/yyyy</span>
+                </div>
             </div>
             <div class="col-12 col-lg-2 col-md-4">
                 <label class="form-label-modern"><i class="bi bi-lightning-charge me-1"></i> Action</label>
@@ -256,7 +262,7 @@
             <span class="text-muted" style="font-size: 12px; font-weight: 700; text-transform: uppercase;">
                 <i class="bi bi-clock-history me-1"></i> Quick Ranges:
             </span>
-            <button type="button" class="quick-chip quick-chip-btn <?= empty($from_date) && empty($to_date) ? 'active' : '' ?>" data-from="" data-to="">All (60d)</button>
+            <button type="button" class="quick-chip quick-chip-btn <?= empty($from_date) && empty($to_date) ? 'active' : '' ?>" data-from="" data-to="">All</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d') && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d') ?>" data-to="<?= date('Y-m-d') ?>">Today</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-7 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-7 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 7 Days</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-30 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-30 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 30 Days</button>
@@ -383,7 +389,20 @@ document.addEventListener('DOMContentLoaded', function() {
     var toInput = document.getElementById('toDate');
     var tableCard = document.getElementById('logsTableCard');
 
+    function syncDateHints() {
+        [fromInput, toInput].forEach(function(input) {
+            if (input) input.closest('.filter-date-field').classList.toggle('has-value', input.value !== '');
+        });
+    }
+    [fromInput, toInput].forEach(function(input) {
+        if (!input) return;
+        input.addEventListener('input', syncDateHints);
+        input.addEventListener('change', syncDateHints);
+    });
+    syncDateHints();
+
     function updateActiveChips(from, to) {
+        syncDateHints();
         var quickButtons = document.querySelectorAll('#logsQuickChipsRow .quick-chip-btn');
         quickButtons.forEach(function(btn) {
             var btnFrom = btn.getAttribute('data-from') || '';

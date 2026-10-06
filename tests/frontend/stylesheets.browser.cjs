@@ -49,7 +49,10 @@ test('late icon fonts keep headings and button geometry stable', { timeout: 6000
     }));
     try {
       await page.goto(origin + '/' + name, { waitUntil: 'domcontentloaded' });
-      await page.evaluate(() => Promise.all(['400 16px "Outfit"', '600 16px "Bricolage Grotesque"', '400 16px "Inter"'].map(font => document.fonts.load(font))));
+      // FontFaceSet.load returns an empty list before delayed CSS registers a face.
+      await page.waitForFunction(() => [...document.querySelectorAll('link[rel="stylesheet"]')].every(link => link.sheet));
+      const textFonts = await page.evaluate(() => Promise.all(['400 16px "Outfit"', '600 16px "Bricolage Grotesque"', '400 16px "Inter"'].map(async font => (await document.fonts.load(font)).length)));
+      assert.ok(textFonts.every(count => count > 0), name + ' measured before its text fonts loaded');
       if (engine === 'chromium') await page.waitForFunction(() => performance.getEntriesByType('paint').some(entry => entry.name === 'first-contentful-paint'));
       await page.waitForTimeout(250);
       const before = await measure(); assert.ok(before.length);
@@ -124,11 +127,12 @@ test('slow text fonts load the original typography and keep it consistent on ref
     try {
       await page.goto(origin + '/' + name, { waitUntil: 'domcontentloaded' });
       // Isolate text-font swapping from the separate icon-font downloads.
+      await page.waitForFunction(() => [...document.querySelectorAll('link[rel="stylesheet"]')].every(link => link.sheet));
       await page.evaluate(async () => {
         if (document.querySelector('link[href*="/fontawesome/"]')) await document.fonts.load('900 16px "Font Awesome 6 Free"', '\uf0c9');
         if (document.querySelector('link[href*="/bootstrap-icons/"]')) await document.fonts.load('16px "bootstrap-icons"', '\uf138');
       });
-      // The page stays usable while its prioritized text fonts are downloading.
+      // The page stays usable while its text fonts are downloading.
       if (engine === 'chromium') await page.waitForFunction(() => performance.getEntriesByType('paint').some(entry => entry.name === 'first-contentful-paint'));
       await page.waitForTimeout(250);
       assert.ok((await measure()).length, name);
@@ -140,12 +144,15 @@ test('slow text fonts load the original typography and keep it consistent on ref
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       assert.equal(await page.evaluate(family => document.fonts.check('400 16px "' + family + '"'), family), true, name);
       const loaded = await measure();
-      assert.ok([...requests.values()].every(count => count === 1), name + ' downloaded a preload twice');
+      assert.ok([...requests.values()].every(count => count === 1), name + ' downloaded the same font twice');
       slowFontGate = null;
-      await page.reload(); await page.evaluate(() => document.fonts.ready);
+      await page.reload();
+      await page.waitForFunction(() => [...document.querySelectorAll('link[rel="stylesheet"]')].every(link => link.sheet));
+      await page.evaluate(() => Promise.all(['400 16px "Outfit"', '600 16px "Bricolage Grotesque"', '400 16px "Inter"'].map(font => document.fonts.load(font))));
+      await page.evaluate(() => document.fonts.ready);
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       assert.deepEqual(await measure(), loaded, name + ' changed typography on refresh');
-      report.cases.push({ page: name, slowFonts: true, consistentTypography: true, preloadsReused: true });
+      report.cases.push({ page: name, slowFonts: true, consistentTypography: true, fontRequestsDeduplicated: true });
     } finally { releaseFonts(); slowFontGate = null; await context.close(); }
   }
 });
