@@ -2050,19 +2050,19 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                 </select>
                             </div>
                             <div class="add-queue-search-filter">
-                                <label for="vehicleModalSearch" class="add-queue-filter-label">SEARCH VEHICLES</label>
+                                <label for="vehicleModalSearch" class="add-queue-filter-label">SEARCH AVAILABLE VEHICLES</label>
                                 <div class="input-group position-relative add-queue-search">
                                     <span class="input-group-text text-muted">
                                         <i class="bi bi-search"></i>
                                     </span>
-                                    <input type="text" id="vehicleModalSearch" class="form-control search-input-modern" placeholder="Plate, type, operator or driver..." aria-label="Search available vehicles" autocomplete="off">
+                                    <input type="text" id="vehicleModalSearch" class="form-control search-input-modern" placeholder="Plate number, type or route..." aria-label="Search available vehicles" autocomplete="off">
                                     <button type="button" class="btn-clear-search" id="clearVehicleModalSearch" style="display: none !important; right: 10px;" title="Clear search">
                                         <i class="bi bi-x-circle-fill"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end gap-2 add-queue-selection-actions">
-                                <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
+                                <button type="button" class="btn btn-sm btn-outline-primary fw-bold px-3 d-flex align-items-center gap-1" id="selectAllVehiclesBtn" style="border-radius: 8px;">
                                     <i class="bi bi-check-all fs-6"></i> Select All
                                 </button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary fw-semibold px-3 d-flex align-items-center gap-1" id="deselectAllVehiclesBtn" style="border-radius: 8px;">

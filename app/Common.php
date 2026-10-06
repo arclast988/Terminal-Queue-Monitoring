@@ -1945,12 +1945,6 @@ body.staff-theme .drawer-nav-item.active {
 body.staff-theme .drawer-nav-item.active i {
     color: var(--primary-dark) !important;
 }
-body.staff-theme .logout-stripe {
-    background: linear-gradient(90deg, {$sp['hex']} 0%, {$sp['dark']} 100%) !important;
-}
-body.staff-theme .logout-btn-confirm {
-    background: linear-gradient(135deg, {$sp['hex']} 0%, {$sp['dark']} 100%) !important;
-}
 body.staff-theme .autocomplete-item i,
 body.staff-theme .autocomplete-item .autocomplete-item-text i {
     color: {$sp['hex']} !important;
@@ -2213,12 +2207,6 @@ body.admin-theme .drawer-nav-item.active {
 }
 body.admin-theme .drawer-nav-item.active i {
     color: var(--primary-dark) !important;
-}
-body.admin-theme .logout-stripe {
-    background: linear-gradient(90deg, {$ap['hex']} 0%, {$ap['dark']} 100%) !important;
-}
-body.admin-theme .logout-btn-confirm {
-    background: linear-gradient(135deg, {$ap['hex']} 0%, {$ap['dark']} 100%) !important;
 }
 body.admin-theme .autocomplete-item i,
 body.admin-theme .autocomplete-item .autocomplete-item-text i {
