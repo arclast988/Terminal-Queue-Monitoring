@@ -186,6 +186,13 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
     if (($argv[4] ?? '') === 'conflicting-round') {
         $fixtureData['existingRules'][] = array_replace($fixtureData['rule'], ['id'=>3, 'round_number'=>3]);
     }
+    if (($argv[4] ?? '') === 'moving-round') {
+        $fixtureData['terminals'] = [['id'=>1, 'name'=>'Villaba']];
+        $fixtureData['routes'] = [['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC'], ['id'=>2, 'terminal_id'=>1, 'destination'=>'TACLOBAN'], ['id'=>3, 'terminal_id'=>1, 'destination'=>'BATO']];
+        $fixtureData['rule'] = array_replace($fixtureData['rule'], ['route_id'=>2, 'route_destination'=>'TACLOBAN', 'round_scope'=>'1|TACLOBAN', 'days_of_week'=>null]);
+        $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'route_id'=>1, 'route_destination'=>'ORMOC', 'round_scope'=>'1|ORMOC'])];
+        $fixtureData['selectedRouteId'] = 2;
+    }
 }
 if (in_array($fixturePage, ['guest-contact-verification','guest-contact-verification-content'], true)) {
     $fixtureState = $argv[4] ?? '';

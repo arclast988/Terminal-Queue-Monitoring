@@ -104,6 +104,42 @@ test('12-hour picker keeps both digits and Set usable in create and edit forms o
   }
 });
 
+test('moving an edited departure rule offers the destination next round and submits it without an overlap', { timeout: 90000 }, async () => {
+  for (const [name, role] of [['staff-rule-edit', ''], ['admin-rule-edit', ''], ['admin-rule-edit', 'super_admin']]) {
+    for (const width of [375, 1280]) {
+      const page = await browser.newPage({ viewport: { width, height: 900 } });
+      const errors = []; page.on('pageerror', error => errors.push(error.message));
+      try {
+        await page.goto(`${origin}/fixture/${name}?state=moving-round&role=${role}`);
+        const round = page.locator('#round_number');
+        const data = () => page.locator('#departureRuleForm').evaluate(form => {
+          const values = new FormData(form);
+          return { route: values.get('route_id'), round: values.get('round_number') };
+        });
+        assert.deepEqual(await data(), { route: '2', round: '1' });
+        await page.locator('#route_id').selectOption('1');
+        assert.deepEqual(await round.locator('option').allTextContents(), ['Round 1', 'New round 2']);
+        assert.equal(await round.isVisible(), true);
+        assert.deepEqual(await data(), { route: '1', round: '2' });
+        assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), false);
+        await round.selectOption('1');
+        assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), true);
+        await round.selectOption('2');
+        assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), false);
+        assert.equal(await page.locator('#departureRuleForm').evaluate(form => form.checkValidity()), true);
+        await page.locator('#route_id').selectOption('2');
+        assert.deepEqual(await data(), { route: '2', round: '1' });
+        await page.locator('#route_id').selectOption('3');
+        assert.deepEqual(await data(), { route: '3', round: '1' });
+        assert.equal(await page.locator('#round_number_display').isVisible(), true);
+        await page.locator('#route_id').selectOption('1');
+        assert.deepEqual(await data(), { route: '1', round: '2' });
+        assert.deepEqual(errors, [], `${name} ${role} ${width}`);
+      } finally { await page.close(); }
+    }
+  }
+});
+
 test('24-hour picker and interval fields remain readable for Admin and SuperAdmin', { timeout: 90000 }, async () => {
   for (const [name, role] of [['admin-rule-create', ''], ['admin-rule-edit', 'super_admin']]) {
     for (const width of [320, 375, 1280]) {

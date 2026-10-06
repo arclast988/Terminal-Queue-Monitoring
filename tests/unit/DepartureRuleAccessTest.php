@@ -338,6 +338,30 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $this->assertSame([[1,3]],ScopedDepartureRulesHarness::$recalculations);
     }
 
+    public function testMovingAnExistingRuleToANewDestinationRoundPreservesItsNumberAndExistingRules(): void
+    {
+        ScopedDepartureRulesHarness::$assignedIds = [1, 2, 3];
+        ScopedDepartureRulesHarness::$testDb->table('departure_rules')->whereNotIn('id', [1, 3])->delete();
+        ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 1)->update(['round_number' => 1]);
+        foreach (['staff', 'admin', 'superadmin'] as $role) {
+            session()->set('role', $role);
+            ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 3)->update(['route_id' => 3, 'round_number' => 1]);
+            $this->postRule(['route_id' => '1', 'round_number' => '2', 'day_selection' => '1', 'days_of_week' => ['1', '2', '3', '4', '5', '6', '7']]);
+            $this->response = service('response', null, false);
+            $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('update', 3);
+            $this->assertSame(302, $result->response()->getStatusCode());
+            $moved = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 3)->get()->getRowArray();
+            $this->assertSame(1, (int) $moved['route_id']);
+            $this->assertSame(2, (int) $moved['round_number']);
+            $this->assertSame(25, (int) $moved['wait_minutes']);
+            $this->assertSame(range(1, 7), departure_rule_days($moved));
+            $existing = ScopedDepartureRulesHarness::$testDb->table('departure_rules')->where('id', 1)->get()->getRowArray();
+            $this->assertSame(1, (int) $existing['round_number']);
+            $this->assertSame(20, (int) $existing['wait_minutes']);
+            $this->assertSame(2, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+        }
+    }
+
     public function testSavingAFirstDestinationRuleAlwaysStartsAtRoundOne(): void
     {
         ScopedDepartureRulesHarness::$assignedIds = [1, 2, 3];
