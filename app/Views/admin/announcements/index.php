@@ -200,7 +200,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                 <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
                                 <td data-label="Actions" class="actions-col management-actions-col">
                                     <div class="announcement-actions-wrap management-row-actions">
-                                        <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
+                                        <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
                                         <form id="delete-announcement-form-<?= $a['id'] ?>" action="<?= base_url('admin/announcements/delete/' . $a['id']) ?>" method="post" class="d-inline">

@@ -287,6 +287,31 @@ if ($fixturePage === 'staff-queue' && in_array(($argv[4] ?? ''), ['dispatch-befo
         ]);
     }
 }
+if ($fixturePage === 'admin-vehicles' && ($argv[4] ?? '') === 'register-order') {
+    $fixtureData['routes'] = [array_replace($route,['destination'=>'ORMOC']), array_replace($route,['id'=>2,'destination'=>'BATO'])];
+    $fixtureData['vehicleTypes'][] = ['id'=>2,'slug'=>'van','name'=>'Van','color'=>'#b71c1c','icon'=>'fa-bus','photo'=>null];
+    $orderedVehicle = array_replace($vehicle, ['route_terminal_id'=>1,'route_origin'=>'VILLABA','route_destination'=>'ORMOC']);
+    $fixtureData['vehicles'] = [
+        array_replace($orderedVehicle,['id'=>203,'plate_number'=>'MID-003','type'=>'van','dispatch_order'=>3]),
+        array_replace($orderedVehicle,['id'=>201,'plate_number'=>'ZZZ-001','type'=>'van','dispatch_order'=>1,'dispatch_rotation'=>1,'dispatch_rotation_date'=>date('Y-m-d')]),
+        array_replace($orderedVehicle,['id'=>202,'plate_number'=>'AAA-002','dispatch_order'=>2]),
+        array_replace($orderedVehicle,['id'=>204,'plate_number'=>'BATO-004','route_destination'=>'BATO','dispatch_order'=>1]),
+        array_replace($orderedVehicle,['id'=>205,'plate_number'=>'ARCHIVED-005','status'=>'archived','dispatch_order'=>1]),
+        array_replace($orderedVehicle,['id'=>206,'plate_number'=>'MAINTENANCE-006','status'=>'maintenance','dispatch_order'=>2]),
+        array_replace($orderedVehicle,['id'=>207,'plate_number'=>'UNASSIGNED-007','route_destination'=>null,'route_origin'=>null]),
+    ];
+}
+if ($fixturePage === 'admin-vehicles') {
+    // The browser workflow uses the bundled framework without Composer installation.
+    spl_autoload_register(static function (string $class): void {
+        $prefix = 'CodeIgniter\\';
+        if (!str_starts_with($class, $prefix)) return;
+        $file = dirname(__DIR__, 2) . '/system/' . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+        if (is_file($file)) require_once $file;
+    });
+    require_once dirname(__DIR__, 2) . '/app/Models/VehicleModel.php';
+    $fixtureData['vehicles'] = \App\Models\VehicleModel::sortForRegister($fixtureData['vehicles'], date('Y-m-d'));
+}
 $fixtureRenderer = new ResponsiveFixtureRenderer();
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',

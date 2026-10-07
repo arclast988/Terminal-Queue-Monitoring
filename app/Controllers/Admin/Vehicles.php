@@ -28,8 +28,8 @@ class Vehicles extends BaseController
             ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.terminal_id as route_terminal_id, routes.vehicle_type as route_vehicle_type, routes.status as route_status')
             ->join('routes', "routes.id = vehicles.default_route_id AND routes.status = 'active'", 'left')
             ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
-            ->orderBy('vehicles.created_at', 'DESC')
             ->findAll();
+        $vehicles = VehicleModel::sortForRegister($vehicles, date('Y-m-d'));
 
         $data = [
             'title' => 'Vehicle Register',
@@ -663,4 +663,3 @@ class Vehicles extends BaseController
         return redirect()->to('/admin/vehicles' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Invalid bulk action.');
     }
 }
-

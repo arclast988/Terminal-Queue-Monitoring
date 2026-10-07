@@ -63,13 +63,15 @@ final class AdminVehicleRegisterTest extends CIUnitTestCase
         $result = $this->controller(new VehicleModel($this->registerDb))->index();
         $this->assertSame('Vehicle Register', $result);
         $rows = $this->viewData['vehicles'];
-        $this->assertSame([4, 3, 2, 1], array_map('intval', array_column($rows, 'id')));
+        $this->assertSame([1, 2, 3, 4], array_map('intval', array_column($rows, 'id')));
         $byId = array_column($rows, null, 'id');
+        $this->assertSame(1, $byId[1]['dispatch_position']);
         $this->assertSame('VILLABA', $byId[1]['route_origin']);
         $this->assertSame('ORMOC', $byId[1]['route_destination']);
         $this->assertSame('van', $byId[1]['route_vehicle_type']);
         $this->assertSame('active', $byId[1]['route_status']);
         foreach ([2, 3, 4] as $id) {
+            $this->assertNull($byId[$id]['dispatch_position']);
             $this->assertNull($byId[$id]['route_origin']);
             $this->assertNull($byId[$id]['route_destination']);
             $this->assertNull($byId[$id]['route_vehicle_type']);

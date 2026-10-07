@@ -85,23 +85,35 @@ foreach ($vehicles ?? [] as $registeredVehicle) {
     $vehicleRouteFilters[$key] = strtoupper($registeredVehicle['route_origin'] ?? '') . ' → ' . strtoupper($registeredVehicle['route_destination']);
 }
 asort($vehicleRouteFilters);
+$registeredVehicleGroups = [];
+foreach ($vehicles ?? [] as $registeredVehicle) {
+    $hasRoute = !empty($registeredVehicle['route_destination']);
+    $routeKey = $hasRoute ? ($registeredVehicle['route_terminal_id'] ?? 0) . '|' . $registeredVehicle['route_destination'] : '__none';
+    $registeredVehicleGroups[$routeKey]['label'] = $hasRoute
+        ? strtoupper($registeredVehicle['route_origin'] ?? '') . ' → ' . strtoupper($registeredVehicle['route_destination'])
+        : 'No active route';
+    $registeredVehicleGroups[$routeKey]['vehicles'][] = $registeredVehicle;
+}
 ?>
 <!-- Vehicle Filter & Summary Bar -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
         <!-- Filter Buttons Row -->
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 vehicle-register-filter-row">
-            <div class="vehicle-search-group me-3 position-relative">
+        <div class="vehicle-register-filter-row">
+            <div class="vehicle-search-field">
+                <label for="vehicle-search" class="form-label-modern">Search vehicles</label>
+                <div class="vehicle-search-group position-relative">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                 <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate, operator, or driver..." aria-label="Search registered vehicles" oninput="toggleVehicleClearBtn(this.value); filterVehicles(currentFilter)" autocomplete="off">
                 <button type="button" class="btn-clear-search" id="clear-vehicle-search" onclick="clearVehicleSearch()" style="display: none !important;" title="Clear search">
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
+                </div>
             </div>
             
             <div class="vehicle-route-filter">
                 <label for="vehicle-route-filter" class="form-label-modern">Filter route</label>
-                <select id="vehicle-route-filter" class="form-select-modern" onchange="filterVehicles(currentFilter)">
+                <select id="vehicle-route-filter" class="form-select-modern" data-no-autocomplete onchange="filterVehicles(currentFilter)">
                     <option value="">All routes</option>
                     <?php foreach ($vehicleRouteFilters as $routeKey => $routeName): ?>
                         <option value="<?= esc($routeKey, 'attr') ?>"><?= esc($routeName) ?></option>
@@ -412,12 +424,16 @@ table:not(.selection-mode-active) .bulk-select-cell {
                 </thead>
                 <tbody>
                     <?php if (!empty($vehicles) && is_array($vehicles)): ?>
-                        <?php foreach ($vehicles as $i => $vehicle): ?>
+                        <?php foreach ($registeredVehicleGroups as $routeKey => $routeGroup): ?>
+                            <tr class="vehicle-route-heading" data-route-heading="<?= esc($routeKey, 'attr') ?>">
+                                <td colspan="10"><div class="vehicle-route-heading-label"><i class="bi bi-geo-alt-fill" aria-hidden="true"></i><span><?= esc($routeGroup['label']) ?></span></div></td>
+                            </tr>
+                        <?php foreach ($routeGroup['vehicles'] as $vehicle): ?>
                             <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>" data-vehicle-id="<?= $vehicle['id'] ?>" data-route-key="<?= esc(!empty($vehicle['route_destination']) ? (($vehicle['route_terminal_id'] ?? 0) . '|' . $vehicle['route_destination']) : '__none', 'attr') ?>">
                                 <td data-label="Select" class="bulk-col bulk-select-cell" style="display: none; text-align: center;">
                                     <input type="checkbox" class="form-check-input vehicle-row-checkbox" value="<?= $vehicle['id'] ?>" data-status="<?= esc($vehicle['status']) ?>" data-plate="<?= esc($vehicle['plate_number']) ?>" title="Select vehicle <?= esc($vehicle['plate_number']) ?>">
                                 </td>
-                                <td data-label="#" class="row-number"><strong><?= $i + 1 ?></strong></td>
+                                <td data-label="#" class="row-number"><strong><?= !empty($vehicle['dispatch_position']) ? (int) $vehicle['dispatch_position'] : '—' ?></strong></td>
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($vehicle['plate_number']) ?></span>
                                 </td>
@@ -465,7 +481,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     ?>
                                         <div class="route-info">
                                             <i class="bi bi-geo-alt" style="color: var(--primary-red);"></i>
-                                            <span><?= $routeLabel ?><?php if (!empty($vehicle['dispatch_order'])): ?><small class="d-block text-muted vehicle-start-order">Daily start #<?= (int) $vehicle['dispatch_order'] ?></small><?php endif; ?></span>
+                                            <span><?= $routeLabel ?></span>
                                         </div>
                                     <?php else: ?>
                                         <span class="badge-modern badge-modern-warning">No Route</span>
@@ -548,6 +564,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     </div>
                                 </td>
                             </tr>
+                        <?php endforeach; ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr class="no-vehicles-row">
@@ -951,6 +968,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
             gap: 4px !important;
             white-space: nowrap !important;
         }
+    }
 
     @media (max-width: 768px) {
         .vehicle-search-group {
@@ -994,15 +1012,41 @@ table:not(.selection-mode-active) .bulk-select-cell {
         width: auto !important;
         margin: 0 !important;
     }
-    .vehicle-register-filter-row .vehicle-search-group { flex: 1 1 260px; min-width: 0; margin: 0 !important; }
-    .vehicle-route-filter { flex: 1 1 260px; min-width: 0; }
-    .vehicle-route-filter label { margin-bottom: 4px; }
-    .vehicle-route-filter select { width: 100%; min-width: 0; max-width: 100%; }
-    .vehicle-register-filter-row .vehicle-filter-controls { flex-basis: 100%; width: 100%; min-width: 0; }
+    .vehicle-register-filter-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: end;
+        gap: 16px 24px;
+        margin-bottom: 12px;
+    }
+    .vehicle-search-field, .vehicle-route-filter { min-width: 0; }
+    .vehicle-register-filter-row .form-label-modern { display: block; margin-bottom: 6px; }
+    .vehicle-register-filter-row .vehicle-search-group {
+        min-width: 0;
+        max-width: none !important;
+        width: 100%;
+        margin: 0 !important;
+    }
+    .vehicle-register-filter-row .vehicle-search-input,
+    .vehicle-register-filter-row .input-group-text {
+        height: 44px !important;
+        min-height: 44px !important;
+    }
+    .vehicle-register-filter-row .vehicle-search-input { min-width: 0; padding-right: 36px !important; }
+    .vehicle-route-filter select { width: 100%; height: 44px; min-width: 0; max-width: 100%; }
+    .vehicle-register-filter-row .vehicle-filter-controls {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-width: 0;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .vehicle-register-filter-row .filter-label-text { height: auto !important; }
+    .vehicle-filter-strip .vf-divider { display: none; }
     .vehicle-dispatch-order-field { min-width: 0; }
     .vehicle-start-order { white-space: normal; }
     @media (max-width: 575.98px) {
-        .vehicle-register-filter-row .vehicle-search-group, .vehicle-route-filter { flex-basis: 100%; }
+        .vehicle-register-filter-row { grid-template-columns: minmax(0, 1fr); gap: 14px; }
     }
     .vehicle-filter-strip {
         display: flex;
@@ -1010,12 +1054,11 @@ table:not(.selection-mode-active) .bulk-select-cell {
         gap: 8px;
         flex: 1 1 auto;
         min-width: 0;
-        overflow-x: auto;
-        overflow-y: hidden;
-        flex-wrap: nowrap;
+        overflow: visible;
+        flex-wrap: wrap;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: thin;
-        padding: 9px 3px 12px;
+        padding: 0;
     }
     .vehicle-filter-strip .vf-btn,
     .vehicle-filter-strip .vf-divider {
@@ -1129,13 +1172,12 @@ table:not(.selection-mode-active) .bulk-select-cell {
             }
         });
 
-        // Re-number visible rows
-        let num = 1;
-        rows.forEach(row => {
-            if (!row.classList.contains('vehicle-row-hidden')) {
-                const numEl = row.querySelector('.row-number strong') || row.querySelector('.row-number');
-                if (numEl) numEl.textContent = num++;
-            }
+        // Keep the route's queue numbers when searching or filtering.
+        document.querySelectorAll('#vehicles-table [data-route-heading]').forEach(heading => {
+            const key = heading.getAttribute('data-route-heading');
+            const hasVisibleVehicle = Array.from(rows).some(row => row.getAttribute('data-route-key') === key
+                && !row.classList.contains('vehicle-row-hidden'));
+            heading.classList.toggle('vehicle-row-hidden', !hasVisibleVehicle);
         });
 
         // Update URL tab parameter for persistence
@@ -1195,6 +1237,9 @@ table:not(.selection-mode-active) .bulk-select-cell {
         const toolbar = document.getElementById('vehicle-bulk-toolbar');
         const btnText = document.getElementById('btn-select-vehicles-text');
         const btn = document.getElementById('btn-toggle-select-vehicles');
+        table?.querySelectorAll('.vehicle-route-heading td').forEach(cell => {
+            cell.colSpan = isVehicleSelectMode ? 11 : 10;
+        });
 
         if (isVehicleSelectMode) {
             if (table) table.classList.add('selection-mode-active');
@@ -3993,5 +4038,3 @@ body.modal-open [id^="editVehicleTypeModal"],
 </script>
 
 <?= view('templates/footer') ?>
-
-

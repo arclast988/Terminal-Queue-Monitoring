@@ -140,6 +140,70 @@ final class DailyVehicleDispatchTest extends CIUnitTestCase
         $this->assertSame(['canceled_ids'=>[], 'rounds_reset'=>0], $queue->resetForNewDay($now));
     }
 
+    public function testRepeatedNumberOneInsertsShiftAllVehicleTypesInTheSameRoute(): void
+    {
+        foreach (['FIRST', 'SECOND'] as $plate) {
+            $this->assertTrue($this->vehicles->saveInDispatchOrder([
+                'plate_number'=>$plate, 'type'=>'jeepney', 'status'=>'active', 'default_route_id'=>2, 'dispatch_order'=>1,
+            ]));
+        }
+        $this->assertSame(['SECOND','FIRST','A','B','C'], $this->platesForRoute([1,2]));
+        $this->assertSame([1,2,3,4,5], $this->positionsForRoute([1,2]));
+        $this->assertSame([1], $this->positionsForRoute([3]));
+        $this->assertSame([1], $this->positionsForRoute([4]));
+    }
+
+    public function testNormalizationRepairsDuplicatesAndGapsAndPreservesDailyRotation(): void
+    {
+        $this->vehicles->update(1, ['dispatch_order'=>3, 'dispatch_rotation'=>2, 'dispatch_rotation_date'=>'2026-10-07']);
+        $this->vehicles->update(2, ['dispatch_order'=>3, 'type'=>'jeepney']);
+        $this->vehicles->update(3, ['dispatch_order'=>9]);
+        $this->vehicles->normalizeDispatchOrders();
+        $this->assertSame(['B','A','C'], $this->platesForRoute([1,2]));
+        $this->assertSame([1,2,3], $this->positionsForRoute([1,2]));
+        $this->assertSame([1], $this->positionsForRoute([3]));
+        $this->assertSame([1], $this->positionsForRoute([4]));
+        $this->assertSame(2, (int) $this->vehicles->find(1)['dispatch_rotation']);
+        $this->assertSame('2026-10-07', $this->vehicles->find(1)['dispatch_rotation_date']);
+        $this->vehicles->normalizeDispatchOrders();
+        $this->assertSame(['B','A','C'], $this->platesForRoute([1,2]));
+    }
+
+    public function testRouteMergeRepairsDuplicateNumberOneInsideTheRouteTransaction(): void
+    {
+        $this->dispatchDb->transStart();
+        $this->vehicles->normalizeDispatchOrders();
+        $this->dispatchDb->table('routes')->where('id', 3)->update(['destination'=>'ORMOC']);
+        $this->vehicles->normalizeDispatchOrders();
+        $this->dispatchDb->transComplete();
+        $this->assertTrue($this->dispatchDb->transStatus());
+        $this->assertSame(['A','D','B','C'], $this->platesForRoute([1,2,3]));
+        $this->assertSame([1,2,3,4], $this->positionsForRoute([1,2,3]));
+        $this->assertSame([1], $this->positionsForRoute([4]));
+    }
+
+    public function testRegisterNumbersFollowDailyQueueOrderAndLeaveUnavailableVehiclesUnnumbered(): void
+    {
+        $this->vehicles->rotateAfterDeparture(1, 1, strtotime('2026-10-07 10:00:00'));
+        $rows = $this->vehicles->select('vehicles.*, routes.terminal_id as route_terminal_id, routes.destination as route_destination')
+            ->join('routes', 'routes.id = vehicles.default_route_id')->findAll();
+        $rows[] = ['id'=>90,'plate_number'=>'ARCHIVED','type'=>'jeepney','status'=>'archived','route_terminal_id'=>1,'route_destination'=>'ORMOC','dispatch_order'=>1];
+        $rows[] = ['id'=>91,'plate_number'=>'MAINTENANCE','status'=>'maintenance','route_terminal_id'=>1,'route_destination'=>'ORMOC','dispatch_order'=>1];
+        $rows[] = ['id'=>92,'plate_number'=>'UNASSIGNED','status'=>'active','dispatch_order'=>1];
+        foreach (['2026-10-07'=>['B','C','A'], '2026-10-08'=>['A','B','C']] as $today=>$expected) {
+            $register = VehicleModel::sortForRegister($rows, $today);
+            $ormoc = array_values(array_filter($register, static fn(array $row): bool => (int) ($row['route_terminal_id'] ?? 0) === 1
+                && ($row['route_destination'] ?? '') === 'ORMOC' && $row['status'] === 'active'));
+            $this->assertSame($expected, array_column($ormoc, 'plate_number'));
+            $this->assertSame([1,2,3], array_column($ormoc, 'dispatch_position'));
+            $byId = array_column($register, null, 'id');
+            $this->assertSame(1, $byId[4]['dispatch_position']);
+            $this->assertSame(1, $byId[5]['dispatch_position']);
+            foreach ([90,91,92] as $id) $this->assertNull($byId[$id]['dispatch_position']);
+            $this->assertSame(92, end($register)['id']);
+        }
+    }
+
     private function platesForRoute(array $ids): array
     {
         return array_column($this->vehicles->whereIn('default_route_id', $ids)->orderBy('dispatch_order')->findAll(), 'plate_number');

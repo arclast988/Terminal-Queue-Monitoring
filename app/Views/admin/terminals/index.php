@@ -137,7 +137,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                 <?php if ($isAdmin): ?>
                                 <td data-label="Actions" class="management-actions-col">
                                     <div class="d-flex gap-2 justify-content-end management-row-actions">
-                                        <a href="<?= base_url('admin/terminals/edit/'.$terminal['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
+                                        <a href="<?= base_url('admin/terminals/edit/'.$terminal['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
                                         <form id="delete-terminal-form-<?= $terminal['id'] ?>" action="<?= base_url('admin/terminals/delete/'.$terminal['id']) ?>" method="post" class="d-inline">
