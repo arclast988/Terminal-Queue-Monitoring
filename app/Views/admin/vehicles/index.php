@@ -113,7 +113,7 @@ foreach ($vehicles ?? [] as $registeredVehicle) {
             
             <div class="vehicle-route-filter">
                 <label for="vehicle-route-filter" class="form-label-modern">Filter route</label>
-                <select id="vehicle-route-filter" class="form-select-modern" data-no-autocomplete onchange="filterVehicles(currentFilter)">
+                <select id="vehicle-route-filter" class="form-select-modern" aria-label="Filter route" data-autocomplete-placeholder="Search routes..." onchange="filterVehicles(currentFilter)">
                     <option value="">All routes</option>
                     <?php foreach ($vehicleRouteFilters as $routeKey => $routeName): ?>
                         <option value="<?= esc($routeKey, 'attr') ?>"><?= esc($routeName) ?></option>
@@ -1033,7 +1033,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         min-height: 44px !important;
     }
     .vehicle-register-filter-row .vehicle-search-input { min-width: 0; padding-right: 36px !important; }
-    .vehicle-route-filter select { width: 100%; height: 44px; min-width: 0; max-width: 100%; }
+    .vehicle-route-filter select,
+    .vehicle-route-filter .autocomplete-wrapper > input { width: 100%; height: 44px; min-width: 0; max-width: 100%; }
     .vehicle-register-filter-row .vehicle-filter-controls {
         grid-column: 1 / -1;
         width: 100%;

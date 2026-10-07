@@ -130,6 +130,33 @@ async function navigate(page, to) {
   await page.waitForURL(origin + to);
 }
 
+test('scrolling and zoom resize pause decorative photos and resume them after the gesture', {timeout:60000}, async t => {
+  const {page,context,errors} = await open(t);
+  await page.goto(origin + '/guest?slideshow=1');
+  await page.waitForFunction(() => !document.documentElement.hasAttribute('data-tq-viewport-moving'));
+  const background = () => page.evaluate(() => getComputedStyle(document.body,'::before').animationPlayState);
+  assert.equal(await background(), 'running');
+  await page.evaluate(() => {
+    window.viewportMotionStates = [];
+    new MutationObserver(() => window.viewportMotionStates.push({
+      moving: document.documentElement.hasAttribute('data-tq-viewport-moving'),
+      background: getComputedStyle(document.body, '::before').animationPlayState,
+    })).observe(document.documentElement, {attributes:true,attributeFilter:['data-tq-viewport-moving']});
+  });
+  await page.mouse.wheel(0,400);
+  await page.waitForFunction(() => window.viewportMotionStates.some(state => state.moving && state.background === 'paused'));
+  await page.waitForFunction(() => window.viewportMotionStates.some(state => !state.moving && state.background === 'running'));
+  assert.equal(await background(), 'running');
+  await page.evaluate(() => { window.viewportMotionStates = []; });
+  await page.setViewportSize({width:1024,height:768});
+  await page.waitForFunction(() => window.viewportMotionStates.some(state => state.moving && state.background === 'paused'));
+  await page.waitForFunction(() => window.viewportMotionStates.some(state => !state.moving && state.background === 'running'));
+  assert.equal(await background(), 'running');
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
 test('navigation handlers are ready while slow vendor styles are still loading', { timeout: 20000 }, async t => {
   const { page, context, errors } = await open(t);
   let releaseStyles;

@@ -37,8 +37,8 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
         width: 44px;
         height: 44px;
         border-radius: 12px;
-        background: #dcfce7;
-        color: #047857;
+        background: var(--primary-soft, #dcfce7);
+        color: var(--primary-dark, #047857);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -96,7 +96,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
     }
 
     .accordion-header-icon {
-        color: #047857;
+        color: var(--primary, #047857);
         font-size: 14px;
         transition: transform 0.25s cubic-bezier(.4, 0, .2, 1);
         flex-shrink: 0;
@@ -108,7 +108,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
     }
 
     .accordion-item.active .accordion-header-text {
-        color: #047857;
+        color: var(--primary, #047857);
     }
 
     .accordion-body {
@@ -132,7 +132,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
     /* Step content formatting */
     .step-box {
         background: #f8fafc;
-        border-left: 3px solid #047857;
+        border-left: 3px solid var(--primary, #047857);
         padding: 12px 16px;
         border-radius: 0 8px 8px 0;
         margin: 12px 0;
@@ -158,20 +158,20 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
     .status-cancelled { background: #fee2e2; color: #991b1b; }
 
     .help-tip {
-        background: #f0fdf4;
-        border: 1px solid #bbf7d0;
+        background: var(--primary-soft, #f0fdf4);
+        border: 1px solid var(--primary-soft, #bbf7d0);
         border-radius: 8px;
         padding: 10px 14px;
         margin-top: 10px;
         font-size: 13px;
-        color: #166534;
+        color: var(--primary-dark, #166534);
         display: flex;
         align-items: flex-start;
         gap: 8px;
     }
     .help-tip i {
         margin-top: 3px;
-        color: #15803d;
+        color: var(--primary, #15803d);
     }
 
     @media (max-width: 768px) {

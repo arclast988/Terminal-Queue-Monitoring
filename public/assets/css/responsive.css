@@ -3340,8 +3340,8 @@ a[title*="delete" i]:hover .bi,
   }
 
   /* Row-aligned cells (label left, value right): give value ample room */
-  html body table.table-modern tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"])::before,
-  html body table.table tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"])::before {
+  html body table.table-modern tbody tr td[data-label]:not(.management-actions-col):not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"])::before,
+  html body table.table tbody tr td[data-label]:not(.management-actions-col):not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"])::before {
     font-size: 11px !important;
     padding-right: 8px !important;
     flex: 0 0 35% !important;
@@ -3350,8 +3350,8 @@ a[title*="delete" i]:hover .bi,
     line-height: 1.2 !important;
   }
 
-  html body table.table-modern tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"]) > *,
-  html body table.table tbody tr td[data-label]:not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"]) > * {
+  html body table.table-modern tbody tr td[data-label]:not(.management-actions-col):not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"]) > *,
+  html body table.table tbody tr td[data-label]:not(.management-actions-col):not([data-label="User"]):not([data-label="Assigned Routes"]):not([data-label="Details"]):not([data-label="Message"]) > * {
     max-width: 65% !important;
     font-size: 12.5px !important;
     overflow-wrap: break-word !important;
@@ -3936,11 +3936,22 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     html body table.table-modern.management-list-table .management-actions-col {
         position: static;
         white-space: normal !important;
+        gap: 12px !important;
+    }
+    html body table.table-modern.management-list-table tbody tr td.management-actions-col[data-label]::before {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding-right: 0 !important;
     }
     html body table.table-modern.management-list-table .management-actions-col > .management-row-actions {
         margin-left: auto;
+        flex: 0 1 auto !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
         justify-content: flex-end !important;
-        align-items: flex-end !important;
+        align-items: center !important;
     }
 }
 

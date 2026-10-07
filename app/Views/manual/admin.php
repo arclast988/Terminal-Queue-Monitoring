@@ -11,12 +11,12 @@
 
     /* Header Banner */
     .manual-header {
-        background: linear-gradient(135deg, #B71C1C 0%, #7F0000 100%);
-        color: #ffffff !important;
+        background: linear-gradient(135deg, var(--primary, #B71C1C) 0%, var(--primary-dark, #7F0000) 100%);
+        color: var(--on-primary, #ffffff) !important;
         border-radius: 18px;
         padding: 32px 28px;
         margin-bottom: 24px;
-        box-shadow: 0 10px 25px -5px rgba(183, 28, 28, 0.28);
+        box-shadow: 0 10px 25px -5px var(--primary-soft, rgba(183, 28, 28, 0.28));
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -33,7 +33,7 @@
     html body.staff-theme .manual-header .manual-title,
     html body .manual-header h1,
     html body .manual-header .manual-title {
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         font-size: clamp(20px, 3.8vw, 26px);
         font-weight: 800;
         margin: 0 0 8px;
@@ -49,7 +49,7 @@
     html body.staff-theme .manual-header .manual-subtitle,
     html body .manual-header p,
     html body .manual-header .manual-subtitle {
-        color: #fee2e2 !important;
+        color: var(--on-primary, #fee2e2) !important;
         font-size: 14.5px;
         margin: 0;
         max-width: 720px;
@@ -65,7 +65,7 @@
 
     .manual-header .btn-back {
         background: rgba(255, 255, 255, 0.16);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         border: 1px solid rgba(255, 255, 255, 0.35);
         padding: 9px 16px;
         border-radius: 9px;
@@ -80,13 +80,13 @@
 
     .manual-header .btn-back:hover {
         background: rgba(255, 255, 255, 0.28);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         transform: translateY(-1px);
     }
 
     .manual-header .btn-print {
         background: #ffffff;
-        color: #B71C1C !important;
+        color: var(--primary-dark, #B71C1C) !important;
         border: none;
         padding: 9px 16px;
         border-radius: 9px;
@@ -101,14 +101,14 @@
     }
 
     .manual-header .btn-print:hover {
-        background: #fef2f2;
-        color: #7F0000 !important;
+        background: var(--primary-soft, #fef2f2);
+        color: var(--primary-dark, #7F0000) !important;
         transform: translateY(-1px);
     }
 
     .manual-header .btn-print-outline {
         background: rgba(255, 255, 255, 0.16);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         border: 1px solid rgba(255, 255, 255, 0.35);
         padding: 9px 14px;
         border-radius: 9px;
@@ -123,7 +123,7 @@
 
     .manual-header .btn-print-outline:hover {
         background: rgba(255, 255, 255, 0.28);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         transform: translateY(-1px);
     }
 
@@ -163,7 +163,7 @@
     }
 
     .manual-mobile-select:focus {
-        border-color: #D62828;
+        border-color: var(--primary, #D62828);
         background: white;
     }
 
@@ -203,10 +203,10 @@
     }
 
     .manual-pill-btn.active {
-        background: #D62828;
-        border-color: #D62828;
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(214, 40, 40, 0.25);
+        background: var(--primary, #D62828);
+        border-color: var(--primary, #D62828);
+        color: var(--on-primary, #ffffff);
+        box-shadow: 0 4px 12px var(--primary-soft, rgba(214, 40, 40, 0.25));
     }
 
     @media (max-width: 640px) {
@@ -301,8 +301,8 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: #fee2e2;
-        color: #b91c1c;
+        background: var(--primary-soft, #fee2e2);
+        color: var(--primary-dark, #b91c1c);
         font-weight: 800;
         display: flex;
         align-items: center;

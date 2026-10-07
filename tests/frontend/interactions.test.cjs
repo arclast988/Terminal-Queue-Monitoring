@@ -150,6 +150,26 @@ test('loading motion follows tab visibility and restores one listener after BFCa
   assert.equal(h.document.count('visibilitychange'), 0);
 });
 
+test('scroll and zoom motion never block input and clear their timer on page exit', () => {
+  const h = loaded();
+  const root = h.document.documentElement;
+  assert.equal(h.window.emit('wheel').defaultPrevented, false);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), true);
+  h.tick(200); h.window.emit('resize'); h.tick(200);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), true);
+  h.tick(50);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), false);
+  h.window.emit('scroll');
+  h.window.emit('pagehide', {persisted:true});
+  assert.equal(h.timers.size, 0);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), false);
+  assert.equal(h.window.count('scroll'), 0);
+  h.window.emit('pageshow', {persisted:true});
+  h.window.emit('pageshow', {persisted:true});
+  assert.equal(h.window.count('scroll'), 1);
+  h.window.emit('pagehide');
+});
+
 test('queue polling coalesces overlap and retains one trailing reconciliation', async () => {
   const h = harness(); h.load(sync); h.window.QueueSync.init({ apiUrl: '/api/queue-status', pollInterval: 100 });
   for (let i = 0; i < 4; i++) h.window.QueueSync.refresh();

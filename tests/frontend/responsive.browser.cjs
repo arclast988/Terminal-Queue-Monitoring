@@ -10,7 +10,7 @@ const { assetContentType } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
-const pages = ['login', 'forgot', 'reset', 'verify', 'guest', 'fares', 'schedules', 'search', 'staff-queue', 'staff-schedules', 'admin-schedules', ...managementPages];
+const pages = ['login', 'forgot', 'reset', 'verify', 'guest', 'fares', 'schedules', 'search', 'staff-queue', 'staff-schedules', 'staff-password', 'admin-schedules', ...managementPages];
 const authPages = new Set(pages.slice(0, 4));
 const cache = new Map();
 const report = { engine, fixtures: 'production PHP views with seeded helper/data values', cases: [], beforeAfter: {} };
@@ -175,6 +175,35 @@ test('management pages keep long values and primary controls inside phone, table
 
 
 
+test('password account details precede the form on mobile with guidelines below it', { timeout: 30000 }, async t => {
+  for (const width of [375,768,1280]) {
+    const {page,context,errors} = await open(t, 'staff-password', width, 900, '');
+    const positions = await page.evaluate(() => Object.fromEntries(['profile','form','guidelines'].map(name => {
+      const box = document.querySelector('.password-' + name).getBoundingClientRect();
+      return [name,{top:box.top,bottom:box.bottom,left:box.left,right:box.right}];
+    })));
+    if (width < 992) {
+      assert.ok(positions.profile.bottom <= positions.form.top, JSON.stringify(positions));
+      assert.ok(positions.form.bottom <= positions.guidelines.top, JSON.stringify(positions));
+    } else {
+      assert.ok(Math.abs(positions.profile.top - positions.form.top) <= 1, JSON.stringify(positions));
+      assert.ok(positions.profile.right < positions.form.left, JSON.stringify(positions));
+    }
+    checkBounds(await bounds(page, ['.password-profile','.password-form','.password-guidelines']), 'password ' + width);
+    assert.equal(await page.locator('#btnSubmitPassword').isEnabled(), true);
+    if (width === 375) await screenshot(page, 'password-account-first-mobile', true);
+    await page.locator('.password-guidelines').scrollIntoViewIfNeeded();
+    assert.equal(await page.locator('.password-guidelines').isVisible(), true);
+    assert.equal(await page.locator('.password-guidelines').evaluate(el => {
+      const box = el.getBoundingClientRect();
+      return box.top >= 0 && box.bottom <= innerHeight + 1;
+    }), true);
+    if (width === 375) await screenshot(page, 'password-guidelines-mobile', false);
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});
+
 test('management actions align with their headers and scroll as normal columns like User Management', { timeout: 90000 }, async t => {
   const reference = await open(t, 'admin-users', 1280, 900, '');
   await reference.page.locator('#users-table td[data-label="Action"]').first().scrollIntoViewIfNeeded();
@@ -227,7 +256,25 @@ test('management actions align with their headers and scroll as normal columns l
         return { top:box.top, bottom:box.bottom, height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
       }));
       assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
-      assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' actions do not stack like User Management: ' + JSON.stringify(targets));
+      if (width > 768) {
+        assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' desktop actions do not stack: ' + JSON.stringify(targets));
+      } else {
+        const layout = await cell.evaluate(el => {
+          const group = el.querySelector('.management-row-actions'), box = el.getBoundingClientRect(), style = getComputedStyle(el);
+          return { label:el.getAttribute('data-label'), labelDisplay:getComputedStyle(el, '::before').display, right:group.getBoundingClientRect().right,
+            cellRight:box.right - parseFloat(style.paddingRight), direction:getComputedStyle(group).flexDirection,
+            wrap:getComputedStyle(group).flexWrap, labelWidth:parseFloat(getComputedStyle(el, '::before').width),
+            labelFlex:getComputedStyle(el, '::before').flex, labelMin:getComputedStyle(el, '::before').minWidth,
+            labelPadding:getComputedStyle(el, '::before').paddingRight, gap:style.gap,
+            groupWidth:getComputedStyle(group).width, groupFlex:getComputedStyle(group).flex };
+        });
+        assert.equal(layout.direction, 'row', name + ' mobile actions should share a row');
+        assert.equal(layout.wrap, 'wrap', name + ' mobile actions should wrap when needed');
+        assert.match(layout.label, /Action/);
+        assert.notEqual(layout.labelDisplay, 'none');
+        assert.ok(Math.abs(layout.right - layout.cellRight) <= 1, JSON.stringify({name,width,layout}));
+        if (width >= 375) assert.ok(Math.abs(targets[0].top - targets[1].top) <= 1, name + ' first actions should fit beside one another: ' + JSON.stringify(targets));
+      }
       if (width === 375 || width === 1280 || width === 1536) await screenshot(page, name + '-management-actions-' + width, false);
       assert.deepEqual(errors, [], name + ' ' + width);
       await context.close();
@@ -286,7 +333,7 @@ test('vehicle register shows every column without horizontal scrolling on deskto
 
 test('registered route groups retain daily queue positions through search, filters and bulk selection', { timeout: 90000 }, async t => {
   for (const [width, height] of [[320,900], [375,900], [768,1024], [1280,1000]]) {
-    const { page, context, errors } = await open(t, 'admin-vehicles', width, height, 'state=register-order');
+    const { page, context, errors } = await open(t, 'admin-vehicles', width, height, 'state=register-order', 'full', width <= 375);
     await page.addScriptTag({ url:origin + '/assets/js/autocomplete-search.js' });
     const visibleRows = () => page.locator('#vehicles-table tr[data-vehicle-id]:visible').evaluateAll(rows => rows.map(row => ({
       plate:row.querySelector('.plate-number').textContent.trim(), number:row.querySelector('.row-number').textContent.trim()
@@ -304,12 +351,19 @@ test('registered route groups retain daily queue positions through search, filte
     assert.ok(headingGap >= 6 && headingGap <= 12, 'route icon and label should stay together: ' + headingGap);
     assert.equal(await page.locator('.vehicle-start-order').count(), 0);
     const search = page.locator('#vehicle-search'), route = page.locator('#vehicle-route-filter');
-    assert.equal(await route.evaluate(el => el.closest('.select-autocomplete-wrapper') === null && getComputedStyle(el).display !== 'none'), true);
-    const searchBox = await search.boundingBox(), routeBox = await route.boundingBox();
+    const routeInput = page.getByRole('textbox', {name:'Filter route'});
+    const routeWrapper = route.locator('..');
+    assert.equal(await routeInput.getAttribute('placeholder'), 'Search routes...');
+    const searchBox = await search.boundingBox(), routeBox = await routeInput.boundingBox();
     assert.ok(Math.abs(searchBox.height - routeBox.height) <= 1, JSON.stringify({width,searchBox,routeBox}));
     if (width >= 576) assert.ok(Math.abs(searchBox.y - routeBox.y) <= 1, JSON.stringify({width,searchBox,routeBox}));
-    checkBounds(await bounds(page, ['.vehicle-register-filter-row','#vehicle-search','#vehicle-route-filter','.vehicle-filter-strip .vf-btn']), 'register filters ' + width);
-    await route.selectOption('1|ORMOC');
+    checkBounds(await bounds(page, ['.vehicle-register-filter-row','#vehicle-search','#vehicle-route-filter_autocomplete_search','.vehicle-filter-strip .vf-btn']), 'register filters ' + width);
+    await routeInput.fill('orm');
+    await page.waitForFunction(() => document.getElementById('vehicle-route-filter').parentElement.querySelectorAll('.autocomplete-item').length === 1);
+    assert.equal(await routeWrapper.locator('.autocomplete-item').count(), 1);
+    const routeChoice = routeWrapper.locator('.autocomplete-item[data-value="1|ORMOC"]');
+    if (width <= 375) await routeChoice.tap(); else await routeChoice.click();
+    assert.equal(await route.inputValue(), '1|ORMOC');
     assert.deepEqual((await headings()).map(text => text.trim()), ['VILLABA → ORMOC']);
     await search.fill('ZZZ-001');
     assert.deepEqual(await visibleRows(), [{plate:'ZZZ-001',number:'3'}]);
@@ -326,13 +380,22 @@ test('registered route groups retain daily queue positions through search, filte
     assert.deepEqual(await visibleRows(), [{plate:'MAINTENANCE-006',number:'—'}]);
     await page.locator('#filter-btn-archived').click();
     assert.deepEqual(await visibleRows(), [{plate:'ARCHIVED-005',number:'—'}]);
-    await route.selectOption('__none');
+    await routeInput.fill('No active');
+    await page.waitForFunction(() => {
+      const items = document.getElementById('vehicle-route-filter').parentElement.querySelectorAll('.autocomplete-item');
+      return items.length === 1 && items[0].dataset.value === '__none';
+    });
+    await routeInput.press('ArrowDown');
+    await routeInput.press('Enter');
+    assert.equal(await route.inputValue(), '__none');
     assert.deepEqual(await visibleRows(), []);
     assert.deepEqual(await headings(), []);
     assert.equal(await page.locator('.no-filter-results:visible').count(), 1);
     await page.locator('#filter-btn-all').click();
     assert.deepEqual(await visibleRows(), [{plate:'UNASSIGNED-007',number:'—'}]);
-    await route.selectOption('');
+    await routeWrapper.getByRole('button', {name:'Clear selection'}).click();
+    assert.equal(await route.inputValue(), '');
+    assert.equal((await visibleRows()).length, 6);
     if (width === 375 || width === 1280) {
       await page.locator('.vehicle-register-filter-row').scrollIntoViewIfNeeded();
       await screenshot(page, 'registered-route-order-' + width, false);

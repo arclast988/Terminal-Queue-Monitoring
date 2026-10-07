@@ -21,7 +21,7 @@ function fixture(name) {
     // Keep real filter/report handlers and Bootstrap, isolating unrelated polling.
     fixtures.set(name, html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (tag, attrs, code) => {
       if (/\bsrc\s*=/.test(attrs)) return /bootstrap\.bundle\.min\.js/.test(attrs) ? tag : '';
-      return /function syncPresetButtons|function syncDateHints/.test(code) ? tag : '';
+      return /function syncPresetButtons|function syncDateHints|function fetchFiltered(?:Logs|History)/.test(code) ? tag : '';
     }));
   }
   return fixtures.get(name);
@@ -40,7 +40,7 @@ test.before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = 'http://127.0.0.1:' + server.address().port;
-  browser = await playwright[engine].launch({ headless: true });
+  browser = await playwright[engine].launch({ headless: true, ...(engine === 'chromium' && process.env.TQ_BROWSER_CHANNEL ? {channel:process.env.TQ_BROWSER_CHANNEL} : {}) });
 });
 test.after(async () => {
   await browser?.close();
@@ -53,6 +53,43 @@ async function reportDates(page, report) {
     return { from: data.get('from_date'), to: data.get('to_date') };
   });
 }
+
+test('AJAX filter buttons show immediate progress until the response completes without repeat requests', {timeout:30000}, async () => {
+  for (const report of reports) {
+    const context = await browser.newContext({viewport:{width:1280,height:900}});
+    try {
+      const page = await context.newPage(), errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await page.goto(origin + '/fixture/' + report.page);
+      await page.addScriptTag({url:origin + '/assets/js/global-loader.js'});
+      const form = page.locator(report.page === 'admin-logs' ? '#logsFilterForm' : '#historyFilterForm');
+      const button = form.locator('button[type="submit"]');
+      const before = await button.boundingBox();
+      await form.locator('[name="q"]').fill('ABC-123');
+      let finish, count = 0;
+      const response = new Promise(resolve => { finish = resolve; });
+      await context.route(origin + report.path + '?**', async route => {
+        count++;
+        assert.equal(new URL(route.request().url()).searchParams.get('q'), 'ABC-123');
+        await response;
+        await route.fulfill({status:200,contentType:'text/html',body:fixture(report.page)});
+      });
+      await button.click();
+      assert.equal(await button.getAttribute('aria-busy'), 'true');
+      assert.equal(await button.locator('.gl-btn-spinner').isVisible(), true);
+      assert.equal(await button.locator('.gl-btn-feedback').textContent(), 'Filtering\u2026');
+      const pending = await button.boundingBox();
+      assert.ok(Math.abs(pending.width - before.width) <= 1 && Math.abs(pending.height - before.height) <= 1);
+      await button.evaluate(btn => btn.click());
+      await form.locator('[name="q"]').press('Enter');
+      assert.equal(count, 1);
+      finish();
+      await page.waitForFunction(selector => !document.querySelector(selector + ' button[type="submit"]').hasAttribute('aria-busy'), report.page === 'admin-logs' ? '#logsFilterForm' : '#historyFilterForm');
+      assert.equal(await button.locator('.gl-btn-spinner').count(), 0);
+      assert.deepEqual(errors, []);
+    } finally {await context.close();}
+  }
+});
 
 test('report presets use local calendar dates across year boundaries and preserve ISO form values', { timeout: 90000 }, async () => {
   const cases = [

@@ -835,6 +835,10 @@
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
     }
+    #manageQueueModal [data-queue-order-count] {
+        background: var(--primary-soft, #dcfce7) !important;
+        color: var(--primary-dark, #166534) !important;
+    }
 
     .queue-order-moves {
         display: flex;

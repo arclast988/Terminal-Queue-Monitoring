@@ -401,6 +401,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof pushState === 'undefined') pushState = true;
         if (isFetching) return;
         isFetching = true;
+        var filterButton = form && form.querySelector('button[type="submit"]');
+        if (window.GlobalLoader && filterButton) {
+            window.GlobalLoader.showButtonSpinner(filterButton, 'Filtering\u2026', true);
+        }
 
         if (tableCard) {
             tableCard.style.opacity = '0.5';
@@ -482,6 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .finally(function() {
             isFetching = false;
+            if (window.GlobalLoader && filterButton) window.GlobalLoader.hideButtonSpinner(filterButton);
             if (tableCard) {
                 tableCard.style.opacity = '1';
                 tableCard.style.pointerEvents = 'auto';

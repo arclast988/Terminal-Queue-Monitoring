@@ -14,8 +14,8 @@ function fixture(name, state = '', role = '') {
   const rendered = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme', state, '', role, 'shared-dialogs'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
   // Retain real picker and dialog handlers while isolating unrelated polling.
   return rendered.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (tag, attrs, code) => {
-    if (/\bsrc\s*=/.test(attrs)) return /(?:bootstrap\.bundle\.min|interaction-motion|dispatch-rule-times|departure-rule-days)\.js/.test(attrs) ? tag : '';
-    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion/.test(code) ? tag : '';
+    if (/\bsrc\s*=/.test(attrs)) return /(?:bootstrap\.bundle\.min|interaction-motion|dispatch-rule-times|departure-rule-days|debounce-passengers|queue-sync)\.js/.test(attrs) ? tag : '';
+    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl/.test(code) ? tag : '';
   });
 }
 
@@ -207,6 +207,55 @@ async function themeTokens(page) {
     probe.remove(); return values;
   });
 }
+
+test('help accents and queue totals follow the role theme while Boarding remains green', {timeout:60000}, async () => {
+  for (const name of ['staff-guide','admin-guide','staff-manual','admin-manual','staff-queue','staff-password']) {
+    const context = await browser.newContext({viewport:{width:375,height:900}});
+    try {
+      const page = await context.newPage(), errors = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await page.goto(`${origin}/fixture/${name}?state=${name === 'staff-queue' ? 'many' : 'custom-theme'}`);
+      await page.addScriptTag({url:origin + '/js/ws-client.js'});
+      if (name === 'staff-password') {
+        assert.equal(await page.locator('#btnSubmitPassword').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgb(226, 232, 240)');
+        await page.locator('#current_password').fill('FixturePrevious123');
+        await page.locator('#verification_code').fill('123456');
+        await page.locator('#new_password').fill('FixtureUpdated123');
+        await page.locator('#confirm_password').fill('FixtureUpdated123');
+        assert.equal(await page.locator('#btnSubmitPassword').evaluate(el=>el.classList.contains('is-valid-form')), true);
+      }
+      for (const primary of ['#7040b0','#fbbf24']) {
+        const staff = name.startsWith('staff');
+        await page.evaluate(({primary,staff}) => applyLiveBranding({category:'theme', [staff ? 'theme_staff_primary' : 'theme_admin_primary']:primary}), {primary,staff});
+        await page.evaluate(() => Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {}))));
+        const colors = await themeTokens(page);
+        if (name.endsWith('guide')) {
+          const actual = await page.locator('.help-header-icon').evaluate(icon => ({background:getComputedStyle(icon).backgroundColor,color:getComputedStyle(icon).color}));
+          assert.deepEqual(actual, {background:colors['primary-soft'],color:colors['primary-dark']});
+          assert.equal(await page.locator('.accordion-header-icon').first().evaluate(el=>getComputedStyle(el).color), colors.primary);
+        } else if (name.endsWith('manual')) {
+          const step = await page.locator('.step-number').first().evaluate(el => ({background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color}));
+          assert.deepEqual(step,{background:colors['primary-soft'],color:colors['primary-dark']});
+          assert.equal(await page.locator('.manual-pill-btn.active').evaluate(el=>getComputedStyle(el).backgroundColor), colors.primary);
+          assert.equal(await page.locator('.manual-pill-btn.active').evaluate(el=>getComputedStyle(el).color), colors['on-primary']);
+          assert.equal(await page.locator('.manual-header .manual-title').evaluate(el=>getComputedStyle(el).color), colors['on-primary']);
+          assert.equal(await page.locator('.manual-header .manual-subtitle').evaluate(el=>getComputedStyle(el).color), colors['on-primary']);
+          assert.ok((await page.locator('.manual-header .btn-back').evaluateAll(elements=>elements.map(el=>getComputedStyle(el).color))).every(color=>color === colors['on-primary']));
+          assert.equal(await page.locator('.manual-header .btn-print-outline').evaluate(el=>getComputedStyle(el).color), colors['on-primary']);
+        } else if (name === 'staff-queue') {
+          const count = await page.locator('[data-queue-order-count]').first().evaluate(el => ({background:getComputedStyle(el).backgroundColor,color:getComputedStyle(el).color}));
+          assert.deepEqual(count,{background:colors['primary-soft'],color:colors['primary-dark']});
+          assert.equal(await page.locator('.queue-order-boarding-badge').first().evaluate(el=>getComputedStyle(el).backgroundColor), 'rgb(25, 135, 84)');
+        } else {
+          assert.equal(await page.locator('#btnSubmitPassword').evaluate(el=>getComputedStyle(el).backgroundColor), colors.primary);
+          assert.equal(await page.locator('#btnSubmitPassword').evaluate(el=>getComputedStyle(el).color), colors['on-primary']);
+          assert.equal(await page.locator('#systemWarningOkBtn').evaluate(el=>getComputedStyle(el).color), colors['on-primary']);
+        }
+      }
+      assert.deepEqual(errors, []);
+    } finally {await context.close();}
+  }
+});
 
 test('logout accents and shared notices follow saved and live role themes, including light colors', { timeout: 90000 }, async () => {
   for (const [name, role] of [['staff-rule-edit', ''], ['admin-rules', ''], ['admin-rules', 'super_admin']]) {

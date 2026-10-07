@@ -32,7 +32,7 @@ function get_system_setting(string $key, $default = null) {
     ] : [];
     return $theme[$key] ?? $default;
 }
-if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content'], true)) {
+if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content', 'staff-guide', 'admin-guide'], true)) {
     // Keep the real footer/modals while stubbing only managed settings/config.
     final class FixtureContentManagement { public static function fields(): array { return []; } }
     class_alias(FixtureContentManagement::class, 'Config\\ContentManagement');
@@ -125,7 +125,7 @@ $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Pal
 $vehicle['status'] = 'active';
 $fixtureData = [
     'title' => 'Fixture', 'body_class' => $fixtureRole . '-theme', 'token' => 'fixture-token', 'error' => null,
-    'masked_email' => 'f***@example.com', 'invalid' => false, 'noRoutesAssigned' => false,
+    'masked_email' => 'f***@example.com', 'has_email' => true, 'has_active_token' => false, 'invalid' => false, 'noRoutesAssigned' => false,
     'announcements' => [], 'breadcrumb_current' => 'Home', 'skip_breadcrumb' => true,
     'queueRoutes' => [
         ['id'=>1, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>$longValue, 'round_number'=>1, 'round_choices'=>[1,2,3], 'round_intervals'=>[1=>20,2=>25,3=>30]],
@@ -335,6 +335,8 @@ $views = [
     'guest-contact-verification' => 'public/enhanced_dashboard',
     'guest-contact-verification-content' => 'partials/guest-contact-verification',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
+    'staff-password' => 'auth/change_password', 'staff-guide' => 'help/dispatcher', 'admin-guide' => 'help/admin',
+    'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
