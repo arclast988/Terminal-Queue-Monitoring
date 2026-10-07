@@ -24,7 +24,7 @@ test.before(async () => {
     const url = new URL(req.url,'http://fixture');
     if (url.pathname === '/fixture.svg') { res.setHeader('Content-Type','image/svg+xml'); return res.end('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><circle cx="32" cy="32" r="30" fill="#475569"/></svg>'); }
     if (url.pathname === '/vehicles' || url.pathname === '/vehicle-edit') {
-      res.setHeader('Content-Type','text/html'); return res.end(fixture(url.pathname === '/vehicles' ? 'admin-vehicles' : 'admin-vehicle-edit','dispatch-register',url.searchParams.get('role') || 'admin'));
+      res.setHeader('Content-Type','text/html'); return res.end(fixture(url.pathname === '/vehicles' ? 'admin-vehicles' : 'admin-vehicle-edit',url.searchParams.get('state') === 'dispatch-order-difference' ? 'dispatch-order-difference' : 'dispatch-register',url.searchParams.get('role') || 'admin'));
     }
     if (url.pathname === '/staff/queue') { refreshes++; res.setHeader('Content-Type','text/html'); return res.end(fixture('staff-queue',queueVariant,'staff')); }
     if (url.pathname === '/api/queue-status') { res.setHeader('Content-Type','application/json'); return res.end(JSON.stringify({success:true,queue:[],sync_token:'unchanged',service_date:serviceDate})); }
@@ -90,12 +90,35 @@ test('register and edit preserve a valid daily starting order with usable layout
     if (role==='admin' && width===375) await screenshot(page,'register-phone');
     await page.goto(origin+'/vehicle-edit?role='+role);
     assert.equal(await page.locator('#dispatch_order').inputValue(),'2');
+    assert.equal(await page.locator('#current_dispatch_position').inputValue(),'2');
     await page.locator('#dispatch_order').fill('1');
     assert.equal(await page.locator('#dispatch_order').evaluate(input=>new FormData(input.form).get('dispatch_order')),'1');
     await fits(page,'#dispatch_order',width);
+    await fits(page,'#current_dispatch_position',width);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
     if (role==='admin' && width===375) await screenshot(page,'edit-phone');
     if (role==='admin' && width===1280) await screenshot(page,'edit-desktop');
+    assert.deepEqual(errors,[]); await page.close();
+  }
+});
+
+test('editing register order three distinguishes today\'s position from saved midnight starting order nine', async()=>{
+  for (const role of ['admin','super_admin']) for (const width of [375,1280]) {
+    const page=await browser.newPage({viewport:{width,height:900}}); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+    const params='?role='+role+'&state=dispatch-order-difference';
+    await page.goto(origin+'/vehicles'+params);
+    assert.equal((await page.locator('tr[data-vehicle-id="209"] .row-number').innerText()).trim(),'3');
+    await page.goto(origin+'/vehicle-edit'+params);
+    assert.equal(await page.locator('#current_dispatch_position').inputValue(),'3');
+    assert.equal(await page.locator('#current_dispatch_position').evaluate(input=>input.readOnly),true);
+    assert.equal(await page.locator('#dispatch_order').inputValue(),'9');
+    assert.match(await page.locator('#dispatch-order-help').innerText(),/12:00 AM Philippine time/);
+    assert.match(await page.locator('#dispatch-order-help').innerText(),/Today's order changes after departures/);
+    await page.locator('#dispatch_order').fill('4');
+    assert.deepEqual(await page.locator('#editVehicleForm').evaluate(form=>({start:new FormData(form).get('dispatch_order'),current:new FormData(form).has('current_dispatch_position')})),{start:'4',current:false});
+    await fits(page,'#dispatch_order',width); await fits(page,'#current_dispatch_position',width);
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
+    if (role==='admin') await screenshot(page,'order-difference-'+width);
     assert.deepEqual(errors,[]); await page.close();
   }
 });

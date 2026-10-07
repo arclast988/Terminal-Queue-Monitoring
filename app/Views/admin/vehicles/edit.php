@@ -206,6 +206,15 @@ select.form-select {
             </div>
 
             <div class="row g-3">
+                <div class="col-12 col-md-6 vehicle-current-order-field">
+                    <label for="current_dispatch_position" class="form-label-modern">Today's route order (#)</label>
+                    <input type="text" class="input-modern" id="current_dispatch_position"
+                        value="<?= esc((string) ($vehicle['dispatch_position'] ?? 'Not in active route order')) ?>"
+                        readonly aria-describedby="current-dispatch-order-help">
+                    <div id="current-dispatch-order-help" class="form-text-modern">
+                        Matches the # in Vehicle Register for the saved route. Changes as vehicles depart.
+                    </div>
+                </div>
                 <?= view('admin/vehicles/dispatch-order-field', ['dispatchOrder' => $vehicle['dispatch_order'] ?? '']) ?>
             </div>
             <div class="d-flex flex-wrap gap-2 mt-4">
@@ -716,4 +725,3 @@ function updateEditTypeFallback(select) {
 </script>
 
 <?= $this->include('templates/footer') ?>
-

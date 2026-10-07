@@ -23,13 +23,7 @@ class Vehicles extends BaseController
 
     public function index()
     {
-        // Join routes to get assigned route info - only active routes display as assigned
-        $vehicles = $this->vehicleModel
-            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.terminal_id as route_terminal_id, routes.vehicle_type as route_vehicle_type, routes.status as route_status')
-            ->join('routes', "routes.id = vehicles.default_route_id AND routes.status = 'active'", 'left')
-            ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
-            ->findAll();
-        $vehicles = VehicleModel::sortForRegister($vehicles, date('Y-m-d'));
+        $vehicles = $this->vehicleModel->getRegisterVehicles();
 
         $data = [
             'title' => 'Vehicle Register',
@@ -268,6 +262,14 @@ class Vehicles extends BaseController
         $vehicle = $this->vehicleModel->find($id);
         if (!$vehicle) {
             return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
+        }
+
+        $vehicle['dispatch_position'] = null;
+        foreach ($this->vehicleModel->getRegisterVehicles() as $registered) {
+            if ((int) $registered['id'] === (int) $id) {
+                $vehicle = $registered;
+                break;
+            }
         }
 
         $data = [
@@ -533,7 +535,7 @@ class Vehicles extends BaseController
 
         $redirectTab = $this->request->getPost('redirect_tab') ?? $this->request->getGet('tab') ?? 'archived';
 
-        if ($this->vehicleModel->delete($id)) {
+        if ($this->vehicleModel->deleteInDispatchOrder((int) $id)) {
             $this->logActivity('Delete vehicle', 'Permanently deleted vehicle ' . $vehicle['plate_number'] . '.');
             $this->broadcastUpdate('queue_update', ['action' => 'vehicle_deleted', 'id' => (int) $id]);
             return redirect()->to('/admin/vehicles' . ($redirectTab === 'archived' ? '?tab=archived' : ''))->with('success', 'Vehicle "' . $vehicle['plate_number'] . '" permanently deleted.');
@@ -548,7 +550,9 @@ class Vehicles extends BaseController
             return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
         }
 
-        $this->vehicleModel->update($id, ['status' => 'archived']);
+        if (!$this->vehicleModel->saveInDispatchOrder(['status' => 'archived'], (int) $id)) {
+            return redirect()->to('/admin/vehicles')->with('error', 'The vehicle could not be deactivated. Please try again.');
+        }
 
         // Cancel any active trips for this archived vehicle so it doesn't stay stranded in the live queue
         $queueModel = new \App\Models\QueueModel();
@@ -577,7 +581,9 @@ class Vehicles extends BaseController
             return redirect()->to('/admin/vehicles')->with('error', 'Vehicle not found.');
         }
 
-        $this->vehicleModel->update($id, ['status' => 'active']);
+        if (!$this->vehicleModel->saveInDispatchOrder(['status' => 'active'], (int) $id)) {
+            return redirect()->to('/admin/vehicles?tab=archived')->with('error', 'The vehicle could not be activated. Please try again.');
+        }
         $this->logActivity('Activate vehicle', 'Activated vehicle ' . $vehicle['plate_number'] . '.');
         $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id]);
 
@@ -614,7 +620,7 @@ class Vehicles extends BaseController
         if ($action === 'deactivate') {
             foreach ($vehicles as $v) {
                 if (($v['status'] ?? 'active') !== 'archived') {
-                    $this->vehicleModel->update($v['id'], ['status' => 'archived']);
+                    if (!$this->vehicleModel->saveInDispatchOrder(['status' => 'archived'], (int) $v['id'])) continue;
                     $activeTrips = $queueModel->where('vehicle_id', $v['id'])
                         ->whereIn('status', ['waiting', 'boarding'])
                         ->findAll();
@@ -634,7 +640,7 @@ class Vehicles extends BaseController
         } elseif ($action === 'activate') {
             foreach ($vehicles as $v) {
                 if (($v['status'] ?? 'active') === 'archived') {
-                    $this->vehicleModel->update($v['id'], ['status' => 'active']);
+                    if (!$this->vehicleModel->saveInDispatchOrder(['status' => 'active'], (int) $v['id'])) continue;
                     $count++;
                 }
             }
@@ -651,8 +657,7 @@ class Vehicles extends BaseController
                             @unlink(FCPATH . $v['photo']);
                         }
                     }
-                    $this->vehicleModel->delete($v['id']);
-                    $count++;
+                    if ($this->vehicleModel->deleteInDispatchOrder((int) $v['id'])) $count++;
                 }
             }
             $this->logActivity('Bulk delete vehicles', "Permanently deleted $count archived vehicle(s).");

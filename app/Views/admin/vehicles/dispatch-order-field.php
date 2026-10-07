@@ -5,7 +5,8 @@
         min="1" max="9999" step="1" inputmode="numeric" placeholder="Last in route"
         aria-describedby="dispatch-order-help">
     <div id="dispatch-order-help" class="form-text-modern">
-        Starting position for this destination. Leave blank to place last; other vehicles shift automatically.
-        Departed vehicles move to the end. Resets at 12:00 AM Philippine time.
+        Saved starting position for this destination at 12:00 AM Philippine time.
+        Active vehicles use consecutive positions. Leave blank to place last; other vehicles shift automatically.
+        Today's order changes after departures, so it can differ from this starting position.
     </div>
 </div>
