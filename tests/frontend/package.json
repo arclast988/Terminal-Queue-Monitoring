@@ -4,7 +4,7 @@
   "scripts": {
     "test": "node --test interactions.test.cjs auth-background.test.cjs session-guard.test.cjs",
     "test:browser": "node --test interactions.browser.cjs page-transitions.browser.cjs",
-    "test:responsive": "node --test responsive.browser.cjs time-theme.browser.cjs report-filters.browser.cjs vehicle-dispatch.browser.cjs",
+    "test:responsive": "node --test responsive.browser.cjs time-theme.browser.cjs report-filters.browser.cjs vehicle-dispatch.browser.cjs vehicle-type-photos.browser.cjs",
     "test:background": "node --test backgrounds.browser.cjs",
     "test:pending": "node --test pending-buttons.browser.cjs",
     "test:styles": "node --test stylesheets.browser.cjs",

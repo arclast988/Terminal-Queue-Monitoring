@@ -11,7 +11,7 @@
     <script src="<?= app_asset_url('assets/js/session-guard.js') ?>" data-status-url="<?= base_url('auth/session-status') ?>" data-login-url="<?= base_url('login') ?>"></script>
     <?php endif; ?>
     <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
-    <script src="<?= base_url('js/vehicle-type-live.js?v=20260905') ?>"></script>
+    <script src="<?= app_asset_url('js/vehicle-type-live.js') ?>"></script>
 
     <script>
         // Disable Bootstrap transitions/animations completely

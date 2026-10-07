@@ -161,11 +161,14 @@ if (! function_exists('vehicle_type_key')) {
 if (! function_exists('get_db_vehicle_types')) {
     function get_db_vehicle_types(bool $forceRefresh = false): array
     {
+        // Older cached metadata prefixed remote photos with the app's base URL.
+        $cacheKey = 'db_vehicle_types_v2';
         $cache = function_exists('cache') ? cache() : null;
         if ($forceRefresh && $cache) {
             $cache->delete('db_vehicle_types');
+            $cache->delete($cacheKey);
         } elseif ($cache) {
-            $fromCache = $cache->get('db_vehicle_types');
+            $fromCache = $cache->get($cacheKey);
             if (is_array($fromCache)) {
                 return $fromCache;
             }
@@ -181,14 +184,15 @@ if (! function_exists('get_db_vehicle_types')) {
                         $key = vehicle_type_key($r['slug']);
                         $photoUrl = null;
                         if (!empty($r['photo'])) {
-                            $relPath = ltrim(str_replace(['\\'], '/', $r['photo']), '/');
-                            $fc = defined('FCPATH') ? FCPATH : (defined('ROOTPATH') ? rtrim(ROOTPATH, '/\\') . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR : '');
-                            $fullPath = $fc ? (rtrim($fc, '/\\') . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relPath)) : '';
-                            if ($fullPath && is_file($fullPath)) {
-                                $mtime = @filemtime($fullPath);
-                                $photoUrl = base_url($relPath) . ($mtime ? '?v=' . $mtime : '');
+                            $photoPath = trim((string) $r['photo']);
+                            if (str_starts_with($photoPath, 'http://') || str_starts_with($photoPath, 'https://')) {
+                                $photoUrl = media_url($photoPath);
                             } else {
-                                $photoUrl = base_url($relPath);
+                                $relPath = ltrim(str_replace(['\\'], '/', $photoPath), '/');
+                                $fc = defined('FCPATH') ? FCPATH : (defined('ROOTPATH') ? rtrim(ROOTPATH, '/\\') . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR : '');
+                                $fullPath = $fc ? (rtrim($fc, '/\\') . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $relPath)) : '';
+                                $mtime = $fullPath && is_file($fullPath) ? @filemtime($fullPath) : false;
+                                $photoUrl = media_url($relPath) . ($mtime ? '?v=' . $mtime : '');
                             }
                         }
                         $cached[$key] = [
@@ -206,7 +210,7 @@ if (! function_exists('get_db_vehicle_types')) {
         }
 
         if ($cache && !empty($cached)) {
-            $cache->save('db_vehicle_types', $cached, 3600);
+            $cache->save($cacheKey, $cached, 3600);
         }
 
         return $cached;

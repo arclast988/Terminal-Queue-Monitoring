@@ -459,7 +459,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     <div class="vehicle-type-cell">
                                         <?php if (!empty($displayPhoto)): ?>
                                             <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>" style="<?= $hasVehPhoto ? 'border-radius: 8px; overflow: hidden; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #cbd5e1; background: #ffffff;' : '' ?>">
-                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>" loading="lazy" decoding="async"
+                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>" loading="lazy" decoding="async" class="<?= $hasVehPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasVehPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vehicle['type'])) . '"') ?>
                                                     style="<?= $hasVehPhoto ? 'width: 100%; height: 100%; object-fit: cover;' : 'height:28px; width:auto; max-width:32px; object-fit:contain;' ?>" 
                                                     title="<?= $hasVehPhoto ? ('Vehicle ' . esc($vehicle['plate_number']) . ' (' . vehicle_type_label($vehicle['type']) . ')') : vehicle_type_label($vehicle['type']) ?>">
                                             </span>

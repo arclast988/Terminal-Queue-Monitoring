@@ -91,7 +91,7 @@ class VehicleTypes extends BaseController
             'name'   => $name,
             'color'  => $color,
             'icon'   => $icon,
-            'photo'  => $photoRelPath ? base_url($photoRelPath) : null,
+            'photo'  => $photoRelPath ? media_url($photoRelPath) : null,
             'colors' => get_db_vehicle_types(),
         ]);
 
@@ -106,7 +106,7 @@ class VehicleTypes extends BaseController
                     'slug'  => $slug,
                     'color' => $color,
                     'icon'  => $icon,
-                    'photo' => $photoRelPath ? base_url($photoRelPath) : null,
+                    'photo' => $photoRelPath ? media_url($photoRelPath) : null,
                 ],
             ]);
         }
