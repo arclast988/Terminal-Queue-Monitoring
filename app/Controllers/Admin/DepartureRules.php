@@ -186,15 +186,14 @@ class DepartureRules extends BaseController
         return is_scalar($day) && preg_match('/^[1-7]$/', (string) $day) ? [(int) $day] : null;
     }
 
-    private function findDayOverlap(array $candidates, array $days): ?array
+    private function duplicateRoundResponse(array $conflict, array $days, ?int $routeId)
     {
-        foreach ($candidates as $candidate) {
-            $existingDays = departure_rule_days($candidate);
-            // Preserve specific-day overrides of an every-day fallback.
-            if ((count($days) === 7) !== (count($existingDays) === 7)) continue;
-            if (array_intersect($days, $existingDays)) return $candidate;
-        }
-        return null;
+        $sharedDays = array_values(array_intersect($days, departure_rule_days($conflict)));
+        $dayLabel = departure_rule_day_label(['days_of_week' => $sharedDays]);
+        $scope = $routeId === null ? 'terminal' : 'destination';
+        $msg = 'Round ' . (int) $conflict['round_number'] . ' already exists for this ' . $scope
+            . ' on ' . $dayLabel . '. Edit that rule or choose a new round.';
+        return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['round_number' => $msg]);
     }
 
     public function index()
@@ -327,25 +326,10 @@ class DepartureRules extends BaseController
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['time' => $msg]);
         }
 
-        // Vehicle-type routes sharing a destination use the same rule scope.
-        $overlapQuery = $this->ruleModel
-            ->where('time_from <', $timeTo)
-            ->where('time_to >', $timeFrom);
-        if ($routeId !== null) {
-            $overlapQuery->where('terminal_id', $terminalId)->whereIn('route_id',
-                $this->routeModel->getDestinationRouteIds($terminalId, $route['destination']));
-        } else {
-            $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
-        }
-        $overlap = $this->findDayOverlap($overlapQuery->where('round_number', $round)->findAll(), $days);
-        if ($overlap) {
-            $msg = 'This time range overlaps with an existing rule: ' . operations_time($overlap['time_from']) . ' - ' . operations_time($overlap['time_to']) . ' (' . ($overlap['label'] ?? 'No label') . ').';
-            return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
-        }
 
         $label       = $this->request->getPost('label') ?: null;
 
-        $this->ruleModel->save([
+        $conflict = $this->ruleModel->saveUniqueDayRound([
             'terminal_id'  => $terminalId,
             'route_id'     => $routeId,
             'time_from'    => $timeFrom,
@@ -356,7 +340,7 @@ class DepartureRules extends BaseController
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
-        if ($routeId !== null) $this->ruleModel->compactRounds($terminalId, $routeId);
+        if ($conflict) return $this->duplicateRoundResponse($conflict, $days, $routeId);
 
         $this->logActivity('Create departure rule', 'Added departure rule: ' . ($label ?? 'Unlabeled') . ' (' . operations_time($timeFrom) . ' - ' . operations_time($timeTo) . ', ' . $waitMinutes . ' min).');
 
@@ -453,22 +437,6 @@ class DepartureRules extends BaseController
             return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['time' => $msg]);
         }
 
-        // Check the whole destination scope, excluding this rule.
-        $overlapQuery = $this->ruleModel
-            ->where('time_from <', $timeTo)
-            ->where('time_to >', $timeFrom)
-            ->where('id !=', $id);
-        if ($routeId !== null) {
-            $overlapQuery->where('terminal_id', $terminalId)->whereIn('route_id',
-                $this->routeModel->getDestinationRouteIds($terminalId, $route['destination']));
-        } else {
-            $overlapQuery->where('terminal_id', $terminalId)->where('route_id', null);
-        }
-        $overlap = $this->findDayOverlap($overlapQuery->where('round_number', $round)->findAll(), $days);
-        if ($overlap) {
-            $msg = 'This time range overlaps with an existing rule: ' . operations_time($overlap['time_from']) . ' - ' . operations_time($overlap['time_to']) . ' (' . ($overlap['label'] ?? 'No label') . ').';
-            return redirect()->back()->withInput()->with('error', $msg)->with('errors', ['overlap' => $msg]);
-        }
 
         $oldRule     = $this->ruleModel->find($id);
         $label       = $this->request->getPost('label') ?: null;
@@ -495,7 +463,8 @@ class DepartureRules extends BaseController
             return $this->noChangesResponse();
         }
 
-        $this->ruleModel->update($id, [
+        $conflict = $this->ruleModel->saveUniqueDayRound([
+            'id'           => (int) $id,
             'terminal_id'  => $terminalId,
             'route_id'     => $routeId,
             'time_from'    => $timeFrom,
@@ -506,13 +475,12 @@ class DepartureRules extends BaseController
             'wait_minutes' => $waitMinutes,
             'label'        => $label
         ]);
-        if ($routeId !== null) $this->ruleModel->compactRounds($terminalId, $routeId);
+        if ($conflict) return $this->duplicateRoundResponse($conflict, $days, $routeId);
 
         $this->logActivity('Update departure rule', 'Updated departure rule: ' . ($oldRule['label'] ?? '#' . $id) . '. Before: ' . $oldRule['wait_minutes'] . ' min (' . operations_time($oldRule['time_from']) . '-' . operations_time($oldRule['time_to']) . '). After: ' . $waitMinutes . ' min (' . operations_time($timeFrom) . '-' . operations_time($timeTo) . ').');
 
         $oldRouteId = !empty($oldRule['route_id']) ? (int) $oldRule['route_id'] : null;
         if ((int) $oldRule['terminal_id'] !== $terminalId || $oldRouteId !== $routeId) {
-            if ($oldRouteId !== null) $this->ruleModel->compactRounds((int) $oldRule['terminal_id'], $oldRouteId);
             $this->recalculateRuleScope((int) $oldRule['terminal_id'], $oldRouteId);
         }
         $this->recalculateRuleScope($terminalId, $routeId);

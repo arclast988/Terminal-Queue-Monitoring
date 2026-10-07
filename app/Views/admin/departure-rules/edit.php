@@ -227,24 +227,24 @@
         min-width: 48px;
     }
     .military-time-popover {
-        position: static;
-        grid-column: 1 / -1;
-        grid-row: 2;
-        width: 100%;
+        position: absolute;
+        top: calc(100% + 4px);
+        right: 0;
+        width: max-content;
         max-width: 100%;
-        margin-top: 8px;
-        padding: 10px 8px;
+        margin-top: 0;
+        padding: 8px 10px;
     }
-    .military-time-popover.open { justify-content: center; gap: 8px; }
-    .tp-btn { width: 48px; height: 44px; }
+    .military-time-popover.open { justify-content: center; gap: 7px; }
+    .military-time-popover .tp-btn { width: 54px; height: 32px; min-height: 32px; }
     .military-time-popover .tp-input {
-        width: 48px;
+        width: 54px !important;
         height: 44px;
         min-height: 44px !important;
         padding: 0 !important;
         font-size: 18px !important;
     }
-    .tp-set-btn { min-height: 0; padding-inline: 12px; }
+    .military-time-popover .tp-set-btn { min-height: 114px; padding: 0 14px; }
 }
 </style>
 

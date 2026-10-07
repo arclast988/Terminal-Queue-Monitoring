@@ -394,20 +394,20 @@ table:not(.selection-mode-active) .bulk-select-cell {
             </div>
         </div>
         <div class="table-responsive">
-            <table class="table-modern" id="vehicles-table">
+            <table class="table-modern management-list-table" id="vehicles-table">
                 <thead>
                     <tr>
                         <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
-                        <th>#</th>
-                        <th>Plate Number</th>
-                        <th>Operator Name</th>
-                        <th>Driver Name</th>
-                        <th>Vehicle Type</th>
-                        <th>Assigned Route</th>
-                        <th>Capacity</th>
-                        <th>Status</th>
-                        <th>Registered</th>
-                        <th>Action</th>
+                        <th class="management-id-col">#</th>
+                        <th class="management-plate-col">Plate Number</th>
+                        <th class="management-person-col">Operator Name</th>
+                        <th class="management-person-col">Driver Name</th>
+                        <th class="management-type-col">Vehicle Type</th>
+                        <th class="management-route-col">Assigned Route</th>
+                        <th class="management-count-col">Capacity</th>
+                        <th class="management-status-col">Status</th>
+                        <th class="management-date-col">Registered</th>
+                        <th class="management-actions-col">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -486,8 +486,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                         <i class="bi bi-calendar3 text-muted me-1" style="font-size: 12px;"></i><?= !empty($vehicle['created_at']) ? date('M d, Y', strtotime($vehicle['created_at'])) : 'N/A' ?>
                                     </div>
                                 </td>
-                                <td data-label="Action" style="white-space: nowrap;">
-                                    <div class="d-flex gap-2 justify-content-end flex-nowrap">
+                                <td data-label="Action" class="management-actions-col">
+                                    <div class="d-flex gap-2 justify-content-end flex-nowrap management-row-actions">
                                         <?php 
                                             $modalRouteLabel = (!empty($vehicle['route_destination']) && ($vehicle['route_status'] ?? 'active') === 'active')
                                                 ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination'])
@@ -3993,6 +3993,5 @@ body.modal-open [id^="editVehicleTypeModal"],
 </script>
 
 <?= view('templates/footer') ?>
-
 
 

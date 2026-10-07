@@ -186,6 +186,12 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
     if (($argv[4] ?? '') === 'conflicting-round') {
         $fixtureData['existingRules'][] = array_replace($fixtureData['rule'], ['id'=>3, 'round_number'=>3]);
     }
+    if (($argv[4] ?? '') === 'unique-day-rounds') {
+        $fixtureData['terminals'] = [['id'=>1, 'name'=>'Villaba']];
+        $fixtureData['routes'] = [['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC'], ['id'=>2, 'terminal_id'=>1, 'destination'=>'TACLOBAN']];
+        $fixtureData['rule'] = array_replace($fixtureData['rule'], ['route_id'=>2, 'route_destination'=>'TACLOBAN', 'round_scope'=>'1|TACLOBAN', 'days_of_week'=>null]);
+        $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'route_id'=>1, 'route_destination'=>'ORMOC', 'round_scope'=>'1|ORMOC', 'days_of_week'=>'1', 'time_from'=>'06:00:00', 'time_to'=>'17:00:00'])];
+    }
     if (($argv[4] ?? '') === 'moving-round') {
         $fixtureData['terminals'] = [['id'=>1, 'name'=>'Villaba']];
         $fixtureData['routes'] = [['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC'], ['id'=>2, 'terminal_id'=>1, 'destination'=>'TACLOBAN'], ['id'=>3, 'terminal_id'=>1, 'destination'=>'BATO']];
@@ -300,4 +306,3 @@ $html = $fixtureRenderer->render($views[$fixturePage]);
 if ($fixtureRole !== null && !in_array($fixturePage, $managementPages, true)) $html .= '</div></body></html>';
 require_once dirname(__DIR__, 2) . '/app/Libraries/InitialStyles.php';
 echo \App\Libraries\InitialStyles::prepare($html);
-

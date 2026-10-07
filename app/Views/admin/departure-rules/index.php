@@ -390,17 +390,17 @@
     </div>
     <div class="modern-card-body">
         <div class="table-responsive">
-            <table class="table-modern" id="departure-rules-table">
+            <table class="table-modern management-list-table" id="departure-rules-table">
                 <thead>
                     <tr>
-                        <th>Terminal</th>
-                        <th>Destination</th>
-                        <th>Day / Round</th>
-                        <th><?= ($prefix ?? 'admin') === 'staff' ? 'Start time (AM/PM)' : 'Time From (HH:MM)' ?></th>
-                        <th><?= ($prefix ?? 'admin') === 'staff' ? 'End time (AM/PM)' : 'Time To (HH:MM)' ?></th>
-                        <th><?= ($prefix ?? 'admin') === 'staff' ? 'Interval (minutes)' : 'Wait Time (HH:MM)' ?></th>
-                        <th>Label</th>
-                        <th>Action</th>
+                        <th class="management-terminal-col">Terminal</th>
+                        <th class="management-destination-col">Destination</th>
+                        <th class="management-day-col">Day / Round</th>
+                        <th class="management-clock-col"><?= ($prefix ?? 'admin') === 'staff' ? 'Start time (AM/PM)' : 'Time From (HH:MM)' ?></th>
+                        <th class="management-clock-col"><?= ($prefix ?? 'admin') === 'staff' ? 'End time (AM/PM)' : 'Time To (HH:MM)' ?></th>
+                        <th class="management-interval-col"><?= ($prefix ?? 'admin') === 'staff' ? 'Interval (minutes)' : 'Wait Time (HH:MM)' ?></th>
+                        <th class="management-label-col">Label</th>
+                        <th class="management-actions-col">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -442,8 +442,8 @@
                                     <span style="color: #475569; font-weight: 500; font-size: 13.5px;"><?= esc(!empty($rule['label']) && $rule['label'] !== '-' ? $rule['label'] : '—') ?></span>
                                 </td>
                                 <?php if (!empty($rule['can_manage']) || session()->get('role') !== 'staff'): ?>
-                                <td data-label="Action">
-                                    <div class="d-flex gap-2 justify-content-end">
+                                <td data-label="Action" class="management-actions-col">
+                                    <div class="d-flex gap-2 justify-content-end management-row-actions">
                                         <a href="<?= base_url($prefix . '/departure-rules/edit/'.$rule['id']) ?>" class="btn-modern btn-action-edit btn-modern-sm rule-edit-link" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>

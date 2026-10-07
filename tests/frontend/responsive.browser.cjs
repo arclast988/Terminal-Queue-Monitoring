@@ -173,6 +173,46 @@ test('management pages keep long values and primary controls inside phone, table
   assert.deepEqual(failures, []);
 });
 
+
+
+test('management actions stay usable while wide tables scroll and remain labeled in phone cards', { timeout: 90000 }, async t => {
+  for (const [name, id] of [['admin-terminals','terminals-table'], ['admin-vehicles','vehicles-table'], ['admin-rules','departure-rules-table'], ['admin-announcements','announcements-table']]) {
+    for (const [width, height] of [[844, 600], [1280, 900], [320, 900], [375, 900], [768, 1024]]) {
+      const { page, context, errors } = await open(t, name, width, height, '');
+      const table = page.locator('#' + id);
+      const cell = table.locator('tbody .management-actions-col').first();
+      const actions = cell.locator('.management-row-actions');
+      await actions.scrollIntoViewIfNeeded();
+      if (width > 768) {
+        const scroll = table.locator('..');
+        const edges = [];
+        for (const fraction of [0, 0.5, 1]) {
+          await scroll.evaluate((el, fraction) => { el.scrollLeft = (el.scrollWidth - el.clientWidth) * fraction; }, fraction);
+          await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+          const result = await cell.evaluate(el => {
+            const box = el.getBoundingClientRect(), parent = el.closest('.table-responsive').getBoundingClientRect();
+            return { left:box.left, right:box.right, parentLeft:parent.left, parentRight:parent.right, background:getComputedStyle(el).backgroundColor };
+          });
+          assert.ok(result.left >= result.parentLeft - 1 && result.right <= result.parentRight + 1, JSON.stringify({name,width,fraction,result}));
+          assert.ok(Math.abs(result.right - result.parentRight) <= 3, JSON.stringify({name,width,fraction,result}));
+          assert.notEqual(result.background, 'rgba(0, 0, 0, 0)', name + ' has a transparent action column');
+          edges.push(result.right);
+        }
+        assert.ok(Math.max(...edges) - Math.min(...edges) <= 1, name + ' actions moved with the table');
+      }
+      checkBounds(await bounds(page, ['#' + id + ' .management-row-actions .btn-modern']), name + ' actions ' + width);
+      const targets = await actions.locator('.btn-modern').evaluateAll(buttons => buttons.map(button => {
+        const box = button.getBoundingClientRect(), label = button.querySelector('.action-label');
+        return { height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
+      }));
+      assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 34) - 1), JSON.stringify({name,width,targets}));
+      if (width === 375 || width === 1280) await screenshot(page, name + '-management-actions-' + width, false);
+      assert.deepEqual(errors, [], name + ' ' + width);
+      await context.close();
+    }
+  }
+});
+
 test('vehicle modals preserve native fields, validation, focus and dismissal at small sizes and motion modes', { timeout: 60000 }, async t => {
   for (const [width, height, mode] of [[320, 568, 'full'], [844, 390, 'full'], [1280, 800, 'full'], [320, 568, 'lite'], [320, 568, 'reduced']]) {
     const { page, context, errors } = await open(t, 'admin-vehicles', width, height, 'long=1', mode);
