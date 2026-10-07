@@ -494,5 +494,19 @@ button.queue-route-chip.active .chip-count {
     min-width: 0;
     overflow-wrap: anywhere;
 }
-.vehicle-select-item .plate-number-box .badge-modern { white-space: nowrap; }
+.vehicle-select-item .plate-number-box .badge-modern {
+    font-family: var(--font-body, 'Outfit', sans-serif);
+    font-size: 12.5px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: 0.35px;
+    padding: 0.35rem 0.65rem;
+    white-space: nowrap;
+}
 .vehicle-select-item .plate-number-box + .vehicle-type-chip { flex-shrink: 0; }
+@media (max-width: 768px) {
+    .vehicle-select-item .plate-number-box .badge-modern {
+        font-size: 0.68rem;
+        padding: 0.2rem 0.5rem;
+    }
+}
