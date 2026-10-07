@@ -178,6 +178,16 @@ test('scrolling and zoom resize pause decorative photos and resume them after th
   await context.close();
 });
 
+test('WebKit page links navigate without native snapshots', {skip:engine!=='webkit',timeout:60000}, async t => {
+  const {page,context,errors}=await open(t);
+  await page.goto(origin+'/guest');
+  await navigate(page,'/fares');
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  assert.deepEqual(await page.evaluate(()=>window.transitionRecords),[]);
+  assert.deepEqual(errors,[]);
+  await context.close();
+});
+
 test('navigation handlers are ready while slow vendor styles are still loading', { timeout: 20000 }, async t => {
   const { page, context, errors } = await open(t);
   let releaseStyles;

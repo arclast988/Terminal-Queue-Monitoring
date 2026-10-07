@@ -1,5 +1,11 @@
 /* Presentation only: inputs, handlers and server-rendered content stay available. */
-@view-transition { navigation: auto; }
+/* Chromium snapshots are verified. WebKit uses normal navigation because
+   its native snapshot crashes when leaving a fully rendered live page.
+   This Chromium-specific capability keeps the opt-in out of other engines. */
+@view-transition { navigation: none; }
+@supports (-webkit-app-region: drag) {
+  @view-transition { navigation: auto; }
+}
 /* Let the browser allocate only the space its visible scrollbar needs. */
 html {
   scrollbar-gutter: auto;
