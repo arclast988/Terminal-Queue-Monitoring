@@ -130,6 +130,27 @@ async function navigate(page, to) {
   await page.waitForURL(origin + to);
 }
 
+test('phone and laptop headers fill the page without an empty scrollbar reservation', {timeout:90000}, async t => {
+  for (const width of [375,768,844,1280,1536]) {
+    const {page,context,errors}=await open(t,'full',false,{width,height:900});
+    for (const route of ['/guest','/staff/queue','/admin/dashboard','/login']) {
+      await page.goto(origin+route);
+      const edge=await page.evaluate(()=>{
+        const root=document.documentElement, body=document.body, header=document.querySelector('#site-header,.sticky-top-wrapper');
+        const width=Math.min(root.clientWidth,innerWidth);
+        return {width,root:root.getBoundingClientRect().right,body:body.getBoundingClientRect().right,
+          header:header?.getBoundingClientRect().right,overflow:root.scrollWidth>innerWidth+1};
+      });
+      assert.ok(Math.abs(edge.root-edge.width)<=1, `${route} ${width}: ${JSON.stringify(edge)}`);
+      assert.ok(Math.abs(edge.body-edge.width)<=1, `${route} ${width}: ${JSON.stringify(edge)}`);
+      if (edge.header!==undefined) assert.ok(Math.abs(edge.header-edge.width)<=1, `${route} ${width}: ${JSON.stringify(edge)}`);
+      assert.equal(edge.overflow,false);
+    }
+    assert.deepEqual(errors,[]);
+    await context.close();
+  }
+});
+
 test('scrolling and zoom resize pause decorative photos and resume them after the gesture', {timeout:60000}, async t => {
   const {page,context,errors} = await open(t);
   await page.goto(origin + '/guest?slideshow=1');

@@ -1,8 +1,8 @@
 /* Presentation only: inputs, handlers and server-rendered content stay available. */
 @view-transition { navigation: auto; }
-/* Short/long pages and scroll-locked menus keep the same content width. */
+/* Let the browser allocate only the space its visible scrollbar needs. */
 html {
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   background-color: #f8fafc;
 }
 /* Isolate full-screen decorative photos from the scrolling content. */
