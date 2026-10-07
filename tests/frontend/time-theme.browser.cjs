@@ -118,13 +118,11 @@ test('moving an edited departure rule offers the destination next round and subm
         });
         assert.deepEqual(await data(), { route: '2', round: '1' });
         await page.locator('#route_id').selectOption('1');
-        assert.deepEqual(await round.locator('option').allTextContents(), ['Round 1', 'New round 2']);
+        assert.deepEqual(await round.locator('option').allTextContents(), ['New round 2']);
         assert.equal(await round.isVisible(), true);
         assert.deepEqual(await data(), { route: '1', round: '2' });
         assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), false);
-        await round.selectOption('1');
-        assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), true);
-        await round.selectOption('2');
+        assert.deepEqual(await round.locator('option').evaluateAll(options => options.map(option => option.value)), ['2']);
         assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), false);
         assert.equal(await page.locator('#departureRuleForm').evaluate(form => form.checkValidity()), true);
         await page.locator('#route_id').selectOption('2');
@@ -135,6 +133,36 @@ test('moving an edited departure rule offers the destination next round and subm
         await page.locator('#route_id').selectOption('1');
         assert.deepEqual(await data(), { route: '1', round: '2' });
         assert.deepEqual(errors, [], `${name} ${role} ${width}`);
+      } finally { await page.close(); }
+    }
+  }
+});
+
+
+test('round assignments reserve a destination number only on overlapping selected weekdays', { timeout: 90000 }, async () => {
+  for (const [name, role] of [['staff-rule-edit',''], ['admin-rule-edit',''], ['admin-rule-edit','super_admin']]) {
+    for (const width of [375,1280]) {
+      const page = await browser.newPage({viewport:{width,height:900}});
+      const errors=[]; page.on('pageerror', error=>errors.push(error.message));
+      try {
+        await page.goto(origin + '/fixture/' + name + '?state=unique-day-rounds&role=' + role);
+        await page.locator('#route_id').selectOption('1');
+        const round = page.locator('#round_number');
+        assert.deepEqual(await round.locator('option').evaluateAll(options=>options.map(option=>option.value)), ['2']);
+        await page.locator('#ruleEveryDay').uncheck();
+        await page.locator('#ruleDays input[type="checkbox"][value="2"]').check();
+        const data = () => page.locator('#departureRuleForm').evaluate(form=>{
+          const values=new FormData(form); return {round:values.get('round_number'),days:values.getAll('days_of_week[]')};
+        });
+        assert.deepEqual(await data(), {round:'1',days:['2']});
+        await page.locator('#ruleDays input[type="checkbox"][value="1"]').check();
+        assert.deepEqual(await data(), {round:'2',days:['1','2']});
+        assert.deepEqual(await round.locator('option').evaluateAll(options=>options.map(option=>option.value)), ['2']);
+        assert.equal(await page.locator('#departureRuleForm').evaluate(form=>form.checkValidity()), true);
+        await page.locator('#ruleEveryDay').check();
+        await page.locator('#route_id').selectOption('2');
+        assert.deepEqual(await data(), {round:'1',days:['1','2','3','4','5','6','7']});
+        assert.deepEqual(errors, []);
       } finally { await page.close(); }
     }
   }
@@ -155,6 +183,11 @@ test('24-hour picker and interval fields remain readable for Admin and SuperAdmi
         await controlsFit(picker, `${name} ${width} ${field}`);
         await page.locator(`#${field}_popover_hh`).fill(hour);
         await page.locator(`#${field}_popover_mm`).fill(minute);
+        if (engine === 'chromium' && field === 'time_from' && [375,1280].includes(width)) {
+          const dir=path.join(__dirname,'artifacts'); fs.mkdirSync(dir,{recursive:true});
+          await picker.screenshot({path:path.join(dir,`rule-timepicker-${name}-${width}.png`)});
+          await page.screenshot({path:path.join(dir,`rule-timepicker-page-${name}-${width}.png`),fullPage:false});
+        }
         await picker.locator('.tp-set-btn').click();
         assert.equal(await page.locator(`#${field}`).inputValue(), `${hour}:${minute}`);
       }

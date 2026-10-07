@@ -60,7 +60,10 @@ final class AnnouncementSeverityTest extends CIUnitTestCase
         ]);
 
         // Check Table Header
-        $this->assertStringContainsString('<th>Severity</th>', $html);
+        $dom = new \DOMDocument();
+        @$dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+        $this->assertSame(1, $xpath->query('//table[@id="announcements-table"]/thead//th[normalize-space(.)="Severity"]')->length);
 
         // Check Info badge
         $this->assertStringContainsString('badge-modern-info', $html);

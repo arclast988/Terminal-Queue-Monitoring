@@ -145,6 +145,108 @@ class DepartureRuleModel extends Model
     }
 
     /**
+     * Save one rule per destination, round and weekday, regardless of its time
+     * window. Lock the terminal while checking so concurrent submissions cannot
+     * both create the same round.
+     *
+     * @return array|null The conflicting rule, or null after a successful save.
+     */
+    public function saveUniqueDayRound(array $data): ?array
+    {
+        $terminalId = (int) $data['terminal_id'];
+        $routeId = !empty($data['route_id']) ? (int) $data['route_id'] : null;
+        $this->db->transBegin();
+        try {
+            $previous = !empty($data['id']) ? $this->find((int) $data['id']) : null;
+            $terminals = array_unique([$terminalId, (int) ($previous['terminal_id'] ?? $terminalId)]);
+            sort($terminals);
+            foreach ($terminals as $terminal) $this->lockRoundTerminal($terminal);
+            $query = $this->roundScopeQuery($terminalId, $routeId)
+                ->where('round_number', (int) $data['round_number']);
+            if (!empty($data['id'])) $query->where('id !=', (int) $data['id']);
+            $days = departure_rule_days($data);
+            foreach ($query->get()->getResultArray() as $candidate) {
+                if (array_intersect($days, departure_rule_days($candidate))) {
+                    $this->db->transRollback();
+                    return $candidate;
+                }
+            }
+            if (!$this->save($data) || !$this->db->transStatus()) {
+                throw new \RuntimeException('Could not save the departure rule.');
+            }
+            if ($routeId !== null) $this->compactRounds($terminalId, $routeId);
+            if ($previous && !empty($previous['route_id'])
+                && ((int) $previous['terminal_id'] !== $terminalId || (int) $previous['route_id'] !== $routeId)) {
+                $this->compactRounds((int) $previous['terminal_id'], (int) $previous['route_id']);
+            }
+            $this->db->transCommit();
+            return null;
+        } catch (\Throwable $error) {
+            $this->db->transRollback();
+            throw $error;
+        }
+    }
+
+    private function lockRoundTerminal(int $terminalId): void
+    {
+        $driver = strtolower($this->db->DBDriver);
+        if (str_contains($driver, 'postgre') || str_contains($driver, 'mysql')) {
+            $sql = $this->db->table('terminals')->select('id')
+                ->where('id', $terminalId)->getCompiledSelect();
+            $this->db->query($sql . ' FOR UPDATE');
+        }
+    }
+
+    private function roundScopeQuery(int $terminalId, ?int $routeId)
+    {
+        $query = $this->db->table($this->table)->where('terminal_id', $terminalId);
+        if ($routeId === null) return $query->where('route_id', null);
+        $routes = new RouteModel($this->db);
+        $route = $routes->find($routeId);
+        $ids = $route ? $routes->getDestinationRouteIds($terminalId, $route['destination']) : [$routeId];
+        return $query->whereIn('route_id', $ids ?: [$routeId]);
+    }
+
+    /**
+     * Repair legacy duplicate day/round entries without changing their days,
+     * time windows, intervals or destinations. Disjoint weekdays may share a
+     * number. Existing valid round numbers are reserved before duplicates move.
+     */
+    public function repairDuplicateDayRounds(int $terminalId, ?int $routeId): void
+    {
+        $this->db->transStart();
+        $this->lockRoundTerminal($terminalId);
+        $rules = $this->roundScopeQuery($terminalId, $routeId)
+            ->orderBy('round_number', 'ASC')->orderBy('time_from', 'ASC')
+            ->orderBy('id', 'ASC')->get()->getResultArray();
+        $occupied = [];
+        $duplicates = [];
+        foreach ($rules as $rule) {
+            $round = max(1, (int) $rule['round_number']);
+            $days = departure_rule_days($rule);
+            if (array_intersect($occupied[$round] ?? [], $days)) {
+                $duplicates[] = $rule;
+            } else {
+                $occupied[$round] = array_unique(array_merge($occupied[$round] ?? [], $days));
+            }
+        }
+        foreach ($duplicates as $rule) {
+            $days = departure_rule_days($rule);
+            $round = max(1, (int) $rule['round_number']) + 1;
+            while ($round <= 999 && array_intersect($occupied[$round] ?? [], $days)) $round++;
+            if ($round > 999) {
+                $round = 1;
+                while ($round <= 999 && array_intersect($occupied[$round] ?? [], $days)) $round++;
+            }
+            if ($round > 999) throw new \RuntimeException('No departure round is available for these days.');
+            $this->db->table($this->table)->where('id', $rule['id'])->update(['round_number' => $round]);
+            $occupied[$round] = array_unique(array_merge($occupied[$round] ?? [], $days));
+        }
+        $this->compactRounds($terminalId, $routeId);
+        $this->db->transComplete();
+    }
+
+    /**
      * Renumber a destination's rounds to 1, 2, 3... across its vehicle types.
      * Terminal-wide defaults close gaps while retaining their starting number.
      * The selected dispatch round and active trips are remapped with destination
@@ -164,13 +266,18 @@ class DepartureRuleModel extends Model
             if (!$routeIds) return;
         }
 
+        $this->db->transStart();
+        $this->lockRoundTerminal($terminalId);
         $builder = $this->db->table($this->table)->select('id, round_number')->where('terminal_id', $terminalId);
         $routeIds ? $builder->whereIn('route_id', $routeIds) : $builder->where('route_id', null);
         $rules = $builder->get()->getResultArray();
 
         $rounds = array_values(array_unique(array_map(static fn(array $r): int => max(1, (int) $r['round_number']), $rules)));
         sort($rounds);
-        if (!$rounds) return;
+        if (!$rounds) {
+            $this->db->transComplete();
+            return;
+        }
 
         $map = [];
         // A destination's first rule is Round 1, including a lone legacy
@@ -181,9 +288,10 @@ class DepartureRuleModel extends Model
             $expected = $firstRound + $index;
             if ($round !== $expected) $map[$round] = $expected;
         }
-        if (!$map) return;
-
-        $this->db->transStart();
+        if (!$map) {
+            $this->db->transComplete();
+            return;
+        }
         foreach ($rules as $rule) {
             $old = max(1, (int) $rule['round_number']);
             if (isset($map[$old])) {

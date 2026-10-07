@@ -138,20 +138,20 @@ table:not(.selection-mode-active) .bulk-select-cell {
         </div>
 
         <div class="table-responsive">
-            <table class="table-modern" id="announcements-table">
+            <table class="table-modern management-list-table" id="announcements-table">
                 <thead>
                     <tr>
                         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
                         <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
-                        <th>No.</th>
-                        <th>Terminal</th>
-                        <th>Severity</th>
-                        <th>Message</th>
-                        <th>Status</th>
-                        <th>Created</th>
+                        <th class="management-id-col">No.</th>
+                        <th class="management-terminal-col">Terminal</th>
+                        <th class="management-severity-col">Severity</th>
+                        <th class="management-message-col">Message</th>
+                        <th class="management-status-col">Status</th>
+                        <th class="management-date-col">Created</th>
                         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
-                        <th class="actions-col" style="width: 170px;">Actions</th>
+                        <th class="actions-col management-actions-col">Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -177,7 +177,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                         <span class="badge-modern badge-modern-info"><i class="bi bi-info-circle-fill"></i> Info</span>
                                     <?php endif; ?>
                                 </td>
-                                <td data-label="Message"><?= esc(strlen($a['message']) > 80 ? substr($a['message'], 0, 80) . '…' : $a['message']) ?></td>
+                                <td data-label="Message" class="management-message"><?= esc($a['message']) ?></td>
                                 <td data-label="Status">
                                     <?php if ($a['is_active']): ?>
                                         <span class="badge-modern badge-modern-success"><i class="bi bi-check-circle-fill"></i> Active</span>
@@ -198,8 +198,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     <?php endif; ?>
                                 </td>
                                 <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
-                                <td data-label="Actions" class="actions-col">
-                                    <div class="announcement-actions-wrap">
+                                <td data-label="Actions" class="actions-col management-actions-col">
+                                    <div class="announcement-actions-wrap management-row-actions">
                                         <a href="<?= base_url('admin/announcements/edit/' . $a['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>

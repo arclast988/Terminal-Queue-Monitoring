@@ -310,7 +310,7 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
         $this->assertSame(302, $result->response()->getStatusCode());
         $this->assertSame(5, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
-        $this->assertStringContainsString('overlaps', session()->getFlashdata('error'));
+        $this->assertStringContainsString('already exists', session()->getFlashdata('error'));
         $this->postRule(['day_selection' => '1', 'days_of_week' => ['4', '7']]);
         $this->response = service('response', null, false);
         $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
@@ -384,4 +384,86 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $this->assertSame(1, (int) $saved['round_number']);
         $this->assertSame(25, (int) $saved['wait_minutes']);
     }
+    public function testASecondTimeWindowCannotReuseADestinationRoundOnTheSameDays(): void
+    {
+        ScopedDepartureRulesHarness::$assignedIds = [1, 2, 3];
+        $db = ScopedDepartureRulesHarness::$testDb;
+        $db->table('departure_rules')->whereNotIn('id', [1, 3])->delete();
+        $db->table('departure_rules')->where('id', 1)->update(['round_number'=>1, 'time_from'=>'06:00:00', 'time_to'=>'17:00:00']);
+        $db->table('departure_rules')->where('id', 3)->update(['round_number'=>1]);
+        foreach (['staff', 'admin', 'super_admin'] as $role) {
+            session()->set('role', $role);
+            $this->postRule(['route_id'=>'2', 'round_number'=>'1', 'time_from'=>'20:00', 'time_to'=>'21:00']);
+            $this->response = service('response', null, false);
+            $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+            $this->assertSame(302, $result->response()->getStatusCode());
+            $this->assertSame(2, $db->table('departure_rules')->countAllResults());
+            $this->assertStringContainsString('Round 1 already exists', session()->getFlashdata('error'));
+            $this->response = service('response', null, false);
+            $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('update', 3);
+            $this->assertSame(302, $result->response()->getStatusCode());
+            $this->assertSame(3, (int) $db->table('departure_rules')->where('id', 3)->get()->getRowArray()['route_id']);
+            $this->assertSame([], ScopedDepartureRulesHarness::$recalculations);
+        }
+    }
+
+    public function testEveryDayAndSpecificDayRulesCannotShareADestinationRound(): void
+    {
+        $db = ScopedDepartureRulesHarness::$testDb;
+        $db->table('departure_rules')->where('id !=', 1)->delete();
+        $db->table('departure_rules')->where('id', 1)->update(['round_number'=>1]);
+        $this->postRule(['route_id'=>'2', 'round_number'=>'1', 'day_selection'=>'1', 'days_of_week'=>['1'], 'time_from'=>'20:00', 'time_to'=>'21:00']);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $this->assertSame(1, $db->table('departure_rules')->countAllResults());
+        $this->assertStringContainsString('Monday', session()->getFlashdata('error'));
+    }
+
+    public function testDifferentWeekdaysCanUseTheSameRoundAcrossVehicleTypeRoutes(): void
+    {
+        $db = ScopedDepartureRulesHarness::$testDb;
+        $db->table('departure_rules')->where('id !=', 1)->delete();
+        $db->table('departure_rules')->where('id', 1)->update(['round_number'=>1, 'days_of_week'=>'1']);
+        $this->postRule(['route_id'=>'2', 'round_number'=>'1', 'day_selection'=>'1', 'days_of_week'=>['2']]);
+        $result = $this->controller(ScopedDepartureRulesHarness::class)->execute('store');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $this->assertSame(2, $db->table('departure_rules')->countAllResults());
+        $saved = $db->table('departure_rules')->where('id !=', 1)->get()->getRowArray();
+        $this->assertSame(1, (int) $saved['round_number']);
+        $this->assertSame([2], departure_rule_days($saved));
+    }
+
+    public function testLegacyDuplicateRepairIsIdempotentAndPreservesRuleDetails(): void
+    {
+        $db = ScopedDepartureRulesHarness::$testDb;
+        $db->table('departure_rules')->whereNotIn('id', [1, 2, 3, 4])->delete();
+        $db->table('departure_rules')->where('id', 1)->update(['round_number'=>1, 'time_from'=>'20:00:00', 'time_to'=>'21:00:00', 'wait_minutes'=>25]);
+        $db->table('departure_rules')->where('id', 2)->update(['round_number'=>1, 'time_from'=>'06:00:00', 'time_to'=>'17:00:00']);
+        $db->table('departure_rules')->where('id', 3)->update(['round_number'=>1]);
+        $before = $db->table('departure_rules')->orderBy('id')->get()->getResultArray();
+        $model = new DepartureRuleModel($db);
+        $model->repairDuplicateDayRounds(1, 1);
+        $after = $db->table('departure_rules')->orderBy('id')->get()->getResultArray();
+        $this->assertSame([2, 1, 1, 2], array_map(static fn($r) => (int) $r['round_number'], $after));
+        foreach ($after as $index => $rule) {
+            unset($rule['round_number'], $before[$index]['round_number']);
+            $this->assertSame($before[$index], $rule);
+        }
+        $model->repairDuplicateDayRounds(1, 2);
+        $this->assertSame($after, $db->table('departure_rules')->orderBy('id')->get()->getResultArray());
+    }
+
+    public function testRepairReservesExistingRoundsAndAllowsDisjointDays(): void
+    {
+        $db = ScopedDepartureRulesHarness::$testDb;
+        $db->table('departure_rules')->whereNotIn('id', [1, 2])->delete();
+        $db->table('departure_rules')->where('id', 1)->update(['round_number'=>1, 'days_of_week'=>'1']);
+        $db->table('departure_rules')->where('id', 2)->update(['round_number'=>1, 'days_of_week'=>'2']);
+        $db->table('departure_rules')->insert(['id'=>6, 'terminal_id'=>1, 'route_id'=>1, 'round_number'=>1]);
+        $db->table('departure_rules')->insert(['id'=>7, 'terminal_id'=>1, 'route_id'=>2, 'round_number'=>2]);
+        (new DepartureRuleModel($db))->repairDuplicateDayRounds(1, 1);
+        $rules = $db->table('departure_rules')->orderBy('id')->get()->getResultArray();
+        $this->assertSame([1, 1, 3, 2], array_map(static fn($r) => (int) $r['round_number'], $rules));
+    }
+
 }

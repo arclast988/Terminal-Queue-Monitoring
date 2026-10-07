@@ -100,19 +100,19 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         </div>
 
         <div class="table-responsive">
-            <table class="table-modern" id="terminals-table">
+            <table class="table-modern management-list-table" id="terminals-table">
                 <thead>
                     <tr>
                         <?php if ($isAdmin): ?>
                         <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
-                        <th>ID</th>
-                        <th>Name</th>
+                        <th class="management-id-col">ID</th>
+                        <th class="management-name-col">Name</th>
                         <th>Location</th>
-                        <th>Capacity</th>
-                        <th>Created At</th>
+                        <th class="management-count-col">Capacity</th>
+                        <th class="management-date-col">Created At</th>
                         <?php if ($isAdmin): ?>
-                        <th>Actions</th>
+                        <th class="management-actions-col">Actions</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -135,8 +135,8 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                     </div>
                                 </td>
                                 <?php if ($isAdmin): ?>
-                                <td data-label="Actions">
-                                    <div class="d-flex gap-2 justify-content-end">
+                                <td data-label="Actions" class="management-actions-col">
+                                    <div class="d-flex gap-2 justify-content-end management-row-actions">
                                         <a href="<?= base_url('admin/terminals/edit/'.$terminal['id']) ?>" class="btn-modern btn-modern-outline btn-modern-sm" title="Edit">
                                             <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
                                         </a>
@@ -656,4 +656,3 @@ body.modal-open #deleteTerminalConfirmModal,
 <?php endif; ?>
 
 <?= view('templates/footer') ?>
-

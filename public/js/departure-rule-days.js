@@ -27,7 +27,7 @@
     boxes.forEach(function (box) { box.addEventListener('change', update); });
     update();
 
-    // Adding or moving a rule fills gaps in the selected destination's rounds.
+    // Assign only rounds that are unused for the selected destination and days.
     var roundSelect = document.getElementById('round_number');
     var routeSelect = document.getElementById('route_id');
     var terminalInput = document.getElementById('terminal_id');
@@ -46,23 +46,26 @@
     }
     function rebuildRounds() {
         var scope = currentScope();
-        var terminalScope = scope.split('|')[0] + '|';
+        var selectedDays = boxes.filter(function (box) { return box.checked; }).map(function (box) { return Number(box.value); });
+        var original = Number(roundSelect.dataset.roundOriginal) || initialRound;
+        var ownRule = Number(roundSelect.dataset.roundRuleId) || 0;
         var configured = [];
         scopes.forEach(function (item) {
-            if ((item.s === scope || item.s === terminalScope) && item.r >= 1 && item.r <= 999) configured.push(item.r);
+            var ruleDays = Array.isArray(item.d) ? item.d : [1, 2, 3, 4, 5, 6, 7];
+            if (item.s === scope && item.i !== ownRule && item.r >= 1 && item.r <= 999
+                && selectedDays.some(function (day) { return ruleDays.indexOf(day) !== -1; })) {
+                configured.push(item.r);
+            }
         });
-        if (scope === roundSelect.dataset.roundOriginalScope && Number(roundSelect.dataset.roundOriginal) > 0) {
-            configured.push(Number(roundSelect.dataset.roundOriginal));
-        }
         configured = Array.from(new Set(configured)).sort(function (a, b) { return a - b; });
-        var choices = configured.slice();
-        var allowNewRound = creating || scope !== roundSelect.dataset.roundOriginalScope;
+        var allowNewRound = creating || scope !== roundSelect.dataset.roundOriginalScope || configured.indexOf(original) !== -1;
+        var choices = [];
+        if (!creating && scope === roundSelect.dataset.roundOriginalScope && configured.indexOf(original) === -1) choices.push(original);
         var newRound = 1;
-        while (newRound <= 999 && choices.indexOf(newRound) !== -1) newRound++;
-        if (allowNewRound && newRound <= 999) choices.push(newRound);
-        if (!allowNewRound && choices.length && choices.indexOf(1) === -1) choices.push(1);
-        if (!choices.length) choices.push(1);
-        choices.sort(function (a, b) { return a - b; });
+        while (newRound <= 999 && configured.indexOf(newRound) !== -1) newRound++;
+        if ((allowNewRound || !choices.length) && newRound <= 999) choices.push(newRound);
+        if (!allowNewRound && original > 1 && configured.indexOf(1) === -1) choices.push(1);
+        choices = Array.from(new Set(choices)).sort(function (a, b) { return a - b; });
         var selected = Number(roundSelect.value) || initialRound;
         if (previousScope !== null && previousScope !== scope) {
             if (allowNewRound && newRound <= 999) selected = newRound;
@@ -71,6 +74,7 @@
         if (choices.indexOf(selected) === -1) selected = choices[0];
         previousScope = scope;
         roundSelect.innerHTML = '';
+        roundSelect.setCustomValidity(choices.length ? '' : 'All rounds for these days are already configured.');
         choices.forEach(function (n) {
             var opt = document.createElement('option');
             opt.value = String(n);
@@ -78,18 +82,19 @@
             if (n === selected) opt.selected = true;
             roundSelect.appendChild(opt);
         });
-        var single = choices.length === 1;
+        var single = choices.length === 1 && configured.length === 0;
         roundSelect.hidden = single;
         roundSelect.classList.toggle('d-none', single);
         if (display) {
             display.hidden = !single;
             display.classList.toggle('d-none', !single);
-            display.value = roundSelect.options[roundSelect.selectedIndex].textContent;
+            display.value = roundSelect.options[roundSelect.selectedIndex] ? roundSelect.options[roundSelect.selectedIndex].textContent : 'No available round';
         }
         if (label) label.htmlFor = single ? 'round_number_display' : 'round_number';
         roundSelect.dispatchEvent(new Event('change', { bubbles: true }));
     }
     if (routeSelect) routeSelect.addEventListener('change', rebuildRounds);
     if (terminalInput) terminalInput.addEventListener('change', rebuildRounds);
+    group.addEventListener('change', rebuildRounds);
     rebuildRounds();
 })();
