@@ -16,10 +16,10 @@ const cache = new Map();
 const report = { engine, fixtures: 'production PHP views with seeded helper/data values', cases: [], beforeAfter: {} };
 let browser, server, origin, beforeCSS;
 function scriptsOf(html) { return [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).filter(Boolean); }
-function fixture(name, long, baseline) {
-  const key = name + ':' + long;
+function fixture(name, long, baseline, state = '') {
+  const key = name + ':' + long + ':' + state;
   if (!cache.has(key)) {
-    const rendered = execFileSync('php', [path.join(__dirname, 'render-responsive-fixture.php'), name, long ? 'long' : 'normal'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+    const rendered = execFileSync('php', [path.join(__dirname, 'render-responsive-fixture.php'), name, long ? 'long' : 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     let scripts;
     if (authPages.has(name) || managementPages.includes(name)) scripts = scriptsOf(rendered);
     else if (!name.startsWith('staff') && !name.startsWith('admin')) {
@@ -59,7 +59,7 @@ test.before(async () => {
     }
     const name = target.slice(1);
     if (!pages.includes(name)) { res.writeHead(404); res.end(); return; }
-    res.setHeader('Content-Type', 'text/html'); res.end(fixture(name, url.searchParams.has('long'), url.searchParams.has('baseline')));
+    res.setHeader('Content-Type', 'text/html'); res.end(fixture(name, url.searchParams.has('long'), url.searchParams.has('baseline'), url.searchParams.get('state') || ''));
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
@@ -195,21 +195,86 @@ test('management actions stay usable while wide tables scroll and remain labeled
           });
           assert.ok(result.left >= result.parentLeft - 1 && result.right <= result.parentRight + 1, JSON.stringify({name,width,fraction,result}));
           assert.ok(Math.abs(result.right - result.parentRight) <= 3, JSON.stringify({name,width,fraction,result}));
-          assert.notEqual(result.background, 'rgba(0, 0, 0, 0)', name + ' has a transparent action column');
+          assert.equal(result.background, 'rgb(255, 255, 255)', name + ' lets scrolled text show through its action column');
           edges.push(result.right);
         }
         assert.ok(Math.max(...edges) - Math.min(...edges) <= 1, name + ' actions moved with the table');
+        const header = table.locator('thead .management-actions-col');
+        assert.equal(await header.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(248, 250, 252)');
+        assert.equal(await cell.evaluate(el => getComputedStyle(el).boxShadow), 'none');
+        await scroll.evaluate(el => { el.scrollLeft = 0; });
       }
       checkBounds(await bounds(page, ['#' + id + ' .management-row-actions .btn-modern']), name + ' actions ' + width);
       const targets = await actions.locator('.btn-modern').evaluateAll(buttons => buttons.map(button => {
         const box = button.getBoundingClientRect(), label = button.querySelector('.action-label');
-        return { height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
+        return { top:box.top, bottom:box.bottom, height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
       }));
-      assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 34) - 1), JSON.stringify({name,width,targets}));
+      assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
+      assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' actions do not stack like User Management: ' + JSON.stringify(targets));
       if (width === 375 || width === 1280) await screenshot(page, name + '-management-actions-' + width, false);
       assert.deepEqual(errors, [], name + ' ' + width);
       await context.close();
     }
+  }
+});
+
+test('registered route groups retain daily queue positions through search, filters and bulk selection', { timeout: 90000 }, async t => {
+  for (const [width, height] of [[320,900], [375,900], [768,1024], [1280,1000]]) {
+    const { page, context, errors } = await open(t, 'admin-vehicles', width, height, 'state=register-order');
+    await page.addScriptTag({ url:origin + '/assets/js/autocomplete-search.js' });
+    const visibleRows = () => page.locator('#vehicles-table tr[data-vehicle-id]:visible').evaluateAll(rows => rows.map(row => ({
+      plate:row.querySelector('.plate-number').textContent.trim(), number:row.querySelector('.row-number').textContent.trim()
+    })));
+    const headings = () => page.locator('#vehicles-table [data-route-heading]:visible').allTextContents();
+    assert.deepEqual(await visibleRows(), [
+      {plate:'BATO-004',number:'1'}, {plate:'AAA-002',number:'1'}, {plate:'MID-003',number:'2'},
+      {plate:'ZZZ-001',number:'3'}, {plate:'MAINTENANCE-006',number:'—'}, {plate:'UNASSIGNED-007',number:'—'}
+    ]);
+    assert.deepEqual((await headings()).map(text => text.trim()), ['VILLABA → BATO','VILLABA → ORMOC','No active route']);
+    const headingGap = await page.locator('.vehicle-route-heading-label').first().evaluate(el => {
+      const icon = el.querySelector('i').getBoundingClientRect(), text = el.querySelector('span').getBoundingClientRect();
+      return text.left - icon.right;
+    });
+    assert.ok(headingGap >= 6 && headingGap <= 12, 'route icon and label should stay together: ' + headingGap);
+    assert.equal(await page.locator('.vehicle-start-order').count(), 0);
+    const search = page.locator('#vehicle-search'), route = page.locator('#vehicle-route-filter');
+    assert.equal(await route.evaluate(el => el.closest('.select-autocomplete-wrapper') === null && getComputedStyle(el).display !== 'none'), true);
+    const searchBox = await search.boundingBox(), routeBox = await route.boundingBox();
+    assert.ok(Math.abs(searchBox.height - routeBox.height) <= 1, JSON.stringify({width,searchBox,routeBox}));
+    if (width >= 576) assert.ok(Math.abs(searchBox.y - routeBox.y) <= 1, JSON.stringify({width,searchBox,routeBox}));
+    checkBounds(await bounds(page, ['.vehicle-register-filter-row','#vehicle-search','#vehicle-route-filter','.vehicle-filter-strip .vf-btn']), 'register filters ' + width);
+    await route.selectOption('1|ORMOC');
+    assert.deepEqual((await headings()).map(text => text.trim()), ['VILLABA → ORMOC']);
+    await search.fill('ZZZ-001');
+    assert.deepEqual(await visibleRows(), [{plate:'ZZZ-001',number:'3'}]);
+    await page.locator('#btn-toggle-select-vehicles').click();
+    assert.equal(await page.locator('[data-route-heading="1|ORMOC"] td').getAttribute('colspan'), '11');
+    await page.locator('tr[data-vehicle-id="201"] .vehicle-row-checkbox').check();
+    assert.equal((await page.locator('#vehicle-selected-count').textContent()).trim(), '1');
+    await search.fill('');
+    assert.equal(await page.locator('[data-route-heading="1|ORMOC"] td').getAttribute('colspan'), '10');
+    assert.equal(await page.locator('.vehicle-row-checkbox:checked').count(), 0);
+    await page.locator('#filter-btn-van').click();
+    assert.deepEqual(await visibleRows(), [{plate:'MID-003',number:'2'},{plate:'ZZZ-001',number:'3'}]);
+    await page.locator('#filter-btn-maintenance').click();
+    assert.deepEqual(await visibleRows(), [{plate:'MAINTENANCE-006',number:'—'}]);
+    await page.locator('#filter-btn-archived').click();
+    assert.deepEqual(await visibleRows(), [{plate:'ARCHIVED-005',number:'—'}]);
+    await route.selectOption('__none');
+    assert.deepEqual(await visibleRows(), []);
+    assert.deepEqual(await headings(), []);
+    assert.equal(await page.locator('.no-filter-results:visible').count(), 1);
+    await page.locator('#filter-btn-all').click();
+    assert.deepEqual(await visibleRows(), [{plate:'UNASSIGNED-007',number:'—'}]);
+    await route.selectOption('');
+    if (width === 375 || width === 1280) {
+      await page.locator('.vehicle-register-filter-row').scrollIntoViewIfNeeded();
+      await screenshot(page, 'registered-route-order-' + width, false);
+      await page.locator('[data-route-heading="1|ORMOC"]').scrollIntoViewIfNeeded();
+      await screenshot(page, 'registered-route-heading-' + width, false);
+    }
+    assert.deepEqual(errors, [], 'register filters ' + width);
+    await context.close();
   }
 });
 

@@ -29,6 +29,7 @@ class VehicleModel extends Model
     {
         $this->db->transStart();
         $this->lockDispatchOrder();
+        $this->lockAllDispatchRoutes();
         $old = $id ? $this->find($id) : null;
         $routeId = (int) ($data['default_route_id'] ?? $old['default_route_id'] ?? 0);
         $routeIds = $this->dispatchRouteIds($routeId);
@@ -59,6 +60,7 @@ class VehicleModel extends Model
         $now ??= time();
         $this->db->transStart();
         $this->lockDispatchOrder();
+        $this->lockAllDispatchRoutes();
         $routeIds = $this->dispatchRouteIds($routeId);
         $this->lockRoutes($routeIds);
         $vehicle = $this->find($id);
@@ -101,6 +103,73 @@ class VehicleModel extends Model
         return $vehicles;
     }
 
+    /** Register order uses the same daily rotation, with unavailable vehicles unnumbered. */
+    public static function sortForRegister(array $vehicles, string $today): array
+    {
+        $groups = [];
+        foreach (self::sortForDispatch($vehicles, $today) as $vehicle) {
+            $key = !empty($vehicle['route_destination'])
+                ? ($vehicle['route_terminal_id'] ?? 0) . '|' . $vehicle['route_destination']
+                : '__none';
+            $available = $key !== '__none' && ($vehicle['status'] ?? '') === 'active';
+            $groups[$key][$available ? 'active' : 'unavailable'][] = $vehicle;
+        }
+        if (isset($groups['__none'])) {
+            $unassigned = $groups['__none'];
+            unset($groups['__none']);
+            $groups['__none'] = $unassigned;
+        }
+        $sorted = [];
+        foreach ($groups as $group) {
+            foreach ($group['active'] ?? [] as $index => $vehicle) {
+                $vehicle['dispatch_position'] = $index + 1;
+                $sorted[] = $vehicle;
+            }
+            foreach ($group['unavailable'] ?? [] as $vehicle) {
+                $vehicle['dispatch_position'] = null;
+                $sorted[] = $vehicle;
+            }
+        }
+        return $sorted;
+    }
+
+    /** Repair duplicates and gaps, including when route edits merge destination lines. */
+    public function normalizeDispatchOrders(): void
+    {
+        if (!$this->db->tableExists('vehicles') || !$this->db->tableExists('routes')
+            || !$this->db->fieldExists('dispatch_order', 'vehicles')) return;
+        $this->db->transBegin();
+        try {
+            $this->lockDispatchOrder();
+            $this->lockAllDispatchRoutes();
+            $routes = $this->db->table('routes')->select('id, terminal_id, destination')
+                ->orderBy('id', 'ASC')->get()->getResultArray();
+            $this->lockRoutes(array_column($routes, 'id'));
+            $scopes = [];
+            foreach ($routes as $route) {
+                $scopes[$route['terminal_id'] . '|' . $route['destination']][] = (int) $route['id'];
+            }
+            foreach ($scopes as $routeIds) {
+                $rows = $this->db->table('vehicles')->select('id, dispatch_order')
+                    ->whereIn('default_route_id', $routeIds)
+                    ->orderBy('CASE WHEN dispatch_order > 0 THEN dispatch_order ELSE 2147483647 END', 'ASC', false)
+                    ->orderBy('type', 'ASC')->orderBy('plate_number', 'ASC')->orderBy('id', 'ASC')
+                    ->get()->getResultArray();
+                foreach ($rows as $index => $row) {
+                    if ((int) $row['dispatch_order'] !== $index + 1) {
+                        $this->db->table('vehicles')->where('id', $row['id'])
+                            ->update(['dispatch_order' => $index + 1]);
+                    }
+                }
+            }
+            if (!$this->db->transStatus()) throw new \RuntimeException('Could not normalize vehicle order.');
+            $this->db->transCommit();
+        } catch (\Throwable $error) {
+            $this->db->transRollback();
+            throw $error;
+        }
+    }
+
     private function lockDispatchOrder(): void
     {
         if (str_contains(strtolower($this->db->DBDriver), 'postgre')) {
@@ -115,6 +184,14 @@ class VehicleModel extends Model
         sort($ids);
         if ($ids && str_contains(strtolower($this->db->DBDriver), 'mysql')) {
             $this->db->query('SELECT id FROM routes WHERE id IN (' . implode(',', $ids) . ') ORDER BY id FOR UPDATE');
+        }
+    }
+
+    /** Lock before reading destinations so a concurrent route rename cannot leave stale scopes. */
+    private function lockAllDispatchRoutes(): void
+    {
+        if (str_contains(strtolower($this->db->DBDriver), 'mysql')) {
+            $this->db->query('SELECT id FROM routes ORDER BY id FOR UPDATE');
         }
     }
 

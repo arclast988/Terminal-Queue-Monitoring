@@ -500,6 +500,11 @@ class Routes extends BaseController
         $oldTerminalId  = $existingRoute['terminal_id'];
         $oldDestination = $existingRoute['destination'];
 
+        $orderDb = \Config\Database::connect();
+        $orderDb->transStart();
+        $orderedVehicles = new \App\Models\VehicleModel($orderDb);
+        $orderedVehicles->normalizeDispatchOrders();
+
         if ($oldTerminalId != $terminalId || $oldDestination !== $destination) {
             $this->routeModel->where('terminal_id', $oldTerminalId)
                              ->where('destination', $oldDestination)
@@ -518,7 +523,14 @@ class Routes extends BaseController
         ]);
 
         if (!$updated) {
+            $orderDb->transRollback();
             return redirect()->back()->withInput()->with('error', 'Failed to update route.');
+        }
+
+        $orderedVehicles->normalizeDispatchOrders();
+        $orderDb->transComplete();
+        if (!$orderDb->transStatus()) {
+            return redirect()->back()->withInput()->with('error', 'Failed to update route order.');
         }
 
         $this->replaceRouteFares((int) $id, (int) $terminalId, (float) $newFare);
@@ -593,6 +605,8 @@ class Routes extends BaseController
         $db->transStart();
 
         // First, update the terminal_id and destination of all existing sibling routes to prevent desync
+        $orderedVehicles = new \App\Models\VehicleModel($db);
+        $orderedVehicles->normalizeDispatchOrders();
         $this->routeModel->where('terminal_id', $oldTerminalId)
                          ->where('destination', $oldDestination)
                          ->set([
@@ -633,6 +647,7 @@ class Routes extends BaseController
             // If selected and exists, keep it as-is (fares preserved)
         }
 
+        $orderedVehicles->normalizeDispatchOrders();
         $db->transComplete();
 
         if ($db->transStatus() === false) {

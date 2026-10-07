@@ -3742,7 +3742,7 @@ a[title*="delete" i]:hover .bi,
 
 /* Consistent management lists, with actions available while a wide table scrolls. */
 html body table.table-modern.management-list-table {
-    --management-action-height: 34px;
+    --management-action-height: 31px;
     font-family: var(--font-body, 'Outfit', sans-serif);
 }
 html body table.table-modern.management-list-table th,
@@ -3792,8 +3792,9 @@ html body table.table-modern.management-list-table .management-message {
 }
 html body table.table-modern.management-list-table .management-actions-col > .management-row-actions {
     display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
     justify-content: flex-start !important;
     gap: 6px !important;
     min-width: 0;
@@ -3817,11 +3818,11 @@ html body #vehicles-table.management-list-table .management-row-actions .btn-mod
     height: auto !important;
     min-height: var(--management-action-height) !important;
     max-width: 100%;
-    padding: 6px 10px !important;
+    padding: 5px 9px !important;
     border-radius: 6px !important;
     font-size: 12px !important;
     font-weight: 600 !important;
-    line-height: 1.25 !important;
+    line-height: 1.5 !important;
     white-space: nowrap !important;
 }
 html body table.table-modern.management-list-table .management-row-actions .action-label {
@@ -3875,12 +3876,15 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         min-width: 190px !important;
         max-width: 190px !important;
         text-align: left !important;
-        background: var(--surface, #ffffff) !important;
-        box-shadow: -8px 0 12px -10px rgba(15, 23, 42, 0.35);
+        padding: 12px 10px !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
     }
     html body table.table-modern.management-list-table th.management-actions-col {
         z-index: 3;
-        background: var(--surface-sunken, #f8fafc) !important;
+        font-size: 13.5px !important;
+        line-height: 1.5;
+        background: #f8fafc !important;
     }
 }
 @media (max-width: 768px) {
@@ -3892,5 +3896,54 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     html body table.table-modern.management-list-table .management-actions-col > .management-row-actions {
         margin-left: auto;
         justify-content: flex-end !important;
+        align-items: flex-end !important;
     }
+}
+
+/* Route headings stay separate from vehicle cards on narrow screens. */
+html body #vehicles-table .vehicle-route-heading td {
+    padding: 16px 12px !important;
+    background: #f8fafc !important;
+    text-align: left !important;
+    border-bottom: 1px solid #e2e8f0;
+}
+html body #vehicles-table .vehicle-route-heading-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start !important;
+    gap: 8px;
+    width: 100%;
+    margin: 0 !important;
+    text-align: left !important;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.45;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+html body #vehicles-table .vehicle-route-heading-label > * {
+    margin: 0 !important;
+    text-align: left !important;
+}
+html body #vehicles-table .vehicle-route-heading-label i { color: var(--primary); flex: none !important; }
+html body #vehicles-table tbody tr.vehicle-route-heading.vehicle-row-hidden { display: none !important; }
+@media (max-width: 768px) {
+    html body #vehicles-table tbody tr.vehicle-route-heading {
+        display: block !important;
+        padding: 0 !important;
+        margin: 16px 0 8px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    html body #vehicles-table tbody tr.vehicle-route-heading td {
+        display: block !important;
+        width: 100% !important;
+        padding: 8px 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+    html body #vehicles-table tbody tr.vehicle-route-heading td::before { display: none !important; }
 }

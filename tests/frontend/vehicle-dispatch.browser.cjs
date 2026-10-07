@@ -64,7 +64,10 @@ test('vehicle register route filtering combines with type, status, and search at
     await page.reload();
     assert.equal(await page.locator('#vehicle-route-filter').inputValue(),'1|ORMOC');
     await fits(page,'.vehicle-route-filter',width);
-    assert.equal(await page.locator('.vehicle-start-order').first().innerText(),'Daily start #1');
+    assert.equal(await page.locator('.vehicle-start-order').count(),0);
+    assert.equal((await page.locator('tr[data-vehicle-id="201"] .row-number').innerText()).trim(),'1');
+    assert.equal((await page.locator('tr[data-vehicle-id="202"] .row-number').innerText()).trim(),'2');
+    assert.deepEqual((await page.locator('[data-route-heading]:visible').allTextContents()).map(text=>text.trim()),['PALOMPON → ORMOC']);
     if (width===375) await screenshot(page,'route-filter-phone');
     assert.deepEqual(errors,[]); await page.close();
   }
