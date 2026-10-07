@@ -235,6 +235,55 @@ test('management actions align with their headers and scroll as normal columns l
   }
 });
 
+test('vehicle register shows every column without horizontal scrolling on desktop, including bulk selection', { timeout: 90000 }, async t => {
+  for (const width of [1280,1366,1440,1536]) {
+    for (const query of ['', 'long=1']) {
+      const { page, context, errors } = await open(t, 'admin-vehicles', width, 900, query);
+      await page.evaluate(() => document.fonts.ready);
+      for (const selection of [false,true]) {
+        if (selection) await page.locator('#btn-toggle-select-vehicles').click();
+        const result = await page.locator('#vehicles-table').evaluate(table => {
+          const wrapper = table.closest('.table-responsive'), outer = wrapper.getBoundingClientRect();
+          const visible = el => el.getBoundingClientRect().width > 0;
+          const headers = [...table.querySelectorAll('thead th')].filter(visible);
+          const measure = document.createElement('canvas').getContext('2d');
+          const splitHeaderWords = headers.flatMap(header => {
+            const style = getComputedStyle(header);
+            measure.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+            const label = style.textTransform === 'uppercase' ? header.textContent.toUpperCase() : header.textContent;
+            const spacing = parseFloat(style.letterSpacing) || 0;
+            const longest = Math.max(0,...label.trim().split(/\s+/).map(word => measure.measureText(word).width + spacing * word.length));
+            const available = header.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+            return longest > available + 1 ? [{label:header.textContent.trim(),longest,available}] : [];
+          });
+          const rows = [...table.querySelectorAll('tbody tr[data-vehicle-id]')].filter(visible);
+          const clipped = rows.flatMap(row => [...row.children].filter(visible).flatMap(cell => {
+            const box = cell.getBoundingClientRect(), range = document.createRange();
+            range.selectNodeContents(cell);
+            const text = range.getBoundingClientRect();
+            return text.width > 0 && (text.left < box.left - 1 || text.right > box.right + 1)
+              ? [{label:cell.dataset.label,cellLeft:box.left,cellRight:box.right,textLeft:text.left,textRight:text.right}] : [];
+          }));
+          const action = table.querySelector('tbody .management-actions-col').getBoundingClientRect();
+          return {scroll:wrapper.scrollWidth,client:wrapper.clientWidth,labels:headers.map(header=>header.textContent.trim()),
+            actionFits:action.left >= outer.left - 1 && action.right <= outer.right + 1,clipped,splitHeaderWords};
+        });
+        assert.ok(result.scroll <= result.client + 1, 'unnecessary horizontal scrollbar: ' + JSON.stringify({width,query,selection,result}));
+        assert.equal(result.labels.length, selection ? 11 : 10);
+        assert.ok(result.labels.includes('Registered') && result.labels.includes('Action'));
+        assert.equal(result.actionFits,true, 'Actions must be visible without horizontal scrolling');
+        assert.deepEqual(result.splitHeaderWords,[], 'header words must fit without splitting: ' + JSON.stringify({width,query,selection,result}));
+        assert.deepEqual(result.clipped,[], 'vehicle text must remain inside its column: ' + JSON.stringify({width,query,selection,result}));
+        if (width === 1366 && !query) {
+          await page.locator('#vehicles-table').scrollIntoViewIfNeeded();
+          await screenshot(page,'vehicle-desktop-fit-1366' + (selection ? '-selection' : ''),false);
+        }
+      }
+      assert.deepEqual(errors,[]); await context.close();
+    }
+  }
+});
+
 test('registered route groups retain daily queue positions through search, filters and bulk selection', { timeout: 90000 }, async t => {
   for (const [width, height] of [[320,900], [375,900], [768,1024], [1280,1000]]) {
     const { page, context, errors } = await open(t, 'admin-vehicles', width, height, 'state=register-order');
