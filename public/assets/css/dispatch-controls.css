@@ -485,3 +485,14 @@ button.queue-route-chip.active .chip-count {
     .undo-banner-actions { flex-wrap: wrap; }
     .queue-action-notice { padding: 12px; scroll-margin-top: 90px; }
 }
+/* Keep daily position and round badges readable with long plates on phones. */
+.vehicle-select-item .plate-number-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.vehicle-select-item .plate-number-box .badge-modern { white-space: nowrap; }
+.vehicle-select-item .plate-number-box + .vehicle-type-chip { flex-shrink: 0; }

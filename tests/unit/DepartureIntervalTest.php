@@ -495,11 +495,12 @@ final class DepartureIntervalTest extends CIUnitTestCase
         $this->intervalDb->table('dispatch_rounds')->where('terminal_id', 1)->update(['service_date' => '2026-10-01']);
         $this->assertSame(1, $rounds->currentRound(1, 'ORMOC'));
         $waiting = $this->addVehicle(2, 1);
-        $this->queue->update($waiting, ['round_number' => 3]);
+        $this->queue->update($waiting, ['round_number' => 3, 'arrival_time'=>date('Y-m-d H:i:s', strtotime('yesterday 06:00:00'))]);
         $now = strtotime(date('Y-m-d') . ' 06:43:00');
         $this->queue->advanceBoarding($now);
-        $this->assertSame(1, (int) $this->queue->find($waiting)['round_number']);
-        $this->assertSame(date('Y-m-d', $now) . ' 07:05:00', $this->queue->find($waiting)['estimated_departure']);
+        $this->assertSame('canceled', $this->queue->find($waiting)['status']);
+        $this->assertNull($this->queue->find($waiting)['estimated_departure']);
+        $this->assertSame(1, $rounds->currentRound(1, 'ORMOC'));
         $this->assertSame(20, (new DepartureRuleModel($this->intervalDb))->getWaitMinutesForTime('10:00:00', 1, 2));
     }
 
@@ -616,7 +617,7 @@ final class DepartureIntervalTest extends CIUnitTestCase
     {
         $this->intervalDb->table('queue')->insert([
             'vehicle_id' => $position, 'route_id' => $routeId, 'position' => $position,
-            'status' => 'waiting', 'arrival_time' => '2026-10-03 10:00:00',
+            'status' => 'waiting', 'arrival_time' => '2026-10-05 06:00:00',
             'estimated_departure' => $departure,
         ]);
         return (int) $this->intervalDb->insertID();
@@ -636,3 +637,4 @@ final class DepartureIntervalTest extends CIUnitTestCase
         }
     }
 }
+

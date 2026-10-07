@@ -29,3 +29,11 @@ Departure History and its printed reports round departure timestamps up to five-
 Run `php spark migrate` before serving the updated application, and restart the existing `ws:serve` process. The migration adds day/round fields, boarding windows, and persisted route round selections, then recalculates waiting vehicles on the five-minute grid. Departed history and ongoing boarding timers are preserved. The WebSocket server advances boarding at clock boundaries; dispatcher pages also provide a fallback while open. Updated scripts and styles use content-based asset versions.
 
 The weekday migration adds `days_of_week` for grouped selections, preserves existing single-day rules, and assigns previously unassigned rules to Round 1. New rules require an explicit round. Restarted services use the updated selection logic; current boarding times remain preserved.
+# Daily vehicle order
+
+Vehicle registration and editing include **Daily starting order**. Positions are shared by vehicle types heading to the same destination from the same terminal. Choosing an occupied position shifts the other vehicles; a blank position appends the vehicle. Add to Queue displays the current route order.
+
+Each departure moves that vehicle behind the other vehicles in its destination for the current day. The saved starting order stays unchanged. At **12:00 AM Asia/Manila**, the saved order returns, the departed badges and cooldown from yesterday clear, and unfinished waiting or boarding trips are automatically canceled. These trips stay in history and must be added as a new trip rather than restored into the next day.
+
+The WebSocket process performs the rollover at its midnight boundary, even with no browser open. Queue/API requests also reconcile the day if the process was offline, and open dispatcher pages refresh through the boundary tick or polling fallback. Deployments must run the new `AddVehicleDispatchOrder` migration (the standard startup script runs migrations).
+

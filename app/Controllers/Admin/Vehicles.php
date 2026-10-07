@@ -25,7 +25,7 @@ class Vehicles extends BaseController
     {
         // Join routes to get assigned route info - only active routes display as assigned
         $vehicles = $this->vehicleModel
-            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.vehicle_type as route_vehicle_type, routes.status as route_status')
+            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.terminal_id as route_terminal_id, routes.vehicle_type as route_vehicle_type, routes.status as route_status')
             ->join('routes', "routes.id = vehicles.default_route_id AND routes.status = 'active'", 'left')
             ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
             ->orderBy('vehicles.created_at', 'DESC')
@@ -154,6 +154,7 @@ class Vehicles extends BaseController
                     'in_list' => 'Status must be active, maintenance, or archived.',
                 ],
             ],
+            'dispatch_order' => ['rules' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[9999]'],
             'route_id'      => [
                 'rules'  => 'required|integer',
                 'errors' => [
@@ -240,7 +241,7 @@ class Vehicles extends BaseController
             }
         }
 
-        $this->vehicleModel->save([
+        if (!$this->vehicleModel->saveInDispatchOrder([
             'plate_number'     => $rawPlate,
             'operator_name'    => $rawOperator,
             'owner_name'       => $rawOperator,
@@ -250,7 +251,10 @@ class Vehicles extends BaseController
             'status'           => $status,
             'default_route_id' => $routeId,
             'photo'            => $photoRelPath,
-        ]);
+            'dispatch_order'   => $this->request->getPost('dispatch_order'),
+        ])) {
+            return redirect()->back()->withInput()->with('error', 'The vehicle could not be saved. Please try again.');
+        }
 
         $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
         $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $rawPlate . ' (' . $vehicleType . ') - Operator: ' . $rawOperator . ' - Driver: ' . $driverName . ' - Route: ' . $routeLabel);
@@ -336,6 +340,7 @@ class Vehicles extends BaseController
                     'in_list'  => 'Vehicle status must be active, maintenance, or archived.',
                 ],
             ],
+            'dispatch_order' => ['rules' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[9999]'],
             'route_id'      => [
                 'rules'  => 'required|integer',
                 'errors' => [
@@ -448,6 +453,7 @@ class Vehicles extends BaseController
             'capacity'         => $vehicle['capacity'] ?? '',
             'status'           => $vehicle['status'] ?? '',
             'default_route_id' => $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '',
+            'dispatch_order'   => $vehicle['dispatch_order'] ?? '',
         ], [
             'plate_number'     => $rawPlate,
             'operator_name'    => $rawOperator,
@@ -456,11 +462,12 @@ class Vehicles extends BaseController
             'capacity'         => $this->request->getPost('capacity'),
             'status'           => $this->request->getPost('status'),
             'default_route_id' => $routeId,
+            'dispatch_order'   => $this->request->getPost('dispatch_order') ?? ($vehicle['dispatch_order'] ?? ''),
         ])) {
             return $this->noChangesResponse();
         }
 
-        $this->vehicleModel->update($id, [
+        if (!$this->vehicleModel->saveInDispatchOrder([
             'plate_number'     => $rawPlate,
             'operator_name'    => $rawOperator,
             'owner_name'       => $rawOperator,
@@ -470,7 +477,10 @@ class Vehicles extends BaseController
             'status'           => $this->request->getPost('status'),
             'default_route_id' => $routeId,
             'photo'            => $photoRelPath,
-        ]);
+            'dispatch_order'   => $this->request->getPost('dispatch_order') ?? ($vehicle['dispatch_order'] ?? ''),
+        ], (int) $id)) {
+            return redirect()->back()->withInput()->with('error', 'The vehicle could not be saved. Please try again.');
+        }
 
         // Synchronize active queue snapshots so live boards and dispatch cards reflect changes immediately
         $queueModel = new \App\Models\QueueModel();
@@ -653,3 +663,4 @@ class Vehicles extends BaseController
         return redirect()->to('/admin/vehicles' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Invalid bulk action.');
     }
 }
+
