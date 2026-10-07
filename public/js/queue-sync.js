@@ -43,6 +43,8 @@
     var _paused = false;
     var _lastSyncToken = null;
     var _lastStructuralHash = null;
+    var _lastServiceDate = null;
+    var _pendingServiceDate = null;
     var _hasPolled = false;
 
     // Tracks the last time a WS passenger_change was received for each ID
@@ -411,6 +413,7 @@
         }
 
         _refreshPending = true;
+        var refreshedServiceDate = _pendingServiceDate;
         var generation = _generation;
         _refreshController = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
@@ -473,6 +476,8 @@
                 });
             }
 
+            if (refreshedServiceDate) _lastServiceDate = refreshedServiceDate;
+
             // Optional extra refresh logic (stat cards, activity logs, etc.)
             if (_config.extraRefresh) {
                 _config.extraRefresh(newDoc);
@@ -518,6 +523,11 @@
             }
 
             var needsRefresh = false;
+            if (json.service_date) {
+                _pendingServiceDate = json.service_date;
+                if (_lastServiceDate && json.service_date !== _lastServiceDate) needsRefresh = true;
+                if (!_lastServiceDate) _lastServiceDate = json.service_date;
+            }
             var currentIds = {};
 
             // Structural change detection (admin vehicle edits): compare a
@@ -899,6 +909,8 @@
         init: function(cfg) {
             if (_config) window.QueueSync.destroy();
             _config = cfg || {};
+            _lastServiceDate = _config.serviceDate || null;
+            _pendingServiceDate = _lastServiceDate;
             _paused = document.hidden;
             var generation = ++_generation;
 
@@ -1002,9 +1014,12 @@
             _wsUpdatedAt = {};
             _lastSyncToken = null;
             _lastStructuralHash = null;
+            _lastServiceDate = null;
+            _pendingServiceDate = null;
             _hasPolled = false;
         }
     };
 
 })(window);
+
 

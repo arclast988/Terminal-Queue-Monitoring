@@ -2119,7 +2119,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
                                         <div class="min-w-0 flex-grow-1">
                                             <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <span class="plate-number-box"><?= esc($v['plate_number']) ?> <span class="badge-modern badge-modern-primary">Round <?= (int) ($v['round_number'] ?? 1) ?></span></span>
+                                                    <span class="plate-number-box"><?= esc($v['plate_number']) ?> <span class="badge-modern badge-modern-primary dispatch-position-badge">Order <?= (int) ($v['dispatch_position'] ?? 1) ?></span> <span class="badge-modern badge-modern-primary">Round <?= (int) ($v['round_number'] ?? 1) ?></span></span>
                                                     <?= vehicle_type_badge($vType) ?>
                                                 </div>
                                                 <div class="flex-shrink-0">
@@ -2162,7 +2162,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 </div>
 
 <script src="<?= app_asset_url('js/queue-actions.js') ?>" data-cancel-url="<?= base_url('staff/queue/cancel-selected') ?>" data-refresh-url="<?= base_url('staff/queue/cancel-selection') ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
-<script src="<?= app_asset_url('js/dispatch-queue.js') ?>" defer data-round-url="<?= base_url('staff/queue/round') ?>" data-tick-url="<?= base_url('staff/queue/tick') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
+<script src="<?= app_asset_url('js/dispatch-queue.js') ?>" defer data-service-date="<?= date('Y-m-d') ?>" data-round-url="<?= base_url('staff/queue/round') ?>" data-tick-url="<?= base_url('staff/queue/tick') ?>" data-csrf-name="<?= csrf_token() ?>" data-csrf-value="<?= csrf_hash() ?>"></script>
 
 <!-- Change Driver Modal -->
 <div class="modal fade" id="changeDriverModal" tabindex="-1" aria-labelledby="changeDriverModalLabel" aria-hidden="true">
@@ -3071,6 +3071,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
     // module now refreshes #queue-list + #vehicleListContainer automatically so
     // admin vehicle edits appear instantly without a manual page reload.
     QueueSync.init({
+        serviceDate: '<?= date('Y-m-d') ?>',
         apiUrl:        '<?= base_url('api/queue-status') ?>',
         pollInterval:  3000,
         refreshUrl:    '<?= base_url('staff/queue') ?>',

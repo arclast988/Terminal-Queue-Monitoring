@@ -77,19 +77,38 @@ if (!empty($vehicles) && is_array($vehicles)) {
 $countInService = $countActive + $countMaintenance;
 ?>
 
+<?php
+$vehicleRouteFilters = [];
+foreach ($vehicles ?? [] as $registeredVehicle) {
+    if (empty($registeredVehicle['route_destination'])) continue;
+    $key = ($registeredVehicle['route_terminal_id'] ?? 0) . '|' . $registeredVehicle['route_destination'];
+    $vehicleRouteFilters[$key] = strtoupper($registeredVehicle['route_origin'] ?? '') . ' → ' . strtoupper($registeredVehicle['route_destination']);
+}
+asort($vehicleRouteFilters);
+?>
 <!-- Vehicle Filter & Summary Bar -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
         <!-- Filter Buttons Row -->
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 vehicle-register-filter-row">
             <div class="vehicle-search-group me-3 position-relative">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate, operator, or driver..." onkeyup="filterVehicles(currentFilter)" oninput="toggleVehicleClearBtn(this.value)" autocomplete="off">
+                <input type="text" class="vehicle-search-input" id="vehicle-search" placeholder="Search plate, operator, or driver..." aria-label="Search registered vehicles" oninput="toggleVehicleClearBtn(this.value); filterVehicles(currentFilter)" autocomplete="off">
                 <button type="button" class="btn-clear-search" id="clear-vehicle-search" onclick="clearVehicleSearch()" style="display: none !important;" title="Clear search">
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
             </div>
             
+            <div class="vehicle-route-filter">
+                <label for="vehicle-route-filter" class="form-label-modern">Filter route</label>
+                <select id="vehicle-route-filter" class="form-select-modern" onchange="filterVehicles(currentFilter)">
+                    <option value="">All routes</option>
+                    <?php foreach ($vehicleRouteFilters as $routeKey => $routeName): ?>
+                        <option value="<?= esc($routeKey, 'attr') ?>"><?= esc($routeName) ?></option>
+                    <?php endforeach; ?>
+                    <option value="__none">No active route</option>
+                </select>
+            </div>
             <div class="vehicle-filter-controls">
                 <span class="filter-label-text">
                     <i class="bi bi-funnel me-1"></i>Filter:
@@ -394,7 +413,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                 <tbody>
                     <?php if (!empty($vehicles) && is_array($vehicles)): ?>
                         <?php foreach ($vehicles as $i => $vehicle): ?>
-                            <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>" data-vehicle-id="<?= $vehicle['id'] ?>">
+                            <tr data-type="<?= esc($vehicle['type']) ?>" data-status="<?= esc($vehicle['status']) ?>" data-vehicle-id="<?= $vehicle['id'] ?>" data-route-key="<?= esc(!empty($vehicle['route_destination']) ? (($vehicle['route_terminal_id'] ?? 0) . '|' . $vehicle['route_destination']) : '__none', 'attr') ?>">
                                 <td data-label="Select" class="bulk-col bulk-select-cell" style="display: none; text-align: center;">
                                     <input type="checkbox" class="form-check-input vehicle-row-checkbox" value="<?= $vehicle['id'] ?>" data-status="<?= esc($vehicle['status']) ?>" data-plate="<?= esc($vehicle['plate_number']) ?>" title="Select vehicle <?= esc($vehicle['plate_number']) ?>">
                                 </td>
@@ -446,7 +465,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     ?>
                                         <div class="route-info">
                                             <i class="bi bi-geo-alt" style="color: var(--primary-red);"></i>
-                                            <span><?= $routeLabel ?></span>
+                                            <span><?= $routeLabel ?><?php if (!empty($vehicle['dispatch_order'])): ?><small class="d-block text-muted vehicle-start-order">Daily start #<?= (int) $vehicle['dispatch_order'] ?></small><?php endif; ?></span>
                                         </div>
                                     <?php else: ?>
                                         <span class="badge-modern badge-modern-warning">No Route</span>
@@ -975,6 +994,16 @@ table:not(.selection-mode-active) .bulk-select-cell {
         width: auto !important;
         margin: 0 !important;
     }
+    .vehicle-register-filter-row .vehicle-search-group { flex: 1 1 260px; min-width: 0; margin: 0 !important; }
+    .vehicle-route-filter { flex: 1 1 260px; min-width: 0; }
+    .vehicle-route-filter label { margin-bottom: 4px; }
+    .vehicle-route-filter select { width: 100%; min-width: 0; max-width: 100%; }
+    .vehicle-register-filter-row .vehicle-filter-controls { flex-basis: 100%; width: 100%; min-width: 0; }
+    .vehicle-dispatch-order-field { min-width: 0; }
+    .vehicle-start-order { white-space: normal; }
+    @media (max-width: 575.98px) {
+        .vehicle-register-filter-row .vehicle-search-group, .vehicle-route-filter { flex-basis: 100%; }
+    }
     .vehicle-filter-strip {
         display: flex;
         align-items: center;
@@ -1016,6 +1045,9 @@ table:not(.selection-mode-active) .bulk-select-cell {
 <?php $vehicleTypeLabels = array_column($vehicleTypes ?? [], 'name', 'slug'); ?>
 <script>
     let currentFilter = 'all';
+    const savedRouteFilter = new URLSearchParams(window.location.search).get('route') || '';
+    const registerRouteFilter = document.getElementById('vehicle-route-filter');
+    if (registerRouteFilter && Array.from(registerRouteFilter.options).some(option => option.value === savedRouteFilter)) registerRouteFilter.value = savedRouteFilter;
     const vehicleTypeLabels = <?= json_encode($vehicleTypeLabels, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
 
     function toggleVehicleClearBtn(val) {
@@ -1045,6 +1077,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         const filterLabel = document.getElementById('filter-label');
         const typeFilters = Object.keys(vehicleTypeLabels);
         const statusFilters = ['active', 'maintenance', 'archived'];
+        const routeFilter = document.getElementById('vehicle-route-filter');
+        const selectedRoute = routeFilter ? routeFilter.value : '';
 
         // Update active button styling
         document.querySelectorAll('.vf-btn').forEach(btn => btn.classList.remove('active'));
@@ -1079,6 +1113,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                 show = !isArchived && (row.getAttribute('data-type') === filter);
             }
 
+            if (show && selectedRoute) show = row.getAttribute('data-route-key') === selectedRoute;
             if (show && searchQuery) {
                 const textContent = row.textContent.toLowerCase();
                 if (!textContent.includes(searchQuery)) {
@@ -1110,6 +1145,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         } else {
             newUrl.searchParams.set('tab', filter);
         }
+        if (selectedRoute) newUrl.searchParams.set('route', selectedRoute);
+        else newUrl.searchParams.delete('route');
         window.history.replaceState({}, '', newUrl);
 
         // Update single deactivate modal redirect_tab
@@ -1127,6 +1164,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         } else {
             filterLabel.innerHTML = 'Showing <strong>' + visibleCount + '</strong> ' + (labelMap[filter] || filter) + ' vehicle' + (visibleCount !== 1 ? 's' : '');
         }
+
+        if (selectedRoute && routeFilter.selectedIndex >= 0) filterLabel.appendChild(document.createTextNode(' · ' + routeFilter.options[routeFilter.selectedIndex].textContent));
 
         // Handle empty state
         let emptyRow = document.querySelector('#vehicles-table .no-filter-results');
@@ -2718,6 +2757,9 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                         </div>
                     </div>
 
+                    <div class="row g-3 mt-1">
+                        <?= view('admin/vehicles/dispatch-order-field', ['dispatchOrder' => '']) ?>
+                    </div>
                     <input type="hidden" name="status" value="active">
                 </div>
                 <div class="modal-footer py-2 px-3 bg-white d-flex align-items-center justify-content-between flex-nowrap w-100" style="border-top: 1px solid var(--border, #e2e8f0); border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; position: relative; z-index: 1;">
@@ -3951,5 +3993,6 @@ body.modal-open [id^="editVehicleTypeModal"],
 </script>
 
 <?= view('templates/footer') ?>
+
 
 

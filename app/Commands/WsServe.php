@@ -63,6 +63,7 @@ class WsServe extends BaseCommand
         $wsClients = [];
         $lastPing = time();
         $lastBoardingBoundary = -1;
+        $lastServiceDate = date('Y-m-d');
 
         while (true) {
             // Incomplete handshakes cannot hold a client slot indefinitely.
@@ -71,8 +72,13 @@ class WsServe extends BaseCommand
             if ($boundary !== $lastBoardingBoundary) {
                 $lastBoardingBoundary = $boundary;
                 try {
-                    $ids = (new \App\Models\QueueModel())->advanceBoarding($now);
-                    if ($ids) {
+                    $queue = new \App\Models\QueueModel();
+                    $reset = $queue->resetForNewDay($now);
+                    $ids = $queue->advanceBoarding($now);
+                    $serviceDate = date('Y-m-d', $now);
+                    $dayChanged = $serviceDate !== $lastServiceDate || $reset['canceled_ids'] || $reset['rounds_reset'];
+                    $lastServiceDate = $serviceDate;
+                    if ($ids || $dayChanged) {
                         // Publish only after advanceBoarding's transaction commits.
                         $token = microtime(true);
                         $tokenFile = WRITEPATH . 'sync_token.txt';
@@ -88,7 +94,7 @@ class WsServe extends BaseCommand
                         }
                         $frame = $this->encode(json_encode([
                             'broadcast_id' => bin2hex(random_bytes(4)), 'sync_token' => $token,
-                            'type' => 'queue_update', 'data' => ['action' => 'automatic_boarding', 'ids' => $ids],
+                            'type' => 'queue_update', 'data' => ['action' => $dayChanged ? 'day_reset' : 'automatic_boarding', 'ids' => $ids, 'service_date' => $serviceDate, 'queue_ids' => $reset['canceled_ids']],
                             'timestamp' => date('Y-m-d H:i:s'),
                         ]));
                         foreach ($wsClients as $clientId => $client) {
@@ -538,4 +544,5 @@ class WsServe extends BaseCommand
         return $this->encode($payload, 0x8);
     }
 }
+
 

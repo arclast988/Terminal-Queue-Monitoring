@@ -174,9 +174,16 @@
         }
     });
 
+    var serviceDate = script.dataset.serviceDate || '';
     async function tick() {
         if (document.hidden || posting) return;
-        try { await post(script.dataset.tickUrl); } catch (error) { /* The next boundary/visible refresh retries. */ }
+        try {
+            var result = await post(script.dataset.tickUrl);
+            if (result.service_date && result.service_date !== serviceDate) {
+                serviceDate = result.service_date;
+                if (window.QueueSync) window.QueueSync.refresh(true);
+            }
+        } catch (error) { /* The next boundary/visible refresh retries. */ }
     }
     function scheduleBoundary() {
         var delay = 300000 - (Date.now() % 300000) + 50;
@@ -187,3 +194,4 @@
     applyFilters();
     scheduleBoundary();
 })();
+

@@ -205,7 +205,10 @@ select.form-select {
                 </div>
             </div>
 
-            <div class="d-flex gap-2 mt-4">
+            <div class="row g-3">
+                <?= view('admin/vehicles/dispatch-order-field', ['dispatchOrder' => $vehicle['dispatch_order'] ?? '']) ?>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-4">
                 <button type="submit" class="btn-modern btn-modern-primary">
                     <i class="bi bi-check-lg"></i> Update Vehicle
                 </button>
@@ -713,3 +716,4 @@ function updateEditTypeFallback(select) {
 </script>
 
 <?= $this->include('templates/footer') ?>
+

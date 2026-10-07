@@ -199,6 +199,8 @@ class Queue extends BaseController
                 ->select('vehicle_id, MAX(departure_time) as departure_time')
                 ->whereIn('vehicle_id', $availableVehicleIds)
                 ->where('status', 'departed')
+                ->where('departure_time >=', date('Y-m-d') . ' 00:00:00')
+                ->where('departure_time <', date('Y-m-d', strtotime('tomorrow')) . ' 00:00:00')
                 ->groupBy('vehicle_id')
                 ->findAll();
 
@@ -247,50 +249,7 @@ class Queue extends BaseController
                 $filteredVehicles[] = $v;
             }
 
-            // Sort:
-            // 1. Group by Destination Alphabetically (e.g. Bato, Maasin, Ormoc)
-            // 2. READY vehicles first, DEPARTED vehicles at the bottom of the list (FIFO trip rotation)
-            // 3. For same destination & status, sort by Vehicle Type Alphabetically (e.g. Bus, Car, Jeepney, Minibus, Taxi, Tricycle, Van)
-            // 4. If DEPARTED of the same type, oldest departure first (FIFO trip rotation)
-            // 5. If READY of the same type, sort by plate number alphabetically, then database ID
-            usort($filteredVehicles, function($a, $b) {
-                // 1. Group by Destination Alphabetically
-                $destCmp = strcmp((string)($a['route_destination'] ?? ''), (string)($b['route_destination'] ?? ''));
-                if ($destCmp !== 0) {
-                    return $destCmp;
-                }
-
-                // 2. READY vehicles first, DEPARTED vehicles at bottom
-                if ($a['is_departed'] !== $b['is_departed']) {
-                    return $a['is_departed'] ? 1 : -1; // ready (false) comes before departed (true)
-                }
-
-                // 3. Vehicle Type Alphabetically (e.g. Taxi before Van)
-                $typeA = strtolower(vehicle_type_label($a['type'] ?? ''));
-                $typeB = strtolower(vehicle_type_label($b['type'] ?? ''));
-                $typeCmp = strcmp($typeA, $typeB);
-                if ($typeCmp !== 0) {
-                    return $typeCmp;
-                }
-
-                // 4. If both DEPARTED of the same type, oldest departure first
-                if (!empty($a['is_departed'])) {
-                    $timeCmp = ($a['departed_timestamp'] ?? 0) <=> ($b['departed_timestamp'] ?? 0);
-                    if ($timeCmp !== 0) {
-                        return $timeCmp;
-                    }
-                }
-
-                // 5. If both READY of the same type, sort by plate number alphabetically, then ID
-                $plateCmp = strcmp((string)($a['plate_number'] ?? ''), (string)($b['plate_number'] ?? ''));
-                if ($plateCmp !== 0) {
-                    return $plateCmp;
-                }
-
-                return ((int) $a['id']) <=> ((int) $b['id']);
-            });
-
-            $vehicles = $filteredVehicles;
+            $vehicles = VehicleModel::sortForDispatch($filteredVehicles, $todayDate);
         }
 
         $routeBuilder = (new RouteModel())->select('routes.*, terminals.name as origin')
@@ -338,8 +297,17 @@ class Queue extends BaseController
         return view('staff/queue/index', $data);
     }
 
+    private function resetDailyQueue(): void
+    {
+        $reset = $this->queueModel->resetForNewDay();
+        if ($reset['canceled_ids'] || $reset['rounds_reset']) {
+            $this->broadcastUpdate('queue_update', ['action' => 'day_reset', 'service_date' => date('Y-m-d'), 'queue_ids' => $reset['canceled_ids']]);
+        }
+    }
+
     private function advanceAutomaticBoarding(): void
     {
+        $this->resetDailyQueue();
         $ids = $this->queueModel->advanceBoarding();
         if ($ids) $this->broadcastUpdate('queue_update', ['action' => 'automatic_boarding', 'ids' => $ids]);
     }
@@ -347,7 +315,7 @@ class Queue extends BaseController
     public function tick()
     {
         $this->advanceAutomaticBoarding();
-        return $this->response->setJSON(['success' => true, 'csrf' => csrf_hash()]);
+        return $this->response->setJSON(['success' => true, 'service_date' => date('Y-m-d'), 'csrf' => csrf_hash()]);
     }
 
     public function setRound()
@@ -361,6 +329,7 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+        $this->queueModel->resetForNewDay();
         $ruleModel = new DepartureRuleModel($db);
         $matched = $ruleModel->getRuleForTime(date('Y-m-d H:i:s'), (int) $route['terminal_id'], $routeId, (int) $round);
         if (empty($matched['id'])) {
@@ -393,6 +362,7 @@ class Queue extends BaseController
 
     public function add()
     {
+        $this->resetDailyQueue();
         $vehicleIds = $this->request->getPost('vehicle_ids');
         if (empty($vehicleIds)) {
             $singleId = $this->request->getPost('vehicle_id');
@@ -416,7 +386,7 @@ class Queue extends BaseController
         $warnings = [];
 
         $cooldownMin = vehicle_cooldown_minutes();
-        $cooldownCutoff = date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes"));
+        $cooldownCutoff = max(date('Y-m-d') . ' 00:00:00', date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes")));
         $departureRuleModel = new DepartureRuleModel();
         $currentTime = date('H:i:s');
         $assignedRouteIds = $this->getAssignedRouteIds();
@@ -429,6 +399,7 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+        $this->queueModel->resetForNewDay();
 
         $baseArrivalTimestamp = time();
         $selectionIndex = 0;
@@ -555,8 +526,8 @@ class Queue extends BaseController
             $waitMinutes = (int) $matchedRule['wait_minutes'];
             $ruleLabel   = $matchedRule['label'] ?? 'Default';
 
-            // Stagger arrival_time by selection order to guarantee FIFO queue ranking
-            $arrivalTime = date('Y-m-d H:i:s', $baseArrivalTimestamp + $selectionIndex);
+            // Position preserves selection order; timestamps must stay in the real service day.
+            $arrivalTime = date('Y-m-d H:i:s', $baseArrivalTimestamp);
 
             $queueId = $this->queueModel->insert([
                 'vehicle_id'          => $vehicleId,
@@ -622,6 +593,7 @@ class Queue extends BaseController
 
     public function updateStatus($id, $status)
     {
+        $this->resetDailyQueue();
         // Server-side route authorization check
         if (!$this->hasQueueAccess((int) $id)) {
             $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to update status of queue #' . $id . ' on an unassigned route.');
@@ -689,6 +661,7 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+        $this->queueModel->resetForNewDay();
 
         // Re-read under the ordering lock so retried departure requests cannot restart the next timer.
         $lockedItem = $this->queueModel->find($id);
@@ -700,6 +673,7 @@ class Queue extends BaseController
             $db->transRollback();
             return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip has already ended. Refresh the queue.']);
         }
+        if ($status === 'departed') $data['departure_time'] = date('Y-m-d H:i:s');
         if ($status === 'boarding') {
             $route = $this->routeModel->find($lockedItem['route_id']);
             $siblings = $this->routeModel->getDestinationRouteIds((int) $route['terminal_id'], $route['destination']);
@@ -739,6 +713,7 @@ class Queue extends BaseController
         // Keep boarding first, preserve the dispatcher order and departure
         // anchor, and renumber the active line after a depart/cancel.
         if ($status === 'departed') {
+            $this->vehicleModel->rotateAfterDeparture((int) $lockedItem['vehicle_id'], (int) $lockedItem['route_id']);
             $this->queueModel->recalculateSchedule((int) $existingItem['route_id'], true, strtotime($data['departure_time']));
         } else {
             $this->queueModel->reorderByDeparture();
@@ -815,6 +790,7 @@ class Queue extends BaseController
         $db->transBegin();
         try {
             $this->acquireQueueOrderingLock($db);
+        $this->queueModel->resetForNewDay();
             $items = $this->queueModel->whereIn('id', $ids)->findAll();
             if (count($items) !== count($ids)) {
                 $db->transRollback();
@@ -1037,6 +1013,7 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+        $this->queueModel->resetForNewDay();
 
         // Re-read the complete line after locking. Refuse a stale or partial
         // request instead of silently moving vehicles the dispatcher did not see.
@@ -1118,6 +1095,7 @@ class Queue extends BaseController
 
     public function undoCancel($id)
     {
+        $this->resetDailyQueue();
         // Server-side route authorization check
         if (!$this->hasQueueAccess((int) $id)) {
             $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to undo cancel on unassigned route queue #' . $id . '.');
@@ -1127,6 +1105,10 @@ class Queue extends BaseController
         $queueItem = $this->queueModel->find($id);
         if (!$queueItem) {
             return $this->response->setJSON(['success' => false, 'message' => 'Queue item not found.']);
+        }
+
+        if (!empty($queueItem['arrival_time']) && $queueItem['arrival_time'] < date('Y-m-d') . ' 00:00:00') {
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip belongs to a previous day. Add the vehicle to today’s queue instead.']);
         }
 
         if ($queueItem['status'] !== 'canceled') {
@@ -1170,6 +1152,12 @@ class Queue extends BaseController
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
+        $this->queueModel->resetForNewDay();
+
+        if ($queueItem['arrival_time'] < date('Y-m-d') . ' 00:00:00') {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip belongs to a previous day. Add the vehicle to today’s queue instead.']);
+        }
 
         // Re-check after acquiring the queue lock so a concurrent add cannot
         // activate the same vehicle between the earlier validation and restore.
@@ -1271,3 +1259,4 @@ class Queue extends BaseController
         return redirect()->to(base_url('staff/queue'))->with('success', 'Trip for ' . $plateNumber . ' has been restored to the queue.');
     }
 }
+

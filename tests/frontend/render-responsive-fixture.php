@@ -120,7 +120,7 @@ $item = [
 $route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
-$managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
+$managementPages = ['admin-users', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
 $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Palompon', 'route_destination' => $longValue, 'created_at' => '2026-10-01 08:00:00'];
 $vehicle['status'] = 'active';
 $fixtureData = [
@@ -203,6 +203,20 @@ if (in_array($fixturePage, ['guest-contact-verification','guest-contact-verifica
     if ($fixtureState === 'error') $fixtureData['error'] = 'Incorrect code. 4 attempts remaining.';
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
+if ($fixturePage === 'admin-vehicle-edit') {
+    $fixtureData['vehicle'] = $vehicle + ['default_route_id'=>1, 'dispatch_order'=>2];
+}
+if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($argv[4] ?? '') === 'dispatch-register') {
+    $fixtureData['routes'] = [array_replace($route,['destination'=>'ORMOC']), array_replace($route,['id'=>2,'destination'=>'BATO'])];
+    $fixtureData['vehicleTypes'][] = ['id'=>2,'slug'=>'van','name'=>'Van','color'=>'#b71c1c','icon'=>'fa-bus','photo'=>null];
+    $fixtureData['vehicles'] = [
+        array_replace($vehicle,['id'=>201,'plate_number'=>'ZZZ-001','type'=>'van','route_terminal_id'=>1,'route_destination'=>'ORMOC','dispatch_order'=>1]),
+        array_replace($vehicle,['id'=>202,'plate_number'=>'AAA-002','route_terminal_id'=>1,'route_destination'=>'ORMOC','dispatch_order'=>2]),
+        array_replace($vehicle,['id'=>203,'plate_number'=>'BATO-003','route_terminal_id'=>1,'route_destination'=>'BATO','dispatch_order'=>1]),
+        array_replace($vehicle,['id'=>204,'plate_number'=>'NO-ROUTE','status'=>'archived','route_destination'=>null,'route_origin'=>null]),
+    ];
+}
+
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
     foreach ([1=>20, 2=>25] as $round=>$minutes) {
         $fixtureData['departure_rules'][] = ['id'=>$round,'label'=>'Round schedule','round_number'=>$round,'days_label'=>'Every day','time_range'=>'12:00 AM – 11:59 PM','wait_minutes'=>$minutes,'interval_label'=>'Every '.$minutes.' min','route_scope'=>'All Routes','route_destination'=>null,'is_active_now'=>$round===1,'active_destinations'=>$round===1?['ORMOC']:[]];
@@ -252,6 +266,21 @@ if ($fixturePage === 'staff-queue') {
         $fixtureData['vehicles'][] = $newVehicle;
     }
 }
+if ($fixturePage === 'staff-queue' && in_array(($argv[4] ?? ''), ['dispatch-before','dispatch-departed','dispatch-reset'], true)) {
+    $fixtureData['queue'] = [];
+    $fixtureData['queueRoutes'][0]['destination'] = 'ORMOC';
+    $fixtureData['vehicles'] = [];
+    $order = ($argv[4] ?? '') === 'dispatch-departed' ? [202,203,201] : [201,202,203];
+    foreach ($order as $position=>$id) {
+        $fixtureData['vehicles'][] = array_replace($vehicle, [
+            'id'=>$id, 'plate_number'=>[201=>'ZZZ-001',202=>'AAA-002',203=>'MID-003'][$id],
+            'route_terminal_id'=>1, 'route_destination'=>'ORMOC', 'default_route_id'=>1,
+            'dispatch_order'=>$id-200, 'dispatch_position'=>$position+1,
+            'is_departed'=>($argv[4] ?? '') === 'dispatch-departed' && $id===201,
+            'departed_time'=>'11:59 PM', 'round_number'=>1,
+        ]);
+    }
+}
 $fixtureRenderer = new ResponsiveFixtureRenderer();
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
@@ -260,7 +289,7 @@ $views = [
     'guest-contact-verification-content' => 'partials/guest-contact-verification',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
-    'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-routes' => 'admin/routes/index',
+    'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
     'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',
@@ -271,3 +300,4 @@ $html = $fixtureRenderer->render($views[$fixturePage]);
 if ($fixtureRole !== null && !in_array($fixturePage, $managementPages, true)) $html .= '</div></body></html>';
 require_once dirname(__DIR__, 2) . '/app/Libraries/InitialStyles.php';
 echo \App\Libraries\InitialStyles::prepare($html);
+

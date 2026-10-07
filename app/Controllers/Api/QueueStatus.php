@@ -14,10 +14,20 @@ class QueueStatus extends Controller
 {
     public function index()
     {
-        // Read-only poll endpoint hit every few seconds: release session
-        // lock immediately so concurrent polls don't serialize.
+        // Release the session before automatic maintenance and polling so its
+        // lock cannot serialize concurrent polls.
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
+        }
+        $queueModel = new QueueModel();
+        $now = time();
+        $serviceDate = date('Y-m-d', $now);
+        $reset = $queueModel->resetForNewDay($now);
+        if ($reset['canceled_ids'] || $reset['rounds_reset']) {
+            cache()->delete('rt_queue_status_pkg');
+            cache()->delete('rt_queue_status');
+            cache()->delete('rt_home_status');
+            cache()->deleteMatching('rt_sched_*');
         }
         // Read sync token first to ensure absolute freshness
         $syncToken = '';
@@ -37,6 +47,7 @@ class QueueStatus extends Controller
             $cached = null;
         }
 
+        if (is_array($cached) && ($cached['service_date'] ?? '') !== $serviceDate) $cached = null;
         if (! is_array($cached)) {
             $queueModel = new QueueModel();
 
@@ -73,6 +84,7 @@ class QueueStatus extends Controller
             $cached = [
                 'items'     => $items,
                 'cached_at' => microtime(true),
+                'service_date' => $serviceDate,
             ];
 
             cache()->save('rt_queue_status_pkg', $cached, 2);
@@ -85,6 +97,7 @@ class QueueStatus extends Controller
             ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->setJSON([
                 'success' => true,
+                'service_date' => $serviceDate,
                 'queue'   => $items,
                 'vehicle_type_colors' => get_db_vehicle_types(),
                 'sync_token' => $syncToken,
@@ -98,6 +111,7 @@ class QueueStatus extends Controller
             session_write_close();
         }
         $queueModel = new \App\Models\QueueModel();
+        $queueModel->resetForNewDay();
 
         // 1. Check if already in active queue
         $existing = $queueModel->where('vehicle_id', $vehicleId)
@@ -116,7 +130,7 @@ class QueueStatus extends Controller
         // 2. Check for recent departure (within configured cooldown)
         $cooldownMin = vehicle_cooldown_minutes();
         if ($cooldownMin > 0) {
-            $cooldownCutoff = date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes"));
+            $cooldownCutoff = max(date('Y-m-d') . ' 00:00:00', date('Y-m-d H:i:s', strtotime("-{$cooldownMin} minutes")));
             $recentDeparture = $queueModel->where('vehicle_id', $vehicleId)
                 ->where('status', 'departed')
                 ->where('departure_time >=', $cooldownCutoff)

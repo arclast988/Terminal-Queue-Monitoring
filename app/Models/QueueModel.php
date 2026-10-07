@@ -291,6 +291,35 @@ class QueueModel extends Model
         return self::nextFiveMinuteBoundary($boardingStart + $waitMinutes * 60);
     }
 
+    /** Close yesterday's unfinished trips; history and today's trips stay intact. */
+    public function resetForNewDay(?int $now = null): array
+    {
+        $now ??= time();
+        $today = date('Y-m-d', $now);
+        $this->db->transStart();
+        if (str_contains(strtolower($this->db->DBDriver), 'postgre')) {
+            $key = crc32('queue_recalc_0');
+            $this->db->query('SELECT pg_advisory_xact_lock(?)', [$key > 2147483647 ? $key - 4294967296 : $key]);
+        }
+        $ids = array_map('intval', $this->whereIn('status', ['waiting', 'boarding'])
+            ->where('arrival_time <', $today . ' 00:00:00')->findColumn('id') ?: []);
+        if ($ids) {
+            $this->db->table('queue')->whereIn('id', $ids)->update([
+                'status' => 'canceled', 'position' => 0,
+                'estimated_departure' => null, 'boarding_start' => null,
+            ]);
+        }
+        $rounds = 0;
+        if ($this->db->tableExists('dispatch_rounds')) {
+            $this->db->table('dispatch_rounds')->where('service_date <', $today)
+                ->update(['service_date' => $today, 'round_number' => 1]);
+            $rounds = $this->db->affectedRows();
+        }
+        $this->db->transComplete();
+        return $this->db->transStatus() ? ['canceled_ids' => $ids, 'rounds_reset' => $rounds]
+            : ['canceled_ids' => [], 'rounds_reset' => 0];
+    }
+
     /** Promote only the head of an idle destination; a late vehicle never overlaps it. */
     public function advanceBoarding(?int $now = null): array
     {
@@ -300,19 +329,7 @@ class QueueModel extends Model
             $key = crc32('queue_recalc_0');
             $this->db->query('SELECT pg_advisory_xact_lock(?)', [$key > 2147483647 ? $key - 4294967296 : $key]);
         }
-        // A new operating day returns each route to Round 1. Re-time waiting
-        // vehicles using today's rules while preserving trips already boarding.
-        if ($this->db->tableExists('dispatch_rounds')) {
-            $today = date('Y-m-d', $now);
-            $states = $this->db->table('dispatch_rounds')->where('service_date <', $today)->get()->getResultArray();
-            foreach ($states as $state) {
-                $this->db->table('dispatch_rounds')->where('id', $state['id'])->update(['service_date' => $today, 'round_number' => 1]);
-                $siblings = (new RouteModel($this->db))->getDestinationRouteIds((int) $state['terminal_id'], $state['destination']);
-                if (!$siblings) continue;
-                $this->db->table('queue')->whereIn('route_id', $siblings)->where('status', 'waiting')->update(['round_number' => 1]);
-                $this->recalculateSchedule((int) $siblings[0], true, null, $now);
-            }
-        }
+        $this->resetForNewDay($now);
         $items = $this->select('queue.*, routes.terminal_id, routes.destination')
             ->join('routes', 'routes.id = queue.route_id')->whereIn('queue.status', ['waiting', 'boarding'])
             ->orderBy("CASE WHEN queue.status = 'boarding' THEN 0 ELSE 1 END", 'ASC')
