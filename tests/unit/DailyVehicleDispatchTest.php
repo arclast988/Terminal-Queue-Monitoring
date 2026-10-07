@@ -33,6 +33,9 @@ final class DailyVehicleDispatchTest extends CIUnitTestCase
         $this->dispatchDb->query('CREATE TEMPORARY TABLE dispatch_rounds (
             id SERIAL PRIMARY KEY, terminal_id INTEGER, destination VARCHAR(100), service_date DATE, round_number INTEGER
         )');
+        // Metadata checks must inspect these fixtures, not depend on public tables.
+        $this->dispatchDb->schema = (string) $this->dispatchDb
+            ->query('SELECT pg_my_temp_schema()::regnamespace::text AS name')->getRowArray()['name'];
         $this->dispatchDb->table('routes')->insertBatch([
             ['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC'],
             ['id'=>2, 'terminal_id'=>1, 'destination'=>'ORMOC'],

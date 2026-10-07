@@ -272,14 +272,21 @@ SVG;
 
         function updateClock() {
             var now = new Date();
+            var value = formatter.format(now);
+            var timestamp = now.toISOString();
             clocks.forEach(function (clock) {
-                clock.textContent = formatter.format(now);
-                clock.dateTime = now.toISOString();
+                if (clock.textContent !== value) clock.textContent = value;
+                if (clock.dateTime.slice(0, 16) !== timestamp.slice(0, 16)) clock.dateTime = timestamp;
             });
         }
 
-        function startClock() {
+        function stopClock() {
             if (clockTimer) window.clearInterval(clockTimer);
+            clockTimer = null;
+        }
+        function startClock() {
+            stopClock();
+            if (document.hidden) return;
             updateClock();
             clockTimer = window.setInterval(updateClock, 1000);
         }
@@ -287,12 +294,13 @@ SVG;
         startClock();
         document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
-                if (clockTimer) window.clearInterval(clockTimer);
-                clockTimer = null;
+                stopClock();
                 return;
             }
             startClock();
         });
+        window.addEventListener('pagehide', stopClock);
+        window.addEventListener('pageshow', function (event) { if (event.persisted) startClock(); });
     })();
 
     function openSidebarDrawer() {

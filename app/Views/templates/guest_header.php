@@ -256,9 +256,24 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 var value = formatter.format(new Date());
                 if (el.textContent !== value) el.textContent = value;
             }
-            updateClock();
-            setInterval(updateClock, 1000);
-            document.addEventListener('visibilitychange', updateClock);
+            var clockTimer = null;
+            function stopClock() {
+                if (clockTimer !== null) clearInterval(clockTimer);
+                clockTimer = null;
+            }
+            function startClock() {
+                stopClock();
+                if (document.hidden) return;
+                updateClock();
+                clockTimer = setInterval(updateClock, 1000);
+            }
+            startClock();
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) stopClock();
+                else startClock();
+            });
+            window.addEventListener('pagehide', stopClock);
+            window.addEventListener('pageshow', function (event) { if (event.persisted) startClock(); });
         }
     })();
 

@@ -72,8 +72,8 @@ test.after(async () => {
   const dir = path.join(__dirname, 'artifacts'); fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'responsive-' + engine + '.json'), JSON.stringify(report, null, 2));
 });
-async function open(t, name, width, height, query = 'long=1', mode = 'full') {
-  const context = await browser.newContext({ viewport: { width, height }, reducedMotion: mode === 'reduced' ? 'reduce' : 'no-preference' });
+async function open(t, name, width, height, query = 'long=1', mode = 'full', touch = false) {
+  const context = await browser.newContext({ viewport: { width, height }, hasTouch: touch, reducedMotion: mode === 'reduced' ? 'reduce' : 'no-preference' });
   t.after(() => context.close());
   await context.addInitScript(({ lite }) => {
     Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { configurable: true, get: () => lite ? 2 : 8 });
@@ -375,8 +375,8 @@ test('vehicle modals preserve native fields, validation, focus and dismissal at 
 });
 
 test('vehicle autocomplete validation stays closed until the field is used and preserves registration payloads', { timeout: 60000 }, async t => {
-  for (const [width, height, mode] of [[320, 568, 'full'], [844, 390, 'full'], [1280, 800, 'full'], [320, 568, 'lite'], [320, 568, 'reduced']]) {
-    const { page, context, errors } = await open(t, 'admin-vehicles', width, height, '', mode);
+  for (const [width, height, mode, touch] of [[320, 568, 'full'], [844, 390, 'full'], [1280, 800, 'full'], [320, 568, 'lite'], [320, 568, 'reduced'], [390, 844, 'full', true]]) {
+    const { page, context, errors } = await open(t, 'admin-vehicles', width, height, '', mode, touch);
     await page.addScriptTag({ path: path.join(root, 'public/assets/js/autocomplete-search.js') });
     const posts = []; page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
     await page.locator('[data-bs-target="#registerVehicleModal"]').click();
@@ -417,11 +417,14 @@ test('vehicle autocomplete validation stays closed until the field is used and p
     // Check a fresh pointer interaction after leaving validation focus.
     // Escape is not used here because it dismisses the Bootstrap modal.
     await page.locator('#capacity').focus();
-    await routeInput.click();
+    if (touch) await routeInput.tap();
+    else await routeInput.click();
     await page.locator('#route_id').locator('..').locator('.autocomplete-dropdown').waitFor({ state: 'visible', timeout: 3000 });
     assert.equal(await opened.count(), 1, `route click ${width} ${height} ${mode}`);
-    await page.locator('#route_id').locator('..').locator('.autocomplete-item[data-value="1"]').click();
-    assert.equal(await page.locator('#route_id').inputValue(), '1');
+    const routeOption = page.locator('#route_id').locator('..').locator('.autocomplete-item[data-value="1"]');
+    if (touch) await routeOption.tap();
+    else await routeOption.click();
+    assert.equal(await page.locator('#route_id').inputValue(), '1', `route selection ${width} ${height} ${mode}${touch ? ' touch' : ''}`);
     assert.equal(await opened.count(), 0);
     assert.equal(await form.evaluate(el => el.checkValidity()), true);
     await form.evaluate(el => {

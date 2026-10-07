@@ -6,6 +6,20 @@ const loader = 'public/assets/js/global-loader.js';
 const sync = 'public/js/queue-sync.js';
 function loaded(options) { const h = harness(options); h.load('public/assets/js/interaction-motion.js'); h.load(loader); return h; }
 
+test('interrupted native page transitions leave navigation usable without unhandled rejections', async () => {
+  const h = loaded();
+  for (const type of ['pageswap', 'pagereveal']) {
+    const viewTransition = Object.fromEntries(['ready', 'finished', 'updateCallbackDone'].map(name => [name, Promise.reject(new Error('snapshot skipped'))]));
+    assert.equal(h.window.emit(type, { viewTransition }).defaultPrevented, false);
+  }
+  await flush();
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-reveal'), '');
+  const request = h.window.fetch('/next-page');
+  assert.equal(h.requests.length, 1);
+  h.requests[0].resolve({ ok: true });
+  assert.equal((await request).ok, true);
+});
+
 test('fetch starts immediately and preserves its arguments and response identity', async () => {
   const h = loaded(); const init = { method: 'POST', body: '{"count":3}', headers: { 'X-CSRF-TOKEN': 'fixture' } };
   const request = h.window.fetch('/passengers', init);

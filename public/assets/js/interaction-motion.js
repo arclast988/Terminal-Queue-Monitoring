@@ -90,14 +90,21 @@
     } catch (error) { /* Older browsers may omit navigation timing/referrers. */ }
     // Native page navigation keeps the old page visible while the response loads.
     // The browser owns routing, form submission, history and transition timing.
+    /** @param {ViewTransition} transition */
+    function observeTransition(transition) {
+        // A fast second navigation or expired snapshot may skip an animation.
+        // Observe its lifecycle promises without holding up the destination.
+        [transition.ready, transition.finished, transition.updateCallbackDone].forEach(function (promise) {
+            if (promise) promise.catch(function () {});
+        });
+    }
     window.addEventListener('pageswap', function (event) {
         if (!event.viewTransition) return;
-        // A skipped/expired snapshot rejects ready; navigation still succeeds.
-        event.viewTransition.ready.catch(function () {});
+        observeTransition(event.viewTransition);
     });
     window.addEventListener('pagereveal', function (event) {
         if (!event.viewTransition) return;
-        event.viewTransition.ready.catch(function () {});
+        observeTransition(event.viewTransition);
         // Retain for this document so entry animations do not restart after the fade.
         root.setAttribute('data-tq-navigation-reveal', '');
     });

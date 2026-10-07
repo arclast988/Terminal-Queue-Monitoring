@@ -85,8 +85,17 @@ async function open(t, mode = 'full', captureFrames = false, viewport = { width:
     Object.defineProperty(Navigator.prototype, 'deviceMemory', { get: () => mode === 'lite' ? 2 : 8 });
     window.transitionRecords = [];
     window.layoutShifts = [];
+    window.layoutShiftDetails = [];
     if (typeof PerformanceObserver !== 'undefined' && PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
-      new PerformanceObserver(list => window.layoutShifts.push(...list.getEntries().map(entry => entry.value)))
+      new PerformanceObserver(list => {
+        for (const entry of list.getEntries()) {
+          window.layoutShifts.push(entry.value);
+          window.layoutShiftDetails.push({ value:entry.value, sources:entry.sources.map(source => ({
+            element:source.node?.id || source.node?.className || source.node?.nodeName,
+            before:source.previousRect.toJSON(), after:source.currentRect.toJSON(),
+          })) });
+        }
+      })
         .observe({ type: 'layout-shift', buffered: true });
     }
     window.addEventListener('pagereveal', event => {
@@ -120,6 +129,26 @@ async function navigate(page, to) {
   await page.locator(`#site-header a[href="${to}"]:visible, .sticky-top-wrapper a[href="${to}"]:visible, #siteSidebarDrawer a[href="${to}"]:visible`).first().click();
   await page.waitForURL(origin + to);
 }
+
+test('navigation handlers are ready while slow vendor styles are still loading', { timeout: 20000 }, async t => {
+  const { page, context, errors } = await open(t);
+  let releaseStyles;
+  const styles = new Promise(resolve => { releaseStyles = resolve; });
+  await context.route('**/assets/vendor/bootstrap/css/bootstrap.min.css*', async route => {
+    await styles;
+    await route.continue();
+  });
+  const navigation = page.goto(origin + '/staff/dashboard');
+  try {
+    await page.waitForFunction(() => !!window.TerminalMotion, null, { timeout: 5000 });
+    assert.equal(await page.evaluate(() => window.TerminalMotion.getMode()), 'full');
+    assert.notEqual(await page.evaluate(() => document.readyState), 'complete');
+  } finally {
+    releaseStyles();
+    await navigation;
+  }
+  assert.deepEqual(errors, []);
+});
 
 test('opening System Themes from the profile waits for the complete selected panel before revealing it', { skip: !nativeOnly, timeout:30000 }, async t => {
   const { page, context, errors } = await open(t);
@@ -230,6 +259,41 @@ test('refresh keeps content fully painted and preserves the current background p
   assert.deepEqual(errors, []);
 });
 
+test('management card hover keeps controls still and excludes layout and shadow transitions', async t => {
+  const { page, errors } = await open(t);
+  await page.goto(origin + '/admin/vehicles');
+  const card = page.locator('.modern-card, .card-modern').first();
+  const before = await card.boundingBox();
+  await card.hover();
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
+  const after = await card.boundingBox();
+  assert.deepEqual(after, before, 'hover must not move registration/filter controls');
+  const properties = await card.evaluate(el => getComputedStyle(el).transitionProperty.split(',').map(value => value.trim()));
+  for (const expensive of ['all', 'width', 'height', 'padding', 'box-shadow']) assert.ok(!properties.includes(expensive), properties.join(', '));
+  assert.deepEqual(errors, []);
+});
+
+test('hidden pages pause background motion and restore it when visible', async t => {
+  const { page, errors } = await open(t);
+  await page.goto(origin + '/admin/vehicles?slideshow=1');
+  const initial = await page.evaluate(() => getComputedStyle(document.body, '::before').animationName);
+  assert.notEqual(initial, 'none', 'exercise the actual animated background');
+  async function visibility(hidden) {
+    return page.evaluate(hidden => {
+      Object.defineProperty(document, 'hidden', { configurable: true, value: hidden });
+      document.dispatchEvent(new Event('visibilitychange'));
+      return {
+        marked: document.documentElement.hasAttribute('data-tq-page-hidden'),
+        animation: getComputedStyle(document.body, '::before').animationName,
+        state: getComputedStyle(document.body, '::before').animationPlayState,
+      };
+    }, hidden);
+  }
+  assert.deepEqual(await visibility(true), { marked:true, animation:initial, state:'paused' });
+  assert.deepEqual(await visibility(false), { marked:false, animation:initial, state:'running' });
+  assert.deepEqual(errors, []);
+});
+
 test('profile, management menu and drawer animate both directions without moving the page', { timeout:20000 }, async t => {
   for (const mode of ['full', 'lite', 'reduced']) {
     const { page, context, errors } = await open(t, mode);
@@ -280,7 +344,7 @@ test('phone, tablet, landscape and laptop page changes stay stable with usable m
       assert.equal(await page.locator('.main-content, .guest-theme > .container').first().evaluate(el => getComputedStyle(el).animationName), 'none');
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `${width} ${to}: horizontal jump`);
       const shifts = await page.evaluate(() => window.layoutShifts.reduce((sum, value) => sum + value, 0));
-      assert.ok(shifts < .01, `${width} ${to}: layout shifted by ${shifts}`);
+      assert.ok(shifts < .01, `${width} ${to}: layout shifted by ${shifts}: ${JSON.stringify(await page.evaluate(() => window.layoutShiftDetails))}`);
       if (width === 390 && to === '/staff/queue') {
         const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, { recursive:true });
         await page.screenshot({ path:path.join(directory, `${engine}-navigation-phone.png`) });
