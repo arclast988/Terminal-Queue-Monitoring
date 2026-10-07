@@ -24,6 +24,17 @@ class VehicleModel extends Model
     protected $beforeInsert = ['mapRouteIdOnWrite', 'uppercaseFieldsOnWrite'];
     protected $beforeUpdate = ['mapRouteIdOnWrite', 'uppercaseFieldsOnWrite'];
 
+    /** Use one calculation for the register and the current order shown while editing. */
+    public function getRegisterVehicles(?string $today = null): array
+    {
+        $vehicles = $this
+            ->select('vehicles.*, terminals.name as route_origin, routes.destination as route_destination, routes.terminal_id as route_terminal_id, routes.vehicle_type as route_vehicle_type, routes.status as route_status')
+            ->join('routes', "routes.id = vehicles.default_route_id AND routes.status = 'active'", 'left')
+            ->join('terminals', 'terminals.id = routes.terminal_id', 'left')
+            ->findAll();
+        return self::sortForRegister($vehicles, $today ?? date('Y-m-d'));
+    }
+
     /** Save one position and shift its neighbours within the destination queue line. */
     public function saveInDispatchOrder(array $data, ?int $id = null): bool
     {
@@ -35,9 +46,15 @@ class VehicleModel extends Model
         $routeIds = $this->dispatchRouteIds($routeId);
         $oldRouteIds = $old ? $this->dispatchRouteIds((int) $old['default_route_id']) : [];
         $this->lockRoutes(array_merge($routeIds, $oldRouteIds));
-        $ids = $this->dispatchVehicleIds($routeIds, $id);
+        $rows = $this->dispatchVehicleRows($routeIds, $id);
+        $ids = array_map('intval', array_column($rows, 'id'));
+        $activeCount = count(array_filter($rows, static fn(array $row): bool => $row['status'] === 'active' && $row['route_status'] === 'active'));
+        $route = $routeId ? $this->db->table('routes')->where('id', $routeId)->get()->getRowArray() : null;
+        $active = ($data['status'] ?? $old['status'] ?? 'active') === 'active' && ($route['status'] ?? '') === 'active';
         $requested = $data['dispatch_order'] ?? null;
-        $position = ($requested === null || $requested === '') ? count($ids) + 1 : max(1, min((int) $requested, count($ids) + 1));
+        $last = $active ? $activeCount + 1 : count($ids) + 1;
+        $first = $active ? 1 : $activeCount + 1;
+        $position = ($requested === null || $requested === '') ? $last : max($first, min((int) $requested, $last));
         $data['dispatch_order'] = $position;
         if ($oldRouteIds !== $routeIds) {
             $data['dispatch_rotation'] = 0;
@@ -52,6 +69,21 @@ class VehicleModel extends Model
         }
         $this->db->transComplete();
         return $saved && $this->db->transStatus();
+    }
+
+    /** Deleting a vehicle must also close the gap in its destination line. */
+    public function deleteInDispatchOrder(int $id): bool
+    {
+        $this->db->transStart();
+        $this->lockDispatchOrder();
+        $this->lockAllDispatchRoutes();
+        $vehicle = $this->find($id);
+        $routeIds = $vehicle ? $this->dispatchRouteIds((int) ($vehicle['default_route_id'] ?? 0)) : [];
+        $this->lockRoutes($routeIds);
+        $deleted = $vehicle && $this->delete($id);
+        if ($deleted) $this->writeDispatchPositions($this->dispatchVehicleIds($routeIds, null));
+        $this->db->transComplete();
+        return $deleted && $this->db->transStatus();
     }
 
     /** Called in the same transaction as departure; each departure gets a unique turn. */
@@ -150,11 +182,7 @@ class VehicleModel extends Model
                 $scopes[$route['terminal_id'] . '|' . $route['destination']][] = (int) $route['id'];
             }
             foreach ($scopes as $routeIds) {
-                $rows = $this->db->table('vehicles')->select('id, dispatch_order')
-                    ->whereIn('default_route_id', $routeIds)
-                    ->orderBy('CASE WHEN dispatch_order > 0 THEN dispatch_order ELSE 2147483647 END', 'ASC', false)
-                    ->orderBy('type', 'ASC')->orderBy('plate_number', 'ASC')->orderBy('id', 'ASC')
-                    ->get()->getResultArray();
+                $rows = $this->dispatchVehicleRows($routeIds, null);
                 foreach ($rows as $index => $row) {
                     if ((int) $row['dispatch_order'] !== $index + 1) {
                         $this->db->table('vehicles')->where('id', $row['id'])
@@ -204,11 +232,21 @@ class VehicleModel extends Model
 
     private function dispatchVehicleIds(array $routeIds, ?int $exclude): array
     {
+        return array_map('intval', array_column($this->dispatchVehicleRows($routeIds, $exclude), 'id'));
+    }
+
+    /** Unavailable vehicles retain unique slots after every active starting position. */
+    private function dispatchVehicleRows(array $routeIds, ?int $exclude): array
+    {
         if (!$routeIds) return [];
-        $builder = $this->db->table('vehicles')->select('id')->whereIn('default_route_id', $routeIds);
-        if ($exclude) $builder->where('id !=', $exclude);
-        return array_map('intval', array_column($builder->orderBy('dispatch_order', 'ASC')
-            ->orderBy('type', 'ASC')->orderBy('plate_number', 'ASC')->orderBy('id', 'ASC')->get()->getResultArray(), 'id'));
+        $builder = $this->db->table('vehicles')->select('vehicles.id, vehicles.dispatch_order, vehicles.status, routes.status as route_status')
+            ->join('routes', 'routes.id = vehicles.default_route_id')->whereIn('vehicles.default_route_id', $routeIds);
+        if ($exclude) $builder->where('vehicles.id !=', $exclude);
+        return $builder
+            ->orderBy("CASE WHEN vehicles.status = 'active' AND routes.status = 'active' THEN 0 ELSE 1 END", 'ASC', false)
+            ->orderBy('CASE WHEN vehicles.dispatch_order > 0 THEN vehicles.dispatch_order ELSE 2147483647 END', 'ASC', false)
+            ->orderBy('vehicles.type', 'ASC')->orderBy('vehicles.plate_number', 'ASC')->orderBy('vehicles.id', 'ASC')
+            ->get()->getResultArray();
     }
 
     private function writeDispatchPositions(array $ids): void

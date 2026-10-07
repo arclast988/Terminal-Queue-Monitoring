@@ -210,7 +210,7 @@ if (in_array($fixturePage, ['guest-contact-verification','guest-contact-verifica
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-vehicle-edit') {
-    $fixtureData['vehicle'] = $vehicle + ['default_route_id'=>1, 'dispatch_order'=>2];
+    $fixtureData['vehicle'] = $vehicle + ['default_route_id'=>1, 'dispatch_order'=>2, 'dispatch_position'=>2];
 }
 if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($argv[4] ?? '') === 'dispatch-register') {
     $fixtureData['routes'] = [array_replace($route,['destination'=>'ORMOC']), array_replace($route,['id'=>2,'destination'=>'BATO'])];
@@ -221,6 +221,17 @@ if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($a
         array_replace($vehicle,['id'=>203,'plate_number'=>'BATO-003','route_terminal_id'=>1,'route_destination'=>'BATO','dispatch_order'=>1]),
         array_replace($vehicle,['id'=>204,'plate_number'=>'NO-ROUTE','status'=>'archived','route_destination'=>null,'route_origin'=>null]),
     ];
+}
+
+if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($argv[4] ?? '') === 'dispatch-order-difference') {
+    $fixtureData['routes'] = [array_replace($route, ['destination'=>'ORMOC'])];
+    $fixtureData['vehicles'] = [];
+    foreach (range(1,9) as $order) {
+        $fixtureData['vehicles'][] = array_replace($vehicle, ['id'=>200+$order, 'plate_number'=>'ORDER-'.sprintf('%02d',$order),
+            'default_route_id'=>1, 'route_terminal_id'=>1, 'route_destination'=>'ORMOC', 'dispatch_order'=>$order,
+            'dispatch_rotation'=>$order <= 6 ? $order : 0, 'dispatch_rotation_date'=>date('Y-m-d')]);
+    }
+    $fixtureData['vehicle'] = end($fixtureData['vehicles']);
 }
 
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
@@ -301,7 +312,7 @@ if ($fixturePage === 'admin-vehicles' && ($argv[4] ?? '') === 'register-order') 
         array_replace($orderedVehicle,['id'=>207,'plate_number'=>'UNASSIGNED-007','route_destination'=>null,'route_origin'=>null]),
     ];
 }
-if ($fixturePage === 'admin-vehicles') {
+if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && isset($fixtureData['vehicles'])) {
     // The browser workflow uses the bundled framework without Composer installation.
     spl_autoload_register(static function (string $class): void {
         $prefix = 'CodeIgniter\\';
@@ -311,6 +322,11 @@ if ($fixturePage === 'admin-vehicles') {
     });
     require_once dirname(__DIR__, 2) . '/app/Models/VehicleModel.php';
     $fixtureData['vehicles'] = \App\Models\VehicleModel::sortForRegister($fixtureData['vehicles'], date('Y-m-d'));
+    if ($fixturePage === 'admin-vehicle-edit' && ($argv[4] ?? '') === 'dispatch-order-difference') {
+        foreach ($fixtureData['vehicles'] as $registered) {
+            if ($registered['id'] === $fixtureData['vehicle']['id']) $fixtureData['vehicle'] = $registered;
+        }
+    }
 }
 $fixtureRenderer = new ResponsiveFixtureRenderer();
 $views = [

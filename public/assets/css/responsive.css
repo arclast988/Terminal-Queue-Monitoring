@@ -3740,7 +3740,7 @@ a[title*="delete" i]:hover .bi,
   }
 }
 
-/* Consistent management lists, with actions available while a wide table scrolls. */
+/* Management actions use the same normal column layout as User Management. */
 html body table.table-modern.management-list-table {
     --management-action-height: 31px;
     font-family: var(--font-body, 'Outfit', sans-serif);
@@ -3869,19 +3869,18 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     html body #announcements-table.management-list-table .management-severity-col { width: 115px; }
     html body #announcements-table.management-list-table .management-status-col { width: 120px; }
     html body table.table-modern.management-list-table .management-actions-col {
-        position: sticky;
-        right: 0;
-        z-index: 2;
+        position: static !important;
+        right: auto;
+        z-index: auto;
         width: 190px !important;
         min-width: 190px !important;
         max-width: 190px !important;
         text-align: left !important;
         padding: 12px 10px !important;
-        background: #ffffff !important;
+        background: transparent !important;
         box-shadow: none !important;
     }
     html body table.table-modern.management-list-table th.management-actions-col {
-        z-index: 3;
         font-size: 13.5px !important;
         line-height: 1.5;
         background: #f8fafc !important;

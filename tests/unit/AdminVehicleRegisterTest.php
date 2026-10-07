@@ -35,7 +35,8 @@ final class AdminVehicleRegisterTest extends CIUnitTestCase
         )');
         $this->registerDb->query('CREATE TEMPORARY TABLE vehicles (
             id INTEGER PRIMARY KEY, plate_number VARCHAR(20), status VARCHAR(20),
-            default_route_id INTEGER, created_at VARCHAR(30)
+            default_route_id INTEGER, created_at VARCHAR(30), type VARCHAR(50), dispatch_order INTEGER,
+            dispatch_rotation INTEGER DEFAULT 0, dispatch_rotation_date DATE
         )');
     }
 
@@ -105,7 +106,21 @@ final class AdminVehicleRegisterTest extends CIUnitTestCase
         $this->assertStringNotContainsString('= "active"', $sql);
     }
 
-    private function controller(VehicleModel $vehicles): Vehicles
+    public function testEditShowsTheSameCurrentPositionAsTheRegisterAlongsideTheSavedStartingOrder(): void
+    {
+        $this->registerDb->table('terminals')->insert(['id'=>1, 'name'=>'VILLABA']);
+        $this->registerDb->table('routes')->insert(['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC', 'vehicle_type'=>'van', 'status'=>'active']);
+        foreach (range(1,9) as $id) {
+            $this->registerDb->table('vehicles')->insert(['id'=>$id, 'plate_number'=>'ORDER-'.$id, 'type'=>'van', 'status'=>'active', 'default_route_id'=>1,
+                'dispatch_order'=>$id, 'dispatch_rotation'=>$id <= 6 ? $id : 0, 'dispatch_rotation_date'=>date('Y-m-d')]);
+        }
+        $this->assertSame('Edit Vehicle', $this->controller(new VehicleModel($this->registerDb), 'admin/vehicles/edit', 'Edit Vehicle')->edit(9));
+        $this->assertSame(3, $this->viewData['vehicle']['dispatch_position']);
+        $this->assertSame(9, (int) $this->viewData['vehicle']['dispatch_order']);
+        $this->assertSame('ORMOC', $this->viewData['vehicle']['route_destination']);
+    }
+
+    private function controller(VehicleModel $vehicles, string $view = 'admin/vehicles/index', string $result = 'Vehicle Register'): Vehicles
     {
         $routes = $this->getMockBuilder(RouteModel::class)
             ->setConstructorArgs([$this->registerDb])->onlyMethods(['withActiveFare', 'findAll'])->getMock();
@@ -120,7 +135,7 @@ final class AdminVehicleRegisterTest extends CIUnitTestCase
             return $renderer;
         });
         $renderer->expects($this->once())->method('render')
-            ->with('admin/vehicles/index')->willReturn('Vehicle Register');
+            ->with($view)->willReturn($result);
         Services::injectMock('renderer', $renderer);
 
         return new class ($vehicles, $routes, $types) extends Vehicles {

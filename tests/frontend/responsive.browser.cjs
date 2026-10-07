@@ -175,9 +175,14 @@ test('management pages keep long values and primary controls inside phone, table
 
 
 
-test('management actions stay usable while wide tables scroll and remain labeled in phone cards', { timeout: 90000 }, async t => {
+test('management actions align with their headers and scroll as normal columns like User Management', { timeout: 90000 }, async t => {
+  const reference = await open(t, 'admin-users', 1280, 900, '');
+  await reference.page.locator('#users-table td[data-label="Action"]').first().scrollIntoViewIfNeeded();
+  await screenshot(reference.page, 'user-management-action-reference', false);
+  assert.deepEqual(reference.errors, []);
+  await reference.context.close();
   for (const [name, id] of [['admin-terminals','terminals-table'], ['admin-vehicles','vehicles-table'], ['admin-rules','departure-rules-table'], ['admin-announcements','announcements-table']]) {
-    for (const [width, height] of [[844, 600], [1280, 900], [320, 900], [375, 900], [768, 1024]]) {
+    for (const [width, height] of [[844, 600], [1280, 900], [1536, 900], [320, 900], [375, 900], [768, 1024]]) {
       const { page, context, errors } = await open(t, name, width, height, '');
       const table = page.locator('#' + id);
       const cell = table.locator('tbody .management-actions-col').first();
@@ -185,24 +190,36 @@ test('management actions stay usable while wide tables scroll and remain labeled
       await actions.scrollIntoViewIfNeeded();
       if (width > 768) {
         const scroll = table.locator('..');
-        const edges = [];
-        for (const fraction of [0, 0.5, 1]) {
+        const positions = [];
+        for (const fraction of [0, 1]) {
           await scroll.evaluate((el, fraction) => { el.scrollLeft = (el.scrollWidth - el.clientWidth) * fraction; }, fraction);
           await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
           const result = await cell.evaluate(el => {
-            const box = el.getBoundingClientRect(), parent = el.closest('.table-responsive').getBoundingClientRect();
-            return { left:box.left, right:box.right, parentLeft:parent.left, parentRight:parent.right, background:getComputedStyle(el).backgroundColor };
+            const box = el.getBoundingClientRect(), parent = el.closest('.table-responsive');
+            const header = el.closest('table').querySelector('thead .management-actions-col');
+            return { left:box.left, scrollLeft:parent.scrollLeft, position:getComputedStyle(el).position,
+              headerPosition:getComputedStyle(header).position, headerLeft:header.getBoundingClientRect().left };
           });
-          assert.ok(result.left >= result.parentLeft - 1 && result.right <= result.parentRight + 1, JSON.stringify({name,width,fraction,result}));
-          assert.ok(Math.abs(result.right - result.parentRight) <= 3, JSON.stringify({name,width,fraction,result}));
-          assert.equal(result.background, 'rgb(255, 255, 255)', name + ' lets scrolled text show through its action column');
-          edges.push(result.right);
+          assert.equal(result.position, 'static', name + ' action cells should not be sticky');
+          assert.equal(result.headerPosition, 'static', name + ' action header should not be sticky');
+          assert.ok(Math.abs(result.headerLeft - result.left) <= 1, JSON.stringify({name,width,fraction,result}));
+          positions.push(result);
         }
-        assert.ok(Math.max(...edges) - Math.min(...edges) <= 1, name + ' actions moved with the table');
-        const header = table.locator('thead .management-actions-col');
-        assert.equal(await header.evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(248, 250, 252)');
+        const movement = positions[0].left - positions[1].left;
+        const distance = positions[1].scrollLeft - positions[0].scrollLeft;
+        assert.ok(Math.abs(movement - distance) <= 1, name + ' actions should move with the table: ' + JSON.stringify(positions));
+        const alignment = await cell.evaluate(el => {
+          const header = el.closest('table').querySelector('thead .management-actions-col');
+          return { header:header.getBoundingClientRect().left + parseFloat(getComputedStyle(header).paddingLeft),
+            buttons:[...el.querySelectorAll('.btn-modern')].map(button => button.getBoundingClientRect().left) };
+        });
+        assert.ok(alignment.buttons.every(left => Math.abs(left - alignment.header) <= 1), JSON.stringify({name,width,alignment}));
         assert.equal(await cell.evaluate(el => getComputedStyle(el).boxShadow), 'none');
-        await scroll.evaluate(el => { el.scrollLeft = 0; });
+        await cell.hover();
+        const highlight = await cell.evaluate(el => ({ background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage }));
+        assert.deepEqual(highlight, {background:'rgba(0, 0, 0, 0)',image:'none'}, name + ' Actions should share the row highlight');
+        await page.mouse.move(0, 0);
+        await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
       }
       checkBounds(await bounds(page, ['#' + id + ' .management-row-actions .btn-modern']), name + ' actions ' + width);
       const targets = await actions.locator('.btn-modern').evaluateAll(buttons => buttons.map(button => {
@@ -211,7 +228,7 @@ test('management actions stay usable while wide tables scroll and remain labeled
       }));
       assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
       assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' actions do not stack like User Management: ' + JSON.stringify(targets));
-      if (width === 375 || width === 1280) await screenshot(page, name + '-management-actions-' + width, false);
+      if (width === 375 || width === 1280 || width === 1536) await screenshot(page, name + '-management-actions-' + width, false);
       assert.deepEqual(errors, [], name + ' ' + width);
       await context.close();
     }
