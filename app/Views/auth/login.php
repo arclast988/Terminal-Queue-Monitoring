@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#D62828">
     <title>Sign in · <?= esc(app_system_title()) ?></title>
     <?= view('partials/app_install') ?>
-    <?= view('partials/font_assets', ['fontFamily' => 'Inter']) ?>
+    <?= view('partials/font_assets', ['fontFamily' => 'Inter', 'preloadFont' => false]) ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= app_theme_css() ?>
     <style>

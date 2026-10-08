@@ -250,7 +250,6 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
     </div>
 </div>
 
-<?= view('partials/guest-contact-verification-modal') ?>
 
 <!-- 4. FAQ Modal -->
 <div id="faqModal" class="support-modal-backdrop">
@@ -335,7 +334,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= app_asset_url('js/vehicle-type-live.js') ?>"></script>
 <script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
-<script src="<?= app_asset_url('assets/js/contact-verification.js') ?>" defer></script>
+<script src="<?= app_asset_url('assets/js/contact-gmail.js') ?>" defer></script>
 <script type="application/json" id="guestManagedContent"><?= json_encode($guestManagedContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
 let savedSupportScrollY = 0;
@@ -421,7 +420,7 @@ function toggleHelpAccordion(headerEl) {
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('contact_verify')) {
-        openSupportModal('guestContactVerificationModal');
+        openSupportModal('contactModal');
     } else if (urlParams.has('help')) {
         openSupportModal('helpModal');
     } else if (urlParams.has('faq')) {

@@ -32,11 +32,11 @@ function get_system_setting(string $key, $default = null) {
     ] : [];
     return $theme[$key] ?? $default;
 }
-if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content', 'staff-guide', 'admin-guide'], true)) {
+if (in_array($fixturePage, ['guest-contact-draft', 'staff-guide', 'admin-guide'], true)) {
     // Keep the real footer/modals while stubbing only managed settings/config.
     final class FixtureContentManagement { public static function fields(): array { return []; } }
     class_alias(FixtureContentManagement::class, 'Config\\ContentManagement');
-    function config(string $name): object { return (object) ['recipients'=>'management@example.com']; }
+    function config(string $name): object { return (object) ['recipients'=>'management@example.com', 'fromEmail'=>'', 'SMTPUser'=>'']; }
 }
 if (($argv[3] ?? '') !== 'theme') {
     function app_theme_css(): string { return ''; }
@@ -100,7 +100,7 @@ function session(): object {
 final class ResponsiveFixtureRenderer {
     public function render(string $name, array $data = []): string {
         // Management fixtures include the real footer and Bootstrap/support modals.
-        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-verification') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true) && ($GLOBALS['argv'][7] ?? '') !== 'shared-dialogs')) return '';
+        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-draft') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true) && ($GLOBALS['argv'][7] ?? '') !== 'shared-dialogs')) return '';
         extract($GLOBALS['fixtureData']);
         extract($data, EXTR_OVERWRITE);
         ob_start();
@@ -202,14 +202,6 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
         $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'route_id'=>1, 'route_destination'=>'ORMOC', 'round_scope'=>'1|ORMOC'])];
         $fixtureData['selectedRouteId'] = 2;
     }
-}
-if (in_array($fixturePage, ['guest-contact-verification','guest-contact-verification-content'], true)) {
-    $fixtureState = $argv[4] ?? '';
-    $fixtureData['pending'] = ['id'=>str_repeat('a',64), 'type'=>'report', 'name'=>'Guest Passenger',
-        'email'=>'guest-passenger-with-a-long-address@example.com', 'subject'=>'Website display / technical problem',
-        'message'=>'<script>Text must stay text</script>', 'verified'=>$fixtureState === 'verified', 'expires_at'=>time()+600, 'sent_at'=>time()];
-    $fixtureData['resendWait'] = 60;
-    if ($fixtureState === 'error') $fixtureData['error'] = 'Incorrect code. 4 attempts remaining.';
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-vehicle-edit') {
@@ -350,8 +342,7 @@ if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
-    'guest-contact-verification' => 'public/enhanced_dashboard',
-    'guest-contact-verification-content' => 'partials/guest-contact-verification',
+    'guest-contact-draft' => 'public/enhanced_dashboard',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
     'staff-password' => 'auth/change_password', 'staff-guide' => 'help/dispatcher', 'admin-guide' => 'help/admin',
     'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',

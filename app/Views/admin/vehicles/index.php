@@ -1065,6 +1065,17 @@ table:not(.selection-mode-active) .bulk-select-cell {
     .vehicle-filter-strip .vf-divider {
         flex: 0 0 auto !important;
     }
+    @media (max-width: 991.98px) {
+        .vehicle-filter-strip {
+            width: 100%;
+            max-width: 100%;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 8px;
+        }
+        .vehicle-filter-strip .vf-btn { white-space: nowrap; }
+    }
     @media (max-width: 768px) {
         .vehicle-filter-controls {
             flex-basis: 100%;
