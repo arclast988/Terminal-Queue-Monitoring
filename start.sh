@@ -63,13 +63,7 @@ if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_NAME" ]; then
     exit 1
 fi
 
-APP_BASE_URL="${APP_BASE_URL:-}"
-if [ -z "$APP_BASE_URL" ] && [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
-    APP_BASE_URL="https://${RAILWAY_PUBLIC_DOMAIN}/"
-fi
-if [ -n "$APP_BASE_URL" ] && [[ "$APP_BASE_URL" != */ ]]; then
-    APP_BASE_URL="${APP_BASE_URL}/"
-fi
+APP_BASE_URL="$(php "$APP_ROOT/deploy/resolve-base-url.php")"
 
 umask 077
 cat > "$APP_ROOT/.env" <<ENVFILE
