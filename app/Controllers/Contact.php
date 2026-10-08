@@ -29,8 +29,12 @@ class Contact extends BaseController
             'view'=>'cm', 'fs'=>'1', 'tf'=>'cm', 'to'=>$recipient,
             'su'=>'[' . app_acronym() . '] ' . $label . $subject, 'body'=>$body,
         ], '', '&', PHP_QUERY_RFC3986);
+        $appUrl = 'mailto:' . str_replace('%40', '@', rawurlencode($recipient)) . '?' . http_build_query([
+            'subject'=>'[' . app_acronym() . '] ' . $label . $subject,
+            'body'=>preg_replace('/\r\n|\r|\n/', "\r\n", $body),
+        ], '', '&', PHP_QUERY_RFC3986);
         session()->remove('guest_contact_pending');
-        return $this->formResponse($draft, null, $url);
+        return $this->formResponse($draft, null, $url, $appUrl);
     }
 
     // Old links and already-open verification forms must never send system email.
@@ -51,19 +55,21 @@ class Contact extends BaseController
         return $this->formResponse(is_array($pending) ? $pending : [], 'Open a Gmail draft to send your message from your own account. Email verification is no longer needed.');
     }
 
-    private function formResponse(array $draft, ?string $error = null, ?string $url = null)
+    private function formResponse(array $draft, ?string $error = null, ?string $url = null, ?string $appUrl = null)
     {
         $input = array_intersect_key($draft, array_flip(['type', 'name', 'subject', 'message']));
         $type = ($input['type'] ?? '') === 'report' ? 'report' : 'contact';
         $this->response->setHeader('Cache-Control', 'no-store');
         if ($this->request->isAJAX() || str_contains(strtolower($this->request->getHeaderLine('Accept')), 'application/json')) {
             return $this->response->setJSON(['success'=>$error === null, 'stage'=>$url ? 'draft' : 'form',
-                'type'=>$type, 'draft'=>$input, 'message'=>$error, 'gmailUrl'=>$url,
+                'type'=>$type, 'draft'=>$input, 'message'=>$error, 'gmailUrl'=>$url, 'emailAppUrl'=>$appUrl,
                 'csrf'=>['name'=>csrf_token(), 'hash'=>csrf_hash()]]);
         }
         session()->setFlashdata('_ci_old_input', ['get'=>[], 'post'=>$input]);
         session()->remove('contact_gmail_url');
+        session()->remove('contact_email_app_url');
         if ($url !== null) session()->setFlashdata('contact_gmail_url', $url);
+        if ($appUrl !== null) session()->setFlashdata('contact_email_app_url', $appUrl);
         $response = redirect()->to(base_url('guest') . '?' . $type . '=1#support-section');
         $response->setHeader('Cache-Control', 'no-store');
         return $error === null ? $response : $response->with('contact_error', $error);

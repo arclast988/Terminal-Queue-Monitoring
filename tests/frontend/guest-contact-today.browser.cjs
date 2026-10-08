@@ -45,7 +45,7 @@ test('both guest forms prepare encoded Gmail drafts from the guest account on mo
       const subject=await page.locator('#'+prefix+'Subject').inputValue();
       const message='<script>Stay as text</script>\nPlate ABC-123: café 🚐 & +=?#';
       await page.locator('#'+prefix+'Message').fill(message);
-      await form.locator('button[type="submit"]').click();
+      await form.locator('button[value="gmail"]').click();
       const draft=await page.evaluate(()=>window.drafts.at(-1));
       assert.ok(draft,JSON.stringify({type,width,errors,requests,validity:await form.evaluate(form=>Array.from(form.elements).filter(el=>el.validity&&!el.validity.valid).map(el=>({name:el.name,value:el.value,message:el.validationMessage})))}));
       const gmail=new URL(draft.url);
@@ -57,7 +57,7 @@ test('both guest forms prepare encoded Gmail drafts from the guest account on mo
       assert.equal(gmail.searchParams.get('body'),'Name: José & Passenger\n\n'+message);
       assert.equal(draft.target,'_blank');assert.equal(draft.features,'noopener,noreferrer');
       assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),draft.url);
-      assert.match(await form.locator('[role="status"]').innerText(),/ready to review in Gmail/);
+      assert.match(await form.locator('[role="status"]').innerText(),/ready to review/);
       assert.equal(await page.locator('#'+prefix+'Message').inputValue(),message);
       assert.equal(page.url(),url);
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
@@ -71,6 +71,59 @@ test('both guest forms prepare encoded Gmail drafts from the guest account on mo
   }
 });
 
+test('email app drafts keep recipients and text on Android, iPhone and tablets with a Gmail browser fallback',async()=>{
+  for(const [device,width,userAgent] of [
+    ['android',375,'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36'],
+    ['iphone',320,'Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Mobile/15E148 Safari/604.1'],
+    ['tablet',820,'Mozilla/5.0 (iPad; CPU OS 18_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Mobile/15E148 Safari/604.1'],
+  ]) {
+    const context=await browser.newContext({viewport:{width,height:850},userAgent,isMobile:true,hasTouch:true});
+    const page=await context.newPage(),errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.addInitScript(()=>{
+      window.appDrafts=[];window.webDrafts=[];
+      window.open=url=>{window.webDrafts.push(url);return null;};
+      // Observe the external-app handoff without launching a desktop mail client in the test runner.
+      document.addEventListener('click',event=>{
+        const link=event.target.closest('a');
+        if(link&&link.getAttribute('href')?.startsWith('mailto:')) {
+          event.preventDefault();window.appDrafts.push(link.href);
+        }
+      },true);
+    });
+    const url=origin+'/fixtures/guest-contact-draft';await page.goto(url);
+    for(const [prefix,modal] of [['guestReport','reportModal'],['guestContact','contactModal']]) {
+      await page.locator('footer a[onclick*="'+modal+'"]').click();
+      const form=page.locator('#'+modal+' form'),message='Café 🚐 + & ? #\nPlease check the trip.';
+      await page.locator('#'+prefix+'Name').fill(' José & Passenger ');
+      await page.locator('#'+prefix+'Message').fill(message);
+      await form.getByRole('button',{name:'Open email app',exact:true}).click();
+      const nativeUrl=new URL(await page.evaluate(()=>window.appDrafts.at(-1)));
+      assert.equal(nativeUrl.protocol,'mailto:');
+      assert.equal(decodeURIComponent(nativeUrl.pathname),'management@example.com');
+      assert.equal(nativeUrl.searchParams.get('body'),'Name: José & Passenger\r\n\r\n'+message.replace(/\n/g,'\r\n'));
+      assert.equal(await page.evaluate(()=>window.webDrafts.length),modal==='reportModal'?0:1);
+      assert.equal(await form.locator('[data-contact-app-link]').getAttribute('href'),nativeUrl.href);
+      assert.equal(await form.locator('[data-contact-app-link]').getAttribute('data-no-loader'),'');
+      assert.equal(page.url(),url);
+      assert.equal(await form.locator('[data-contact-draft-notice]').isVisible(),true);
+      await form.getByRole('button',{name:'Use Gmail in browser',exact:true}).click();
+      const webUrl=new URL(await page.evaluate(()=>window.webDrafts.at(-1)));
+      assert.equal(webUrl.searchParams.get('su'),nativeUrl.searchParams.get('subject'));
+      assert.equal(webUrl.searchParams.get('body'),'Name: José & Passenger\n\n'+message);
+      await page.locator('#'+prefix+'Name').fill('');await page.locator('#'+prefix+'Message').fill('');
+      assert.equal(await form.locator('[data-contact-app-link]').getAttribute('href'),null);
+      assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),null);
+      await form.getByRole('button',{name:'Open email app',exact:true}).click();
+      assert.equal(new URL(await page.evaluate(()=>window.appDrafts.at(-1))).searchParams.get('body'),'');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      await page.screenshot({path:path.join(__dirname,'artifacts','guest-email-app-'+device+'-'+prefix+'.png')});
+      await page.keyboard.press('Escape');
+    }
+    assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
 test('blocked Gmail tabs retain a usable draft link, and editing rebuilds the draft',async()=>{
   const page=await browser.newPage({viewport:{width:375,height:820}});
   await page.addInitScript(()=>{window.open=()=>null;});
@@ -78,14 +131,14 @@ test('blocked Gmail tabs retain a usable draft link, and editing rebuilds the dr
   await page.locator('#guestContactName').fill('Passenger');
   await page.locator('#guestContactMessage').fill('First message');
   const form=page.locator('#contactModal form');
-  await form.locator('button[type="submit"]').click();
+  await form.locator('button[value="gmail"]').click();
   assert.equal(await form.locator('[data-contact-draft-link]').isVisible(),true);
   assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('rel'),'noopener noreferrer');
-  assert.equal(await form.locator('button[type="submit"]').isEnabled(),true);
+  assert.equal(await form.locator('button[value="gmail"]').isEnabled(),true);
   await page.locator('#guestContactMessage').fill('Corrected message');
   assert.equal(await form.locator('[role="status"]').isVisible(),false);
   assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),null);
-  await form.locator('button[type="submit"]').click();
+  await form.locator('button[value="gmail"]').click();
   const link=new URL(await form.locator('[data-contact-draft-link]').getAttribute('href'));
   assert.ok(link.searchParams.get('body').endsWith('Corrected message'));
   await page.close();
@@ -102,7 +155,7 @@ test('Gmail buttons and blocked-popup links survive the notification timeout and
     for(const [prefix,modal] of [['guestReport','reportModal'],['guestContact','contactModal']]) {
       await page.locator('footer a[onclick*="'+modal+'"]').click();
       const form=page.locator('#'+modal+' form');
-      await form.getByRole('button',{name:'Open Gmail',exact:true}).click();
+      await form.getByRole('button',{name:'Use Gmail in browser',exact:true}).click();
       const firstUrl=await page.evaluate(()=>window.drafts.at(-1));
       assert.equal(new URL(firstUrl).origin,'https://mail.google.com');
       const link=form.locator('[data-contact-draft-link]');
@@ -113,12 +166,36 @@ test('Gmail buttons and blocked-popup links survive the notification timeout and
       await page.locator('footer a[onclick*="'+modal+'"]').click();
       await page.locator('#'+prefix+'Message').fill('Updated after reopening');
       assert.equal(await form.locator('[role="status"]').isVisible(),false);
-      await form.getByRole('button',{name:'Open Gmail',exact:true}).click();
+      await form.getByRole('button',{name:'Use Gmail in browser',exact:true}).click();
       const secondUrl=await page.evaluate(()=>window.drafts.at(-1));
       assert.ok(new URL(secondUrl).searchParams.get('body').endsWith('Updated after reopening'));
       await page.keyboard.press('Escape');
     }
     assert.deepEqual(errors,[]);await page.close();
+  }
+});
+
+test('the email reminder closes on return or dismissal and keeps a blocked launch usable',async()=>{
+  for(const width of [320,1365]) {
+    const page=await browser.newPage({viewport:{width,height:850}});
+    await page.addInitScript(()=>{window.open=()=>null;});
+    await page.goto(origin+'/fixtures/guest-contact-draft?report=1');
+    const form=page.locator('#reportModal form'),notice=form.locator('[data-contact-draft-notice]');
+    await page.locator('#guestReportMessage').fill('Keep my details when returning.');
+    await form.getByRole('button',{name:'Use Gmail in browser',exact:true}).click();
+    await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+    assert.equal(await notice.isVisible(),true,'a blocked popup stays usable when no app or tab opened');
+    const link=await form.locator('[data-contact-draft-link]').getAttribute('href');
+    await form.getByRole('button',{name:'Dismiss email reminder',exact:true}).click();
+    assert.equal(await notice.isVisible(),false);
+    assert.equal(await page.locator('#guestReportMessage').inputValue(),'Keep my details when returning.');
+    assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),link);
+    await form.getByRole('button',{name:'Use Gmail in browser',exact:true}).click();
+    await page.evaluate(()=>{window.dispatchEvent(new Event('blur'));window.dispatchEvent(new Event('focus'));});
+    assert.equal(await notice.isVisible(),false,'returning from the app or browser hides the reminder without assuming delivery');
+    assert.equal(await page.locator('#reportModal').isVisible(),true);
+    assert.equal(await page.locator('#guestReportMessage').inputValue(),'Keep my details when returning.');
+    await page.close();
   }
 });
 
@@ -129,7 +206,7 @@ test('a missing email notice does not prevent Gmail opening or editing the form'
   await page.goto(origin+'/fixtures/guest-contact-draft?report=1');
   await page.locator('#reportModal [data-contact-draft-notice]').evaluate(el=>el.remove());
   await page.locator('#guestReportMessage').fill('Details stay usable');
-  await page.locator('#reportModal button[type="submit"]').click();
+  await page.locator('#reportModal button[value="gmail"]').click();
   assert.equal(new URL(await page.evaluate(()=>window.drafts.at(-1))).origin,'https://mail.google.com');
   assert.deepEqual(errors,[]);await page.close();
 });
@@ -142,7 +219,7 @@ test('Gmail opens in a separate tab without access to the guest page',async()=>{
   await page.locator('#guestReportName').fill('Passenger');
   await page.locator('#guestReportMessage').fill('Draft only; no message delivery.');
   const popupPromise=context.waitForEvent('page');
-  await page.locator('#reportModal button[type="submit"]').click();
+  await page.locator('#reportModal button[value="gmail"]').click();
   const popup=await popupPromise;await popup.waitForLoadState();
   assert.equal(new URL(popup.url()).origin,'https://mail.google.com');
   assert.equal(await popup.evaluate(()=>window.opener),null);
@@ -166,7 +243,7 @@ test('optional guest fields and distinct searchable topics prepare drafts on mob
       assert.ok(await page.locator('#'+prefix+'Subject option').count()>=10);
       await page.locator('#'+prefix+'Subject_autocomplete_search').fill(query);
       await form.locator('.autocomplete-item').filter({hasText:topic}).click();
-      await form.locator('button[type="submit"]').click();
+      await form.locator('button[value="gmail"]').click();
       let draft=new URL(await page.evaluate(()=>window.drafts.at(-1)));
       const label=type==='report'?'Report Issue':'Contact Us';
       assert.equal(draft.searchParams.get('body'),'');
@@ -177,7 +254,7 @@ test('optional guest fields and distinct searchable topics prepare drafts on mob
       await page.locator('#'+prefix+'Subject').selectOption(nextTopic);
       assert.equal(await form.locator('[role="status"]').isVisible(),false);
       assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),null);
-      await form.locator('button[type="submit"]').click();
+      await form.locator('button[value="gmail"]').click();
       draft=new URL(await page.evaluate(()=>window.drafts.at(-1)));
       assert.equal(draft.searchParams.get('body'),'');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));

@@ -31,7 +31,7 @@ final class GuestContactDraftTest extends CIUnitTestCase
         parent::setUp();
         GuestContactHarness::$recipient = 'management@example.com';
         GuestContactHarness::$mail = [];
-        session()->remove(['guest_contact_pending', 'isLoggedIn', 'role', '_ci_old_input', 'contact_success', 'contact_error', 'contact_verify_error', 'contact_verify_notice', 'contact_gmail_url']);
+        session()->remove(['guest_contact_pending', 'isLoggedIn', 'role', '_ci_old_input', 'contact_success', 'contact_error', 'contact_verify_error', 'contact_verify_notice', 'contact_gmail_url', 'contact_email_app_url']);
         service('renderer')->resetData();
         $this->contactDb = Database::connect(['DBDriver'=>'SQLite3', 'database'=>':memory:', 'DBPrefix'=>'', 'DBDebug'=>true], false);
         $property = new \ReflectionProperty(\CodeIgniter\Database\Config::class, 'instances');
@@ -45,7 +45,7 @@ final class GuestContactDraftTest extends CIUnitTestCase
     {
         $this->assertSame([], GuestContactHarness::$mail, 'Guest contact actions must never send system email.');
         service('renderer')->resetData();
-        session()->remove(['guest_contact_pending', 'contact_gmail_url', '_ci_old_input']);
+        session()->remove(['guest_contact_pending', 'contact_gmail_url', 'contact_email_app_url', '_ci_old_input']);
         (new \ReflectionProperty(\CodeIgniter\Database\Config::class, 'instances'))->setValue(null, $this->connections);
         $this->contactDb->close();
         parent::tearDown();
@@ -87,6 +87,12 @@ final class GuestContactDraftTest extends CIUnitTestCase
             $this->assertSame('cm', $params['view']);
             $this->assertSame('[' . app_acronym() . '] ' . $label . ': Fare & +=?#', $params['su']);
             $this->assertSame('Name: José & Guest' . "\n\n" . $draft['message'], $params['body']);
+            $appUrl = parse_url($data['emailAppUrl']);
+            $this->assertSame('mailto', $appUrl['scheme']);
+            $this->assertSame('management@example.com', rawurldecode($appUrl['path']));
+            parse_str($appUrl['query'], $appParams);
+            $this->assertSame($params['su'], $appParams['subject']);
+            $this->assertSame(str_replace("\n", "\r\n", $params['body']), $appParams['body']);
             $this->assertArrayNotHasKey('authuser', $params);
             $this->assertArrayNotHasKey('from', $params);
             $this->assertArrayNotHasKey('email', $params);
@@ -104,6 +110,7 @@ final class GuestContactDraftTest extends CIUnitTestCase
             $data = json_decode($this->action('send', $this->draft($input), true)->getBody(), true);
             $this->assertFalse($data['success']);
             $this->assertNull($data['gmailUrl']);
+            $this->assertNull($data['emailAppUrl']);
             $this->assertSame('form', $data['stage']);
         }
     }
@@ -117,6 +124,7 @@ final class GuestContactDraftTest extends CIUnitTestCase
         $this->assertSame($draft, $data['draft']);
         $this->assertStringContainsString('currently unavailable', $data['message']);
         $this->assertNull($data['gmailUrl']);
+        $this->assertNull($data['emailAppUrl']);
     }
 
     public function testNoJavascriptSubmissionShowsAnEscapedDraftLinkAndKeepsTheForm(): void
@@ -128,8 +136,10 @@ final class GuestContactDraftTest extends CIUnitTestCase
         $this->assertStringContainsString('https://mail.google.com/mail/?', html_entity_decode($form, ENT_QUOTES));
         $this->assertStringContainsString('&lt;script&gt;', $form);
         $this->assertStringNotContainsString('<script>alert', $form);
-        $this->assertStringContainsString('Open Gmail', $form);
-        $this->assertStringContainsString('ready to review in Gmail', $form);
+        $this->assertStringContainsString('Open email app', $form);
+        $this->assertStringContainsString('Use Gmail in browser', $form);
+        $this->assertStringContainsString('ready to review', $form);
+        $this->assertStringContainsString('mailto:management@example.com?', html_entity_decode($form, ENT_QUOTES));
         $this->assertStringNotContainsString('name="email"', $form);
         $this->assertStringNotContainsString('data-contact-resume', $form);
         $this->assertStringContainsString('data-permanent="true"', $form);

@@ -15,4 +15,12 @@
 .contact-verification-notice { margin: 16px 0; padding: 12px 14px; border: 1px solid #86efac; border-radius: 8px; background: #f0fdf4; color: #166534; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease; }
 .contact-verification-notice.is-error { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
 .contact-verification-notice.alert-dismissing { opacity: 0; transform: translateY(-8px); max-height: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; border-width: 0 !important; pointer-events: none; overflow: hidden; }
+.contact-compose-browser { width: 100%; min-height: 44px; margin-top: 10px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; background: #fff; color: #334155; font: inherit; font-weight: 600; cursor: pointer; }
+.contact-compose-browser:hover { background: #f8fafc; border-color: var(--primary); }
+.contact-compose-browser:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.contact-compose-links { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+[data-contact-draft-notice] { position: relative; padding-right: 44px; }
+.contact-notice-close { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 24px; cursor: pointer; }
+.contact-notice-close:hover { background: #dcfce7; }
+.contact-notice-close:focus-visible { outline: 2px solid currentColor; outline-offset: -3px; }
 
