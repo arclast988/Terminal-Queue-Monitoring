@@ -340,6 +340,13 @@ if (($argv[4] ?? '') === 'vehicle-type-photos') {
         ? [$vehicle, array_replace($vehicle, ['id'=>102, 'plate_number'=>'CUSTOM-202', 'photo'=>'/fixture-custom.svg', 'vehicle_photo'=>'/fixture-custom.svg'])]
         : [$item, $customItem];
 }
+if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
+    $fixtureData['vehicleTypes'] = [
+        ['id'=>1, 'slug'=>'minibus', 'name'=>'Minibus', 'color'=>'#2e7d32', 'icon'=>'fa-bus', 'photo'=>'https://res.cloudinary.com/demo/image/upload/v124/vehicle_types/jeepney.png'],
+        ['id'=>2, 'slug'=>'van', 'name'=>'Van', 'color'=>'#b71c1c', 'icon'=>'fa-van-shuttle', 'photo'=>'/fixture.svg'],
+        ['id'=>3, 'slug'=>'jeepney', 'name'=>'Jeepney', 'color'=>'#1565c0', 'icon'=>'fa-truck-front', 'photo'=>null],
+    ];
+}
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
