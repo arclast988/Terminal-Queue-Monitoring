@@ -330,7 +330,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <!-- ===== Footer JS ===== -->
 <script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20261002a') ?>"></script>
-<script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
+<script src="<?= app_asset_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= app_asset_url('js/vehicle-type-live.js') ?>"></script>
 <script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>

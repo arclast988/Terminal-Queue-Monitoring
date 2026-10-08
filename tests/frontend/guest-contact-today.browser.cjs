@@ -57,7 +57,7 @@ test('both guest forms prepare encoded Gmail drafts from the guest account on mo
       assert.equal(gmail.searchParams.get('body'),'Name: José & Passenger\nType: '+(type==='report'?'Report Issue':'Contact Us')+'\nSubject: '+subject+'\n\nMessage:\n'+message);
       assert.equal(draft.target,'_blank');assert.equal(draft.features,'noopener,noreferrer');
       assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),draft.url);
-      assert.match(await form.locator('[role="status"]').innerText(),/has not been sent yet/);
+      assert.match(await form.locator('[role="status"]').innerText(),/ready to review in Gmail/);
       assert.equal(await page.locator('#'+prefix+'Message').inputValue(),message);
       assert.equal(page.url(),url);
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
@@ -89,6 +89,49 @@ test('blocked Gmail tabs retain a usable draft link, and editing rebuilds the dr
   const link=new URL(await form.locator('[data-contact-draft-link]').getAttribute('href'));
   assert.ok(link.searchParams.get('body').endsWith('Corrected message'));
   await page.close();
+});
+
+test('Gmail buttons and blocked-popup links survive the notification timeout and reopening',{timeout:60000},async()=>{
+  for(const width of [375,1365]) {
+    const page=await browser.newPage({viewport:{width,height:850}}),errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.addInitScript(()=>{window.drafts=[];window.open=url=>{window.drafts.push(url);return null;};});
+    await page.goto(origin+'/fixtures/guest-contact-draft');
+    // The old notification timer removed both hidden form links after 4.95s.
+    await page.waitForTimeout(5500);
+    for(const [prefix,modal] of [['guestReport','reportModal'],['guestContact','contactModal']]) {
+      await page.locator('footer a[onclick*="'+modal+'"]').click();
+      const form=page.locator('#'+modal+' form');
+      await form.getByRole('button',{name:'Open Gmail',exact:true}).click();
+      const firstUrl=await page.evaluate(()=>window.drafts.at(-1));
+      assert.equal(new URL(firstUrl).origin,'https://mail.google.com');
+      const link=form.locator('[data-contact-draft-link]');
+      await page.waitForTimeout(5500);
+      assert.equal(await link.isVisible(),true,'a blocked-popup link stays available until the form is edited');
+      assert.equal(await link.getAttribute('href'),firstUrl);
+      await page.keyboard.press('Escape');
+      await page.locator('footer a[onclick*="'+modal+'"]').click();
+      await page.locator('#'+prefix+'Message').fill('Updated after reopening');
+      assert.equal(await form.locator('[role="status"]').isVisible(),false);
+      await form.getByRole('button',{name:'Open Gmail',exact:true}).click();
+      const secondUrl=await page.evaluate(()=>window.drafts.at(-1));
+      assert.ok(new URL(secondUrl).searchParams.get('body').endsWith('Updated after reopening'));
+      await page.keyboard.press('Escape');
+    }
+    assert.deepEqual(errors,[]);await page.close();
+  }
+});
+
+test('a missing email notice does not prevent Gmail opening or editing the form',async()=>{
+  const page=await browser.newPage(),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  await page.addInitScript(()=>{window.drafts=[];window.open=url=>window.drafts.push(url);});
+  await page.goto(origin+'/fixtures/guest-contact-draft?report=1');
+  await page.locator('#reportModal [data-contact-draft-notice]').evaluate(el=>el.remove());
+  await page.locator('#guestReportMessage').fill('Details stay usable');
+  await page.locator('#reportModal button[type="submit"]').click();
+  assert.equal(new URL(await page.evaluate(()=>window.drafts.at(-1))).origin,'https://mail.google.com');
+  assert.deepEqual(errors,[]);await page.close();
 });
 
 test('Gmail opens in a separate tab without access to the guest page',async()=>{

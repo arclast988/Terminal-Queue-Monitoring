@@ -29,11 +29,13 @@
                 + (subject ? '\nSubject: ' + subject : '') + (message ? '\n\nMessage:\n' + message : '')
         });
         var url = 'https://mail.google.com/mail/?' + params.toString();
-        form.querySelector('[data-contact-draft-link]').href = url;
-        form.querySelector('[data-contact-draft-notice]').hidden = false;
+        var draftLink = form.querySelector('[data-contact-draft-link]');
+        var notice = form.querySelector('[data-contact-draft-notice]');
+        if (draftLink) draftLink.href = url;
+        if (notice) notice.hidden = false;
         // Open during the submit gesture. The visible link also works if popups are blocked.
         window.open(url, '_blank', 'noopener,noreferrer');
-        form.querySelector('[data-contact-draft-notice]').focus({preventScroll: true});
+        if (notice) notice.focus({preventScroll: true});
     });
 
     function invalidateDraft(event) {
@@ -41,8 +43,9 @@
         if (!form) return;
         if (event.target.setCustomValidity) event.target.setCustomValidity('');
         var notice = form.querySelector('[data-contact-draft-notice]');
-        notice.hidden = true;
-        form.querySelector('[data-contact-draft-link]').removeAttribute('href');
+        if (notice) notice.hidden = true;
+        var draftLink = form.querySelector('[data-contact-draft-link]');
+        if (draftLink) draftLink.removeAttribute('href');
     }
     document.addEventListener('input', invalidateDraft);
     document.addEventListener('change', invalidateDraft);

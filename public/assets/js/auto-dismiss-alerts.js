@@ -12,6 +12,9 @@
         );
 
         alerts.forEach(function (alert) {
+            // Draft links belong to the form, including while hidden. Removing
+            // them on a timer prevents later submissions from opening Gmail.
+            if (alert.matches('[data-contact-draft-notice], [data-permanent="true"]')) return;
             // Prevent double initialization
             if (alert.dataset.dismissInit === 'true') return;
             alert.dataset.dismissInit = 'true';
