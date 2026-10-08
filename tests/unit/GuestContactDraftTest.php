@@ -128,11 +128,15 @@ final class GuestContactDraftTest extends CIUnitTestCase
         $this->assertStringContainsString('https://mail.google.com/mail/?', html_entity_decode($form, ENT_QUOTES));
         $this->assertStringContainsString('&lt;script&gt;', $form);
         $this->assertStringNotContainsString('<script>alert', $form);
-        $this->assertStringContainsString('Open Gmail draft', $form);
-        $this->assertStringContainsString('has not been sent yet', $form);
+        $this->assertStringContainsString('Open Gmail', $form);
+        $this->assertStringContainsString('ready to review in Gmail', $form);
         $this->assertStringNotContainsString('name="email"', $form);
         $this->assertStringNotContainsString('data-contact-resume', $form);
-        $this->assertStringNotContainsString('data-contact-draft-notice class="contact-verification-notice" role="status" tabindex="-1" hidden', $form);
+        $this->assertStringContainsString('data-permanent="true"', $form);
+        $document = new \DOMDocument();
+        $document->loadHTML($form, LIBXML_NOERROR | LIBXML_NOWARNING);
+        $xpath = new \DOMXPath($document);
+        $this->assertSame(1, $xpath->query('//*[@data-contact-draft-notice and not(@hidden)]')->length);
         $request = service('request', config('App'), false);
         $request->getUri()->setPath(parse_url(base_url('guest'), PHP_URL_PATH));
         $guestResponse = service('response', null, false);
