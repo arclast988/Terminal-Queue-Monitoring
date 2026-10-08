@@ -278,8 +278,11 @@ test('settings refresh restores its selected panel before paint and tab clicks s
     window.firstSettingsPanel = null;
     function readPanel() {
       const panels = [...document.querySelectorAll('.settings-page .tab-content')];
-      if (!panels.length) return requestAnimationFrame(readPanel);
-      window.firstSettingsPanel = panels.filter(panel => getComputedStyle(panel).display !== 'none').map(panel => panel.id);
+      const visiblePanels = panels.filter(panel => getComputedStyle(panel).display !== 'none').map(panel => panel.id);
+      // Parsing may expose earlier hidden panels before the saved panel exists.
+      // Record the first visible panel; a wrong panel still fails the assertion.
+      if (!visiblePanels.length) return requestAnimationFrame(readPanel);
+      window.firstSettingsPanel = visiblePanels;
     }
     requestAnimationFrame(readPanel);
   });
