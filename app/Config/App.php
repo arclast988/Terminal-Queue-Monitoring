@@ -39,19 +39,31 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        // Railway writes app.baseURL from APP_BASE_URL/RAILWAY_PUBLIC_DOMAIN.
-        // Never replace that trusted value with a request's Host header: reset
-        // links and other absolute URLs must not be controlled by the caller.
-        if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
-            return;
-        }
-
         if (!empty($_SERVER['HTTP_HOST']) && preg_match('/\A[a-zA-Z0-9.-]+(?::[0-9]{1,5})?\z/D', $_SERVER['HTTP_HOST'])) {
+            $currentHost = $_SERVER['HTTP_HOST'];
+            $hostWithoutPort = strtolower(explode(':', $currentHost)[0]);
+
+            // In production, allow trusted Railway domains and configured hostnames
+            // to adapt dynamically so domain renames or stale APP_BASE_URL never break CSS/assets.
+            $isTrustedHost = str_ends_with($hostWithoutPort, '.up.railway.app')
+                || str_ends_with($hostWithoutPort, '.railway.app')
+                || in_array($hostWithoutPort, $this->allowedHostnames, true);
+
+            if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
+                if ($isTrustedHost && (empty($this->baseURL) || !str_contains($this->baseURL, $hostWithoutPort))) {
+                    $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
+                        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+                        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
+                    $scheme = $isHttps ? 'https://' : 'http://';
+                    $this->baseURL = $scheme . $currentHost . '/';
+                }
+                return;
+            }
+
             $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
                 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
                 || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
             $scheme = $isHttps ? 'https://' : 'http://';
-            $currentHost = $_SERVER['HTTP_HOST'];
 
             // If baseURL is currently empty, points to localhost, or differs from the requesting host,
             // adapt to the client's current request host so asset links and API calls point to the actual server.
