@@ -86,7 +86,7 @@ final class GuestContactDraftTest extends CIUnitTestCase
             $this->assertSame('management@example.com', $params['to']);
             $this->assertSame('cm', $params['view']);
             $this->assertSame('[' . app_acronym() . '] ' . $label . ': Fare & +=?#', $params['su']);
-            $this->assertSame('Name: José & Guest' . "\nType: " . $label . "\nSubject: Fare & +=?#\n\nMessage:\n" . $draft['message'], $params['body']);
+            $this->assertSame('Name: José & Guest' . "\n\n" . $draft['message'], $params['body']);
             $this->assertArrayNotHasKey('authuser', $params);
             $this->assertArrayNotHasKey('from', $params);
             $this->assertArrayNotHasKey('email', $params);
@@ -180,7 +180,7 @@ final class GuestContactDraftTest extends CIUnitTestCase
                 $this->assertSame('', $data['draft']['name']);
                 $this->assertSame('', $data['draft']['message']);
                 parse_str(parse_url($data['gmailUrl'], PHP_URL_QUERY), $params);
-                $this->assertSame('Type: ' . $label . "\nSubject: Topic only", $params['body']);
+                $this->assertSame('', $params['body']);
             }
             $response = $this->action('send', ['type'=>$type, 'subject'=>'Topic only']);
             $this->assertStringEndsWith('/guest?' . $type . '=1#support-section', $response->getHeaderLine('Location'));
@@ -188,6 +188,24 @@ final class GuestContactDraftTest extends CIUnitTestCase
             $this->assertStringContainsString('Your Name (optional)', $form);
             $this->assertStringContainsString('<option selected>Topic only</option>', $form);
             $this->assertStringContainsString('https://mail.google.com/mail/?', html_entity_decode($form, ENT_QUOTES));
+        }
+    }
+
+    public function testDraftBodyContainsOnlyTheOptionalNameAndMessage(): void
+    {
+        foreach (['report', 'contact'] as $type) {
+            foreach ([
+                ['name'=>'Guest', 'message'=>'', 'body'=>'Name: Guest'],
+                ['name'=>'', 'message'=>'Please check the trip.', 'body'=>'Please check the trip.'],
+                ['name'=>' Guest ', 'message'=>' Please check the trip. ', 'body'=>"Name: Guest\n\nPlease check the trip."],
+            ] as $case) {
+                $data = json_decode($this->action('send', [
+                    'type'=>$type, 'subject'=>'Trip inquiry', 'name'=>$case['name'], 'message'=>$case['message'],
+                ], true)->getBody(), true);
+                $this->assertTrue($data['success']);
+                parse_str(parse_url($data['gmailUrl'], PHP_URL_QUERY), $params);
+                $this->assertSame($case['body'], $params['body']);
+            }
         }
     }
 

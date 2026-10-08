@@ -23,9 +23,8 @@ class Contact extends BaseController
         if ($recipient === null) return $this->formResponse($draft, 'The terminal contact email is currently unavailable. Please contact the terminal office directly.');
         $label = $draft['type'] === 'report' ? 'Report Issue' : 'Contact Us';
         $subject = $draft['subject'] !== '' ? ': ' . $draft['subject'] : '';
-        $body = ($draft['name'] !== '' ? 'Name: ' . $draft['name'] . "\n" : '') . 'Type: ' . $label
-            . ($draft['subject'] !== '' ? "\nSubject: " . $draft['subject'] : '')
-            . ($draft['message'] !== '' ? "\n\nMessage:\n" . $draft['message'] : '');
+        $body = ($draft['name'] !== '' ? 'Name: ' . $draft['name'] : '')
+            . ($draft['name'] !== '' && $draft['message'] !== '' ? "\n\n" : '') . $draft['message'];
         $url = 'https://mail.google.com/mail/?' . http_build_query([
             'view'=>'cm', 'fs'=>'1', 'tf'=>'cm', 'to'=>$recipient,
             'su'=>'[' . app_acronym() . '] ' . $label . $subject, 'body'=>$body,

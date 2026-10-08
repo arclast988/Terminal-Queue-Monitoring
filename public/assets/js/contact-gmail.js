@@ -25,8 +25,7 @@
         var params = new URLSearchParams({
             view: 'cm', fs: '1', tf: 'cm', to: form.dataset.recipient,
             su: '[' + form.dataset.acronym + '] ' + label + (subject ? ': ' + subject : ''),
-            body: (name ? 'Name: ' + name + '\n' : '') + 'Type: ' + label
-                + (subject ? '\nSubject: ' + subject : '') + (message ? '\n\nMessage:\n' + message : '')
+            body: (name ? 'Name: ' + name : '') + (name && message ? '\n\n' : '') + message
         });
         var url = 'https://mail.google.com/mail/?' + params.toString();
         var draftLink = form.querySelector('[data-contact-draft-link]');

@@ -54,7 +54,7 @@ test('both guest forms prepare encoded Gmail drafts from the guest account on mo
       assert.equal(gmail.searchParams.get('view'),'cm');assert.equal(gmail.searchParams.get('tf'),'cm');
       assert.equal(gmail.searchParams.get('authuser'),null);assert.equal(gmail.searchParams.get('from'),null);
       assert.ok(gmail.searchParams.get('su').endsWith((type==='report'?'Report Issue':'Contact Us')+': '+subject));
-      assert.equal(gmail.searchParams.get('body'),'Name: José & Passenger\nType: '+(type==='report'?'Report Issue':'Contact Us')+'\nSubject: '+subject+'\n\nMessage:\n'+message);
+      assert.equal(gmail.searchParams.get('body'),'Name: José & Passenger\n\n'+message);
       assert.equal(draft.target,'_blank');assert.equal(draft.features,'noopener,noreferrer');
       assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),draft.url);
       assert.match(await form.locator('[role="status"]').innerText(),/ready to review in Gmail/);
@@ -169,7 +169,7 @@ test('optional guest fields and distinct searchable topics prepare drafts on mob
       await form.locator('button[type="submit"]').click();
       let draft=new URL(await page.evaluate(()=>window.drafts.at(-1)));
       const label=type==='report'?'Report Issue':'Contact Us';
-      assert.equal(draft.searchParams.get('body'),'Type: '+label+'\nSubject: '+topic);
+      assert.equal(draft.searchParams.get('body'),'');
       assert.ok(draft.searchParams.get('su').endsWith(': '+topic));
       await page.screenshot({path:path.join(__dirname,'artifacts','guest-optional-'+type+'-'+width+'.png')});
       await page.locator('#'+prefix+'Name').fill('   ');
@@ -179,7 +179,7 @@ test('optional guest fields and distinct searchable topics prepare drafts on mob
       assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),null);
       await form.locator('button[type="submit"]').click();
       draft=new URL(await page.evaluate(()=>window.drafts.at(-1)));
-      assert.equal(draft.searchParams.get('body'),'Type: '+label+'\nSubject: '+nextTopic);
+      assert.equal(draft.searchParams.get('body'),'');
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
       await page.keyboard.press('Escape');
     }
