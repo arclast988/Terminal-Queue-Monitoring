@@ -104,6 +104,8 @@ function session(): object {
 }
 final class ResponsiveFixtureRenderer {
     public function render(string $name, array $data = []): string {
+        // Layout/control fixtures exclude the external feedback widget and its network requests.
+        if ($name === 'partials/maze_snippet') return '';
         // Management fixtures include the real footer and Bootstrap/support modals.
         if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-draft') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true) && ($GLOBALS['argv'][7] ?? '') !== 'shared-dialogs')) return '';
         extract($GLOBALS['fixtureData']);
