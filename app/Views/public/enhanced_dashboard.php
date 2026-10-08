@@ -2220,6 +2220,8 @@
     </style>
     <?= $this->include('partials/interaction_assets') ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/image-tools.css') ?>">
+    <script src="<?= app_asset_url('assets/js/image-tools.js') ?>" defer></script>
 </head>
 
 <body class="guest-theme">

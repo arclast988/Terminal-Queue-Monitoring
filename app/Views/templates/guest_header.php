@@ -10,7 +10,7 @@
  *   $skip_breadcrumb      bool   optional — when true, the breadcrumb section is not rendered (the
  *                                page is expected to render its own). Defaults to false.
  *
- * Callers load shared guest styles in the head; standalone use retains a stylesheet fallback.
+ * Callers load shared guest styles and image tools in the head; standalone use retains a fallback.
  * The page using it must already
  * have <head> with Font Awesome + Outfit font + the CSS variables (--primary, --primary-dark,
  * --text-muted, --shadow-sm, --transition) defined.
@@ -18,9 +18,9 @@
 ?>
 <?php if (empty($guest_shell_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
-<?php endif; ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/image-tools.css') ?>">
 <script src="<?= app_asset_url('assets/js/image-tools.js') ?>" defer></script>
+<?php endif; ?>
 <?php if (empty($interaction_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/interaction-motion.css') ?>">
 <?php endif; ?>
