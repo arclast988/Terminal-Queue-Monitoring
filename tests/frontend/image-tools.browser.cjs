@@ -172,8 +172,10 @@ test('Cancel and Escape keep the previous staged photo and Use original preserve
   const original=await input.evaluate(async input=>Array.from(new Uint8Array(await input.files[0].arrayBuffer())));
   assert.deepEqual(Buffer.from(original),file.buffer);
   await input.setInputFiles({...file,name:'second.png'});await page.getByRole('button',{name:'Cancel',exact:true}).click();
+  await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
   assert.equal(await input.evaluate(input=>input.files[0].name),'photo.png');
   await input.setInputFiles({...file,name:'third.png'});await page.keyboard.press('Escape');
+  await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
   assert.equal(await input.evaluate(input=>input.files[0].name),'photo.png');assert.equal(await page.locator('dialog[open]').count(),0);assert.deepEqual(errors,[]);
 });
 
@@ -204,10 +206,11 @@ test('vehicle photos open clearly for guests, dispatchers, admins and superadmin
       assert.equal(await dialog.locator('img').getAttribute('src'),new URL(source,origin).href);
       await page.getByRole('button',{name:'Zoom in',exact:true}).click();assert.equal(await dialog.locator('[data-zoom]').textContent(),'150%');
       await page.getByRole('button',{name:'Fit image',exact:true}).click();assert.equal(await dialog.locator('[data-zoom]').textContent(),'100%');
-      await page.keyboard.press('Escape');assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await photo.evaluate(img=>document.activeElement===img),true);
+      await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await photo.evaluate(img=>document.activeElement===img),true);
       await photo.evaluate(img=>img.src='/fixture-updated.svg');await photo.click();
       assert.match(await dialog.locator('img').getAttribute('src'),/fixture-updated\.svg$/,'the viewer uses the latest live photo address');
       await page.getByRole('button',{name:'Close',exact:true}).click();
+      await dialog.waitFor({state:'hidden'});
       const filterImages=page.locator('button img[data-vt-photo], a img[data-vt-photo]');
       assert.equal(await filterImages.evaluateAll(imgs=>imgs.some(img=>img.hasAttribute('data-image-preview'))),false,'filter icons keep filtering');
       assert.deepEqual(errors,[]);await context.close();
