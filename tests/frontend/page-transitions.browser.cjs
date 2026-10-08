@@ -427,7 +427,7 @@ test('public, authentication and management navigation uses one short native pag
     await page.waitForFunction(() => window.transitionRecords.length > 0, null, { timeout: 3000 });
     const record = await page.evaluate(() => window.transitionRecords.find(record => record.duration));
     assert.ok(record, JSON.stringify(await page.evaluate(() => window.transitionRecords)));
-    assert.equal(record.duration, '0.15s', `${from} → ${to}`);
+    assert.equal(record.duration, '0.18s', `${from} → ${to}`);
     assert.equal(record.oldOpacity, '1', `${from} → ${to}: never expose a blank canvas`);
     assert.equal(record.oldAnimation, 'none', `${from} → ${to}: keep the outgoing frame solid`);
     // pagereveal can precede body parsing on faster runners. Inspect the actual
@@ -451,7 +451,7 @@ test('reduced motion and constrained devices keep the old frame until the destin
     assert.equal(await page.locator('html').getAttribute('data-tq-navigation-reveal'), '');
     await page.waitForFunction(() => window.transitionRecords.length > 0);
     const record = await page.evaluate(() => window.transitionRecords[0]);
-    assert.equal(record.duration, mode === 'lite' ? '0.1s' : '0s');
+    assert.equal(record.duration, mode === 'lite' ? '0.12s' : '0s');
     assert.equal(record.oldOpacity, '1');
     assert.equal(await page.locator('.login-card .card-head').evaluate(el => getComputedStyle(el).animationName), 'none');
     await page.locator('#username').fill('dispatcher@example.com');
@@ -468,7 +468,7 @@ test('the dispatcher header never brightens or disappears between rendered trans
   await page.waitForURL(origin + '/staff/queue');
   await page.waitForFunction(() => window.heldTransitions?.length > 0);
   let previousOpacity = 0;
-  for (const time of [0, 37.5, 75, 112.5, 150]) {
+  for (const time of [0, 45, 90, 135, 180]) {
     const opacity = await page.evaluate(time => {
       window.heldTransitions.forEach(animation => animation.currentTime = time);
       return {
@@ -478,6 +478,8 @@ test('the dispatcher header never brightens or disappears between rendered trans
     }, time);
     assert.equal(opacity.old, '1', `old frame at ${time}ms`);
     assert.ok(opacity.incoming >= previousOpacity && opacity.incoming <= 1);
+    if (time === 0) assert.equal(opacity.incoming, 0, 'begin with the complete outgoing page, not an almost-opaque new snapshot');
+    if (time === 180) assert.equal(opacity.incoming, 1, 'the destination is fully painted within the short motion budget');
     previousOpacity = opacity.incoming;
     const png = await page.screenshot({ animations: 'allow' });
     // Sample an unchanged part of the actual production header. A transparent
@@ -495,6 +497,42 @@ test('the dispatcher header never brightens or disappears between rendered trans
   }
   await page.evaluate(() => window.heldTransitions.forEach(animation => animation.finish()));
   assert.deepEqual(errors, []);
+});
+
+test('browsers without a snapshot use one brief arrival fade with immediately usable Login fields', {timeout:30000}, async t => {
+  for (const mode of ['full', 'lite', 'reduced']) {
+    const {page,context,errors} = await open(t, mode);
+    // Exercise the same fallback on every engine, including unavailable/skipped snapshots.
+    await context.route('**/assets/css/interaction-motion.css*', route => route.fulfill({
+      contentType:'text/css', body:fs.readFileSync(path.join(root,'public/assets/css/interaction-motion.css'),'utf8').replace('navigation: auto','navigation: none'),
+    }));
+    await page.goto(origin+'/guest');
+    await page.locator('a[href="/login"]:visible').first().click();
+    await page.waitForURL(origin+'/login');
+    await page.locator('#username').focus();
+    const state = await page.evaluate(() => ({
+      fallback:document.documentElement.hasAttribute('data-tq-navigation-fallback'),
+      animation:getComputedStyle(document.body).animationName,
+      duration:getComputedStyle(document.body).animationDuration,
+      child:getComputedStyle(document.querySelector('.login-card .card-head')).animationName,
+      focused:document.activeElement === document.querySelector('#username'),
+      background:getComputedStyle(document.body,'::before').animationName,
+    }));
+    assert.equal(state.fallback,true);
+    assert.equal(state.animation,mode === 'reduced' ? 'none' : 'tq-content-fade');
+    assert.equal(state.duration,mode === 'reduced' ? '0s' : mode === 'lite' ? '0.1s' : '0.14s');
+    assert.equal(state.child,'none','the arrival fade does not stack with login field entrances');
+    assert.equal(state.focused,true);
+    if (mode !== 'full') assert.equal(state.background,'none');
+    await page.locator('#username').fill('ready@example.com');
+    assert.equal(await page.locator('#username').inputValue(),'ready@example.com');
+    await page.waitForFunction(() => !document.body.getAnimations().some(animation => animation.playState === 'running'));
+    assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).opacity),'1');
+    await page.reload();
+    assert.equal(await page.locator('html').getAttribute('data-tq-navigation-fallback'),null,'reload does not replay arrival motion');
+    assert.deepEqual(errors,[]);
+    await context.close();
+  }
 });
 
 test('browser history preserves form values and clears pending feedback after a page fade', { timeout: 15000, skip: !nativeOnly }, async t => {
