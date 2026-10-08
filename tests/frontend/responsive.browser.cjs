@@ -357,12 +357,14 @@ test('vehicle filters scroll in one row on smaller devices and every filter stay
   }
 });
 
-test('pages load fonts normally without unused font preload warnings', {timeout:60000}, async t=>{
+test('pages load their body fonts without unused font preload warnings', {timeout:60000}, async t=>{
   for (const name of ['login','guest','admin-vehicles','admin-users','staff-queue']) {
   const {page,context,errors}=await open(t,name,375,850);
   const warnings=[];
   page.on('console',message=>{if(message.text().includes('preloaded')&&message.text().includes('/fonts/')) warnings.push(message.text());});
-  assert.equal(await page.locator('link[rel="preload"][as="font"]').count(),0);
+  const preloads=page.locator('link[rel="preload"][as="font"]');
+  assert.equal(await preloads.count(),name==='login'?0:1);
+  if (name!=='login') assert.match(await preloads.getAttribute('href'),/outfit-latin-6c18d579fd87\.woff2$/);
   await page.evaluate(()=>document.fonts.ready);
   assert.match(await page.locator('body').evaluate(el=>getComputedStyle(el).fontFamily),name==='login'?/Inter/:/Outfit/);
   await page.waitForTimeout(4000);
