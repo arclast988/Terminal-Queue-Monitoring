@@ -8,6 +8,7 @@
     "test:background": "node --test backgrounds.browser.cjs",
     "test:pending": "node --test pending-buttons.browser.cjs",
     "test:styles": "node --test stylesheets.browser.cjs",
+    "test:images": "node --test image-tools.browser.cjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:dispatch": "node --test dispatch-queue.browser.cjs guest-contact-today.browser.cjs"
   },

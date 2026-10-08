@@ -19,6 +19,8 @@
 <?php if (empty($guest_shell_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
 <?php endif; ?>
+<link rel="stylesheet" href="<?= app_asset_url('assets/css/image-tools.css') ?>">
+<script src="<?= app_asset_url('assets/js/image-tools.js') ?>" defer></script>
 <?php if (empty($interaction_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/interaction-motion.css') ?>">
 <?php endif; ?>
@@ -57,7 +59,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 var first = track && track.querySelector('.marquee-copy');
                 if (!track || !first) return;
 
-                var resizeTimer;
+                var resizeTimer, previousText = null;
 
                 function rebuild() {
                     while (track.children.length > 2) track.removeChild(track.lastElementChild);
@@ -71,12 +73,20 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 
                     var bounds = first.getBoundingClientRect();
                     var segmentWidth = bounds.width || first.offsetWidth || 350;
-                    var durationSec = Math.max(12, Math.round(segmentWidth / 55));
+                    var startWidth = track.parentElement.clientWidth;
+                    track.style.setProperty('--gh-marquee-start', startWidth + 'px');
+                    var durationSec = Math.max(8, (startWidth + segmentWidth) / 55).toFixed(2);
                     var durStr = durationSec + 's';
                     if (track.style.animationDuration !== durStr) {
                         track.style.setProperty('animation-duration', durStr, 'important');
                         track.style.setProperty('-webkit-animation-duration', durStr, 'important');
                     }
+                    if (previousText !== first.textContent && track.getAnimations) {
+                        track.getAnimations().forEach(function (animation) {
+                            if (animation.animationName === 'gh-marquee') animation.currentTime = 0;
+                        });
+                    }
+                    previousText = first.textContent;
                 }
 
                 window.refreshGuestMarquee = rebuild;

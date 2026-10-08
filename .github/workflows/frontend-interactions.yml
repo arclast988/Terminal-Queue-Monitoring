@@ -43,6 +43,7 @@ jobs:
           node --check public/assets/js/interaction-motion.js
           node --check public/assets/js/auth-background.js
           node --check public/assets/js/global-loader.js
+          node --check public/assets/js/image-tools.js
           node --check public/js/queue-sync.js
           node --check public/js/ws-client.js
       - name: Run request and lifecycle regressions
@@ -70,6 +71,10 @@ jobs:
         env:
           TQ_BROWSER: ${{ matrix.browser }}
           TQ_BUTTON_BASE_REF: 64adc8c9c456bc7888f69db4bd8465bc96b76af0
+      - name: Verify image cropping, vehicle photo previews and announcement entry
+        run: npm run --prefix tests/frontend test:images
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
       - name: Run responsive and compatibility checks on production views
         run: npm run --prefix tests/frontend test:responsive
         env:

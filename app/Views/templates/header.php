@@ -37,6 +37,8 @@
     <?php endif; ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/navigation.css') ?>">
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
+    <link rel="stylesheet" href="<?= app_asset_url('assets/css/image-tools.css') ?>">
+    <script src="<?= app_asset_url('assets/js/image-tools.js') ?>" defer></script>
     <?php foreach (($pageStyles ?? []) as $pageStyle): ?>
     <link rel="stylesheet" href="<?= app_asset_url($pageStyle) ?>">
     <?php endforeach; ?>

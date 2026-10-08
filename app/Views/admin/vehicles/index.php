@@ -2886,7 +2886,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 <div class="d-flex align-items-center gap-2 gap-sm-3 flex-grow-1" style="min-width: 0;">
                                     <div class="rounded-3 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background-color: <?= esc($vtColor) ?>; color: <?= esc($vtContrast) ?>; <?= $vtIsLight ? 'border: 1.5px solid #cbd5e1;' : '' ?> overflow: hidden;">
                                         <?php if (!empty($vt['photo'])): ?>
-                                            <img src="<?= esc(media_url($vt['photo'])) ?>" alt="<?= esc($vt['name']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                                            <img src="<?= esc(media_url($vt['photo'])) ?>" alt="<?= esc($vt['name']) ?>" data-image-preview style="width: 100%; height: 100%; object-fit: cover;">
                                         <?php else: ?>
                                             <i class="fas <?= esc($vtIcon) ?>" style="font-size: 15px; color: <?= esc($vtContrast) ?> !important;"></i>
                                         <?php endif; ?>
