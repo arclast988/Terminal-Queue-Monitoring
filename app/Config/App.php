@@ -39,27 +39,18 @@ class App extends BaseConfig
     {
         parent::__construct();
 
+        if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
+            // Resolve from deployment configuration, including CLI startup.
+            // A request cannot choose the host used by assets or reset links.
+            $this->baseURL = \App\Libraries\DeploymentUrl::resolve(
+                $this->baseURL,
+                (string) env('RAILWAY_PUBLIC_DOMAIN', '')
+            );
+            return;
+        }
+
         if (!empty($_SERVER['HTTP_HOST']) && preg_match('/\A[a-zA-Z0-9.-]+(?::[0-9]{1,5})?\z/D', $_SERVER['HTTP_HOST'])) {
             $currentHost = $_SERVER['HTTP_HOST'];
-            $hostWithoutPort = strtolower(explode(':', $currentHost)[0]);
-
-            // In production, allow trusted Railway domains and configured hostnames
-            // to adapt dynamically so domain renames or stale APP_BASE_URL never break CSS/assets.
-            $isTrustedHost = str_ends_with($hostWithoutPort, '.up.railway.app')
-                || str_ends_with($hostWithoutPort, '.railway.app')
-                || in_array($hostWithoutPort, $this->allowedHostnames, true);
-
-            if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
-                if ($isTrustedHost && (empty($this->baseURL) || !str_contains($this->baseURL, $hostWithoutPort))) {
-                    $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
-                        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
-                        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
-                    $scheme = $isHttps ? 'https://' : 'http://';
-                    $this->baseURL = $scheme . $currentHost . '/';
-                }
-                return;
-            }
-
             $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
                 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
                 || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
