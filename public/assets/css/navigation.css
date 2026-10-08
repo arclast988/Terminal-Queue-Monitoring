@@ -2457,13 +2457,13 @@ body.swal2-shown .register-vehicle-card {
 /* ADMIN THEME (RED) */
 body.admin-theme .autocomplete-item i,
 body.admin-theme .autocomplete-item .autocomplete-item-text i {
-  color: #c62828 !important;
-  -webkit-text-fill-color: #c62828 !important;
+  color: var(--primary, #c62828) !important;
+  -webkit-text-fill-color: var(--primary, #c62828) !important;
 }
 body.admin-theme .autocomplete-item:hover,
 body.admin-theme .autocomplete-item.active-item {
-  background-color: #fdecea !important;
-  color: #c62828 !important;
+  background-color: var(--primary-soft, #fdecea) !important;
+  color: var(--primary-dark, #c62828) !important;
 }
 body.admin-theme .autocomplete-item:hover span,
 body.admin-theme .autocomplete-item.active-item span,
@@ -2471,14 +2471,14 @@ body.admin-theme .autocomplete-item:hover .autocomplete-item-text,
 body.admin-theme .autocomplete-item.active-item .autocomplete-item-text,
 body.admin-theme .autocomplete-item:hover i,
 body.admin-theme .autocomplete-item.active-item i {
-  color: #c62828 !important;
-  -webkit-text-fill-color: #c62828 !important;
+  color: var(--primary-dark, #c62828) !important;
+  -webkit-text-fill-color: var(--primary-dark, #c62828) !important;
 }
 body.admin-theme .autocomplete-badge {
-  background-color: #fdecea !important;
-  color: #b71c1c !important;
-  -webkit-text-fill-color: #b71c1c !important;
-  border: 1px solid #fca5a5 !important;
+  background-color: var(--primary-soft, #fdecea) !important;
+  color: var(--primary-dark, #b71c1c) !important;
+  -webkit-text-fill-color: var(--primary-dark, #b71c1c) !important;
+  border: 1px solid var(--primary-soft, #fca5a5) !important;
 }
 
 /* STAFF THEME */

@@ -87,6 +87,8 @@
                             return; // NEVER overwrite individual vehicle's custom photo!
                         }
                         img.src = photo;
+                        img.style.removeProperty('display');
+                        if (img.nextElementSibling && img.nextElementSibling.matches('i.fas, i.bi')) img.nextElementSibling.style.display = 'none';
                     });
                 }
 
@@ -133,6 +135,8 @@
                             return; // PRESERVE individual vehicle's custom photo!
                         }
                         oldImg.src = photo;
+                        oldImg.style.removeProperty('display');
+                        if (oldImg.nextElementSibling && oldImg.nextElementSibling.matches('i.fas, i.bi')) oldImg.nextElementSibling.style.display = 'none';
                     } else {
                         var oldI = thumbBox.querySelector('i');
                         var img = document.createElement('img');
@@ -195,6 +199,7 @@
                 document.querySelectorAll('.vehicle-type-icon.vehicle-type-' + key + ', [data-vehicle-type="' + key + '"] .vehicle-type-icon').forEach(function (iconBox) {
                     var oldImg = iconBox.querySelector('img');
                     if (oldImg) {
+                        if (oldImg.hasAttribute('data-vehicle-custom-photo') || oldImg.classList.contains('vehicle-custom-photo')) return;
                         var iEl = document.createElement('i');
                         iEl.className = 'fas ' + icon;
                         iEl.style.color = color || 'var(--vehicle-' + key + ')';
@@ -213,6 +218,7 @@
                 document.querySelectorAll('[data-vehicle-type="' + key + '"] .vehicle-thumb-box').forEach(function (thumbBox) {
                     var oldImg = thumbBox.querySelector('img');
                     if (oldImg) {
+                        if (oldImg.hasAttribute('data-vehicle-custom-photo') || oldImg.classList.contains('vehicle-custom-photo')) return;
                         var iEl = document.createElement('i');
                         iEl.className = 'fas ' + icon;
                         iEl.style.fontSize = '28px';

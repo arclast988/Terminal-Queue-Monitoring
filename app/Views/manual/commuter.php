@@ -3,6 +3,7 @@
 <head>
     <?= view('partials/maze_snippet') ?>
     <meta charset="UTF-8">
+    <?= $this->include('partials/interaction_policy') ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title><?= esc($title ?? 'Commuter User Guide & Error Help - ' . app_name()) ?></title>

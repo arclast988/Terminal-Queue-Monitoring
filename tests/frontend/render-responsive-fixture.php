@@ -32,7 +32,7 @@ function get_system_setting(string $key, $default = null) {
     ] : [];
     return $theme[$key] ?? $default;
 }
-if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content'], true)) {
+if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content', 'staff-guide', 'admin-guide'], true)) {
     // Keep the real footer/modals while stubbing only managed settings/config.
     final class FixtureContentManagement { public static function fields(): array { return []; } }
     class_alias(FixtureContentManagement::class, 'Config\\ContentManagement');
@@ -74,7 +74,10 @@ function vehicle_type_key(string $type): string { return strtolower($type); }
 function vehicle_type_label(string $type): string { return ucfirst($type); }
 function vehicle_type_class(string $type): string { return 'vehicle-type-' . esc(strtolower($type)); }
 function vehicle_type_photo(string $type): string { return '/fixture.svg'; }
-function vehicle_resolved_photo(array $item, string $type): string { return '/fixture.svg'; }
+function vehicle_resolved_photo(array $item, string $type): string {
+    if (($GLOBALS['argv'][4] ?? '') === 'vehicle-type-photos' && !empty($item['vehicle_photo'] ?? $item['photo'] ?? null)) return media_url($item['vehicle_photo'] ?? $item['photo']);
+    return '/fixture.svg';
+}
 function passenger_color_class(int $count, int $capacity): string { return 'passenger-color-green'; }
 function vehicle_type_badge(string $type): string { return '<span class="vehicle-type-chip ' . vehicle_type_class($type) . '">' . esc(vehicle_type_label($type)) . '</span>'; }
 function get_db_vehicle_types(): array { return [['id' => 1, 'slug' => 'jeepney', 'name' => 'Jeepney', 'color' => '#1565c0', 'icon' => 'fa-bus', 'photo' => '/fixture.svg']]; }
@@ -125,7 +128,7 @@ $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Pal
 $vehicle['status'] = 'active';
 $fixtureData = [
     'title' => 'Fixture', 'body_class' => $fixtureRole . '-theme', 'token' => 'fixture-token', 'error' => null,
-    'masked_email' => 'f***@example.com', 'invalid' => false, 'noRoutesAssigned' => false,
+    'masked_email' => 'f***@example.com', 'has_email' => true, 'has_active_token' => false, 'invalid' => false, 'noRoutesAssigned' => false,
     'announcements' => [], 'breadcrumb_current' => 'Home', 'skip_breadcrumb' => true,
     'queueRoutes' => [
         ['id'=>1, 'terminal_id'=>1, 'origin'=>'Palompon', 'destination'=>$longValue, 'round_number'=>1, 'round_choices'=>[1,2,3], 'round_intervals'=>[1=>20,2=>25,3=>30]],
@@ -329,12 +332,29 @@ if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && iss
     }
 }
 $fixtureRenderer = new ResponsiveFixtureRenderer();
+if (($argv[4] ?? '') === 'vehicle-type-photos') {
+    $customItem = array_replace($item, ['id'=>102, 'vehicle_id'=>202, 'position'=>2, 'plate_number'=>'CUSTOM-202', 'vehicle_photo'=>'/fixture-custom.svg']);
+    $fixtureData['active_queue'] = [$item, $customItem];
+    $fixtureData['queue'] = [$item, $customItem];
+    $fixtureData['vehicles'] = $fixturePage === 'admin-vehicles'
+        ? [$vehicle, array_replace($vehicle, ['id'=>102, 'plate_number'=>'CUSTOM-202', 'photo'=>'/fixture-custom.svg', 'vehicle_photo'=>'/fixture-custom.svg'])]
+        : [$item, $customItem];
+}
+if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
+    $fixtureData['vehicleTypes'] = [
+        ['id'=>1, 'slug'=>'minibus', 'name'=>'Minibus', 'color'=>'#2e7d32', 'icon'=>'fa-bus', 'photo'=>'https://res.cloudinary.com/demo/image/upload/v124/vehicle_types/jeepney.png'],
+        ['id'=>2, 'slug'=>'van', 'name'=>'Van', 'color'=>'#b71c1c', 'icon'=>'fa-van-shuttle', 'photo'=>'/fixture.svg'],
+        ['id'=>3, 'slug'=>'jeepney', 'name'=>'Jeepney', 'color'=>'#1565c0', 'icon'=>'fa-truck-front', 'photo'=>null],
+    ];
+}
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
     'guest-contact-verification' => 'public/enhanced_dashboard',
     'guest-contact-verification-content' => 'partials/guest-contact-verification',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
+    'staff-password' => 'auth/change_password', 'staff-guide' => 'help/dispatcher', 'admin-guide' => 'help/admin',
+    'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',

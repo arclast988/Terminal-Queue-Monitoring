@@ -11,6 +11,9 @@
     var cores = window.navigator.hardwareConcurrency;
     var memory = window.navigator.deviceMemory;
     var subscribed = false;
+    var viewportTimer = 0;
+    var viewportMoving = false;
+    var viewport = window.visualViewport;
     var constrained = (typeof cores === 'number' && cores > 0 && cores <= 4)
         || (typeof memory === 'number' && memory > 0 && memory <= 4);
 
@@ -26,6 +29,26 @@
     function applyVisibility() {
         if (document.hidden) root.setAttribute('data-tq-page-hidden', '');
         else root.removeAttribute('data-tq-page-hidden');
+        if (document.hidden) stopViewportMotion();
+    }
+
+    function stopViewportMotion() {
+        clearTimeout(viewportTimer);
+        viewportTimer = 0;
+        viewportMoving = false;
+        root.removeAttribute('data-tq-viewport-moving');
+    }
+
+    // Decorative photos can wait while scrolling, pinch zoom or resizing uses
+    // the rendering budget. Write once per gesture, never measure layout here.
+    function markViewportMotion() {
+        if (document.hidden) return;
+        if (!viewportMoving) {
+            viewportMoving = true;
+            root.setAttribute('data-tq-viewport-moving', '');
+        }
+        clearTimeout(viewportTimer);
+        viewportTimer = setTimeout(stopViewportMotion, 250);
     }
 
     // Keep decorative photos on the same timeline across pages and refreshes.
@@ -48,6 +71,13 @@
         if (subscribed) return;
         subscribed = true;
         document.addEventListener('visibilitychange', applyVisibility);
+        ['scroll', 'wheel', 'touchmove', 'resize'].forEach(function (name) {
+            window.addEventListener(name, markViewportMotion, { passive: true });
+        });
+        if (viewport) {
+            viewport.addEventListener('resize', markViewportMotion, { passive: true });
+            viewport.addEventListener('scroll', markViewportMotion, { passive: true });
+        }
         if (!preference) return;
         if (preference.addEventListener) preference.addEventListener('change', applyPreference);
         else if (preference.addListener) preference.addListener(applyPreference);
@@ -56,6 +86,14 @@
     function unsubscribe() {
         subscribed = false;
         document.removeEventListener('visibilitychange', applyVisibility);
+        ['scroll', 'wheel', 'touchmove', 'resize'].forEach(function (name) {
+            window.removeEventListener(name, markViewportMotion);
+        });
+        if (viewport) {
+            viewport.removeEventListener('resize', markViewportMotion);
+            viewport.removeEventListener('scroll', markViewportMotion);
+        }
+        stopViewportMotion();
         if (!preference) return;
         if (preference.removeEventListener) preference.removeEventListener('change', applyPreference);
         else if (preference.removeListener) preference.removeListener(applyPreference);
@@ -90,14 +128,21 @@
     } catch (error) { /* Older browsers may omit navigation timing/referrers. */ }
     // Native page navigation keeps the old page visible while the response loads.
     // The browser owns routing, form submission, history and transition timing.
+    /** @param {ViewTransition} transition */
+    function observeTransition(transition) {
+        // A fast second navigation or expired snapshot may skip an animation.
+        // Observe its lifecycle promises without holding up the destination.
+        [transition.ready, transition.finished, transition.updateCallbackDone].forEach(function (promise) {
+            if (promise) promise.catch(function () {});
+        });
+    }
     window.addEventListener('pageswap', function (event) {
         if (!event.viewTransition) return;
-        // A skipped/expired snapshot rejects ready; navigation still succeeds.
-        event.viewTransition.ready.catch(function () {});
+        observeTransition(event.viewTransition);
     });
     window.addEventListener('pagereveal', function (event) {
         if (!event.viewTransition) return;
-        event.viewTransition.ready.catch(function () {});
+        observeTransition(event.viewTransition);
         // Retain for this document so entry animations do not restart after the fade.
         root.setAttribute('data-tq-navigation-reveal', '');
     });

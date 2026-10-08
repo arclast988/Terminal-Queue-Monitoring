@@ -4,6 +4,7 @@
 <head>
     <?= view('partials/maze_snippet') ?>
     <meta charset="UTF-8">
+    <?= $this->include('partials/interaction_policy') ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $title ?? 'Terminal Monitoring System' ?></title>
     <meta name="csrf-token" content="<?= csrf_hash() ?>">
@@ -542,19 +543,38 @@
     <?php $interaction_assets_loaded = true; $navigation_assets_loaded = true; include __DIR__ . '/navbar.php'; ?>
     <script>
         (function() {
-            function syncHeaderHeight() {
+            var headerFrame = null;
+            var lastWidth = null;
+            var lastHeight = null;
+            function measureHeaderHeight() {
+                headerFrame = null;
                 var hdr = document.getElementById('site-header');
-                if (hdr && hdr.offsetHeight > 0) {
+                if (hdr) {
+                    var bounds = hdr.getBoundingClientRect();
+                    if (bounds.height <= 0) return;
                     // The root clientWidth includes a reserved scrollbar gutter
                     // in some browsers; the header measures the usable width.
-                    document.documentElement.style.setProperty('--tq-viewport-width', Math.min(document.documentElement.clientWidth, hdr.getBoundingClientRect().width) + 'px');
+                    var width = Math.min(document.documentElement.clientWidth, bounds.width);
                     var isMobile = window.innerWidth <= 768;
                     var maxCap = isMobile ? 82 : 84;
-                    var h = Math.min(Math.max(hdr.offsetHeight || 52, 48), maxCap);
-                    document.documentElement.style.setProperty('--site-header-height', h + 'px');
+                    var h = Math.min(Math.max(bounds.height, 48), maxCap);
+                    // Read layout once, then write only values that changed.
+                    if (width !== lastWidth) {
+                        document.documentElement.style.setProperty('--tq-viewport-width', width + 'px');
+                        lastWidth = width;
+                    }
+                    if (h !== lastHeight) {
+                        document.documentElement.style.setProperty('--site-header-height', h + 'px');
+                        lastHeight = h;
+                    }
                 }
             }
-            syncHeaderHeight();
+            function syncHeaderHeight() {
+                if (headerFrame === null && !document.hidden) {
+                    headerFrame = window.requestAnimationFrame(measureHeaderHeight);
+                }
+            }
+            measureHeaderHeight();
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', syncHeaderHeight);
             }
@@ -564,6 +584,11 @@
                 if (el) new ResizeObserver(syncHeaderHeight).observe(el);
             }
             window.addEventListener('resize', syncHeaderHeight, { passive: true });
+            window.addEventListener('pagehide', function () {
+                if (headerFrame !== null) window.cancelAnimationFrame(headerFrame);
+                headerFrame = null;
+            });
+            window.addEventListener('pageshow', syncHeaderHeight);
         })();
     </script>
     <div class="main-content container-fluid">

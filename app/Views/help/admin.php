@@ -38,8 +38,8 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
         width: 44px;
         height: 44px;
         border-radius: 12px;
-        background: #fee2e2;
-        color: #b71c1c;
+        background: var(--primary-soft, #fee2e2);
+        color: var(--primary-dark, #b71c1c);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -97,7 +97,7 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
     }
 
     .accordion-header-icon {
-        color: #b71c1c;
+        color: var(--primary, #b71c1c);
         font-size: 14px;
         transition: transform 0.25s cubic-bezier(.4, 0, .2, 1);
         flex-shrink: 0;
@@ -109,7 +109,7 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
     }
 
     .accordion-item.active .accordion-header-text {
-        color: #b71c1c;
+        color: var(--primary, #b71c1c);
     }
 
     .accordion-body {
@@ -133,7 +133,7 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
     /* Step content formatting */
     .step-box {
         background: #f8fafc;
-        border-left: 3px solid #b71c1c;
+        border-left: 3px solid var(--primary, #b71c1c);
         padding: 12px 16px;
         border-radius: 0 8px 8px 0;
         margin: 12px 0;
@@ -161,13 +161,13 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
     .role-staff { background: #15803d !important; color: #ffffff !important; }
 
     .help-tip {
-        background: #fff5f5;
-        border: 1px solid #fed7d7;
+        background: var(--primary-soft, #fff5f5);
+        border: 1px solid var(--primary-soft, #fed7d7);
         border-radius: 8px;
         padding: 10px 14px;
         margin-top: 10px;
         font-size: 13px;
-        color: #9b2c2c;
+        color: var(--primary-dark, #9b2c2c);
         display: flex;
         align-items: flex-start;
         gap: 8px;

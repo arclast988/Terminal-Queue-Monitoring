@@ -11,12 +11,12 @@
 
     /* Header Banner */
     .manual-header {
-        background: linear-gradient(135deg, #065f46 0%, #047857 100%);
-        color: #ffffff !important;
+        background: linear-gradient(135deg, var(--primary-dark, #065f46) 0%, var(--primary, #047857) 100%);
+        color: var(--on-primary, #ffffff) !important;
         border-radius: 18px;
         padding: 32px 28px;
         margin-bottom: 24px;
-        box-shadow: 0 10px 25px -5px rgba(4, 120, 87, 0.28);
+        box-shadow: 0 10px 25px -5px var(--primary-soft, rgba(4, 120, 87, 0.28));
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -33,7 +33,7 @@
     html body.admin-theme .manual-header .manual-title,
     html body .manual-header h1,
     html body .manual-header .manual-title {
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         font-size: clamp(20px, 3.8vw, 26px);
         font-weight: 800;
         margin: 0 0 8px;
@@ -49,7 +49,7 @@
     html body.admin-theme .manual-header .manual-subtitle,
     html body .manual-header p,
     html body .manual-header .manual-subtitle {
-        color: #d1fae5 !important;
+        color: var(--on-primary, #d1fae5) !important;
         font-size: 14.5px;
         margin: 0;
         max-width: 720px;
@@ -65,7 +65,7 @@
 
     .manual-header .btn-back {
         background: rgba(255, 255, 255, 0.18);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         border: 1px solid rgba(255, 255, 255, 0.35);
         padding: 9px 16px;
         border-radius: 9px;
@@ -80,13 +80,13 @@
 
     .manual-header .btn-back:hover {
         background: rgba(255, 255, 255, 0.28);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         transform: translateY(-1px);
     }
 
     .manual-header .btn-action-primary {
         background: #ffffff;
-        color: #065f46 !important;
+        color: var(--primary-dark, #065f46) !important;
         border: none;
         padding: 9px 16px;
         border-radius: 9px;
@@ -101,14 +101,14 @@
     }
 
     .manual-header .btn-action-primary:hover {
-        background: #f0fdf4;
-        color: #047857 !important;
+        background: var(--primary-soft, #f0fdf4);
+        color: var(--primary-dark, #047857) !important;
         transform: translateY(-1px);
     }
 
     .manual-header .btn-print-outline {
         background: rgba(255, 255, 255, 0.18);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         border: 1px solid rgba(255, 255, 255, 0.35);
         padding: 9px 14px;
         border-radius: 9px;
@@ -123,7 +123,7 @@
 
     .manual-header .btn-print-outline:hover {
         background: rgba(255, 255, 255, 0.28);
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
         transform: translateY(-1px);
     }
 
@@ -163,7 +163,7 @@
     }
 
     .manual-mobile-select:focus {
-        border-color: #059669;
+        border-color: var(--primary, #059669);
         background: white;
     }
 
@@ -203,10 +203,10 @@
     }
 
     .manual-pill-btn.active {
-        background: #059669;
-        border-color: #059669;
-        color: #ffffff;
-        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+        background: var(--primary, #059669);
+        border-color: var(--primary, #059669);
+        color: var(--on-primary, #ffffff);
+        box-shadow: 0 4px 12px var(--primary-soft, rgba(5, 150, 105, 0.25));
     }
 
     @media (max-width: 640px) {
@@ -301,8 +301,8 @@
         width: 32px;
         height: 32px;
         border-radius: 50%;
-        background: #d1fae5;
-        color: #065f46;
+        background: var(--primary-soft, #d1fae5);
+        color: var(--primary-dark, #065f46);
         font-weight: 800;
         display: flex;
         align-items: center;
@@ -333,7 +333,7 @@
     /* Callouts */
     .rule-callout {
         background: #f8fafc;
-        border-left: 4px solid #059669;
+        border-left: 4px solid var(--primary, #059669);
         padding: 14px 16px;
         border-radius: 0 10px 10px 0;
         margin: 16px 0;

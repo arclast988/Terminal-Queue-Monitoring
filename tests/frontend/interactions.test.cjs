@@ -6,6 +6,20 @@ const loader = 'public/assets/js/global-loader.js';
 const sync = 'public/js/queue-sync.js';
 function loaded(options) { const h = harness(options); h.load('public/assets/js/interaction-motion.js'); h.load(loader); return h; }
 
+test('interrupted native page transitions leave navigation usable without unhandled rejections', async () => {
+  const h = loaded();
+  for (const type of ['pageswap', 'pagereveal']) {
+    const viewTransition = Object.fromEntries(['ready', 'finished', 'updateCallbackDone'].map(name => [name, Promise.reject(new Error('snapshot skipped'))]));
+    assert.equal(h.window.emit(type, { viewTransition }).defaultPrevented, false);
+  }
+  await flush();
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-reveal'), '');
+  const request = h.window.fetch('/next-page');
+  assert.equal(h.requests.length, 1);
+  h.requests[0].resolve({ ok: true });
+  assert.equal((await request).ok, true);
+});
+
 test('fetch starts immediately and preserves its arguments and response identity', async () => {
   const h = loaded(); const init = { method: 'POST', body: '{"count":3}', headers: { 'X-CSRF-TOKEN': 'fixture' } };
   const request = h.window.fetch('/passengers', init);
@@ -134,6 +148,26 @@ test('loading motion follows tab visibility and restores one listener after BFCa
   assert.equal(h.document.count('visibilitychange'), 1);
   h.window.emit('pagehide', { persisted: false });
   assert.equal(h.document.count('visibilitychange'), 0);
+});
+
+test('scroll and zoom motion never block input and clear their timer on page exit', () => {
+  const h = loaded();
+  const root = h.document.documentElement;
+  assert.equal(h.window.emit('wheel').defaultPrevented, false);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), true);
+  h.tick(200); h.window.emit('resize'); h.tick(200);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), true);
+  h.tick(50);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), false);
+  h.window.emit('scroll');
+  h.window.emit('pagehide', {persisted:true});
+  assert.equal(h.timers.size, 0);
+  assert.equal(root.hasAttribute('data-tq-viewport-moving'), false);
+  assert.equal(h.window.count('scroll'), 0);
+  h.window.emit('pageshow', {persisted:true});
+  h.window.emit('pageshow', {persisted:true});
+  assert.equal(h.window.count('scroll'), 1);
+  h.window.emit('pagehide');
 });
 
 test('queue polling coalesces overlap and retains one trailing reconciliation', async () => {

@@ -113,7 +113,7 @@ foreach ($vehicles ?? [] as $registeredVehicle) {
             
             <div class="vehicle-route-filter">
                 <label for="vehicle-route-filter" class="form-label-modern">Filter route</label>
-                <select id="vehicle-route-filter" class="form-select-modern" data-no-autocomplete onchange="filterVehicles(currentFilter)">
+                <select id="vehicle-route-filter" class="form-select-modern" aria-label="Filter route" data-autocomplete-placeholder="Search routes..." onchange="filterVehicles(currentFilter)">
                     <option value="">All routes</option>
                     <?php foreach ($vehicleRouteFilters as $routeKey => $routeName): ?>
                         <option value="<?= esc($routeKey, 'attr') ?>"><?= esc($routeName) ?></option>
@@ -459,7 +459,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     <div class="vehicle-type-cell">
                                         <?php if (!empty($displayPhoto)): ?>
                                             <span class="vehicle-type-icon <?= vehicle_type_class($vehicle['type']) ?>" style="<?= $hasVehPhoto ? 'border-radius: 8px; overflow: hidden; width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1.5px solid #cbd5e1; background: #ffffff;' : '' ?>">
-                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>" loading="lazy" decoding="async"
+                                                <img src="<?= esc($displayPhoto) ?>" alt="<?= vehicle_type_label($vehicle['type']) ?>" loading="lazy" decoding="async" class="<?= $hasVehPhoto ? 'vehicle-custom-photo' : '' ?>" <?= $hasVehPhoto ? 'data-vehicle-custom-photo="true"' : ('data-vt-photo="' . esc(vehicle_type_key($vehicle['type'])) . '"') ?>
                                                     style="<?= $hasVehPhoto ? 'width: 100%; height: 100%; object-fit: cover;' : 'height:28px; width:auto; max-width:32px; object-fit:contain;' ?>" 
                                                     title="<?= $hasVehPhoto ? ('Vehicle ' . esc($vehicle['plate_number']) . ' (' . vehicle_type_label($vehicle['type']) . ')') : vehicle_type_label($vehicle['type']) ?>">
                                             </span>
@@ -1033,7 +1033,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         min-height: 44px !important;
     }
     .vehicle-register-filter-row .vehicle-search-input { min-width: 0; padding-right: 36px !important; }
-    .vehicle-route-filter select { width: 100%; height: 44px; min-width: 0; max-width: 100%; }
+    .vehicle-route-filter select,
+    .vehicle-route-filter .autocomplete-wrapper > input { width: 100%; height: 44px; min-width: 0; max-width: 100%; }
     .vehicle-register-filter-row .vehicle-filter-controls {
         grid-column: 1 / -1;
         width: 100%;
@@ -2954,7 +2955,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                             <!-- Vehicle Photo / Emblem -->
                             <?php
                             $vtPhoto = $vt['photo'] ?? null;
-                            $vtPhotoUrl = !empty($vtPhoto) ? base_url($vtPhoto) : '';
+                            $vtPhotoUrl = !empty($vtPhoto) ? media_url($vtPhoto) : '';
                             ?>
                             <div class="mb-2">
                                 <label class="form-label fw-semibold mb-1 d-flex justify-content-between align-items-center" style="font-size: 13px;">
@@ -2969,9 +2970,9 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                         <img id="edit_vt_photo_preview_<?= $vt['id'] ?>" src="<?= esc($vtPhotoUrl) ?>" alt="Photo" style="width: 100%; height: 100%; object-fit: cover; <?= empty($vtPhotoUrl) ? 'display: none;' : '' ?>">
                                         <i id="edit_vt_photo_placeholder_<?= $vt['id'] ?>" class="fas fa-image text-muted" style="font-size: 16px; <?= !empty($vtPhotoUrl) ? 'display: none;' : '' ?>"></i>
                                     </div>
-                                    <input type="file" id="edit_vt_photo_input_<?= $vt['id'] ?>" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" class="form-control form-control-sm flex-grow-1" style="height: 38px; border-radius: 8px; font-size: 12.5px;" onchange="previewEditVtPhoto(<?= $vt['id'] ?>, this)">
+                                    <input type="file" id="edit_vt_photo_input_<?= $vt['id'] ?>" name="photo" accept="image/png,image/jpeg,image/jpg,image/webp" aria-describedby="edit_vt_photo_help_<?= $vt['id'] ?>" class="form-control form-control-sm flex-grow-1" style="height: 38px; border-radius: 8px; font-size: 12.5px;" onchange="previewEditVtPhoto(<?= $vt['id'] ?>, this)">
                                 </div>
-                                <div class="form-text mt-1" style="font-size: 11px;">PNG, JPG, WEBP &bull; Max 2MB</div>
+                                <div id="edit_vt_photo_help_<?= $vt['id'] ?>" class="form-text mt-1" style="font-size: 11px;">PNG, JPG, WEBP &bull; Max 2MB<span class="d-block">Leave empty to keep the current photo. Clear Photo removes it.</span></div>
                             </div>
 
                             <!-- Color Assignment -->

@@ -730,7 +730,10 @@
                     ];
                     var foundImgs = document.querySelectorAll(selectors.join(', '));
                     foundImgs.forEach(function(img) {
+                        if (img.hasAttribute('data-vehicle-custom-photo') || img.classList.contains('vehicle-custom-photo')) return;
                         img.src = photo;
+                        img.style.removeProperty('display');
+                        if (img.nextElementSibling && img.nextElementSibling.matches('i.fas, i.bi')) img.nextElementSibling.style.display = 'none';
                     });
 
                     // Upgrade icon-only elements to img if needed
@@ -756,9 +759,10 @@
             } else {
                 // Photo is removed / null: revert to assigned icon
                 try {
-                    document.querySelectorAll('.vehicle-type-icon.vehicle-type-' + key + ', [data-vehicle-type="' + key + '"] .vehicle-type-icon').forEach(function(iconBox) {
+                    document.querySelectorAll('.vehicle-type-icon.vehicle-type-' + key + ', [data-vehicle-type="' + key + '"] .vehicle-type-icon, [data-vehicle-type="' + key + '"] .vehicle-thumb-box').forEach(function(iconBox) {
                         var oldImg = iconBox.querySelector('img');
                         if (oldImg) {
+                            if (oldImg.hasAttribute('data-vehicle-custom-photo') || oldImg.classList.contains('vehicle-custom-photo')) return;
                             var iEl = document.createElement('i');
                             iEl.className = 'fas ' + icon;
                             iEl.style.color = color || 'var(--vehicle-' + key + ')';
@@ -823,6 +827,8 @@
                             return; // NEVER overwrite individual vehicle's custom photo!
                         }
                         img.src = data.photo;
+                        img.style.removeProperty('display');
+                        if (img.nextElementSibling && img.nextElementSibling.matches('i.fas, i.bi')) img.nextElementSibling.style.display = 'none';
                     });
                 } catch (e) { /* ignore */ }
             }

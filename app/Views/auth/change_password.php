@@ -49,11 +49,11 @@ SVG;
     </div>
 
     <!-- 2-Column Responsive Layout -->
-    <div class="row g-4">
+    <div class="row g-4 password-layout">
         <!-- Left Column: User Identity & Security Guidance -->
-        <div class="col-lg-4 order-2 order-lg-1">
+        <div class="col-lg-4 order-2 order-lg-1 password-sidebar">
             <!-- Profile Overview Card -->
-            <div class="modern-card shadow-modern mb-4">
+            <div class="modern-card shadow-modern mb-4 password-profile">
                 <div class="modern-card-body text-center p-4">
                     <div class="profile-avatar-wrapper mb-3">
                         <div class="avatar-circle-lg <?= $sessionRole === 'super_admin' ? 'avatar-super-admin' : ($sessionRole === 'admin' ? 'avatar-admin' : 'avatar-dispatcher') ?>">
@@ -92,7 +92,7 @@ SVG;
             </div>
 
             <!-- Password Guidelines Card -->
-            <div class="modern-card shadow-modern">
+            <div class="modern-card shadow-modern password-guidelines">
                 <div class="modern-card-header py-3 px-4" style="border-bottom: 1px solid #f1f5f9; background: #fafafa;">
                     <span class="modern-card-title" style="font-size: 14px; font-weight: 700; color: #334155;">
                         <i class="bi bi-shield-check text-primary me-2"></i>Security Guidelines
@@ -118,11 +118,11 @@ SVG;
         </div>
 
         <!-- Right Column: Password Update Form Card -->
-        <div class="col-lg-8 order-1 order-lg-2">
+        <div class="col-lg-8 order-1 order-lg-2 password-form">
             <div class="modern-card shadow-modern">
                 <div class="modern-card-header py-3 px-4 d-flex align-items-center justify-content-between" style="border-bottom: 1px solid #f1f5f9;">
                     <span class="modern-card-title" style="font-size: 15px; font-weight: 700; color: #0f172a;">
-                        <i class="bi bi-key-fill text-danger me-2"></i>Update Password
+                        <i class="bi bi-key-fill text-primary me-2"></i>Update Password
                     </span>
                     <span class="badge bg-light text-muted border" style="font-size: 11px; font-weight: 600;">
                         OTP Required
@@ -304,7 +304,7 @@ SVG;
                             <a href="<?= $backUrl ?>" class="btn-modern btn-modern-outline">
                                 Cancel
                             </a>
-                            <button type="submit" id="btnSubmitPassword" class="btn-modern btn-modern-success">
+                            <button type="submit" id="btnSubmitPassword" class="btn-modern btn-modern-primary">
                                 <i class="bi bi-check2-circle me-1"></i> Update Password
                             </button>
                         </div>
@@ -335,7 +335,7 @@ SVG;
             </div>
 
             <div class="modal-footer" style="border-top: 1px solid #f1f5f9; padding: 16px 24px 20px; display: flex; justify-content: center; background: #ffffff;">
-                <button type="button" class="btn" id="systemWarningOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: var(--primary, #15803d); border: none; color: #ffffff; font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: all 0.15s ease; box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);">
+                <button type="button" class="btn" id="systemWarningOkBtn" data-bs-dismiss="modal" style="min-width: 130px; height: 42px; background: var(--primary, #15803d); border: none; color: var(--on-primary, #ffffff); font-weight: 600; font-size: 14.5px; border-radius: 8px; transition: background-color 0.15s ease; box-shadow: 0 2px 6px var(--primary-soft, rgba(21, 128, 61, 0.25));">
                     OK
                 </button>
             </div>
@@ -344,6 +344,18 @@ SVG;
 </div>
 
 <style>
+@media (max-width: 991.98px) {
+    .change-password-page .password-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+        margin: 0;
+    }
+    .change-password-page .password-sidebar { display: contents; }
+    .change-password-page .password-profile { order: 1; margin: 0 !important; }
+    .change-password-page .password-form { order: 2; width: 100%; margin: 0; padding: 0; min-width: 0; }
+    .change-password-page .password-guidelines { order: 3; }
+}
 .change-password-page .modern-card {
     background: #ffffff !important;
     backdrop-filter: none !important;
@@ -491,37 +503,43 @@ SVG;
 }
 #systemWarningOkBtn:hover {
     background: var(--primary-dark, #166534) !important;
-    color: #ffffff !important;
+    color: var(--on-primary, #ffffff) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(21, 128, 61, 0.35) !important;
+    box-shadow: 0 4px 10px var(--primary-soft, rgba(21, 128, 61, 0.35)) !important;
 }
 #systemWarningOkBtn:active {
     transform: translateY(0);
 }
 
 /* Update Password Button Dynamic States */
-#btnSubmitPassword.btn-modern-success {
-    background: #e2e8f0;
+#btnSubmitPassword:not(.is-valid-form) {
+    background: #e2e8f0 !important;
     color: #64748b !important;
-    border: 1.5px solid #cbd5e1;
+    -webkit-text-fill-color: #64748b !important;
+    border: 1.5px solid #cbd5e1 !important;
     box-shadow: none;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     cursor: pointer;
 }
-#btnSubmitPassword.btn-modern-success:hover:not(.is-valid-form) {
-    background: #cbd5e1;
+#btnSubmitPassword:not(.is-valid-form) i {
+    color: inherit !important;
+    -webkit-text-fill-color: inherit !important;
+}
+#btnSubmitPassword:hover:not(.is-valid-form) {
+    background: #cbd5e1 !important;
     color: #334155 !important;
+    -webkit-text-fill-color: #334155 !important;
 }
-#btnSubmitPassword.btn-modern-success.is-valid-form {
-    background: linear-gradient(135deg, var(--primary, #16a34a) 0%, var(--primary, #15803d) 100%) !important;
-    color: #ffffff !important;
+#btnSubmitPassword.is-valid-form {
+    background: var(--primary, #16a34a) !important;
+    color: var(--on-primary, #ffffff) !important;
     border-color: transparent !important;
-    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35) !important;
+    box-shadow: 0 4px 14px var(--primary-soft, rgba(22, 163, 74, 0.35)) !important;
 }
-#btnSubmitPassword.btn-modern-success.is-valid-form:hover {
-    background: linear-gradient(135deg, #22c55e 0%, var(--primary, #16a34a) 100%) !important;
-    color: #ffffff !important;
-    box-shadow: 0 6px 20px rgba(22, 163, 74, 0.45) !important;
+#btnSubmitPassword.is-valid-form:hover {
+    background: var(--primary-dark, #15803d) !important;
+    color: var(--on-primary, #ffffff) !important;
+    box-shadow: 0 6px 20px var(--primary-soft, rgba(22, 163, 74, 0.45)) !important;
     transform: none;
 }
 

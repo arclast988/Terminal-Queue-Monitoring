@@ -1,9 +1,25 @@
 /* Presentation only: inputs, handlers and server-rendered content stay available. */
-@view-transition { navigation: auto; }
-/* Short/long pages and scroll-locked menus keep the same content width. */
+/* Chromium snapshots are verified. WebKit uses normal navigation because
+   its native snapshot crashes when leaving a fully rendered live page.
+   This Chromium-specific capability keeps the opt-in out of other engines. */
+@view-transition { navigation: none; }
+@supports (-webkit-app-region: drag) {
+  @view-transition { navigation: auto; }
+}
+/* Let the browser allocate only the space its visible scrollbar needs. */
 html {
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   background-color: #f8fafc;
+}
+/* Isolate full-screen decorative photos from the scrolling content. */
+html body::before,
+html body::after {
+  contain: strict;
+  transform: translateZ(0);
+}
+html[data-tq-viewport-moving] body::before,
+html[data-tq-viewport-moving] body::after {
+  animation-play-state: paused !important;
 }
 html[data-tq-motion="full"] body:not(.auth-page)::before,
 html[data-tq-motion="full"] body::after {
@@ -15,6 +31,8 @@ html[data-tq-motion="full"] body::after {
    snapshots with normal blending exposes the canvas as a white flash. */
 ::view-transition-group(root) { animation-duration: .15s; }
 ::view-transition-image-pair(root) { isolation: isolate; }
+/* Snapshots are visual only; the newly loaded page remains interactive. */
+::view-transition { pointer-events: none; }
 ::view-transition-old(root) {
   animation: none;
   opacity: 1;
@@ -110,6 +128,23 @@ body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
 body :is(.card, .stat-card, .queue-card, .results-section, .search-bar, .nav-menu a) {
   transition-property: transform, opacity, color, background-color, border-color !important;
 }
+/* Large surfaces stay still while their buttons and menus move independently.
+   A transformed card would also change the containing block of fixed dialogs. */
+body :is(.modern-card, .card-modern, .queue-card, .fare-card, .schedule-card, .manual-card, .help-card-container, .results-section, .search-bar) {
+  transition-property: background-color, border-color !important;
+  transition-duration: .16s !important;
+}
+body :is(.modern-card, .card-modern, .queue-card, .fare-card, .schedule-card, .manual-card, .help-card-container, .results-section, .search-bar):hover {
+  transform: none !important;
+}
+body .stat-card-modern {
+  transition-property: transform, background-color, border-color !important;
+  transition-duration: .16s !important;
+}
+body :is(.input-modern, .form-control-modern, .select-modern, .form-select-modern, .autocomplete-item) {
+  transition-property: color, background-color, border-color !important;
+  transition-duration: .12s !important;
+}
 .auth-page :is(.control input, .toggle, .check .box, .forgot) {
   transition-property: transform, opacity !important;
 }
@@ -199,6 +234,12 @@ html[data-tq-motion="lite"] :is(.card, .login-card, .modal-backdrop, .support-mo
 /* This stylesheet is also used before the global loader is loaded. */
 @keyframes gl-spin { to { transform: rotate(360deg); } }
 html[data-tq-page-hidden] :is(.gl-btn-spinner, .table-loader-spinner, .spinner-border, .spinner-grow, .fa-spin, .fa-pulse, .fa-spin-pulse) {
+  animation-play-state: paused !important;
+}
+/* Hidden tabs do not need decorative animation or marquee compositor work. */
+html[data-tq-page-hidden] *,
+html[data-tq-page-hidden] *::before,
+html[data-tq-page-hidden] *::after {
   animation-play-state: paused !important;
 }
 

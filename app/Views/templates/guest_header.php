@@ -256,9 +256,24 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 var value = formatter.format(new Date());
                 if (el.textContent !== value) el.textContent = value;
             }
-            updateClock();
-            setInterval(updateClock, 1000);
-            document.addEventListener('visibilitychange', updateClock);
+            var clockTimer = null;
+            function stopClock() {
+                if (clockTimer !== null) clearInterval(clockTimer);
+                clockTimer = null;
+            }
+            function startClock() {
+                stopClock();
+                if (document.hidden) return;
+                updateClock();
+                clockTimer = setInterval(updateClock, 1000);
+            }
+            startClock();
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) stopClock();
+                else startClock();
+            });
+            window.addEventListener('pagehide', stopClock);
+            window.addEventListener('pageshow', function (event) { if (event.persisted) startClock(); });
         }
     })();
 
@@ -452,6 +467,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
         var bar = document.querySelector('.sticky-top-wrapper');
         if (!bar) return;
         var lastPadding = -1;
+        var paddingFrame = 0;
         function syncPadding() {
             var h = bar.offsetHeight;
             if (h !== lastPadding) {
@@ -459,11 +475,23 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 document.body.style.paddingTop = h + 'px';
             }
         }
+        function schedulePadding() {
+            if (paddingFrame) return;
+            paddingFrame = requestAnimationFrame(function () {
+                paddingFrame = 0;
+                syncPadding();
+            });
+        }
         syncPadding();
         if (window.ResizeObserver) {
-            new ResizeObserver(syncPadding).observe(bar);
+            new ResizeObserver(schedulePadding).observe(bar);
         }
-        window.addEventListener('resize', syncPadding, { passive: true });
+        window.addEventListener('resize', schedulePadding, { passive: true });
+        window.addEventListener('pageshow', schedulePadding);
+        window.addEventListener('pagehide', function () {
+            if (paddingFrame) cancelAnimationFrame(paddingFrame);
+            paddingFrame = 0;
+        });
     })();
     var _annScrollY = 0;
     function openAnnouncementModal() {

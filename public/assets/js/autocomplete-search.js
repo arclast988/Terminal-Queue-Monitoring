@@ -880,8 +880,18 @@
                 activeIndex = -1;
 
                 dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                    // Keep validation focus on the search field until a complete
+                    // click chooses an option. Do not collapse/move the menu on
+                    // mousedown, before Firefox has delivered mouseup/click.
+                    item.addEventListener('pointerdown', (e) => {
+                        e.preventDefault();
+                    });
                     item.addEventListener('mousedown', (e) => {
                         e.preventDefault();
+                    });
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         selectOption(item.dataset.value, item.dataset.text);
                     });
                     item.addEventListener('mouseenter', () => {

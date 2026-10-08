@@ -120,6 +120,7 @@ abstract class BaseController extends Controller
                 $cache->delete('rt_fares_api');
                 $cache->delete('rt_fares_api_v2');
                 $cache->delete('db_vehicle_types');
+                $cache->delete('db_vehicle_types_v2');
             }
         } catch (\Throwable $e) {
             // ignore — caching is an optimisation, not a correctness requirement
