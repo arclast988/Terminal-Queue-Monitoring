@@ -9,12 +9,12 @@ const uploads=[], fixtures=new Map();
 let browser,server,origin;
 
 test.before(async()=>{
-  for(const name of ['admin-settings','admin-vehicles','admin-vehicles-admin','admin-users','admin-vehicle-edit','staff-queue','guest']) {
+  for(const name of ['admin-settings','admin-vehicles','admin-vehicles-admin','admin-users','admin-user-edit','admin-vehicle-edit','staff-queue','guest']) {
     const html=execFileSync(phpBinary(),[path.join(__dirname,'render-responsive-fixture.php'),name.replace(/-admin$/,''),'normal','theme','vehicle-type-photos','',name.endsWith('-admin')?'admin':'super_admin'],{encoding:'utf8',maxBuffer:3*1024*1024});
     // Keep actual image handlers, Bootstrap, and the shared motion/image policy.
     // Queue polling and unrelated account/network code are isolated from these tests.
     const isolated=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,script=>{
-      if(/image-tools\.js|bootstrap\.bundle|window.TerminalMotion|function uploadMedia|function previewRegVehiclePhoto|previewEditVehPhoto|var fileInput = document.getElementById\('modalAvatarInput'\)/.test(script)) return script;
+      if(/image-tools\.js|bootstrap\.bundle|window.TerminalMotion|function uploadMedia|function previewRegVehiclePhoto|previewEditVehPhoto|miniMenuViewBtn|var fileInput = document.getElementById\('modalAvatarInput'\)/.test(script)) return script;
       return '';
     });
     fixtures.set(name,isolated);
@@ -193,7 +193,7 @@ test('avatar cropping defaults to square inside its existing modal and cancel se
   assert.equal(uploads.length,before+1);assert.match(uploads[before].body.toString('latin1'),/name="avatar"; filename="photo-cropped\.png"/);assert.deepEqual(errors,[]);
 });
 
-test('vehicle photos open clearly for guests, dispatchers, admins and superadmins without taking filter actions',{timeout:60000},async t=>{
+test('image-only vehicle view fits phones and desktops, zooms, pans and restores focus in every role',{timeout:60000},async t=>{
   for(const name of ['guest','staff-queue','admin-vehicles','admin-vehicles-admin']) {
     for(const width of [375,1365]) {
       const {page,context,errors}=await open(t,name,width);
@@ -204,8 +204,21 @@ test('vehicle photos open clearly for guests, dispatchers, admins and superadmin
       const dialog=page.getByRole('dialog');await dialog.waitFor({state:'visible'});
       assert.ok(await dialog.evaluate(el=>el.getBoundingClientRect().right<=innerWidth));
       assert.equal(await dialog.locator('img').getAttribute('src'),new URL(source,origin).href);
-      await page.getByRole('button',{name:'Zoom in',exact:true}).click();assert.equal(await dialog.locator('[data-zoom]').textContent(),'150%');
-      await page.getByRole('button',{name:'Fit image',exact:true}).click();assert.equal(await dialog.locator('[data-zoom]').textContent(),'100%');
+      await dialog.locator('img').evaluate(img=>img.decode());
+      const fitted=await dialog.locator('img').boundingBox();
+      assert.ok(fitted.x>=0 && fitted.x+fitted.width<=width && fitted.y>=0 && fitted.y+fitted.height<=812,'entire image fits before zooming');
+      assert.equal(await dialog.locator('h2,.tq-image-help,.tq-image-toolbar').count(),0);
+      assert.equal(await dialog.evaluate(el=>el.scrollHeight>el.clientHeight),false,'image view has no panel scrollbar');
+      await page.getByRole('button',{name:'Zoom in',exact:true}).click();
+      assert.ok((await dialog.locator('img').boundingBox()).width>fitted.width*1.49);
+      const stage=dialog.locator('.tq-viewer-stage');await stage.focus();await stage.press('ArrowRight');
+      assert.ok((await dialog.locator('img').boundingBox()).x<(width-fitted.width*1.5)/2,'zoomed image moves with keyboard');
+      await page.getByRole('button',{name:'Zoom out',exact:true}).click();
+      assert.ok(Math.abs((await dialog.locator('img').boundingBox()).width-fitted.width)<1);
+      if(name==='guest' && engine==='chromium') {
+        fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
+        await page.screenshot({path:path.join(__dirname,'artifacts','image-only-'+width+'.png')});
+      }
       await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await photo.evaluate(img=>document.activeElement===img),true);
       await photo.evaluate(img=>img.src='/fixture-updated.svg');await photo.click();
       assert.match(await dialog.locator('img').getAttribute('src'),/fixture-updated\.svg$/,'the viewer uses the latest live photo address');
@@ -234,4 +247,80 @@ test('announcement text begins off the right edge, moves left and restarts from 
     return {edge:viewport.right,start:start.left,next:next.left,end:end.right,left:viewport.left,updated:updated.left,duplicates:[...track.children].filter(el=>el.getAttribute('aria-hidden')==='true').map(el=>getComputedStyle(el).display)};
   });
   assert.ok(Math.abs(positions.start-positions.edge)<2,JSON.stringify(positions));assert.ok(positions.next<positions.start);assert.ok(positions.end<=positions.left+2);assert.ok(Math.abs(positions.updated-positions.edge)<2);assert.deepEqual(positions.duplicates,['none']);assert.deepEqual(errors,[]);
+});
+
+test('upload thumbnails open above their edit dialogs without submitting or discarding staged photos',{timeout:60000},async t=>{
+  for(const [modalId,photoId,inputId] of [
+    ['registerVehicleModal','reg_veh_photo_preview','reg_veh_photo_input'],
+    ['editVehicleTypeModal1','edit_vt_photo_preview_1','edit_vt_photo_input_1'],
+    ['addVehicleTypeModal','add_vt_photo_preview','add_vt_photo_input']
+  ]) {
+    const {page,context,errors}=await open(t,'admin-vehicles',375),before=uploads.length;
+    await page.evaluate(id=>bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).show(),modalId);
+    await page.locator('#'+inputId).setInputFiles(await imageFile(page));await applyCrop(page);
+    const photo=page.locator('#'+photoId);await photo.waitFor({state:'visible'});await photo.click();
+    const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
+    await viewer.locator('img').evaluate(img=>img.decode());
+    assert.equal(await viewer.locator('img').getAttribute('src'),await photo.getAttribute('src'));
+    await viewer.getByRole('button',{name:'Zoom in',exact:true}).click();
+    await page.keyboard.press('Escape');await viewer.waitFor({state:'hidden'});
+    assert.equal(await page.locator('#'+modalId).evaluate(el=>el.classList.contains('show')),true,'underlying editor stays open');
+    assert.match(await page.locator('#'+inputId).evaluate(el=>el.files[0].name),/-cropped\.png$/);
+    assert.equal(uploads.length,before,'viewing never submits the upload');assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('profile photos and View Photo menu use current images and the default avatar without replacing upload actions',{timeout:60000},async t=>{
+  for(const name of ['admin-vehicles','admin-vehicles-admin','staff-queue']) {
+    const {page,context,errors}=await open(t,name,1365);
+    await page.locator('#userProfileBtn').click();await page.locator('#btnHeaderAvatarClick').click();
+    await page.getByRole('menuitem',{name:'View Photo',exact:true}).click();
+    const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
+    await viewer.locator('img').evaluate(img=>img.decode());
+    assert.match(await viewer.locator('img').getAttribute('src'),/^data:image\/svg\+xml/);
+    await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
+    assert.equal(await page.locator('#userProfileBtn').evaluate(el=>el===document.activeElement),true);
+    await page.locator('#navProfileHeaderAvatar').evaluate(el=>el.innerHTML='<img src="/fixture-updated.svg" alt="Profile photo">');
+    await page.locator('#userProfileBtn').click();await page.locator('#btnHeaderAvatarClick').click();
+    await page.getByRole('menuitem',{name:'View Photo',exact:true}).click();await viewer.waitFor({state:'visible'});
+    assert.match(await viewer.locator('img').getAttribute('src'),/fixture-updated\.svg$/);
+    await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
+    assert.ok(await page.locator('#miniMenuEditBtn').count());assert.deepEqual(errors,[]);await context.close();
+  }
+  for(const name of ['admin-users','admin-user-edit']) {
+    const {page,context,errors}=await open(t,name,375);
+    if(name==='admin-users') await page.evaluate(()=>window.openAvatarModal(2,'Fixture Driver','/fixture.svg','FD','staff'));
+    const photo=page.locator(name==='admin-users'?'#modalAvatarPreviewCircle svg':'#editUserAvatarPreview svg');
+    await photo.click();const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
+    await viewer.locator('img').evaluate(img=>img.decode());
+    await viewer.getByRole('button',{name:'Zoom in',exact:true}).click();
+    await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
+    assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('photo zoom accepts mouse wheel and phone pinch and refits when the viewport changes',{timeout:30000},async t=>{
+  const {page,context,errors}=await open(t,'guest',375,'reduced');
+  const photo=page.locator('img[data-vehicle-custom-photo][data-image-preview]').first();
+  await photo.locator('..').scrollIntoViewIfNeeded();await photo.click();
+  const viewer=page.locator('dialog.tq-image-viewer'),image=viewer.locator('img');await image.evaluate(img=>img.decode());
+  const fitted=await image.boundingBox();
+  await page.mouse.move(180,405);await page.mouse.wheel(0,-100);
+  await page.waitForFunction(()=>document.querySelector('.tq-viewer-stage').hasAttribute('data-zoomed'));
+  assert.ok((await image.boundingBox()).width>fitted.width);
+  await viewer.getByRole('button',{name:'Zoom out',exact:true}).click();
+  if(engine==='chromium') {
+    const touch=await context.newCDPSession(page);
+    await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:0,x:140,y:405},{id:1,x:220,y:405}]});
+    await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{id:0,x:100,y:405},{id:1,x:260,y:405}]});
+    await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await touch.detach();
+    assert.ok((await image.boundingBox()).width>fitted.width*1.9,'pinch enlarges the photo');
+    const enlarged=await image.boundingBox();await page.mouse.move(180,405);await page.mouse.down();await page.mouse.move(210,405);await page.mouse.up();
+    assert.ok((await image.boundingBox()).x>enlarged.x,'drag pans the enlarged photo');
+  }
+  await page.setViewportSize({width:812,height:375});
+  await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
+  await photo.locator('..').scrollIntoViewIfNeeded();await photo.click();await image.evaluate(img=>img.decode());
+  const landscape=await image.boundingBox();assert.ok(landscape.width<=812 && landscape.height<=375);
+  assert.equal(await viewer.evaluate(el=>getComputedStyle(el).animationName),'none');assert.deepEqual(errors,[]);
 });

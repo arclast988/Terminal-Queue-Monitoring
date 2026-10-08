@@ -110,18 +110,6 @@
             .auth-bg-slideshow { display: none !important; }
         }
 
-        /* ---- Subtle transportation scenery (route lines, nodes, faint skyline) ---- */
-        .scenery {
-            position: fixed !important;
-            inset: 0 !important;
-            z-index: 0 !important;
-            pointer-events: none !important;
-            overflow: hidden !important;
-        }
-        .scenery svg { position: absolute; display: block; }
-        .scenery .routes { top: -60px; right: -80px; width: 640px; height: 640px; }
-        .scenery .skyline { bottom: -2px; left: 0; width: 100%; height: 150px; }
-
         /* =================================================================
            Layout
            ================================================================= */
@@ -718,24 +706,6 @@
         <img class="auth-bg-slide" alt="" decoding="async">
     </div>
 
-    <!-- Subtle transportation scenery -->
-    <div class="scenery" aria-hidden="true">
-        <svg class="routes" viewBox="0 0 640 640" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M40 470C170 350 300 500 470 350S640 170 610 60"
-                  stroke="#D62828" stroke-opacity="0.10" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
-            <path d="M90 560C240 420 420 560 560 420"
-                  stroke="#D62828" stroke-opacity="0.07" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>
-            <circle cx="470" cy="350" r="6" fill="#D62828" fill-opacity="0.14"/>
-            <circle cx="470" cy="350" r="14" stroke="#D62828" stroke-opacity="0.10" stroke-width="1.5"/>
-            <circle cx="610" cy="60" r="5" fill="#D62828" fill-opacity="0.12"/>
-            <circle cx="610" cy="60" r="12" stroke="#D62828" stroke-opacity="0.08" stroke-width="1.5"/>
-            <circle cx="40" cy="470" r="5" fill="#D62828" fill-opacity="0.10"/>
-        </svg>
-        <svg class="skyline" viewBox="0 0 1440 150" preserveAspectRatio="xMidYMax slice" fill="#D62828" xmlns="http://www.w3.org/2000/svg">
-            <path fill-opacity="0.05" d="M0 150V96h40v54h34V60h48v90h40V84h52v66h36V40h46v110h52V74h44v76h40V58h54v92h34V100h48v50h40V70h44v80h40V48h60v102h34V96h44v54h36V64h52v86h40V110h46v40h44V76h52v74h36V56h60v94h44V120h38v30h24V150H0z"/>
-            <path fill-opacity="0.04" d="M0 150V120h28v30h28V84h40v66h44V64h52v86h40V104h48v46h36V52h56v98h40V92h52v58h40V120h44v30h36V72h48v78h40V110h52v40h34V88h52v62h40V120h44v30h36V96h52v54h36V140h40v10H0z"/>
-        </svg>
-    </div>
 
     <div class="page">
         <!-- Brand -->

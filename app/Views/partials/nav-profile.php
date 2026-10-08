@@ -64,7 +64,7 @@ SVG;
         <!-- User Info Header -->
         <div class="profile-dropdown-header">
             <!-- Clickable Avatar with Camera Badge & Mini Action Menu -->
-            <div class="profile-header-avatar" id="btnHeaderAvatarClick" role="button" tabindex="0" title="Click to edit or delete photo" aria-label="Profile picture actions" aria-haspopup="true" aria-expanded="false">
+            <div class="profile-header-avatar" id="btnHeaderAvatarClick" role="button" tabindex="0" title="View or manage photo" aria-label="Profile picture actions" aria-haspopup="true" aria-expanded="false">
                 <div class="profile-avatar-circle profile-avatar-large" id="navProfileHeaderAvatar">
                     <?php if ($hasCustomImage): ?>
                         <img src="<?= esc(media_url($profileImage)) ?>" alt="<?= esc($fullName) ?>" class="profile-avatar-img user-avatar-preview">
@@ -78,6 +78,10 @@ SVG;
 
                 <!-- Simple Click Mini-Menu (No big modal) -->
                 <div class="avatar-mini-menu" id="avatarMiniMenu" style="display: none;" role="menu" aria-label="Avatar options">
+                    <button type="button" class="avatar-mini-item" id="miniMenuViewBtn" role="menuitem" aria-label="View Photo">
+                        <i class="fas fa-search-plus" aria-hidden="true"></i>
+                        <span>View Photo</span>
+                    </button>
                     <button type="button" class="avatar-mini-item" id="miniMenuEditBtn" role="menuitem">
                         <i class="fas fa-edit"></i>
                         <span id="miniMenuEditText"><?= $hasCustomImage ? 'Edit Photo' : 'Upload Photo' ?></span>

@@ -765,6 +765,18 @@ SVG;
                 }
             });
 
+            // View uses the current image, including the default profile picture.
+            var miniMenuViewBtn = document.getElementById('miniMenuViewBtn');
+            if (miniMenuViewBtn) {
+                miniMenuViewBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeAvatarMiniMenu();
+                    var photo = document.querySelector('#navProfileHeaderAvatar img, #navProfileHeaderAvatar svg');
+                    if (window.TerminalImages) window.TerminalImages.open(photo, document.getElementById('userProfileBtn'));
+                });
+            }
+
             // Edit / Upload button
             if (miniMenuEditBtn) {
                 miniMenuEditBtn.addEventListener('click', function (e) {

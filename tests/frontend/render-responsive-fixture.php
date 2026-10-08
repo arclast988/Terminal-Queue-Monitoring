@@ -95,6 +95,7 @@ function session(): object {
             };
         }
         public function getFlashdata(string $key) { return null; }
+        public function has(string $key): bool { return false; }
     };
 }
 final class ResponsiveFixtureRenderer {
@@ -123,7 +124,7 @@ $item = [
 $route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
-$managementPages = ['admin-users', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
+$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
 $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Palompon', 'route_destination' => $longValue, 'created_at' => '2026-10-01 08:00:00'];
 $vehicle['status'] = 'active';
 $fixtureData = [
@@ -141,7 +142,7 @@ $fixtureData = [
     'vehicle_type' => '', 'destination' => '', 'search' => '', 'all_destinations' => [$longValue],
     'active_dest_counts' => [$longValue => 1], 'total_active_count' => 1,
     'active_results' => [$item], 'total_results' => 1,
-    'users' => [$user], 'terminals' => [$terminal], 'rules' => [['id' => 1, 'route_id' => 1, 'terminal_name' => 'Palompon', 'route_destination' => $longValue, 'time_from' => '08:00', 'time_to' => '18:00', 'wait_minutes' => 15, 'label' => $longValue]],
+    'user' => $user, 'users' => [$user], 'terminals' => [$terminal], 'rules' => [['id' => 1, 'route_id' => 1, 'terminal_name' => 'Palompon', 'route_destination' => $longValue, 'time_from' => '08:00', 'time_to' => '18:00', 'wait_minutes' => 15, 'label' => $longValue]],
     'departures' => [$item], 'destinations' => [['destination' => $longValue]], 'destinationVehicleTypes' => [],
     'logs' => [$user + ['action' => 'Updated queue', 'details' => $longValue, 'timestamp' => '2026-10-01 08:00:00']],
     'actions' => [['action' => 'Updated queue']], 'stats' => [], 'pager' => null,
@@ -347,7 +348,7 @@ $views = [
     'staff-password' => 'auth/change_password', 'staff-guide' => 'help/dispatcher', 'admin-guide' => 'help/admin',
     'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
-    'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
+    'admin-users' => 'admin/users/index', 'admin-user-edit' => 'admin/users/edit', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
     'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',

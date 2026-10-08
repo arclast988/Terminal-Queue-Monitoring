@@ -677,6 +677,7 @@ test('authentication fields fit small and landscape screens while retaining thei
         const style = getComputedStyle(el);
         return Math.max(...style.animationDuration.split(',').map((duration, i) => parseFloat(duration) + parseFloat(style.animationDelay.split(',')[i] || style.animationDelay.split(',')[0]))) * 1000;
       });
+      assert.equal(await page.locator('.scenery, .scenery .skyline, .scenery .routes').count(), 0, 'old decoration is removed from authentication pages');
       assert.ok(entrance <= 300, `${name} entrance ${entrance}ms`);
       checkBounds(await bounds(page, ['.brand', '.brand-name', '.brand-title', '.brand-sub', '.login-card', '.auth > .card', 'form input:not([type="hidden"]):not([type="checkbox"])', 'form button[type="submit"]']), `${name} ${width}x${height}`);
       if (width === 320 || width === 1440) {

@@ -3,7 +3,10 @@
     'use strict';
     if (window.TerminalImages) return;
     var crop = null, viewer = null, accepted = new WeakMap(), replaying = new WeakSet();
-    var previewSelector = 'img[data-vehicle-custom-photo], img[data-vt-photo], img.vehicle-thumb-img, img[data-image-preview]';
+    var previewSelector = 'img[data-vehicle-custom-photo], img[data-vt-photo], img.vehicle-thumb-img, img[data-image-preview], ' +
+        '#reg_veh_photo_preview, #edit_veh_photo_preview, #reg_veh_type_fallback img, #edit_veh_type_fallback img, ' +
+        'img[id^="edit_vt_photo_preview_"], img[id^="edit_vt_preview_photo_"], #add_vt_photo_preview, #add_vt_preview_photo, ' +
+        '#editUserAvatarPreview :is(img,svg), #createUserAvatarPreview :is(img,svg), #modalAvatarPreviewCircle :is(img,svg)';
     var canDialog = typeof window.HTMLDialogElement === 'function' && typeof window.HTMLDialogElement.prototype.showModal === 'function';
 
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
@@ -177,42 +180,92 @@
     }
 
     function buildViewer() {
-        var dialog=makeDialog('tq-image-viewer','Vehicle photo',
-            '<p class="tq-image-help">Zoom in for details. Drag the image to move around when zoomed.</p>' +
-            '<div class="tq-image-toolbar"><button type="button" class="tq-image-action" data-out aria-label="Zoom out">−</button><button type="button" class="tq-image-action" data-in aria-label="Zoom in">+</button><button type="button" class="tq-image-action" data-fit>Fit image</button><span data-zoom aria-live="polite">100%</span></div>' +
-            '<div class="tq-viewer-stage" tabindex="0" aria-label="Vehicle image; use arrow keys to pan when zoomed"><img class="tq-viewer-photo" alt="" draggable="false"></div><p class="tq-image-message" role="status"></p>');
+        var dialog=document.createElement('dialog');
+        dialog.className='tq-image-dialog tq-image-viewer';
+        dialog.setAttribute('aria-label','Photo');
+        dialog.innerHTML='<div class="tq-viewer-stage" tabindex="0" aria-label="Photo; use plus and minus to zoom, arrow keys to move"><img class="tq-viewer-photo" alt="" draggable="false"></div>' +
+            '<button type="button" class="tq-viewer-control tq-viewer-close" aria-label="Close">&times;</button>' +
+            '<div class="tq-viewer-controls"><button type="button" class="tq-viewer-control" data-out aria-label="Zoom out">−</button><button type="button" class="tq-viewer-control" data-in aria-label="Zoom in">+</button></div>' +
+            '<p class="tq-viewer-message" role="status"></p>';
+        document.body.appendChild(dialog);
         var image=dialog.querySelector('img'),stage=dialog.querySelector('.tq-viewer-stage'),status=dialog.querySelector('[role="status"]');
-        var zoom=1,x=0,y=0,gesture=null,focus=null;
+        var zoom=1,x=0,y=0,gesture=null,focus=null,points=new Map();
         function paint() {
             var bounds=stage.getBoundingClientRect();
-            var maxX=Math.max(0,(image.clientWidth*zoom-bounds.width)/2),maxY=Math.max(0,(image.clientHeight*zoom-bounds.height)/2);
+            var fit=image.naturalWidth ? Math.min((bounds.width-24)/image.naturalWidth,(bounds.height-24)/image.naturalHeight) : 1;
+            var width=image.naturalWidth*fit,height=image.naturalHeight*fit;
+            image.style.width=width+'px';image.style.height=height+'px';
+            var maxX=Math.max(0,(width*zoom-bounds.width)/2),maxY=Math.max(0,(height*zoom-bounds.height)/2);
             x=clamp(x,-maxX,maxX);y=clamp(y,-maxY,maxY);
             image.style.transform='translate('+x+'px,'+y+'px) scale('+zoom+')';
             stage.toggleAttribute('data-zoomed',zoom>1);
-            dialog.querySelector('[data-zoom]').textContent=Math.round(zoom*100)+'%';
             dialog.querySelector('[data-out]').disabled=zoom<=1; dialog.querySelector('[data-in]').disabled=zoom>=4;
         }
-        function close() { dialog.close(); image.removeAttribute('src'); gesture=null; restoreFocus(focus); }
-        dialog.querySelector('.tq-image-close').addEventListener('click',close);
+        function changeZoom(value,clientX,clientY) {
+            var previous=zoom;zoom=clamp(value,1,4);
+            if(typeof clientX==='number') {
+                var r=stage.getBoundingClientRect(),dx=clientX-r.left-r.width/2,dy=clientY-r.top-r.height/2;
+                x=dx-(dx-x)*zoom/previous;y=dy-(dy-y)*zoom/previous;
+            }
+            paint();
+        }
+        function close() { dialog.close(); image.removeAttribute('src'); gesture=null;points.clear();restoreFocus(focus); }
+        dialog.querySelector('.tq-viewer-close').addEventListener('click',close);
         dialog.addEventListener('cancel',function (event) {event.preventDefault();close();});
-        dialog.addEventListener('click',function (event) {
-            if(event.target!==dialog) return; var r=dialog.getBoundingClientRect();
-            if(event.clientX<r.left || event.clientX>r.right || event.clientY<r.top || event.clientY>r.bottom) close();
+        stage.addEventListener('click',function (event) {if(event.target===stage && zoom===1) close();});
+        dialog.querySelector('[data-in]').addEventListener('click',function () {changeZoom(zoom+.5);});
+        dialog.querySelector('[data-out]').addEventListener('click',function () {changeZoom(zoom-.5);});
+        stage.addEventListener('wheel',function (event) {event.preventDefault();changeZoom(zoom+(event.deltaY<0?.25:-.25),event.clientX,event.clientY);},{passive:false});
+        function beginGesture() {
+            var p=Array.from(points.values()),r=stage.getBoundingClientRect();
+            if(!p.length) {gesture=null;return;}
+            gesture={x:x,y:y,zoom:zoom,cx:p[0].x,cy:p[0].y};
+            if(p.length>1) {
+                gesture.distance=Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y);
+                gesture.cx=(p[0].x+p[1].x)/2;gesture.cy=(p[0].y+p[1].y)/2;
+            }
+            gesture.left=r.left+r.width/2;gesture.top=r.top+r.height/2;
+        }
+        stage.addEventListener('pointerdown',function (event) {
+            if(event.button!==0 || points.size>=2) return;
+            event.preventDefault();points.set(event.pointerId,{x:event.clientX,y:event.clientY});stage.setPointerCapture(event.pointerId);beginGesture();
         });
-        dialog.querySelector('[data-in]').addEventListener('click',function () {zoom=Math.min(4,zoom+.5);paint();});
-        dialog.querySelector('[data-out]').addEventListener('click',function () {zoom=Math.max(1,zoom-.5);paint();});
-        dialog.querySelector('[data-fit]').addEventListener('click',function () {zoom=1;x=y=0;paint();});
-        stage.addEventListener('pointerdown',function (event) {if(zoom<=1 || event.button!==0) return;event.preventDefault();gesture={id:event.pointerId,x:event.clientX,y:event.clientY,px:x,py:y};stage.setPointerCapture(event.pointerId);});
-        stage.addEventListener('pointermove',function (event) {if(!gesture || gesture.id!==event.pointerId) return;x=gesture.px+event.clientX-gesture.x;y=gesture.py+event.clientY-gesture.y;paint();});
-        ['pointerup','pointercancel','lostpointercapture'].forEach(function (name) {stage.addEventListener(name,function () {gesture=null;});});
-        stage.addEventListener('keydown',function (event) {if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key) || zoom<=1) return;event.preventDefault();x+=event.key==='ArrowLeft'?24:event.key==='ArrowRight'?-24:0;y+=event.key==='ArrowUp'?24:event.key==='ArrowDown'?-24:0;paint();});
+        stage.addEventListener('pointermove',function (event) {
+            if(!gesture || !points.has(event.pointerId)) return;
+            points.set(event.pointerId,{x:event.clientX,y:event.clientY});var p=Array.from(points.values());
+            if(p.length>1 && gesture.distance>0) {
+                zoom=clamp(gesture.zoom*Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y)/gesture.distance,1,4);
+                x=(p[0].x+p[1].x)/2-gesture.left-(gesture.cx-gesture.left-gesture.x)*zoom/gesture.zoom;
+                y=(p[0].y+p[1].y)/2-gesture.top-(gesture.cy-gesture.top-gesture.y)*zoom/gesture.zoom;
+            } else {x=gesture.x+event.clientX-gesture.cx;y=gesture.y+event.clientY-gesture.cy;}
+            paint();
+        });
+        ['pointerup','pointercancel','lostpointercapture'].forEach(function (name) {stage.addEventListener(name,function (event) {points.delete(event.pointerId);beginGesture();});});
+        stage.addEventListener('keydown',function (event) {
+            if(['+','=','-'].includes(event.key)) {event.preventDefault();changeZoom(zoom+(event.key==='-'?-.5:.5));return;}
+            if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key) || zoom<=1) return;
+            event.preventDefault();x+=event.key==='ArrowLeft'?24:event.key==='ArrowRight'?-24:0;y+=event.key==='ArrowUp'?24:event.key==='ArrowDown'?-24:0;paint();
+        });
         image.addEventListener('load',function () {status.textContent='';paint();});
         image.addEventListener('error',function () {status.textContent='This photo could not be loaded. Please close the view and try again.';});
-        return {dialog:dialog,close:close,open:function (source) {
-            focus=source;zoom=1;x=y=0;gesture=null;
-            image.alt=source.alt || 'Vehicle photo';dialog.querySelector('h2').textContent=image.alt+' · Photo';
-            status.textContent='Loading photo…';dialog.showModal();image.src=source.src || source.currentSrc;paint();dialog.querySelector('.tq-image-close').focus({preventScroll:true});
+        window.addEventListener('resize',function () {if(dialog.open) paint();});
+        return {dialog:dialog,close:close,open:function (source,returnFocus) {
+            focus=returnFocus || source;zoom=1;x=y=0;gesture=null;points.clear();
+            image.alt=source.getAttribute('alt') || 'Profile photo';dialog.setAttribute('aria-label',image.alt);
+            status.textContent='Loading photo…';dialog.showModal();image.src=photoSource(source);paint();dialog.querySelector('.tq-viewer-close').focus({preventScroll:true});
         }};
+    }
+    function photoSource(source) {
+        if(source.tagName.toLowerCase()==='svg') {
+            var svg=source.cloneNode(true);svg.setAttribute('width','512');svg.setAttribute('height','512');
+            return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(svg));
+        }
+        return source.getAttribute('src') ? (source.src || source.getAttribute('src')) : source.currentSrc;
+    }
+    function showPhoto(source,returnFocus) {
+        if(!source || !photoSource(source)) return;
+        if(!canDialog) {window.open(photoSource(source),'_blank','noopener,noreferrer');return;}
+        if(!viewer) viewer=buildViewer();viewer.open(source,returnFocus);
     }
     function enhance(root) {
         var images=[];
@@ -221,18 +274,18 @@
         images.forEach(function (image) {
             // Filter icons and upload pickers retain their existing action.
             if(image.closest('button,a,label,.tq-image-dialog,[data-no-image-preview]')) return;
+            image.removeAttribute('aria-hidden');
             image.setAttribute('data-image-preview','');image.tabIndex=0;image.setAttribute('role','button');
-            image.setAttribute('aria-label','View '+(image.alt || 'vehicle')+' photo');
+            image.setAttribute('aria-label','View '+(image.getAttribute('alt') || 'profile')+' photo');
             image.title='View photo';
         });
     }
     function openPreview(event) {
-        var image=event.target.closest && event.target.closest('img[data-image-preview]');
-        if(!image || !image.getClientRects().length || !image.src) return;
+        var image=event.target.closest && event.target.closest('[data-image-preview]');
+        if(!image || !image.getClientRects().length || !photoSource(image)) return;
         if(event.type==='keydown' && !['Enter',' '].includes(event.key)) return;
         event.preventDefault();event.stopImmediatePropagation();
-        if(!canDialog) {window.open(image.src,'_blank','noopener,noreferrer');return;}
-        if(!viewer) viewer=buildViewer();viewer.open(image);
+        showPhoto(image);
     }
     document.addEventListener('change',cropChange,true);
     document.addEventListener('drop',function (event) {
@@ -261,5 +314,5 @@
         window.addEventListener('pageshow',function (event) {if(event.persisted) {enhance(document.body);observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['src','data-vt-photo','data-vehicle-custom-photo']});}});
     }
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-    window.TerminalImages=Object.freeze({});
+    window.TerminalImages=Object.freeze({open:showPhoto});
 })(window,document);
