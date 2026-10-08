@@ -114,7 +114,7 @@ chmod 640 "$APP_ROOT/.env" 2>/dev/null || true
 echo "[ENV] Production configuration generated."
 if [ "${EMAIL_DELIVERY_PROVIDER:-brevo}" = "brevo" ]; then
     if [ -z "${BREVO_API_KEY:-}" ] || [ -z "${EMAIL_FROM:-}" ]; then
-        echo "[WARN] BREVO_API_KEY or EMAIL_FROM is empty; password-reset and contact email delivery will fail fast until configured."
+        echo "[WARN] BREVO_API_KEY or EMAIL_FROM is empty; password-reset email delivery will fail fast until configured."
     fi
 elif [ -z "${EMAIL_SMTP_USER:-}" ] || [ -z "${EMAIL_SMTP_PASS:-}" ]; then
     echo "[WARN] EMAIL_SMTP_USER or EMAIL_SMTP_PASS is empty; SMTP email delivery will be unavailable."
