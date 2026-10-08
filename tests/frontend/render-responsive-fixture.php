@@ -79,7 +79,6 @@ function vehicle_resolved_photo(array $item, string $type): string {
     return '/fixture.svg';
 }
 function passenger_color_class(int $count, int $capacity): string { return 'passenger-color-green'; }
-function vehicle_type_badge(string $type): string { return '<span class="vehicle-type-chip ' . vehicle_type_class($type) . '">' . esc(vehicle_type_label($type)) . '</span>'; }
 function get_db_vehicle_types(): array { return [['id' => 1, 'slug' => 'jeepney', 'name' => 'Jeepney', 'color' => '#1565c0', 'icon' => 'fa-bus', 'photo' => '/fixture.svg']]; }
 function session(): object {
     static $session;

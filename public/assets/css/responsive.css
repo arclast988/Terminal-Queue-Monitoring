@@ -3907,8 +3907,19 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     }
     html body #vehicles-table.management-list-table .vehicle-type-cell {
         max-width: 100%;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         gap: 6px;
+    }
+    html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-icon {
+        flex: 0 0 34px;
+        width: 34px;
+        height: 34px;
+        padding: 0;
+    }
+    html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-chip {
+        min-width: 0;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
     }
     html body #vehicles-table.management-list-table td[data-label="Registered"] > div {
         white-space: normal !important;

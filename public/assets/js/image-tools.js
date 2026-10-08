@@ -184,12 +184,22 @@
         dialog.className='tq-image-dialog tq-image-viewer';
         dialog.setAttribute('aria-label','Photo');
         dialog.innerHTML='<div class="tq-viewer-stage" tabindex="0" aria-label="Photo; use plus and minus to zoom, arrow keys to move"><img class="tq-viewer-photo" alt="" draggable="false"></div>' +
-            '<button type="button" class="tq-viewer-control tq-viewer-close" aria-label="Close">&times;</button>' +
-            '<div class="tq-viewer-controls"><button type="button" class="tq-viewer-control" data-out aria-label="Zoom out">−</button><button type="button" class="tq-viewer-control" data-in aria-label="Zoom in">+</button></div>' +
+            '<button type="button" class="tq-viewer-control tq-viewer-close" aria-label="Close"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M3 3l10 10M13 3L3 13"/></svg></button>' +
+            '<div class="tq-viewer-controls"><button type="button" class="tq-viewer-control" data-out aria-label="Zoom out"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 8h12"/></svg></button><button type="button" class="tq-viewer-control" data-in aria-label="Zoom in"><svg aria-hidden="true" viewBox="0 0 16 16"><path d="M2 8h12M8 2v12"/></svg></button></div>' +
             '<p class="tq-viewer-message" role="status"></p>';
         document.body.appendChild(dialog);
         var image=dialog.querySelector('img'),stage=dialog.querySelector('.tq-viewer-stage'),status=dialog.querySelector('[role="status"]');
-        var zoom=1,x=0,y=0,gesture=null,focus=null,points=new Map();
+        var zoom=1,x=0,y=0,gesture=null,focus=null,points=new Map(),position=null;
+        function rememberPosition(source) {
+            var ancestors=[],node=source.parentElement;
+            while(node) {ancestors.push({node:node,left:node.scrollLeft,top:node.scrollTop});node=node.parentElement;}
+            return {left:window.scrollX,top:window.scrollY,ancestors:ancestors};
+        }
+        function restorePosition() {
+            if(!position) return;
+            position.ancestors.forEach(function (saved) {if(saved.node.isConnected) {saved.node.scrollLeft=saved.left;saved.node.scrollTop=saved.top;}});
+            window.scrollTo({left:position.left,top:position.top,behavior:'instant'});
+        }
         function paint() {
             var bounds=stage.getBoundingClientRect();
             var fit=image.naturalWidth ? Math.min((bounds.width-24)/image.naturalWidth,(bounds.height-24)/image.naturalHeight) : 1;
@@ -199,22 +209,22 @@
             x=clamp(x,-maxX,maxX);y=clamp(y,-maxY,maxY);
             image.style.transform='translate('+x+'px,'+y+'px) scale('+zoom+')';
             stage.toggleAttribute('data-zoomed',zoom>1);
-            dialog.querySelector('[data-out]').disabled=zoom<=1; dialog.querySelector('[data-in]').disabled=zoom>=4;
+            dialog.querySelector('[data-out]').disabled=zoom<=.25; dialog.querySelector('[data-in]').disabled=zoom>=4;
         }
         function changeZoom(value,clientX,clientY) {
-            var previous=zoom;zoom=clamp(value,1,4);
+            var previous=zoom;zoom=clamp(value,.25,4);
             if(typeof clientX==='number') {
                 var r=stage.getBoundingClientRect(),dx=clientX-r.left-r.width/2,dy=clientY-r.top-r.height/2;
                 x=dx-(dx-x)*zoom/previous;y=dy-(dy-y)*zoom/previous;
             }
             paint();
         }
-        function close() { dialog.close(); image.removeAttribute('src'); gesture=null;points.clear();restoreFocus(focus); }
+        function close() { dialog.close(); image.removeAttribute('src'); gesture=null;points.clear();restoreFocus(focus);restorePosition();position=null; }
         dialog.querySelector('.tq-viewer-close').addEventListener('click',close);
         dialog.addEventListener('cancel',function (event) {event.preventDefault();close();});
         stage.addEventListener('click',function (event) {if(event.target===stage && zoom===1) close();});
-        dialog.querySelector('[data-in]').addEventListener('click',function () {changeZoom(zoom+.5);});
-        dialog.querySelector('[data-out]').addEventListener('click',function () {changeZoom(zoom-.5);});
+        dialog.querySelector('[data-in]').addEventListener('click',function () {changeZoom(zoom<1?Math.min(1,zoom+.25):zoom+.5);});
+        dialog.querySelector('[data-out]').addEventListener('click',function () {changeZoom(zoom>1?Math.max(1,zoom-.5):zoom-.25);});
         stage.addEventListener('wheel',function (event) {event.preventDefault();changeZoom(zoom+(event.deltaY<0?.25:-.25),event.clientX,event.clientY);},{passive:false});
         function beginGesture() {
             var p=Array.from(points.values()),r=stage.getBoundingClientRect();
@@ -234,7 +244,7 @@
             if(!gesture || !points.has(event.pointerId)) return;
             points.set(event.pointerId,{x:event.clientX,y:event.clientY});var p=Array.from(points.values());
             if(p.length>1 && gesture.distance>0) {
-                zoom=clamp(gesture.zoom*Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y)/gesture.distance,1,4);
+                zoom=clamp(gesture.zoom*Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y)/gesture.distance,.25,4);
                 x=(p[0].x+p[1].x)/2-gesture.left-(gesture.cx-gesture.left-gesture.x)*zoom/gesture.zoom;
                 y=(p[0].y+p[1].y)/2-gesture.top-(gesture.cy-gesture.top-gesture.y)*zoom/gesture.zoom;
             } else {x=gesture.x+event.clientX-gesture.cx;y=gesture.y+event.clientY-gesture.cy;}
@@ -246,12 +256,14 @@
             if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key) || zoom<=1) return;
             event.preventDefault();x+=event.key==='ArrowLeft'?24:event.key==='ArrowRight'?-24:0;y+=event.key==='ArrowUp'?24:event.key==='ArrowDown'?-24:0;paint();
         });
-        image.addEventListener('load',function () {status.textContent='';paint();});
+        image.addEventListener('load',function () {paint();image.setAttribute('data-photo-ready','');status.textContent='';});
         image.addEventListener('error',function () {status.textContent='This photo could not be loaded. Please close the view and try again.';});
         window.addEventListener('resize',function () {if(dialog.open) paint();});
         return {dialog:dialog,close:close,open:function (source,returnFocus) {
             focus=returnFocus || source;zoom=1;x=y=0;gesture=null;points.clear();
+            position=rememberPosition(source);
             image.alt=source.getAttribute('alt') || 'Profile photo';dialog.setAttribute('aria-label',image.alt);
+            image.removeAttribute('data-photo-ready');
             status.textContent='Loading photo…';dialog.showModal();image.src=photoSource(source);paint();dialog.querySelector('.tq-viewer-close').focus({preventScroll:true});
         }};
     }

@@ -69,6 +69,9 @@ async function applyCrop(page) {
   await page.getByRole('button',{name:'Use crop',exact:true}).click();
   await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
 }
+async function readyPhoto(viewer) {
+  const photo=viewer.locator('img[data-photo-ready]');await photo.waitFor({state:'visible'});await photo.evaluate(img=>img.decode());
+}
 
 test('crop shapes change real pixels and stage only the confirmed logo without an early upload',{timeout:60000},async t=>{
   for(const [width,mode] of [[320,'lite'],[1365,'full'],[375,'reduced']]) {
@@ -200,13 +203,14 @@ test('image-only vehicle view fits phones and desktops, zooms, pans and restores
       t.diagnostic(name+' · '+width+'px');
       const photo=page.locator('img[data-vehicle-custom-photo][data-image-preview]').first();
       await photo.locator('..').scrollIntoViewIfNeeded();await photo.waitFor({state:'visible'});
+      const previousPosition=await page.evaluate(()=>({x:scrollX,y:scrollY}));
       const source=await photo.getAttribute('src');await photo.focus();await photo.press('Enter');
       const dialog=page.getByRole('dialog');await dialog.waitFor({state:'visible'});
       assert.ok(await dialog.evaluate(el=>el.getBoundingClientRect().right<=innerWidth));
       assert.equal(await dialog.locator('img').getAttribute('src'),new URL(source,origin).href);
-      await dialog.locator('img').evaluate(img=>img.decode());
+      await readyPhoto(dialog);
       const fitted=await dialog.locator('img').boundingBox();
-      assert.ok(fitted.x>=0 && fitted.x+fitted.width<=width && fitted.y>=0 && fitted.y+fitted.height<=812,'entire image fits before zooming');
+      assert.ok(fitted.x>=0 && fitted.x+fitted.width<=width && fitted.y>=0 && fitted.y+fitted.height<=812,'entire image fits before zooming: '+JSON.stringify(fitted));
       assert.equal(await dialog.locator('h2,.tq-image-help,.tq-image-toolbar').count(),0);
       assert.equal(await dialog.evaluate(el=>el.scrollHeight>el.clientHeight),false,'image view has no panel scrollbar');
       await page.getByRole('button',{name:'Zoom in',exact:true}).click();
@@ -215,11 +219,15 @@ test('image-only vehicle view fits phones and desktops, zooms, pans and restores
       assert.ok((await dialog.locator('img').boundingBox()).x<(width-fitted.width*1.5)/2,'zoomed image moves with keyboard');
       await page.getByRole('button',{name:'Zoom out',exact:true}).click();
       assert.ok(Math.abs((await dialog.locator('img').boundingBox()).width-fitted.width)<1);
+      await page.getByRole('button',{name:'Zoom out',exact:true}).click();
+      assert.ok((await dialog.locator('img').boundingBox()).width<fitted.width*.76,'minus also shrinks below the initial fitted size');
+      await page.getByRole('button',{name:'Zoom in',exact:true}).click();
       if(name==='guest' && engine==='chromium') {
         fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
         await page.screenshot({path:path.join(__dirname,'artifacts','image-only-'+width+'.png')});
       }
       await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await photo.evaluate(img=>document.activeElement===img),true);
+      assert.deepEqual(await page.evaluate(()=>({x:scrollX,y:scrollY})),previousPosition,'closing retains the original page position');
       await photo.evaluate(img=>img.src='/fixture-updated.svg');await photo.click();
       assert.match(await dialog.locator('img').getAttribute('src'),/fixture-updated\.svg$/,'the viewer uses the latest live photo address');
       await page.getByRole('button',{name:'Close',exact:true}).click();
@@ -260,7 +268,7 @@ test('upload thumbnails open above their edit dialogs without submitting or disc
     await page.locator('#'+inputId).setInputFiles(await imageFile(page));await applyCrop(page);
     const photo=page.locator('#'+photoId);await photo.waitFor({state:'visible'});await photo.click();
     const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
-    await viewer.locator('img').evaluate(img=>img.decode());
+    await readyPhoto(viewer);
     assert.equal(await viewer.locator('img').getAttribute('src'),await photo.getAttribute('src'));
     await viewer.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.keyboard.press('Escape');await viewer.waitFor({state:'hidden'});
@@ -276,15 +284,19 @@ test('profile photos and View Photo menu use current images and the default avat
     await page.locator('#userProfileBtn').click();await page.locator('#btnHeaderAvatarClick').click();
     await page.getByRole('menuitem',{name:'View Photo',exact:true}).click();
     const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
-    await viewer.locator('img').evaluate(img=>img.decode());
+    await readyPhoto(viewer);
     assert.match(await viewer.locator('img').getAttribute('src'),/^data:image\/svg\+xml/);
     await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
     assert.equal(await page.locator('#userProfileBtn').evaluate(el=>el===document.activeElement),true);
+    assert.equal(await page.locator('#userProfileDropdown').evaluate(el=>el.classList.contains('open')),true,'closing the photo leaves the profile menu open');
     await page.locator('#navProfileHeaderAvatar').evaluate(el=>el.innerHTML='<img src="/fixture-updated.svg" alt="Profile photo">');
-    await page.locator('#userProfileBtn').click();await page.locator('#btnHeaderAvatarClick').click();
+    await page.locator('#btnHeaderAvatarClick').click();
     await page.getByRole('menuitem',{name:'View Photo',exact:true}).click();await viewer.waitFor({state:'visible'});
     assert.match(await viewer.locator('img').getAttribute('src'),/fixture-updated\.svg$/);
     await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
+    await page.locator('#btnHeaderAvatarClick').click();await page.getByRole('menuitem',{name:'View Photo',exact:true}).click();
+    await viewer.waitFor({state:'visible'});await page.keyboard.press('Escape');await viewer.waitFor({state:'hidden'});
+    assert.equal(await page.locator('#userProfileDropdown').evaluate(el=>el.classList.contains('open')),true,'Escape dismisses only the photo');
     assert.ok(await page.locator('#miniMenuEditBtn').count());assert.deepEqual(errors,[]);await context.close();
   }
   for(const name of ['admin-users','admin-user-edit']) {
@@ -292,7 +304,7 @@ test('profile photos and View Photo menu use current images and the default avat
     if(name==='admin-users') await page.evaluate(()=>window.openAvatarModal(2,'Fixture Driver','/fixture.svg','FD','staff'));
     const photo=page.locator(name==='admin-users'?'#modalAvatarPreviewCircle svg':'#editUserAvatarPreview svg');
     await photo.click();const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
-    await viewer.locator('img').evaluate(img=>img.decode());
+    await readyPhoto(viewer);
     await viewer.getByRole('button',{name:'Zoom in',exact:true}).click();
     await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
     assert.deepEqual(errors,[]);await context.close();
@@ -303,7 +315,7 @@ test('photo zoom accepts mouse wheel and phone pinch and refits when the viewpor
   const {page,context,errors}=await open(t,'guest',375,'reduced');
   const photo=page.locator('img[data-vehicle-custom-photo][data-image-preview]').first();
   await photo.locator('..').scrollIntoViewIfNeeded();await photo.click();
-  const viewer=page.locator('dialog.tq-image-viewer'),image=viewer.locator('img');await image.evaluate(img=>img.decode());
+  const viewer=page.locator('dialog.tq-image-viewer'),image=viewer.locator('img');await readyPhoto(viewer);
   const fitted=await image.boundingBox();
   await page.mouse.move(180,405);await page.mouse.wheel(0,-100);
   await page.waitForFunction(()=>document.querySelector('.tq-viewer-stage').hasAttribute('data-zoomed'));
@@ -320,7 +332,21 @@ test('photo zoom accepts mouse wheel and phone pinch and refits when the viewpor
   }
   await page.setViewportSize({width:812,height:375});
   await viewer.getByRole('button',{name:'Close',exact:true}).click();await viewer.waitFor({state:'hidden'});
-  await photo.locator('..').scrollIntoViewIfNeeded();await photo.click();await image.evaluate(img=>img.decode());
+  await photo.locator('..').scrollIntoViewIfNeeded();await photo.click();await readyPhoto(viewer);
   const landscape=await image.boundingBox();assert.ok(landscape.width<=812 && landscape.height<=375);
   assert.equal(await viewer.evaluate(el=>getComputedStyle(el).animationName),'none');assert.deepEqual(errors,[]);
+});
+
+test('vehicle register keeps thumbnails beside type labels within the desktop column',{timeout:30000},async t=>{
+  for(const width of [1024,1365,1920]) {
+    const {page,context,errors}=await open(t,'admin-vehicles',width);
+    const cell=page.locator('#vehicles-table .vehicle-type-cell').first();await cell.scrollIntoViewIfNeeded();
+    const boxes=await cell.evaluate(el=>{
+      const cell=el.closest('td').getBoundingClientRect(),photo=el.querySelector('.vehicle-type-icon').getBoundingClientRect(),label=el.querySelector('.vehicle-type-chip').getBoundingClientRect();
+      return {photo:{left:photo.left,right:photo.right,y:photo.top+photo.height/2},label:{left:label.left,right:label.right,y:label.top+label.height/2},cell:{left:cell.left,right:cell.right}};
+    });
+    assert.ok(Math.abs(boxes.photo.y-boxes.label.y)<2,JSON.stringify(boxes));
+    assert.ok(boxes.label.left>=boxes.photo.right && boxes.label.right<=boxes.cell.right+1,JSON.stringify(boxes));
+    assert.deepEqual(errors,[]);await context.close();
+  }
 });
