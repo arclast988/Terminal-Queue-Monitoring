@@ -42,6 +42,11 @@ if (($argv[3] ?? '') !== 'theme') {
     function app_theme_css(): string { return ''; }
 }
 // Use the real asset version helper in every production-view fixture.
+// Image layout checks need the production badge, including its icon and border.
+// Other fixtures retain their existing lightweight text badge.
+if (($argv[8] ?? '') !== 'real-type-badges') {
+    function vehicle_type_badge(string $type): string { return '<span class="vehicle-type-chip ' . vehicle_type_class($type) . '">' . esc(vehicle_type_label($type)) . '</span>'; }
+}
 require dirname(__DIR__, 2) . '/app/Common.php';
 if (!function_exists('media_url')) {
     function media_url(?string $path): string {

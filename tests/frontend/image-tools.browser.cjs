@@ -10,7 +10,7 @@ let browser,server,origin;
 
 test.before(async()=>{
   for(const name of ['admin-settings','admin-vehicles','admin-vehicles-admin','admin-users','admin-user-edit','admin-vehicle-edit','staff-queue','guest']) {
-    const html=execFileSync(phpBinary(),[path.join(__dirname,'render-responsive-fixture.php'),name.replace(/-admin$/,''),'normal','theme','vehicle-type-photos','',name.endsWith('-admin')?'admin':'super_admin'],{encoding:'utf8',maxBuffer:3*1024*1024});
+    const html=execFileSync(phpBinary(),[path.join(__dirname,'render-responsive-fixture.php'),name.replace(/-admin$/,''),'normal','theme','vehicle-type-photos','',name.endsWith('-admin')?'admin':'super_admin','','real-type-badges'],{encoding:'utf8',maxBuffer:3*1024*1024});
     // Keep actual image handlers, Bootstrap, and the shared motion/image policy.
     // Queue polling and unrelated account/network code are isolated from these tests.
     const isolated=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,script=>{
@@ -203,14 +203,19 @@ test('image-only vehicle view fits phones and desktops, zooms, pans and restores
       t.diagnostic(name+' · '+width+'px');
       const photo=page.locator('img[data-vehicle-custom-photo][data-image-preview]').first();
       await photo.locator('..').scrollIntoViewIfNeeded();await photo.waitFor({state:'visible'});
+      const source=await photo.getAttribute('src');await photo.focus();
+      // Keyboard focus can first scroll a thumbnail into view. Record the actual
+      // position at activation, after that native focus behavior has settled.
+      await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
       const previousPosition=await page.evaluate(()=>({x:scrollX,y:scrollY}));
-      const source=await photo.getAttribute('src');await photo.focus();await photo.press('Enter');
+      await photo.press('Enter');
       const dialog=page.getByRole('dialog');await dialog.waitFor({state:'visible'});
       assert.ok(await dialog.evaluate(el=>el.getBoundingClientRect().right<=innerWidth));
       assert.equal(await dialog.locator('img').getAttribute('src'),new URL(source,origin).href);
       await readyPhoto(dialog);
+      assert.equal(await dialog.evaluate(el=>getComputedStyle(el).position),'fixed','the photo stays attached to the viewport after scrolling');
       const fitted=await dialog.locator('img').boundingBox();
-      assert.ok(fitted.x>=0 && fitted.x+fitted.width<=width && fitted.y>=0 && fitted.y+fitted.height<=812,'entire image fits before zooming: '+JSON.stringify(fitted));
+      assert.ok(fitted.x>=0 && fitted.x+fitted.width<=width && fitted.y>=0 && fitted.y+fitted.height<=812,'entire image fits before zooming: '+JSON.stringify({image:fitted,viewer:await dialog.evaluate(el=>({box:el.getBoundingClientRect().toJSON(),scrollTop:el.scrollTop,stage:el.querySelector('.tq-viewer-stage').getBoundingClientRect().toJSON(),windowY:scrollY,position:getComputedStyle(el).position}))}));
       assert.equal(await dialog.locator('h2,.tq-image-help,.tq-image-toolbar').count(),0);
       assert.equal(await dialog.evaluate(el=>el.scrollHeight>el.clientHeight),false,'image view has no panel scrollbar');
       await page.getByRole('button',{name:'Zoom in',exact:true}).click();
@@ -266,13 +271,25 @@ test('upload thumbnails open above their edit dialogs without submitting or disc
     const {page,context,errors}=await open(t,'admin-vehicles',375),before=uploads.length;
     await page.evaluate(id=>bootstrap.Modal.getOrCreateInstance(document.getElementById(id)).show(),modalId);
     await page.locator('#'+inputId).setInputFiles(await imageFile(page));await applyCrop(page);
-    const photo=page.locator('#'+photoId);await photo.waitFor({state:'visible'});await photo.click();
+    const photo=page.locator('#'+photoId);await photo.waitFor({state:'visible'});
+    const modalBody=page.locator('#'+modalId+' .modal-body');
+    await modalBody.evaluate(el=>el.scrollTop=Math.min(24,el.scrollHeight-el.clientHeight));
+    await photo.scrollIntoViewIfNeeded();await photo.evaluate(el=>el.focus({preventScroll:true}));
+    const editorPosition=await photo.evaluate(el=>{
+      const positions=[];for(let node=el.parentElement;node;node=node.parentElement) positions.push({top:node.scrollTop,left:node.scrollLeft});
+      return positions;
+    });
+    await photo.press('Enter');
     const viewer=page.locator('dialog.tq-image-viewer');await viewer.waitFor({state:'visible'});
     await readyPhoto(viewer);
     assert.equal(await viewer.locator('img').getAttribute('src'),await photo.getAttribute('src'));
     await viewer.getByRole('button',{name:'Zoom in',exact:true}).click();
     await page.keyboard.press('Escape');await viewer.waitFor({state:'hidden'});
     assert.equal(await page.locator('#'+modalId).evaluate(el=>el.classList.contains('show')),true,'underlying editor stays open');
+    assert.deepEqual(await photo.evaluate(el=>{
+      const positions=[];for(let node=el.parentElement;node;node=node.parentElement) positions.push({top:node.scrollTop,left:node.scrollLeft});
+      return positions;
+    }),editorPosition,'closing retains every scroll position inside the editor');
     assert.match(await page.locator('#'+inputId).evaluate(el=>el.files[0].name),/-cropped\.png$/);
     assert.equal(uploads.length,before,'viewing never submits the upload');assert.deepEqual(errors,[]);await context.close();
   }

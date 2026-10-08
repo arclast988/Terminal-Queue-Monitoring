@@ -1,5 +1,8 @@
 /* Shared image tools: brief opacity motion, no background blur or idle work. */
 dialog.tq-image-dialog {
+  /* Page background layering rules position direct body children relatively.
+     Image dialogs must stay attached to the viewport, including after scroll. */
+  position: fixed !important;
   width: min(900px, calc(100% - 24px)); max-width: none;
   max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px);
   padding: 18px; margin: auto; border: 1px solid #dbe3ed; border-radius: 18px;
