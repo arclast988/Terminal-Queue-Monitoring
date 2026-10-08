@@ -65,6 +65,10 @@ async function fileInfo(page,selector) {
     return {name:file.name,type:file.type,width:img.naturalWidth,height:img.naturalHeight,corner};
   });
 }
+async function applyCrop(page) {
+  await page.getByRole('button',{name:'Use crop',exact:true}).click();
+  await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
+}
 
 test('crop shapes change real pixels and stage only the confirmed logo without an early upload',{timeout:60000},async t=>{
   for(const [width,mode] of [[320,'lite'],[1365,'full'],[375,'reduced']]) {
@@ -79,7 +83,7 @@ test('crop shapes change real pixels and stage only the confirmed logo without a
       fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
       await page.screenshot({path:path.join(__dirname,'artifacts','mobile-image-crop.png')});
     }
-    await page.getByRole('button',{name:'Use crop',exact:true}).click();await dialog.waitFor({state:'hidden'});
+    await applyCrop(page);
     const image=await fileInfo(page,'#logoFileInput');
     assert.equal(image.width,800);assert.equal(image.height,450);assert.match(image.name,/-cropped\.png$/);
     assert.equal(uploads.length,before,'branding still waits for its existing Save action');
@@ -110,7 +114,7 @@ test('free crop supports touch resizing, preserves transparency and keeps native
   const before=await box.evaluate(el=>({w:el.getBoundingClientRect().width,h:el.getBoundingClientRect().height}));
   await box.focus();await box.press('Shift+ArrowLeft');
   assert.ok((await box.boundingBox()).width<before.w);
-  await page.getByRole('button',{name:'Use crop',exact:true}).click();
+  await applyCrop(page);
   const image=await fileInfo(page,'#reg_veh_photo_input');assert.ok(image.width<800 && image.height<600);assert.equal(image.type,'image/png');assert.equal(image.corner[3],0,'transparent area remains transparent');
   const form=await page.locator('#registerVehicleForm').evaluate(form=>{const data=new FormData(form);return {photo:data.get('photo').name,csrf:data.get('csrf_fixture')};});
   assert.deepEqual(form,{photo:'photo-cropped.png',csrf:'unchanged'});assert.deepEqual(errors,[]);
@@ -130,7 +134,7 @@ test('dropped logos and backgrounds use the same crop decision and preserve exis
     },Array.from(file.buffer));
     await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'visible'});
     assert.equal(uploads.length,before);assert.equal(await page.locator('#'+zoneId).evaluate(el=>el.classList.contains('drag-over')),false);
-    await page.getByLabel('Crop shape').selectOption('1');await page.getByRole('button',{name:'Use crop',exact:true}).click();
+    await page.getByLabel('Crop shape').selectOption('1');await applyCrop(page);
     assert.equal((await fileInfo(page,'#'+inputId)).width,600);assert.equal(uploads.length,before);
     const saved=page.waitForResponse(response=>response.request().method()==='POST' && response.status()===200);
     await page.locator('#'+saveId).click();await saved;
@@ -144,19 +148,19 @@ test('large exports are bounded and newly added slideshow inputs wait for a crop
   await page.locator('#logoFileInput').setInputFiles(await imageFile(page,4096,3072));
   await page.addScriptTag({url:origin+'/assets/js/autocomplete-search.js'});await page.evaluate(()=>window.initLocationAutocomplete());
   assert.equal(await page.getByLabel('Crop shape').evaluate(el=>getComputedStyle(el).opacity),'1','the crop shape control stays a usable native select');
-  await page.getByRole('button',{name:'Use crop',exact:true}).click();
+  await applyCrop(page);
   const image=await fileInfo(page,'#logoFileInput');assert.equal(image.width,2048);assert.equal(image.height,1536);
   let before=uploads.length;
   await page.locator('#newSlotFileInput').setInputFiles(await imageFile(page));
   await page.getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(uploads.length,before);
   await page.locator('#newSlotFileInput').setInputFiles(await imageFile(page));
   const uploaded=page.waitForResponse(response=>response.url().includes('add-slideshow-slot') && response.status()===200);
-  await page.getByRole('button',{name:'Use crop',exact:true}).click();await uploaded;
+  await applyCrop(page);await uploaded;
   await page.locator('#slotFileInput-6').waitFor({state:'attached'});assert.equal(uploads.length,before+1);
   before=uploads.length;await page.locator('#slotFileInput-6').setInputFiles(await imageFile(page));
   assert.equal(uploads.length,before);
   const replaced=page.waitForResponse(response=>response.url().includes('upload-slideshow-slot') && response.status()===200);
-  await page.getByRole('button',{name:'Use crop',exact:true}).click();await replaced;
+  await applyCrop(page);await replaced;
   assert.equal(uploads.length,before+1);assert.match(uploads[before].body.toString('latin1'),/name="slot"\r\n\r\n6/);assert.deepEqual(errors,[]);
 });
 
@@ -180,7 +184,7 @@ test('avatar cropping defaults to square inside its existing modal and cancel se
   await page.locator('#modalAvatarInput').setInputFiles(await imageFile(page));
   const dialog=page.getByRole('dialog',{name:'Crop image'});await dialog.waitFor({state:'visible'});
   assert.equal(await page.getByLabel('Crop shape').inputValue(),'1');
-  await page.getByRole('button',{name:'Use crop',exact:true}).click();await dialog.waitFor({state:'hidden'});
+  await applyCrop(page);
   const image=await fileInfo(page,'#modalAvatarInput');assert.equal(image.width,600);assert.equal(image.height,600);
   assert.equal(uploads.length,before);await page.locator('#modalSaveAvatarBtn').click();
   await page.waitForFunction(()=>document.querySelector('#modalAvatarInput').files.length===0);
@@ -191,7 +195,9 @@ test('vehicle photos open clearly for guests, dispatchers, admins and superadmin
   for(const name of ['guest','staff-queue','admin-vehicles','admin-vehicles-admin']) {
     for(const width of [375,1365]) {
       const {page,context,errors}=await open(t,name,width);
-      const photo=page.locator('img[data-vehicle-custom-photo][data-image-preview]').first();await photo.waitFor({state:'visible'});
+      t.diagnostic(name+' · '+width+'px');
+      const photo=page.locator('img[data-vehicle-custom-photo][data-image-preview]').first();
+      await photo.locator('..').scrollIntoViewIfNeeded();await photo.waitFor({state:'visible'});
       const source=await photo.getAttribute('src');await photo.focus();await photo.press('Enter');
       const dialog=page.getByRole('dialog');await dialog.waitFor({state:'visible'});
       assert.ok(await dialog.evaluate(el=>el.getBoundingClientRect().right<=innerWidth));
