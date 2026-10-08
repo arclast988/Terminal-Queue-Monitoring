@@ -440,7 +440,7 @@
         })();
     </script>
     <?= view('partials/auth_background', ['authSlides' => $authSlides, 'defaultAuthSlides' => $defaultAuthSlides]) ?>
-    <script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
+    <script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
     <script>

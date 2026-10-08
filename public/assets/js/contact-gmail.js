@@ -15,10 +15,9 @@
         var name = form.elements.name.value.trim();
         var subject = form.elements.subject.value.trim();
         var message = form.elements.message.value.trim();
-        if (!name || !message || /[\r\n]/.test(name + subject)) {
-            form.elements.name.setCustomValidity(!name || /[\r\n]/.test(name) ? 'Enter your name on one line.' : '');
+        if (/[\r\n]/.test(name + subject)) {
+            form.elements.name.setCustomValidity(/[\r\n]/.test(name) ? 'Enter your name on one line.' : '');
             form.elements.subject.setCustomValidity(/[\r\n]/.test(subject) ? 'Enter the subject on one line.' : '');
-            form.elements.message.setCustomValidity(!message ? 'Enter your message.' : '');
             form.reportValidity();
             return;
         }
@@ -26,7 +25,8 @@
         var params = new URLSearchParams({
             view: 'cm', fs: '1', tf: 'cm', to: form.dataset.recipient,
             su: '[' + form.dataset.acronym + '] ' + label + (subject ? ': ' + subject : ''),
-            body: 'Name: ' + name + '\nType: ' + label + (subject ? '\nSubject: ' + subject : '') + '\n\nMessage:\n' + message
+            body: (name ? 'Name: ' + name + '\n' : '') + 'Type: ' + label
+                + (subject ? '\nSubject: ' + subject : '') + (message ? '\n\nMessage:\n' + message : '')
         });
         var url = 'https://mail.google.com/mail/?' + params.toString();
         form.querySelector('[data-contact-draft-link]').href = url;
@@ -36,12 +36,14 @@
         form.querySelector('[data-contact-draft-notice]').focus({preventScroll: true});
     });
 
-    document.addEventListener('input', function (event) {
+    function invalidateDraft(event) {
         var form = event.target.closest('[data-contact-gmail]');
         if (!form) return;
         if (event.target.setCustomValidity) event.target.setCustomValidity('');
         var notice = form.querySelector('[data-contact-draft-notice]');
         notice.hidden = true;
         form.querySelector('[data-contact-draft-link]').removeAttribute('href');
-    });
+    }
+    document.addEventListener('input', invalidateDraft);
+    document.addEventListener('change', invalidateDraft);
 })();

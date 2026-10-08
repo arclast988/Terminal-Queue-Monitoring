@@ -245,7 +245,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         <?php if (session()->getFlashdata('contact_error')): ?>
         <div class="alert-error-banner"><i class="fas fa-times-circle"></i> <?= session()->getFlashdata('contact_error') ?></div>
         <?php endif; ?>
-        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message to <?= esc(app_name()) ?> Terminal administration. We are committed to safe, reliable public transport.</p>
+        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Choose an inquiry or feedback topic for <?= esc(app_name()) ?> terminal administration. You can add your name and message here or complete them in Gmail.</p>
         <?= view('partials/guest-contact-form', ['type' => 'contact']) ?>
     </div>
 </div>
@@ -328,7 +328,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <!-- ===== Footer CSS ===== -->
 
 <!-- ===== Footer JS ===== -->
-<script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
+<script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20261002a') ?>"></script>
 <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>

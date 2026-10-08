@@ -41,7 +41,7 @@ test('both guest forms prepare encoded Gmail drafts from the guest account on mo
       assert.equal(await form.locator('input[name="email"]').count(),0);
       assert.equal(await page.locator('#guestContactVerificationModal').count(),0);
       await page.locator('#'+prefix+'Name').fill('José & Passenger');
-      if(type==='contact') await page.locator('#'+prefix+'Subject').fill('Schedules & +=?#');
+      if(type==='contact') await page.locator('#'+prefix+'Subject').selectOption('Travel feedback or suggestion');
       const subject=await page.locator('#'+prefix+'Subject').inputValue();
       const message='<script>Stay as text</script>\nPlate ABC-123: café 🚐 & +=?#';
       await page.locator('#'+prefix+'Message').fill(message);
@@ -107,19 +107,41 @@ test('Gmail opens in a separate tab without access to the guest page',async()=>{
   await context.close();
 });
 
-test('required and whitespace-only fields never open a draft and can be corrected',async()=>{
-  const page=await browser.newPage();
-  await page.addInitScript(()=>{window.drafts=[];window.open=url=>window.drafts.push(url);});
-  await page.goto(origin+'/fixtures/guest-contact-draft?contact=1');
-  const button=page.locator('#contactModal button[type="submit"]');
-  await button.click();assert.equal(await page.evaluate(()=>window.drafts.length),0);
-  await page.locator('#guestContactName').fill('   ');
-  await page.locator('#guestContactMessage').fill('   ');
-  await button.click();assert.equal(await page.evaluate(()=>window.drafts.length),0);
-  await page.locator('#guestContactName').fill('Passenger');
-  await page.locator('#guestContactMessage').fill('Valid inquiry');
-  await button.click();assert.equal(await page.evaluate(()=>window.drafts.length),1);
-  await page.close();
+test('optional guest fields and distinct searchable topics prepare drafts on mobile and desktop',async()=>{
+  for (const width of [320,1365]) {
+    const page=await browser.newPage({viewport:{width,height:850}}),errors=[];
+    page.on('pageerror',error=>errors.push(error.message));
+    await page.addInitScript(()=>{window.drafts=[];window.open=url=>window.drafts.push(url);});
+    await page.goto(origin+'/fixtures/guest-contact-draft');
+    for (const [type,prefix,modal,query,topic,nextTopic] of [
+      ['report','guestReport','reportModal','Unsafe','Unsafe driving or vehicle condition','Delayed or cancelled trip'],
+      ['contact','guestContact','contactModal','feedback','Travel feedback or suggestion','Terminal hours and facilities'],
+    ]) {
+      await page.locator('footer a[onclick*="'+modal+'"]').click();
+      const form=page.locator('#'+modal+' form');
+      assert.equal(await form.locator('[required]').count(),0);
+      assert.ok(await page.locator('#'+prefix+'Subject option').count()>=10);
+      await page.locator('#'+prefix+'Subject_autocomplete_search').fill(query);
+      await form.locator('.autocomplete-item').filter({hasText:topic}).click();
+      await form.locator('button[type="submit"]').click();
+      let draft=new URL(await page.evaluate(()=>window.drafts.at(-1)));
+      const label=type==='report'?'Report Issue':'Contact Us';
+      assert.equal(draft.searchParams.get('body'),'Type: '+label+'\nSubject: '+topic);
+      assert.ok(draft.searchParams.get('su').endsWith(': '+topic));
+      await page.screenshot({path:path.join(__dirname,'artifacts','guest-optional-'+type+'-'+width+'.png')});
+      await page.locator('#'+prefix+'Name').fill('   ');
+      await page.locator('#'+prefix+'Message').fill('   ');
+      await page.locator('#'+prefix+'Subject').selectOption(nextTopic);
+      assert.equal(await form.locator('[role="status"]').isVisible(),false);
+      assert.equal(await form.locator('[data-contact-draft-link]').getAttribute('href'),null);
+      await form.locator('button[type="submit"]').click();
+      draft=new URL(await page.evaluate(()=>window.drafts.at(-1)));
+      assert.equal(draft.searchParams.get('body'),'Type: '+label+'\nSubject: '+nextTopic);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      await page.keyboard.press('Escape');
+    }
+    assert.deepEqual(errors,[]);await page.close();
+  }
 });
 
 test('the production CSP blocks an untrusted script without breaking local guest controls',async()=>{

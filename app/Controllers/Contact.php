@@ -8,12 +8,14 @@ class Contact extends BaseController
     {
         if (!$this->request->is('post')) return redirect()->to(base_url('guest'));
         $draft = [];
+        $invalidInput = false;
         foreach (['type', 'name', 'subject', 'message'] as $field) {
             $value = $this->request->getPost($field);
+            if ($value !== null && !is_string($value)) $invalidInput = true;
             $draft[$field] = is_string($value) ? trim($value) : '';
         }
         if (!in_array($draft['type'], ['report', 'contact'], true)) return $this->formResponse($draft, 'Choose Contact Us or Report Issue to prepare your message.');
-        if ($draft['name'] === '' || $draft['message'] === '') return $this->formResponse($draft, 'Please fill in all required fields.');
+        if ($invalidInput) return $this->formResponse($draft, 'Use text for your name, subject, and message.');
         if (mb_strlen($draft['name']) > 120 || mb_strlen($draft['subject']) > 180 || mb_strlen($draft['message']) > 5000 || preg_match('/[\r\n]/', $draft['name'] . $draft['subject'])) {
             return $this->formResponse($draft, 'Use up to 120 characters for your name, 180 for the subject, and 5,000 for the message. Names and subjects must be on one line.');
         }
@@ -21,9 +23,9 @@ class Contact extends BaseController
         if ($recipient === null) return $this->formResponse($draft, 'The terminal contact email is currently unavailable. Please contact the terminal office directly.');
         $label = $draft['type'] === 'report' ? 'Report Issue' : 'Contact Us';
         $subject = $draft['subject'] !== '' ? ': ' . $draft['subject'] : '';
-        $body = 'Name: ' . $draft['name'] . "\nType: " . $label
+        $body = ($draft['name'] !== '' ? 'Name: ' . $draft['name'] . "\n" : '') . 'Type: ' . $label
             . ($draft['subject'] !== '' ? "\nSubject: " . $draft['subject'] : '')
-            . "\n\nMessage:\n" . $draft['message'];
+            . ($draft['message'] !== '' ? "\n\nMessage:\n" . $draft['message'] : '');
         $url = 'https://mail.google.com/mail/?' . http_build_query([
             'view'=>'cm', 'fs'=>'1', 'tf'=>'cm', 'to'=>$recipient,
             'su'=>'[' . app_acronym() . '] ' . $label . $subject, 'body'=>$body,

@@ -98,9 +98,9 @@ final class GuestContactDraftTest extends CIUnitTestCase
 
     public function testInvalidInputCannotPrepareADraft(): void
     {
-        foreach ([['type'=>'admin'], ['name'=>[]], ['name'=>''], ['name'=>'  '], ['name'=>str_repeat('é',121)],
+        foreach ([['type'=>'admin'], ['type'=>[]], ['name'=>[]], ['subject'=>[]], ['name'=>str_repeat('é',121)],
             ['subject'=>str_repeat('x',181)], ['subject'=>"Injected\nsubject"], ['name'=>"Guest\rInjected"],
-            ['message'=>str_repeat('x',5001)], ['message'=>[]], ['message'=>'']] as $input) {
+            ['message'=>str_repeat('x',5001)], ['message'=>[]]] as $input) {
             $data = json_decode($this->action('send', $this->draft($input), true)->getBody(), true);
             $this->assertFalse($data['success']);
             $this->assertNull($data['gmailUrl']);
@@ -164,6 +164,27 @@ final class GuestContactDraftTest extends CIUnitTestCase
         $this->assertSame('[' . app_acronym() . '] Contact Us', $params['su']);
         $this->assertStringEndsWith($message, $params['body']);
         $this->assertStringNotContainsString('Subject:', $params['body']);
+    }
+
+    public function testBothFormsAcceptOptionalNameAndMessageWithoutEmptyBodyLabels(): void
+    {
+        foreach (['report'=>'Report Issue', 'contact'=>'Contact Us'] as $type=>$label) {
+            foreach ([[], ['name'=>'', 'message'=>''], ['name'=>'   ', 'message'=>" \n "]] as $optional) {
+                $post = ['type'=>$type, 'subject'=>'Topic only'] + $optional;
+                $data = json_decode($this->action('send', $post, true)->getBody(), true);
+                $this->assertTrue($data['success']);
+                $this->assertSame('', $data['draft']['name']);
+                $this->assertSame('', $data['draft']['message']);
+                parse_str(parse_url($data['gmailUrl'], PHP_URL_QUERY), $params);
+                $this->assertSame('Type: ' . $label . "\nSubject: Topic only", $params['body']);
+            }
+            $response = $this->action('send', ['type'=>$type, 'subject'=>'Topic only']);
+            $this->assertStringEndsWith('/guest?' . $type . '=1#support-section', $response->getHeaderLine('Location'));
+            $form = view('partials/guest-contact-form', ['type'=>$type]);
+            $this->assertStringContainsString('Your Name (optional)', $form);
+            $this->assertStringContainsString('<option selected>Topic only</option>', $form);
+            $this->assertStringContainsString('https://mail.google.com/mail/?', html_entity_decode($form, ENT_QUOTES));
+        }
     }
 
     public function testRecipientHelperUsesConfiguredManagementEmailBeforeSenderFallback(): void
