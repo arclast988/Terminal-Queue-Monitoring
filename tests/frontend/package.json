@@ -2,12 +2,13 @@
   "name": "terminal-interaction-regressions",
   "private": true,
   "scripts": {
-    "test": "node --test interactions.test.cjs auth-background.test.cjs session-guard.test.cjs",
-    "test:browser": "node --test interactions.browser.cjs page-transitions.browser.cjs",
+    "test": "node --test interactions.test.cjs auth-background.test.cjs session-guard.test.cjs native-navigation-loader.test.cjs",
+    "test:browser": "node --test interactions.browser.cjs page-transitions.browser.cjs native-navigation-loader.browser.cjs",
     "test:responsive": "node --test responsive.browser.cjs time-theme.browser.cjs report-filters.browser.cjs vehicle-dispatch.browser.cjs vehicle-type-photos.browser.cjs",
     "test:background": "node --test backgrounds.browser.cjs",
     "test:pending": "node --test pending-buttons.browser.cjs",
     "test:styles": "node --test stylesheets.browser.cjs",
+    "test:images": "node --test image-tools.browser.cjs",
     "typecheck": "tsc -p tsconfig.json",
     "test:dispatch": "node --test dispatch-queue.browser.cjs guest-contact-today.browser.cjs"
   },
@@ -17,4 +18,5 @@
     "typescript": "5.9.3"
   }
 }
+
 

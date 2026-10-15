@@ -38,6 +38,38 @@
         return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
     }
 
+    function isAppWindow() {
+        return (window.matchMedia && (
+            window.matchMedia('(display-mode: standalone)').matches
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.matchMedia('(display-mode: minimal-ui)').matches
+            || window.matchMedia('(display-mode: window-controls-overlay)').matches
+        )) || window.navigator.standalone === true || Boolean(document.fullscreenElement);
+    }
+
+    function preferNativeNavigationProgress() {
+        // Browsers do not expose their loading-bar visibility to a page. This is
+        // a fallback for known mobile browser tabs, not native-bar detection.
+        // Installed apps, embedded pages and identifiable WebViews keep feedback.
+        if (isAppWindow() || (window.top && window.top !== window)) return false;
+        var browser = window.navigator;
+        var ua = browser.userAgent || '';
+        var mobile = Boolean(browser.userAgentData && browser.userAgentData.mobile)
+            || /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(ua)
+            || (browser.platform === 'MacIntel' && browser.maxTouchPoints > 1);
+        if (!mobile) return false;
+        if (/\bwv\b|FBAN|FBAV|Instagram|Line\/|WebView/i.test(ua)) return false;
+        return /Chrome\/|Chromium\/|CriOS\/|Firefox\/|FxiOS\/|EdgA\/|EdgiOS\/|OPR\/|Opera|Safari\/|SamsungBrowser\//i.test(ua);
+    }
+
+    function startNavigation() {
+        if (preferNativeNavigationProgress()) {
+            forceDone();
+            return;
+        }
+        start(true);
+    }
+
     function injectStyles() {
         if (document.getElementById('global-loader-injected-css')) return;
         var style = document.createElement('style');
@@ -46,10 +78,10 @@
             '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; overflow:hidden; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
             '.global-progress-bar.is-active { opacity:1; }',
             '.global-progress-bar.is-done { opacity:0; }',
-            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,var(--primary-dark,#b91c1c),var(--primary,#ea580c)); box-shadow:none; transition:transform .16s cubic-bezier(.2,.8,.2,1); border-radius:0 3px 3px 0; }',
+            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; overflow:hidden; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); box-shadow:none; transition:transform .16s cubic-bezier(.2,.8,.2,1); border-radius:0 3px 3px 0; }',
             '@keyframes gl-progress-sweep { from { transform:translateX(-100%); } to { transform:translateX(350%); } }',
-            '@media (prefers-reduced-motion:no-preference) { html:not([data-tq-motion="reduced"]) .global-progress-bar.is-active:not(.is-done)::after { content:""; position:absolute; inset:0 auto 0 0; width:30%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent); animation:gl-progress-sweep 1.2s linear infinite !important; } }',
-            'html[data-tq-page-hidden] .global-progress-bar::after { animation-play-state:paused !important; }',
+            '@media (prefers-reduced-motion:no-preference) { html:not([data-tq-motion="reduced"]) .global-progress-bar.is-active:not(.is-done) .global-progress-bar-inner::after { content:""; position:absolute; inset:0 auto 0 0; width:30%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent); animation:gl-progress-sweep 1.2s linear infinite !important; } }',
+            'html[data-tq-page-hidden] .global-progress-bar-inner::after { animation-play-state:paused !important; }',
             '.table-loader-overlay { position:absolute; inset:0; min-height:100px; background:rgba(255,255,255,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; z-index:50; border-radius:inherit; pointer-events:none !important; transition:opacity .16s ease; }',
             '.gl-table-skeleton { width:72%; max-width:22rem; display:grid; gap:8px; }',
             '.gl-table-skeleton span { display:block; height:8px; border-radius:4px; background:#e2e8f0; }',
@@ -65,7 +97,9 @@
             '@keyframes gl-spin { to { transform:rotate(360deg); } }',
             '@keyframes gl-shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }',
             '.gl-shake { animation:gl-shake .24s ease-in-out !important; }',
-            'html[data-tq-motion="lite"] .global-progress-bar-inner, html[data-tq-motion="reduced"] .global-progress-bar-inner { transition:none; will-change:auto; }',
+            'html[data-tq-motion="lite"] .global-progress-bar { transition:opacity .1s ease-out !important; }',
+            'html[data-tq-motion="lite"] .global-progress-bar-inner { transition:transform .1s ease-out !important; will-change:auto; }',
+            'html[data-tq-motion="reduced"] .global-progress-bar-inner { transition:none; will-change:auto; }',
             'html[data-tq-motion="reduced"] .gl-btn-spinner { animation:none !important; }',
             'html[data-tq-page-hidden] .gl-btn-spinner { animation-play-state:paused !important; }',
             '@media (prefers-reduced-motion:reduce) { .global-progress-bar, .global-progress-bar-inner, .table-loader-overlay { transition:none; } .gl-btn-spinner, .table-loader-spinner, .gl-shake { animation:none !important; } }'
@@ -139,7 +173,7 @@
         clearOperationTimers();
         clearCompletion();
         if (!isVisible) { setProgress(0); return; }
-        var wait = motionMode() === 'full' ? Math.max(0, MIN_VISIBLE - (Date.now() - visibleAt)) : 0;
+        var wait = motionMode() === 'reduced' ? 0 : Math.max(0, MIN_VISIBLE - (Date.now() - visibleAt));
         finishTimer = setTimeout(function () {
             finishTimer = null;
             setProgress(100);
@@ -149,7 +183,7 @@
                 barEl.classList.remove('is-active', 'is-done');
                 isVisible = false;
                 setProgress(0);
-            }, motionMode() === 'full' ? 160 : 0);
+            }, motionMode() === 'reduced' ? 0 : motionMode() === 'lite' ? 100 : 160);
         }, wait);
     }
 
@@ -482,7 +516,7 @@
             Promise.resolve().then(function () {
                 if (event.defaultPrevented) return;
                 pendingForms.add(form);
-                start(true);
+                startNavigation();
                 if (submitBtn) showButtonSpinner(submitBtn, undefined, true);
             });
         }, false);
@@ -497,7 +531,7 @@
                 var url = new URL(a.href, window.location.href);
                 if (url.origin !== window.location.origin) return;
                 if (url.pathname === window.location.pathname && url.search === window.location.search) return;
-                Promise.resolve().then(function () { if (!event.defaultPrevented) start(true); });
+                Promise.resolve().then(function () { if (!event.defaultPrevented) startNavigation(); });
             } catch (error) { /* Not an internal navigation. */ }
         }, false);
         window.addEventListener('pagehide', resetPage);
@@ -507,8 +541,7 @@
     hookFetch();
     hookXHR();
     function onInit() {
-        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
-            || window.navigator.standalone === true;
+        var standalone = isAppWindow();
         if (standalone) document.documentElement.classList.add('gl-standalone');
         ensureElements();
         setupInteractions();
@@ -545,3 +578,4 @@
         showButtonSpinner: showButtonSpinner, hideButtonSpinner: hideButtonSpinner
     };
 })(window, document);
+

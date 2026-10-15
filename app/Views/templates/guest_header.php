@@ -10,7 +10,7 @@
  *   $skip_breadcrumb      bool   optional — when true, the breadcrumb section is not rendered (the
  *                                page is expected to render its own). Defaults to false.
  *
- * Callers load shared guest styles in the head; standalone use retains a stylesheet fallback.
+ * Callers load shared guest styles and image tools in the head; standalone use retains a fallback.
  * The page using it must already
  * have <head> with Font Awesome + Outfit font + the CSS variables (--primary, --primary-dark,
  * --text-muted, --shadow-sm, --transition) defined.
@@ -18,6 +18,8 @@
 ?>
 <?php if (empty($guest_shell_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/guest-shell.css') ?>">
+<link rel="stylesheet" href="<?= app_asset_url('assets/css/image-tools.css') ?>">
+<script src="<?= app_asset_url('assets/js/image-tools.js') ?>" defer></script>
 <?php endif; ?>
 <?php if (empty($interaction_assets_loaded)): ?>
 <link rel="stylesheet" href="<?= app_asset_url('assets/css/interaction-motion.css') ?>">
@@ -57,7 +59,7 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
                 var first = track && track.querySelector('.marquee-copy');
                 if (!track || !first) return;
 
-                var resizeTimer;
+                var resizeTimer, previousText = null;
 
                 function rebuild() {
                     while (track.children.length > 2) track.removeChild(track.lastElementChild);
@@ -71,12 +73,20 @@ $rawMarqueeText = !empty($marqueeItems) ? implode($annSeparator, $marqueeItems) 
 
                     var bounds = first.getBoundingClientRect();
                     var segmentWidth = bounds.width || first.offsetWidth || 350;
-                    var durationSec = Math.max(12, Math.round(segmentWidth / 55));
+                    var startWidth = track.parentElement.clientWidth;
+                    track.style.setProperty('--gh-marquee-start', startWidth + 'px');
+                    var durationSec = Math.max(8, (startWidth + segmentWidth) / 55).toFixed(2);
                     var durStr = durationSec + 's';
                     if (track.style.animationDuration !== durStr) {
                         track.style.setProperty('animation-duration', durStr, 'important');
                         track.style.setProperty('-webkit-animation-duration', durStr, 'important');
                     }
+                    if (previousText !== first.textContent && track.getAnimations) {
+                        track.getAnimations().forEach(function (animation) {
+                            if (animation.animationName === 'gh-marquee') animation.currentTime = 0;
+                        });
+                    }
+                    previousText = first.textContent;
                 }
 
                 window.refreshGuestMarquee = rebuild;

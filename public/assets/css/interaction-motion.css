@@ -25,11 +25,11 @@ html[data-tq-motion="full"] body:not(.auth-page)::before,
 html[data-tq-motion="full"] body::after {
   animation-delay: var(--tq-background-delay, 0s) !important;
 }
-@keyframes tq-page-in { from { opacity: .95; } }
+@keyframes tq-page-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* Keep a solid outgoing snapshot beneath the incoming page. Fading both
    snapshots with normal blending exposes the canvas as a white flash. */
-::view-transition-group(root) { animation-duration: .15s; }
+::view-transition-group(root) { animation-duration: .18s; }
 ::view-transition-image-pair(root) { isolation: isolate; }
 /* Snapshots are visual only; the newly loaded page remains interactive. */
 ::view-transition { pointer-events: none; }
@@ -39,11 +39,11 @@ html[data-tq-motion="full"] body::after {
   mix-blend-mode: normal;
 }
 ::view-transition-new(root) {
-  animation: tq-page-in .15s ease-out both;
+  animation: tq-page-in .18s cubic-bezier(.2, .8, .2, 1) both;
   mix-blend-mode: normal;
 }
 html[data-tq-motion="lite"]::view-transition-group(root),
-html[data-tq-motion="lite"]::view-transition-new(root) { animation-duration: .1s; }
+html[data-tq-motion="lite"]::view-transition-new(root) { animation-duration: .12s; }
 @media (prefers-reduced-motion: reduce) {
   /* Retain the old frame until first paint, with no movement or fading. */
   ::view-transition-group(root),
@@ -63,6 +63,17 @@ html[data-tq-motion="lite"]::view-transition-new(root) { animation-duration: .1s
 @keyframes tq-overlay-enter {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* A single opacity fade also works in browsers without page snapshots. It
+   never hides the destination, holds a click, or staggers nested controls. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-tq-navigation-fallback]:not([data-tq-motion="reduced"]) body {
+    animation: tq-content-fade .14s ease-out backwards !important;
+  }
+  html[data-tq-navigation-fallback][data-tq-motion="lite"] body {
+    animation-duration: .1s !important;
+  }
 }
 
 /* No permanent promotion of the page, forms, or cards to GPU layers. */
@@ -192,6 +203,9 @@ html[data-tq-motion="lite"] .queue-card.card-enter {
 }
 html[data-tq-motion="lite"] body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]) {
   transition: transform .1s ease-out, opacity .1s ease-out !important;
+}
+html[data-tq-motion="lite"] body :is(.input-modern, .form-control-modern, .select-modern, .form-select-modern, .autocomplete-item) {
+  transition: color .1s ease-out, background-color .1s ease-out, border-color .1s ease-out !important;
 }
 html[data-tq-motion="lite"] .modal.fade .modal-dialog { transform: none !important; }
 html[data-tq-motion="lite"] :is(.modal-backdrop.fade, .support-modal-backdrop) {

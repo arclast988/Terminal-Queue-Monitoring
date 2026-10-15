@@ -3,7 +3,7 @@
     <?= view('partials/support-modals') ?>
     <?= view('partials/footer') ?>
     <script src="<?= app_asset_url('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') ?>"></script>
-    <script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
+    <script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
     <script src="<?= base_url('assets/js/autocomplete-search.js?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/js/autocomplete-search.js') ? filemtime(FCPATH . 'assets/js/autocomplete-search.js') : '20260927_1')) ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= base_url('assets/js/no-change-guard.js?v=20260909') ?>"></script>

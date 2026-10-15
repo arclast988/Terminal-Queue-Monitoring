@@ -475,6 +475,7 @@ SVG;
             });
 
             document.addEventListener('click', function (e) {
+                if (e.target && e.target.closest && e.target.closest('dialog.tq-image-viewer')) return;
                 // Do not close profile dropdown if clicking inside the logout confirmation modal (e.g. "Stay Signed In")
                 if (e.target && e.target.closest && (e.target.closest('.logout-btn-cancel') || e.target.closest('#logoutModal'))) {
                     return;
@@ -486,6 +487,7 @@ SVG;
             });
 
             document.addEventListener('keydown', function (e) {
+                if (e.target && e.target.closest && e.target.closest('dialog.tq-image-viewer')) return;
                 // If logout modal is currently open, let Bootstrap handle Escape for the modal without closing the dropdown
                 var logoutModal = document.getElementById('logoutModal');
                 if (logoutModal && logoutModal.classList.contains('show')) {
@@ -764,6 +766,18 @@ SVG;
                     closeAvatarMiniMenu();
                 }
             });
+
+            // View uses the current image, including the default profile picture.
+            var miniMenuViewBtn = document.getElementById('miniMenuViewBtn');
+            if (miniMenuViewBtn) {
+                miniMenuViewBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeAvatarMiniMenu();
+                    var photo = document.querySelector('#navProfileHeaderAvatar img, #navProfileHeaderAvatar svg');
+                    if (window.TerminalImages) window.TerminalImages.open(photo, document.getElementById('userProfileBtn'));
+                });
+            }
 
             // Edit / Upload button
             if (miniMenuEditBtn) {

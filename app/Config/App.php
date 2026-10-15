@@ -39,19 +39,22 @@ class App extends BaseConfig
     {
         parent::__construct();
 
-        // Railway writes app.baseURL from APP_BASE_URL/RAILWAY_PUBLIC_DOMAIN.
-        // Never replace that trusted value with a request's Host header: reset
-        // links and other absolute URLs must not be controlled by the caller.
         if (defined('ENVIRONMENT') && ENVIRONMENT === 'production') {
+            // Resolve from deployment configuration, including CLI startup.
+            // A request cannot choose the host used by assets or reset links.
+            $this->baseURL = \App\Libraries\DeploymentUrl::resolve(
+                $this->baseURL,
+                (string) env('RAILWAY_PUBLIC_DOMAIN', '')
+            );
             return;
         }
 
         if (!empty($_SERVER['HTTP_HOST']) && preg_match('/\A[a-zA-Z0-9.-]+(?::[0-9]{1,5})?\z/D', $_SERVER['HTTP_HOST'])) {
+            $currentHost = $_SERVER['HTTP_HOST'];
             $isHttps = (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) === 'on')
                 || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
                 || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443);
             $scheme = $isHttps ? 'https://' : 'http://';
-            $currentHost = $_SERVER['HTTP_HOST'];
 
             // If baseURL is currently empty, points to localhost, or differs from the requesting host,
             // adapt to the client's current request host so asset links and API calls point to the actual server.

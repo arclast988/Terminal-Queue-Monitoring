@@ -1489,7 +1489,7 @@ $slotsMeta = [
                 </div>
             </div>
 
-            <div class="upload-zone" id="logoUploadZone">
+            <div class="upload-zone" id="logoUploadZone" data-image-crop-input="logoFileInput">
                 <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif" style="display:none;">
                 <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                 <div class="upload-text"><strong>Click to upload</strong> or drag and drop official seal</div>
@@ -1643,7 +1643,7 @@ $slotsMeta = [
 
             <!-- SINGLE HERO BACKGROUND SECTION -->
             <div id="sectionSingleBgManager" style="<?= $bgMode === 'single' ? '' : 'display:none;' ?>">
-                <div class="upload-zone" id="bgUploadZone">
+                <div class="upload-zone" id="bgUploadZone" data-image-crop-input="bgFileInput">
                     <input type="file" id="bgFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;">
                     <div class="upload-icon"><i class="fas fa-mountain-sun"></i></div>
                     <div class="upload-text"><strong>Click to upload</strong> or drag and drop single hero background</div>
@@ -1679,7 +1679,7 @@ $slotsMeta = [
                 </div>
             </div>
 
-            <div class="upload-zone" id="loginCardUploadZone">
+            <div class="upload-zone" id="loginCardUploadZone" data-image-crop-input="loginCardFileInput">
                 <input type="file" id="loginCardFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;">
                 <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                 <div class="upload-text"><strong>Click to upload</strong> or drag and drop login hero illustration</div>

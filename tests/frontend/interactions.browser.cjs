@@ -189,10 +189,21 @@ test('phone loading indicators keep moving in lite mode and stop for reduced mot
       const spinner = button.querySelector('.gl-btn-spinner');
       return { spinner: getComputedStyle(spinner).animationName, legacy: nodes.map(el => getComputedStyle(el).animationName),
         barDisplay: getComputedStyle(document.querySelector('#global-progress-bar')).display,
-        sweep: getComputedStyle(document.querySelector('#global-progress-bar'), '::after').animationName };
+        sweep: getComputedStyle(document.querySelector('.global-progress-bar-inner'), '::after').animationName,
+        outsideSweep: getComputedStyle(document.querySelector('#global-progress-bar'), '::after').content,
+        clip: getComputedStyle(document.querySelector('.global-progress-bar-inner')).overflow,
+        progressDuration: getComputedStyle(document.querySelector('.global-progress-bar-inner')).transitionDuration };
     });
     assert.equal(styles.spinner, mode === 'reduced' ? 'none' : 'gl-spin');
     assert.notEqual(styles.barDisplay, 'none'); assert.equal(styles.sweep, mode === 'reduced' ? 'none' : 'gl-progress-sweep');
+    assert.equal(styles.outsideSweep, 'none', 'no separate strip ahead of the progress');
+    assert.equal(styles.clip, 'hidden', 'the shimmer stays inside the filled portion');
+    assert.equal(styles.progressDuration, mode === 'reduced' ? '0s' : mode === 'lite' ? '0.1s' : '0.16s');
+    await page.evaluate(() => { window.originalWrappedFetch = fetch; });
+    await page.addScriptTag({ path:path.join(root, 'public/assets/js/global-loader.js') });
+    assert.deepEqual(await page.evaluate(() => ({ bars:document.querySelectorAll('#global-progress-bar').length,
+      styles:document.querySelectorAll('#global-loader-injected-css').length, sameFetch:fetch === window.originalWrappedFetch })),
+      { bars:1, styles:1, sameFetch:true }, 'loading the helper twice still uses one indicator and one request wrapper');
     if (mode === 'lite') assert.deepEqual(styles.legacy, ['gl-spin', 'gl-spin', 'gl-spin']);
     if (mode !== 'reduced') {
       const rotation = await page.locator('.gl-btn-spinner').evaluate(async el => {
@@ -223,7 +234,7 @@ test('a phone shows navigation feedback while a slow destination is still loadin
     link.addEventListener('click', () => setTimeout(() => {
       const bar = document.querySelector('#global-progress-bar');
       navigator.sendBeacon('/navigation-state', JSON.stringify({ visible: GlobalLoader.isVisible(), mode: TerminalMotion.getMode(),
-        display: getComputedStyle(bar).display, animation: getComputedStyle(bar, '::after').animationName }));
+        display: getComputedStyle(bar).display, animation: getComputedStyle(bar.querySelector('.global-progress-bar-inner'), '::after').animationName }));
     }, 80), { once: true });
   });
   const box = await page.locator('#navigation').boundingBox(); assert.ok(box);

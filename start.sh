@@ -63,13 +63,7 @@ if [ -z "$DB_HOST" ] || [ -z "$DB_PORT" ] || [ -z "$DB_NAME" ]; then
     exit 1
 fi
 
-APP_BASE_URL="${APP_BASE_URL:-}"
-if [ -z "$APP_BASE_URL" ] && [ -n "${RAILWAY_PUBLIC_DOMAIN:-}" ]; then
-    APP_BASE_URL="https://${RAILWAY_PUBLIC_DOMAIN}/"
-fi
-if [ -n "$APP_BASE_URL" ] && [[ "$APP_BASE_URL" != */ ]]; then
-    APP_BASE_URL="${APP_BASE_URL}/"
-fi
+APP_BASE_URL="$(php "$APP_ROOT/deploy/resolve-base-url.php")"
 
 umask 077
 cat > "$APP_ROOT/.env" <<ENVFILE
@@ -120,7 +114,7 @@ chmod 640 "$APP_ROOT/.env" 2>/dev/null || true
 echo "[ENV] Production configuration generated."
 if [ "${EMAIL_DELIVERY_PROVIDER:-brevo}" = "brevo" ]; then
     if [ -z "${BREVO_API_KEY:-}" ] || [ -z "${EMAIL_FROM:-}" ]; then
-        echo "[WARN] BREVO_API_KEY or EMAIL_FROM is empty; password-reset and contact email delivery will fail fast until configured."
+        echo "[WARN] BREVO_API_KEY or EMAIL_FROM is empty; password-reset email delivery will fail fast until configured."
     fi
 elif [ -z "${EMAIL_SMTP_USER:-}" ] || [ -z "${EMAIL_SMTP_PASS:-}" ]; then
     echo "[WARN] EMAIL_SMTP_USER or EMAIL_SMTP_PASS is empty; SMTP email delivery will be unavailable."

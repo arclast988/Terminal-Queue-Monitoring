@@ -107,14 +107,11 @@ final class EmailDeliveryConfigurationTest extends CIUnitTestCase
         }
     }
 
-    public function testEveryPublicEmailFlowUsesConfiguredTransport(): void
+    public function testAuthenticationEmailUsesConfiguredTransport(): void
     {
         $auth = file_get_contents(APPPATH . 'Controllers/Auth.php');
-        $contact = file_get_contents(APPPATH . 'Controllers/Contact.php');
 
         $this->assertSame(3, substr_count($auth, 'sendConfiguredHtmlEmail('));
-        $this->assertStringContainsString('sendConfiguredHtmlEmail(', $contact);
-        $this->assertStringNotContainsString('getConfiguredEmailService()', $contact);
     }
 
     public function testRailwayWritesCompleteSmtpConfigurationWithoutSecretFallbacks(): void
@@ -124,7 +121,7 @@ final class EmailDeliveryConfigurationTest extends CIUnitTestCase
         foreach (['EMAIL_SMTP_HOST', 'EMAIL_SMTP_USER', 'EMAIL_SMTP_PASS', 'EMAIL_SMTP_PORT', 'EMAIL_SMTP_CRYPTO', 'EMAIL_SMTP_TIMEOUT'] as $variable) {
             $this->assertStringContainsString($variable, $start);
         }
-        $this->assertStringContainsString('password-reset and contact email delivery will fail fast until configured', $start);
+        $this->assertStringContainsString('password-reset email delivery will fail fast until configured', $start);
         $this->assertStringNotContainsString('EMAIL_SMTP_PASS:-password', $start);
     }
 }

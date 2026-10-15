@@ -32,16 +32,21 @@ function get_system_setting(string $key, $default = null) {
     ] : [];
     return $theme[$key] ?? $default;
 }
-if (in_array($fixturePage, ['guest-contact-verification', 'guest-contact-verification-content', 'staff-guide', 'admin-guide'], true)) {
+if (in_array($fixturePage, ['guest-contact-draft', 'staff-guide', 'admin-guide'], true)) {
     // Keep the real footer/modals while stubbing only managed settings/config.
     final class FixtureContentManagement { public static function fields(): array { return []; } }
     class_alias(FixtureContentManagement::class, 'Config\\ContentManagement');
-    function config(string $name): object { return (object) ['recipients'=>'management@example.com']; }
+    function config(string $name): object { return (object) ['recipients'=>'management@example.com', 'fromEmail'=>'', 'SMTPUser'=>'']; }
 }
 if (($argv[3] ?? '') !== 'theme') {
     function app_theme_css(): string { return ''; }
 }
 // Use the real asset version helper in every production-view fixture.
+// Image layout checks need the production badge, including its icon and border.
+// Other fixtures retain their existing lightweight text badge.
+if (($argv[8] ?? '') !== 'real-type-badges') {
+    function vehicle_type_badge(string $type): string { return '<span class="vehicle-type-chip ' . vehicle_type_class($type) . '">' . esc(vehicle_type_label($type)) . '</span>'; }
+}
 require dirname(__DIR__, 2) . '/app/Common.php';
 if (!function_exists('media_url')) {
     function media_url(?string $path): string {
@@ -79,7 +84,6 @@ function vehicle_resolved_photo(array $item, string $type): string {
     return '/fixture.svg';
 }
 function passenger_color_class(int $count, int $capacity): string { return 'passenger-color-green'; }
-function vehicle_type_badge(string $type): string { return '<span class="vehicle-type-chip ' . vehicle_type_class($type) . '">' . esc(vehicle_type_label($type)) . '</span>'; }
 function get_db_vehicle_types(): array { return [['id' => 1, 'slug' => 'jeepney', 'name' => 'Jeepney', 'color' => '#1565c0', 'icon' => 'fa-bus', 'photo' => '/fixture.svg']]; }
 function session(): object {
     static $session;
@@ -95,12 +99,15 @@ function session(): object {
             };
         }
         public function getFlashdata(string $key) { return null; }
+        public function has(string $key): bool { return false; }
     };
 }
 final class ResponsiveFixtureRenderer {
     public function render(string $name, array $data = []): string {
+        // Layout/control fixtures exclude the external feedback widget and its network requests.
+        if ($name === 'partials/maze_snippet') return '';
         // Management fixtures include the real footer and Bootstrap/support modals.
-        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-verification') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true) && ($GLOBALS['argv'][7] ?? '') !== 'shared-dialogs')) return '';
+        if (($name === 'templates/guestfooter' && $GLOBALS['fixturePage'] !== 'guest-contact-draft') || ($name === 'templates/footer' && !in_array($GLOBALS['fixturePage'], $GLOBALS['managementPages'], true) && ($GLOBALS['argv'][7] ?? '') !== 'shared-dialogs')) return '';
         extract($GLOBALS['fixtureData']);
         extract($data, EXTR_OVERWRITE);
         ob_start();
@@ -123,7 +130,7 @@ $item = [
 $route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
-$managementPages = ['admin-users', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
+$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
 $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Palompon', 'route_destination' => $longValue, 'created_at' => '2026-10-01 08:00:00'];
 $vehicle['status'] = 'active';
 $fixtureData = [
@@ -141,7 +148,7 @@ $fixtureData = [
     'vehicle_type' => '', 'destination' => '', 'search' => '', 'all_destinations' => [$longValue],
     'active_dest_counts' => [$longValue => 1], 'total_active_count' => 1,
     'active_results' => [$item], 'total_results' => 1,
-    'users' => [$user], 'terminals' => [$terminal], 'rules' => [['id' => 1, 'route_id' => 1, 'terminal_name' => 'Palompon', 'route_destination' => $longValue, 'time_from' => '08:00', 'time_to' => '18:00', 'wait_minutes' => 15, 'label' => $longValue]],
+    'user' => $user, 'users' => [$user], 'terminals' => [$terminal], 'rules' => [['id' => 1, 'route_id' => 1, 'terminal_name' => 'Palompon', 'route_destination' => $longValue, 'time_from' => '08:00', 'time_to' => '18:00', 'wait_minutes' => 15, 'label' => $longValue]],
     'departures' => [$item], 'destinations' => [['destination' => $longValue]], 'destinationVehicleTypes' => [],
     'logs' => [$user + ['action' => 'Updated queue', 'details' => $longValue, 'timestamp' => '2026-10-01 08:00:00']],
     'actions' => [['action' => 'Updated queue']], 'stats' => [], 'pager' => null,
@@ -202,14 +209,6 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
         $fixtureData['existingRules'] = [$fixtureData['rule'], array_replace($fixtureData['rule'], ['id'=>2, 'route_id'=>1, 'route_destination'=>'ORMOC', 'round_scope'=>'1|ORMOC'])];
         $fixtureData['selectedRouteId'] = 2;
     }
-}
-if (in_array($fixturePage, ['guest-contact-verification','guest-contact-verification-content'], true)) {
-    $fixtureState = $argv[4] ?? '';
-    $fixtureData['pending'] = ['id'=>str_repeat('a',64), 'type'=>'report', 'name'=>'Guest Passenger',
-        'email'=>'guest-passenger-with-a-long-address@example.com', 'subject'=>'Website display / technical problem',
-        'message'=>'<script>Text must stay text</script>', 'verified'=>$fixtureState === 'verified', 'expires_at'=>time()+600, 'sent_at'=>time()];
-    $fixtureData['resendWait'] = 60;
-    if ($fixtureState === 'error') $fixtureData['error'] = 'Incorrect code. 4 attempts remaining.';
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-vehicle-edit') {
@@ -350,13 +349,12 @@ if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
     'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
-    'guest-contact-verification' => 'public/enhanced_dashboard',
-    'guest-contact-verification-content' => 'partials/guest-contact-verification',
+    'guest-contact-draft' => 'public/enhanced_dashboard',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
     'staff-password' => 'auth/change_password', 'staff-guide' => 'help/dispatcher', 'admin-guide' => 'help/admin',
     'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
-    'admin-users' => 'admin/users/index', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
+    'admin-users' => 'admin/users/index', 'admin-user-edit' => 'admin/users/edit', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
     'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',

@@ -245,12 +245,11 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         <?php if (session()->getFlashdata('contact_error')): ?>
         <div class="alert-error-banner"><i class="fas fa-times-circle"></i> <?= session()->getFlashdata('contact_error') ?></div>
         <?php endif; ?>
-        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Send a message to <?= esc(app_name()) ?> Terminal administration. We are committed to safe, reliable public transport.</p>
+        <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Choose an inquiry or feedback topic for <?= esc(app_name()) ?> terminal administration. You can add your name and message here or complete them in Gmail.</p>
         <?= view('partials/guest-contact-form', ['type' => 'contact']) ?>
     </div>
 </div>
 
-<?= view('partials/guest-contact-verification-modal') ?>
 
 <!-- 4. FAQ Modal -->
 <div id="faqModal" class="support-modal-backdrop">
@@ -329,13 +328,13 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <!-- ===== Footer CSS ===== -->
 
 <!-- ===== Footer JS ===== -->
-<script src="<?= base_url('assets/js/global-loader.js?v=20261003motion2') ?>"></script>
+<script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20261002a') ?>"></script>
-<script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
+<script src="<?= app_asset_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= app_asset_url('js/vehicle-type-live.js') ?>"></script>
 <script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
-<script src="<?= app_asset_url('assets/js/contact-verification.js') ?>" defer></script>
+<script src="<?= app_asset_url('assets/js/contact-gmail.js') ?>" defer></script>
 <script type="application/json" id="guestManagedContent"><?= json_encode($guestManagedContent, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
 <script>
 let savedSupportScrollY = 0;
@@ -421,7 +420,7 @@ function toggleHelpAccordion(headerEl) {
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('contact_verify')) {
-        openSupportModal('guestContactVerificationModal');
+        openSupportModal('contactModal');
     } else if (urlParams.has('help')) {
         openSupportModal('helpModal');
     } else if (urlParams.has('faq')) {

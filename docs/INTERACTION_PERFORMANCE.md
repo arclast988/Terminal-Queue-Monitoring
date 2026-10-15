@@ -1,5 +1,25 @@
 # Interaction performance review
 
+## Loader and navigation refinement (October 2026)
+
+The rainbow progress bar retains its colors. Its moving highlight is now clipped
+inside the filled segment instead of sweeping independently across the viewport.
+Repeated script initialization still reuses one bar and one request wrapper.
+
+Cross-document snapshots reveal the incoming page over an opaque outgoing frame
+in 180 ms (120 ms in lite mode). Browsers without a usable snapshot receive one
+140 ms opacity arrival fade (100 ms in lite mode); nested entrances are suppressed.
+Reloads and browser history do not replay that fallback. Reduced-motion mode uses
+no fade. Fields remain focusable, and native links and requests start immediately.
+
+Lite mode keeps the progress fill and completion smooth with 100 ms compositor
+transitions, short button and field feedback, static decorative photos, and no
+backdrop blur. Visual completion timers do not retain a request or pending button.
+The browser regressions verify duplicate initialization, clipped loading feedback,
+native transition frames, fallback Login focus, history, and throttled navigation.
+Hardware hints remain optional; these tests do not establish a universal frame
+rate on physical lower-end devices.
+
 Reviewed base: `c4048e1923aac4452526f7d9b45f7eca5192df8c`.
 
 ## 1. Before and after

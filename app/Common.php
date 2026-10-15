@@ -1264,6 +1264,18 @@ if (! function_exists('app_contact_email')) {
     }
 }
 
+if (! function_exists('app_contact_recipient')) {
+    function app_contact_recipient(): ?string
+    {
+        $config = config('Email');
+        foreach ([$config->recipients, app_contact_email(), $config->fromEmail ?: $config->SMTPUser] as $candidate) {
+            $candidate = trim($candidate);
+            if (filter_var($candidate, FILTER_VALIDATE_EMAIL)) return $candidate;
+        }
+        return null;
+    }
+}
+
 if (! function_exists('app_theme_color_helper')) {
     /**
      * Internal helper to compute derived color tokens (dark, soft, contrast, alpha).

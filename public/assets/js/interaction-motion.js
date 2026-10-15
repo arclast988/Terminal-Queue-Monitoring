@@ -113,17 +113,19 @@
             window.sessionStorage.setItem('tq-last-document-path', path);
         }
     } catch (error) { /* Optional presentation state only. */ }
-    // Avoid another entry fade on browsers without native page snapshots too.
-    // Set this in the head, before the destination content can be painted.
+    // Internal navigation gets one reveal. Browsers without a usable snapshot
+    // use a short arrival fade, set before content can be painted.
     try {
         var navigation = window.performance && /** @type {PerformanceNavigationTiming|undefined} */ (window.performance.getEntriesByType('navigation')[0]);
         // Some engines publish the modern entry only after load. The legacy
         // navigation type is already available while parsing the head.
         var legacyType = window.performance && window.performance.navigation && window.performance.navigation.type;
         if ((navigation && (navigation.type === 'reload' || navigation.type === 'back_forward'))
-            || legacyType === 1 || legacyType === 2
-            || (document.referrer && new URL(document.referrer).origin === window.location.origin)) {
+            || legacyType === 1 || legacyType === 2) {
             root.setAttribute('data-tq-navigation-reveal', '');
+        } else if (document.referrer && new URL(document.referrer).origin === window.location.origin) {
+            root.setAttribute('data-tq-navigation-reveal', '');
+            root.setAttribute('data-tq-navigation-fallback', '');
         }
     } catch (error) { /* Older browsers may omit navigation timing/referrers. */ }
     // Native page navigation keeps the old page visible while the response loads.
@@ -143,6 +145,7 @@
     window.addEventListener('pagereveal', function (event) {
         if (!event.viewTransition) return;
         observeTransition(event.viewTransition);
+        root.removeAttribute('data-tq-navigation-fallback');
         // Retain for this document so entry animations do not restart after the fade.
         root.setAttribute('data-tq-navigation-reveal', '');
     });

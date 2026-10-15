@@ -331,6 +331,48 @@ test('vehicle register shows every column without horizontal scrolling on deskto
   }
 });
 
+test('vehicle filters scroll in one row on smaller devices and every filter stays usable', {timeout:60000}, async t => {
+  for (const width of [320,375,768,844]) {
+    const {page,context,errors}=await open(t,'admin-vehicles',width,900,'state=register-order');
+    const strip=page.locator('.vehicle-filter-strip');
+    await strip.scrollIntoViewIfNeeded();
+    await page.evaluate(()=>document.fonts.ready);
+    const layout=await strip.evaluate(el=>({
+      wrap:getComputedStyle(el).flexWrap,overflow:getComputedStyle(el).overflowX,
+      tops:Array.from(el.querySelectorAll('.vf-btn')).map(btn=>btn.getBoundingClientRect().top),
+      width:el.clientWidth,total:el.scrollWidth,pageWidth:document.documentElement.scrollWidth,viewport:innerWidth
+    }));
+    assert.equal(layout.wrap,'nowrap');assert.equal(layout.overflow,'auto');
+    assert.ok(Math.max(...layout.tops)-Math.min(...layout.tops)<=1,JSON.stringify({width,layout}));
+    assert.ok(layout.pageWidth<=layout.viewport+1,JSON.stringify({width,layout}));
+    if(width<=375) assert.ok(layout.total>layout.width,'mobile filters should scroll within their own strip');
+    await screenshot(page,'vehicle-scroll-filters-'+width,false);
+    await page.locator('#filter-btn-archived').click();
+    assert.match(await page.locator('#filter-label').innerText(),/archived/i);
+    assert.equal(await page.locator('tr[data-vehicle-id="205"]').isVisible(),true);
+    assert.match(await page.locator('#filter-btn-archived').getAttribute('class'),/\bactive\b/);
+    await page.locator('#filter-btn-all').click();
+    assert.match(await page.locator('#filter-label').innerText(),/in-service/);
+    assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('pages load their body fonts without unused font preload warnings', {timeout:60000}, async t=>{
+  for (const name of ['login','guest','admin-vehicles','admin-users','staff-queue']) {
+  const {page,context,errors}=await open(t,name,375,850);
+  const warnings=[];
+  page.on('console',message=>{if(message.text().includes('preloaded')&&message.text().includes('/fonts/')) warnings.push(message.text());});
+  const preloads=page.locator('link[rel="preload"][as="font"]');
+  assert.equal(await preloads.count(),name==='login'?0:1);
+  if (name!=='login') assert.match(await preloads.getAttribute('href'),/outfit-latin-6c18d579fd87\.woff2$/);
+  await page.evaluate(()=>document.fonts.ready);
+  assert.match(await page.locator('body').evaluate(el=>getComputedStyle(el).fontFamily),name==='login'?/Inter/:/Outfit/);
+  await page.waitForTimeout(4000);
+  assert.deepEqual(warnings,[],name);assert.deepEqual(errors,[],name);
+  await context.close();
+  }
+});
+
 test('registered route groups retain daily queue positions through search, filters and bulk selection', { timeout: 90000 }, async t => {
   for (const [width, height] of [[320,900], [375,900], [768,1024], [1280,1000]]) {
     const { page, context, errors } = await open(t, 'admin-vehicles', width, height, 'state=register-order', 'full', width <= 375);
@@ -357,7 +399,7 @@ test('registered route groups retain daily queue positions through search, filte
     const searchBox = await search.boundingBox(), routeBox = await routeInput.boundingBox();
     assert.ok(Math.abs(searchBox.height - routeBox.height) <= 1, JSON.stringify({width,searchBox,routeBox}));
     if (width >= 576) assert.ok(Math.abs(searchBox.y - routeBox.y) <= 1, JSON.stringify({width,searchBox,routeBox}));
-    checkBounds(await bounds(page, ['.vehicle-register-filter-row','#vehicle-search','#vehicle-route-filter_autocomplete_search','.vehicle-filter-strip .vf-btn']), 'register filters ' + width);
+    checkBounds(await bounds(page, ['.vehicle-register-filter-row','#vehicle-search','#vehicle-route-filter_autocomplete_search','.vehicle-filter-strip']), 'register filters ' + width);
     await routeInput.fill('orm');
     await page.waitForFunction(() => document.getElementById('vehicle-route-filter').parentElement.querySelectorAll('.autocomplete-item').length === 1);
     assert.equal(await routeWrapper.locator('.autocomplete-item').count(), 1);
@@ -635,6 +677,7 @@ test('authentication fields fit small and landscape screens while retaining thei
         const style = getComputedStyle(el);
         return Math.max(...style.animationDuration.split(',').map((duration, i) => parseFloat(duration) + parseFloat(style.animationDelay.split(',')[i] || style.animationDelay.split(',')[0]))) * 1000;
       });
+      assert.equal(await page.locator('.scenery, .scenery .skyline, .scenery .routes').count(), 0, 'old decoration is removed from authentication pages');
       assert.ok(entrance <= 300, `${name} entrance ${entrance}ms`);
       checkBounds(await bounds(page, ['.brand', '.brand-name', '.brand-title', '.brand-sub', '.login-card', '.auth > .card', 'form input:not([type="hidden"]):not([type="checkbox"])', 'form button[type="submit"]']), `${name} ${width}x${height}`);
       if (width === 320 || width === 1440) {

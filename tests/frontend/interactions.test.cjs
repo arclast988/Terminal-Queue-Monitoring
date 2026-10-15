@@ -124,6 +124,38 @@ test('reload and history timing suppress entrances before paint, including engin
   assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-reveal'), null);
 });
 
+test('internal navigation falls back once and native snapshots take over without timing or routing work', async () => {
+  const h = harness({cores:2});
+  h.document.referrer = 'https://terminal.test/guest';
+  h.window.performance = {getEntriesByType:() => [], navigation:{type:0}};
+  h.load('public/assets/js/interaction-motion.js');
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-fallback'),'');
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-reveal'),'');
+  h.window.emit('pagereveal',{});
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-fallback'),'');
+  const viewTransition = Object.fromEntries(['ready','finished','updateCallbackDone'].map(name => [name,Promise.resolve()]));
+  assert.equal(h.window.emit('pagereveal',{viewTransition}).defaultPrevented,false);
+  await flush();
+  assert.equal(h.document.documentElement.getAttribute('data-tq-navigation-fallback'),null);
+  assert.equal(h.timers.size,0);
+});
+
+test('lite completion remains smooth while the response and pending ownership finish immediately', async () => {
+  const h = loaded({cores:2}); h.window.GlobalLoader.setDelay(0);
+  const button = h.document.body.appendChild(new h.Element('button'));
+  h.window.GlobalLoader.showButtonSpinner(button,'Saving',true);
+  const request = h.window.fetch('/save');
+  const response = {ok:true}; h.requests[0].resolve(response);
+  assert.equal(await request,response);
+  h.window.GlobalLoader.hideButtonSpinner(button);
+  assert.equal(button.getAttribute('aria-busy'),null);
+  assert.equal(h.window.GlobalLoader.isRunning(),false);
+  assert.equal(h.window.GlobalLoader.isVisible(),true);
+  h.tick(200);
+  assert.equal(h.window.GlobalLoader.isVisible(),false);
+  assert.equal(h.timers.size,0);
+});
+
 test('navigation feedback starts immediately without deferring or intercepting the link', async () => {
   const h = loaded({ cores: 2, mobile: true });
   const link = h.document.body.appendChild(new h.Element('a'));
