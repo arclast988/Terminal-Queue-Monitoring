@@ -31,7 +31,7 @@ The PTTM System implements a comprehensive **Three-Pillar Defensive Architecture
    - [The "No-Change Guard" Architecture (`no-change-guard.js`)](#31-the-no-change-guard-architecture-no-change-guardjs)
    - [Plate Number Collision Detection (`check-plate`)](#32-plate-number-collision-detection-check-plate)
    - [Route Distance & Fare Matrix Validation](#33-route-distance--fare-matrix-validation)
-   - [Overlapping Departure Rule Time Conflicts](#34-overlapping-departure-rule-time-conflicts)
+   - [Duplicate Departure Rule Day and Round Conflicts](#34-duplicate-departure-rule-day-and-round-conflicts)
 4. [Commuter & Public Facing Errors](#4-commuter--public-facing-errors)
    - [Zero-Result Search Query Guidance](#41-zero-result-search-query-guidance)
    - [Invalid Feedback / Issue Report Form Inputs](#42-invalid-feedback--issue-report-form-inputs)
@@ -79,7 +79,7 @@ The PTTM System implements a comprehensive **Three-Pillar Defensive Architecture
   - **Recognition**: An inline warning alert prevents queue insertion.
   - **Diagnosis**: Instead of a generic error like *"Action Forbidden"* or code `403`, the system states:  
     `"Vehicle ABC-1234 departed recently. Please wait about 14 more minute(s) before adding it back."`
-  - **Recovery**: The dispatcher can inform the driver of the exact remaining wait time. The vehicle's entry in the Available Vehicles pool automatically re-enables as soon as the 30-minute timer expires.
+  - **Recovery**: The dispatcher can inform the driver of the remaining wait time. The vehicle becomes available when the configured cooldown expires (30 minutes by default). The cooldown is configurable by the superadministrator, and yesterday's departures no longer impose a cooldown after the service day changes.
 
 #### 2.3 Passenger Over-Capacity Clamping & Alerts
 - **The Problem**: A dispatcher clicks the passenger "+" button too rapidly or mistypes a count of `24` on a 14-seater UV Express van.
@@ -127,12 +127,12 @@ The PTTM System implements a comprehensive **Three-Pillar Defensive Architecture
     `"Base fare must be at least ₱0.00."`
   - **Recovery**: The form retains all previously entered valid fields so the user only corrects the invalid numbers without starting over.
 
-#### 3.4 Overlapping Departure Rule Time Conflicts
-- **The Problem**: Creating two conflicting headway rules for the same terminal, route, and overlapping hours (e.g., Rule A: 08:00–10:00, Rule B: 09:00–11:00).
+#### 3.4 Duplicate Departure Rule Day and Round Conflicts
+- **The Problem**: Creating another rule for the same terminal or destination scope, selected day, and round. Changing only the time window does not make a duplicate day/round valid.
 - **PTTM Heuristic #9 Implementation**:
-  - **Recognition & Diagnosis**: The system validates interval boundaries and flags:  
-    `"A departure rule already covers 09:00:00 to 10:00:00 for this route."`
-  - **Recovery**: Highlights the conflicting rule with a direct link to edit its end time.
+  - **Recognition & Diagnosis**: The system identifies the conflicting round and days, and asks the user to edit that rule or choose a new round. Start and end times are also validated; the end must be later than the start.
+  - **Recovery**: Edit the existing rule, select nonconflicting days, or choose another round. Dispatchers can create, edit, and delete rules for their assigned destinations and terminal-wide defaults where they dispatch; ask an administrator to correct missing assignments.
+  - **No Active Rule**: A rule must match the current weekday, time window, and destination before selecting that round in Queue Management. The legacy fallback interval is not a configured selectable round.
 
 ---
 
@@ -169,7 +169,7 @@ The PTTM System implements a comprehensive **Three-Pillar Defensive Architecture
     When the connection is restored, the pill seamlessly switches to `Live Sync Connected` in green, immediately fetching the latest queue snapshot.
 
 #### 5.2 Graceful HTTP Polling Fallback
-- If the WebSocket server is offline or blocked by a commuter's strict enterprise proxy, the system **automatically enables background HTTP polling** (`/api/queue-status`) every 20 seconds. Commuters continue to receive updated queue data without experiencing a broken interface.
+- If the WebSocket server is unavailable but the device still has internet access, background HTTP refreshes (`/api/queue-status`) continue checking for changes. Refresh timing varies by page and connection state; connected clients also retain a low-frequency safety check. A fully offline device must reconnect before it can receive fresh information.
 
 #### 5.3 Session & CSRF Token Expiration
 - **The Problem**: An administrator leaves a form open over lunch, returns, and submits after the CSRF token has expired.
@@ -188,6 +188,6 @@ When system-level errors occur, administrators can consult this quick diagnosis 
 | :--- | :--- | :--- |
 | **"Queue updates not appearing in real-time"** | WebSocket daemon process has terminated. | 1. Check `writable/logs/ws.log`.<br>2. Restart daemon: `php spark ws:serve` or `bash start_system.sh`.<br>3. Verify browser network tab shows active WS connection to `/ws`. |
 | **"Database connection failed"** | PostgreSQL service stopped or invalid credentials in `.env`. | 1. Inspect `writable/logs/log-YYYY-MM-DD.log`.<br>2. Run `systemctl status postgresql` (Linux) or check Services (Windows).<br>3. Verify port `5432`, user `jeepney_user`, and database `jeepneynvans`. |
-| **"Vehicle cannot be added to queue"** | Vehicle status is `maintenance` or `inactive`, or 30-min cooldown is active. | 1. Check vehicle status in **Vehicle Register** (`/admin/vehicles`).<br>2. Review the cooldown banner for remaining minutes. |
+| **"Vehicle cannot be added to queue"** | Vehicle is not active, is already queued, is outside assigned routes, the terminal is full, or the configured cooldown is active. | Check Vehicle Register and route assignments, refresh the queue, and review the server's capacity or cooldown explanation. |
 | **"Dispatcher cannot view assigned route"** | Route mapping missing from dispatcher user account. | 1. Navigate to `/admin/users`.<br>2. Edit the dispatcher account and check the missing route checkbox. |
 | **"Email notifications / password reset fails"** | SMTP authentication failure in `app/Config/Email.php` or `.env`. | 1. Verify `email.SMTPUser` and Google App Password (`email.SMTPPass`).<br>2. Check `writable/logs/` for SMTP handshake timeouts. |

@@ -7,7 +7,7 @@ $guestManagedContent = managed_content_overrides($guestManagedKeys);
 $termsUpdatedRaw = get_system_setting('content_terms_updated_at');
 $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
     ? date('F Y', strtotime($termsUpdatedRaw))
-    : 'September 2026';
+    : 'October 2026';
 ?>
 <!-- ===== Footer ===== -->
 <footer>
@@ -97,7 +97,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                     </div>
                     <div class="step-box">
                         <span class="status-badge status-full"><i class="fas fa-user-check"></i> FULL</span><br>
-                        <strong>Capacity Reached:</strong> All passenger seats are taken. The vehicle will dispatch immediately. Passengers should queue for the next vehicle in line.
+                        <strong>Capacity Reached:</strong> All passenger seats are taken. The dispatcher may depart the vehicle early and records its departure when it leaves. Passengers should check the next vehicle in line.
                     </div>
                     <div class="step-box">
                         <span class="status-badge status-departed"><i class="fas fa-check-circle"></i> Departed</span><br>
@@ -132,12 +132,12 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Estimated Departure Times (ETD) are governed by official municipal headway rules:</p>
+                    <p>Estimated Departure Times (ETD) use the configured rules for the destination, weekday, and active round:</p>
                     <div class="step-box">
-                        <strong>Headway Wait Timers:</strong> During peak commute hours (morning and late afternoon), departures are spaced closely (typically every 15–20 minutes). During off-peak periods, wait intervals are typically 30–45 minutes.
+                        <strong>Departure Rules:</strong> Administrators, superadministrators, and dispatchers configure departure intervals. Dispatchers manage their assigned destinations and terminal-wide defaults at terminals where they dispatch. The selected round is shared by vehicle types serving the same destination at the same terminal.
                     </div>
                     <div class="step-box">
-                        <strong>Early Departure on Full Capacity:</strong> Vehicles do not need to wait for the timer to reach zero. Once 100% of seats are filled, the dispatcher sends the vehicle immediately for passenger convenience.
+                        <strong>Boarding and Departure:</strong> Automatic boarding starts the next vehicle at its assigned five-minute boundary when the destination has no vehicle still boarding. Dispatchers may start boarding immediately or depart a full vehicle early. Departure targets use five-minute clock marks; a full count or expired timer does not automatically record a departure.
                     </div>
                     <p>Check complete daily timetables by visiting the <a href="<?= base_url('schedules') ?>" style="color:#0284c7; font-weight:700; text-decoration:none;">Schedules page</a>.</p>
                 </div>
@@ -170,12 +170,12 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>The system utilizes sub-second WebSocket synchronization to push queue changes directly to your device:</p>
+                    <p>The live connection and background refreshes keep the queue up to date while your device is online:</p>
                     <div class="step-box">
-                        <strong>Zero Manual Refreshing Needed:</strong> When a dispatcher updates passenger counts or boards a new vehicle, your screen updates instantly without reloading the page.
+                        <strong>Automatic Updates:</strong> Dispatcher changes normally appear without a manual page refresh. Delivery time depends on your connection.
                     </div>
                     <div class="step-box">
-                        <strong>Automatic Network Recovery:</strong> If your mobile signal fluctuates or drops, the system seamlessly transitions to background HTTP polling every 20 seconds and automatically reconnects once your connection stabilizes.
+                        <strong>Automatic Network Recovery:</strong> If the live connection is unavailable but internet access remains, background refreshes continue and the live connection retries automatically. When fully offline, reconnect before relying on displayed times.
                     </div>
                 </div>
             </div>
@@ -192,7 +192,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
                         <strong>Queue Appears Inactive:</strong> If departure times seem unchanged, verify your internet connection. You can perform a quick browser pull-to-refresh to fetch fresh queue states.
                     </div>
                     <div class="step-box">
-                        <strong>Reporting Overcharging or Lost Belongings:</strong> If an operator charges above the official LTFRB fare or if you misplaced items at the terminal, click <a href="javascript:void(0)" onclick="closeSupportModal('helpModal'); openSupportModal('reportModal');" style="color:#ef4444; font-weight:700;">Report Issue</a> or <a href="javascript:void(0)" onclick="closeSupportModal('helpModal'); openSupportModal('contactModal');" style="color:#16a34a; font-weight:700;">Contact Us</a>. Submissions are delivered directly to municipal terminal administrators.
+                        <strong>Reporting Overcharging or Lost Belongings:</strong> Click <a href="javascript:void(0)" onclick="closeSupportModal('helpModal'); openSupportModal('reportModal');" style="color:#ef4444; font-weight:700;">Report Issue</a> or <a href="javascript:void(0)" onclick="closeSupportModal('helpModal'); openSupportModal('contactModal');" style="color:#16a34a; font-weight:700;">Contact Us</a> to prepare a draft in your email app or Gmail. Include the route, plate number, date, and time, review the draft, then select Send in your email service.
                     </div>
                 </div>
             </div>
@@ -258,7 +258,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         <h3><i class="fas fa-question-circle" style="color:#eab308;"></i> Frequently Asked Questions</h3>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What are the terminal operating hours? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The <?= esc(app_name()) ?> Terminal operates daily from <strong>4:00 AM to 8:00 PM</strong>. Earliest trips dispatch starting at 4:30 AM, with frequent departures throughout peak commute hours. Check the Live Monitor or Schedules page for real-time departure status.</div>
+            <div class="faq-answer">Check the Live Monitor and Schedules page for current trips and configured departure rules. Trip availability depends on the destination, selected weekdays, and active round. Confirm the terminal's opening hours and first or last trips with terminal staff.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Can I purchase tickets or book seats online? <i class="fas fa-chevron-down"></i></button>
@@ -266,11 +266,11 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">What vehicle types operate from this terminal? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">The terminal services <strong>PUJs (Jeepneys)</strong>, <strong>UV Express Vans</strong>, and <strong>Modern Minibuses</strong> across certified regional routes including Ormoc City, Tacloban City, Isabel, Naval, and Kananga. You can filter the queue and fare matrices by vehicle type.</div>
+            <div class="faq-answer">Use the vehicle-type and destination filters on the Live Monitor, Schedules, and Fares pages to see the types and routes currently configured by terminal staff. The available options depend on active registrations and routes.</div>
         </div>
         <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">How accurate are the estimated departure times (ETD)? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Estimated Departure Times are automatically calculated based on official departure headway rules set by terminal administration. <em>Note:</em> If a vehicle reaches 100% seating capacity earlier than scheduled, it will dispatch immediately for passenger convenience.</div>
+            <button class="faq-question" onclick="toggleFaq(this)">Who configures departure rules, and how accurate are departure times? <i class="fas fa-chevron-down"></i></button>
+            <div class="faq-answer">Administrators and superadministrators configure departure rules. <strong>Dispatchers can also create, edit, and delete rules</strong> for their assigned destinations and terminal-wide defaults at terminals where they dispatch. Rules include weekdays, rounds, time windows, and intervals. Estimated departure times use the active round and five-minute clock marks. A dispatcher may depart a full vehicle early; departure is recorded when staff select Depart, rather than automatically when seats fill or the timer expires.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">Who is eligible for the 20% statutory fare discount? <i class="fas fa-chevron-down"></i></button>
@@ -278,11 +278,11 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How often does the live queue update? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Queue updates occur in sub-seconds via real-time WebSocket communication. When a vehicle boards or departs, your screen updates instantly without requiring a page refresh. If your internet connection drops, the system falls back to automatic background HTTP polling.</div>
+            <div class="faq-answer">The live connection normally updates queue changes without a manual page refresh. Background refreshes also check for changes if the live connection is unavailable. Your device still needs internet access; after reconnecting, allow the monitor to refresh before relying on displayed times.</div>
         </div>
         <div class="faq-item">
             <button class="faq-question" onclick="toggleFaq(this)">How do I report overcharging, lost items, or file complaints? <i class="fas fa-chevron-down"></i></button>
-            <div class="faq-answer">Use the "Report Issue" or "Contact Us" forms in this support section. Please include the route, vehicle plate number, date, and time. Messages are routed directly to terminal management at <a href="mailto:<?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?>" style="color:#0284c7; font-weight:600;"><?= esc(config('Email')->recipients ?: 'arclast988@gmail.com') ?></a>.</div>
+            <div class="faq-answer">Use the "Report Issue" or "Contact Us" forms to prepare a draft addressed to the configured terminal contact in your email app or Gmail. Include the route, vehicle plate number, date, and time. Review the draft and select <strong>Send</strong> in your email service; preparing the draft alone does not send a report. If the contact email is unavailable, ask at the terminal office.</div>
         </div>
     </div>
 </div>
@@ -317,7 +317,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
             <p><?= esc(app_name()) ?> Terminal and its administrators shall not be liable for any direct, indirect, incidental, or consequential loss resulting from reliance on displayed departure schedules, missed connections, or unforeseen operational changes.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">7. Privacy & Support Communications</h4>
-            <p>This system does not harvest personal user tracking data from guest commuters. Inquiries and operational issue reports submitted through the Support section are transmitted securely via email to terminal management solely for verification and resolution purposes, and are never shared with unauthorized third parties.</p>
+            <p>The Support section prepares contact and issue-report drafts in your email app or Gmail. Review the recipient and message before selecting Send in your email service. Draft preparation alone does not deliver a message to terminal management.</p>
 
             <h4 style="color: #1f2937; margin: 15px 0 5px;">8. Governing Law & Jurisdiction</h4>
             <p>These Terms shall be governed and interpreted under the laws of the Republic of the Philippines and applicable transit regulations and guidelines.</p>

@@ -39,7 +39,7 @@ The architecture comprises:
 | **Terminal & Bay Configuration** | Full Access | Full Access | View Only | View Only |
 | **Vehicle Registration & Approval** | Full Access | Full Access | View Only | View Only |
 | **Route & Fare Matrix Management** | Full Access | Full Access | View Only | View Fares Only |
-| **Departure Rules Configuration** | Full Access | Full Access | View Only | Live Countdown |
+| **Departure Rules Configuration** | Full Access | Full Access | Create, Edit, Delete within assigned destinations and terminals | View Rules & Live Countdown |
 | **Terminal Queue Operations** | Override / View | Override / View | Full Management | Live Monitor |
 | **Announcements & Advisories** | Create, Edit, Delete | Create, Edit, Delete | Create & Edit | View Only |
 | **Audit Logs & Security Trails** | Full Access + Print | Full Access + Print | No Access | No Access |
@@ -150,23 +150,27 @@ Under LTFRB mandates, the system supports percentage and fixed discounts:
 ### 8. Departure Rules & Headway Scheduling
 **URL**: `/admin/departure-rules`
 
-Departure rules dictate target vehicle departure intervals (headways) based on time of day, terminal, and route.
+Departure rules set target vehicle departure intervals by terminal, destination, weekday, and round. Administrators and superadministrators manage all rules. Dispatchers can create, edit, and delete rules for assigned destinations and terminal-wide defaults at terminals where they dispatch, using `/staff/departure-rules`.
 
 #### 8.1 How Departure Rules Work
-When a vehicle enters the queue or transitions to **Boarding**, the system matches the current local time against active departure rules for that route and calculates the **Estimated Departure Time (ETD)**:
-- **24-Hour Continuous Coverage**: Rules cover the full day seamlessly, including the midnight interval (`00:00:00` to `04:00:00`).
-- **Peak Hours Rule** (e.g., 06:00 AM – 09:00 AM & 04:30 PM – 07:00 PM): Shorter wait time (e.g., 15–20 minutes) due to high passenger volume.
-- **Off-Peak Rule** (e.g., 09:01 AM – 04:29 PM): Standard headway interval (e.g., 30–45 minutes).
-- **Early Departure on Full Capacity**: Once all passenger seats reach 100% capacity, the vehicle dispatches immediately without waiting for the timer to reach zero.
+The scheduler uses the selected round and applicable weekdays to calculate the **Estimated Departure Time (ETD)**:
+- **Destination and Day Priority**: Destination rules take priority over terminal-wide defaults; specific-day rules take priority over every-day defaults for the same round and destination.
+- **Shared Rounds**: All vehicle types serving the same destination at the same terminal share the active round. Dispatchers switch configured rounds using **Queue Management > Round**. A round is a rule period, not a vehicle's trip count.
+- **Boarding and Departure Times**: Automatic boarding uses five-minute clock boundaries. **Start boarding now** starts the next vehicle immediately, using the configured interval and rounding the departure target up to a five-minute clock mark. A late boarding vehicle stays first until its departure is recorded.
+- **Round Changes**: Switching rounds changes waiting and boarding trips while preserving elapsed boarding time.
+- **Manual Departure**: A full vehicle may leave early, but the dispatcher must record **Depart**. A full count or expired timer does not automatically record a departure.
+- **New Service Day**: At midnight in Asia/Manila, rounds return to Round 1, unfinished trips are canceled, and saved daily vehicle starting order applies again.
 
 #### 8.2 Adding a Departure Rule
 1. Navigate to **Management** $\rightarrow$ **Departure Rules**.
 2. Click **+ Add Departure Rule**.
-3. Select the **Route** and target **Terminal** (or leave terminal blank for terminal-wide application).
-4. Set the **Start Time** and **End Time** (e.g., `00:00:00` to `04:00:00` or `06:00:00` to `09:00:00`).
-5. Enter **Wait Minutes** (e.g., `20`).
-6. Enter an intuitive **Rule Label** (e.g., `Morning Peak - Ormoc Express`).
-7. Click **Save Rule**.
+3. Select the required **Terminal** and optional **Destination**. Leave the destination blank for a terminal-wide default; a destination rule uses that destination's terminal.
+4. Check the operating weekdays or **Every day**, and explicitly choose a **Round** from 1 to 999.
+5. Set the **Start Time** and **End Time**. Admin forms use 24-hour inputs; dispatcher forms use AM/PM pickers. The end must be later than the start; split a period crossing midnight into separate rules.
+6. Set the interval using the duration input on admin forms or minutes on dispatcher forms, and optionally enter a **Rule Label**.
+7. Click **Save Rule**. A duplicate round in the same destination or terminal scope on overlapping selected days must be edited or assigned another round.
+
+See [Dispatcher days, rounds, and boarding windows](DISPATCH_ROUNDS.md) for the detailed scheduling behavior.
 
 ---
 
@@ -217,7 +221,7 @@ php spark ws:serve
 # or via dedicated script
 bash start_system.sh
 ```
-If the WebSocket process stops, the web application automatically switches to 20-second HTTP polling without interrupting user sessions.
+If the WebSocket process stops while internet access remains available, background HTTP refreshes continue and the live connection retries automatically. Refresh timing varies by page and connection state. A device that is fully offline cannot receive fresh queue information.
 
 #### 11.2 Database Migrations & Seeds
 ```bash

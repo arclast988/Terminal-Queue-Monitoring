@@ -8,20 +8,24 @@
 2. [Shift Login & Terminal Setup](#2-shift-login--terminal-setup)
 3. [Understanding the Queue Interface](#3-understanding-the-queue-interface)
 4. [Checking Vehicles into the Queue](#4-checking-vehicles-into-the-queue)
-5. [The 30-Minute Departure Cooldown Rule](#5-the-30-minute-departure-cooldown-rule)
+5. [The Departure Cooldown Rule](#5-the-departure-cooldown-rule)
 6. [Managing Vehicle Status: Waiting to Boarding](#6-managing-vehicle-status-waiting-to-boarding)
 7. [Live Passenger Loading Counter](#7-live-passenger-loading-counter)
 8. [Updating Assigned Drivers on Duty](#8-updating-assigned-drivers-on-duty)
 9. [Dispatching a Vehicle (Departure)](#9-dispatching-a-vehicle-departure)
 10. [Cancelling a Trip & 1-Click Undo Cancel](#10-cancelling-a-trip--1-click-undo-cancel)
-11. [Monitoring Departure Rules & Headway Timers](#11-monitoring-departure-rules--headway-timers)
+11. [Configuring Departure Rules, Days & Rounds](#11-configuring-departure-rules-days--rounds)
 12. [Publishing Terminal Announcements](#12-publishing-terminal-announcements)
+13. [Account Security & Self-Service Password Change](#13-account-security--self-service-password-change)
+14. [Quick Help Guide & Support](#14-quick-help-guide--support)
+15. [Frequently Asked Questions](#15-frequently-asked-questions)
 
 ---
 
 ### 1. Introduction for Dispatchers
 As a **Terminal Dispatcher / Staff Member**, you play a central role in keeping the Palompon Transit Terminal running smoothly. Your daily responsibilities include:
-- Registering arriving vehicles into their assigned route queues in First-In, First-Out (FIFO) order.
+- Adding arriving vehicles to their assigned destination queues and managing the waiting order.
+- Configuring departure rules for assigned destinations and terminal-wide defaults at terminals where you dispatch.
 - Moving vehicles into the active boarding bay when it is their turn.
 - Tracking passenger boarding counts in real-time.
 - Dispatching vehicles once full or when scheduled departure timers expire.
@@ -45,7 +49,8 @@ All actions you take on the dispatcher portal reflect **instantly** on the publi
 
 The Queue Management screen is divided into two primary zones:
 1. **Ready Vehicles Panel (Available Pool)**:
-   - Lists all certified, active vehicles assigned to your authorized routes that are currently physically present at the terminal and ready to be queued.
+   - Lists active registered vehicles assigned to your authorized routes that are not already queued and have completed any applicable cooldown. Confirm that a vehicle is physically present before adding it.
+   - Uses the saved **Daily starting order**, then today's departure rotation, for each destination and terminal. Different vehicle types serving that destination share the order.
    - Shows plate number, vehicle type (PUJ, UV Express, Minibus), operator name, default driver, and last departure status.
 2. **Active Queue Board**:
    - Displays vehicles currently queued for departure, sorted by route and departure priority.
@@ -64,7 +69,7 @@ The Queue Management screen is divided into two primary zones:
    - Verifies the vehicle is not already active in the queue.
    - Verifies that the vehicle has satisfied the post-departure cooldown period (default 30 minutes, or custom interval configured by Superadmin).
    - Matches the current time to the active **Departure Rule** for that route to assign an accurate **Estimated Departure Time (ETD)**.
-   - Appends the vehicle to the queue in strict chronological FIFO order.
+   - Appends selected vehicles to the destination's waiting queue in selection order. Use **Manage Queue** to adjust waiting positions; a boarding vehicle stays first.
 6. A success alert will display: `"[Plate Number] added to queue."`
 
 ---
@@ -76,6 +81,7 @@ To prevent accidental double-queuing and ensure fair rotation among transport op
 - If an operator arrives early and you try to add them before the cooldown has elapsed, the system prevents the action and displays a helpful notice:
   > *"Vehicle [Plate] departed recently. Please wait about X more minute(s) before adding it back."*
 - You do not need to calculate the time manually; the system automatically tracks the elapsed minutes and unlocks the vehicle as soon as the cooldown expires. (If the Superadmin has disabled the cooldown by setting it to 0 minutes, vehicles can be re-queued immediately).
+- At midnight in **Asia/Manila**, yesterday's departure badges and cooldown no longer apply. Unfinished waiting and boarding trips are canceled, daily rounds return to Round 1, and the saved vehicle starting order applies again. Add a new trip for the new day instead of restoring yesterday's trip.
 
 ---
 
@@ -90,10 +96,10 @@ $$\text{Waiting} \longrightarrow \text{Boarding} \longrightarrow \text{Departed}
 - **Departed (Gray / Completed)**: Vehicle has left the terminal.
 
 #### 6.2 Transitioning to Boarding:
-1. When the current boarding vehicle leaves, locate the **#1 Waiting** vehicle for that destination route.
-2. Click the **Start Boarding** button.
-3. The status shifts to `Boarding`.
-4. **Key Rule**: The departure headway countdown recalculates from the exact moment boarding begins, giving passengers and operators a fresh, accurate countdown window.
+1. When the current boarding vehicle leaves, the next vehicle automatically starts boarding at its assigned five-minute clock boundary (for example, 6:45 AM after a 6:43 AM departure).
+2. During busy periods, use **Start boarding now** to start the next vehicle immediately. It cannot skip a vehicle ahead or overlap an existing boarding vehicle.
+3. The active round's interval determines the departure target, rounded up to a five-minute clock mark. Repeated boarding clicks do not restart the timer.
+4. A full vehicle or expired timer still needs the dispatcher to record **Depart**; neither automatically records a departure.
 
 ---
 
@@ -153,17 +159,27 @@ If you clicked **Cancel** by mistake:
 1. Do not re-register the vehicle from scratch!
 2. A temporary recovery alert will display on your screen with an **Undo Cancel** button.
 3. Click **Undo Cancel**.
-4. The system automatically restores the vehicle to its exact prior queue position, restores its arrival timestamp, and re-broadcasts it to the public monitor without disrupting other vehicles.
+4. The system restores an eligible canceled trip from today to `Waiting`, preserves its arrival timestamp, reinserts it into the queue, and recalculates departure targets. The vehicle and route must still be active, the vehicle must not already be queued, and terminal capacity must be available. Yesterday's trips cannot be restored into today.
 
 ---
 
-### 11. Monitoring Departure Rules & Headway Timers
+### 11. Configuring Departure Rules, Days & Rounds
 **URL**: `/staff/departure-rules`
 
-Dispatchers can view the active departure interval rules configured by the terminal administration:
-- See peak hours vs off-peak hours for each destination.
-- View standard waiting intervals (e.g., 20 mins for Ormoc, 30 mins for Tacloban).
-- Use these schedules as your guide for dispatch timing.
+Dispatchers can **create, edit, and delete** rules for their assigned destinations and terminal-wide defaults at terminals where they dispatch. Rules outside those assignments cannot be managed.
+
+1. Open **Departure Rules** and choose **Add Rule**, or edit an existing rule.
+2. Choose the terminal and destination. Leave **Destination** blank for a terminal-wide default; the terminal is required.
+3. Select the operating weekdays or **Every day**, and explicitly choose a **Round** from 1 to 999.
+4. Use the time picker to set the start and end times with **AM/PM**. The end must be later than the start; use separate rules for a period crossing midnight.
+5. Enter the interval in minutes, optionally add a label, and save.
+6. To remove a rule, use its **Delete** action and confirm. A duplicate round for the same destination or terminal scope on overlapping selected days must be edited or assigned another round.
+
+In **Queue Management**, open **Round** and select the destination's configured round. Rounds are shared by vehicle types serving the same destination at the same terminal; they are not a vehicle's trip count. A round with **No active rule** cannot be selected: its rule must match the current weekday, time window, and destination. Destination rules take priority over terminal defaults, and specific-day rules over every-day defaults for the same round and destination.
+
+Switching rounds updates waiting and boarding trips. Boarding time already elapsed is preserved. For example, switching from 20 to 40 minutes after 30 minutes of boarding leaves 10 minutes remaining, subject to the five-minute departure clock marks.
+
+See [Dispatcher days, rounds, and boarding windows](DISPATCH_ROUNDS.md) for detailed examples.
 
 ---
 
@@ -185,7 +201,7 @@ Dispatchers have permission to post live announcements:
 
 Dispatchers can update their login credentials without needing administrator intervention:
 1. Open your profile menu from the top bar and click **Change Password**.
-2. Click **Send Verification Code**. The system sends a 6-digit verification code to your registered email address (valid for 15 minutes).
+2. Click **Send Verification Code**. The system sends a 6-digit verification code to your registered email address (valid for 10 minutes).
 3. Enter your **Current Password**, **New Password**, and the **6-Digit Verification Code**.
 4. Click **Update Password**.
 5. *Security Protection*: Accounts lock automatically for 15 minutes after 5 consecutive incorrect login attempts to protect against brute-force attacks.
@@ -196,3 +212,21 @@ Dispatchers can update their login credentials without needing administrator int
 **URL**: `/staff/help`
 
 For operational assistance during your shift, access the interactive **Dispatcher Quick Help Guide** directly from the top navigation or sidebar. It provides step-by-step procedures, troubleshooting tips, and answers to common queue scenarios.
+
+### 15. Frequently Asked Questions
+
+**Can dispatchers configure departure rules?**
+
+Yes. Open `/staff/departure-rules` to create, edit, or delete rules for your assigned destinations and terminal-wide defaults at terminals where you dispatch. Choose weekdays, a round, a time window, and an interval in minutes.
+
+**How do I change the active round?**
+
+Open **Queue Management > Round** and choose a configured round for the destination. This updates that destination's waiting and boarding trips across vehicle types while preserving elapsed boarding time.
+
+**Why can I not save or select a round?**
+
+Check your route assignment, selected weekdays, required round, time window, and interval. A duplicate day/round in the same scope must be edited or given another round. **No active rule** means a rule must match that destination, the current weekday, and the current time before selecting the round.
+
+**Does FULL or an overdue timer automatically depart a vehicle?**
+
+No. Record **Depart** when the vehicle actually leaves. Automatic boarding advances only the next vehicle when its destination has no vehicle still boarding.

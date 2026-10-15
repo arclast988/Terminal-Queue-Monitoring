@@ -306,7 +306,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                         <strong>The Departure Cooldown:</strong> To guarantee fair rotation among operators, recently departed vehicles cannot be re-queued immediately until their cooldown interval expires (default is 30 minutes, or as customized by the Superadmin in System Settings). If an operator arrives early, the system displays: <em>"Vehicle departed recently. Please wait about X more minute(s) before adding it back."</em> The vehicle unlocks automatically once the cooldown period has elapsed.
                     </div>
                     <div class="step-box">
-                        <strong>Initial Status:</strong> Upon entry, the vehicle is placed in chronological FIFO order with the <span class="status-badge status-waiting">Waiting</span> status.
+                        <strong>Vehicle Order:</strong> Available vehicles follow the saved daily starting order and today's departure rotation. Selected vehicles enter the destination's waiting queue in selection order. Use <strong>Manage Queue</strong> to adjust waiting positions; the boarding vehicle stays first.
                     </div>
                 </div>
             </div>
@@ -322,8 +322,8 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                 <div class="accordion-body">
                     <p>When the vehicle advances into the active terminal boarding bay:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
-                        <li>Click the action button to transition the vehicle to <span class="status-badge status-boarding">Boarding</span>.</li>
-                        <li>The <strong>headway countdown timer</strong> starts automatically based on the active departure rule for that route.</li>
+                        <li>The next vehicle automatically enters <span class="status-badge status-boarding">Boarding</span> at its assigned five-minute clock boundary when no vehicle is still boarding for that destination. Use <strong>Start boarding now</strong> to start the next vehicle immediately during busy periods.</li>
+                        <li>The active round's interval sets the departure target, rounded up to a five-minute clock mark. Repeated boarding clicks do not restart the timer.</li>
                         <li>Update passenger counts using the <strong>+</strong> and <strong>-</strong> buttons (or enter the number directly).</li>
                     </ol>
                     <div class="step-box">
@@ -369,7 +369,9 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li><strong>Driver Change:</strong> If a relief driver takes the wheel, click the driver's name on the queue card, type the new driver's name, and click <strong>Save Driver</strong>. The change is saved and broadcasted to public monitors.</li>
                         <li><strong>Trip Cancellation:</strong> If a vehicle suffers a mechanical issue, click <strong>Cancel</strong> to set the trip to <span class="status-badge status-cancelled">Cancelled</span>.</li>
-                        <li><strong>1-Click Undo Cancel:</strong> If Cancel was clicked accidentally, an immediate <strong>Undo Cancel</strong> button appears on the notification banner and queue row. Clicking it restores the vehicle to the queue without loss of timestamp or line position.</li>
+                        <li><strong>1-Click Undo Cancel:</strong> Use <strong>Undo Cancel</strong> to restore an eligible canceled trip from today. The vehicle and route must still be active, the vehicle must not already be queued, and the terminal must have capacity.</li>
+                        <li><strong>Select trips to cancel:</strong> Open the checklist, filter by destination, select the affected trips, and confirm. Only selected trips are canceled.</li>
+                        <li><strong>New day:</strong> At midnight in Asia/Manila, unfinished trips are canceled, rounds return to Round 1, and the saved vehicle starting order applies again. Add a new trip for today instead of restoring yesterday's trip.</li>
                     </ol>
                 </div>
             </div>
@@ -398,13 +400,18 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleHelpAccordion(this)">
                     <h3 class="accordion-header-text">
-                        7. Timetables & Emergency Announcements
+                        7. Departure Rules, Rounds & Announcements
                     </h3>
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Stay informed about operational changes and municipal advisories:</p>
+                    <p>Dispatchers can configure departure rules for their assigned destinations and terminal-wide defaults at terminals where they dispatch:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
+                        <li>Open <strong>Departure Rules</strong> (<code>/staff/departure-rules</code>). Use <strong>Add Rule</strong>, <strong>Edit</strong>, or <strong>Delete</strong> to manage an accessible rule.</li>
+                        <li>Choose the required terminal and destination, or leave the destination blank for a terminal-wide default. Select weekdays or <strong>Every day</strong>, and choose a <strong>Round</strong> from 1 to 999.</li>
+                        <li>Set the start and end times using the AM/PM picker, enter the interval in minutes, and save. The end must be later than the start. A duplicate day/round in the same scope must be edited or given another round.</li>
+                        <li>In <strong>Queue Management &gt; Round</strong>, select a configured round for the destination. Vehicle types serving the same destination and terminal share the round. <strong>No active rule</strong> means a rule must match that destination, the current weekday, and the current time.</li>
+                        <li>Changing rounds updates waiting and boarding trips while preserving boarding time already elapsed.</li>
                         <li>Click <strong>Schedules</strong> to inspect daily trip timetables and departure intervals.</li>
                         <li>Click <strong>Announcements</strong> to create and broadcast weather warnings, road delay advisories, or port closure notices. High priority advisories scroll immediately across all terminal displays.</li>
                     </ol>
@@ -423,7 +430,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                     <p>Dispatchers can update their account credentials securely without administrator intervention:</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Navigate to <strong>Change Password</strong> from your user menu (<code>/change-password</code>).</li>
-                        <li>Click <strong>Send Verification Code</strong>. The system emails a secure 6-digit code valid for 15 minutes.</li>
+                        <li>Click <strong>Send Verification Code</strong>. The system emails a secure 6-digit code valid for 10 minutes.</li>
                         <li>Enter your current password, new password, and the 6-digit code.</li>
                         <li>Click <strong>Update Password</strong>. Your password updates immediately with zero downtime.</li>
                     </ol>
@@ -444,16 +451,28 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                 </div>
                 <div class="accordion-body">
                     <div class="step-box">
+                        <strong>Q: Can dispatchers configure departure rules?</strong><br>
+                        A: Yes. Open <strong>Departure Rules</strong> to create, edit, or delete rules for your assigned destinations and terminal-wide defaults at terminals where you dispatch. Set the weekdays, round, time window, and interval in minutes. Use <strong>Queue Management &gt; Round</strong> to select the destination's active configured round.
+                    </div>
+                    <div class="step-box">
+                        <strong>Q: Why can I not save or select a departure round?</strong><br>
+                        A: Check your route assignments, selected weekdays, required round, and time window. A duplicate day/round in the same scope must be edited or assigned another round. If the picker shows <strong>No active rule</strong>, a rule must match that destination, the current weekday, and the current time before selecting it.
+                    </div>
+                    <div class="step-box">
                         <strong>Q: Why does a vehicle not appear in the Add to Queue list?</strong><br>
                         A: Ensure the vehicle is set to <em>Active</em> rather than <em>Maintenance</em>, is assigned to one of your authorized routes, is not already queued, and has completed its post-departure cooldown period (default 30 minutes, or as set by the Superadmin).
                     </div>
                     <div class="step-box">
                         <strong>Q: What should I do if the live WebSocket connection indicator turns red or yellow?</strong><br>
-                        A: The system automatically falls back to background HTTP polling every 20 seconds. You can continue managing the queue normally; the system will reconnect to WebSockets as soon as network stability returns.
+                        A: While your internet connection is available, background refreshes keep checking for updates and the live connection retries automatically. If you are offline, reconnect before relying on displayed times or submitting queue changes.
                     </div>
                     <div class="step-box">
                         <strong>Q: Can I depart a vehicle before the timer runs out?</strong><br>
                         A: Yes! If a vehicle reaches 100% capacity (all seats occupied), you can depart it immediately to keep passenger flow moving smoothly.
+                    </div>
+                    <div class="step-box">
+                        <strong>Q: Does a full passenger count or expired timer automatically record departure?</strong><br>
+                        A: No. Click <strong>Depart</strong> when the vehicle leaves. The next vehicle cannot automatically start boarding while a vehicle in the same destination is still marked Boarding.
                     </div>
                 </div>
             </div>

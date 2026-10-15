@@ -66,7 +66,9 @@ On the homepage dashboard, you will find the **Live Terminal Monitor**:
   - When it turns red with `FULL`, boardings for that vehicle have closed.
 - **Estimated Departure Time (ETD)**:
   - Calculated based on official terminal departure intervals and current boarding progress.
-  - *Note*: A vehicle may depart earlier than its estimated time if all seats are filled before the clock runs out!
+  - Departure rules are configured by administrators, superadministrators, and dispatchers. Dispatchers manage assigned destinations and terminal-wide defaults where they dispatch.
+  - Rules include weekdays, rounds, time windows, and intervals. Vehicle types serving the same destination and terminal share the active round. Departure targets use five-minute clock marks.
+  - A dispatcher may depart a full vehicle early. A full count or expired timer does not automatically record departure; staff record it when the vehicle leaves.
 
 ---
 
@@ -127,19 +129,27 @@ If you are in a rush or looking for a specific vehicle:
 *No.* The Palompon Terminal Monitor is a real-time public information service. Tickets and cash fares are handled directly in person at the terminal bays or with the vehicle conductor.
 
 **Q2: What are the terminal operating hours?**  
-The Palompon Terminal typically operates daily from **4:00 AM to 8:00 PM**. Individual vehicle departures depend on passenger demand and scheduled route intervals.
+Check the Live Monitor and Schedules page for current trips and configured departure rules. Confirm terminal opening hours and first or last trips with terminal staff; availability depends on the destination, selected weekdays, and active round.
 
 **Q3: Does the website refresh automatically?**  
-*Yes!* The terminal monitor uses real-time synchronization. Whenever a dispatcher checks in a vehicle, updates passenger counts, or logs a departure, your screen updates instantly without refreshing.
+Yes. The live connection and background refreshes check for dispatcher changes without a manual refresh. Both need internet access. After reconnecting, allow the monitor to refresh before relying on displayed times.
 
 **Q4: Is there an official Android or iOS app?**  
 The website is a progressive web-compatible responsive site. You do not need to download an app from an app store. Simply open your phone's browser, bookmark the URL, or choose "Add to Home Screen" for one-tap access.
+
+**Q5: Can dispatchers configure departure rules?**
+
+Yes. Dispatchers can create, edit, and delete rules for assigned destinations and terminal-wide defaults at terminals where they dispatch. They set weekdays, rounds, time windows, and intervals, and select the destination's active round. Guests can view published rules and estimated departure times but cannot change them.
+
+**Q6: Does preparing a contact message automatically send it?**
+
+No. Contact Us and Report Issue open a draft in your email app or Gmail. Review it and select **Send** in that email service.
 
 ---
 
 ### 11. Getting Help, Submitting Feedback & Reporting Issues
 We welcome commuter feedback to continuously improve terminal services!
 - **Help Guide**: Click **Help Guide** in the footer for the complete, mobile-responsive operational guide, boarding status definitions, and headway rules.
-- **Report an Issue**: Click **Report Issue** in the footer to report inaccurate schedules, missing vehicles, or fare overcharging directly to terminal supervisors.
-- **Contact Us**: Click **Contact Us** in the footer or email the terminal administration at `arclast988@gmail.com`.
-- **Physical Assistance**: Visit the **Palompon Terminal Office** located at the terminal grounds, Rizal Street, Palompon, Leyte.
+- **Report an Issue**: Click **Report Issue** in the footer to prepare an email draft about inaccurate schedules, missing vehicles, or fare concerns. Include the route, plate number, date, and time, then review and send it in your email service.
+- **Contact Us**: Click **Contact Us** in the footer to prepare a draft addressed to the terminal's configured contact. Preparing a draft alone does not send it.
+- **Physical Assistance**: Ask at the terminal office if contact details are unavailable or immediate assistance is needed.

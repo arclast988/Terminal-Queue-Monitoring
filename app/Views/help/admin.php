@@ -396,17 +396,21 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
-                    <p>Departure rules establish target headway intervals based on route demand and time of day:</p>
+                    <p>Administrators and superadministrators manage all departure rules. Dispatchers can also create, edit, and delete rules for their assigned destinations and terminal-wide defaults at terminals where they dispatch.</p>
                     <ol style="padding-left: 20px; margin: 0 0 10px 0;">
                         <li>Go to <strong>Management &gt; Departure Rules</strong>.</li>
                         <li>Click <strong>+ Add Rule</strong>.</li>
-                        <li><strong>Destination:</strong> Select a specific destination route (e.g., <em>Ormoc</em>) or leave blank to establish a terminal-wide default.</li>
-                        <li><strong>24-Hour Coverage (Time From / Time To):</strong> Define the rule's active hours. Rules now cover all intervals seamlessly, including the midnight-to-morning period (<code>00:00:00</code> to <code>04:00:00</code>).</li>
-                        <li><strong>Headway Wait Time:</strong> Set the waiting interval (e.g., <code>15</code> minutes for peak rush hours, <code>30</code> minutes for regular daytime).</li>
+                        <li><strong>Terminal and Destination:</strong> Select the required terminal and a destination, or leave the destination blank for a terminal-wide default.</li>
+                        <li><strong>Weekdays and Round:</strong> Check the operating days or <strong>Every day</strong>, and choose a round from 1 to 999. A duplicate day/round in the same destination or terminal scope must be edited or assigned another round.</li>
+                        <li><strong>Time From / Time To:</strong> Set the time window. Admin forms use 24-hour inputs; dispatcher forms use AM/PM pickers. The end must be later than the start; split periods crossing midnight into separate rules.</li>
+                        <li><strong>Headway Interval:</strong> Set the duration in admin forms or enter minutes in dispatcher forms.</li>
                         <li><strong>Rule Label:</strong> Enter an identifiable name (e.g., <em>Morning Peak Rush</em> or <em>Regular Daytime Headway</em>).</li>
                     </ol>
                     <div class="step-box">
                         <strong>Automatic ETD Calculation & Full Capacity:</strong> When a dispatcher places a vehicle into <em>Boarding</em> status, the system calculates the Estimated Departure Time automatically. If 100% seating capacity is reached ahead of time, the dispatcher can dispatch the vehicle immediately.
+                    </div>
+                    <div class="step-box">
+                        <strong>Active Rounds and Boarding:</strong> Dispatchers select a configured destination round in <strong>Queue Management &gt; Round</strong>. Vehicle types serving the same destination at the same terminal share it. Changing rounds preserves elapsed boarding time. Automatic boarding starts the next vehicle at its assigned five-minute boundary when the destination has no vehicle still boarding; <strong>Start boarding now</strong> allows an immediate start. Departure targets round up to five-minute clock marks. Full counts and expired timers still require the dispatcher to record <strong>Depart</strong>.
                     </div>
                 </div>
             </div>
@@ -479,6 +483,10 @@ $adminManagedContent = managed_content_overrides($adminManagedKeys);
                     <i class="fas fa-chevron-down accordion-header-icon"></i>
                 </div>
                 <div class="accordion-body">
+                    <div class="step-box">
+                        <strong>Q: Can dispatchers configure departure rules?</strong><br>
+                        A: Yes. Dispatchers can create, edit, and delete rules for assigned destinations and terminal-wide defaults at terminals where they dispatch, using <code>/staff/departure-rules</code>. They set weekdays, rounds, time windows, and intervals, and choose the active destination round in <strong>Queue Management &gt; Round</strong>. Update the dispatcher's route assignments if a required destination is missing.
+                    </div>
                     <div class="step-box">
                         <strong>Q: How do I upload or change a vehicle registration photo?</strong><br>
                         A: In <em>Management &gt; Vehicle Register</em>, click Edit on any vehicle. Use the drag-and-drop photo uploader to select a JPG, PNG, or WEBP image up to 2MB. Click Save Vehicle. The image renders across queue management and search displays.

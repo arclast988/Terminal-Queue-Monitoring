@@ -2,14 +2,17 @@
 
 ## System Documentation & User Manuals
 
-Official system manuals and usability guides are maintained in the [`docs/`](file:///c:/jeepneynvans/docs) directory:
+System manuals and usability guides are maintained in the [`docs/`](docs/) directory:
 
-- 📘 [**Administrator & Super Admin User Manual**](file:///c:/jeepneynvans/docs/USER_MANUAL_ADMIN.md) — Comprehensive guide to fleet registration, route & fare matrix setup, departure headway rules, user permissions, announcements, and audit trails.
-- 📋 [**Dispatcher & Terminal Staff User Manual**](file:///c:/jeepneynvans/docs/USER_MANUAL_DISPATCHER.md) — Step-by-step terminal queue operations, FIFO entry, 30-minute departure cooldown enforcement, boarding progression, passenger counting, and 1-click Undo Cancel.
-- 🚏 [**Commuter & Passenger User Guide**](file:///c:/jeepneynvans/docs/USER_MANUAL_COMMUTER.md) — Commuter guide for live terminal monitoring, seat availability progress, 20% statutory discount rules, daily schedules, and departure search.
-- 🛡️ [**Error Recognition, Diagnosis & Recovery Guide**](file:///c:/jeepneynvans/docs/ERROR_RECOGNITION_DIAGNOSIS_RECOVERY_GUIDE.md) — Deep-dive usability manual detailing plain-language diagnostics, error prevention guardrails, 1-click Undo Cancel, cooldown timers, `no-change-guard.js`, and WebSocket/HTTP failover.
+- 📘 [**Administrator & Super Admin User Manual**](docs/USER_MANUAL_ADMIN.md) — Fleet registration, routes and fares, departure rules, user permissions, announcements, and audit trails.
+- 📋 [**Dispatcher & Terminal Staff User Manual**](docs/USER_MANUAL_DISPATCHER.md) — Daily vehicle order, queue management, configurable cooldowns, departure-rule editing, weekdays and rounds, boarding, and cancellations.
+- 🚏 [**Commuter & Passenger User Guide**](docs/USER_MANUAL_COMMUTER.md) — Live monitoring, seat availability, fares, schedules, departure search, and contact email drafts.
+- 🛡️ [**Error Recognition, Diagnosis & Recovery Guide**](docs/ERROR_RECOGNITION_DIAGNOSIS_RECOVERY_GUIDE.md) — Diagnostics, recovery actions, cooldowns, departure-rule validation, and connection fallback.
+- [**Dispatcher days, rounds, and boarding windows**](docs/DISPATCH_ROUNDS.md) — Detailed scheduling, daily rotation, and midnight rollover behavior.
 
-Interactive, clickable versions of these manuals are also directly accessible inside the web application at `/admin/manual`, `/staff/manual`, and `/manual`.
+In-app help is available at `/admin/help`, `/staff/help`, and the public Help Guide. The older `/admin/manual`, `/staff/manual`, and `/manual` links redirect to those guides. Markdown files do not populate the in-app text: keep `app/Views/help/admin.php`, `app/Views/help/dispatcher.php`, and the public FAQ/help in `app/Views/templates/guestfooter.php` synchronized with the manuals. Superadmins can override this built-in text in **Content Manager**; saved custom text must be reviewed separately or cleared to show the updated defaults.
+
+Dispatchers can create, edit, and delete departure rules for their assigned destinations and terminal-wide defaults at terminals where they dispatch. Rules specify weekdays, rounds, time windows, and intervals; **Queue Management > Round** selects a destination's configured active round across vehicle types.
 
 ## Setup (Ubuntu Server / Linux & Windows WSL — Nginx + PHP-FPM + PostgreSQL, no XAMPP)
 
@@ -33,7 +36,7 @@ This project runs on **Nginx + PHP-FPM + PostgreSQL** — pure enterprise-grade 
    - starts the real-time WebSocket server,
    - waits for Nginx, then opens the app.
 4. **Open the app:** <http://localhost/>
-5. **Sign in** with a seeded account (`admin` / `admin123`, `staff` / `staff123`), or with official seeder accounts (`admin@ttm.local` / `admin123`, `staff@ttm.local` / `staff123`).
+5. **Sign in with an account configured for this installation.** Do not assume importing a schema creates login accounts. In a development environment, explicitly run `php spark db:seed UserSeeder` if demo accounts are needed (`admin@ttm.local` / `admin123`, `staff@ttm.local` / `staff123`). Demo seeders are disabled in production.
 6. **Stopping the system** — double-click `stop_system.bat` to shut down PostgreSQL, PHP-FPM, Nginx, and the WebSocket server. Database data is preserved.
 
 ### Local quick start (from inside a WSL terminal)
@@ -83,7 +86,7 @@ Queue auto-refresh uses a WebSocket server that `start_system.bat` starts for yo
 - **502 Bad Gateway** → PHP-FPM isn't running or its socket version doesn't match Nginx; re-run `start_system.bat`, or check `sudo systemctl status php-fpm`.
 - **"Unable to connect to the database"** → PostgreSQL isn't started (`sudo systemctl status postgresql`), or `.env` credentials don't match.
 - **Real-time not updating** → run `VERIFY_SETUP.bat` or `diagnose_windows.bat` (checks Nginx proxy, ports 8081/8082, and WebSocket server daemon).
-- **Login fails** → confirm the import created the `users` table with default accounts (`admin` / `admin123` or seeded `admin@ttm.local` / `admin123`).
+- **Login fails** → confirm that account initialization was completed for this environment rather than assuming a schema import provides default accounts. Demo seeders are development-only.
 
 ### Security, Performance & Code Optimization Updates (June 2026)
 
