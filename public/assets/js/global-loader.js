@@ -38,6 +38,38 @@
         return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduced' : 'full';
     }
 
+    function isAppWindow() {
+        return (window.matchMedia && (
+            window.matchMedia('(display-mode: standalone)').matches
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.matchMedia('(display-mode: minimal-ui)').matches
+            || window.matchMedia('(display-mode: window-controls-overlay)').matches
+        )) || window.navigator.standalone === true || Boolean(document.fullscreenElement);
+    }
+
+    function preferNativeNavigationProgress() {
+        // Browsers do not expose their loading-bar visibility to a page. This is
+        // a fallback for known mobile browser tabs, not native-bar detection.
+        // Installed apps, embedded pages and identifiable WebViews keep feedback.
+        if (isAppWindow() || (window.top && window.top !== window)) return false;
+        var browser = window.navigator;
+        var ua = browser.userAgent || '';
+        var mobile = Boolean(browser.userAgentData && browser.userAgentData.mobile)
+            || /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(ua)
+            || (browser.platform === 'MacIntel' && browser.maxTouchPoints > 1);
+        if (!mobile) return false;
+        if (/\bwv\b|FBAN|FBAV|Instagram|Line\/|WebView/i.test(ua)) return false;
+        return /Chrome\/|Chromium\/|CriOS\/|Firefox\/|FxiOS\/|EdgA\/|EdgiOS\/|OPR\/|Opera|Safari\/|SamsungBrowser\//i.test(ua);
+    }
+
+    function startNavigation() {
+        if (preferNativeNavigationProgress()) {
+            forceDone();
+            return;
+        }
+        start(true);
+    }
+
     function injectStyles() {
         if (document.getElementById('global-loader-injected-css')) return;
         var style = document.createElement('style');
@@ -484,7 +516,7 @@
             Promise.resolve().then(function () {
                 if (event.defaultPrevented) return;
                 pendingForms.add(form);
-                start(true);
+                startNavigation();
                 if (submitBtn) showButtonSpinner(submitBtn, undefined, true);
             });
         }, false);
@@ -499,7 +531,7 @@
                 var url = new URL(a.href, window.location.href);
                 if (url.origin !== window.location.origin) return;
                 if (url.pathname === window.location.pathname && url.search === window.location.search) return;
-                Promise.resolve().then(function () { if (!event.defaultPrevented) start(true); });
+                Promise.resolve().then(function () { if (!event.defaultPrevented) startNavigation(); });
             } catch (error) { /* Not an internal navigation. */ }
         }, false);
         window.addEventListener('pagehide', resetPage);
@@ -509,8 +541,7 @@
     hookFetch();
     hookXHR();
     function onInit() {
-        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
-            || window.navigator.standalone === true;
+        var standalone = isAppWindow();
         if (standalone) document.documentElement.classList.add('gl-standalone');
         ensureElements();
         setupInteractions();
@@ -547,3 +578,4 @@
         showButtonSpinner: showButtonSpinner, hideButtonSpinner: hideButtonSpinner
     };
 })(window, document);
+
