@@ -284,9 +284,10 @@ final class ProfileDropdownTest extends CIUnitTestCase
         $this->assertStringContainsString('data-img-url', $html);
         $this->assertStringContainsString('modalRemoveAvatarBtn', $html);
         $this->assertStringContainsString('window.syncUserAvatar = syncUserAvatar;', $html);
-        $this->assertStringContainsString('window.notifyAvatarSync', $html);
-        $this->assertStringContainsString('pttm:ws-user_avatar_updated', $html);
-        $this->assertStringContainsString('pttm_avatar_sync', $html);
+        $this->assertStringContainsString('var currentLoggedInUserId = 1;', $html);
+        $this->assertStringContainsString('var currentUserId = currentLoggedInUserId;', $html);
+        $this->assertStringContainsString('window.notifyAvatarSync(currentLoggedInUserId, null);', $html);
+        $this->assertStringContainsString('window.notifyAvatarSync(currentLoggedInUserId, result.data.image_url);', $html);
     }
 }
 

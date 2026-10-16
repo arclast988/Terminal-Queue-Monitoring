@@ -512,6 +512,7 @@ SVG;
         var headerAvatar      = document.getElementById('navProfileHeaderAvatar');
 
         var currentLoggedInUserId = <?= (int)(session()->get('id') ?? 0) ?>;
+        var currentUserId = currentLoggedInUserId;
         var defaultIdenticonHtml = '<svg class="profile-identicon-svg" viewBox="0 0 64 64" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2" /><path d="M32 32.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zm0 5c-9.2 0-17 5.8-17 13.5 0 1 .8 1.8 1.8 1.8h30.4c1 0 1.8-.8 1.8-1.8 0-7.7-7.8-13.5-17-13.5z" fill="#475569" /></svg>';
 
         function updateAvatarDom(imageUrl) {
@@ -826,7 +827,16 @@ SVG;
                             body: formData
                         })
                         .then(function (res) {
-                            return res.json().then(function (data) {
+                            var contentType = res.headers.get('content-type') || '';
+                            if (res.redirected && new URL(res.url).pathname === '/login') {
+                                throw new Error('Your session has expired. Please sign in again.');
+                            }
+                            if (!contentType.includes('application/json')) {
+                                throw new Error('Reset could not be completed. Please refresh the page and try again.');
+                            }
+                            return res.json().catch(function () {
+                                throw new Error('The reset response was unreadable. Please refresh the page and try again.');
+                            }).then(function (data) {
                                 return { status: res.status, data: data };
                             });
                         })
@@ -837,7 +847,7 @@ SVG;
                             if (result.data && result.data.success) {
                                 updateAvatarDom(null);
                                 if (typeof window.notifyAvatarSync === 'function') {
-                                    window.notifyAvatarSync(currentUserId, null);
+                                    window.notifyAvatarSync(currentLoggedInUserId, null);
                                 }
                                 showAvatarStatus('Reverted to default logo.', 'success', 3000);
                             } else {
@@ -845,8 +855,11 @@ SVG;
                                 showAvatarStatus(err, 'error', 4000);
                             }
                         })
-                        .catch(function () {
-                            showAvatarStatus('Network error while resetting photo.', 'error', 4000);
+                        .catch(function (error) {
+                            var message = error instanceof TypeError
+                                ? 'Connection lost while resetting photo. Please check your connection and try again.'
+                                : (error && error.message ? error.message : 'Network error while resetting photo.');
+                            showAvatarStatus(message, 'error', 4000);
                         });
                     }
 
@@ -924,7 +937,7 @@ SVG;
                     if (result.data && result.data.success) {
                         updateAvatarDom(result.data.image_url);
                         if (typeof window.notifyAvatarSync === 'function') {
-                            window.notifyAvatarSync(currentUserId, result.data.image_url);
+                            window.notifyAvatarSync(currentLoggedInUserId, result.data.image_url);
                         }
                         showAvatarStatus('Photo updated successfully!', 'success', 3000);
                     } else {
