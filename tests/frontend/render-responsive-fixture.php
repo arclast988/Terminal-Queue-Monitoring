@@ -211,6 +211,10 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
     }
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
+if (($argv[4] ?? '') === 'archived-actions') {
+    if ($fixturePage === 'admin-users') $fixtureData['users'] = [array_replace($user, ['status' => 'archived'])];
+    if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [array_replace($vehicle, ['status' => 'archived'])];
+}
 if ($fixturePage === 'admin-vehicle-edit') {
     $fixtureData['vehicle'] = $vehicle + ['default_route_id'=>1, 'dispatch_order'=>2, 'dispatch_position'=>2];
 }

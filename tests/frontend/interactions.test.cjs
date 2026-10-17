@@ -6,6 +6,81 @@ const loader = 'public/assets/js/global-loader.js';
 const sync = 'public/js/queue-sync.js';
 function loaded(options) { const h = harness(options); h.load('public/assets/js/interaction-motion.js'); h.load(loader); return h; }
 
+test('confirmation buttons use the action instead of turning Yes into a loading verb', () => {
+  const h = loaded();
+  const cases = [
+    ['Yes, Activate', 'Activating\u2026'],
+    ['Yes, Deactivate', 'Deactivating\u2026'],
+    ['Yes, Reactivate', 'Reactivating\u2026'],
+    ['Yes, Restore', 'Restoring\u2026'],
+    ['Yes, Archive', 'Archiving\u2026'],
+    ['Yes, Enable', 'Enabling\u2026'],
+    ['Yes, Disable', 'Disabling\u2026'],
+    ['Yes, Approve', 'Approving\u2026'],
+    ['Yes, Reject', 'Rejecting\u2026'],
+    ['  YES,\n  ACTIVATE  ', 'Activating\u2026'],
+    ['Mark Arrival', 'Marking arrival\u2026'],
+    ['Mark as Ready', 'Marking ready\u2026'],
+    ['Yes, Delete', 'Deleting\u2026'],
+    ['Save Changes', 'Saving\u2026'],
+    ['Apply Filters', 'Applying\u2026'],
+    ['Sign In', 'Signing in\u2026'],
+    ['Mark Departure', 'Departing\u2026']
+  ];
+  for (const [text, expected] of cases) {
+    const btn = h.document.body.appendChild(new h.Element('button'));
+    btn.textContent = text;
+    h.window.GlobalLoader.showButtonSpinner(btn, undefined, true);
+    assert.equal(btn.querySelector('.gl-btn-label').textContent, expected, text);
+    h.window.GlobalLoader.hideButtonSpinner(btn);
+    assert.equal(btn.textContent, text);
+  }
+});
+
+test('generic confirmations and unknown labels use Processing without guessed words', () => {
+  const h = loaded();
+  for (const text of ['Yes', 'Okay', 'Done', 'Options', 'Confirm', 'Proceed', 'Continue']) {
+    const btn = h.document.body.appendChild(new h.Element('button'));
+    btn.textContent = text;
+    h.window.GlobalLoader.showButtonSpinner(btn, undefined, true);
+    assert.equal(btn.querySelector('.gl-btn-label').textContent, 'Processing\u2026', text);
+    h.window.GlobalLoader.hideButtonSpinner(btn);
+  }
+});
+
+test('explicit loading text and caller-provided labels keep their precedence', () => {
+  const h = loaded();
+  const btn = h.document.body.appendChild(new h.Element('button'));
+  btn.textContent = 'Yes, Activate';
+  btn.setAttribute('data-loading-text', 'Restoring vehicle\u2026');
+  h.window.GlobalLoader.showButtonSpinner(btn, undefined, true);
+  assert.equal(btn.querySelector('.gl-btn-label').textContent, 'Restoring vehicle\u2026');
+  h.window.GlobalLoader.hideButtonSpinner(btn);
+  h.window.GlobalLoader.showButtonSpinner(btn, 'Activating vehicle\u2026', true);
+  assert.equal(btn.querySelector('.gl-btn-label').textContent, 'Activating vehicle\u2026');
+  h.window.GlobalLoader.hideButtonSpinner(btn);
+  assert.equal(btn.textContent, 'Yes, Activate');
+});
+
+test('native vehicle activation submission displays Activating and preserves its submitter', async () => {
+  const h = loaded();
+  const form = h.document.body.appendChild(new h.Element('form'));
+  form.setAttribute('method', 'post');
+  const btn = form.appendChild(new h.Element('button')); btn.form = form;
+  btn.setAttribute('name', 'action'); btn.setAttribute('value', 'activate');
+  btn.textContent = 'Yes, Activate';
+  const event = h.document.emit('submit', { target: form, submitter: btn });
+  await flush();
+  assert.equal(event.defaultPrevented, false);
+  assert.equal(btn.querySelector('.gl-btn-label').textContent, 'Activating\u2026');
+  assert.equal(btn.getAttribute('name'), 'action');
+  assert.equal(btn.getAttribute('value'), 'activate');
+  assert.equal(h.document.emit('submit', { target: form, submitter: btn }).defaultPrevented, true);
+  h.window.emit('pagehide');
+  assert.equal(btn.textContent, 'Yes, Activate');
+  assert.equal(btn.getAttribute('aria-busy'), null);
+});
+
 test('interrupted native page transitions leave navigation usable without unhandled rejections', async () => {
   const h = loaded();
   for (const type of ['pageswap', 'pagereveal']) {
