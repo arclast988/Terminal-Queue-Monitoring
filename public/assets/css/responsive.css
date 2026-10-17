@@ -3973,7 +3973,7 @@ html body .route-card-item .action-buttons-grid {
     display: grid !important;
     grid-template-columns: max-content max-content;
     gap: 6px !important;
-    align-items: center !important;
+    align-items: stretch !important;
     justify-content: start !important;
     width: max-content;
     max-width: 100%;
@@ -3981,7 +3981,7 @@ html body .route-card-item .action-buttons-grid {
 html body .action-buttons-grid > .btn-action-activate,
 html body .action-buttons-grid > form:has(.btn-action-activate) {
     grid-area: 1 / 2;
-    justify-self: start;
+    justify-self: stretch;
 }
 html body .action-buttons-grid > .btn-action-edit {
     grid-area: 2 / 1;
@@ -3989,13 +3989,16 @@ html body .action-buttons-grid > .btn-action-edit {
 html body .action-buttons-grid > .btn-action-delete,
 html body .action-buttons-grid > form:has(.btn-action-delete) {
     grid-area: 2 / 2;
-    justify-self: start;
+    justify-self: stretch;
 }
 html body .action-buttons-grid > form:not(.d-none) {
     display: flex !important;
     width: auto !important;
     margin: 0 !important;
     padding: 0 !important;
+}
+html body .action-buttons-grid > form > .btn-modern {
+    flex-grow: 1 !important;
 }
 @media (max-width: 768px) {
     html body .route-card-item .action-buttons-grid .btn-modern {
@@ -4052,4 +4055,59 @@ html body #vehicles-table tbody tr.vehicle-route-heading.vehicle-row-hidden { di
         background: transparent !important;
     }
     html body #vehicles-table tbody tr.vehicle-route-heading td::before { display: none !important; }
+}
+
+/* Small-screen archive actions: Activate above Delete, Edit beside Delete. */
+@media (max-width: 575.98px) {
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] {
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 8px 12px !important;
+    }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"]::before {
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: none !important;
+        padding-right: 0 !important;
+    }
+    html body #users-table tbody tr[data-status="archived"] td[data-label="Action"] > .btn-group-modern,
+    html body #vehicles-table tbody tr[data-status="archived"] td[data-label="Action"] > .management-row-actions {
+        display: grid !important;
+        grid-template-columns: max-content max-content;
+        grid-template-areas: ". activate" "edit delete";
+        gap: 6px !important;
+        align-items: stretch !important;
+        justify-content: end !important;
+        flex: 0 0 auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin-left: auto !important;
+    }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] > div > :is(.btn-action-activate, form[id^="activate-user-form-"]) {
+        grid-area: activate;
+    }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] > div > .btn-action-edit {
+        grid-area: edit;
+    }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] > div > form[id^="delete-"] {
+        grid-area: delete;
+    }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] > div > form {
+        display: flex !important;
+        width: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] .btn-modern {
+        width: 100% !important;
+        min-height: 40px !important;
+        padding: 5px 9px !important;
+        gap: 5px !important;
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+    }
 }

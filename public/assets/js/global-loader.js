@@ -299,6 +299,17 @@
         if (lower.indexOf('submit report') !== -1 || lower.indexOf('submit message') !== -1 || lower.indexOf('submit') !== -1) return 'Submitting\u2026';
         if (lower.indexOf('depart') !== -1) return 'Departing\u2026';
         if (lower.indexOf('assign') !== -1) return 'Assigning\u2026';
+        if (/\bdeactivate\b/.test(lower)) return 'Deactivating\u2026';
+        if (/\breactivate\b/.test(lower)) return 'Reactivating\u2026';
+        if (/\bactivate\b/.test(lower)) return 'Activating\u2026';
+        if (/\brestore\b/.test(lower)) return 'Restoring\u2026';
+        if (/\barchive\b/.test(lower)) return 'Archiving\u2026';
+        if (/\bdisable\b/.test(lower)) return 'Disabling\u2026';
+        if (/\benable\b/.test(lower)) return 'Enabling\u2026';
+        if (/\bapprove\b/.test(lower)) return 'Approving\u2026';
+        if (/\breject\b/.test(lower)) return 'Rejecting\u2026';
+        if (/\b(arrive|arrival)\b/.test(lower)) return 'Marking arrival\u2026';
+        if (/\bready\b/.test(lower)) return 'Marking ready\u2026';
         if (lower.indexOf('confirm') !== -1 || lower.indexOf('proceed') !== -1 || lower.indexOf('continue') !== -1) return 'Processing\u2026';
         if (lower.indexOf('refresh') !== -1 || lower.indexOf('reload') !== -1) return 'Refreshing\u2026';
         if (lower.indexOf('print') !== -1) return 'Printing\u2026';
@@ -306,20 +317,8 @@
         if (lower.indexOf('check') !== -1) return 'Checking\u2026';
         if (lower.indexOf('cancel') !== -1) return 'Cancelling\u2026';
 
-        // Intelligent English gerund fallback from first word
-        var firstWord = lower.split(' ')[0].replace(/[^a-z]/g, '');
-        if (firstWord.length >= 3) {
-            var gerund = firstWord;
-            if (firstWord.endsWith('e') && !firstWord.endsWith('ee')) {
-                gerund = firstWord.slice(0, -1) + 'ing';
-            } else if (firstWord.endsWith('y')) {
-                gerund = firstWord + 'ing';
-            } else {
-                gerund = firstWord + 'ing';
-            }
-            return gerund.charAt(0).toUpperCase() + gerund.slice(1) + '\u2026';
-        }
-
+        // Confirmation words and unknown labels are not necessarily action verbs.
+        // Never invent labels such as "Yesing" by adding a suffix to their text.
         return 'Processing\u2026';
     }
 

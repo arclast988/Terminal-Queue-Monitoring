@@ -204,6 +204,49 @@ test('password account details precede the form on mobile with guidelines below 
   }
 });
 
+test('archive actions place Activate above Delete with Edit beside Delete on phones and desktop', { timeout: 90000 }, async t => {
+  for (const [name, id] of [['admin-users', 'users-table'], ['admin-vehicles', 'vehicles-table']]) {
+    for (const width of [320, 360, 390, 430, 575, 576, 768, 1280]) {
+      const { page, context, errors } = await open(t, name, width, 900, 'state=archived-actions');
+      await page.locator('button.vf-archive').click();
+      await page.mouse.move(0, 0);
+      const cell = page.locator('#' + id + ' tr[data-status="archived"] td[data-label="Action"]');
+      await cell.scrollIntoViewIfNeeded();
+      await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => {}))));
+      const layout = await cell.evaluate(el => {
+        const rect = node => {
+          const box = node.getBoundingClientRect();
+          return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, width: box.width, height: box.height };
+        };
+        const group = el.querySelector('.btn-group-modern, .management-row-actions');
+        const buttons = [...group.querySelectorAll('.btn-modern')];
+        return {
+          display: getComputedStyle(group).display, label: getComputedStyle(el, '::before').display,
+          labelWidth: parseFloat(getComputedStyle(el, '::before').width), cell: rect(el), group: rect(group),
+          activate: rect(group.querySelector('.btn-action-activate')), edit: rect(group.querySelector('.btn-action-edit')),
+          delete: rect(group.querySelector('.btn-action-delete')),
+          clipped: buttons.some(button => button.scrollWidth > button.clientWidth + 1)
+        };
+      });
+      assert.equal(layout.display, 'grid', name + ' ' + width);
+      assert.ok(Math.abs(layout.edit.top - layout.delete.top) <= 1, 'Edit and Delete must share a row');
+      assert.ok(layout.edit.right + 5 <= layout.delete.left, 'Edit must sit to the left of Delete');
+      assert.ok(layout.activate.bottom + 5 <= layout.delete.top, 'Activate must sit above Delete');
+      assert.ok(Math.abs(layout.activate.left - layout.delete.left) <= 1 && Math.abs(layout.activate.right - layout.delete.right) <= 1, 'Activate and Delete must share a column');
+      if (width <= 768) {
+        assert.notEqual(layout.label, 'none');
+        assert.ok(layout.group.left >= layout.cell.left && layout.group.right <= layout.cell.right + 1, 'Actions must stay inside the card');
+        assert.ok(layout.group.left >= layout.cell.left + layout.labelWidth + 5 || layout.group.top > layout.cell.top + 16, 'Action label must not overlap the buttons');
+        assert.equal(layout.clipped, false, name + ' labels must fit at ' + width);
+        checkBounds(await bounds(page, ['#' + id + ' tr[data-status="archived"] .btn-modern']), name + ' archived actions ' + width);
+        if (width === 390) await screenshot(page, name + '-archived-action-grid', false);
+      }
+      assert.deepEqual(errors, [], name + ' ' + width);
+      await context.close();
+    }
+  }
+});
+
 test('management actions align with their headers and scroll as normal columns like User Management', { timeout: 90000 }, async t => {
   const reference = await open(t, 'admin-users', 1280, 900, '');
   await reference.page.locator('#users-table td[data-label="Action"]').first().scrollIntoViewIfNeeded();
