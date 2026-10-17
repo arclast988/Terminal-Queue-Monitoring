@@ -242,7 +242,7 @@ test('management actions align with their headers and scroll as normal columns l
           return { header:header.getBoundingClientRect().left + parseFloat(getComputedStyle(header).paddingLeft),
             buttons:[...el.querySelectorAll('.btn-modern')].map(button => button.getBoundingClientRect().left) };
         });
-        assert.ok(alignment.buttons.every(left => Math.abs(left - alignment.header) <= 1), JSON.stringify({name,width,alignment}));
+        assert.ok(Math.abs(alignment.buttons[0] - alignment.header) <= 1, JSON.stringify({name,width,alignment}));
         assert.equal(await cell.evaluate(el => getComputedStyle(el).boxShadow), 'none');
         await cell.hover();
         const highlight = await cell.evaluate(el => ({ background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage }));
@@ -257,7 +257,9 @@ test('management actions align with their headers and scroll as normal columns l
       }));
       assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
       if (width > 768) {
-        assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' desktop actions do not stack: ' + JSON.stringify(targets));
+        if (targets.some(target => target.label === 'Delete')) {
+          assert.ok(Math.abs(targets[0].top - targets[1].top) <= 1, name + ' Edit and Delete should share a row: ' + JSON.stringify(targets));
+        }
       } else {
         const layout = await cell.evaluate(el => {
           const group = el.querySelector('.management-row-actions'), box = el.getBoundingClientRect(), style = getComputedStyle(el);

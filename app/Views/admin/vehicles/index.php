@@ -503,7 +503,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     </div>
                                 </td>
                                 <td data-label="Action" class="management-actions-col">
-                                    <div class="d-flex gap-2 justify-content-end flex-nowrap management-row-actions">
+                                    <div class="d-flex gap-2 justify-content-end flex-nowrap management-row-actions<?= ($vehicle['status'] ?? 'active') === 'archived' ? ' action-buttons-grid' : '' ?>">
                                         <?php 
                                             $modalRouteLabel = (!empty($vehicle['route_destination']) && ($vehicle['route_status'] ?? 'active') === 'active')
                                                 ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination'])

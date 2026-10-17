@@ -312,7 +312,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                     </div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <?php if ($isAdmin): ?>
-                        <div class="d-inline-flex gap-2">
+                        <div class="d-inline-flex gap-2<?= $grpStatus === 'archived' ? ' action-buttons-grid' : '' ?>">
                             <?php if ($grpStatus === 'archived'): ?>
                                 <button type="button" class="btn-modern btn-action-activate btn-modern-sm" style="padding: 6px 12px;" title="Activate Route Group"
                                     onclick="showActivateRouteModal({

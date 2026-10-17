@@ -3792,9 +3792,9 @@ html body table.table-modern.management-list-table .management-message {
 }
 html body table.table-modern.management-list-table .management-actions-col > .management-row-actions {
     display: flex !important;
-    flex-direction: column !important;
-    flex-wrap: nowrap !important;
-    align-items: flex-start !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
     justify-content: flex-start !important;
     gap: 6px !important;
     min-width: 0;
@@ -3855,9 +3855,9 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     html body #terminals-table.management-list-table .management-date-col { width: 156px; }
     html body #vehicles-table.management-list-table .management-id-col { width: 4%; }
     html body #vehicles-table.management-list-table .management-plate-col { width: 9%; }
-    html body #vehicles-table.management-list-table .management-person-col { width: 9.75%; }
-    html body #vehicles-table.management-list-table .management-type-col { width: 13%; }
-    html body #vehicles-table.management-list-table .management-route-col { width: 16%; }
+    html body #vehicles-table.management-list-table .management-person-col { width: 8.75%; }
+    html body #vehicles-table.management-list-table .management-type-col { width: 12%; }
+    html body #vehicles-table.management-list-table .management-route-col { width: 14%; }
     html body #vehicles-table.management-list-table .management-count-col { width: 7.5%; }
     html body #vehicles-table.management-list-table .management-status-col { width: 10%; }
     html body #vehicles-table.management-list-table .management-date-col { width: 10%; }
@@ -3894,7 +3894,7 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         padding: 12px 8px !important;
     }
     html body #vehicles-table.management-list-table .management-actions-col {
-        width: 11% !important;
+        width: 16% !important;
         min-width: 0 !important;
         max-width: none !important;
         padding: 12px 10px !important;
@@ -3934,13 +3934,13 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     }
     html body #vehicles-table.management-list-table.selection-mode-active .management-id-col { width: 3.84%; }
     html body #vehicles-table.management-list-table.selection-mode-active .management-plate-col { width: 8.64%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-person-col { width: 9.36%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-type-col { width: 12.48%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-route-col { width: 15.36%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-person-col { width: 8.4%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-type-col { width: 11.52%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-route-col { width: 13.44%; }
     html body #vehicles-table.management-list-table.selection-mode-active .management-count-col { width: 7.2%; }
     html body #vehicles-table.management-list-table.selection-mode-active .management-status-col { width: 9.6%; }
     html body #vehicles-table.management-list-table.selection-mode-active .management-date-col { width: 9.6%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-actions-col { width: 10.56% !important; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-actions-col { width: 15.36% !important; }
 }
 @media (max-width: 768px) {
     html body table.table-modern.management-list-table { --management-action-height: 40px; }
@@ -3963,6 +3963,46 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         flex-wrap: wrap !important;
         justify-content: flex-end !important;
         align-items: center !important;
+    }
+}
+
+/* Three actions: Activate above Delete, with Edit and Delete side by side. */
+html body #users-table .action-buttons-grid,
+html body #vehicles-table.management-list-table .management-actions-col > .management-row-actions.action-buttons-grid,
+html body .route-card-item .action-buttons-grid {
+    display: grid !important;
+    grid-template-columns: max-content max-content;
+    gap: 6px !important;
+    align-items: center !important;
+    justify-content: start !important;
+    width: max-content;
+    max-width: 100%;
+}
+html body .action-buttons-grid > .btn-action-activate,
+html body .action-buttons-grid > form:has(.btn-action-activate) {
+    grid-area: 1 / 2;
+    justify-self: start;
+}
+html body .action-buttons-grid > .btn-action-edit {
+    grid-area: 2 / 1;
+}
+html body .action-buttons-grid > .btn-action-delete,
+html body .action-buttons-grid > form:has(.btn-action-delete) {
+    grid-area: 2 / 2;
+    justify-self: start;
+}
+html body .action-buttons-grid > form:not(.d-none) {
+    display: flex !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+@media (max-width: 768px) {
+    html body .route-card-item .action-buttons-grid .btn-modern {
+        min-height: 40px;
+        padding: 5px 9px !important;
+        font-size: 12px !important;
+        white-space: nowrap;
     }
 }
 

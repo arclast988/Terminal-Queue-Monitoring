@@ -515,7 +515,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                  (($currentUserRole === 'super_admin') || 
                                                   ($currentUserRole === 'admin' && $targetUserRole === 'staff'));
                                     ?>
-                                    <div class="btn-group-modern" role="group">
+                                    <div class="btn-group-modern<?= ($canActivate && $canEdit && $canDelete) ? ' action-buttons-grid' : '' ?>" role="group">
                                         <?php if ($isArchived): ?>
                                             <?php if ($canActivate): ?>
                                                 <form id="activate-user-form-<?= $user['id'] ?>" action="<?= base_url('admin/users/activate/' . $user['id']) ?>" method="post" class="d-inline">
