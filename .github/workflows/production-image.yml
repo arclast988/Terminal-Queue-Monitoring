@@ -44,10 +44,18 @@ jobs:
           '
       - name: Start the production stack and verify HTTP and WebSocket responses
         run: |
+          docker run --rm --network host --entrypoint bash \
+            -e CI_ENVIRONMENT=production \
+            -e database.default.hostname=127.0.0.1 \
+            -e database.default.database=jeepneynvans_test \
+            -e database.default.username=jeepney_user \
+            -e database.default.password=image_test_password \
+            jeepneynvans-production:test -c \
+            'mkdir -p writable/cache writable/logs writable/session; php spark migrate --all'
           docker run -d --name production-smoke --network host \
             -e DATABASE_URL=postgresql://jeepney_user:image_test_password@127.0.0.1:5432/jeepneynvans_test \
             -e ENCRYPTION_KEY=0123456789abcdef0123456789abcdef \
-            -e APP_BASE_URL=http://127.0.0.1:8080/ \
+            -e APP_BASE_URL=https://production.example.test/ \
             jeepneynvans-production:test
           ready=0
           for attempt in $(seq 1 60); do
@@ -55,15 +63,17 @@ jobs:
             sleep 2
           done
           test "$ready" = 1
-          curl --fail --silent --output /dev/null http://127.0.0.1:8080/
-          curl --fail --silent --output /dev/null http://127.0.0.1:8080/login
+          curl --fail --silent --show-error --header 'Host: production.example.test' --header 'X-Forwarded-Proto: https' --output /dev/null http://127.0.0.1:8080/
+          curl --fail --silent --show-error --header 'Host: production.example.test' --header 'X-Forwarded-Proto: https' --output /dev/null http://127.0.0.1:8080/login
           python3 - <<'PY'
           import socket
           with socket.create_connection(('127.0.0.1', 8080), timeout=10) as connection:
-              connection.sendall(b'GET /ws HTTP/1.1\r\nHost: 127.0.0.1:8080\r\nOrigin: http://127.0.0.1:8080\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n')
+              connection.sendall(b'GET /ws HTTP/1.1\r\nHost: production.example.test\r\nOrigin: https://production.example.test\r\nX-Forwarded-Proto: https\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n')
               response = connection.recv(4096)
               assert b'101 Switching Protocols' in response, response
           PY
       - name: Show production logs
         if: always()
-        run: docker logs production-smoke 2>&1 || true
+        run: |
+          docker logs production-smoke 2>&1 || true
+          docker exec production-smoke sh -c 'tail -n 60 writable/logs/log-* 2>/dev/null' || true
