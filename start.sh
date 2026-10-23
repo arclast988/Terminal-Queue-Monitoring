@@ -7,6 +7,7 @@ echo "  Jeepney nVans - Railway Production"
 echo "=========================================="
 
 APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+php -r 'printf("[PHP] Runtime: %s (%s)\n", PHP_VERSION, PHP_SAPI);'
 PORT="${PORT:-8080}"
 WEBSOCKET_PORT="${WEBSOCKET_PORT:-8081}"
 WEBSOCKET_BROADCAST_PORT="${WEBSOCKET_BROADCAST_PORT:-8082}"
@@ -148,7 +149,7 @@ else
     echo "[DB] Default demo users skipped. Set RUN_DEFAULT_SEEDERS=true only for a new development database."
 fi
 
-PHP_FPM_BIN="$(command -v php-fpm || command -v php-fpm8.4 || command -v php-fpm8.3 || command -v php-fpm8.2 || command -v php-fpm84 || command -v php-fpm83 || command -v php-fpm82 || true)"
+PHP_FPM_BIN="$(command -v php-fpm || command -v php-fpm8.5 || command -v php-fpm8.4 || command -v php-fpm8.3 || command -v php-fpm8.2 || command -v php-fpm85 || command -v php-fpm84 || command -v php-fpm83 || command -v php-fpm82 || true)"
 if [ -z "$PHP_FPM_BIN" ]; then
     echo "[FATAL] PHP-FPM is not installed in the Railway image."
     exit 1
@@ -180,6 +181,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "[PHP] Starting PHP-FPM..."
+"$PHP_FPM_BIN" -v | head -n 1
 "$PHP_FPM_BIN" --fpm-config "$APP_ROOT/deploy/php-fpm.railway.conf" --nodaemonize &
 FPM_PID=$!
 

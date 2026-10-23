@@ -169,7 +169,7 @@ trait ResponseTrait
     /**
      * Converts the $body into JSON and sets the Content Type header.
      *
-     * @param array|object|string $body
+     * @param mixed $body
      *
      * @return $this
      */
@@ -195,13 +195,13 @@ trait ResponseTrait
             $body = service('format')->getFormatter('application/json')->format($body);
         }
 
-        return $body ?: null;
+        return ($body === null || $body === '') ? null : $body;
     }
 
     /**
      * Converts $body into XML, and sets the correct Content-Type.
      *
-     * @param array|string $body
+     * @param mixed $body
      *
      * @return $this
      */
@@ -224,7 +224,7 @@ trait ResponseTrait
         $body = $this->body;
 
         if ($this->bodyFormat !== 'xml') {
-            $body = service('format')->getFormatter('application/xml')->format($body);
+            return service('format')->getFormatter('application/xml')->format($body);
         }
 
         return $body;
@@ -234,8 +234,8 @@ trait ResponseTrait
      * Handles conversion of the data into the appropriate format,
      * and sets the correct Content-Type header for our response.
      *
-     * @param array|object|string $body
-     * @param string              $format Valid: json, xml
+     * @param mixed  $body
+     * @param string $format Valid: json, xml
      *
      * @return false|string
      *
@@ -249,7 +249,7 @@ trait ResponseTrait
 
         // Nothing much to do for a string...
         if (! is_string($body) || $format === 'json-unencoded') {
-            $body = service('format')->getFormatter($mime)->format($body);
+            return service('format')->getFormatter($mime)->format($body);
         }
 
         return $body;
@@ -367,11 +367,7 @@ trait ResponseTrait
     {
         // If we're enforcing a Content Security Policy,
         // we need to give it a chance to build out it's headers.
-        if ($this->CSP->enabled()) {
-            $this->CSP->finalize($this);
-        } else {
-            $this->body = str_replace(['{csp-style-nonce}', '{csp-script-nonce}'], '', $this->body ?? '');
-        }
+        $this->CSP->finalize($this);
 
         $this->sendHeaders();
         $this->sendCookies();
@@ -479,9 +475,7 @@ trait ResponseTrait
             }
         }
 
-        if ($code === null) {
-            $code = 302;
-        }
+        $code ??= 302;
 
         match ($method) {
             'refresh' => $this->setHeader('Refresh', '0;url=' . $uri),
@@ -499,15 +493,16 @@ trait ResponseTrait
      * Accepts an arbitrary number of binds (up to 7) or an associative
      * array in the first parameter containing all the values.
      *
-     * @param array|Cookie|string $name     Cookie name / array containing binds / Cookie object
-     * @param string              $value    Cookie value
-     * @param int                 $expire   Cookie expiration time in seconds
-     * @param string              $domain   Cookie domain (e.g.: '.yourdomain.com')
-     * @param string              $path     Cookie path (default: '/')
-     * @param string              $prefix   Cookie name prefix ('': the default prefix)
-     * @param bool|null           $secure   Whether to only transfer cookies via SSL
-     * @param bool|null           $httponly Whether only make the cookie accessible via HTTP (no javascript)
-     * @param string|null         $samesite
+     * @param array|Cookie|string                $name     Cookie name / array containing binds / Cookie object
+     * @param string                             $value    Cookie value
+     * @param int|string                         $expire   Cookie expiration time in seconds
+     * @param string                             $domain   Cookie domain (e.g.: '.yourdomain.com')
+     * @param string                             $path     Cookie path (default: '/')
+     * @param string                             $prefix   Cookie name prefix ('': the default prefix)
+     * @param bool|null                          $secure   Whether to only transfer cookies via SSL
+     * @param bool|null                          $httponly Whether only make the cookie accessible via HTTP (no javascript)
+     * @param string|null                        $samesite
+     * @param array<string, mixed>|Cookie|string $name
      *
      * @return $this
      */
@@ -545,10 +540,12 @@ trait ResponseTrait
 
         if (is_numeric($expire)) {
             $expire = $expire > 0 ? Time::now()->getTimestamp() + $expire : 0;
+        } else {
+            $expire = 0;
         }
 
         $cookie = new Cookie($name, $value, [
-            'expires'  => $expire ?: 0,
+            'expires'  => $expire,
             'domain'   => $domain,
             'path'     => $path,
             'prefix'   => $prefix,
@@ -702,6 +699,8 @@ trait ResponseTrait
      * Extracted call to `setrawcookie()` in order to run unit tests on it.
      *
      * @codeCoverageIgnore
+     *
+     * @param array<array-key, mixed> $options
      */
     private function doSetRawCookie(string $name, string $value, array $options): void
     {
@@ -719,6 +718,8 @@ trait ResponseTrait
      * Extracted call to `setcookie()` in order to run unit tests on it.
      *
      * @codeCoverageIgnore
+     *
+     * @param array<array-key, mixed> $options
      */
     private function doSetCookie(string $name, string $value, array $options): void
     {
@@ -751,20 +752,15 @@ trait ResponseTrait
             return null;
         }
 
-        $filepath = '';
         if ($data === null) {
-            $filepath = $filename;
-            $filename = explode('/', str_replace(DIRECTORY_SEPARATOR, '/', $filename));
-            $filename = end($filename);
+            $response = new DownloadResponse(basename($filename), $setMime);
+            $response->setFilePath($filename);
+
+            return $response;
         }
 
         $response = new DownloadResponse($filename, $setMime);
-
-        if ($filepath !== '') {
-            $response->setFilePath($filepath);
-        } elseif ($data !== null) {
-            $response->setBinary($data);
-        }
+        $response->setBinary($data);
 
         return $response;
     }

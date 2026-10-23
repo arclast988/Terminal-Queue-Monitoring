@@ -21,6 +21,7 @@ use CodeIgniter\Database\Exceptions\DatabaseException;
 use CodeIgniter\Database\Exceptions\DataException;
 use CodeIgniter\Entity\Entity;
 use CodeIgniter\Exceptions\BadMethodCallException;
+use CodeIgniter\Exceptions\InvalidArgumentException;
 use CodeIgniter\Exceptions\ModelException;
 use CodeIgniter\Validation\ValidationInterface;
 use Config\Database;
@@ -38,6 +39,11 @@ use stdClass;
  *      - removes the need to use Result object directly in most cases
  *
  * @property-read BaseConnection $db
+ *
+ * @phpstan-type WhenCallback        callable(BaseBuilder, mixed): mixed
+ * @phpstan-type WhenDefaultCallback callable(BaseBuilder): mixed
+ *
+ * @phpstan-import-type row_array from BaseModel
  *
  * @method $this groupBy($by, ?bool $escape = null)
  * @method $this groupEnd()
@@ -77,13 +83,11 @@ use stdClass;
  * @method $this selectMax(string $select = '', string $alias = '')
  * @method $this selectMin(string $select = '', string $alias = '')
  * @method $this selectSum(string $select = '', string $alias = '')
- * @method $this when($condition, callable $callback, ?callable $defaultCallback = null)
- * @method $this whenNot($condition, callable $callback, ?callable $defaultCallback = null)
+ * @method $this when($condition, WhenCallback $callback, ?WhenDefaultCallback $defaultCallback = null)
+ * @method $this whenNot($condition, WhenCallback $callback, ?WhenDefaultCallback $defaultCallback = null)
  * @method $this where($key, $value = null, ?bool $escape = null)
  * @method $this whereIn(?string $key = null, $values = null, ?bool $escape = null)
  * @method $this whereNotIn(?string $key = null, $values = null, ?bool $escape = null)
- *
- * @phpstan-import-type row_array from BaseModel
  */
 class Model extends BaseModel
 {
@@ -120,7 +124,7 @@ class Model extends BaseModel
      * so that we can capture it (not the builder)
      * and ensure it gets validated first.
      *
-     * @var array{escape: array<int|string, bool|null>, data: row_array}|array{}
+     * @var array{escape: array<array-key, bool|null>, data: row_array}|array{}
      */
     protected $tempData = [];
 
@@ -128,7 +132,7 @@ class Model extends BaseModel
      * Escape array that maps usage of escape
      * flag for every parameter.
      *
-     * @var array<int|string, bool|null>
+     * @var array<array-key, bool|null>
      */
     protected $escape = [];
 
@@ -145,9 +149,7 @@ class Model extends BaseModel
 
     public function __construct(?ConnectionInterface $db = null, ?ValidationInterface $validation = null)
     {
-        /**
-         * @var BaseConnection|null $db
-         */
+        /** @var BaseConnection $db */
         $db ??= Database::connect($this->DBGroup);
 
         $this->db = $db;
@@ -233,7 +235,7 @@ class Model extends BaseModel
      */
     protected function doFindAll(?int $limit = null, int $offset = 0)
     {
-        $limitZeroAsAll = config(Feature::class)->limitZeroAsAll ?? true;
+        $limitZeroAsAll = config(Feature::class)->limitZeroAsAll ?? true; // @phpstan-ignore nullCoalesce.property
         if ($limitZeroAsAll) {
             $limit ??= 0;
         }
@@ -533,10 +535,14 @@ class Model extends BaseModel
      */
     public function chunk(int $size, Closure $userFunc)
     {
+        if ($size <= 0) {
+            throw new InvalidArgumentException('chunk() requires a positive integer for the $size argument.');
+        }
+
         $total  = $this->builder()->countAllResults(false);
         $offset = 0;
 
-        while ($offset <= $total) {
+        while ($offset < $total) {
             $builder = clone $this->builder();
             $rows    = $builder->get($size, $offset);
 
@@ -706,15 +712,10 @@ class Model extends BaseModel
         return parent::update($id, $row);
     }
 
-    protected function objectToRawArray($object, bool $onlyChanged = true, bool $recursive = false): array
-    {
-        return parent::objectToRawArray($object, $onlyChanged);
-    }
-
     /**
      * Provides/instantiates the builder/db connection and model's table/primary key names and return type.
      *
-     * @return array<int|string, mixed>|BaseBuilder|bool|float|int|object|string|null
+     * @return mixed
      */
     public function __get(string $name)
     {
@@ -741,7 +742,7 @@ class Model extends BaseModel
      * Provides direct access to method in the builder (if available)
      * and the database connection.
      *
-     * @return $this|array<int|string, mixed>|BaseBuilder|bool|float|int|object|string|null
+     * @return mixed
      */
     public function __call(string $name, array $params)
     {

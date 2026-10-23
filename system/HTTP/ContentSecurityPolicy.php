@@ -400,6 +400,10 @@ class ContentSecurityPolicy
         if ($this->styleNonce === null) {
             $this->styleNonce = base64_encode(random_bytes(12));
             $this->addStyleSrc('nonce-' . $this->styleNonce);
+
+            if ($this->styleSrcElem !== []) {
+                $this->addStyleSrcElem('nonce-' . $this->styleNonce);
+            }
         }
 
         return $this->styleNonce;
@@ -413,6 +417,10 @@ class ContentSecurityPolicy
         if ($this->scriptNonce === null) {
             $this->scriptNonce = base64_encode(random_bytes(12));
             $this->addScriptSrc('nonce-' . $this->scriptNonce);
+
+            if ($this->scriptSrcElem !== []) {
+                $this->addScriptSrcElem('nonce-' . $this->scriptNonce);
+            }
         }
 
         return $this->scriptNonce;
@@ -427,9 +435,7 @@ class ContentSecurityPolicy
      */
     public function finalize(ResponseInterface $response)
     {
-        if ($this->autoNonce) {
-            $this->generateNonces($response);
-        }
+        $this->generateNonces($response);
 
         $this->buildHeaders($response);
     }
@@ -892,19 +898,31 @@ class ContentSecurityPolicy
      */
     protected function generateNonces(ResponseInterface $response)
     {
+        if ($this->enabled() && ! $this->autoNonce) {
+            return;
+        }
+
         $body = (string) $response->getBody();
 
         if ($body === '') {
             return;
         }
 
+        // Escape quotes for JSON responses to prevent corrupting the JSON body
+        $jsonEscape = str_contains($response->getHeaderLine('Content-Type'), 'json');
+
         // Replace style and script placeholders with nonces
         $pattern = sprintf('/(%s|%s)/', preg_quote($this->styleNonceTag, '/'), preg_quote($this->scriptNonceTag, '/'));
 
-        $body = preg_replace_callback($pattern, function ($match): string {
-            $nonce = $match[0] === $this->styleNonceTag ? $this->getStyleNonce() : $this->getScriptNonce();
+        $body = preg_replace_callback($pattern, function ($match) use ($jsonEscape): string {
+            if (! $this->enabled()) {
+                return '';
+            }
 
-            return "nonce=\"{$nonce}\"";
+            $nonce = $match[0] === $this->styleNonceTag ? $this->getStyleNonce() : $this->getScriptNonce();
+            $attr  = 'nonce="' . $nonce . '"';
+
+            return $jsonEscape ? str_replace('"', '\\"', $attr) : $attr;
         }, $body);
 
         $response->setBody($body);
@@ -919,9 +937,9 @@ class ContentSecurityPolicy
      */
     protected function buildHeaders(ResponseInterface $response)
     {
-        $response->setHeader('Content-Security-Policy', []);
-        $response->setHeader('Content-Security-Policy-Report-Only', []);
-        $response->setHeader('Reporting-Endpoints', []);
+        if (! $this->enabled()) {
+            return;
+        }
 
         if (in_array($this->baseURI, ['', null, []], true)) {
             $this->baseURI = 'self';
@@ -945,9 +963,7 @@ class ContentSecurityPolicy
             }
         }
 
-        // Compile our own header strings here since if we just
-        // append it to the response, it will be joined with
-        // commas, not semi-colons as we need.
+        // Compile each generated header value before appending it to the response.
         if ($this->reportingEndpoints !== []) {
             $endpoints = [];
 

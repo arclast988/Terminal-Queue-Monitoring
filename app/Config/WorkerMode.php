@@ -47,4 +47,7 @@ class WorkerMode
      * Helps prevent memory leaks at a small performance cost.
      */
     public bool $forceGarbageCollection = true;
+
+    /** @var list<string> Request listeners to reset in optional worker mode. */
+    public array $resetEventListeners = [];
 }

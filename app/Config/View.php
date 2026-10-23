@@ -23,6 +23,9 @@ class View extends BaseView
      */
     public $saveData = true;
 
+    /** Restrict Parser conditions to comparisons and basic expressions. */
+    public bool $restrictParserConditionals = true;
+
     /**
      * Parser Filters map a filter name with any PHP callable. When the
      * Parser prepares a variable for display, it will chain it

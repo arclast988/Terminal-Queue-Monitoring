@@ -1,0 +1,79 @@
+name: Production PHP image
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'composer.*'
+      - 'start.sh'
+      - 'deploy/**'
+      - '.github/workflows/production-image.yml'
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: jeepney_user
+          POSTGRES_PASSWORD: image_test_password
+          POSTGRES_DB: jeepneynvans_test
+        ports: ['5432:5432']
+        options: --health-cmd="pg_isready -U jeepney_user -d jeepneynvans_test" --health-interval=5s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build --pull -t jeepneynvans-production:test .
+      - name: Verify patched PHP and required extensions
+        run: |
+          docker run --rm --entrypoint php jeepneynvans-production:test -r '
+            if (PHP_VERSION_ID !== 80235) { exit(1); }
+            foreach (["intl", "mbstring", "pgsql", "pdo_pgsql", "curl", "gd", "fileinfo", "openssl", "sodium"] as $extension) {
+                if (!extension_loaded($extension)) { fwrite(STDERR, "Missing extension: $extension\n"); exit(1); }
+            }
+            echo "PHP ", PHP_VERSION, ": runtime and extensions verified\n";
+          '
+      - name: Start the production stack and verify HTTP and WebSocket responses
+        run: |
+          docker run --rm --network host --entrypoint bash \
+            -e CI_ENVIRONMENT=production \
+            -e database.default.hostname=127.0.0.1 \
+            -e database.default.database=jeepneynvans_test \
+            -e database.default.username=jeepney_user \
+            -e database.default.password=image_test_password \
+            jeepneynvans-production:test -c \
+            'mkdir -p writable/cache writable/logs writable/session; php spark migrate --all'
+          docker run -d --name production-smoke --network host \
+            -e DATABASE_URL=postgresql://jeepney_user:image_test_password@127.0.0.1:5432/jeepneynvans_test \
+            -e ENCRYPTION_KEY=0123456789abcdef0123456789abcdef \
+            -e APP_BASE_URL=https://production.example.test/ \
+            jeepneynvans-production:test
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:8080/healthz; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          curl --fail --silent --show-error --header 'Host: production.example.test' --header 'X-Forwarded-Proto: https' --output /dev/null http://127.0.0.1:8080/
+          curl --fail --silent --show-error --header 'Host: production.example.test' --header 'X-Forwarded-Proto: https' --output /dev/null http://127.0.0.1:8080/login
+          python3 - <<'PY'
+          import socket
+          with socket.create_connection(('127.0.0.1', 8080), timeout=10) as connection:
+              connection.sendall(b'GET /ws HTTP/1.1\r\nHost: production.example.test\r\nOrigin: https://production.example.test\r\nX-Forwarded-Proto: https\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n\r\n')
+              response = connection.recv(4096)
+              assert b'101 Switching Protocols' in response, response
+          PY
+      - name: Show production logs
+        if: always()
+        run: |
+          docker logs production-smoke 2>&1 || true
+          docker exec production-smoke sh -c 'tail -n 60 writable/logs/log-* 2>/dev/null' || true
