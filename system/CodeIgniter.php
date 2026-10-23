@@ -55,7 +55,7 @@ class CodeIgniter
     /**
      * The current version of CodeIgniter Framework
      */
-    public const CI_VERSION = '4.7.0';
+    public const CI_VERSION = '4.7.5';
 
     /**
      * App startup time.
@@ -186,10 +186,10 @@ class CodeIgniter
     public function initialize()
     {
         // Set default locale on the server
-        Locale::setDefault($this->config->defaultLocale ?? 'en');
+        Locale::setDefault($this->config->defaultLocale);
 
         // Set default timezone on the server
-        date_default_timezone_set($this->config->appTimezone ?? 'UTC');
+        date_default_timezone_set($this->config->appTimezone);
     }
 
     /**
@@ -208,6 +208,29 @@ class CodeIgniter
         // Reset timing
         $this->startTime = null;
         $this->totalTime = 0;
+
+        $this->resetKintForWorkerMode();
+    }
+
+    /**
+     * Resets Kint request-specific state for worker mode.
+     */
+    private function resetKintForWorkerMode(): void
+    {
+        if (! CI_DEBUG || ! class_exists(Kint::class, false)) {
+            return;
+        }
+
+        $csp = service('csp');
+        if ($csp->enabled()) {
+            RichRenderer::$js_nonce  = $csp->getScriptNonce();
+            RichRenderer::$css_nonce = $csp->getStyleNonce();
+        } else {
+            RichRenderer::$js_nonce  = null;
+            RichRenderer::$css_nonce = null;
+        }
+
+        RichRenderer::$needs_pre_render = true;
     }
 
     /**
@@ -238,7 +261,7 @@ class CodeIgniter
     {
         // If we have KINT_DIR it means it's already loaded via composer
         if (! defined('KINT_DIR')) {
-            spl_autoload_register(function ($class): void {
+            spl_autoload_register(static function ($class): void {
                 $class = explode('\\', $class);
 
                 if (array_shift($class) !== 'Kint') {
@@ -452,7 +475,7 @@ class CodeIgniter
             if ($routeFilters !== null) {
                 $filters->enableFilters($routeFilters, 'before');
 
-                $oldFilterOrder = config(Feature::class)->oldFilterOrder ?? false;
+                $oldFilterOrder = config(Feature::class)->oldFilterOrder ?? false; // @phpstan-ignore nullCoalesce.property
                 if (! $oldFilterOrder) {
                     $routeFilters = array_reverse($routeFilters);
                 }
@@ -482,29 +505,29 @@ class CodeIgniter
         // If startController returned a Response (from an attribute or Closure), use it
         if ($returned instanceof ResponseInterface) {
             $this->gatherOutput($cacheConfig, $returned);
-        }
-        // Closure controller has run in startController().
-        elseif (! is_callable($this->controller)) {
-            $controller = $this->createController();
+        } else {
+            // Closure controller has run in startController().
+            if (! is_callable($this->controller)) {
+                $controller = $this->createController();
 
-            if (! method_exists($controller, '_remap') && ! is_callable([$controller, $this->method], false)) {
-                throw PageNotFoundException::forMethodNotFound($this->method);
+                if (! method_exists($controller, '_remap') && ! is_callable([$controller, $this->method], false)) {
+                    throw PageNotFoundException::forMethodNotFound($this->method);
+                }
+
+                // Is there a "post_controller_constructor" event?
+                Events::trigger('post_controller_constructor');
+
+                $returned = $this->runController($controller);
+            } else {
+                $this->benchmark->stop('controller_constructor');
+                $this->benchmark->stop('controller');
             }
 
-            // Is there a "post_controller_constructor" event?
-            Events::trigger('post_controller_constructor');
-
-            $returned = $this->runController($controller);
-        } else {
-            $this->benchmark->stop('controller_constructor');
-            $this->benchmark->stop('controller');
+            // If $returned is a string, then the controller output something,
+            // probably a view, instead of echoing it directly. Send it along
+            // so it can be used with the output.
+            $this->gatherOutput($cacheConfig, $returned);
         }
-
-        // If $returned is a string, then the controller output something,
-        // probably a view, instead of echoing it directly. Send it along
-        // so it can be used with the output.
-        $this->gatherOutput($cacheConfig, $returned);
-
         if ($this->enableFilters) {
             /** @var Filters $filters */
             $filters = service('filters');
@@ -521,7 +544,7 @@ class CodeIgniter
         }
 
         // Execute controller attributes' after() methods AFTER framework filters
-        if ((config('Routing')->useControllerAttributes ?? true) === true) {
+        if ((config('Routing')->useControllerAttributes ?? true) === true) { // @phpstan-ignore nullCoalesce.property
             $this->benchmark->start('route_attributes_after');
             $this->response = $this->router->executeAfterAttributes($this->request, $this->response);
             $this->benchmark->stop('route_attributes_after');
@@ -601,9 +624,7 @@ class CodeIgniter
      */
     protected function startBenchmark()
     {
-        if ($this->startTime === null) {
-            $this->startTime = microtime(true);
-        }
+        $this->startTime ??= microtime(true);
 
         $this->benchmark = Services::timer();
         $this->benchmark->start('total_execution', $this->startTime);
@@ -752,6 +773,8 @@ class CodeIgniter
 
     /**
      * Returns an array with our basic performance stats collected.
+     *
+     * @return array{startTime: float|null, totalTime: float}
      */
     public function getPerformanceStats(): array
     {
@@ -887,7 +910,7 @@ class CodeIgniter
 
         // Execute route attributes' before() methods
         // This runs after routing/validation but BEFORE expensive controller instantiation
-        if ((config('Routing')->useControllerAttributes ?? true) === true) {
+        if ((config('Routing')->useControllerAttributes ?? true) === true) { // @phpstan-ignore nullCoalesce.property
             $this->benchmark->start('route_attributes_before');
             $attributeResponse = $this->router->executeBeforeAttributes($this->request);
             $this->benchmark->stop('route_attributes_before');

@@ -98,8 +98,8 @@ class RedisHandler extends BaseHandler
             $this->keyPrefix .= $this->ipAddress . ':';
         }
 
-        $this->lockRetryInterval = $config->lockWait ?? $this->lockRetryInterval;
-        $this->lockMaxRetries    = $config->lockAttempts ?? $this->lockMaxRetries;
+        $this->lockRetryInterval = $config->lockRetryInterval ?? $this->lockRetryInterval; // @phpstan-ignore nullCoalesce.property
+        $this->lockMaxRetries    = $config->lockMaxRetries ?? $this->lockMaxRetries; // @phpstan-ignore nullCoalesce.property
     }
 
     protected function setSavePath(): void
@@ -174,7 +174,7 @@ class RedisHandler extends BaseHandler
      */
     public function open($path, $name): bool
     {
-        if (empty($this->savePath)) {
+        if ($this->savePath === [] || $this->savePath === '') {
             return false;
         }
 
@@ -228,9 +228,7 @@ class RedisHandler extends BaseHandler
     public function read($id): false|string
     {
         if (isset($this->redis) && $this->lockSession($id)) {
-            if (! isset($this->sessionID)) {
-                $this->sessionID = $id;
-            }
+            $this->sessionID ??= $id;
 
             $data = $this->redis->get($this->keyPrefix . $id);
 
@@ -275,7 +273,7 @@ class RedisHandler extends BaseHandler
             $this->redis->expire($this->lockKey, 300);
 
             if ($this->fingerprint !== ($fingerprint = hash('sha256', $data)) || $this->keyExists === false) {
-                if ($this->redis->set($this->keyPrefix . $id, $data, $this->sessionExpiration)) {
+                if ($this->redis->set($this->keyPrefix . $id, $data, ['ex' => $this->sessionExpiration])) {
                     $this->fingerprint = $fingerprint;
                     $this->keyExists   = true;
 
@@ -386,10 +384,10 @@ class RedisHandler extends BaseHandler
             break;
         } while (++$attempt < $this->lockMaxRetries);
 
-        if ($attempt === 300) {
+        if ($attempt === $this->lockMaxRetries) {
             $this->logger->error(
                 'Session: Unable to obtain lock for ' . $this->keyPrefix . $sessionID
-                . ' after 300 attempts, aborting.',
+                . ' after ' . $this->lockMaxRetries . ' attempts, aborting.',
             );
 
             return false;

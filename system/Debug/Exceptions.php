@@ -201,10 +201,6 @@ class Exceptions
                 return true;
             }
 
-            if ($this->isImplicitNullableDeprecationError($message, $file, $line)) {
-                return true;
-            }
-
             if (! $this->config->logDeprecations || (bool) env('CODEIGNITER_SCREAM_DEPRECATIONS')) {
                 throw new ErrorException($message, 0, $severity, $file, $line);
             }
@@ -228,38 +224,6 @@ class Exceptions
         if (
             PHP_VERSION_ID >= 80400
             && str_contains($message, 'session.sid_')
-        ) {
-            log_message(
-                LogLevel::WARNING,
-                '[DEPRECATED] {message} in {errFile} on line {errLine}.',
-                [
-                    'message' => $message,
-                    'errFile' => clean_path($file ?? ''),
-                    'errLine' => $line ?? 0,
-                ],
-            );
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Workaround to implicit nullable deprecation errors in PHP 8.4.
-     *
-     * "Implicitly marking parameter $xxx as nullable is deprecated,
-     *  the explicit nullable type must be used instead"
-     *
-     * @TODO remove this before v4.6.0 release
-     */
-    private function isImplicitNullableDeprecationError(string $message, ?string $file = null, ?int $line = null): bool
-    {
-        if (
-            PHP_VERSION_ID >= 80400
-            && str_contains($message, 'the explicit nullable type must be used instead')
-            // Only Kint and Faker, which cause this error, are logged.
-            && (str_starts_with($message, 'Kint\\') || str_starts_with($message, 'Faker\\'))
         ) {
             log_message(
                 LogLevel::WARNING,
@@ -391,6 +355,8 @@ class Exceptions
     /**
      * Gathers the variables that will be made available to the view.
      *
+     * @return array{title: string, type: string, code: int, message: string, file: string, line: int, trace: list<array<string, mixed>>}
+     *
      * @deprecated 4.4.0 No longer used. Moved to BaseExceptionHandler.
      */
     protected function collectVars(Throwable $exception, int $statusCode): array
@@ -422,9 +388,10 @@ class Exceptions
     /**
      * Mask sensitive data in the trace.
      *
-     * @param array $trace
+     * @param list<array<string, mixed>> $trace
+     * @param list<string>               $keysToMask
      *
-     * @return array
+     * @return list<array<string, mixed>>
      *
      * @deprecated 4.4.0 No longer used. Moved to BaseExceptionHandler.
      */
@@ -438,9 +405,10 @@ class Exceptions
     }
 
     /**
-     * @param array|object $args
+     * @param array<array-key, mixed>|object $args
+     * @param list<string>                   $keysToMask
      *
-     * @return array|object
+     * @return array<array-key, mixed>|object
      *
      * @deprecated 4.4.0 No longer used. Moved to BaseExceptionHandler.
      */
@@ -477,6 +445,8 @@ class Exceptions
 
     /**
      * Determines the HTTP status code and the exit status code for this request.
+     *
+     * @return array{int, int}
      */
     protected function determineCodes(Throwable $exception): array
     {

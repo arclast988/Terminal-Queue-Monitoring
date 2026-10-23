@@ -241,10 +241,12 @@ class ShowTableInfo extends BaseCommand
      */
     private function makeTbodyForShowAllTables(array $tables): array
     {
+        $this->tbody = [];
+
         $this->removeDBPrefix();
 
-        foreach ($tables  as $id => $tableName) {
-            $db    = $this->db->table($tableName)->get();
+        foreach ($tables as $id => $tableName) {
+            $db = $this->db->table($tableName)->get();
 
             $this->tbody[] = [
                 $id + 1,

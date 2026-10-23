@@ -11,14 +11,15 @@ final class RailwayProductionRealtimeTest extends CIUnitTestCase
     {
         $start = file_get_contents(HOMEPATH . 'start.sh');
         $railway = json_decode(file_get_contents(HOMEPATH . 'railway.json'), true, 512, JSON_THROW_ON_ERROR);
-        $nixpacks = file_get_contents(HOMEPATH . 'nixpacks.toml');
+        $dockerfile = file_get_contents(HOMEPATH . 'Dockerfile');
 
         $this->assertStringContainsString('CI_ENVIRONMENT:-production', $start);
         $this->assertStringContainsString('php-fpm', $start);
         $this->assertStringContainsString("nginx -c", $start);
         $this->assertStringNotContainsString('php -S 0.0.0.0', $start);
         $this->assertSame('/healthz', $railway['deploy']['healthcheckPath']);
-        $this->assertStringContainsString('aptPkgs = ["nginx"]', $nixpacks);
+        $this->assertSame('DOCKERFILE', $railway['build']['builder']);
+        $this->assertStringContainsString('nginx', $dockerfile);
     }
 
     public function testRailwayNginxRoutesWebsocketAndPhpTraffic(): void

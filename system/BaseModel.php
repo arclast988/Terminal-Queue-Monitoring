@@ -49,7 +49,7 @@ use stdClass;
  *      - process various callbacks
  *      - allow intermingling calls to the db connection
  *
- * @phpstan-type row_array               array<int|string, float|int|null|object|string|bool>
+ * @phpstan-type row_array               array<array-key, mixed>
  * @phpstan-type event_data_beforeinsert array{data: row_array}
  * @phpstan-type event_data_afterinsert  array{id: int|string, data: row_array, result: bool}
  * @phpstan-type event_data_beforefind   array{id?: int|string, method: string, singleton: bool, limit?: int, offset?: int}
@@ -582,6 +582,7 @@ abstract class BaseModel
      * @return void
      *
      * @throws DataException
+     * @throws InvalidArgumentException if $size is not a positive integer
      */
     abstract public function chunk(int $size, Closure $userFunc);
 
@@ -652,7 +653,7 @@ abstract class BaseModel
      */
     public function findAll(?int $limit = null, int $offset = 0)
     {
-        $limitZeroAsAll = config(Feature::class)->limitZeroAsAll ?? true;
+        $limitZeroAsAll = config(Feature::class)->limitZeroAsAll ?? true; // @phpstan-ignore nullCoalesce.property
         if ($limitZeroAsAll) {
             $limit ??= 0;
         }
@@ -1099,6 +1100,21 @@ abstract class BaseModel
     {
         if (is_array($set)) {
             foreach ($set as &$row) {
+                // Save the index value from the original row because
+                // transformDataToArray() may strip it when updateOnlyChanged
+                // is true.
+                $updateIndex = null;
+
+                if ($this->updateOnlyChanged) {
+                    if (is_array($row)) {
+                        $updateIndex = $row[$index] ?? null;
+                    } elseif ($row instanceof Entity) {
+                        $updateIndex = $row->toRawArray()[$index] ?? null;
+                    } elseif (is_object($row)) {
+                        $updateIndex = $row->{$index} ?? null;
+                    }
+                }
+
                 $row = $this->transformDataToArray($row, 'update');
 
                 // Validate data before saving.
@@ -1106,8 +1122,13 @@ abstract class BaseModel
                     return false;
                 }
 
-                // Save updateIndex for later
-                $updateIndex = $row[$index] ?? null;
+                // When updateOnlyChanged is true, restore the pre-extracted
+                // index into $row. Otherwise read it from the transformed row.
+                if ($updateIndex !== null) {
+                    $row[$index] = $updateIndex;
+                } else {
+                    $updateIndex = $row[$index] ?? null;
+                }
 
                 if ($updateIndex === null) {
                     throw new InvalidArgumentException(
@@ -1404,9 +1425,11 @@ abstract class BaseModel
      */
     protected function setDate(?int $userDate = null)
     {
-        $currentDate = $userDate ?? Time::now()->getTimestamp();
+        if ($userDate === null && $this->dateFormat === 'datetime') {
+            return $this->timeToDate(Time::now());
+        }
 
-        return $this->intToDate($currentDate);
+        return $this->intToDate($userDate ?? Time::now()->getTimestamp());
     }
 
     /**
@@ -1627,9 +1650,7 @@ abstract class BaseModel
 
     protected function ensureValidation(): void
     {
-        if ($this->validation === null) {
-            $this->validation = service('validation', null, false);
-        }
+        $this->validation ??= service('validation', null, false);
     }
 
     /**
@@ -1834,7 +1855,7 @@ abstract class BaseModel
      *
      * @param object|row_array|null $row
      *
-     * @return array<int|string, mixed>
+     * @return array<array-key, mixed>
      *
      * @throws DataException
      * @throws InvalidArgumentException
@@ -1926,7 +1947,7 @@ abstract class BaseModel
     /**
      * Provides direct access to method in the database connection.
      *
-     * @param array<int|string, mixed> $params
+     * @param array<array-key, mixed> $params
      *
      * @return mixed
      */

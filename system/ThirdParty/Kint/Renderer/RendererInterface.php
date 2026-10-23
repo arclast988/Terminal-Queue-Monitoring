@@ -27,24 +27,21 @@ declare(strict_types=1);
 
 namespace Kint\Renderer;
 
-/** @psalm-api */
+use Kint\Value\AbstractValue;
+
 interface RendererInterface
 {
-    /** @psalm-api */
-    public function render(\Kint\Value\AbstractValue $v): string;
+    public function render(AbstractValue $v): string;
 
-    /** @psalm-api */
-    public function preRender(): string;
+    public function shouldRenderObjectIds(): bool;
 
-    /** @psalm-api */
-    public function postRender(): string;
-
-    /** @psalm-api */
-    public function filterParserPlugins(array $plugins): array;
-
-    /** @psalm-api */
     public function setCallInfo(array $info): void;
 
-    /** @psalm-api */
     public function setStatics(array $statics): void;
+
+    public function filterParserPlugins(array $plugins): array;
+
+    public function preRender(): string;
+
+    public function postRender(): string;
 }
