@@ -370,6 +370,44 @@ $slotsMeta = [
     font-size: 11.5px;
 }
 
+.queue-reset-layout {
+    align-items: start;
+    gap: 20px;
+}
+.queue-reset-layout .form-group { min-width: 0; }
+.queue-reset-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--sb-border);
+    border-radius: 10px;
+    background: #f8fafc;
+    cursor: pointer;
+}
+.queue-reset-option .form-check-input {
+    flex: 0 0 18px;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 2px 0 0 !important;
+    float: none !important;
+}
+.queue-reset-copy {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--sb-text-main);
+}
+.queue-reset-option-title { font-weight: 600; }
+.queue-reset-copy .form-text,
+.queue-reset-time .form-text { margin: 0; font-weight: 400; line-height: 1.5; }
+
 .form-input {
     padding: 10px 14px;
     border: 1.5px solid var(--sb-border);
@@ -2058,18 +2096,20 @@ $slotsMeta = [
                 </div>
                 <input type="hidden" name="queue_reset_configured" value="1">
                 <input type="hidden" name="queue_reset_enabled" value="0">
-                <div class="form-grid">
+                <div class="form-grid queue-reset-layout">
                     <div class="form-group">
-                        <label class="form-label" for="inputQueueResetEnabled">
-                            <input type="checkbox" class="form-check-input me-2" id="inputQueueResetEnabled" name="queue_reset_enabled" value="1" <?= ($s['queue_reset_enabled'] ?? '1') === '1' ? 'checked' : '' ?>>
-                            Clear the queue automatically every day
+                        <label class="queue-reset-option" for="inputQueueResetEnabled">
+                            <input type="checkbox" class="form-check-input" id="inputQueueResetEnabled" name="queue_reset_enabled" value="1" aria-describedby="queueResetEnabledHelp" <?= ($s['queue_reset_enabled'] ?? '1') === '1' ? 'checked' : '' ?>>
+                            <span class="queue-reset-copy">
+                                <span class="queue-reset-option-title">Clear the queue automatically every day</span>
+                                <span class="form-text" id="queueResetEnabledHelp">Removes waiting and boarding vehicles from the active queue.</span>
+                            </span>
                         </label>
-                        <p class="form-text">Removes waiting and boarding vehicles from the active queue.</p>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group queue-reset-time">
                         <label class="form-label" for="inputQueueResetTime">Daily clearing time (Philippine time)</label>
-                        <input type="time" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" step="60" required>
-                        <p class="form-text">Asia/Manila. Changes begin at the next scheduled time. Default: 12:00 AM.</p>
+                        <input type="time" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" step="60" required aria-describedby="queueResetTimeHelp">
+                        <p class="form-text" id="queueResetTimeHelp">Asia/Manila. Changes begin at the next scheduled time. Default: 12:00 AM.</p>
                     </div>
                 </div>
             </div>

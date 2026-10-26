@@ -453,15 +453,32 @@ test('terminal names become uppercase while typing on both admin forms', {timeou
 });
 
 test('daily queue clearing offers an editable Philippine time and an enable switch', {timeout:90000}, async () => {
-  const page=await browser.newPage({viewport:{width:375,height:850}});
+  for (const width of [320, 375, 768, 1280]) {
+  const page=await browser.newPage({viewport:{width,height:850}});
   try {
     await page.goto(`${origin}/fixture/admin-settings#operations`);
     assert.equal(await page.locator('#inputQueueResetTime').isVisible(),true);
+    const layout = await page.locator('.queue-reset-layout').evaluate(el => {
+      const checkbox = el.querySelector('#inputQueueResetEnabled').getBoundingClientRect();
+      const copy = el.querySelector('.queue-reset-copy').getBoundingClientRect();
+      return {gap:copy.left-checkbox.right, aligned:Math.abs(copy.top-checkbox.top)<=4,
+        fits:[...el.querySelectorAll('.queue-reset-option, #inputQueueResetTime')].every(node=>{
+          const box=node.getBoundingClientRect(); return box.left>=0&&box.right<=innerWidth+1;
+        })};
+    });
+    assert.ok(layout.gap>=8 && layout.gap<=16 && layout.aligned, JSON.stringify({width,layout}));
+    assert.equal(layout.fits,true);
     assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'00:00');
+    if (width===375 || width===1280) {
+      const dir=path.join(__dirname,'artifacts'); fs.mkdirSync(dir,{recursive:true});
+      await page.locator('.queue-reset-layout').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(dir,`${engine}-queue-clearing-${width}.png`),animations:'disabled'});
+    }
     await page.locator('#inputQueueResetTime').fill('18:30');
     await page.locator('#inputQueueResetEnabled').uncheck();
     assert.deepEqual(await page.locator('#formOperations').evaluate(form=>{const data=new FormData(form);return [data.get('queue_reset_time'),data.getAll('queue_reset_enabled').at(-1)];}),['18:30','0']);
     await page.locator('#inputQueueResetEnabled').check();
     assert.equal(await page.locator('#formOperations').evaluate(form=>new FormData(form).getAll('queue_reset_enabled').at(-1)),'1');
   } finally {await page.close();}
+  }
 });
