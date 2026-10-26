@@ -2,21 +2,10 @@
 
 
 <style>
-.rule-bulk-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 14px;
-    padding: 14px;
-    margin-bottom: 16px;
-    border: 1px solid var(--border, #e2e8f0);
-    border-radius: 12px;
-    background: var(--surface-sunken, #f8fafc);
-}
 .rule-bulk-toolbar[hidden] { display: none !important; }
 #departure-rules-table:not(.selection-mode-active) .rule-select-cell { display: none !important; }
-#departure-rules-table.selection-mode-active .rule-select-cell { width: 48px; text-align: center; }
-.rule-select-checkbox, #select-all-rules { width: 20px; height: 20px; cursor: pointer; }
+#departure-rules-table.selection-mode-active .rule-select-cell { width: 44px; text-align: center; }
+.rule-select-checkbox, #select-all-rules { width: 18px; height: 18px; cursor: pointer; }
 #departure-rules-table .rule-row.is-selected { background: var(--primary-soft); }
 .rule-filter-container {
     background: #ffffff;
@@ -332,11 +321,6 @@
     </h1>
     <?php if ($prefix !== 'staff' || !empty($routes)): ?>
     <div class="d-flex gap-2 flex-wrap">
-        <?php if (!empty($rules)): ?>
-        <button type="button" class="btn-modern btn-modern-outline" id="btn-toggle-select-rules" aria-pressed="false">
-            <i class="bi bi-check2-square"></i> <span id="btn-select-rules-text">Select</span>
-        </button>
-        <?php endif; ?>
         <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-rule" class="btn-modern btn-modern-primary">
             <i class="bi bi-plus-circle"></i> Add New Rule
         </a>
@@ -403,31 +387,43 @@
 </div>
 
 <div class="modern-card shadow-modern fade-in">
-    <div class="modern-card-header d-flex align-items-center justify-content-between">
+    <div class="modern-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
         <span class="modern-card-title">
             <i class="bi bi-list" style="color: var(--primary, #1565C0);"></i>
             Rule List <span id="active-filter-title" class="badge-modern badge-modern-primary ms-2" style="font-size: 12px; font-weight: 700;">(All Destinations)</span>
         </span>
+        <?php if (!empty($rules)): ?>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-toggle-select-rules" aria-pressed="false" aria-expanded="false" aria-controls="rule-bulk-toolbar" title="Toggle selection mode for batch actions">
+                <i class="bi bi-check2-square me-1"></i> <span id="btn-select-rules-text">Select</span>
+            </button>
+        </div>
+        <?php endif; ?>
     </div>
     <div class="modern-card-body">
-        <div id="rule-bulk-toolbar" class="rule-bulk-toolbar" hidden>
-            <label class="d-flex align-items-center gap-2 mb-0">
-                <input type="checkbox" id="select-all-rules" class="form-check-input m-0">
-                Select all shown
-            </label>
-            <span id="rule-selected-count" aria-live="polite">0 rules selected</span>
-            <div class="d-flex gap-2 flex-wrap ms-auto">
-                <button type="button" class="btn-modern btn-modern-sm btn-action-delete" id="btn-bulk-delete-rules" disabled>
-                    <i class="bi bi-trash"></i> Delete Selected
+        <div id="rule-bulk-toolbar" class="rule-bulk-toolbar bulk-action-top-bar" hidden>
+            <div class="bulk-bar-info">
+                <label class="bulk-select-all-wrap mb-0" title="Select all displayed rules">
+                    <input type="checkbox" id="select-all-rules" class="form-check-input select-all-checkbox m-0">
+                    <span class="fw-semibold text-dark" style="font-size: 13.5px;">Select All</span>
+                </label>
+                <span class="bulk-bar-divider"></span>
+                <span class="bulk-count-badge"><span id="rule-selected-count" aria-live="polite">0 rules selected</span></span>
+            </div>
+            <div class="bulk-bar-actions">
+                <button type="button" class="btn-modern btn-modern-sm btn-action-delete btn-bulk-delete" id="btn-bulk-delete-rules" disabled>
+                    <i class="bi bi-trash"></i> <span>Delete Selected</span>
                 </button>
-                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-cancel-select-rules">Cancel</button>
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline btn-bulk-cancel" id="btn-cancel-select-rules">
+                    <i class="bi bi-x"></i> <span>Cancel</span>
+                </button>
             </div>
         </div>
         <div class="table-responsive">
             <table class="table-modern management-list-table" id="departure-rules-table">
                 <thead>
                     <tr>
-                        <th class="rule-select-cell" scope="col"><span class="visually-hidden">Select rule</span></th>
+                        <th class="rule-select-cell bulk-col" scope="col"><span class="visually-hidden">Select rule</span></th>
                         <th class="management-terminal-col">Terminal</th>
                         <th class="management-destination-col">Destination</th>
                         <th class="management-day-col">Day / Round</th>
@@ -443,7 +439,7 @@
                         <?php foreach ($rules as $rule): ?>
                             <?php $destSlug = !empty($rule['route_destination']) && $rule['route_destination'] !== '-' ? strtolower($rule['route_destination']) : 'general'; ?>
                             <tr class="rule-row" data-destination="<?= esc($destSlug) ?>" data-route-id="<?= esc($rule['route_id'] ?? '') ?>">
-                                <td data-label="Select" class="rule-select-cell">
+                                <td data-label="Select" class="rule-select-cell bulk-col bulk-select-cell">
                                     <?php if (!empty($rule['can_manage']) || session()->get('role') !== 'staff'): ?>
                                     <input type="checkbox" class="form-check-input rule-select-checkbox" value="<?= (int) $rule['id'] ?>" aria-label="Select <?= esc(($rule['label'] ?? 'departure rule') . ' #' . $rule['id'], 'attr') ?>">
                                     <?php endif; ?>
@@ -555,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!toggle) return;
     let selectionMode = false;
     const checkboxes = Array.from(table.querySelectorAll('.rule-select-checkbox'));
-    const shown = () => checkboxes.filter(box => !box.closest('tr').classList.contains('d-none'));
+    const shown = () => checkboxes.filter(box => !box.disabled && !box.closest('tr').classList.contains('d-none'));
     function update() {
         const visible = shown();
         const selected = visible.filter(box => box.checked);
@@ -569,9 +565,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function setMode(enabled) {
         selectionMode = enabled;
         toolbar.hidden = !enabled;
+        toolbar.classList.toggle('is-visible', enabled);
         table.classList.toggle('selection-mode-active', enabled);
+        toggle.classList.toggle('active', enabled);
         toggle.setAttribute('aria-pressed', String(enabled));
-        document.getElementById('btn-select-rules-text').textContent = enabled ? 'Cancel Selection' : 'Select';
+        toggle.setAttribute('aria-expanded', String(enabled));
+        document.getElementById('btn-select-rules-text').textContent = enabled ? 'Exit Select' : 'Select';
         checkboxes.forEach(box => { box.checked = false; });
         document.getElementById('rule-bulk-selected-inputs').replaceChildren();
         update();
@@ -580,6 +579,12 @@ document.addEventListener('DOMContentLoaded', function() {
     toggle.addEventListener('click', () => setMode(!selectionMode));
     document.getElementById('btn-cancel-select-rules').addEventListener('click', () => setMode(false));
     checkboxes.forEach(box => box.addEventListener('change', update));
+    table.addEventListener('click', event => {
+        const cell = event.target.closest('td.rule-select-cell');
+        if (!selectionMode || !cell || event.target.closest('input, label')) return;
+        const box = cell.querySelector('.rule-select-checkbox:not(:disabled)');
+        if (box) box.click();
+    });
     all.addEventListener('change', () => { shown().forEach(box => { box.checked = all.checked; }); update(); });
     remove.addEventListener('click', () => {
         const selected = shown().filter(box => box.checked);

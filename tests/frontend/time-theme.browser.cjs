@@ -313,15 +313,40 @@ test('logout accents and shared notices follow saved and live role themes, inclu
 
 
 test('departure rule Select deletes only checked rows and resets after route changes', {timeout: 90000}, async () => {
-  for (const name of ['admin-rules', 'staff-rules']) {
-    const page = await browser.newPage({viewport:{width:375,height:900}});
+  for (const name of ['admin-rules', 'staff-rules']) for (const width of [320, 375, 1280]) {
+    const page = await browser.newPage({viewport:{width,height:900}});
     try {
       await page.goto(`${origin}/fixture/${name}?state=bulk-rules`);
+      assert.equal(await page.locator('.modern-card-header #btn-toggle-select-rules').count(), 1);
+      assert.equal(await page.locator('.page-header-modern #btn-toggle-select-rules').count(), 0);
       assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), false);
+      assert.equal(await page.locator('.rule-select-cell').first().isVisible(), false);
       await page.locator('#btn-toggle-select-rules').click();
       assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), true);
+      assert.equal(await page.locator('#btn-select-rules-text').textContent(), 'Exit Select');
+      assert.equal(await page.locator('#btn-toggle-select-rules').getAttribute('aria-expanded'), 'true');
+      assert.equal(await page.locator('#rule-selected-count').textContent(), '0 rules selected');
       assert.equal(await page.locator('#btn-bulk-delete-rules').isDisabled(), true);
+      const toolbarFits = await page.locator('#rule-bulk-toolbar').evaluate(el => {
+        const bar = el.getBoundingClientRect();
+        return [...el.querySelectorAll('label, .bulk-count-badge, button')].every(node => {
+          const box = node.getBoundingClientRect();
+          return box.left >= bar.left && box.right <= bar.right + 1 && box.right <= innerWidth + 1;
+        });
+      });
+      assert.equal(toolbarFits, true, `${name} toolbar must fit at ${width}px`);
+      if (width !== 320) {
+        const dir = path.join(__dirname, 'artifacts'); fs.mkdirSync(dir, {recursive:true});
+        await page.locator('#rule-bulk-toolbar').scrollIntoViewIfNeeded();
+        await page.screenshot({path:path.join(dir, `${engine}-${name}-selection-${width}.png`), animations:'disabled'});
+      }
+      const boxes = page.locator('.rule-select-checkbox:visible:not(:disabled)');
+      await boxes.first().check();
+      assert.equal(await page.locator('#rule-selected-count').textContent(), '1 rule selected');
+      if (await boxes.count() > 1) assert.equal(await page.locator('#select-all-rules').evaluate(el => el.indeterminate), true);
       await page.locator('#select-all-rules').check();
+      assert.equal(await page.locator('.rule-select-checkbox:checked').count(), await boxes.count());
+      if (await boxes.count() > 1) await boxes.first().uncheck();
       const selected = await page.locator('.rule-select-checkbox:checked').count();
       assert.ok(selected > 0);
       // Bootstrap ignores hide() while its opening transition is still running.
@@ -335,8 +360,17 @@ test('departure rule Select deletes only checked rows and resets after route cha
       await page.evaluate(() => window.ruleDeleteModalShown);
       assert.match(await page.locator('#deleteRuleConfirmMessage').textContent(), /selected departure rules/);
       assert.equal(await page.locator('#ruleBulkDeleteForm input[name="ids[]"]').count(), selected);
+      assert.deepEqual(await page.locator('#ruleBulkDeleteForm input[name="ids[]"]').evaluateAll(nodes => nodes.map(node => node.value)),
+        await page.locator('.rule-select-checkbox:checked').evaluateAll(nodes => nodes.map(node => node.value)));
       await page.locator('#deleteRuleConfirmModal [data-bs-dismiss="modal"]').click();
       await page.locator('#deleteRuleConfirmModal').waitFor({state:'hidden'});
+      await page.locator('#btn-cancel-select-rules').click();
+      assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), false);
+      assert.equal(await page.locator('#btn-select-rules-text').textContent(), 'Select');
+      assert.equal(await page.locator('.rule-select-checkbox:checked').count(), 0);
+      assert.equal(await page.locator('#ruleBulkDeleteForm input[name="ids[]"]').count(), 0);
+      await page.locator('#btn-toggle-select-rules').click();
+      await page.locator('#select-all-rules').check();
       await page.locator('[data-route-filter="general"]').click();
       assert.equal(await page.locator('.rule-select-checkbox:checked').count(), 0);
       assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), false);
