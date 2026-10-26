@@ -225,7 +225,7 @@ test('phone loading indicators keep moving in lite mode and stop for reduced mot
   }
 });
 
-test('a phone shows navigation feedback while a slow destination is still loading', { timeout: 15000 }, async t => {
+test('a phone relies on browser navigation feedback without a second site bar', { timeout: 15000 }, async t => {
   const { page, context, errors } = await pageFor('lite', true);
   t.after(async () => { for (const response of navigations) if (!response.writableEnded) response.end('Next page'); await context.close(); });
   const count = navigations.length, reportCount = navigationReports.length;
@@ -241,7 +241,7 @@ test('a phone shows navigation feedback while a slow destination is still loadin
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   for (let i = 0; i < 300 && (navigations.length === count || navigationReports.length === reportCount); i++) await new Promise(resolve => setTimeout(resolve, 10));
   assert.equal(navigations.length, count + 1); assert.equal(navigationReports.length, reportCount + 1);
-  assert.deepEqual(navigationReports[reportCount], { visible: true, mode: 'lite', display: 'block', animation: 'gl-progress-sweep' });
+  assert.deepEqual(navigationReports[reportCount], { visible: false, mode: 'lite', display: 'block', animation: 'none' });
   navigations[count].setHeader('Content-Type', 'text/html'); navigations[count].end('<p>Schedules ready</p>');
   await page.waitForURL(origin + '/slow-navigation'); assert.deepEqual(errors, []);
 });

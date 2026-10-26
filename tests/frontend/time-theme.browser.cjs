@@ -324,8 +324,15 @@ test('departure rule Select deletes only checked rows and resets after route cha
       await page.locator('#select-all-rules').check();
       const selected = await page.locator('.rule-select-checkbox:checked').count();
       assert.ok(selected > 0);
+      // Bootstrap ignores hide() while its opening transition is still running.
+      // Listen before clicking so reduced-motion browsers cannot finish first.
+      await page.evaluate(() => {
+        window.ruleDeleteModalShown = new Promise(resolve => {
+          document.getElementById('deleteRuleConfirmModal').addEventListener('shown.bs.modal', () => resolve(), {once:true});
+        });
+      });
       await page.locator('#btn-bulk-delete-rules').click();
-      await page.locator('#deleteRuleConfirmModal.show').waitFor();
+      await page.evaluate(() => window.ruleDeleteModalShown);
       assert.match(await page.locator('#deleteRuleConfirmMessage').textContent(), /selected departure rules/);
       assert.equal(await page.locator('#ruleBulkDeleteForm input[name="ids[]"]').count(), selected);
       await page.locator('#deleteRuleConfirmModal [data-bs-dismiss="modal"]').click();

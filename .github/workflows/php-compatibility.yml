@@ -33,6 +33,10 @@ jobs:
           php-version: ${{ matrix.php }}
           extensions: intl, mbstring, pgsql, pdo_pgsql, curl, sqlite3, pdo_sqlite, dom, xml
           coverage: none
+      - name: Prepare writable test directories
+        run: |
+          mkdir -p writable/cache writable/logs writable/session writable/uploads
+          chmod -R u+rwX writable
       - name: Install the locked dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
       - name: Verify PHP syntax

@@ -550,7 +550,7 @@ test('browser history preserves form values and clears pending feedback after a 
   assert.deepEqual(errors, []);
 });
 
-test('a slow destination leaves the current page readable and starts its request immediately', { timeout: 15000, skip: !nativeOnly }, async t => {
+test('a slow destination preserves the readable page and uses browser navigation feedback', { timeout: 15000, skip: !nativeOnly }, async t => {
   const { page, errors } = await open(t);
   t.after(() => { for (const response of pending) if (!response.writableEnded) response.end(fixtures.get('/schedules')); });
   await page.goto(origin + '/guest');
@@ -570,7 +570,7 @@ test('a slow destination leaves the current page readable and starts its request
   assert.deepEqual(errors, []);
   assert.equal(pending.length, count + 1);
   assert.equal(navigationReports.length, reportCount + 1);
-  assert.deepEqual(navigationReports[reportCount], { path: '/guest', progress: true, opacity: '1', headerVisible: true });
+  assert.deepEqual(navigationReports[reportCount], { path: '/guest', progress: false, opacity: '1', headerVisible: true });
   pending[count].setHeader('Content-Type', 'text/html'); pending[count].end(fixtures.get('/schedules'));
   await page.waitForURL(origin + '/slow?route=ormoc');
   assert.deepEqual(errors, []);
