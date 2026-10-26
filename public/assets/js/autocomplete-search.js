@@ -771,6 +771,7 @@
             wrapper.appendChild(dropdown);
 
             let activeIndex = -1;
+            let isPickingOption = false;
 
             function renderSelectDropdown(query = '') {
                 const opts = getAvailableOptions();
@@ -883,8 +884,17 @@
                     // Keep validation focus on the search field until a complete
                     // click chooses an option. Do not collapse/move the menu on
                     // mousedown, before Firefox has delivered mouseup/click.
-                    item.addEventListener('pointerdown', (e) => {
-                        e.preventDefault();
+                    item.addEventListener('pointerdown', () => {
+                        // WebKit may blur a validated input during a pointer
+                        // gesture. Keep the menu intact until its click arrives.
+                        isPickingOption = true;
+                        const finishPick = () => {
+                            document.removeEventListener('pointerup', finishPick);
+                            document.removeEventListener('pointercancel', finishPick);
+                            setTimeout(() => { isPickingOption = false; }, 0);
+                        };
+                        document.addEventListener('pointerup', finishPick, { once: true });
+                        document.addEventListener('pointercancel', finishPick, { once: true });
                     });
                     item.addEventListener('mousedown', (e) => {
                         e.preventDefault();
@@ -892,6 +902,7 @@
                     item.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        isPickingOption = false;
                         selectOption(item.dataset.value, item.dataset.text);
                     });
                     item.addEventListener('mouseenter', () => {
@@ -956,7 +967,7 @@
             }, INPUT_DEBOUNCE_MS));
 
             searchInput.addEventListener('blur', () => {
-                if (isClearing) return;
+                if (isClearing || isPickingOption) return;
                 const query = (searchInput.value || '').trim().toUpperCase();
                 const available = getAvailableOptions().filter(o => !o.isPlaceholder);
                 if (query) {

@@ -576,9 +576,17 @@ test('vehicle autocomplete validation stays closed until the field is used and p
     await page.locator('#route_id').locator('..').locator('.autocomplete-dropdown').waitFor({ state: 'visible', timeout: 3000 });
     assert.equal(await opened.count(), 1, `route click ${width} ${height} ${mode}`);
     const routeOption = page.locator('#route_id').locator('..').locator('.autocomplete-item[data-value="1"]');
+    await page.evaluate(() => {
+      window.routePickEvents = [];
+      const wrapper = document.querySelector('#route_id').parentElement;
+      for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup', 'click', 'blur', 'change']) {
+        wrapper.addEventListener(type, event => window.routePickEvents.push({type, target:event.target.id || event.target.className,
+          value:document.querySelector('#route_id').value}), true);
+      }
+    });
     if (touch) await routeOption.tap();
     else await routeOption.click();
-    assert.equal(await page.locator('#route_id').inputValue(), '1', `route selection ${width} ${height} ${mode}${touch ? ' touch' : ''}`);
+    assert.equal(await page.locator('#route_id').inputValue(), '1', `route selection ${width} ${height} ${mode}${touch ? ' touch' : ''}: ` + JSON.stringify(await page.evaluate(() => window.routePickEvents)));
     assert.equal(await opened.count(), 0);
     assert.equal(await form.evaluate(el => el.checkValidity()), true);
     await form.evaluate(el => {

@@ -20,6 +20,8 @@ jobs:
         browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -29,6 +31,12 @@ jobs:
           coverage: none
       - run: npm ci --prefix tests/frontend --ignore-scripts --no-audit --no-fund
       - run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify vehicle route selection after native validation
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+        run: >-
+          node --test --test-name-pattern='vehicle autocomplete validation'
+          tests/frontend/responsive.browser.cjs
       - name: Verify reports, themes, selection, touch filters, and loader behavior
         env:
           TQ_BROWSER: ${{ matrix.browser }}
