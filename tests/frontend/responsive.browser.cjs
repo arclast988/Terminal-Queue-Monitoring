@@ -296,10 +296,14 @@ test('management actions align with their headers and scroll as normal columns l
       checkBounds(await bounds(page, ['#' + id + ' .management-row-actions .btn-modern']), name + ' actions ' + width);
       const targets = await actions.locator('.btn-modern').evaluateAll(buttons => buttons.map(button => {
         const box = button.getBoundingClientRect(), label = button.querySelector('.action-label');
-        return { top:box.top, bottom:box.bottom, height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
+        return { left:box.left, top:box.top, bottom:box.bottom, height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
       }));
       assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
       if (width > 768) {
+        if (name === 'admin-vehicles') {
+          assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), 'Vehicle actions should stack like User Management: ' + JSON.stringify(targets));
+          assert.ok(targets.every(target => Math.abs(target.left - targets[0].left) <= 1), 'Vehicle actions should share their left edge');
+        }
         if (targets.some(target => target.label === 'Delete')) {
           assert.ok(Math.abs(targets[0].top - targets[1].top) <= 1, name + ' Edit and Delete should share a row: ' + JSON.stringify(targets));
         }

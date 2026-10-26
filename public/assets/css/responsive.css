@@ -3899,6 +3899,11 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         max-width: none !important;
         padding: 12px 10px !important;
     }
+    html body #vehicles-table.management-list-table .management-actions-col > .management-row-actions:not(.action-buttons-grid) {
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        align-items: flex-start !important;
+    }
     html body #vehicles-table.management-list-table .plate-number,
     html body #vehicles-table.management-list-table td[data-label="Status"] .badge-modern {
         max-width: 100%;

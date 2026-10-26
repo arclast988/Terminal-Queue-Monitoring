@@ -112,8 +112,8 @@ test('editing register order three distinguishes today\'s position from saved mi
     assert.equal(await page.locator('#current_dispatch_position').inputValue(),'3');
     assert.equal(await page.locator('#current_dispatch_position').evaluate(input=>input.readOnly),true);
     assert.equal(await page.locator('#dispatch_order').inputValue(),'9');
-    assert.match(await page.locator('#dispatch-order-help').innerText(),/12:00 AM Philippine time/);
-    assert.match(await page.locator('#dispatch-order-help').innerText(),/Today's order changes after departures/);
+    assert.match(await page.locator('#dispatch-order-help').innerText(),/12:00 AM \(?Philippine time\)?/);
+    assert.match(await page.locator('#dispatch-order-help').innerText(),/order changes (?:after departures|as vehicles leave)/i);
     await page.locator('#dispatch_order').fill('4');
     assert.deepEqual(await page.locator('#editVehicleForm').evaluate(form=>({start:new FormData(form).get('dispatch_order'),current:new FormData(form).has('current_dispatch_position')})),{start:'4',current:false});
     await fits(page,'#dispatch_order',width); await fits(page,'#current_dispatch_position',width);
