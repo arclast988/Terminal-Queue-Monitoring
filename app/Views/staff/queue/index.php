@@ -1056,7 +1056,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         <?php if (empty($noRoutesAssigned)): ?>
         <?php if (!empty($queueOrderGroups)): ?>
         <button type="button" class="btn-modern btn-modern-outline" data-bs-toggle="modal" data-bs-target="#manageQueueModal" id="manageQueueBtn">
-            <i class="bi bi-list-ol"></i> Manage Queue
+            <i class="bi bi-list-ol"></i> Manage Order
         </button>
         <?php endif; ?>
         <button class="btn-modern btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addToQueueModal">
@@ -1310,7 +1310,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
             <div class="modal-header queue-order-header">
                 <div>
                     <h5 class="modal-title fw-bold mb-1" id="manageQueueModalLabel">
-                        <i class="bi bi-list-ol me-2"></i>Manage Queue Order
+                        <i class="bi bi-list-ol me-2"></i>Manage Order
                     </h5>
                     <div class="small queue-order-subtitle">Hold and drag waiting vehicles, or use the arrows, to change their order.</div>
                 </div>
@@ -3053,7 +3053,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
         var newCancelSelectionBtn = newDoc ? newDoc.getElementById('cancelSelectionBtn') : null;
         if (cancelSelectionBtn && newCancelSelectionBtn) cancelSelectionBtn.disabled = newCancelSelectionBtn.disabled;
 
-        // Defensive check: If there are 0 queue cards (or empty state is showing), ensure Manage Queue button is hidden
+        // Defensive check: If there are 0 queue cards (or empty state is showing), ensure Manage Order button is hidden
         var queueCards = document.querySelectorAll('#queue-list .q-card');
         var manageBtn = document.getElementById('manageQueueBtn') || document.querySelector('[data-bs-target="#manageQueueModal"]');
         if (manageBtn) {

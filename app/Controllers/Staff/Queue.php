@@ -1107,8 +1107,9 @@ class Queue extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Queue item not found.']);
         }
 
-        if (!empty($queueItem['arrival_time']) && $queueItem['arrival_time'] < date('Y-m-d') . ' 00:00:00') {
-            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip belongs to a previous day. Add the vehicle to today’s queue instead.']);
+        $resetCutoff = \App\Libraries\QueueResetSchedule::configuredCutoff();
+        if ($resetCutoff !== null && !empty($queueItem['arrival_time']) && $queueItem['arrival_time'] < $resetCutoff) {
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip is from before the latest queue clearing time. Add a new trip instead.']);
         }
 
         if ($queueItem['status'] !== 'canceled') {
@@ -1154,9 +1155,10 @@ class Queue extends BaseController
         $this->acquireQueueOrderingLock($db);
         $this->queueModel->resetForNewDay();
 
-        if ($queueItem['arrival_time'] < date('Y-m-d') . ' 00:00:00') {
+        $resetCutoff = \App\Libraries\QueueResetSchedule::configuredCutoff();
+        if ($resetCutoff !== null && $queueItem['arrival_time'] < $resetCutoff) {
             $db->transRollback();
-            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip belongs to a previous day. Add the vehicle to today’s queue instead.']);
+            return $this->response->setStatusCode(409)->setJSON(['success' => false, 'message' => 'This trip is from before the latest queue clearing time. Add a new trip instead.']);
         }
 
         // Re-check after acquiring the queue lock so a concurrent add cannot

@@ -668,7 +668,8 @@
             font-size: 12.5px;
             font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+            transition: none;
+            touch-action: manipulation;
             font-family: inherit;
             white-space: nowrap;
             display: inline-flex;
@@ -709,7 +710,7 @@
             font-weight: 800;
             padding: 0 5px;
             line-height: 1;
-            transition: all 0.2s ease;
+            transition: none;
         }
 
         .rules-route-chip.active .chip-count {
@@ -2772,20 +2773,41 @@
         var filterGroup = document.getElementById('rulesRouteFilterGroup');
         if (!filterGroup) return;
 
-        filterGroup.addEventListener('click', function(e) {
-            var chip = e.target.closest('.rules-route-chip');
-            if (!chip) return;
-
-            // Update active chip styles
-            filterGroup.querySelectorAll('.rules-route-chip').forEach(function(c) {
-                c.classList.remove('active');
-                c.setAttribute('aria-pressed', 'false');
-            });
+        function selectRulesRoute(chip) {
+            if (!chip || !filterGroup.contains(chip)) return;
+            var route = chip.dataset.route || 'all';
+            if (route === activeRulesFilter) return;
+            var previous = filterGroup.querySelector('.rules-route-chip.active');
+            if (previous) {
+                previous.classList.remove('active');
+                previous.setAttribute('aria-pressed', 'false');
+            }
             chip.classList.add('active');
             chip.setAttribute('aria-pressed', 'true');
-
-            activeRulesFilter = chip.dataset.route || 'all';
+            activeRulesFilter = route;
             applyDepartureRulesFilter();
+        }
+
+        // Respond on finger/pen release without waiting for a synthesized click.
+        // Track movement so horizontal scrolling never chooses a route by mistake.
+        var touch = null;
+        filterGroup.addEventListener('pointerdown', function(e) {
+            touch = null;
+            if ((e.pointerType !== 'touch' && e.pointerType !== 'pen') || !e.isPrimary) return;
+            var chip = e.target.closest('.rules-route-chip');
+            if (chip) touch = {id: e.pointerId, chip: chip, x: e.clientX, y: e.clientY, moved: false};
+        }, {passive: true});
+        filterGroup.addEventListener('pointermove', function(e) {
+            if (touch && touch.id === e.pointerId && Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > 10) touch.moved = true;
+        }, {passive: true});
+        filterGroup.addEventListener('pointercancel', function() { touch = null; }, {passive: true});
+        filterGroup.addEventListener('pointerup', function(e) {
+            var tap = touch; touch = null;
+            if (tap && tap.id === e.pointerId && !tap.moved && tap.chip === e.target.closest('.rules-route-chip')) selectRulesRoute(tap.chip);
+        }, {passive: true});
+        // Mouse, keyboard and browsers without Pointer Events retain native clicks.
+        filterGroup.addEventListener('click', function(e) {
+            selectRulesRoute(e.target.closest('.rules-route-chip'));
         });
     })();
     </script>

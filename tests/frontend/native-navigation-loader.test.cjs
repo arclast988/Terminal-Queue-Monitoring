@@ -59,10 +59,10 @@ test('client hints and iPad desktop profiles use the mobile navigation fallback'
   }
 });
 
-test('desktop navigation keeps the site bar even with a narrow viewport or touch input', async () => {
+test('Chrome tabs use browser progress with desktop, narrow, and touch profiles', async () => {
   for (const options of [{}, { narrow: true }, { touchPoints: 10, mobileHint: false }]) {
     const h = loaded(options); const event = await navigate(h);
-    assert.equal(event.defaultPrevented, false); assert.equal(visible(h), true);
+    assert.equal(event.defaultPrevented, false); assert.equal(visible(h), false);
   }
 });
 
@@ -144,4 +144,30 @@ test('reinitialization and restored pages preserve one loader and usable feedbac
   await navigate(h); h.window.emit('pageshow', { persisted: true });
   const request = h.window.fetch('/api/vehicles'); h.tick(251); assert.equal(visible(h), true);
   h.requests[0].resolve({ ok: true }); await request; h.tick(500); assert.equal(visible(h), false);
+});
+
+test('late in-page requests cannot restart a second bar during browser navigation', async () => {
+  const h = loaded({ ua: android });
+  await navigate(h);
+  const request = h.window.fetch('/api/vehicles'); h.tick(251);
+  assert.equal(visible(h), false);
+  h.requests[0].resolve({ ok: true }); await request;
+  h.window.emit('pageshow', { persisted: true });
+  const next = h.window.fetch('/api/vehicles'); h.tick(251);
+  assert.equal(visible(h), true);
+  h.requests[1].resolve({ ok: true }); await next;
+});
+
+test('programmatic navigation uses the same browser policy and abort restores feedback', async () => {
+  const h = harness();
+  h.window.navigator.userAgent = android;
+  h.window.top = h.window;
+  const navigation = new h.Element('navigation'); h.window.navigation = navigation;
+  h.load(loader);
+  const signal = new h.Element('signal');
+  const event = navigation.emit('navigate', { destination: { sameDocument: false }, signal });
+  await flush(); assert.equal(event.defaultPrevented, false);
+  const request = h.window.fetch('/api/vehicles'); h.tick(251); assert.equal(visible(h), false);
+  signal.emit('abort'); h.tick(251); assert.equal(visible(h), true);
+  h.requests[0].resolve({ ok: true }); await request;
 });

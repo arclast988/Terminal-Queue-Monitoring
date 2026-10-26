@@ -466,4 +466,37 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $this->assertSame([1, 1, 3, 2], array_map(static fn($r) => (int) $r['round_number'], $rules));
     }
 
+    public function testBulkDeleteRejectsMixedPermissionsWithoutDeletingAnything(): void
+    {
+        $this->request->setMethod('POST')->setGlobal('post', ['ids' => ['1', '3']]);
+        $result = $this->withUri('http://localhost/staff/departure-rules/bulk-delete')
+            ->controller(ScopedDepartureRulesHarness::class)->execute('bulkDelete');
+        $this->assertSame(403, $result->response()->getStatusCode());
+        $this->assertSame(5, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+        $this->assertSame([], ScopedDepartureRulesHarness::$recalculations);
+    }
+
+    public function testBulkDeleteRemovesOnlySelectedRulesAndKeepsTheRouteFilter(): void
+    {
+        $this->request->setMethod('POST')->setGlobal('post', ['ids' => ['1', '4', '1'], 'return_route' => 'ormoc']);
+        $result = $this->withUri('http://localhost/staff/departure-rules/bulk-delete')
+            ->controller(ScopedDepartureRulesHarness::class)->execute('bulkDelete');
+        $this->assertSame(302, $result->response()->getStatusCode());
+        $this->assertStringEndsWith('/staff/departure-rules?route=ormoc', $result->response()->getHeaderLine('Location'));
+        $this->assertSame([2, 3, 5], array_map('intval', array_column(ScopedDepartureRulesHarness::$testDb->table('departure_rules')->orderBy('id')->get()->getResultArray(), 'id')));
+        $this->assertSame([[1, 1], [1, null]], ScopedDepartureRulesHarness::$recalculations);
+        $this->assertCount(1, ScopedDepartureRulesHarness::$broadcasts);
+    }
+
+    public function testBulkDeleteRejectsMalformedAndMissingRecords(): void
+    {
+        foreach ([['bad'], [['1']], ['0'], ['1', '999']] as $ids) {
+            $this->response = service('response', null, false);
+            $this->request->setMethod('POST')->setGlobal('post', ['ids' => $ids]);
+            $this->withUri('http://localhost/staff/departure-rules/bulk-delete')
+                ->controller(ScopedDepartureRulesHarness::class)->execute('bulkDelete');
+            $this->assertSame(5, ScopedDepartureRulesHarness::$testDb->table('departure_rules')->countAllResults());
+        }
+    }
+
 }

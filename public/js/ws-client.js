@@ -431,8 +431,8 @@
             var gp_dark = colorDarken(gp_hex, 0.18);
             var gp_soft = colorSoft(gp_hex, 0.14);
             var gp_on = contrastText(gp_hex);
-            var gn_hex = data.theme_guest_nav_bg || '#ffffff';
-            var gt_hex = data.theme_guest_nav_text || '#1c2430';
+            var gn_hex = data.theme_guest_nav_bg || getComputedStyle(document.documentElement).getPropertyValue('--guest-nav-bg').trim() || '#ffffff';
+            var gt_hex = data.theme_guest_nav_text || getComputedStyle(document.documentElement).getPropertyValue('--guest-nav-text').trim() || '#1c2430';
             var gn_bright = colorBrightness(gn_hex);
             // Ensure proper contrast: if navbar is dark, text MUST be light; if navbar is light, text MUST be dark
             if (gn_bright < 135 && colorBrightness(gt_hex) < 135) {
@@ -443,11 +443,16 @@
             var gn_chipBg = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var gn_divider = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
             var gt_soft = (colorBrightness(gt_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+            document.documentElement.style.setProperty('--guest-nav-bg', gn_hex, 'important');
+            document.documentElement.style.setProperty('--guest-nav-text', gt_hex, 'important');
 
             var isGuestPage = !document.body.classList.contains('admin-theme') && !document.body.classList.contains('staff-theme');
             if (isGuestPage) {
                 var guestVars = {
                     '--primary': gp_hex,
+                    '--primary-rgb': Object.values(hexToRgb(gp_hex)).join(', '),
+                    '--primary-soft-alpha': colorSoft(gp_hex, 0.08),
+                    '--primary-badge-bg': colorBrightness(gp_hex) > 155 ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.25)',
                     '--primary-color': gp_hex,
                     '--primary-dark': gp_dark,
                     '--primary-soft': gp_soft,
@@ -746,17 +751,22 @@
             var sp_on = contrastText(sp_hex);
             document.documentElement.style.setProperty('--staff-primary', sp_hex, 'important');
             document.documentElement.style.setProperty('--staff-on-primary', sp_on, 'important');
-            var sn_hex = data.theme_staff_nav_bg || sp_hex;
-            var st_hex = data.theme_staff_nav_text || '#ffffff';
+            var sn_hex = data.theme_staff_nav_bg || getComputedStyle(document.documentElement).getPropertyValue('--staff-nav-bg').trim() || sp_hex;
+            var st_hex = data.theme_staff_nav_text || getComputedStyle(document.documentElement).getPropertyValue('--staff-nav-text').trim() || '#ffffff';
             var sn_bright = colorBrightness(sn_hex);
             var sn_chipBg = (sn_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var sn_divider = (sn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
             var st_soft = (colorBrightness(st_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+            document.documentElement.style.setProperty('--staff-nav-bg', sn_hex, 'important');
+            document.documentElement.style.setProperty('--staff-nav-text', st_hex, 'important');
 
             var isStaffPage = document.body.classList.contains('staff-theme');
             if (isStaffPage) {
                 var staffVars = {
                     '--primary': sp_hex,
+                    '--primary-rgb': Object.values(hexToRgb(sp_hex)).join(', '),
+                    '--primary-soft-alpha': colorSoft(sp_hex, 0.08),
+                    '--primary-badge-bg': colorBrightness(sp_hex) > 155 ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.25)',
                     '--primary-dark': sp_dark,
                     '--primary-soft': sp_soft,
                     '--primary-red': sp_hex,
@@ -930,17 +940,22 @@
             var ap_on = contrastText(ap_hex);
             document.documentElement.style.setProperty('--admin-primary', ap_hex, 'important');
             document.documentElement.style.setProperty('--admin-on-primary', ap_on, 'important');
-            var an_hex = data.theme_admin_nav_bg || ap_hex;
-            var at_hex = data.theme_admin_nav_text || '#ffffff';
+            var an_hex = data.theme_admin_nav_bg || getComputedStyle(document.documentElement).getPropertyValue('--admin-nav-bg').trim() || ap_hex;
+            var at_hex = data.theme_admin_nav_text || getComputedStyle(document.documentElement).getPropertyValue('--admin-nav-text').trim() || '#ffffff';
             var an_bright = colorBrightness(an_hex);
             var an_chipBg = (an_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var an_divider = (an_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
             var at_soft = (colorBrightness(at_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+            document.documentElement.style.setProperty('--admin-nav-bg', an_hex, 'important');
+            document.documentElement.style.setProperty('--admin-nav-text', at_hex, 'important');
 
             var isAdminPage = document.body.classList.contains('admin-theme');
             if (isAdminPage) {
                 var adminVars = {
                     '--primary': ap_hex,
+                    '--primary-rgb': Object.values(hexToRgb(ap_hex)).join(', '),
+                    '--primary-soft-alpha': colorSoft(ap_hex, 0.08),
+                    '--primary-badge-bg': colorBrightness(ap_hex) > 155 ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.25)',
                     '--primary-dark': ap_dark,
                     '--primary-soft': ap_soft,
                     '--primary-red': ap_hex,

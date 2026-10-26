@@ -371,7 +371,7 @@ $dispatcherManagedContent = managed_content_overrides($dispatcherManagedKeys);
                         <li><strong>Trip Cancellation:</strong> If a vehicle suffers a mechanical issue, click <strong>Cancel</strong> to set the trip to <span class="status-badge status-cancelled">Cancelled</span>.</li>
                         <li><strong>1-Click Undo Cancel:</strong> Use <strong>Undo Cancel</strong> to restore an eligible canceled trip from today. The vehicle and route must still be active, the vehicle must not already be queued, and the terminal must have capacity.</li>
                         <li><strong>Select trips to cancel:</strong> Open the checklist, filter by destination, select the affected trips, and confirm. Only selected trips are canceled.</li>
-                        <li><strong>New day:</strong> At midnight in Asia/Manila, unfinished trips are canceled, rounds return to Round 1, and the saved vehicle starting order applies again. Add a new trip for today instead of restoring yesterday's trip.</li>
+                        <li><strong>New day:</strong> Unfinished trips leave the queue at the daily clearing time set by the Superadmin (default: midnight, Asia/Manila). Daily rounds and the saved vehicle starting order restart with the new day. Add a new trip for today instead of restoring yesterday's trip.</li>
                     </ol>
                 </div>
             </div>

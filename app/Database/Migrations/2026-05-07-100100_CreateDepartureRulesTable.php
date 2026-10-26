@@ -42,15 +42,7 @@ class CreateDepartureRulesTable extends Migration
         // Skipped if any rows already exist (additional safety on top of tableExists check).
         $count = $db->table('departure_rules')->countAllResults();
         if ($count === 0) {
-            $db->table('departure_rules')->insertBatch([
-                ['time_from' => '00:00:00', 'time_to' => '05:00:00', 'wait_minutes' => 60, 'label' => 'Late Night / Early Morning'],
-                ['time_from' => '05:00:00', 'time_to' => '09:00:00', 'wait_minutes' => 30, 'label' => 'Morning Rush'],
-                ['time_from' => '09:00:00', 'time_to' => '12:00:00', 'wait_minutes' => 40, 'label' => 'Mid-Morning'],
-                ['time_from' => '12:00:00', 'time_to' => '15:00:00', 'wait_minutes' => 40, 'label' => 'Afternoon'],
-                ['time_from' => '15:00:00', 'time_to' => '18:00:00', 'wait_minutes' => 30, 'label' => 'Afternoon Rush'],
-                ['time_from' => '18:00:00', 'time_to' => '21:00:00', 'wait_minutes' => 40, 'label' => 'Evening'],
-                ['time_from' => '21:00:00', 'time_to' => '23:59:59', 'wait_minutes' => 60, 'label' => 'Late Night'],
-            ]);
+            $db->table('departure_rules')->insertBatch(\App\Libraries\DepartureRuleDefaults::rules());
         }
     }
 

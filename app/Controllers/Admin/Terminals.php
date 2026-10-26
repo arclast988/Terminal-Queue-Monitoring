@@ -44,7 +44,7 @@ class Terminals extends BaseController
             'capacity' => (int) $this->request->getPost('capacity')
         ]);
 
-        $this->logActivity('Create terminal', 'Added terminal: ' . $this->request->getPost('name'));
+        $this->logActivity('Create terminal', 'Added terminal: ' . mb_strtoupper(trim((string) $this->request->getPost('name')), 'UTF-8'));
         $this->broadcastUpdate('fare_update', ['action' => 'terminal_created']);
 
         return redirect()->to('/admin/terminals')->with('success', 'Terminal added successfully.');
@@ -95,7 +95,7 @@ class Terminals extends BaseController
 
         $this->terminalModel->update($id, $newData);
 
-        $this->logActivity('Update terminal', 'Updated terminal: ' . $this->request->getPost('name'));
+        $this->logActivity('Update terminal', 'Updated terminal: ' . mb_strtoupper(trim((string) $this->request->getPost('name')), 'UTF-8'));
         $this->broadcastUpdate('fare_update', ['action' => 'terminal_updated', 'id' => (int) $id]);
 
         return redirect()->to('/admin/terminals')->with('success', 'Terminal updated successfully.');

@@ -16,9 +16,9 @@ const profiles = [
   { name: 'iphone-safari', ua: iphoneUA, width: 375, height: 812, touch: true, native: true },
   { name: 'ipad-desktop-profile', ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15', width: 1024, height: 768, touch: true, platform: 'MacIntel', touchPoints: 5, native: true },
   { name: 'android-tablet', ua: androidUA, width: 768, height: 1024, touch: true, native: true },
-  { name: 'desktop', ua: desktopUA, width: 1366, height: 768, native: false },
-  { name: 'wide-desktop', ua: desktopUA, width: 1920, height: 1080, native: false },
-  { name: 'narrow-desktop', ua: desktopUA, width: 320, height: 640, native: false },
+  { name: 'desktop', ua: desktopUA, width: 1366, height: 768, native: true },
+  { name: 'wide-desktop', ua: desktopUA, width: 1920, height: 1080, native: true },
+  { name: 'narrow-desktop', ua: desktopUA, width: 320, height: 640, native: true },
   { name: 'installed-android-app', ua: androidUA, width: 390, height: 844, touch: true, standalone: true, native: false },
   { name: 'android-webview', ua: androidUA.replace('Android 15;', 'Android 15; wv;'), width: 390, height: 844, touch: true, native: false },
   { name: 'ios-webview', ua: iphoneUA.replace(' Safari/604.1', ''), width: 375, height: 812, touch: true, native: false }

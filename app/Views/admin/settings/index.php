@@ -529,6 +529,8 @@ $slotsMeta = [
 }
 
 .preview-header-bar .preview-brand h4 {
+    color: inherit;
+    -webkit-text-fill-color: currentColor;
     font-size: 14.5px;
     font-weight: 700;
     margin: 0;
@@ -545,6 +547,8 @@ $slotsMeta = [
 }
 
 .preview-header-bar .preview-brand p {
+    color: inherit;
+    -webkit-text-fill-color: currentColor;
     font-size: 10.5px;
     margin: 1px 0 0;
     opacity: 0.82;
@@ -2040,6 +2044,32 @@ $slotsMeta = [
                             <i class="fas fa-info-circle me-1" style="color:#ca8a04;"></i>
                             <strong>Operational Impact:</strong> When a vehicle is marked as <em>Departed</em>, it remains hidden from the terminal dispatcher's check-in selection until this cooldown has expired. If dispatchers attempt to manually queue a vehicle before its cooldown finishes, the system blocks the action and displays the remaining wait time. Setting this value to <strong>0</strong> removes the cooldown, allowing vehicles to be queued again immediately after departure.
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <div class="card-icon"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <h3>Daily Queue Clearing</h3>
+                        <p>Choose when unfinished trips leave the active queue each day. Completed departures stay in history.</p>
+                    </div>
+                </div>
+                <input type="hidden" name="queue_reset_configured" value="1">
+                <input type="hidden" name="queue_reset_enabled" value="0">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="inputQueueResetEnabled">
+                            <input type="checkbox" class="form-check-input me-2" id="inputQueueResetEnabled" name="queue_reset_enabled" value="1" <?= ($s['queue_reset_enabled'] ?? '1') === '1' ? 'checked' : '' ?>>
+                            Clear the queue automatically every day
+                        </label>
+                        <p class="form-text">Removes waiting and boarding vehicles from the active queue.</p>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="inputQueueResetTime">Daily clearing time (Philippine time)</label>
+                        <input type="time" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" step="60" required>
+                        <p class="form-text">Asia/Manila. Changes begin at the next scheduled time. Default: 12:00 AM.</p>
                     </div>
                 </div>
             </div>

@@ -68,10 +68,12 @@ class WsServe extends BaseCommand
         while (true) {
             // Incomplete handshakes cannot hold a client slot indefinitely.
             $now = time();
-            $boundary = intdiv($now, 300);
+            $boundary = intdiv($now, 60);
             if ($boundary !== $lastBoardingBoundary) {
                 $lastBoardingBoundary = $boundary;
                 try {
+                    // Long-running workers must see saved reset times without a restart.
+                    get_all_system_settings(true);
                     $queue = new \App\Models\QueueModel();
                     $reset = $queue->resetForNewDay($now);
                     $ids = $queue->advanceBoarding($now);

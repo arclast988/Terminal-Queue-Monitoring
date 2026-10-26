@@ -15,7 +15,7 @@ function fixture(name, state = '', role = '') {
   // Retain real picker and dialog handlers while isolating unrelated polling.
   return rendered.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (tag, attrs, code) => {
     if (/\bsrc\s*=/.test(attrs)) return /(?:bootstrap\.bundle\.min|interaction-motion|dispatch-rule-times|departure-rule-days|debounce-passengers|queue-sync)\.js/.test(attrs) ? tag : '';
-    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl/.test(code) ? tag : '';
+    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl|btn-toggle-select-rules|const filterBtns|window.showDeleteRuleModal|Role Theme Palettes Sync|Global modal openers for Departure Rules/.test(code) ? tag : '';
   });
 }
 
@@ -309,4 +309,118 @@ test('logout accents and shared notices follow saved and live role themes, inclu
       await page.close();
     }
   }
+});
+
+
+test('departure rule Select deletes only checked rows and resets after route changes', {timeout: 90000}, async () => {
+  for (const name of ['admin-rules', 'staff-rules']) {
+    const page = await browser.newPage({viewport:{width:375,height:900}});
+    try {
+      await page.goto(`${origin}/fixture/${name}?state=bulk-rules`);
+      assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), false);
+      await page.locator('#btn-toggle-select-rules').click();
+      assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), true);
+      assert.equal(await page.locator('#btn-bulk-delete-rules').isDisabled(), true);
+      await page.locator('#select-all-rules').check();
+      const selected = await page.locator('.rule-select-checkbox:checked').count();
+      assert.ok(selected > 0);
+      await page.locator('#btn-bulk-delete-rules').click();
+      await page.locator('#deleteRuleConfirmModal.show').waitFor();
+      assert.match(await page.locator('#deleteRuleConfirmMessage').textContent(), /selected departure rules/);
+      assert.equal(await page.locator('#ruleBulkDeleteForm input[name="ids[]"]').count(), selected);
+      await page.locator('#deleteRuleConfirmModal [data-bs-dismiss="modal"]').click();
+      await page.locator('#deleteRuleConfirmModal').waitFor({state:'hidden'});
+      await page.locator('[data-route-filter="general"]').click();
+      assert.equal(await page.locator('.rule-select-checkbox:checked').count(), 0);
+      assert.equal(await page.locator('#rule-bulk-toolbar').isVisible(), false);
+      assert.equal(await page.locator('#ruleBulkDeleteForm .rule-return-route').inputValue(), 'general');
+    } finally { await page.close(); }
+  }
+});
+
+test('activity logs use readable labels and omit action controls from reports', {timeout:90000}, async () => {
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${origin}/fixture/admin-logs?state=friendly-logs`);
+    assert.match(await page.locator('#logsTable').textContent(), /Signed in/);
+    assert.match(await page.locator('#logsTable').textContent(), /Dispatcher signed in/);
+    assert.equal(await page.locator('#logReportForm [name="action_type"]').count(), 0);
+    await page.goto(`${origin}/fixture/admin-logs-report`);
+    assert.deepEqual(await page.locator('table thead th').allTextContents(), ['Log ID','Timestamp','User','Details']);
+    assert.match(await page.locator('table tbody').textContent(), /Dispatcher signed in/);
+  } finally {await page.close();}
+});
+
+test('text fill, outline labels and date chips follow live primary colors', {timeout:90000}, async () => {
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${origin}/fixture/admin-logs?state=custom-theme`);
+    await page.addScriptTag({url:origin + '/js/ws-client.js'});
+    for (const primary of ['#fbbf24', '#7040b0']) {
+      await page.evaluate(primary => applyLiveBranding({category:'theme',theme_admin_primary:primary}), primary);
+      const tokens = await themeTokens(page);
+      const chip = page.locator('.quick-chip.active');
+      await page.waitForFunction(color => getComputedStyle(document.querySelector('.quick-chip.active')).backgroundColor === color, tokens.primary);
+      assert.equal(await chip.evaluate(el=>getComputedStyle(el).color), tokens['on-primary']);
+      const probe = await page.evaluate(() => {
+        const el = document.createElement('span'); el.className='text-primary'; document.body.appendChild(el);
+        const result={color:getComputedStyle(el).color,fill:getComputedStyle(el).webkitTextFillColor}; el.remove(); return result;
+      });
+      assert.deepEqual(probe,{color:tokens.primary,fill:tokens.primary});
+    }
+  } finally {await page.close();}
+});
+
+
+test('commuter departure filters react on touch release and keep swipes and keyboard input usable', {timeout:90000}, async () => {
+  const page=await browser.newPage({viewport:{width:375,height:850}});
+  try {
+    await page.goto(`${origin}/fixture/guest?state=guest-route-rules`);
+    await page.locator('#routeAverageCard').click();
+    await page.locator('#routeAverageModal.is-open').waitFor();
+    const result=await page.evaluate(() => {
+      const ormoc=document.querySelector('.rules-route-chip[data-route="ormoc"]');
+      const events=(type,x)=>new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:1,isPrimary:true,clientX:x,clientY:20});
+      ormoc.dispatchEvent(events('pointerdown',20)); ormoc.dispatchEvent(events('pointerup',20));
+      // Assert synchronously, before any click or timer can run.
+      return {selected:ormoc.getAttribute('aria-pressed'), visible:[...document.querySelectorAll('#routeAverageList .route-average-item')].filter(el=>el.style.display!=='none').map(el=>el.dataset.ruleDest),transition:getComputedStyle(ormoc).transitionDuration,touchAction:getComputedStyle(ormoc).touchAction};
+    });
+    assert.equal(result.selected,'true'); assert.deepEqual(result.visible,['ormoc']);
+    assert.equal(result.transition,'0s'); assert.equal(result.touchAction,'manipulation');
+    await page.evaluate(() => {
+      const bato=document.querySelector('.rules-route-chip[data-route="bato"]');
+      for(const [type,x] of [['pointerdown',20],['pointermove',60],['pointerup',60]]) bato.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerType:'touch',pointerId:2,isPrimary:true,clientX:x,clientY:20}));
+    });
+    assert.equal(await page.locator('.rules-route-chip.active').getAttribute('data-route'),'ormoc');
+    await page.locator('.rules-route-chip[data-route="bato"]').focus(); await page.keyboard.press('Enter');
+    assert.equal(await page.locator('.rules-route-chip.active').getAttribute('data-route'),'bato');
+    assert.deepEqual(await page.locator('#routeAverageList .route-average-item:visible').evaluateAll(items=>items.map(el=>el.dataset.ruleDest)),['bato']);
+  } finally {await page.close();}
+});
+
+
+test('terminal names become uppercase while typing on both admin forms', {timeout:90000}, async () => {
+  const page=await browser.newPage({viewport:{width:375,height:850}});
+  try {
+    for(const name of ['admin-terminal-create','admin-terminal-edit']) {
+      await page.goto(`${origin}/fixture/${name}`);
+      await page.locator('#name').fill('villaba town terminal');
+      assert.equal(await page.locator('#name').inputValue(),'VILLABA TOWN TERMINAL');
+      assert.equal(await page.locator('#name').evaluate(el=>new FormData(el.form).get('name')),'VILLABA TOWN TERMINAL');
+    }
+  } finally {await page.close();}
+});
+
+test('daily queue clearing offers an editable Philippine time and an enable switch', {timeout:90000}, async () => {
+  const page=await browser.newPage({viewport:{width:375,height:850}});
+  try {
+    await page.goto(`${origin}/fixture/admin-settings#operations`);
+    assert.equal(await page.locator('#inputQueueResetTime').isVisible(),true);
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'00:00');
+    await page.locator('#inputQueueResetTime').fill('18:30');
+    await page.locator('#inputQueueResetEnabled').uncheck();
+    assert.deepEqual(await page.locator('#formOperations').evaluate(form=>{const data=new FormData(form);return [data.get('queue_reset_time'),data.getAll('queue_reset_enabled').at(-1)];}),['18:30','0']);
+    await page.locator('#inputQueueResetEnabled').check();
+    assert.equal(await page.locator('#formOperations').evaluate(form=>new FormData(form).getAll('queue_reset_enabled').at(-1)),'1');
+  } finally {await page.close();}
 });

@@ -229,11 +229,11 @@
                             </td>
                             <td data-label="Action">
                                 <span class="action-badge-pill <?= $badgeClass ?>">
-                                    <?= esc($log['action']) ?>
+                                    <?= esc(\App\Libraries\ActivityLogFormatter::action($log['action'] ?? '')) ?>
                                 </span>
                             </td>
                             <td data-label="Details" class="log-details-cell" style="font-size: 13px;">
-                                <?= esc($log['details'] ?? '—') ?>
+                                <?= esc(\App\Libraries\ActivityLogFormatter::details($log['action'] ?? '', $log['details'] ?? '')) ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

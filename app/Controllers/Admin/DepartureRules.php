@@ -489,6 +489,62 @@ class DepartureRules extends BaseController
         return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))->with('success', 'Departure rule updated successfully.');
     }
 
+    public function bulkDelete()
+    {
+        $selected = $this->request->getPost('ids');
+        if (!is_array($selected) || !$selected || count($selected) > 500) {
+            return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))
+                ->with('error', 'Select between 1 and 500 departure rules to delete.');
+        }
+        foreach ($selected as $id) {
+            if (!is_scalar($id) || !preg_match('/^[1-9]\d*$/', (string) $id)) {
+                return $this->response->setStatusCode(400)->setBody('Invalid departure rule selection.');
+            }
+        }
+        $ids = array_values(array_unique(array_map('intval', $selected)));
+        $db = \Config\Database::connect();
+        $db->transBegin();
+        try {
+            $rules = $this->ruleModel->whereIn('id', $ids)->findAll();
+            if (count($rules) !== count($ids)) {
+                $db->transRollback();
+                return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))
+                    ->with('error', 'Some selected rules no longer exist. Refresh the list and select again.');
+            }
+            $scopes = [];
+            foreach ($rules as $rule) {
+                if (!$this->canManageRule($rule)) {
+                    $db->transRollback();
+                    return $this->response->setStatusCode(403)->setBody('A selected departure rule is outside your assigned destinations.');
+                }
+                $terminalId = (int) $rule['terminal_id'];
+                $routeId = !empty($rule['route_id']) ? (int) $rule['route_id'] : null;
+                $scopes[$terminalId . '|' . ($routeId ?? '')] = [$terminalId, $routeId];
+            }
+            if (!$this->ruleModel->delete($ids)) {
+                throw new \RuntimeException('Could not delete the selected rules.');
+            }
+            foreach ($scopes as [$terminalId, $routeId]) {
+                $this->ruleModel->compactRounds($terminalId, $routeId);
+                $this->recalculateRuleScope($terminalId, $routeId);
+            }
+            if (!$db->transStatus()) {
+                throw new \RuntimeException('Could not update the remaining departure schedules.');
+            }
+            $db->transCommit();
+        } catch (\Throwable $error) {
+            $db->transRollback();
+            log_message('error', 'Departure rule selection deletion failed: {error}', ['error' => $error->getMessage()]);
+            return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))
+                ->with('error', 'The selected rules could not be deleted. Please try again.');
+        }
+        $count = count($rules);
+        $this->logActivity('Bulk delete departure rules', 'Deleted ' . $count . ' departure schedule' . ($count === 1 ? '' : 's') . '. Rule record numbers: ' . implode(', ', $ids) . '.');
+        $this->broadcastUpdate('queue_update', ['action' => 'recalculate']);
+        return redirect()->to($this->listUrlForRoute($this->request->getPost('return_route')))
+            ->with('success', $count . ' departure rule' . ($count === 1 ? '' : 's') . ' deleted successfully.');
+    }
+
     public function delete($id)
     {
         $rule = $this->ruleModel->find($id);

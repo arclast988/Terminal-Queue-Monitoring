@@ -103,7 +103,7 @@
         border-top: 1px solid #f1f5f9;
     }
 
-    /* Red theme quick chips */
+    /* Date shortcuts follow the selected role theme. */
     html body .quick-chip {
         padding: 6px 16px;
         border-radius: 20px;
@@ -129,7 +129,8 @@
     html body .quick-chip.active {
         background: var(--primary, #b71c1c) !important;
         border-color: var(--primary, #b71c1c) !important;
-        color: #ffffff !important;
+        color: var(--on-primary, #ffffff) !important;
+        -webkit-text-fill-color: var(--on-primary, #ffffff) !important;
     }
 
 
@@ -232,7 +233,7 @@
                     <?php if (!empty($actions)): ?>
                         <?php foreach ($actions as $act): ?>
                             <option value="<?= esc($act['action']) ?>" <?= ($action_type ?? '') === $act['action'] ? 'selected' : '' ?>>
-                                <?= esc($act['action']) ?>
+                                <?= esc(\App\Libraries\ActivityLogFormatter::action($act['action'])) ?>
                             </option>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -350,11 +351,11 @@
                                 </td>
                                 <td data-label="Action">
                                     <span class="action-badge-pill <?= $badgeClass ?>">
-                                        <?= esc($log['action']) ?>
+                                        <?= esc(\App\Libraries\ActivityLogFormatter::action($log['action'] ?? '')) ?>
                                     </span>
                                 </td>
                                 <td data-label="Details" class="log-details-cell">
-                                    <?= esc($log['details'] ?? '—') ?>
+                                    <?= esc(\App\Libraries\ActivityLogFormatter::details($log['action'] ?? '', $log['details'] ?? '')) ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
