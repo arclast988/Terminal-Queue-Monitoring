@@ -1,0 +1,39 @@
+name: Browser compatibility
+
+on:
+  push:
+    branches: [main, master]
+    paths: ['app/**', 'public/**', 'tests/frontend/**', '.github/workflows/browser-compatibility.yml']
+  pull_request:
+    paths: ['app/**', 'public/**', 'tests/frontend/**', '.github/workflows/browser-compatibility.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+      - run: npm ci --prefix tests/frontend --ignore-scripts --no-audit --no-fund
+      - run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify reports, themes, selection, touch filters, and loader behavior
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+        run: >-
+          node --test
+          --test-name-pattern='departure rule Select|activity logs use|text fill|commuter departure filters|terminal names|daily queue clearing|phone, tablet|native form values|mobile in-page'
+          tests/frontend/time-theme.browser.cjs
+          tests/frontend/native-navigation-loader.browser.cjs

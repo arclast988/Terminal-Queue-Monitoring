@@ -291,23 +291,36 @@ class QueueModel extends Model
         return self::nextFiveMinuteBoundary($boardingStart + $waitMinutes * 60);
     }
 
-    /** Close yesterday's unfinished trips; history and today's trips stay intact. */
-    public function resetForNewDay(?int $now = null): array
+    /** Clear unfinished trips at the configured Manila cutoff; preserve completed history. */
+    public function resetForNewDay(?int $now = null, ?array $resetSettings = null): array
     {
         $now ??= time();
         $today = date('Y-m-d', $now);
+        $resetSettings ??= [
+            'time' => (string) get_system_setting('queue_reset_time', '00:00'),
+            'enabled' => get_system_setting('queue_reset_enabled', '1') === '1',
+            'effective_from' => (int) get_system_setting('queue_reset_effective_from', '0'),
+        ];
+        $cutoff = \App\Libraries\QueueResetSchedule::cutoff($now, $resetSettings['time'], $resetSettings['enabled'], $resetSettings['effective_from'] ?? 0);
         $this->db->transStart();
         if (str_contains(strtolower($this->db->DBDriver), 'postgre')) {
             $key = crc32('queue_recalc_0');
             $this->db->query('SELECT pg_advisory_xact_lock(?)', [$key > 2147483647 ? $key - 4294967296 : $key]);
         }
-        $ids = array_map('intval', $this->whereIn('status', ['waiting', 'boarding'])
-            ->where('arrival_time <', $today . ' 00:00:00')->findColumn('id') ?: []);
+        $ids = $cutoff === null ? [] : array_map('intval', $this->whereIn('status', ['waiting', 'boarding'])
+            ->where('arrival_time <', $cutoff)->findColumn('id') ?: []);
         if ($ids) {
             $this->db->table('queue')->whereIn('id', $ids)->update([
                 'status' => 'canceled', 'position' => 0,
                 'estimated_departure' => null, 'boarding_start' => null,
             ]);
+            if ($this->db->tableExists('audit_logs')) {
+                $this->db->table('audit_logs')->insert([
+                    'user_id' => null, 'action' => 'Automatic queue reset',
+                    'details' => 'Cleared ' . count($ids) . ' unfinished trips from the waiting line. Daily clearing time: ' . $resetSettings['time'] . ' (Asia/Manila).',
+                    'timestamp' => date('Y-m-d H:i:s', $now),
+                ]);
+            }
         }
         $rounds = 0;
         if ($this->db->tableExists('dispatch_rounds')) {

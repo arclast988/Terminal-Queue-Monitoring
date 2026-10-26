@@ -637,12 +637,6 @@
                 <?php endif; ?>
             </span>
         </div>
-        <?php if (!empty($action_type)): ?>
-        <div class="filter-item">
-            <span class="filter-label">Action Filter</span>
-            <span class="filter-value"><?= esc($action_type) ?></span>
-        </div>
-        <?php endif; ?>
         <?php if (!empty($selected_user)): ?>
         <div class="filter-item">
             <span class="filter-label">User Filter</span>
@@ -673,24 +667,12 @@
                 <th style="width: 8%;">Log ID</th>
                 <th style="width: 17%;">Timestamp</th>
                 <th style="width: 23%;">User</th>
-                <th style="width: 18%;">Action</th>
-                <th style="width: 34%;">Details</th>
+                <th style="width: 52%;">Details</th>
             </tr>
         </thead>
         <tbody>
             <?php if (!empty($results) && is_array($results)): ?>
                 <?php foreach ($results as $row): ?>
-                    <?php
-                        $actLower = strtolower($row['action'] ?? '');
-                        $badgeStyle = 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;';
-                        if (strpos($actLower, 'delete') !== false || strpos($actLower, 'remove') !== false) {
-                            $badgeStyle = 'background: #fef2f2; color: #991b1b; border: 1px solid #fecaca;';
-                        } elseif (strpos($actLower, 'update') !== false || strpos($actLower, 'edit') !== false || strpos($actLower, 'reassign') !== false) {
-                            $badgeStyle = 'background: #fefce8; color: #854d0e; border: 1px solid #fef08a;';
-                        } elseif (strpos($actLower, 'add') !== false || strpos($actLower, 'create') !== false) {
-                            $badgeStyle = 'background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;';
-                        }
-                    ?>
                     <tr>
                         <td class="log-id">#<?= $row['id'] ?></td>
                         <td class="log-timestamp">
@@ -709,17 +691,14 @@
                                 ?><?= esc($printRole) ?>
                             </div>
                         </td>
-                        <td>
-                            <span class="action-badge" style="<?= $badgeStyle ?>"><?= esc($row['action']) ?></span>
-                        </td>
                         <td class="details-text">
-                            <?= esc($row['details'] ?? '—') ?>
+                            <?= esc(\App\Libraries\ActivityLogFormatter::details($row['action'] ?? '', $row['details'] ?? '')) ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 35px; color: #94a3b8; font-weight: 600;">
+                    <td colspan="4" style="text-align: center; padding: 35px; color: #94a3b8; font-weight: 600;">
                         No activity log entries match the specified filters.
                     </td>
                 </tr>

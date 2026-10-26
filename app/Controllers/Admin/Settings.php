@@ -307,6 +307,25 @@ class Settings extends BaseController
         ];
 
         $currentSettings = get_all_system_settings();
+        if ($this->request->getPost('queue_reset_configured') === '1') {
+            $enabled = $this->request->getPost('queue_reset_enabled');
+            $clock = $this->request->getPost('queue_reset_time');
+            if (!is_scalar($enabled) || !in_array((string) $enabled, ['0', '1'], true)
+                || !is_string($clock) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $clock)) {
+                $message = 'Choose a valid daily queue clearing time.';
+                if ($this->request->isAJAX()) {
+                    return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $message, 'csrf_token' => csrf_token(), 'csrf_hash' => csrf_hash()]);
+                }
+                return redirect()->back()->withInput()->with('error', $message);
+            }
+            $fields['queue_reset_enabled'] = (string) $enabled;
+            $fields['queue_reset_time'] = $clock;
+            if ((string) ($currentSettings['queue_reset_enabled'] ?? '1') !== (string) $enabled
+                || (string) ($currentSettings['queue_reset_time'] ?? '00:00') !== $clock) {
+                // A saved change takes effect at the next occurrence, never retroactively.
+                $fields['queue_reset_effective_from'] = (string) time();
+            }
+        }
         $hasChange = false;
         foreach ($fields as $k => $v) {
             if ((string) ($currentSettings[$k] ?? '') !== $v) {
@@ -329,7 +348,17 @@ class Settings extends BaseController
         }
 
         $model = new SystemSettingModel();
+        $db = \Config\Database::connect();
+        $db->transStart();
         $model->setMultiple($fields);
+        $db->transComplete();
+        if (!$db->transStatus()) {
+            $message = 'The queue and retention settings could not be saved. Please try again.';
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => $message, 'csrf_token' => csrf_token(), 'csrf_hash' => csrf_hash()]);
+            }
+            return redirect()->back()->withInput()->with('error', $message);
+        }
         get_all_system_settings(true);
 
         // Opportunistically run purges with new retention rules immediately
@@ -346,12 +375,17 @@ class Settings extends BaseController
                 'vehicle_cooldown_minutes' => $cooldownVal,
                 'log_retention_days'       => $logDaysVal,
                 'departure_retention_days' => $depDaysVal,
+                'queue_reset_enabled' => ($fields['queue_reset_enabled'] ?? $currentSettings['queue_reset_enabled'] ?? '1') === '1',
+                'queue_reset_time' => $fields['queue_reset_time'] ?? $currentSettings['queue_reset_time'] ?? '00:00',
             ]);
         } catch (\Throwable $e) {
             // Silently continue if daemon offline
         }
 
-        $this->logActivity('System Settings', "Updated operational rules: Queue Cooldown={$cooldownVal}m, Log Retention={$logDaysVal}d, Departure Retention={$depDaysVal}d");
+        $resetLabel = ($fields['queue_reset_enabled'] ?? $currentSettings['queue_reset_enabled'] ?? '1') === '1'
+            ? ($fields['queue_reset_time'] ?? $currentSettings['queue_reset_time'] ?? '00:00') . ' (Asia/Manila)'
+            : 'turned off';
+        $this->logActivity('System Settings', "Changed operating settings: vehicles can rejoin the waiting line after {$cooldownVal} minutes; activity logs are kept for {$logDaysVal} days; departure history is kept for {$depDaysVal} days. Daily queue clearing: {$resetLabel}.");
 
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
@@ -363,6 +397,8 @@ class Settings extends BaseController
                     'vehicle_cooldown_minutes' => $cooldownVal,
                     'log_retention_days'       => $logDaysVal,
                     'departure_retention_days' => $depDaysVal,
+                    'queue_reset_enabled' => ($fields['queue_reset_enabled'] ?? $currentSettings['queue_reset_enabled'] ?? '1') === '1',
+                    'queue_reset_time' => $fields['queue_reset_time'] ?? $currentSettings['queue_reset_time'] ?? '00:00',
                 ],
             ]);
         }

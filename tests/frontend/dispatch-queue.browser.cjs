@@ -358,11 +358,12 @@ test('expired rounds are absent and routes with no active hours stay disabled af
   assert.deepEqual(await active.locator('option').evaluateAll(options=>options.map(option=>option.value)),['','2','3']);
   assert.match(await active.locator('option:checked').innerText(),/Choose an available round/);
   assert.equal(await page.locator('[data-round-route="1|BATO"] select, [data-round-route="1|BATO"] button').count(),0);
-  assert.match(await unavailable.innerText(),/No rounds available now/);
+  assert.match(await unavailable.innerText(),/No active round/);
+  assert.equal(await page.locator('[data-round-route="1|BATO"] .queue-round-choice p').count(),0);
   await active.selectOption('2');
   await page.waitForFunction(()=>document.getElementById('queueRoundFeedback').textContent.includes('Round updated'));
   assert.equal(roundRequests.find(request=>request.path.endsWith('/round')).body.get('round_number'),'2');
-  assert.match(await unavailable.innerText(),/No rounds available now/);
+  assert.match(await unavailable.innerText(),/No active round/);
   assert.equal(await active.isEnabled(),true);
   await page.close();
 });

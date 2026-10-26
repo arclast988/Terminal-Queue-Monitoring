@@ -1,0 +1,52 @@
+name: PHP compatibility
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'app/**'
+      - 'tests/unit/**'
+      - 'composer.*'
+      - '.github/workflows/php-compatibility.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'tests/unit/**'
+      - 'composer.*'
+      - '.github/workflows/php-compatibility.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4', '8.5']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: intl, mbstring, pgsql, pdo_pgsql, curl, sqlite3, pdo_sqlite, dom, xml
+          coverage: none
+      - name: Install the locked dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Verify PHP syntax
+        run: find app -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: Verify logs, themes, schedules, and dispatcher controls
+        run: >-
+          php vendor/bin/phpunit --no-coverage
+          tests/unit/ActivityLogFormatterTest.php
+          tests/unit/DepartureRuleDefaultsTest.php
+          tests/unit/DepartureRuleAccessTest.php
+          tests/unit/DepartureIntervalTest.php
+          tests/unit/StaffQueueOrderingTest.php
+          tests/unit/QueueSelectionActionsTest.php
+          tests/unit/ThemeConsistencyAndClearButtonTest.php
+          tests/unit/ReportPreviewMobileTest.php
+          tests/unit/QueueResetScheduleTest.php
+          tests/unit/OperationsQueueResetTest.php

@@ -17,6 +17,7 @@
     var fadeTimer = null;
     var isRunning = false;
     var isVisible = false;
+    var nativeNavigationPending = false;
     var barEl = null;
     var innerEl = null;
     var pendingButtons = new Map();
@@ -49,21 +50,18 @@
 
     function preferNativeNavigationProgress() {
         // Browsers do not expose their loading-bar visibility to a page. This is
-        // a fallback for known mobile browser tabs, not native-bar detection.
+        // a policy for known browser tabs, not native-bar detection.
         // Installed apps, embedded pages and identifiable WebViews keep feedback.
         if (isAppWindow() || (window.top && window.top !== window)) return false;
         var browser = window.navigator;
         var ua = browser.userAgent || '';
-        var mobile = Boolean(browser.userAgentData && browser.userAgentData.mobile)
-            || /Android|iPhone|iPad|iPod|Windows Phone|Mobile/i.test(ua)
-            || (browser.platform === 'MacIntel' && browser.maxTouchPoints > 1);
-        if (!mobile) return false;
         if (/\bwv\b|FBAN|FBAV|Instagram|Line\/|WebView/i.test(ua)) return false;
         return /Chrome\/|Chromium\/|CriOS\/|Firefox\/|FxiOS\/|EdgA\/|EdgiOS\/|OPR\/|Opera|Safari\/|SamsungBrowser\//i.test(ua);
     }
 
     function startNavigation() {
         if (preferNativeNavigationProgress()) {
+            nativeNavigationPending = true;
             forceDone();
             return;
         }
@@ -152,6 +150,9 @@
     }
 
     function start(immediate) {
+        // Late background responses must not reintroduce a second bar while
+        // the browser is already loading the next document.
+        if (nativeNavigationPending) return;
         ensureElements();
         clearCompletion();
         if (safetyTimer !== null) clearTimeout(safetyTimer);
@@ -475,6 +476,7 @@
     }
 
     function resetPage() {
+        nativeNavigationPending = false;
         requestEpoch++;
         activeRequests = 0;
         forceDone();
@@ -484,6 +486,24 @@
     }
 
     function setupInteractions() {
+        // Also cover location changes and form.submit(), which do not emit the
+        // click/submit events below. Observe navigation without intercepting it.
+        if (window.navigation && typeof window.navigation.addEventListener === 'function') {
+            window.navigation.addEventListener('navigate', function (event) {
+                if (!event.destination || event.destination.sameDocument || event.downloadRequest != null) return;
+                Promise.resolve().then(function () {
+                    if (event.defaultPrevented) return;
+                    startNavigation();
+                    if (event.signal && typeof event.signal.addEventListener === 'function') {
+                        event.signal.addEventListener('abort', function () {
+                            nativeNavigationPending = false;
+                            forceDone();
+                            if (activeRequests > 0) start();
+                        }, { once: true });
+                    }
+                });
+            });
+        }
         // Capture suppresses only activations of a button already owned by a pending
         // operation. The first click and all unrelated event handlers run immediately.
         document.addEventListener('click', function (event) {

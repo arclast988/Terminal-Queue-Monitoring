@@ -48,6 +48,7 @@ if (($argv[8] ?? '') !== 'real-type-badges') {
     function vehicle_type_badge(string $type): string { return '<span class="vehicle-type-chip ' . vehicle_type_class($type) . '">' . esc(vehicle_type_label($type)) . '</span>'; }
 }
 require dirname(__DIR__, 2) . '/app/Common.php';
+require dirname(__DIR__, 2) . '/app/Libraries/ActivityLogFormatter.php';
 if (!function_exists('media_url')) {
     function media_url(?string $path): string {
         $path = trim((string) $path);
@@ -130,7 +131,7 @@ $item = [
 $route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
-$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
+$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-terminal-create', 'admin-terminal-edit', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
 $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Palompon', 'route_destination' => $longValue, 'created_at' => '2026-10-01 08:00:00'];
 $vehicle['status'] = 'active';
 $fixtureData = [
@@ -148,7 +149,7 @@ $fixtureData = [
     'vehicle_type' => '', 'destination' => '', 'search' => '', 'all_destinations' => [$longValue],
     'active_dest_counts' => [$longValue => 1], 'total_active_count' => 1,
     'active_results' => [$item], 'total_results' => 1,
-    'user' => $user, 'users' => [$user], 'terminals' => [$terminal], 'rules' => [['id' => 1, 'route_id' => 1, 'terminal_name' => 'Palompon', 'route_destination' => $longValue, 'time_from' => '08:00', 'time_to' => '18:00', 'wait_minutes' => 15, 'label' => $longValue]],
+    'user' => $user, 'users' => [$user], 'terminal' => $terminal, 'terminals' => [$terminal], 'rules' => [['id' => 1, 'route_id' => 1, 'terminal_name' => 'Palompon', 'route_destination' => $longValue, 'time_from' => '08:00', 'time_to' => '18:00', 'wait_minutes' => 15, 'label' => $longValue]],
     'departures' => [$item], 'destinations' => [['destination' => $longValue]], 'destinationVehicleTypes' => [],
     'logs' => [$user + ['action' => 'Updated queue', 'details' => $longValue, 'timestamp' => '2026-10-01 08:00:00']],
     'actions' => [['action' => 'Updated queue']], 'stats' => [], 'pager' => null,
@@ -156,6 +157,11 @@ $fixtureData = [
     'today' => date('Y-m-d'), 'filters' => ['q'=>'', 'destination'=>'', 'vehicle_type'=>''],
     'groupedRoutes' => [['terminal_name' => 'Palompon', 'destination' => $longValue, 'status' => 'active', 'items' => [$route + ['terminal_id' => 1]]]],
 ];
+if ($fixturePage === 'admin-logs-report' || (in_array($fixturePage, ['admin-logs'], true) && ($argv[4] ?? '') === 'friendly-logs')) {
+    $fixtureData['logs'] = [$user + ['action' => 'Login', 'details' => 'Staff logged in (alex)', 'timestamp' => '2026-10-01 08:00:00']];
+    $fixtureData['actions'] = [['action' => 'Login']];
+    $fixtureData['results'] = $fixtureData['logs'];
+}
 if (in_array($fixturePage, ['staff-departures', 'staff-departures-report'], true)) {
     $fixtureData['departures'] = [];
     for ($id = 1; $id <= 37; $id++) {
@@ -175,7 +181,7 @@ if (in_array($fixturePage, ['staff-departures', 'staff-departures-report'], true
     }
 }
 if ($fixturePage === 'staff-dashboard') $fixtureData['active_queue_count'] = 1;
-if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules', 'admin-rule-create', 'admin-rule-edit'], true)) {
+if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules', 'admin-rule-create', 'admin-rule-edit'], true) || ($fixturePage === 'admin-rules' && ($argv[4] ?? '') === 'bulk-rules')) {
     $fixtureData['prefix'] = str_starts_with($fixturePage, 'staff') ? 'staff' : 'admin';
     $fixtureData['title'] = 'Departure Rules';
     $fixtureData['returnRoute'] = 'all';
@@ -243,6 +249,14 @@ if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($a
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
     foreach ([1=>20, 2=>25] as $round=>$minutes) {
         $fixtureData['departure_rules'][] = ['id'=>$round,'label'=>'Round schedule','round_number'=>$round,'days_label'=>'Every day','time_range'=>'12:00 AM – 11:59 PM','wait_minutes'=>$minutes,'interval_label'=>'Every '.$minutes.' min','route_scope'=>'All Routes','route_destination'=>null,'is_active_now'=>$round===1,'active_destinations'=>$round===1?['ORMOC']:[]];
+    }
+}
+if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-route-rules') {
+    $fixtureData['departure_rules'] = [];
+    foreach ([1=>'ORMOC', 2=>'BATO', 3=>null] as $id=>$destination) {
+        $fixtureData['departure_rules'][] = ['id'=>$id, 'label'=>'Daily schedule', 'round_number'=>1, 'days_label'=>'Every day',
+            'time_range'=>'5:00 AM – 6:00 PM', 'wait_minutes'=>20, 'interval_label'=>'Every 20 min',
+            'route_scope'=>$destination ? 'VILLABA → '.$destination : 'All Routes', 'route_destination'=>$destination, 'is_active_now'=>false];
     }
 }
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];
@@ -359,7 +373,9 @@ $views = [
     'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-user-edit' => 'admin/users/edit', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
+    'admin-terminal-create' => 'admin/terminals/create', 'admin-terminal-edit' => 'admin/terminals/edit',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
+    'admin-logs-report' => 'admin/logs/print_logs',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
     'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',
     'admin-rule-create' => 'admin/departure-rules/create', 'admin-rule-edit' => 'admin/departure-rules/edit',

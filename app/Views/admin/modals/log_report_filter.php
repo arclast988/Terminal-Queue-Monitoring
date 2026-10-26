@@ -144,18 +144,6 @@
                     </div>
 
                     <!-- Additional Filters -->
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Action Type</label>
-                        <select class="form-select" name="action_type" id="log_modal_action_type">
-                            <option value="">-- All Actions --</option>
-                            <?php if (!empty($actions)): ?>
-                                <?php foreach ($actions as $act): ?>
-                                    <option value="<?= esc($act['action']) ?>"><?= esc($act['action']) ?></option>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </select>
-                    </div>
-
                     <div class="mb-4">
                         <label class="form-label small fw-bold text-muted text-uppercase">Specific User</label>
                         <select class="form-select" name="user_id" id="log_modal_user_id">
@@ -190,7 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const reportForm = document.getElementById('logReportForm');
     const fromInput = document.getElementById('log_modal_from_date');
     const toInput = document.getElementById('log_modal_to_date');
-    const actionSelect = document.getElementById('log_modal_action_type');
     const userSelect = document.getElementById('log_modal_user_id');
     const qInput = document.getElementById('log_modal_q');
     const btnPdf = document.getElementById('log-btn-pdf');
@@ -282,16 +269,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (pageForm) {
                 const pageFrom = pageForm.querySelector('[name="from_date"]');
                 const pageTo = pageForm.querySelector('[name="to_date"]');
-                const pageAction = pageForm.querySelector('[name="action_type"]');
                 const pageUser = pageForm.querySelector('[name="user_id"]');
                 const pageQ = pageForm.querySelector('[name="q"]');
 
                 if (pageFrom && pageFrom.value) fromInput.value = pageFrom.value;
                 if (pageTo && pageTo.value) toInput.value = pageTo.value;
-                if (pageAction && pageAction.value) {
-                    actionSelect.value = pageAction.value;
-                    actionSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                }
                 if (pageUser && pageUser.value) {
                     userSelect.value = pageUser.value;
                     userSelect.dispatchEvent(new Event('change', { bubbles: true }));
