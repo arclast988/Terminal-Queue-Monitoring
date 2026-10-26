@@ -51,7 +51,7 @@
                         
                         <div class="mb-4">
                             <label for="name" class="form-label-modern">Terminal Name <span class="text-danger">*</span></label>
-                            <input type="text" class="input-modern" id="name" name="name" value="<?= old('name', $terminal['name']) ?>" placeholder="e.g. Cebu South Terminal" required>
+                            <input type="text" class="input-modern" id="name" name="name" autocapitalize="characters" oninput="if (!event.isComposing) { const caret = this.selectionStart; this.value = this.value.toUpperCase(); this.setSelectionRange(caret, caret); }" oncompositionend="this.value = this.value.toUpperCase()" value="<?= old('name', $terminal['name']) ?>" placeholder="e.g. CEBU SOUTH TERMINAL" required>
                             <div class="form-text-modern">Enter the official name of the terminal.</div>
                         </div>
                         

@@ -167,6 +167,7 @@ $routes->group('admin', ['filter' => 'auth:admin'], function ($routes) {
     $routes->post('departure-rules/store', 'Admin\DepartureRules::store');
     $routes->get('departure-rules/edit/(:num)', 'Admin\DepartureRules::edit/$1');
     $routes->post('departure-rules/update/(:num)', 'Admin\DepartureRules::update/$1');
+    $routes->post('departure-rules/bulk-delete', 'Admin\DepartureRules::bulkDelete');
     $routes->post('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
 
     // User Manual & Help Guide
@@ -196,6 +197,7 @@ $routes->group('staff', ['filter' => 'auth:staff'], function ($routes) {
     $routes->post('departure-rules/store', 'Admin\DepartureRules::store');
     $routes->get('departure-rules/edit/(:num)', 'Admin\DepartureRules::edit/$1');
     $routes->post('departure-rules/update/(:num)', 'Admin\DepartureRules::update/$1');
+    $routes->post('departure-rules/bulk-delete', 'Admin\DepartureRules::bulkDelete');
     $routes->post('departure-rules/delete/(:num)', 'Admin\DepartureRules::delete/$1');
     $routes->post('queue/round', 'Staff\Queue::setRound');
     $routes->post('queue/tick', 'Staff\Queue::tick');

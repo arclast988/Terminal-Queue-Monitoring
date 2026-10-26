@@ -2,6 +2,22 @@
 
 
 <style>
+.rule-bulk-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 12px;
+    background: var(--surface-sunken, #f8fafc);
+}
+.rule-bulk-toolbar[hidden] { display: none !important; }
+#departure-rules-table:not(.selection-mode-active) .rule-select-cell { display: none !important; }
+#departure-rules-table.selection-mode-active .rule-select-cell { width: 48px; text-align: center; }
+.rule-select-checkbox, #select-all-rules { width: 20px; height: 20px; cursor: pointer; }
+#departure-rules-table .rule-row.is-selected { background: var(--primary-soft); }
 .rule-filter-container {
     background: #ffffff;
     border-radius: 16px;
@@ -88,12 +104,12 @@
 .rule-filter-btn.active {
     background: var(--primary, #1565C0) !important;
     border-color: var(--primary, #1565C0) !important;
-    color: #ffffff !important;
+    color: var(--on-primary, #ffffff) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .rule-filter-btn.active i {
-    color: #ffffff !important;
+    color: var(--on-primary, #ffffff) !important;
 }
 
 .rule-filter-btn .badge-count {
@@ -109,8 +125,8 @@
 }
 
 .rule-filter-btn.active .badge-count {
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
+    background: var(--primary-badge-bg, rgba(255, 255, 255, 0.25));
+    color: var(--on-primary, #ffffff);
 }
 
 @media (max-width: 768px) {
@@ -315,7 +331,12 @@
         Departure Time Rules
     </h1>
     <?php if ($prefix !== 'staff' || !empty($routes)): ?>
-    <div>
+    <div class="d-flex gap-2 flex-wrap">
+        <?php if (!empty($rules)): ?>
+        <button type="button" class="btn-modern btn-modern-outline" id="btn-toggle-select-rules" aria-pressed="false">
+            <i class="bi bi-check2-square"></i> <span id="btn-select-rules-text">Select</span>
+        </button>
+        <?php endif; ?>
         <a href="<?= base_url($prefix . '/departure-rules/create') ?>" id="btn-add-rule" class="btn-modern btn-modern-primary">
             <i class="bi bi-plus-circle"></i> Add New Rule
         </a>
@@ -389,10 +410,24 @@
         </span>
     </div>
     <div class="modern-card-body">
+        <div id="rule-bulk-toolbar" class="rule-bulk-toolbar" hidden>
+            <label class="d-flex align-items-center gap-2 mb-0">
+                <input type="checkbox" id="select-all-rules" class="form-check-input m-0">
+                Select all shown
+            </label>
+            <span id="rule-selected-count" aria-live="polite">0 rules selected</span>
+            <div class="d-flex gap-2 flex-wrap ms-auto">
+                <button type="button" class="btn-modern btn-modern-sm btn-action-delete" id="btn-bulk-delete-rules" disabled>
+                    <i class="bi bi-trash"></i> Delete Selected
+                </button>
+                <button type="button" class="btn-modern btn-modern-sm btn-modern-outline" id="btn-cancel-select-rules">Cancel</button>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table-modern management-list-table" id="departure-rules-table">
                 <thead>
                     <tr>
+                        <th class="rule-select-cell" scope="col"><span class="visually-hidden">Select rule</span></th>
                         <th class="management-terminal-col">Terminal</th>
                         <th class="management-destination-col">Destination</th>
                         <th class="management-day-col">Day / Round</th>
@@ -408,6 +443,11 @@
                         <?php foreach ($rules as $rule): ?>
                             <?php $destSlug = !empty($rule['route_destination']) && $rule['route_destination'] !== '-' ? strtolower($rule['route_destination']) : 'general'; ?>
                             <tr class="rule-row" data-destination="<?= esc($destSlug) ?>" data-route-id="<?= esc($rule['route_id'] ?? '') ?>">
+                                <td data-label="Select" class="rule-select-cell">
+                                    <?php if (!empty($rule['can_manage']) || session()->get('role') !== 'staff'): ?>
+                                    <input type="checkbox" class="form-check-input rule-select-checkbox" value="<?= (int) $rule['id'] ?>" aria-label="Select <?= esc(($rule['label'] ?? 'departure rule') . ' #' . $rule['id'], 'attr') ?>">
+                                    <?php endif; ?>
+                                </td>
                                 <td data-label="Terminal">
                                     <span class="fw-bold" style="color: var(--text-main, #0f172a); font-size: 13.5px;">
                                         <i class="bi bi-building me-1 text-muted"></i><?= strtoupper(esc($rule['terminal_name'] ?? '-')) ?>
@@ -423,7 +463,7 @@
                                 <td data-label="Day / Round">
                                     <div class="rule-day-round-cell">
                                         <span class="badge-modern badge-modern-primary rule-days-label"><?= esc(departure_rule_day_label($rule)) ?></span>
-                                        <span class="rule-round-text">Round <?= (int) ($rule['round_number'] ?? 1) ?></span>
+                                        <span class="rule-round-text"><?= empty($rule['round_number']) ? 'All rounds' : 'Round ' . (int) $rule['round_number'] ?></span>
                                     </div>
                                 </td>
                                 <td data-label="<?= ($prefix ?? 'admin') === 'staff' ? 'Start time (AM/PM)' : 'Time From (HH:MM)' ?>"><span style="white-space: nowrap; font-weight: 600; font-size: 13px; color: var(--text-main);"><i class="bi bi-clock me-1 text-muted"></i><?= operations_time($rule['time_from']) ?></span></td>
@@ -473,7 +513,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr id="empty-all-rules-row">
-                            <td colspan="8" class="text-center py-5 text-muted empty-state-table">
+                            <td colspan="9" class="text-center py-5 text-muted empty-state-table">
                                 <i class="bi bi-clock-history fs-1 d-block mb-3 opacity-50"></i>
                                 <div class="fw-bold fs-6 empty-state-title">No departure rules configured</div>
                                 <small class="empty-state-subtitle">The terminal default interval (30 minutes) will be used.</small>
@@ -481,7 +521,7 @@
                         </tr>
                     <?php endif; ?>
                     <tr id="empty-filter-row" class="d-none" style="display: none !important;">
-                        <td colspan="8" class="text-center py-5 text-muted empty-state-table">
+                        <td colspan="9" class="text-center py-5 text-muted empty-state-table">
                             <i class="bi bi-search fs-1 d-block mb-3 opacity-50"></i>
                             <div class="fw-bold fs-6 empty-state-title" id="empty-filter-text" style="white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important; max-width: 100% !important;">No departure rules configured for this route</div>
                             <small class="empty-state-subtitle">No custom dispatch interval has been configured for this destination.</small>
@@ -497,10 +537,64 @@
                 </tbody>
             </table>
         </div>
+        <form id="ruleBulkDeleteForm" method="post" action="<?= base_url($prefix . '/departure-rules/bulk-delete') ?>">
+            <?= csrf_field() ?>
+            <input type="hidden" name="return_route" class="rule-return-route" value="all">
+            <div id="rule-bulk-selected-inputs"></div>
+        </form>
     </div>
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('departure-rules-table');
+    const toggle = document.getElementById('btn-toggle-select-rules');
+    const toolbar = document.getElementById('rule-bulk-toolbar');
+    const all = document.getElementById('select-all-rules');
+    const remove = document.getElementById('btn-bulk-delete-rules');
+    if (!toggle) return;
+    let selectionMode = false;
+    const checkboxes = Array.from(table.querySelectorAll('.rule-select-checkbox'));
+    const shown = () => checkboxes.filter(box => !box.closest('tr').classList.contains('d-none'));
+    function update() {
+        const visible = shown();
+        const selected = visible.filter(box => box.checked);
+        checkboxes.forEach(box => box.closest('tr').classList.toggle('is-selected', box.checked));
+        document.getElementById('rule-selected-count').textContent = selected.length + (selected.length === 1 ? ' rule selected' : ' rules selected');
+        remove.disabled = selected.length === 0;
+        all.disabled = visible.length === 0;
+        all.checked = visible.length > 0 && selected.length === visible.length;
+        all.indeterminate = selected.length > 0 && selected.length < visible.length;
+    }
+    function setMode(enabled) {
+        selectionMode = enabled;
+        toolbar.hidden = !enabled;
+        table.classList.toggle('selection-mode-active', enabled);
+        toggle.setAttribute('aria-pressed', String(enabled));
+        document.getElementById('btn-select-rules-text').textContent = enabled ? 'Cancel Selection' : 'Select';
+        checkboxes.forEach(box => { box.checked = false; });
+        document.getElementById('rule-bulk-selected-inputs').replaceChildren();
+        update();
+    }
+    window.resetDepartureRuleSelection = () => setMode(false);
+    toggle.addEventListener('click', () => setMode(!selectionMode));
+    document.getElementById('btn-cancel-select-rules').addEventListener('click', () => setMode(false));
+    checkboxes.forEach(box => box.addEventListener('change', update));
+    all.addEventListener('change', () => { shown().forEach(box => { box.checked = all.checked; }); update(); });
+    remove.addEventListener('click', () => {
+        const selected = shown().filter(box => box.checked);
+        if (!selected.length) return;
+        const inputs = document.getElementById('rule-bulk-selected-inputs');
+        inputs.replaceChildren();
+        selected.forEach(box => {
+            const input = document.createElement('input');
+            input.type = 'hidden'; input.name = 'ids[]'; input.value = box.value;
+            inputs.appendChild(input);
+        });
+        showDeleteRuleModal({ formId: 'ruleBulkDeleteForm', count: selected.length, timeWindow: selected.length + ' departure rules', destination: '' });
+    });
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const filterBtns = document.querySelectorAll('.rule-filter-btn');
     const rows = document.querySelectorAll('.rule-row');
@@ -523,6 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyFilter(filterName, routeId) {
         if (appliedRouteFilter === filterName) return;
         appliedRouteFilter = filterName;
+        window.resetDepartureRuleSelection?.();
         let visibleCount = 0;
 
         filterBtns.forEach(btn => {
@@ -835,6 +930,11 @@ body.modal-open #deleteRuleConfirmModal,
             return;
         }
 
+        var bulk = Number(opts.count || 0);
+        document.getElementById('deleteRuleConfirmLabel').textContent = bulk ? 'Delete Selected Departure Rules?' : 'Delete Departure Rule?';
+        document.getElementById('deleteRuleConfirmMessage').textContent = bulk
+            ? 'Delete these ' + bulk + ' selected departure rules? This cannot be undone. Remaining rules will be renumbered and waiting times recalculated.'
+            : 'Are you sure you want to delete this departure rule? This action cannot be undone.';
         var timeEl = document.getElementById('deleteRuleTimeLabel');
         var destTagEl = document.getElementById('deleteRuleDestTag');
         var subEl = document.getElementById('deleteRuleSubtitle');

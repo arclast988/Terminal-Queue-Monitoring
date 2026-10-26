@@ -678,6 +678,9 @@ if (! function_exists('get_all_system_settings')) {
             'log_retention_days'       => '60',
             'departure_retention_days' => '60',
             'vehicle_cooldown_minutes' => '30',
+            'queue_reset_enabled'      => '1',
+            'queue_reset_time'         => '00:00',
+            'queue_reset_effective_from' => '0',
         ];
 
         $settings = $defaults;
@@ -1303,6 +1306,7 @@ if (! function_exists('app_theme_color_helper')) {
 
         return [
             'hex'       => '#' . $clean,
+            'rgb'       => "{$r}, {$g}, {$b}",
             'dark'      => sprintf('#%02x%02x%02x', $darkR, $darkG, $darkB),
             'soft'      => "rgba({$r}, {$g}, {$b}, 0.14)",
             'softAlpha' => "rgba({$r}, {$g}, {$b}, 0.08)",
@@ -1389,11 +1393,17 @@ body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-con
 /* --- Guest Portal Dynamic Theme Tokens --- */
 :root {
     --guest-primary: {$gp['hex']};
-    --staff-primary: {$sp['hex']}; --staff-on-primary: {$sp['on']};
-    --admin-primary: {$ap['hex']}; --admin-on-primary: {$ap['on']};
+    --guest-nav-bg: {$gn['hex']}; --guest-nav-text: {$gt['hex']};
+    --staff-primary: {$sp['hex']};
+    --staff-nav-bg: {$sn['hex']}; --staff-nav-text: {$st['hex']}; --staff-on-primary: {$sp['on']};
+    --admin-primary: {$ap['hex']};
+    --admin-nav-bg: {$an['hex']}; --admin-nav-text: {$at['hex']}; --admin-on-primary: {$ap['on']};
 }
 :root, body.guest-theme, html body.guest-theme, body:not(.admin-theme):not(.staff-theme) {
     --primary: {$gp['hex']} !important;
+    --primary-rgb: {$gp['rgb']} !important;
+    --primary-soft-alpha: {$gp['softAlpha']} !important;
+    --primary-badge-bg: {$gp['activeBadgeBg']} !important;
     --primary-dark: {$gp['dark']} !important;
     --primary-soft: {$gp['soft']} !important;
     --primary-red: {$gp['hex']} !important;
@@ -1414,8 +1424,8 @@ body:not(.auth-page) > *:not(.modal):not(.route-average-modal):not(.dropdown-con
 .guest-header,
 body.guest-theme header#site-header,
 body:not(.admin-theme):not(.staff-theme) header#site-header {
-    background: {$gn['hex']} !important;
-    border-bottom: 1px solid {$gn['divider']} !important;
+    background: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--nav-divider) !important;
 }
 .guest-header .logo-text h1,
 body.guest-theme #site-header .logo-text h1,
@@ -1423,7 +1433,7 @@ body.guest-theme .logo-section .logo-text h1,
 body.guest-theme .logo-text h1,
 body:not(.admin-theme):not(.staff-theme) #site-header .logo-text h1,
 body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text h1 {
-    color: {$gt['hex']} !important;
+    color: var(--nav-text) !important;
 }
 .guest-header .logo-text p,
 body.guest-theme #site-header .logo-text p,
@@ -1431,129 +1441,129 @@ body.guest-theme .logo-section .logo-text p,
 body.guest-theme .logo-text p,
 body:not(.admin-theme):not(.staff-theme) #site-header .logo-text p,
 body:not(.admin-theme):not(.staff-theme) .logo-section .logo-text p {
-    color: {$gt['softText']} !important;
+    color: var(--nav-text-soft) !important;
     opacity: 0.90;
 }
 .guest-header .nav-menu > a:not(.login-btn):not(.profile-dropdown-item),
 body.guest-theme .nav-menu > a:not(.login-btn):not(.profile-dropdown-item),
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) {
-    color: {$gt['softText']} !important;
+    color: var(--nav-text-soft) !important;
 }
 .guest-header .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i,
 body.guest-theme .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):not(.profile-dropdown-item) i {
-    color: {$gt['softText']} !important;
+    color: var(--nav-text-soft) !important;
 }
 .guest-header .nav-menu > a:not(.login-btn):hover,
 body.guest-theme .nav-menu > a:not(.login-btn):hover,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover {
-    color: {$gp['hex']} !important;
-    background: {$gp['softAlpha']} !important;
+    color: var(--primary) !important;
+    background: var(--primary-soft-alpha) !important;
 }
 .guest-header .nav-menu > a:not(.login-btn):hover i,
 body.guest-theme .nav-menu > a:not(.login-btn):hover i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn):hover i {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 .guest-header .nav-menu > a:not(.login-btn).active,
 body.guest-theme .nav-menu > a:not(.login-btn).active,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active {
-    color: {$gp['hex']} !important;
-    background: {$gp['softAlpha']} !important;
+    color: var(--primary) !important;
+    background: var(--primary-soft-alpha) !important;
     font-weight: 700;
 }
 .guest-header .nav-menu > a:not(.login-btn).active i,
 body.guest-theme .nav-menu > a:not(.login-btn).active i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu > a:not(.login-btn).active i {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 .guest-header .nav-menu a::after {
-    background: {$gp['hex']} !important;
+    background: var(--primary) !important;
 }
 .guest-header .nav-menu a.login-btn,
 body.guest-theme .nav-menu a.login-btn,
 body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn {
-    background: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    background: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 .guest-header .nav-menu a.login-btn i,
 body.guest-theme .nav-menu a.login-btn i,
 body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn i {
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 .guest-header .nav-menu a.login-btn:hover,
 body.guest-theme .nav-menu a.login-btn:hover,
 body:not(.admin-theme):not(.staff-theme) .nav-menu a.login-btn:hover {
-    background: {$gp['dark']} !important;
+    background: var(--primary-dark) !important;
 }
 .guest-header .mobile-toggle,
 body.guest-theme .nav-hamburger-btn,
 body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn {
-    color: {$gt['hex']} !important;
+    color: var(--nav-text) !important;
 }
 .guest-header .mobile-toggle i,
 body.guest-theme .nav-hamburger-btn i,
 body:not(.admin-theme):not(.staff-theme) .nav-hamburger-btn i {
-    color: {$gt['hex']} !important;
-    -webkit-text-fill-color: {$gt['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 .guest-header .header-info {
-    border-left-color: {$gn['divider']} !important;
+    border-left-color: var(--nav-divider) !important;
 }
 .guest-header .header-clock-pill,
 .header-clock-pill {
-    color: {$gt['hex']} !important;
+    color: var(--nav-text) !important;
 }
 .guest-header .header-clock-pill span,
 .header-clock-pill span {
-    color: {$gt['hex']} !important;
+    color: var(--nav-text) !important;
 }
 .guest-header .header-clock-pill i,
 .header-clock-pill i {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 .breadcrumb-section a,
 .guest-header ~ .breadcrumb-section a,
 .ann-modal-text a {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 .advisory-bar,
 .ann-modal-header {
-    background: linear-gradient(135deg, {$gp['hex']} 0%, {$gp['dark']} 100%) !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%) !important;
 }
 .advisory-icon {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 .ann-bullet-wrap {
-    color: {$gp['hex']} !important;
-    background: {$gp['soft']} !important;
+    color: var(--primary) !important;
+    background: var(--primary-soft) !important;
 }
 @media (max-width: 900px) {
     .guest-header .nav-menu {
-        background: {$gn['hex']} !important;
-        border-left: 1px solid {$gn['divider']} !important;
+        background: var(--nav-bg) !important;
+        border-left: 1px solid var(--nav-divider) !important;
     }
     .guest-header .nav-menu a:not(.login-btn) {
-        background: {$gn['chipBg']} !important;
-        color: {$gt['hex']} !important;
+        background: var(--nav-chip-bg) !important;
+        color: var(--nav-text) !important;
     }
     .guest-header .nav-menu a:not(.login-btn).active {
-        background: {$gp['soft']} !important;
-        color: {$gp['hex']} !important;
+        background: var(--primary-soft) !important;
+        color: var(--primary) !important;
     }
 }
 /* Autocomplete dynamic styles for Public / Guest */
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item i,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item .autocomplete-item-text i {
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item {
-    background-color: {$gp['soft']} !important;
-    color: {$gp['hex']} !important;
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
 }
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover span,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item span,
@@ -1561,14 +1571,14 @@ body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover .autocomplete-
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item .autocomplete-item-text,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item:hover i,
 body:not(.admin-theme):not(.staff-theme) .autocomplete-item.active-item i {
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body:not(.admin-theme):not(.staff-theme) .autocomplete-badge {
-    background-color: {$gp['soft']} !important;
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
-    border: 1px solid {$gp['soft']} !important;
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    border: 1px solid var(--primary-soft) !important;
 }
 
 /* Universal Search Clear Button Protection (keeps icon clean, transparent, and non-pill) */
@@ -1617,11 +1627,11 @@ body.guest-theme .btn-primary,
 body:not(.admin-theme):not(.staff-theme) .btn-primary,
 body.guest-theme .btn-hero-action:not(.btn-hero-outline),
 body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline) {
-    background: {$gp['hex']} !important;
-    background-color: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.guest-theme .search-bar button:not(.guest-clear-search-btn):hover,
 body:not(.admin-theme):not(.staff-theme) .search-bar button:not(.guest-clear-search-btn):hover,
@@ -1631,16 +1641,16 @@ body.guest-theme .btn-primary:hover,
 body:not(.admin-theme):not(.staff-theme) .btn-primary:hover,
 body.guest-theme .btn-hero-action:not(.btn-hero-outline):hover,
 body:not(.admin-theme):not(.staff-theme) .btn-hero-action:not(.btn-hero-outline):hover {
-    background: {$gp['dark']} !important;
-    background-color: {$gp['dark']} !important;
-    border-color: {$gp['dark']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.guest-theme .search-bar:focus-within,
 body:not(.admin-theme):not(.staff-theme) .search-bar:focus-within {
-    border-color: {$gp['hex']} !important;
-    box-shadow: 0 0 0 4px {$gp['soft']}, var(--shadow-lg) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px var(--primary-soft), var(--shadow-lg) !important;
 }
 
 /* Guest Filter Chips & Route Chips (inactive, hover, active, active hover) */
@@ -1671,10 +1681,10 @@ body.guest-theme .filter-chip:hover:not(.active),
 body:not(.admin-theme):not(.staff-theme) .filter-chip:hover:not(.active),
 body.guest-theme .route-chip:hover:not(.active),
 body:not(.admin-theme):not(.staff-theme) .route-chip:hover:not(.active) {
-    border-color: {$gp['hex']} !important;
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
-    background: {$gp['softAlpha']} !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    background: var(--primary-soft-alpha) !important;
 }
 body.guest-theme .filter-chip:hover:not(.active) .chip-count,
 body:not(.admin-theme):not(.staff-theme) .filter-chip:hover:not(.active) .chip-count,
@@ -1682,9 +1692,9 @@ body.guest-theme .route-chip:hover:not(.active) .chip-count,
 body:not(.admin-theme):not(.staff-theme) .route-chip:hover:not(.active) .chip-count,
 body.guest-theme .rules-route-chip:hover:not(.active) .chip-count,
 body:not(.admin-theme):not(.staff-theme) .rules-route-chip:hover:not(.active) .chip-count {
-    background: {$gp['soft']} !important;
-    color: {$gp['dark']} !important;
-    -webkit-text-fill-color: {$gp['dark']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
+    -webkit-text-fill-color: var(--primary-dark) !important;
 }
 
 body.guest-theme .filter-chip.active,
@@ -1693,12 +1703,12 @@ body.guest-theme .route-chip.active,
 body:not(.admin-theme):not(.staff-theme) .route-chip.active,
 body.guest-theme .rules-route-chip.active,
 body:not(.admin-theme):not(.staff-theme) .rules-route-chip.active {
-    background: {$gp['hex']} !important;
-    background-color: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
-    box-shadow: 0 4px 12px {$gp['soft']} !important;
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
+    box-shadow: 0 4px 12px var(--primary-soft) !important;
 }
 body.guest-theme .filter-chip.active:hover,
 body:not(.admin-theme):not(.staff-theme) .filter-chip.active:hover,
@@ -1706,11 +1716,11 @@ body.guest-theme .route-chip.active:hover,
 body:not(.admin-theme):not(.staff-theme) .route-chip.active:hover,
 body.guest-theme .rules-route-chip.active:hover,
 body:not(.admin-theme):not(.staff-theme) .rules-route-chip.active:hover {
-    background: {$gp['dark']} !important;
-    background-color: {$gp['dark']} !important;
-    border-color: {$gp['dark']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.guest-theme .filter-chip.active .chip-count,
 body:not(.admin-theme):not(.staff-theme) .filter-chip.active .chip-count,
@@ -1718,15 +1728,15 @@ body.guest-theme .route-chip.active .chip-count,
 body:not(.admin-theme):not(.staff-theme) .route-chip.active .chip-count,
 body.guest-theme .rules-route-chip.active .chip-count,
 body:not(.admin-theme):not(.staff-theme) .rules-route-chip.active .chip-count {
-    background: {$gp['activeBadgeBg']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    background: var(--primary-badge-bg) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 
 /* Guest Cards & Interactive Element Hover/Focus Highlights */
 body.guest-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type])::before,
 body:not(.admin-theme):not(.staff-theme) .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type])::before {
-    background: linear-gradient(90deg, {$gp['hex']}, {$gp['dark']}) !important;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark)) !important;
 }
 body.guest-theme .stat-card:hover,
 body:not(.admin-theme):not(.staff-theme) .stat-card:hover,
@@ -1742,16 +1752,16 @@ body.guest-theme .schedule-card:hover,
 body:not(.admin-theme):not(.staff-theme) .schedule-card:hover,
 body.guest-theme .filter-box:hover,
 body:not(.admin-theme):not(.staff-theme) .filter-box:hover {
-    border-color: {$gp['soft']} !important;
-    box-shadow: 0 10px 25px {$gp['soft']} !important;
+    border-color: var(--primary-soft) !important;
+    box-shadow: 0 10px 25px var(--primary-soft) !important;
 }
 body.guest-theme .stat-card-link:not(.stat-card),
 body:not(.admin-theme):not(.staff-theme) .stat-card-link:not(.stat-card) {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.guest-theme .stat-card-link:not(.stat-card):hover,
 body:not(.admin-theme):not(.staff-theme) .stat-card-link:not(.stat-card):hover {
-    color: {$gp['dark']} !important;
+    color: var(--primary-dark) !important;
 }
 body.guest-theme .card-header-modern .card-title-modern i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
 body.guest-theme .modern-card-header .modern-card-title i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
@@ -1759,81 +1769,81 @@ body.guest-theme .schedule-card .card-header h3 i:first-child:not(.text-danger):
 body:not(.admin-theme):not(.staff-theme) .card-header-modern .card-title-modern i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
 body:not(.admin-theme):not(.staff-theme) .modern-card-header .modern-card-title i:first-child:not(.text-danger):not(.text-warning):not(.text-success),
 body:not(.admin-theme):not(.staff-theme) .schedule-card .card-header h3 i:first-child:not(.text-danger):not(.text-warning):not(.text-success) {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.guest-theme .count-badge,
 body:not(.admin-theme):not(.staff-theme) .count-badge {
-    background: {$gp['soft']} !important;
-    color: {$gp['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary) !important;
 }
 body.guest-theme .stat-card-link:focus,
 body.guest-theme .stat-card-button:focus,
 body:not(.admin-theme):not(.staff-theme) .stat-card-link:focus,
 body:not(.admin-theme):not(.staff-theme) .stat-card-button:focus {
     outline: none !important;
-    box-shadow: 0 0 0 3px {$gp['soft']}, var(--shadow-md) !important;
+    box-shadow: 0 0 0 3px var(--primary-soft), var(--shadow-md) !important;
 }
 body.guest-theme .filter-badge,
 body:not(.admin-theme):not(.staff-theme) .filter-badge {
-    color: {$gp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.guest-theme .back-link,
 body:not(.admin-theme):not(.staff-theme) .back-link {
-    color: {$gp['hex']} !important;
-    border-color: {$gp['soft']} !important;
+    color: var(--primary) !important;
+    border-color: var(--primary-soft) !important;
 }
 body.guest-theme .back-link:hover,
 body:not(.admin-theme):not(.staff-theme) .back-link:hover {
-    background: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
 }
 body.guest-theme .btn-outline-primary,
 body:not(.admin-theme):not(.staff-theme) .btn-outline-primary,
 body.guest-theme .btn-hero-outline,
 body:not(.admin-theme):not(.staff-theme) .btn-hero-outline {
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    border-color: var(--primary) !important;
     background: transparent !important;
 }
 body.guest-theme .btn-outline-primary:hover,
 body:not(.admin-theme):not(.staff-theme) .btn-outline-primary:hover,
 body.guest-theme .btn-hero-outline:hover,
 body:not(.admin-theme):not(.staff-theme) .btn-hero-outline:hover {
-    background-color: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
-    -webkit-text-fill-color: {$gp['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.guest-theme .guide-pill-btn.active,
 body:not(.admin-theme):not(.staff-theme) .guide-pill-btn.active {
-    background: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
-    box-shadow: 0 4px 12px {$gp['soft']} !important;
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    box-shadow: 0 4px 12px var(--primary-soft) !important;
 }
 body.guest-theme .pagination .page-item.active .page-link,
 body:not(.admin-theme):not(.staff-theme) .pagination .page-item.active .page-link {
-    background-color: {$gp['hex']} !important;
-    border-color: {$gp['hex']} !important;
-    color: {$gp['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
 }
 
 /* Guest Footer Elements dynamic brand accent */
 body.guest-theme footer .f-about h3,
 body:not(.admin-theme):not(.staff-theme) footer .f-about h3 {
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.guest-theme footer .f-links h4::after,
 body:not(.admin-theme):not(.staff-theme) footer .f-links h4::after {
-    background: {$gp['hex']} !important;
+    background: var(--primary) !important;
 }
 body.guest-theme footer .f-links a:hover,
 body:not(.admin-theme):not(.staff-theme) footer .f-links a:hover {
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.guest-theme footer .f-links li i.fa-map-marker-alt,
 body.guest-theme footer .f-links li i.fa-phone,
@@ -1841,13 +1851,16 @@ body.guest-theme footer .f-links li i.fa-envelope,
 body:not(.admin-theme):not(.staff-theme) footer .f-links li i.fa-map-marker-alt,
 body:not(.admin-theme):not(.staff-theme) footer .f-links li i.fa-phone,
 body:not(.admin-theme):not(.staff-theme) footer .f-links li i.fa-envelope {
-    color: {$gp['hex']} !important;
-    -webkit-text-fill-color: {$gp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 
 /* --- Dispatcher / Staff Dynamic Theme Tokens --- */
 body.staff-theme, html body.staff-theme {
     --primary: {$sp['hex']} !important;
+    --primary-rgb: {$sp['rgb']} !important;
+    --primary-soft-alpha: {$sp['softAlpha']} !important;
+    --primary-badge-bg: {$sp['activeBadgeBg']} !important;
     --primary-dark: {$sp['dark']} !important;
     --primary-soft: {$sp['soft']} !important;
     --primary-red: {$sp['hex']} !important;
@@ -1865,84 +1878,84 @@ body.staff-theme, html body.staff-theme {
     --nav-cta-text: {$sp['hex']} !important;
 }
 body.staff-theme header#site-header {
-    background: {$sn['hex']} !important;
-    border-bottom: 1px solid {$sn['divider']} !important;
+    background: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--nav-divider) !important;
 }
 body.staff-theme #site-header .logo-text h1,
 body.staff-theme .logo-section .logo-text h1,
 body.staff-theme .logo-text h1 {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.staff-theme #site-header .logo-text p,
 body.staff-theme .logo-section .logo-text p,
 body.staff-theme .logo-text p {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 0.88;
 }
 body.staff-theme .nav-menu > a:not(.profile-dropdown-item),
 body.staff-theme .nav-menu > .dropdown > .dropbtn {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.staff-theme .nav-menu > a:not(.profile-dropdown-item) i,
 body.staff-theme .nav-menu > .dropdown > .dropbtn i {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 0.92;
 }
 body.staff-theme .nav-menu > a:not(.profile-dropdown-item):hover,
 body.staff-theme .nav-menu > .dropdown > .dropbtn:hover {
-    background: {$sn['chipBg']} !important;
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    background: var(--nav-chip-bg) !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.staff-theme .nav-menu > a:not(.profile-dropdown-item):hover i,
 body.staff-theme .nav-menu > .dropdown > .dropbtn:hover i {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 1;
 }
 body.staff-theme .nav-menu > a.active:not(.profile-dropdown-item),
 body.staff-theme .nav-menu > .dropdown > .dropbtn.active {
-    background: {$sn['chipBg']} !important;
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    background: var(--nav-chip-bg) !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.staff-theme .nav-menu > a.active:not(.profile-dropdown-item) i,
 body.staff-theme .nav-menu > .dropdown > .dropbtn.active i {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 1;
 }
 body.staff-theme .nav-hamburger-btn {
-    color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
 }
 body.staff-theme .nav-hamburger-btn i {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.staff-theme .profile-trigger-name {
-    color: {$st['hex']} !important;
-    -webkit-text-fill-color: {$st['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     text-shadow: none !important;
 }
 body.staff-theme .profile-trigger-caret {
-    color: {$st['softText']} !important;
-    -webkit-text-fill-color: {$st['softText']} !important;
+    color: var(--nav-text-soft) !important;
+    -webkit-text-fill-color: var(--nav-text-soft) !important;
 }
 body.staff-theme .profile-trigger-btn {
-    background: {$sn['chipBg']} !important;
-    border-color: {$sn['divider']} !important;
+    background: var(--nav-chip-bg) !important;
+    border-color: var(--nav-divider) !important;
 }
 body.staff-theme .profile-trigger-btn:hover {
-    background: {$sn['chipBg']} !important;
-    border-color: {$sn['divider']} !important;
+    background: var(--nav-chip-bg) !important;
+    border-color: var(--nav-divider) !important;
     filter: brightness(0.92);
 }
 body.staff-theme .user-profile-dropdown {
-    border-left-color: {$sn['divider']} !important;
+    border-left-color: var(--nav-divider) !important;
 }
 body.staff-theme .drawer-brand-subtitle {
     color: var(--primary) !important;
@@ -1963,19 +1976,19 @@ body.staff-theme .drawer-nav-item.active i {
 }
 body.staff-theme .autocomplete-item i,
 body.staff-theme .autocomplete-item .autocomplete-item-text i {
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.staff-theme .autocomplete-item:hover,
 body.staff-theme .autocomplete-item.active-item {
-    background-color: {$sp['soft']} !important;
-    color: {$sp['hex']} !important;
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
 }
 body.staff-theme .autocomplete-badge {
-    background-color: {$sp['soft']} !important;
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
-    border: 1px solid {$sp['soft']} !important;
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    border: 1px solid var(--primary-soft) !important;
 }
 
 /* Dispatcher Buttons, Chips & Cards */
@@ -1983,34 +1996,34 @@ body.staff-theme .btn-primary,
 body.staff-theme .btn-modern.btn-primary,
 body.staff-theme .btn-modern.btn-modern-primary,
 body.staff-theme .btn-action-primary {
-    background: {$sp['hex']} !important;
-    background-color: {$sp['hex']} !important;
-    border-color: {$sp['hex']} !important;
-    color: {$sp['on']} !important;
-    -webkit-text-fill-color: {$sp['on']} !important;
-    box-shadow: 0 2px 6px {$sp['soft']} !important;
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
+    box-shadow: 0 2px 6px var(--primary-soft) !important;
 }
 body.staff-theme .btn-primary:hover,
 body.staff-theme .btn-modern.btn-primary:hover,
 body.staff-theme .btn-modern.btn-modern-primary:hover,
 body.staff-theme .btn-action-primary:hover {
-    background: {$sp['dark']} !important;
-    background-color: {$sp['dark']} !important;
-    border-color: {$sp['dark']} !important;
-    color: {$sp['on']} !important;
-    -webkit-text-fill-color: {$sp['on']} !important;
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.staff-theme .btn-outline-primary {
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
-    border-color: {$sp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    border-color: var(--primary) !important;
     background: transparent !important;
 }
 body.staff-theme .btn-outline-primary:hover {
-    background-color: {$sp['hex']} !important;
-    border-color: {$sp['hex']} !important;
-    color: {$sp['on']} !important;
-    -webkit-text-fill-color: {$sp['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 
 body.staff-theme .route-chip:not(.active) {
@@ -2025,90 +2038,93 @@ body.staff-theme .route-chip:not(.active) .chip-count {
 }
 body.staff-theme .route-chip:hover:not(.active),
 body.staff-theme .dep-filter-btn[data-type="all"]:hover:not(.active) {
-    border-color: {$sp['hex']} !important;
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
-    background: {$sp['softAlpha']} !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    background: var(--primary-soft-alpha) !important;
 }
 body.staff-theme .route-chip:hover:not(.active) .chip-count,
 body.staff-theme .dep-filter-btn[data-type="all"]:hover:not(.active) .dep-chip-count {
-    background: {$sp['soft']} !important;
-    color: {$sp['dark']} !important;
-    -webkit-text-fill-color: {$sp['dark']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
+    -webkit-text-fill-color: var(--primary-dark) !important;
 }
 body.staff-theme .route-chip.active,
 body.staff-theme .dep-filter-btn[data-type="all"].active {
-    background: {$sp['hex']} !important;
-    background-color: {$sp['hex']} !important;
-    border-color: {$sp['hex']} !important;
-    color: {$sp['on']} !important;
-    -webkit-text-fill-color: {$sp['on']} !important;
-    box-shadow: 0 4px 12px {$sp['soft']} !important;
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
+    box-shadow: 0 4px 12px var(--primary-soft) !important;
 }
 body.staff-theme .route-chip.active:hover,
 body.staff-theme .dep-filter-btn[data-type="all"].active:hover {
-    background: {$sp['dark']} !important;
-    background-color: {$sp['dark']} !important;
-    border-color: {$sp['dark']} !important;
-    color: {$sp['on']} !important;
-    -webkit-text-fill-color: {$sp['on']} !important;
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.staff-theme .route-chip.active .chip-count,
 body.staff-theme .dep-filter-btn[data-type="all"].active .dep-chip-count {
-    background: {$sp['activeBadgeBg']} !important;
-    color: {$sp['on']} !important;
-    -webkit-text-fill-color: {$sp['on']} !important;
+    background: var(--primary-badge-bg) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 
 /* Dispatcher Cards & Highlights (preserving vehicle type and fare colors) */
 body.staff-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type])::before,
 body.staff-theme .stat-card-modern.success-accent::before {
-    background: linear-gradient(90deg, {$sp['hex']}, {$sp['dark']}) !important;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark)) !important;
 }
 body.staff-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]) .stat-card-icon,
 body.staff-theme .stat-card-modern.success-accent .stat-card-icon {
-    background: {$sp['soft']} !important;
-    color: {$sp['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary) !important;
 }
 body.staff-theme .modern-card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
 body.staff-theme .card-modern:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
 body.staff-theme .card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
 body.staff-theme .stat-card:hover,
 body.staff-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):hover {
-    border-color: {$sp['soft']} !important;
-    box-shadow: 0 8px 25px {$sp['soft']} !important;
+    border-color: var(--primary-soft) !important;
+    box-shadow: 0 8px 25px var(--primary-soft) !important;
 }
 body.staff-theme .stat-card-link:not(.stat-card) {
-    color: {$sp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.staff-theme .stat-card-link:not(.stat-card):hover {
-    color: {$sp['dark']} !important;
+    color: var(--primary-dark) !important;
 }
 body.staff-theme .modern-card-header .modern-card-title i:not(.text-danger):not(.text-warning):not(.text-success),
 body.staff-theme .card-header-modern .card-title-modern i:not(.text-danger):not(.text-warning):not(.text-success),
 body.staff-theme .card-header .card-title i:not(.text-danger):not(.text-warning):not(.text-success) {
-    color: {$sp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.staff-theme .route-breakdown-card {
-    border-left-color: {$sp['hex']} !important;
+    border-left-color: var(--primary) !important;
 }
 body.staff-theme .departure-search-group:focus-within .input-group-text,
 body.staff-theme .departure-search-group:focus-within .departure-search-input {
-    border-color: {$sp['hex']} !important;
-    box-shadow: 0 0 0 3px {$sp['soft']} !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-soft) !important;
 }
 body.staff-theme .route-filter-label i {
-    color: {$sp['hex']} !important;
+    color: var(--primary) !important;
 }
 body.staff-theme .pagination .page-item.active .page-link {
-    background-color: {$sp['hex']} !important;
-    border-color: {$sp['hex']} !important;
-    color: {$sp['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
 }
 
 /* --- Admin & Super Admin Dynamic Theme Tokens --- */
 body.admin-theme, html body.admin-theme {
     --primary: {$ap['hex']} !important;
+    --primary-rgb: {$ap['rgb']} !important;
+    --primary-soft-alpha: {$ap['softAlpha']} !important;
+    --primary-badge-bg: {$ap['activeBadgeBg']} !important;
     --primary-dark: {$ap['dark']} !important;
     --primary-soft: {$ap['soft']} !important;
     --primary-red: {$ap['hex']} !important;
@@ -2128,84 +2144,84 @@ body.admin-theme, html body.admin-theme {
     --nav-cta-text: {$ap['hex']} !important;
 }
 body.admin-theme header#site-header {
-    background: {$an['hex']} !important;
-    border-bottom: 1px solid {$an['divider']} !important;
+    background: var(--nav-bg) !important;
+    border-bottom: 1px solid var(--nav-divider) !important;
 }
 body.admin-theme #site-header .logo-text h1,
 body.admin-theme .logo-section .logo-text h1,
 body.admin-theme .logo-text h1 {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.admin-theme #site-header .logo-text p,
 body.admin-theme .logo-section .logo-text p,
 body.admin-theme .logo-text p {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 0.88;
 }
 body.admin-theme .nav-menu > a:not(.profile-dropdown-item),
 body.admin-theme .nav-menu > .dropdown > .dropbtn {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.admin-theme .nav-menu > a:not(.profile-dropdown-item) i,
 body.admin-theme .nav-menu > .dropdown > .dropbtn i {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 0.92;
 }
 body.admin-theme .nav-menu > a:not(.profile-dropdown-item):hover,
 body.admin-theme .nav-menu > .dropdown > .dropbtn:hover {
-    background: {$an['chipBg']} !important;
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    background: var(--nav-chip-bg) !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.admin-theme .nav-menu > a:not(.profile-dropdown-item):hover i,
 body.admin-theme .nav-menu > .dropdown > .dropbtn:hover i {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 1;
 }
 body.admin-theme .nav-menu > a.active:not(.profile-dropdown-item),
 body.admin-theme .nav-menu > .dropdown > .dropbtn.active {
-    background: {$an['chipBg']} !important;
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    background: var(--nav-chip-bg) !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.admin-theme .nav-menu > a.active:not(.profile-dropdown-item) i,
 body.admin-theme .nav-menu > .dropdown > .dropbtn.active i {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     opacity: 1;
 }
 body.admin-theme .nav-hamburger-btn {
-    color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
 }
 body.admin-theme .nav-hamburger-btn i {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
 }
 body.admin-theme .profile-trigger-name {
-    color: {$at['hex']} !important;
-    -webkit-text-fill-color: {$at['hex']} !important;
+    color: var(--nav-text) !important;
+    -webkit-text-fill-color: var(--nav-text) !important;
     text-shadow: none !important;
 }
 body.admin-theme .profile-trigger-caret {
-    color: {$at['softText']} !important;
-    -webkit-text-fill-color: {$at['softText']} !important;
+    color: var(--nav-text-soft) !important;
+    -webkit-text-fill-color: var(--nav-text-soft) !important;
 }
 body.admin-theme .profile-trigger-btn {
-    background: {$an['chipBg']} !important;
-    border-color: {$an['divider']} !important;
+    background: var(--nav-chip-bg) !important;
+    border-color: var(--nav-divider) !important;
 }
 body.admin-theme .profile-trigger-btn:hover {
-    background: {$an['chipBg']} !important;
-    border-color: {$an['divider']} !important;
+    background: var(--nav-chip-bg) !important;
+    border-color: var(--nav-divider) !important;
     filter: brightness(0.92);
 }
 body.admin-theme .user-profile-dropdown {
-    border-left-color: {$an['divider']} !important;
+    border-left-color: var(--nav-divider) !important;
 }
 body.admin-theme .drawer-brand-subtitle {
     color: var(--primary) !important;
@@ -2226,19 +2242,19 @@ body.admin-theme .drawer-nav-item.active i {
 }
 body.admin-theme .autocomplete-item i,
 body.admin-theme .autocomplete-item .autocomplete-item-text i {
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.admin-theme .autocomplete-item:hover,
 body.admin-theme .autocomplete-item.active-item {
-    background-color: {$ap['soft']} !important;
-    color: {$ap['hex']} !important;
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
 }
 body.admin-theme .autocomplete-badge {
-    background-color: {$ap['soft']} !important;
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
-    border: 1px solid {$ap['soft']} !important;
+    background-color: var(--primary-soft) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    border: 1px solid var(--primary-soft) !important;
 }
 
 /* Admin Buttons, Tabs, Chips & Cards */
@@ -2247,115 +2263,115 @@ body.admin-theme .btn-modern.btn-primary,
 body.admin-theme .btn-modern.btn-modern-primary,
 body.admin-theme .btn-submit,
 body.admin-theme .btn-action-primary {
-    background: {$ap['hex']} !important;
-    background-color: {$ap['hex']} !important;
-    border-color: {$ap['hex']} !important;
-    color: {$ap['on']} !important;
-    -webkit-text-fill-color: {$ap['on']} !important;
-    box-shadow: 0 2px 6px {$ap['soft']} !important;
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
+    box-shadow: 0 2px 6px var(--primary-soft) !important;
 }
 body.admin-theme .btn-primary:hover,
 body.admin-theme .btn-modern.btn-primary:hover,
 body.admin-theme .btn-modern.btn-modern-primary:hover,
 body.admin-theme .btn-submit:hover,
 body.admin-theme .btn-action-primary:hover {
-    background: {$ap['dark']} !important;
-    background-color: {$ap['dark']} !important;
-    border-color: {$ap['dark']} !important;
-    color: {$ap['on']} !important;
-    -webkit-text-fill-color: {$ap['on']} !important;
+    background: var(--primary-dark) !important;
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.admin-theme .btn-outline-primary {
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
-    border-color: {$ap['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    border-color: var(--primary) !important;
     background: transparent !important;
 }
 body.admin-theme .btn-outline-primary:hover {
-    background-color: {$ap['hex']} !important;
-    border-color: {$ap['hex']} !important;
-    color: {$ap['on']} !important;
-    -webkit-text-fill-color: {$ap['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 
 body.admin-theme .nav-tabs .nav-link.active,
 body.admin-theme .nav-pills .nav-link.active,
 body.admin-theme .settings-tab-btn.active,
 body.admin-theme .tab-pill.active {
-    background-color: {$ap['hex']} !important;
-    border-color: {$ap['hex']} !important;
-    color: {$ap['on']} !important;
-    -webkit-text-fill-color: {$ap['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.admin-theme .btn-filter.active,
 body.admin-theme .route-filter-btn.active,
 body.admin-theme .admin-chip.active {
-    background: {$ap['hex']} !important;
-    background-color: {$ap['hex']} !important;
-    border-color: {$ap['hex']} !important;
-    color: {$ap['on']} !important;
-    -webkit-text-fill-color: {$ap['on']} !important;
-    box-shadow: 0 3px 10px {$ap['soft']} !important;
+    background: var(--primary) !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
+    box-shadow: 0 3px 10px var(--primary-soft) !important;
 }
 body.admin-theme .btn-filter.active .chip-count,
 body.admin-theme .route-filter-btn.active .chip-count,
 body.admin-theme .admin-chip.active .chip-count {
-    background: {$ap['activeBadgeBg']} !important;
-    color: {$ap['on']} !important;
-    -webkit-text-fill-color: {$ap['on']} !important;
+    background: var(--primary-badge-bg) !important;
+    color: var(--on-primary) !important;
+    -webkit-text-fill-color: var(--on-primary) !important;
 }
 body.admin-theme .btn-filter:hover:not(.active),
 body.admin-theme .route-filter-btn:hover:not(.active),
 body.admin-theme .admin-chip:hover:not(.active) {
-    border-color: {$ap['hex']} !important;
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
-    background: {$ap['softAlpha']} !important;
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
+    background: var(--primary-soft-alpha) !important;
 }
 body.admin-theme .btn-filter:hover:not(.active) .chip-count,
 body.admin-theme .route-filter-btn:hover:not(.active) .chip-count,
 body.admin-theme .admin-chip:hover:not(.active) .chip-count {
-    background: {$ap['soft']} !important;
-    color: {$ap['dark']} !important;
-    -webkit-text-fill-color: {$ap['dark']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary-dark) !important;
+    -webkit-text-fill-color: var(--primary-dark) !important;
 }
 
 /* Admin Cards & Highlights (preserving vehicle type and fare colors) */
 body.admin-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):not(.blue-accent):not(.gold-accent):not(.success-accent)::before {
-    background: linear-gradient(90deg, {$ap['hex']}, {$ap['dark']}) !important;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark)) !important;
 }
 body.admin-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):not(.blue-accent):not(.gold-accent):not(.success-accent) .stat-card-icon {
-    background: {$ap['soft']} !important;
-    color: {$ap['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary) !important;
 }
 body.admin-theme .modern-card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
 body.admin-theme .card-modern:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
 body.admin-theme .card:not(.fare-section-card):not(.queue-card):not(.q-card):not([data-vehicle-type]):hover,
 body.admin-theme .stat-card:hover,
 body.admin-theme .stat-card-modern:not([style*="--card-accent"]):not([data-vehicle-type]):hover {
-    border-color: {$ap['soft']} !important;
-    box-shadow: 0 8px 25px {$ap['soft']} !important;
+    border-color: var(--primary-soft) !important;
+    box-shadow: 0 8px 25px var(--primary-soft) !important;
 }
 body.admin-theme .stat-card-link:not(.stat-card) {
-    color: {$ap['hex']} !important;
+    color: var(--primary) !important;
 }
 body.admin-theme .stat-card-link:not(.stat-card):hover {
-    color: {$ap['dark']} !important;
+    color: var(--primary-dark) !important;
 }
 body.admin-theme .modern-card-header .modern-card-title i:not(.text-danger):not(.text-warning):not(.text-success),
 body.admin-theme .card-header-modern .card-title-modern i:not(.text-danger):not(.text-warning):not(.text-success),
 body.admin-theme .card-header .card-title i:not(.text-danger):not(.text-warning):not(.text-success) {
-    color: {$ap['hex']} !important;
+    color: var(--primary) !important;
 }
 body.admin-theme .form-control:focus,
 body.admin-theme .form-select:focus {
-    border-color: {$ap['hex']} !important;
-    box-shadow: 0 0 0 3px {$ap['soft']} !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-soft) !important;
 }
 body.admin-theme .pagination .page-item.active .page-link {
-    background-color: {$ap['hex']} !important;
-    border-color: {$ap['hex']} !important;
-    color: {$ap['on']} !important;
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--on-primary) !important;
 }
 
 /* --- Common Dropdown Menus (Management, Records, etc.) --- */
@@ -2401,48 +2417,48 @@ body.staff-theme .nav-menu .dropdown-content a i {
 body.admin-theme .dropdown-content a:hover,
 body.admin-theme .nav-menu .dropdown-content a:hover {
     background: #f1f5f9 !important;
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.admin-theme .dropdown-content a:hover i,
 body.admin-theme .nav-menu .dropdown-content a:hover i {
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.admin-theme .dropdown-content a.active,
 body.admin-theme .nav-menu .dropdown-content a.active {
-    background: {$ap['soft']} !important;
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
     font-weight: 700 !important;
 }
 body.admin-theme .dropdown-content a.active i,
 body.admin-theme .nav-menu .dropdown-content a.active i {
-    color: {$ap['hex']} !important;
-    -webkit-text-fill-color: {$ap['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.staff-theme .dropdown-content a:hover,
 body.staff-theme .nav-menu .dropdown-content a:hover {
     background: #f1f5f9 !important;
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.staff-theme .dropdown-content a:hover i,
 body.staff-theme .nav-menu .dropdown-content a:hover i {
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 body.staff-theme .dropdown-content a.active,
 body.staff-theme .nav-menu .dropdown-content a.active {
-    background: {$sp['soft']} !important;
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
+    background: var(--primary-soft) !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
     font-weight: 700 !important;
 }
 body.staff-theme .dropdown-content a.active i,
 body.staff-theme .nav-menu .dropdown-content a.active i {
-    color: {$sp['hex']} !important;
-    -webkit-text-fill-color: {$sp['hex']} !important;
+    color: var(--primary) !important;
+    -webkit-text-fill-color: var(--primary) !important;
 }
 
 /* Nav badge chips for Record / Audit status inside dropdowns */

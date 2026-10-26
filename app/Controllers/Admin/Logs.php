@@ -4,6 +4,7 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\LogModel;
+use App\Libraries\ActivityLogFormatter;
 use App\Models\UserModel;
 
 class Logs extends BaseController
@@ -82,7 +83,7 @@ class Logs extends BaseController
         $search       = trim((string) $this->request->getGet('q'));
         $fromDate     = trim((string) $this->request->getGet('from_date'));
         $toDate       = trim((string) $this->request->getGet('to_date'));
-        $actionFilter = trim((string) $this->request->getGet('action_type'));
+        $actionFilter = ''; // Reports include all types of activity.
         $userFilter   = trim((string) $this->request->getGet('user_id'));
 
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $actionFilter, $userFilter);
@@ -100,7 +101,6 @@ class Logs extends BaseController
             'search'       => $search,
             'from_date'    => $fromDate,
             'to_date'      => $toDate,
-            'action_type'  => $actionFilter,
             'user_id'      => $userFilter,
             'selected_user'=> $selectedUser,
             'generated_at' => date('Y-m-d H:i:s'),
@@ -124,8 +124,12 @@ class Logs extends BaseController
                 ->orLike('audit_logs.details', $search)
                 ->orLike('users.username', $search)
                 ->orLike('users.full_name', $search)
-                ->orLike('users.email', $search)
-                ->groupEnd();
+                ->orLike('users.email', $search);
+            $matchingActions = ActivityLogFormatter::matchingActions($search);
+            if ($matchingActions !== []) {
+                $builder->orWhereIn('audit_logs.action', $matchingActions);
+            }
+            $builder->groupEnd();
         }
 
         if ($fromDate !== '') {

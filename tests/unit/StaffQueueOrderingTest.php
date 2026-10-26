@@ -48,7 +48,7 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $view = file_get_contents(APPPATH . 'Views/staff/queue/index.php');
 
         $this->assertStringContainsString('id="manageQueueModal"', $view);
-        $this->assertStringContainsString('Manage Queue', $view);
+        $this->assertStringContainsString('Manage Order', $view);
         $this->assertStringContainsString('data-queue-move="up"', $view);
         $this->assertStringContainsString('data-queue-move="down"', $view);
         $this->assertStringContainsString("base_url('staff/queue/reorder')", $view);
