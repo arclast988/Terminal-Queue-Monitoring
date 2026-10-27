@@ -1011,6 +1011,9 @@ if (! function_exists('app_full_branding_payload')) {
             'contact_phone'         => app_contact_phone(),
             'contact_address'       => app_contact_address(),
             'contact_email'         => app_contact_email(),
+            'contact_phones'        => app_contact_phones(),
+            'contact_emails'        => app_contact_emails(),
+            'contact_recipient'     => app_contact_recipient(),
             'footer_about_title'    => app_footer_about_title(),
             'footer_about_desc'     => app_footer_about_text(),
             'footer_credit'         => app_footer_credit(),
@@ -1267,13 +1270,37 @@ if (! function_exists('app_contact_email')) {
     }
 }
 
+if (! function_exists('app_contact_phones')) {
+    function app_contact_phones(?string $value = null): array
+    {
+        $parts = preg_split('/[\r\n,;\/]+/', $value ?? app_contact_phone()) ?: [];
+        return array_values(array_unique(array_filter(array_map('trim', $parts), static fn($part) => $part !== '')));
+    }
+}
+
+if (! function_exists('app_contact_emails')) {
+    function app_contact_emails(?string $value = null): array
+    {
+        $emails = [];
+        foreach (preg_split('/[\s,;]+/', $value ?? app_contact_email()) ?: [] as $candidate) {
+            if (filter_var($candidate, FILTER_VALIDATE_EMAIL) && !isset($emails[strtolower($candidate)])) {
+                $emails[strtolower($candidate)] = $candidate;
+            }
+        }
+        return array_values($emails);
+    }
+}
+
 if (! function_exists('app_contact_recipient')) {
     function app_contact_recipient(): ?string
     {
+        $contacts = app_contact_emails();
+        if ($contacts) return implode(',', $contacts);
+        if (!function_exists('config')) return null;
         $config = config('Email');
-        foreach ([$config->recipients, app_contact_email(), $config->fromEmail ?: $config->SMTPUser] as $candidate) {
-            $candidate = trim($candidate);
-            if (filter_var($candidate, FILTER_VALIDATE_EMAIL)) return $candidate;
+        foreach ([$config->recipients, $config->fromEmail ?: $config->SMTPUser] as $candidate) {
+            $contacts = app_contact_emails(trim($candidate));
+            if ($contacts) return implode(',', $contacts);
         }
         return null;
     }
@@ -1312,7 +1339,7 @@ if (! function_exists('app_theme_color_helper')) {
             'softAlpha' => "rgba({$r}, {$g}, {$b}, 0.08)",
             'on'            => $onColor,
             'isLight'       => ($brightness > 155),
-            'softText'      => ($brightness > 155) ? 'rgba(255, 255, 255, 0.90)' : '#5d6b7e',
+            'softText'      => "rgba({$r}, {$g}, {$b}, 0.90)",
             'chipBg'        => ($brightness > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)',
             'divider'       => ($brightness > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)',
             'activeBadgeBg' => ($brightness > 155) ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.25)',

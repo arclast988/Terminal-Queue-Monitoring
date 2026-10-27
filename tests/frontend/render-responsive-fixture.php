@@ -30,7 +30,11 @@ function get_system_setting(string $key, $default = null) {
         'theme_staff_primary'=>'#155e75', 'theme_staff_nav_bg'=>'#164e63',
         'theme_admin_primary'=>'#7040b0', 'theme_admin_nav_bg'=>'#563084',
     ] : [];
-    return $theme[$key] ?? $default;
+    $contacts = ($GLOBALS['argv'][4] ?? '') === 'multiple-contacts' ? [
+        'contact_email' => "office@example.com and dispatch@example.com",
+        'contact_phone' => "+639171234567 / (053) 555-8376",
+    ] : [];
+    return $theme[$key] ?? $contacts[$key] ?? $default;
 }
 if (in_array($fixturePage, ['guest-contact-draft', 'staff-guide', 'admin-guide'], true)) {
     // Keep the real footer/modals while stubbing only managed settings/config.
@@ -131,7 +135,7 @@ $item = [
 $route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
-$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-terminals', 'admin-terminal-create', 'admin-terminal-edit', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
+$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-route-create', 'admin-route-edit', 'admin-terminals', 'admin-terminal-create', 'admin-terminal-edit', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
 $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Palompon', 'route_destination' => $longValue, 'created_at' => '2026-10-01 08:00:00'];
 $vehicle['status'] = 'active';
 $fixtureData = [
@@ -217,6 +221,14 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
     }
 }
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
+if ($fixturePage === 'admin-settings' && ($argv[4] ?? '') === 'multiple-contacts') {
+    $fixtureData['settings'] = ['contact_email'=>'office@example.com and dispatch@example.com','contact_phone'=>'+639171234567 / (053) 555-8376'];
+}
+if (in_array($fixturePage, ['admin-route-create', 'admin-route-edit'], true)) {
+    $fixtureData['route'] = $route;
+    $fixtureData['fares'] = ['jeepney' => 100];
+    $fixtureData['all_locations'] = ($argv[4] ?? '') === 'empty-route-suggestions' ? [] : ['ORMOC', 'TACLOBAN', 'PEÑA'];
+}
 if (($argv[4] ?? '') === 'archived-actions') {
     if ($fixturePage === 'admin-users') $fixtureData['users'] = [array_replace($user, ['status' => 'archived'])];
     if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [array_replace($vehicle, ['status' => 'archived'])];
@@ -381,6 +393,7 @@ $views = [
     'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-user-edit' => 'admin/users/edit', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminal-create' => 'admin/terminals/create', 'admin-terminal-edit' => 'admin/terminals/edit',
+    'admin-route-create' => 'admin/routes/create', 'admin-route-edit' => 'admin/routes/edit',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-logs-report' => 'admin/logs/print_logs',
     'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',

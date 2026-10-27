@@ -364,6 +364,25 @@
             if (input.dataset.autocompleteInitialized === "true") return;
             input.dataset.autocompleteInitialized = "true";
 
+            if (input.hasAttribute('data-uppercase')) {
+                const uppercaseValue = () => {
+                    const previous = input.value;
+                    const uppercase = previous.toUpperCase();
+                    if (uppercase === previous) return;
+                    const start = input.selectionStart;
+                    const end = input.selectionEnd;
+                    const direction = input.selectionDirection;
+                    input.value = uppercase;
+                    if (typeof start === 'number' && typeof end === 'number') {
+                        input.setSelectionRange(previous.slice(0, start).toUpperCase().length,
+                            previous.slice(0, end).toUpperCase().length, direction || 'none');
+                    }
+                };
+                input.addEventListener('input', event => { if (!event.isComposing) uppercaseValue(); });
+                input.addEventListener('compositionend', uppercaseValue);
+                uppercaseValue();
+            }
+
             let suggestions = [];
             if (input.dataset.suggestions) {
                 try {

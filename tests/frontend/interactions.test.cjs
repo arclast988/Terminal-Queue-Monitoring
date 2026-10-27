@@ -109,7 +109,7 @@ test('overlapping requests cannot be cleared by an older completion animation', 
   h.tick(110);
   const second = h.window.fetch('/second'); h.tick(1000);
   assert.equal(h.window.GlobalLoader.isRunning(), true); assert.equal(h.window.GlobalLoader.isVisible(), true);
-  h.requests[1].resolve({ ok: true }); await second; h.tick(300);
+  h.requests[1].resolve({ ok: true }); await second; h.tick(400);
   assert.equal(h.window.GlobalLoader.isRunning(), false); assert.equal(h.window.GlobalLoader.isVisible(), false);
 });
 
@@ -226,7 +226,10 @@ test('lite completion remains smooth while the response and pending ownership fi
   assert.equal(button.getAttribute('aria-busy'),null);
   assert.equal(h.window.GlobalLoader.isRunning(),false);
   assert.equal(h.window.GlobalLoader.isVisible(),true);
-  h.tick(200);
+  h.tick(100);
+  assert.equal(h.document.getElementById('global-progress-bar').classList.contains('is-done'),false);
+  assert.equal(h.document.querySelector('.global-progress-bar-inner').style.transform,'scaleX(1)');
+  h.tick(250);
   assert.equal(h.window.GlobalLoader.isVisible(),false);
   assert.equal(h.timers.size,0);
 });

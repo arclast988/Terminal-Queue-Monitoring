@@ -139,10 +139,6 @@ test('phone, tablet, desktop and installed-app link navigation use the intended 
     checkStart(await waitEntry(reports, id + ':link-start'), profile);
     const report = await waitEntry(reports, id + ':link'); checkSnapshot(report, profile);
     const navigation = await waitEntry(pending, id + ':/slow-link');
-    if(engine==='chromium' && profile.name==='desktop') {
-      fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
-      await page.screenshot({path:path.join(__dirname,'artifacts','desktop-navigation-loader.png')});
-    }
     assert.equal(navigation.method, 'GET'); navigation.res.end('Next page');
     await page.waitForURL(origin + '/slow-link?id=' + id);
     assert.deepEqual(errors, []);
@@ -162,14 +158,34 @@ test('native form values and button feedback survive mobile, desktop and app nav
     const fields = new URLSearchParams(submission.body);
     assert.equal(fields.get('csrf_fixture'), 'unchanged');
     assert.equal(fields.get('vehicle'), 'fixture-vehicle'); assert.equal(fields.get('action'), 'save');
-    if(engine==='chromium' && profile.name==='desktop') {
-      fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
-      await page.screenshot({path:path.join(__dirname,'artifacts','desktop-form-loader.png')});
-    }
     submission.res.end('Saved'); await page.waitForURL(origin + '/slow-form?id=' + id);
     assert.deepEqual(errors, []); results.forms.push({ profile: profile.name, passed: true }); await context.close();
   }
 });
+test('desktop page and form arrivals fill the visible progress bar to the right before fading', {timeout:30000}, async t => {
+  for (const [selector,destination,kind] of [['#navigate','/slow-link','link'],['#submit','/slow-form','form']]) {
+    const profile=profiles.find(profile=>profile.name==='desktop');
+    const {id,page,context,errors}=await open(t,profile);
+    await click(page,selector);
+    checkSnapshot(await waitEntry(reports,id+':'+kind),profile);
+    const navigation=await waitEntry(pending,id+':'+destination);
+    const probe=`<script>document.addEventListener('DOMContentLoaded',function(){
+      function sample(){var bar=document.getElementById('global-progress-bar'),fill=bar.querySelector('.global-progress-bar-inner');
+        var right=fill.getBoundingClientRect().right,opacity=Number(getComputedStyle(bar).opacity);
+        if(right>=innerWidth-1&&opacity>0.8&&!GlobalLoader.isRunning()){
+          navigator.sendBeacon('/report',JSON.stringify({id:'${id}',kind:'finished',right:right,width:innerWidth,opacity:opacity}));
+        }else requestAnimationFrame(sample);
+      }requestAnimationFrame(sample);
+    });<\/script>`;
+    navigation.res.setHeader('Content-Type','text/html'); navigation.res.end(fixture(id).replace('</body>',probe+'</body>'));
+    const finished=await waitEntry(reports,id+':finished');
+    assert.ok(finished.right>=finished.width-1 && finished.opacity>0.8,JSON.stringify(finished));
+    await page.waitForURL(origin+destination+'?id='+id);
+    await page.waitForFunction(()=>!GlobalLoader.isVisible()&&!GlobalLoader.isRunning());
+    assert.deepEqual(errors,[]); await context.close();
+  }
+});
+
 test('mobile in-page fetch and XHR operations retain progress and local loading feedback', { timeout: 30000 }, async t => {
   for (const profile of [profiles[0], profiles[2], profiles[3]]) {
     const { id, page, context, errors } = await open(t, profile);

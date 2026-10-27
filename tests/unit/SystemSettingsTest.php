@@ -304,6 +304,27 @@ final class SystemSettingsTest extends CIUnitTestCase
         $this->assertStringContainsString('admin/settings/update-operations', $html);
     }
 
+    public function testSavedContactListsArePublicAndTakePriorityForDraftRecipients(): void
+    {
+        $db = \Config\Database::connect();
+        if (!$db->tableExists('system_settings')) {
+            $runner = service('migrations'); $runner->setNamespace('App'); $runner->latest('tests');
+        }
+        $saved = get_all_system_settings(true);
+        $model = new \App\Models\SystemSettingModel();
+        $config = config('Email'); $oldRecipients = $config->recipients;
+        try {
+            $model->setMultiple(['contact_email'=>"office@example.com and dispatch@example.com, OFFICE@example.com",'contact_phone'=>"+639171234567 / (053) 555-8376"]);
+            get_all_system_settings(true); $config->recipients = 'fallback@example.com';
+            $this->assertSame(['office@example.com','dispatch@example.com'], app_contact_emails());
+            $this->assertSame(['+639171234567','(053) 555-8376'], app_contact_phones());
+            $this->assertSame('office@example.com,dispatch@example.com', app_contact_recipient());
+        } finally {
+            $model->setMultiple(['contact_email'=>$saved['contact_email'] ?? '', 'contact_phone'=>$saved['contact_phone'] ?? '']);
+            $config->recipients = $oldRecipients; get_all_system_settings(true);
+        }
+    }
+
     public function testLoginCardHelpersAndDefaults(): void
     {
         $defaultImg = app_login_card_image();

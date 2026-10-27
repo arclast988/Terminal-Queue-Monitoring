@@ -27,6 +27,29 @@ test.before(async()=>{
 });
 test.after(async()=>{await browser?.close();server?.closeAllConnections();await new Promise(resolve=>server?.close(resolve));});
 
+test('guest contact lists and Gmail drafts use every configured email and follow live updates',async()=>{
+  const page=await browser.newPage({viewport:{width:375,height:850}});
+  try {
+    await page.addInitScript(()=>{window.drafts=[];window.open=url=>{window.drafts.push(url);return null;};});
+    await page.goto(origin+'/fixtures/guest-contact-draft?state=multiple-contacts');
+    assert.equal(await page.locator('[data-terminal-phone]').count(),2);
+    assert.equal(await page.locator('[data-terminal-email]').count(),2);
+    await page.locator('footer a[onclick*="contactModal"]').click();
+    const form=page.locator('#contactModal form');
+    assert.equal(await form.getAttribute('data-recipient'),'office@example.com,dispatch@example.com');
+    await form.locator('button[value="gmail"]').click();
+    let url=new URL(await page.evaluate(()=>window.drafts.at(-1)));
+    assert.equal(url.searchParams.get('to'),'office@example.com,dispatch@example.com');
+    await page.addScriptTag({url:origin+'/js/ws-client.js'});
+    await page.evaluate(()=>applyLiveBranding({category:'identity',contact_phones:['09181234567'],contact_emails:['new@example.com','other@example.com'],contact_recipient:'new@example.com,other@example.com'}));
+    assert.equal(await page.locator('[data-terminal-phone]').count(),1);
+    assert.deepEqual(await page.locator('[data-terminal-email] a').allTextContents(),['new@example.com','other@example.com']);
+    await form.locator('button[value="gmail"]').click();
+    url=new URL(await page.evaluate(()=>window.drafts.at(-1)));
+    assert.equal(url.searchParams.get('to'),'new@example.com,other@example.com');
+  } finally {await page.close();}
+});
+
 test('both guest forms prepare encoded Gmail drafts from the guest account on mobile and desktop',async()=>{
   for(const width of [320,375,1365]) {
     const page=await browser.newPage({viewport:{width,height:850}}),errors=[],requests=[];

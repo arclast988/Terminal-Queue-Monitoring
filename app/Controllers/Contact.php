@@ -29,7 +29,7 @@ class Contact extends BaseController
             'view'=>'cm', 'fs'=>'1', 'tf'=>'cm', 'to'=>$recipient,
             'su'=>'[' . app_acronym() . '] ' . $label . $subject, 'body'=>$body,
         ], '', '&', PHP_QUERY_RFC3986);
-        $appUrl = 'mailto:' . str_replace('%40', '@', rawurlencode($recipient)) . '?' . http_build_query([
+        $appUrl = 'mailto:' . str_replace(['%40', '%2C'], ['@', ','], rawurlencode($recipient)) . '?' . http_build_query([
             'subject'=>'[' . app_acronym() . '] ' . $label . $subject,
             'body'=>preg_replace('/\r\n|\r|\n/', "\r\n", $body),
         ], '', '&', PHP_QUERY_RFC3986);

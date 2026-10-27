@@ -37,15 +37,41 @@ class Settings extends BaseController
             return redirect()->back()->with('error', 'Unauthorized.');
         }
 
+        $contacts = [];
+        foreach (['phones' => ['contact_phones', 'contact_phone'], 'emails' => ['contact_emails', 'contact_email']] as $kind => [$inputName, $settingName]) {
+            $posted = $this->request->getPost($inputName);
+            if ($posted === null) {
+                $legacy = $this->request->getPost($settingName) ?? '';
+                if (!is_string($legacy)) return $this->contactValidationError('Invalid terminal contact values.');
+                $contacts[$settingName] = $kind === 'emails' ? implode("\n", app_contact_emails($legacy)) : implode("\n", app_contact_phones($legacy));
+                continue;
+            }
+            if (!is_array($posted)) return $this->contactValidationError('Invalid terminal contact list.');
+            $values = [];
+            foreach ($posted as $value) {
+                if (!is_string($value)) return $this->contactValidationError('Invalid terminal contact value.');
+                $value = trim($value);
+                if ($value === '') continue;
+                if ($kind === 'emails' && (!filter_var($value, FILTER_VALIDATE_EMAIL) || strlen($value) > 254)) {
+                    return $this->contactValidationError('Enter one valid email address in each contact email row.');
+                }
+                if ($kind === 'phones' && (strlen($value) > 80 || !preg_match('/\d/', $value) || preg_match('/[\r\n]/', $value))) {
+                    return $this->contactValidationError('Enter one valid phone number in each contact phone row.');
+                }
+                $key = $kind === 'emails' ? strtolower($value) : $value;
+                if (!isset($values[$key])) $values[$key] = $value;
+            }
+            $contacts[$settingName] = implode("\n", array_values($values));
+        }
         $model = new SystemSettingModel();
         $fields = [
             'app_name'              => trim($this->request->getPost('app_name') ?? ''),
             'app_subtitle'          => trim($this->request->getPost('app_subtitle') ?? ''),
             'acronym'               => trim($this->request->getPost('acronym') ?? ''),
             'system_title'          => trim($this->request->getPost('system_title') ?? ''),
-            'contact_phone'         => trim($this->request->getPost('contact_phone') ?? ''),
+            'contact_phone'         => $contacts['contact_phone'],
             'contact_address'       => trim($this->request->getPost('contact_address') ?? ''),
-            'contact_email'         => trim($this->request->getPost('contact_email') ?? ''),
+            'contact_email'         => $contacts['contact_email'],
             'login_headline'        => trim($this->request->getPost('login_headline') ?? ''),
             'login_subheadline'     => trim($this->request->getPost('login_subheadline') ?? ''),
             'login_kicker'          => trim($this->request->getPost('login_kicker') ?? ''),
@@ -1348,6 +1374,17 @@ class Settings extends BaseController
     /**
      * Broadcast branding changes across WebSocket to all connected clients in real time.
      */
+    private function contactValidationError(string $message)
+    {
+        if ($this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false, 'message' => $message,
+                'csrf_token' => csrf_token(), 'csrf_hash' => csrf_hash(),
+            ]);
+        }
+        return redirect()->back()->withInput()->with('error', $message);
+    }
+
     protected function broadcastBrandingChange(?string $category = null): void
     {
         try {

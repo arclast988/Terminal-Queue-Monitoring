@@ -238,4 +238,16 @@ final class GuestContactDraftTest extends CIUnitTestCase
             [$config->recipients, $config->fromEmail, $config->SMTPUser] = $saved;
         }
     }
+
+    public function testDraftsKeepEveryConfiguredRecipientWithoutSendingMail(): void
+    {
+        GuestContactHarness::$recipient = 'office@example.com,dispatch@example.com';
+        $response = $this->action('send', $this->draft() + ['recipient'=>'attacker@example.com'], true);
+        $data = json_decode($response->getBody(), true);
+        $this->assertTrue($data['success']);
+        parse_str(parse_url($data['gmailUrl'], PHP_URL_QUERY), $query);
+        $this->assertSame('office@example.com,dispatch@example.com', $query['to']);
+        $this->assertSame('office@example.com,dispatch@example.com', rawurldecode(parse_url($data['emailAppUrl'], PHP_URL_PATH)));
+        $this->assertSame([], GuestContactHarness::$mail);
+    }
 }

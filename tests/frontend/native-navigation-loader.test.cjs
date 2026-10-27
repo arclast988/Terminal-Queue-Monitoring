@@ -156,6 +156,32 @@ test('a background response cannot finish a pending desktop navigation indicator
   h.window.emit('pagehide'); assert.equal(visible(h), false);
 });
 
+test('slow tracked requests keep feedback until they actually finish', async () => {
+  const h = loaded(); const request = h.window.fetch('/api/vehicles');
+  h.tick(13000); assert.equal(visible(h),true);
+  h.requests[0].resolve({ok:true}); await request; h.tick(500);
+  assert.equal(visible(h),false); assert.equal(h.timers.size,0);
+});
+
+test('a visible desktop navigation resumes on arrival and fills completely before fading', async () => {
+  const source = loaded(); await navigate(source); source.tick(500);
+  source.window.emit('pagehide');
+  const arrival = harness();
+  arrival.window.navigator.userAgent = desktop;
+  arrival.window.sessionStorage = source.window.sessionStorage;
+  arrival.tick(source.window.Date.now() - arrival.window.Date.now());
+  arrival.load(loader);
+  const bar = arrival.document.getElementById('global-progress-bar');
+  assert.equal(visible(arrival),true);
+  arrival.tick(100);
+  assert.equal(arrival.document.querySelector('.global-progress-bar-inner').style.transform,'scaleX(1)');
+  assert.equal(bar.classList.contains('is-done'),false);
+  arrival.tick(194); assert.equal(bar.classList.contains('is-done'),true);
+  arrival.tick(160); assert.equal(visible(arrival),false);
+  assert.equal(arrival.timers.size,0);
+  assert.equal(arrival.window.sessionStorage.getItem('gl_navigation_progress'),null);
+});
+
 test('reinitialization and restored pages preserve one loader and usable feedback', async () => {
   const h = loaded({ ua: android }); h.load(loader);
   assert.equal(h.document.querySelectorAll('#global-progress-bar').length, 1);

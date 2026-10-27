@@ -142,8 +142,13 @@
     background: #f1f5f9;
     color: #1e293b;
     border: 1px solid #cbd5e1;
-    white-space: nowrap;
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
+.route-tag-pill > i { flex: 0 0 auto; }
+.route-tag-text { min-width: 0; overflow-wrap: anywhere; }
 
 .rule-day-round-cell {
     display: inline-flex;
@@ -451,7 +456,7 @@
                                 </td>
                                 <td data-label="Destination">
                                     <?php if (!empty($rule['route_destination']) && $rule['route_destination'] !== '-'): ?>
-                                        <span class="route-tag-pill"><i class="bi bi-geo-alt-fill text-danger"></i> <?= strtoupper(esc($rule['route_destination'])) ?></span>
+                                        <span class="route-tag-pill"><i class="bi bi-geo-alt-fill text-danger"></i><span class="route-tag-text"><?= strtoupper(esc($rule['route_destination'])) ?></span></span>
                                     <?php else: ?>
                                         <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
                                     <?php endif; ?>

@@ -40,7 +40,7 @@
             body: (name ? 'Name: ' + name : '') + (name && message ? '\n\n' : '') + message
         });
         var url = 'https://mail.google.com/mail/?' + params.toString();
-        var appUrl = 'mailto:' + encodeURIComponent(form.dataset.recipient).replace(/%40/g, '@')
+        var appUrl = 'mailto:' + encodeURIComponent(form.dataset.recipient).replace(/%40/g, '@').replace(/%2C/gi, ',')
             + '?subject=' + encodeURIComponent(params.get('su'))
             + '&body=' + encodeURIComponent(params.get('body').replace(/\r\n|\r|\n/g, '\r\n'));
         var draftLink = form.querySelector('[data-contact-draft-link]');

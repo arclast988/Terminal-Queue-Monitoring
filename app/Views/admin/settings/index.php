@@ -407,6 +407,27 @@ $slotsMeta = [
 .queue-reset-option-title { font-weight: 600; }
 .queue-reset-copy .form-text,
 .queue-reset-time .form-text { margin: 0; font-weight: 400; line-height: 1.5; }
+.queue-reset-time-control { position: relative; }
+.queue-reset-time-control > .form-input { padding-right: 46px; }
+.queue-reset-time-toggle {
+    position: absolute; right: 6px; top: 5px; width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 6px; background: transparent; color: var(--sb-primary); cursor: pointer;
+}
+.queue-reset-picker {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end; gap: 8px; margin-top: 8px; padding: 12px;
+    border: 1px solid var(--sb-border); border-radius: 8px; background: var(--sb-surface-subtle);
+}
+.queue-reset-picker[hidden] { display: none !important; }
+.queue-reset-picker label { min-width: 0; margin: 0; font-size: 12px; color: var(--sb-text-main); }
+.queue-reset-picker select { width: 100%; min-width: 0; margin-top: 5px; padding: 8px; border: 1px solid var(--sb-border); border-radius: 6px; background: var(--sb-surface); color: var(--sb-text-main); }
+.queue-reset-picker button { min-height: 36px; padding: 8px 12px; border: 0; border-radius: 6px; background: var(--sb-primary); color: var(--on-primary, #fff); font-weight: 600; cursor: pointer; }
+.contact-settings-group { min-width: 0; margin: 0; padding: 0; border: 0; }
+.contact-entry { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.contact-entry .form-input { min-width: 0; flex: 1; }
+.contact-remove { flex: 0 0 34px; height: 34px; border: 1px solid var(--sb-border); border-radius: 6px; color: var(--sb-text-muted); background: var(--sb-surface); cursor: pointer; }
+.contact-add { padding: 6px 10px; border: 1px solid var(--sb-border); border-radius: 6px; color: var(--sb-primary); background: var(--sb-surface); font-size: 12px; font-weight: 600; cursor: pointer; }
 
 .form-input {
     padding: 10px 14px;
@@ -1461,14 +1482,25 @@ $slotsMeta = [
                         <label class="form-label">Full Official Title <span class="label-hint">(Printed Reports & Documentation)</span></label>
                         <input type="text" name="system_title" class="form-input" id="inputSystemTitle" value="<?= esc($s['system_title'] ?? 'Terminal Queue Monitoring System') ?>" maxlength="150" placeholder="e.g. Terminal Queue Monitoring System">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Terminal Contact Phone</label>
-                        <input type="text" name="contact_phone" class="form-input" value="<?= esc($s['contact_phone'] ?? '') ?>" maxlength="80" placeholder="e.g. (053) 555-8376 / 338-2022">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Terminal Contact Email</label>
-                        <input type="email" name="contact_email" class="form-input" value="<?= esc($s['contact_email'] ?? '') ?>" maxlength="120" placeholder="e.g. terminal@transit.gov.ph">
-                    </div>
+                    <fieldset class="form-group contact-settings-group">
+                        <legend class="form-label">Terminal Contact Numbers</legend>
+                        <div id="terminalPhonesList" data-contact-list data-contact-label="Terminal contact number">
+                        <?php $phoneRows = old('contact_phones', app_contact_phones($s['contact_phone'] ?? '')); $phoneRows = is_array($phoneRows) ? array_values(array_filter($phoneRows, 'is_string')) : []; foreach ($phoneRows ?: [''] as $index => $phone): ?>
+                            <div class="contact-entry"><input type="tel" name="contact_phones[]" class="form-input" value="<?= esc($phone) ?>" maxlength="80" autocomplete="off" aria-label="Terminal contact number <?= $index + 1 ?>" placeholder="e.g. (053) 555-8376"><button type="button" class="contact-remove" data-contact-remove aria-label="Remove contact number"><i class="bi bi-x" aria-hidden="true"></i></button></div>
+                        <?php endforeach; ?>
+                        </div>
+                        <button type="button" class="contact-add" data-contact-add="terminalPhonesList"><i class="bi bi-plus" aria-hidden="true"></i> Add number</button>
+                    </fieldset>
+                    <fieldset class="form-group contact-settings-group">
+                        <legend class="form-label">Terminal Contact Emails</legend>
+                        <div id="terminalEmailsList" data-contact-list data-contact-label="Terminal contact email">
+                        <?php $emailRows = old('contact_emails', app_contact_emails($s['contact_email'] ?? '')); $emailRows = is_array($emailRows) ? array_values(array_filter($emailRows, 'is_string')) : []; foreach ($emailRows ?: [''] as $index => $email): ?>
+                            <div class="contact-entry"><input type="email" name="contact_emails[]" class="form-input" value="<?= esc($email) ?>" maxlength="254" autocomplete="off" aria-label="Terminal contact email <?= $index + 1 ?>" placeholder="e.g. terminal@gmail.com"><button type="button" class="contact-remove" data-contact-remove aria-label="Remove contact email"><i class="bi bi-x" aria-hidden="true"></i></button></div>
+                        <?php endforeach; ?>
+                        </div>
+                        <button type="button" class="contact-add" data-contact-add="terminalEmailsList"><i class="bi bi-plus" aria-hidden="true"></i> Add email</button>
+                        <small class="form-text">Shown to commuters. Contact and report drafts are addressed to these email accounts.</small>
+                    </fieldset>
                     <div class="form-group full-width">
                         <label class="form-label">Terminal Physical Address</label>
                         <input type="text" name="contact_address" class="form-input" value="<?= esc($s['contact_address'] ?? '') ?>" maxlength="200" placeholder="e.g. Central Transit Terminal">
@@ -2107,9 +2139,17 @@ $slotsMeta = [
                         </label>
                     </div>
                     <div class="form-group queue-reset-time">
-                        <label class="form-label" for="inputQueueResetTime">Daily clearing time (Philippine time)</label>
-                        <input type="time" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" step="60" required aria-describedby="queueResetTimeHelp">
-                        <p class="form-text" id="queueResetTimeHelp">Asia/Manila. Changes begin at the next scheduled time. Default: 12:00 AM.</p>
+                        <label class="form-label" for="inputQueueResetTime">Daily clearing time (24-hour, Philippine time)</label>
+                        <div class="queue-reset-time-control">
+                            <input type="text" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" placeholder="00:00" maxlength="5" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required autocomplete="off" aria-describedby="queueResetTimeHelp">
+                            <button type="button" class="queue-reset-time-toggle" id="queueResetTimeToggle" aria-label="Choose daily clearing time in 24-hour format" aria-controls="queueResetTimePicker" aria-expanded="false"><i class="bi bi-clock" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="queue-reset-picker" id="queueResetTimePicker" role="group" aria-label="24-hour clearing time" hidden>
+                            <label for="queueResetHour">Hour (00–23)<select id="queueResetHour" data-no-autocomplete><?php for ($hour = 0; $hour < 24; $hour++): ?><option value="<?= sprintf('%02d', $hour) ?>"><?= sprintf('%02d', $hour) ?></option><?php endfor; ?></select></label>
+                            <label for="queueResetMinute">Minute (00–59)<select id="queueResetMinute" data-no-autocomplete><?php for ($minute = 0; $minute < 60; $minute++): ?><option value="<?= sprintf('%02d', $minute) ?>"><?= sprintf('%02d', $minute) ?></option><?php endfor; ?></select></label>
+                            <button type="button" id="queueResetTimeApply">Set</button>
+                        </div>
+                        <p class="form-text" id="queueResetTimeHelp">Asia/Manila. Use HH:MM from 00:00 to 23:59. Changes begin at the next scheduled time. Default: 00:00.</p>
                     </div>
                 </div>
             </div>
@@ -3441,4 +3481,52 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-contact-add]').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var list = document.getElementById(button.dataset.contactAdd);
+            var row = list.querySelector('.contact-entry').cloneNode(true);
+            var input = row.querySelector('input'); input.value = '';
+            input.setAttribute('aria-label', list.dataset.contactLabel + ' ' + (list.children.length + 1));
+            list.appendChild(row); input.focus();
+        });
+    });
+    document.querySelectorAll('[data-contact-list]').forEach(function (list) {
+        list.addEventListener('click', function (event) {
+            var remove = event.target.closest('[data-contact-remove]');
+            if (!remove) return;
+            if (list.children.length === 1) list.querySelector('input').value = '';
+            else remove.closest('.contact-entry').remove();
+            list.querySelectorAll('input').forEach(function (input, index) { input.setAttribute('aria-label', list.dataset.contactLabel + ' ' + (index + 1)); });
+            list.dispatchEvent(new Event('input', {bubbles:true}));
+        });
+    });
+    var input = document.getElementById('inputQueueResetTime');
+    var toggle = document.getElementById('queueResetTimeToggle');
+    var picker = document.getElementById('queueResetTimePicker');
+    var hours = document.getElementById('queueResetHour');
+    var minutes = document.getElementById('queueResetMinute');
+    if (!input || !toggle || !picker) return;
+    function closePicker() { picker.hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
+    toggle.addEventListener('click', function () {
+        if (!picker.hidden) { closePicker(); return; }
+        var match = input.value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+        hours.value = match ? match[1] : '00'; minutes.value = match ? match[2] : '00';
+        picker.hidden = false; toggle.setAttribute('aria-expanded', 'true'); hours.focus();
+    });
+    document.getElementById('queueResetTimeApply').addEventListener('click', function () {
+        input.value = hours.value + ':' + minutes.value;
+        input.dispatchEvent(new Event('input', {bubbles:true}));
+        input.dispatchEvent(new Event('change', {bubbles:true}));
+        closePicker(); input.focus();
+    });
+    document.addEventListener('click', function (event) {
+        if (!picker.contains(event.target) && !toggle.contains(event.target)) closePicker();
+    });
+    picker.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') { closePicker(); toggle.focus(); }
+    });
+});
+</script>
 <?= $this->include('templates/footer') ?>

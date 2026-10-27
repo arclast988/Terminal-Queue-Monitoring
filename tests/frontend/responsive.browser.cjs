@@ -10,7 +10,8 @@ const { assetContentType } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
-const pages = ['login', 'forgot', 'reset', 'verify', 'guest', 'fares', 'schedules', 'search', 'staff-queue', 'staff-schedules', 'staff-password', 'admin-schedules', ...managementPages];
+const routeFormPages = ['admin-route-create', 'admin-route-edit'];
+const pages = ['login', 'forgot', 'reset', 'verify', 'guest', 'fares', 'schedules', 'search', 'staff-queue', 'staff-schedules', 'staff-password', 'admin-schedules', ...managementPages, ...routeFormPages];
 const authPages = new Set(pages.slice(0, 4));
 const cache = new Map();
 const report = { engine, fixtures: 'production PHP views with seeded helper/data values', cases: [], beforeAfter: {} };
@@ -21,7 +22,7 @@ function fixture(name, long, baseline, state = '') {
   if (!cache.has(key)) {
     const rendered = execFileSync('php', [path.join(__dirname, 'render-responsive-fixture.php'), name, long ? 'long' : 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     let scripts;
-    if (authPages.has(name) || managementPages.includes(name)) scripts = scriptsOf(rendered);
+    if (authPages.has(name) || managementPages.includes(name) || routeFormPages.includes(name)) scripts = scriptsOf(rendered);
     else if (!name.startsWith('staff') && !name.startsWith('admin')) {
       // Keep actual guest navigation/announcement controls; isolate realtime reads.
       const header = fs.readFileSync(path.join(root, 'app/Views/templates/guest_header.php'), 'utf8');
@@ -105,6 +106,33 @@ async function screenshot(page, name, fullPage = true) {
   await page.screenshot({ path: path.join(dir, `${engine}-${name}.png`), fullPage, animations: 'disabled' });
 }
 
+test('route destinations uppercase typed and pasted text while preserving editing and submitted values', {timeout:60000}, async t => {
+  for (const name of routeFormPages) for (const width of [375,1280]) for (const empty of [false,true]) {
+    const {page,context,errors} = await open(t,name,width,900,empty ? 'state=empty-route-suggestions' : '');
+    try {
+      await page.addScriptTag({path:path.join(root,'public/assets/js/autocomplete-search.js')});
+      const field = page.locator('#destination');
+      await field.fill('ormoc'); assert.equal(await field.inputValue(),'ORMOC');
+      await field.evaluate(el=>el.setSelectionRange(2,2));
+      await page.keyboard.insertText('a');
+      assert.equal(await field.inputValue(),'ORAMOC');
+      assert.equal(await field.evaluate(el=>el.selectionStart),3);
+      await field.fill(''); await page.keyboard.insertText('hello world i am here');
+      assert.equal(await field.inputValue(),'HELLO WORLD I AM HERE');
+      await field.fill('peña'); assert.equal(await field.inputValue(),'PEÑA');
+      if (!empty) {
+        await field.fill('ta');
+        await field.locator('..').locator('.autocomplete-item').filter({hasText:'TACLOBAN'}).first().click();
+        assert.equal(await field.inputValue(),'TACLOBAN');
+      }
+      await field.fill('tacloban city');
+      const data = await field.evaluate(el=>{const data=new FormData(el.form);return {destination:data.get('destination'),csrf:data.get('csrf_fixture')};});
+      assert.deepEqual(data,{destination:'TACLOBAN CITY',csrf:'unchanged'});
+      assert.deepEqual(errors,[],name+' '+width+' empty='+empty);
+    } finally {await context.close();}
+  }
+});
+
 test('management pages keep long values and primary controls inside phone, tablet and desktop layouts', { timeout: 90000 }, async t => {
   const failures = [];
   for (const name of managementPages) {
@@ -144,6 +172,17 @@ test('management pages keep long values and primary controls inside phone, table
             });
             assert.ok(labels.every(label => label.wordWidth <= label.available + 1), `label words are squeezed: ${JSON.stringify(labels)}`);
           }
+        }
+        if (name === 'admin-rules') {
+          const overlaps = await page.locator('#departure-rules-table .route-tag-pill').evaluateAll(tags => tags.flatMap(tag => {
+            const cell = tag.closest('td').getBoundingClientRect(), pill = tag.getBoundingClientRect();
+            const range = document.createRange(); range.selectNodeContents(tag.querySelector('.route-tag-text') || tag);
+            const text = [...range.getClientRects()];
+            return pill.left < cell.left - 1 || pill.right > cell.right + 1 || text.some(line => line.left < cell.left - 1 || line.right > cell.right + 1)
+              ? [{destination:tag.textContent.trim(),cell:{left:cell.left,right:cell.right},pill:{left:pill.left,right:pill.right}}] : [];
+          }));
+          assert.deepEqual(overlaps, [], 'Destination must stay inside its column at ' + width);
+          if (width === 1280) await screenshot(page, 'departure-rules-long-destination-1280', false);
         }
         assert.deepEqual(errors, [], name);
       } catch (error) {

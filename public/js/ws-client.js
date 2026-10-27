@@ -357,6 +357,33 @@
         var affectsBackground = affectsAll || category === 'background';
         var affectsFooter = affectsAll || category === 'footer';
 
+        if (affectsIdentity && (Array.isArray(data.contact_emails) || Array.isArray(data.contact_phones))) {
+            var emails = Array.isArray(data.contact_emails) ? data.contact_emails : [];
+            var phones = Array.isArray(data.contact_phones) ? data.contact_phones : [];
+            var recipient = data.contact_recipient || emails.join(',');
+            var shownEmails = emails.length ? emails : (recipient ? recipient.split(',') : []);
+            document.querySelectorAll('[data-terminal-contacts]').forEach(function (list) {
+                list.querySelectorAll('[data-terminal-phone], [data-terminal-email]').forEach(function (item) { item.remove(); });
+                function addContact(value, kind) {
+                    var item = document.createElement('li'), link = document.createElement('a');
+                    var icon = document.createElement('i'), text = document.createElement('span');
+                    item.setAttribute(kind === 'phone' ? 'data-terminal-phone' : 'data-terminal-email', '');
+                    item.style.cssText = 'font-size:14px;color:#cbd5e1';
+                    link.href = kind === 'phone' ? 'tel:' + value.replace(/[^0-9+]/g, '') : 'mailto:' + encodeURIComponent(value).replace(/%40/g, '@');
+                    link.style.cssText = 'color:inherit;text-decoration:none;display:inline-flex;align-items:flex-start;gap:10px;max-width:100%';
+                    icon.className = 'fas fa-' + (kind === 'phone' ? 'phone' : 'envelope');
+                    icon.style.cssText = 'color:var(--primary,#C62828);flex-shrink:0';
+                    text.textContent = value; text.style.cssText = 'min-width:0;overflow-wrap:anywhere';
+                    link.appendChild(icon); link.appendChild(text); item.appendChild(link); list.appendChild(item);
+                }
+                phones.forEach(function (value) { addContact(value, 'phone'); });
+                shownEmails.forEach(function (value) { addContact(value, 'email'); });
+            });
+            document.querySelectorAll('[data-contact-gmail]').forEach(function (form) { form.dataset.recipient = recipient; });
+            document.querySelectorAll('[data-contact-recipient-label]').forEach(function (label) { label.textContent = recipient ? 'to ' + recipient.split(',').join(', ') : 'your email'; });
+            if (typeof data.contact_address === 'string') document.querySelectorAll('[data-contact-address]').forEach(function (el) { el.textContent = data.contact_address; });
+        }
+
         // 1. Update App Name
         if (affectsIdentity && data.app_name) {
             document.querySelectorAll('#site-header .logo-text h1, .site-header .logo-text h1, .guest-header .logo-text h1, .drawer-brand-title, .app-brand-name, .header-brand-title, .previewNameEl').forEach(function(el) {
@@ -442,7 +469,7 @@
             }
             var gn_chipBg = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var gn_divider = (gn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
-            var gt_soft = (colorBrightness(gt_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+            var gt_soft = colorSoft(gt_hex, 0.90);
             document.documentElement.style.setProperty('--guest-nav-bg', gn_hex, 'important');
             document.documentElement.style.setProperty('--guest-nav-text', gt_hex, 'important');
 
@@ -756,7 +783,7 @@
             var sn_bright = colorBrightness(sn_hex);
             var sn_chipBg = (sn_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var sn_divider = (sn_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
-            var st_soft = (colorBrightness(st_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+            var st_soft = colorSoft(st_hex, 0.90);
             document.documentElement.style.setProperty('--staff-nav-bg', sn_hex, 'important');
             document.documentElement.style.setProperty('--staff-nav-text', st_hex, 'important');
 
@@ -945,7 +972,7 @@
             var an_bright = colorBrightness(an_hex);
             var an_chipBg = (an_bright > 155) ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.18)';
             var an_divider = (an_bright > 155) ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.22)';
-            var at_soft = (colorBrightness(at_hex) > 155) ? 'rgba(255, 255, 255, 0.88)' : 'rgba(15, 23, 42, 0.82)';
+            var at_soft = colorSoft(at_hex, 0.90);
             document.documentElement.style.setProperty('--admin-nav-bg', an_hex, 'important');
             document.documentElement.style.setProperty('--admin-nav-text', at_hex, 'important');
 

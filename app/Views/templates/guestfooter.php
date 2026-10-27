@@ -48,18 +48,15 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
             </div>
             <div class="f-links">
                 <h4>Contact</h4>
-                <ul>
-                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <?= esc(app_contact_address()) ?></li>
-                    <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', app_contact_phone())) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;">
-                            <i class="fas fa-phone" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <?= esc(app_contact_phone()) ?>
-                        </a>
-                    </li>
-                    <li style="font-size: 14px; color: #cbd5e1;">
-                        <a href="mailto:<?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>" style="color: inherit; text-decoration: none; display: inline-flex; align-items: center; transition: color 0.2s ease;">
-                            <i class="fas fa-envelope" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <?= esc(app_contact_email() ?: (config('Email')->recipients ?: 'arclast988@gmail.com')) ?>
-                        </a>
-                    </li>
+                <?php $contactEmails = app_contact_emails(); if (!$contactEmails) $contactEmails = app_contact_emails(app_contact_recipient() ?? ''); ?>
+                <ul data-terminal-contacts>
+                    <li style="font-size: 14px; color: #cbd5e1;"><i class="fas fa-map-marker-alt" style="margin-right: 10px; color: var(--primary, #C62828);"></i> <span data-contact-address><?= esc(app_contact_address()) ?></span></li>
+                    <?php foreach (app_contact_phones() as $phone): ?>
+                    <li data-terminal-phone style="font-size:14px;color:#cbd5e1;"><a href="tel:<?= esc(preg_replace('/[^0-9+]/', '', $phone)) ?>" style="color:inherit;text-decoration:none;display:inline-flex;align-items:flex-start;gap:10px;max-width:100%;"><i class="fas fa-phone" style="color:var(--primary,#C62828);flex-shrink:0;"></i><span style="min-width:0;overflow-wrap:anywhere;"><?= esc($phone) ?></span></a></li>
+                    <?php endforeach; ?>
+                    <?php foreach ($contactEmails as $email): ?>
+                    <li data-terminal-email style="font-size:14px;color:#cbd5e1;"><a href="mailto:<?= esc(str_replace('%40', '@', rawurlencode($email))) ?>" style="color:inherit;text-decoration:none;display:inline-flex;align-items:flex-start;gap:10px;max-width:100%;"><i class="fas fa-envelope" style="color:var(--primary,#C62828);flex-shrink:0;"></i><span style="min-width:0;overflow-wrap:anywhere;"><?= esc($email) ?></span></a></li>
+                    <?php endforeach; ?>
                 </ul>
             </div>
         </div>

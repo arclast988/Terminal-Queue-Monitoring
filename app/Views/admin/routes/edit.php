@@ -167,7 +167,7 @@
                             <label for="destination" class="form-label-modern">Destination <span class="text-danger">*</span></label>
                             <input type="text" class="input-modern autocomplete-location" id="destination" name="destination"
                                    value="<?= old('destination', $route['destination']) ?>" placeholder="Search or type destination (e.g. ORMOC, TACLOBAN)..."
-                                   required minlength="2" maxlength="100" autocomplete="off"
+                                   required minlength="2" maxlength="100" autocomplete="off" autocapitalize="characters" data-uppercase
                                    data-suggestions="<?= esc(json_encode($all_locations ?? [])) ?>">
                             <div class="form-text-modern"><i class="bi bi-search me-1"></i>Type to search existing locations or enter a new destination name.</div>
                         </div>

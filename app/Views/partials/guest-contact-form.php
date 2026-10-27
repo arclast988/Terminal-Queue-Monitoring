@@ -43,7 +43,7 @@ $emailAppUrl = old('type') === $type ? session()->getFlashdata('contact_email_ap
         <label for="<?= $prefix ?>Message"><?= $isReport ? 'Describe the Issue (optional)' : 'Message (optional)' ?></label>
         <textarea id="<?= $prefix ?>Message" name="message" maxlength="5000" placeholder="<?= $isReport ? 'Add details if available: plate number, destination, date/time and issue…' : 'Add any questions or feedback you would like to share…' ?>"><?= esc($oldValue('message')) ?></textarea>
     </div>
-    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Use your email app or Gmail in your browser to write<?= $recipient ? ' to ' . esc($recipient) : ' your email' ?>. Review or add details before sending.</p>
+    <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Use your email app or Gmail in your browser to write <span data-contact-recipient-label><?= $recipient ? 'to ' . esc(str_replace(',', ', ', $recipient)) : 'your email' ?></span>. Review or add details before sending.</p>
     <button type="submit" name="compose" value="app" class="submit-btn"><i class="fas fa-envelope-open-text" aria-hidden="true"></i> Open email app</button>
     <button type="submit" name="compose" value="gmail" class="contact-compose-browser">Use Gmail in browser</button>
     <div data-contact-draft-notice data-permanent="true" class="contact-verification-notice" role="status" tabindex="-1" <?= $gmailUrl ? '' : 'hidden' ?>>

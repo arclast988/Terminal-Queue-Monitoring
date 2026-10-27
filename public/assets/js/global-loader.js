@@ -28,6 +28,7 @@
     var MIN_VISIBLE = 100;
     var BUTTON_DELAY = 200;
     var TABLE_DELAY = 200;
+    var NAVIGATION_PROGRESS_KEY = 'gl_navigation_progress';
     var SILENT_PATTERNS = [
         /\/api\/queue-status/i, /\/status(\?|$)/i, /\/schedules\/status/i,
         /\/api\/fares/i, /\/api\/announcements/i, /\/api\/check-vehicle-availability/i,
@@ -171,7 +172,11 @@
             }, SHOW_DELAY);
         }
         // This is a visual watchdog only. It must not unlock a still-pending request.
-        safetyTimer = setTimeout(forceDone, 12000);
+        safetyTimer = setTimeout(function () {
+            safetyTimer = null;
+            if (activeRequests > 0 || siteNavigationPending) return;
+            forceDone();
+        }, 12000);
     }
 
     function done() {
@@ -184,13 +189,18 @@
         finishTimer = setTimeout(function () {
             finishTimer = null;
             setProgress(100);
-            barEl.classList.add('is-done');
+            // Finish the fill before fading. One layout read starts the CSS
+            // transition now, so its full-width frame can actually be painted.
+            if (innerEl && typeof innerEl.getBoundingClientRect === 'function') innerEl.getBoundingClientRect();
             fadeTimer = setTimeout(function () {
-                fadeTimer = null;
-                barEl.classList.remove('is-active', 'is-done');
-                isVisible = false;
-                setProgress(0);
-            }, motionMode() === 'reduced' ? 0 : motionMode() === 'lite' ? 100 : 160);
+                barEl.classList.add('is-done');
+                fadeTimer = setTimeout(function () {
+                    fadeTimer = null;
+                    barEl.classList.remove('is-active', 'is-done');
+                    isVisible = false;
+                    setProgress(0);
+                }, motionMode() === 'reduced' ? 0 : motionMode() === 'lite' ? 100 : 160);
+            }, motionMode() === 'reduced' ? 0 : (motionMode() === 'lite' ? 100 : 160) + 34);
         }, wait);
     }
 
@@ -492,6 +502,34 @@
         tableContainers.forEach(function (el) { hideTableLoader(el, true); });
     }
 
+    function leavePage() {
+        try {
+            if (siteNavigationPending && isVisible) {
+                window.sessionStorage.setItem(NAVIGATION_PROGRESS_KEY, JSON.stringify({
+                    at: Date.now(), progress: progress, origin: window.location.origin
+                }));
+            } else window.sessionStorage.removeItem(NAVIGATION_PROGRESS_KEY);
+        } catch (error) { /* Navigation works when browser storage is unavailable. */ }
+        resetPage();
+    }
+
+    function resumeNavigationProgress() {
+        var saved = null;
+        try {
+            saved = JSON.parse(window.sessionStorage.getItem(NAVIGATION_PROGRESS_KEY) || 'null');
+            window.sessionStorage.removeItem(NAVIGATION_PROGRESS_KEY);
+        } catch (error) { return false; }
+        if (!saved || preferNativeNavigationProgress() || saved.origin !== window.location.origin
+            || !Number.isFinite(saved.at) || Date.now() < saved.at || Date.now() - saved.at > 30000
+            || !Number.isFinite(saved.progress) || saved.progress < 0 || saved.progress > 100) return false;
+        start(true);
+        setProgress(saved.progress);
+        function finishArrival() { if (activeRequests === 0) done(); }
+        if (document.readyState === 'complete') finishArrival();
+        else window.addEventListener('load', finishArrival, { once: true });
+        return true;
+    }
+
     function setupInteractions() {
         // Also cover location changes and form.submit(), which do not emit the
         // click/submit events below. Observe navigation without intercepting it.
@@ -560,8 +598,10 @@
                 Promise.resolve().then(function () { if (!event.defaultPrevented) startNavigation(); });
             } catch (error) { /* Not an internal navigation. */ }
         }, false);
-        window.addEventListener('pagehide', resetPage);
-        window.addEventListener('pageshow', function (event) { if (event.persisted) resetPage(); });
+        window.addEventListener('pagehide', leavePage);
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) { resetPage(); resumeNavigationProgress(); }
+        });
     }
 
     hookFetch();
@@ -572,7 +612,8 @@
         ensureElements();
         setupInteractions();
         try { window.sessionStorage.removeItem('gl_navigating'); } catch (error) {}
-        if (standalone) {
+        var resumed = resumeNavigationProgress();
+        if (standalone && !resumed) {
             var firstPage = true;
             try {
                 firstPage = window.sessionStorage.getItem('gl_standalone_opened') !== '1';

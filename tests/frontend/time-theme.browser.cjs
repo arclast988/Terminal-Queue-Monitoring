@@ -422,6 +422,10 @@ test('text fill, outline labels and date chips follow live primary colors', {tim
       });
       assert.deepEqual(probe,{color:tokens.primary,fill:tokens.primary});
     }
+    await page.evaluate(()=>applyLiveBranding({category:'theme',theme_admin_nav_text:'#25c17a'}));
+    const subtitle=page.locator('#site-header .logo-text p').first();
+    assert.deepEqual(await subtitle.evaluate(el=>({color:getComputedStyle(el).color,fill:getComputedStyle(el).webkitTextFillColor})),{color:'rgb(37, 193, 122)',fill:'rgb(37, 193, 122)'});
+    assert.equal(await page.locator('.profile-trigger-caret').first().evaluate(el=>getComputedStyle(el).color),'rgba(37, 193, 122, 0.9)');
   } finally {await page.close();}
 });
 
@@ -465,6 +469,25 @@ test('terminal names become uppercase while typing on both admin forms', {timeou
   } finally {await page.close();}
 });
 
+test('terminal contacts allow separate numbers and emails without losing the form payload', {timeout:30000}, async () => {
+  for (const width of [375,1280]) {
+    const page=await browser.newPage({viewport:{width,height:850}});
+    try {
+      await page.goto(`${origin}/fixture/admin-settings?state=multiple-contacts#identity`);
+      assert.equal(await page.locator('#terminalPhonesList input').count(),2);
+      assert.equal(await page.locator('#terminalEmailsList input').count(),2);
+      await page.locator('[data-contact-add="terminalPhonesList"]').click();
+      await page.locator('#terminalPhonesList input').last().fill('09181234567');
+      await page.locator('[data-contact-add="terminalEmailsList"]').click();
+      await page.locator('#terminalEmailsList input').last().fill('extra@example.com');
+      await page.locator('#terminalEmailsList [data-contact-remove]').first().click();
+      const data=await page.locator('#formIdentity').evaluate(form=>{const values=new FormData(form);return {phones:values.getAll('contact_phones[]'),emails:values.getAll('contact_emails[]')};});
+      assert.deepEqual(data,{phones:['+639171234567','(053) 555-8376','09181234567'],emails:['dispatch@example.com','extra@example.com']});
+      assert.equal(await page.locator('#formIdentity').evaluate(form=>form.checkValidity()),true);
+    } finally {await page.close();}
+  }
+});
+
 test('daily queue clearing offers an editable Philippine time and an enable switch', {timeout:90000}, async () => {
   for (const width of [320, 375, 768, 1280]) {
   const page=await browser.newPage({viewport:{width,height:850}});
@@ -482,6 +505,18 @@ test('daily queue clearing offers an editable Philippine time and an enable swit
     assert.ok(layout.gap>=8 && layout.gap<=16 && layout.aligned, JSON.stringify({width,layout}));
     assert.equal(layout.fits,true);
     assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'00:00');
+    assert.equal(await page.locator('#inputQueueResetTime').getAttribute('type'),'text');
+    await page.locator('#queueResetTimeToggle').click();
+    assert.equal(await page.locator('#queueResetHour option').count(),24);
+    assert.equal(await page.locator('#queueResetMinute option').count(),60);
+    await page.locator('#queueResetHour').selectOption('18');
+    await page.locator('#queueResetMinute').selectOption('30');
+    await page.locator('#queueResetTimeApply').click();
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'18:30');
+    assert.equal(await page.locator('#queueResetTimePicker').isVisible(),false);
+    await page.locator('#inputQueueResetTime').fill('24:00');
+    assert.equal(await page.locator('#inputQueueResetTime').evaluate(el=>el.checkValidity()),false);
+    await page.locator('#inputQueueResetTime').fill('00:00');
     if (width===375 || width===1280) {
       const dir=path.join(__dirname,'artifacts'); fs.mkdirSync(dir,{recursive:true});
       await page.locator('.queue-reset-layout').scrollIntoViewIfNeeded();
