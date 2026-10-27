@@ -293,6 +293,30 @@ test('queue polling coalesces overlap and retains one trailing reconciliation', 
   h.window.QueueSync.destroy(); assert.equal(h.timers.size, 0);
 });
 
+test('live record refresh resolves the current filters and discards a response overtaken by a sort change', async () => {
+  const h = harness(); h.load(sync);
+  let url = '/admin/history?sort_order=desc', parsed = 0, applied = 0;
+  h.window.DOMParser = class {
+    parseFromString() { parsed++; return {getElementById:()=>null,querySelector:()=>null,querySelectorAll:()=>[]}; }
+  };
+  h.window.QueueSync.init({refreshUrl:()=>url,pollInterval:60000,extraRefresh:()=>{applied++;}});
+  h.window.QueueSync.refresh(true);
+  assert.equal(h.requests[0].args[0], '/admin/history?sort_order=desc');
+  url = '/admin/history?sort_order=asc&q=VAN&page=2';
+  h.requests[0].resolve({ok:true,text:async()=>'<table>stale descending rows</table>'});
+  await flush();
+  assert.equal(parsed, 0, 'The old response must not reach the table renderer.');
+  assert.equal(applied, 0);
+  h.tick(1000);
+  assert.equal(h.requests.length, 2);
+  assert.equal(h.requests[1].args[0], url);
+  h.requests[1].resolve({ok:true,text:async()=>'<table>current ascending rows</table>'});
+  await flush();
+  assert.equal(parsed, 1);
+  assert.equal(applied, 1);
+  h.window.QueueSync.destroy();
+});
+
 test('destroy/reinit removes listeners and ignores late responses from a previous lifecycle', async () => {
   const h = harness({ noAbort: true }); h.load(sync);
   h.window.QueueSync.init({ apiUrl: '/old' }); h.window.QueueSync.refresh(); h.window.QueueSync.destroy();

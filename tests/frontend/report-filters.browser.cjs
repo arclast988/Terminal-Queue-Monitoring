@@ -18,9 +18,9 @@ let browser, server, origin;
 function fixture(name) {
   if (!fixtures.has(name)) {
     const html = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, 'normal', 'theme'], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
-    // Keep real filter/report handlers and Bootstrap, isolating unrelated polling.
+    // Keep filter/report handlers and history's real live-refresh integration.
     fixtures.set(name, html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (tag, attrs, code) => {
-      if (/\bsrc\s*=/.test(attrs)) return /bootstrap\.bundle\.min\.js/.test(attrs) ? tag : '';
+      if (/\bsrc\s*=/.test(attrs)) return /bootstrap\.bundle\.min\.js|\/js\/queue-sync\.js/.test(attrs) ? tag : '';
       return /function syncPresetButtons|function syncDateHints|function fetchFiltered(?:Logs|History)/.test(code) ? tag : '';
     }));
   }
@@ -187,6 +187,13 @@ test('record sort follows AJAX filters, browser history, and the printable repor
           await form.locator('button[type="submit"]').click();
           await page.waitForFunction(expected => new URLSearchParams(location.search).get('sort_order') === expected && document.querySelector('.table-modern').closest('.modern-card').style.opacity === '1', direction);
           assert.equal(new URL(page.url()).searchParams.get('q'), 'SORT-RECORD');
+          if (report.page === 'admin-history') {
+            const refreshed = page.waitForResponse(response => response.url().startsWith(origin + report.path + '?'));
+            await page.evaluate(() => QueueSync.refresh(true));
+            const params = new URL((await refreshed).url()).searchParams;
+            assert.equal(params.get('sort_order'), direction, 'Live refresh keeps the applied order');
+            assert.equal(params.get('q'), 'SORT-RECORD', 'Live refresh keeps the applied search');
+          }
           await page.locator(`[data-bs-target="${report.modal}"]`).click();
           await page.locator(report.modal + '.show').waitFor({state:'visible'});
           const printOrder = page.locator(`${report.form} [name="sort_order"]`);
@@ -194,15 +201,19 @@ test('record sort follows AJAX filters, browser history, and the printable repor
           await page.locator(`${report.form} [name="from_date"]`).fill('2026-10-01');
           await page.locator(`${report.form} [name="to_date"]`).fill('2026-10-27');
           for (const printDirection of [direction, direction === 'asc' ? 'desc' : 'asc']) {
+            await page.bringToFront();
             await printOrder.selectOption(printDirection);
-            const requested = context.waitForEvent('request', request => request.url().startsWith(origin + report.path + '/print?'));
-            const opened = context.waitForEvent('page');
-            await page.locator(report.button).click();
-            const params = new URL((await requested).url()).searchParams;
+            const [requested, opened] = await Promise.all([
+              context.waitForEvent('request', request => request.url().startsWith(origin + report.path + '/print?')),
+              context.waitForEvent('page'),
+              page.locator(report.button).click(),
+            ]).catch(error => { throw new Error(`${report.page} ${width} ${direction} print ${printDirection}: ${error.message}`); });
+            const params = new URL(requested.url()).searchParams;
             assert.equal(params.get('sort_order'), printDirection);
             assert.equal(params.get('from_date'), '2026-10-01');
             assert.equal(params.get('to_date'), '2026-10-27');
-            await (await opened).close();
+            await opened.waitForLoadState('domcontentloaded');
+            await opened.close();
           }
           await page.locator(`${report.modal} [data-bs-dismiss="modal"]`).click();
           await page.locator(report.modal).waitFor({state:'hidden'});

@@ -412,12 +412,14 @@
             return;
         }
 
+        var refreshUrl = typeof _config.refreshUrl === 'function' ? _config.refreshUrl() : _config.refreshUrl;
+        if (!refreshUrl) return;
         _refreshPending = true;
         var refreshedServiceDate = _pendingServiceDate;
         var generation = _generation;
         _refreshController = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
-        fetch(_config.refreshUrl, {
+        fetch(refreshUrl, {
             method: 'GET',
             cache: 'no-store',
             headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Silent': 'true' },
@@ -429,6 +431,11 @@
         })
         .then(function(html) {
             if (!_config || generation !== _generation) return;
+            // A filter or page change can overtake an earlier live refresh.
+            if (typeof _config.refreshUrl === 'function' && refreshUrl !== _config.refreshUrl()) {
+                _refreshQueued = true;
+                return;
+            }
             var parser = new DOMParser();
             var newDoc = parser.parseFromString(html, 'text/html');
 
@@ -904,7 +911,7 @@
          * @param {Object} cfg
          * @param {string}   cfg.apiUrl         - JSON API URL for polling (e.g. '/api/queue-status')
          * @param {number}   [cfg.pollInterval] - Polling interval in ms (default 5000)
-         * @param {string}   cfg.refreshUrl     - URL to fetch HTML for full table refresh
+         * @param {string|Function} cfg.refreshUrl - URL, or a function returning the current filtered URL
          * @param {string}   [cfg.tableSelector]- CSS selector for the <tbody> to replace
          * @param {string}   [cfg.modalSelector]- CSS selector for modals to re-mount
          * @param {Function} [cfg.extraRefresh] - Extra callback(newDoc) after AJAX refresh

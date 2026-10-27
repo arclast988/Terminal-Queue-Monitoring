@@ -67,7 +67,7 @@ export interface RealtimeMessage {
 }
 export interface QueueSyncConfig {
   apiUrl?: string;
-  refreshUrl?: string;
+  refreshUrl?: string | (() => string);
   pollInterval?: number;
   tableSelector?: string;
   modalSelector?: string;

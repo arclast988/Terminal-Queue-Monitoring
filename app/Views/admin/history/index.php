@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof QueueSync !== 'undefined') {
         QueueSync.init({
             pollInterval:  15000,
-            refreshUrl:    window.location.href,
+            refreshUrl:    function() { return window.location.href; },
             tableSelector: '#historyTable tbody',
             extraRefresh:  function(newDoc) {
                 var newCards = newDoc.querySelectorAll('.stat-card-value');
