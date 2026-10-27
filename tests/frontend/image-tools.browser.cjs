@@ -9,12 +9,12 @@ const uploads=[], fixtures=new Map();
 let browser,server,origin;
 
 test.before(async()=>{
-  for(const name of ['admin-settings','admin-vehicles','admin-vehicles-admin','admin-users','admin-user-edit','admin-vehicle-edit','staff-queue','guest']) {
-    const html=execFileSync(phpBinary(),[path.join(__dirname,'render-responsive-fixture.php'),name.replace(/-admin$/,''),'normal','theme','vehicle-type-photos','',name.endsWith('-admin')?'admin':'super_admin','','real-type-badges'],{encoding:'utf8',maxBuffer:3*1024*1024});
+  for(const name of ['admin-settings','admin-vehicles','admin-vehicles-admin','admin-vehicles-types','admin-users','admin-user-edit','admin-vehicle-edit','staff-queue','guest']) {
+    const html=execFileSync(phpBinary(),[path.join(__dirname,'render-responsive-fixture.php'),name.replace(/-(?:admin|types)$/,''),'normal','theme',name.endsWith('-types')?'vehicle-type-labels':'vehicle-type-photos','',name.endsWith('-admin')?'admin':'super_admin','','real-type-badges'],{encoding:'utf8',maxBuffer:3*1024*1024});
     // Keep actual image handlers, Bootstrap, and the shared motion/image policy.
     // Queue polling and unrelated account/network code are isolated from these tests.
     const isolated=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,script=>{
-      if(/image-tools\.js|bootstrap\.bundle|window.TerminalMotion|function uploadMedia|function previewRegVehiclePhoto|previewEditVehPhoto|miniMenuViewBtn|var fileInput = document.getElementById\('modalAvatarInput'\)/.test(script)) return script;
+      if(/image-tools\.js|bootstrap\.bundle|window.TerminalMotion|function uploadMedia|function previewRegVehiclePhoto|previewEditVehPhoto|miniMenuViewBtn|var fileInput = document.getElementById\('modalAvatarInput'\)/.test(script) || (name.endsWith('-types') && /function toggleVehicleSelectMode/.test(script))) return script;
       return '';
     });
     fixtures.set(name,isolated);
@@ -354,16 +354,31 @@ test('photo zoom accepts mouse wheel and phone pinch and refits when the viewpor
   assert.equal(await viewer.evaluate(el=>getComputedStyle(el).animationName),'none');assert.deepEqual(errors,[]);
 });
 
-test('vehicle register keeps thumbnails beside type labels within the desktop column',{timeout:30000},async t=>{
-  for(const width of [1024,1365,1920]) {
-    const {page,context,errors}=await open(t,'admin-vehicles',width);
-    const cell=page.locator('#vehicles-table .vehicle-type-cell').first();await cell.scrollIntoViewIfNeeded();
-    const boxes=await cell.evaluate(el=>{
-      const cell=el.closest('td').getBoundingClientRect(),photo=el.querySelector('.vehicle-type-icon').getBoundingClientRect(),label=el.querySelector('.vehicle-type-chip').getBoundingClientRect();
-      return {photo:{left:photo.left,right:photo.right,y:photo.top+photo.height/2},label:{left:label.left,right:label.right,y:label.top+label.height/2},cell:{left:cell.left,right:cell.right}};
-    });
-    assert.ok(Math.abs(boxes.photo.y-boxes.label.y)<2,JSON.stringify(boxes));
-    assert.ok(boxes.label.left>=boxes.photo.right && boxes.label.right<=boxes.cell.right+1,JSON.stringify(boxes));
+test('vehicle register keeps complete type labels and thumbnails inside their column',{timeout:60000},async t=>{
+  for(const width of [320,375,768,1024,1365,1920]) {
+    const {page,context,errors}=await open(t,'admin-vehicles-types',width);
+    for(const selection of [false,true]) {
+      if(selection) await page.locator('#btn-toggle-select-vehicles').click();
+      const cells=page.locator('#vehicles-table .vehicle-type-cell');
+      for(const el of await cells.all()) {
+        await el.scrollIntoViewIfNeeded();
+        const boxes=await el.evaluate(el=>{
+          const td=el.closest('td'),cell=td.getBoundingClientRect(),style=getComputedStyle(td),photo=el.querySelector('.vehicle-type-icon').getBoundingClientRect(),badge=el.querySelector('.vehicle-type-chip'),label=badge.getBoundingClientRect();
+          const text=[...badge.childNodes].find(node=>node.nodeType===Node.TEXT_NODE && node.textContent.trim()),range=document.createRange();range.selectNodeContents(text);
+          return {text:text.textContent.trim(),lines:range.getClientRects().length,photo:{left:photo.left,right:photo.right,top:photo.top,bottom:photo.bottom,y:photo.top+photo.height/2},label:{left:label.left,right:label.right,top:label.top,y:label.top+label.height/2},cell:{left:cell.left+parseFloat(style.paddingLeft),right:cell.right-parseFloat(style.paddingRight)}};
+        });
+        const details=JSON.stringify({width,selection,...boxes});
+        assert.equal(boxes.lines,1,'Vehicle type names must not split: '+details);
+        assert.ok(boxes.photo.left>=boxes.cell.left-1 && boxes.photo.right<=boxes.cell.right+1,details);
+        assert.ok(boxes.label.left>=boxes.cell.left-1 && boxes.label.right<=boxes.cell.right+1,details);
+        const beside=Math.abs(boxes.photo.y-boxes.label.y)<2 && boxes.label.left>=boxes.photo.right;
+        assert.ok(beside || boxes.label.top>=boxes.photo.bottom+5,'The complete badge should wrap below its thumbnail when space is limited: '+details);
+      }
+      if(engine==='chromium' && !selection && [375,1365,1920].includes(width)) {
+        fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
+        await page.locator('#vehicles-table').screenshot({path:path.join(__dirname,'artifacts','vehicle-register-types-'+width+'.png'),animations:'disabled'});
+      }
+    }
     assert.deepEqual(errors,[]);await context.close();
   }
 });

@@ -357,6 +357,12 @@ if (($argv[4] ?? '') === 'vehicle-type-photos') {
         ? [$vehicle, array_replace($vehicle, ['id'=>102, 'plate_number'=>'CUSTOM-202', 'photo'=>'/fixture-custom.svg', 'vehicle_photo'=>'/fixture-custom.svg'])]
         : [$item, $customItem];
 }
+if ($fixturePage === 'admin-vehicles' && ($argv[4] ?? '') === 'vehicle-type-labels') {
+    $fixtureData['vehicles'] = [];
+    foreach (['minibus', 'motorcycle', 'van'] as $index => $type) {
+        $fixtureData['vehicles'][] = array_replace($vehicle, ['id'=>101+$index, 'type'=>$type, 'plate_number'=>'TYPE-'.($index+1)]);
+    }
+}
 if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
     $fixtureData['vehicleTypes'] = [
         ['id'=>1, 'slug'=>'minibus', 'name'=>'Minibus', 'color'=>'#2e7d32', 'icon'=>'fa-bus', 'photo'=>'https://res.cloudinary.com/demo/image/upload/v124/vehicle_types/jeepney.png'],
