@@ -469,7 +469,10 @@ test('commuter departure filters keep the dialog and route controls steady with 
         const filter=document.getElementById('rulesFilterBar').getBoundingClientRect();
         return {top:box.top,height:box.height,closeTop:close.top,filterTop:filter.top};
       });
-      assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el,'::before').animationPlayState),'paused');
+      assert.equal(await page.locator('body').evaluate(el=>{
+        const style=getComputedStyle(el,'::before');
+        return style.animationName==='none' || style.animationPlayState==='paused';
+      }),true,'covered backgrounds must be static or paused');
       const initial=await geometry();
       assert.ok(initial.top>=0 && initial.top+initial.height<=viewport.height+1);
       await page.locator('.route-average-body').evaluate(el=>{el.scrollTop=el.scrollHeight;});

@@ -6,7 +6,7 @@ const path = require('node:path');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
 const playwright = require('playwright');
-const { assetContentType } = require('./harness.cjs');
+const { assetContentType, phpBinary } = require('./harness.cjs');
 const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
@@ -20,7 +20,7 @@ function scriptsOf(html) { return [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\
 function fixture(name, long, baseline, state = '') {
   const key = name + ':' + long + ':' + state;
   if (!cache.has(key)) {
-    const rendered = execFileSync('php', [path.join(__dirname, 'render-responsive-fixture.php'), name, long ? 'long' : 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
+    const rendered = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, long ? 'long' : 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     let scripts;
     if (authPages.has(name) || managementPages.includes(name) || routeFormPages.includes(name)) scripts = scriptsOf(rendered);
     else if (!name.startsWith('staff') && !name.startsWith('admin')) {
@@ -564,6 +564,7 @@ test('vehicle modals preserve native fields, validation, focus and dismissal at 
 
 test('vehicle autocomplete validation stays closed until the field is used and preserves registration payloads', { timeout: 60000 }, async t => {
   for (const [width, height, mode, touch] of [[320, 568, 'full'], [844, 390, 'full'], [1280, 800, 'full'], [320, 568, 'lite'], [320, 568, 'reduced'], [390, 844, 'full', true]]) {
+    t.diagnostic(`vehicle registration: ${width}x${height}, ${mode}${touch ? ', touch' : ''}`);
     const { page, context, errors } = await open(t, 'admin-vehicles', width, height, '', mode, touch);
     await page.addScriptTag({ path: path.join(root, 'public/assets/js/autocomplete-search.js') });
     const posts = []; page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
@@ -633,6 +634,7 @@ test('vehicle autocomplete validation stays closed until the field is used and p
       });
     });
     await button.click();
+    await page.waitForFunction(() => window.fixtureVehicleSubmits.length > 0, null, {timeout:5000});
     assert.deepEqual(await page.evaluate(() => window.fixtureVehicleSubmits), [{ csrf_fixture: 'unchanged', plate_number: 'ABC-1234', operator_name: 'FIXTURE OPERATOR', driver_name: 'Fixture Driver', type: 'jeepney', route_id: '1', capacity: '16', status: 'active' }]);
     const contract = await form.evaluate(el => ({ action: el.getAttribute('action'), method: el.method, enctype: el.enctype }));
     assert.deepEqual(contract, { action: '/admin/vehicles/store', method: 'post', enctype: 'multipart/form-data' });
