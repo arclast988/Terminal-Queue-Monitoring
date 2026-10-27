@@ -15,6 +15,7 @@
     var showTimer = null;
     var finishTimer = null;
     var fadeTimer = null;
+    var progressTimer = null;
     var isRunning = false;
     var isVisible = false;
     var nativeNavigationPending = false;
@@ -59,6 +60,7 @@
         var ua = browser.userAgent || '';
         if (/\bwv\b|FBAN|FBAV|Instagram|Line\/|WebView/i.test(ua)) return false;
         var mobile = Boolean(browser.userAgentData && browser.userAgentData.mobile)
+            || /Android|iOS|iPadOS/i.test(browser.userAgentData && browser.userAgentData.platform || '')
             || /Android|iPhone|iPad|iPod/i.test(ua)
             || (/Mac/i.test(browser.platform || '') && browser.maxTouchPoints > 1);
         if (!mobile) return false;
@@ -83,7 +85,7 @@
             '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; overflow:hidden; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
             '.global-progress-bar.is-active { opacity:1; }',
             '.global-progress-bar.is-done { opacity:0; }',
-            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; overflow:hidden; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); box-shadow:none; transition:transform .16s cubic-bezier(.2,.8,.2,1); border-radius:0 3px 3px 0; }',
+            '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; overflow:hidden; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); box-shadow:none; transition:transform .16s linear; border-radius:0 3px 3px 0; }',
             '@keyframes gl-progress-sweep { from { transform:translateX(-100%); } to { transform:translateX(350%); } }',
             '@media (prefers-reduced-motion:no-preference) { html:not([data-tq-motion="reduced"]) .global-progress-bar.is-active:not(.is-done) .global-progress-bar-inner::after { content:""; position:absolute; inset:0 auto 0 0; width:30%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent); animation:gl-progress-sweep 1.2s linear infinite !important; } }',
             'html[data-tq-page-hidden] .global-progress-bar-inner::after { animation-play-state:paused !important; }',
@@ -103,7 +105,7 @@
             '@keyframes gl-shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }',
             '.gl-shake { animation:gl-shake .24s ease-in-out !important; }',
             'html[data-tq-motion="lite"] .global-progress-bar { transition:opacity .1s ease-out !important; }',
-            'html[data-tq-motion="lite"] .global-progress-bar-inner { transition:transform .1s ease-out !important; will-change:auto; }',
+            'html[data-tq-motion="lite"] .global-progress-bar-inner { transition:transform .1s linear !important; will-change:auto; }',
             'html[data-tq-motion="reduced"] .global-progress-bar-inner { transition:none; will-change:auto; }',
             'html[data-tq-motion="reduced"] .gl-btn-spinner { animation:none !important; }',
             'html[data-tq-page-hidden] .gl-btn-spinner { animation-play-state:paused !important; }',
@@ -148,18 +150,37 @@
         showTimer = safetyTimer = null;
     }
 
+    function stopProgress() {
+        if (progressTimer !== null) clearTimeout(progressTimer);
+        progressTimer = null;
+    }
+
+    function advanceProgress() {
+        if (progressTimer !== null || !isRunning || !isVisible || motionMode() === 'reduced' || progress >= 94) return;
+        // Pages and fetch responses do not expose a reliable completion percentage.
+        // Pace the fill while waiting; only a real completion can reach 100%.
+        progressTimer = setTimeout(function () {
+            progressTimer = null;
+            if (!isRunning || !isVisible) return;
+            if (!document.hidden) setProgress(Math.min(94, progress + Math.max(0.08, (94 - progress) * 0.035)));
+            advanceProgress();
+        }, motionMode() === 'lite' ? 100 : 160);
+    }
+
     function renderStart() {
         isVisible = true;
         visibleAt = Date.now();
         barEl.classList.remove('is-done');
         barEl.classList.add('is-active');
-        if (progress === 0 || progress === 100) setProgress(25);
+        if (progress === 0 || progress === 100) setProgress(12);
+        advanceProgress();
     }
 
     function start(immediate) {
-        // Late background responses must not reintroduce a second bar while
-        // the browser is already loading the next document.
-        if (nativeNavigationPending) return;
+        // Mobile browser tabs use native page feedback and local button/table
+        // feedback for in-page work. Apps and WebViews retain their own top bar.
+        // Late background responses must not duplicate native navigation feedback.
+        if (nativeNavigationPending || preferNativeNavigationProgress()) return;
         ensureElements();
         clearCompletion();
         if (safetyTimer !== null) clearTimeout(safetyTimer);
@@ -182,6 +203,7 @@
     function done() {
         if (!isRunning || siteNavigationPending) return;
         isRunning = false;
+        stopProgress();
         clearOperationTimers();
         clearCompletion();
         if (!isVisible) { setProgress(0); return; }
@@ -205,6 +227,7 @@
     }
 
     function forceDone() {
+        stopProgress();
         clearOperationTimers();
         clearCompletion();
         siteNavigationPending = false;
@@ -273,9 +296,19 @@
                 if (completed) return;
                 completed = true;
                 xhr.removeEventListener('loadend', complete);
+                xhr.removeEventListener('progress', transferred);
                 if (tracked) finishRequest(epoch);
             }
-            if (tracked) { activeRequests++; start(); xhr.addEventListener('loadend', complete); }
+            function transferred(event) {
+                if (epoch !== requestEpoch || completed || !isRunning || !isVisible || !event.lengthComputable || event.total <= 0) return;
+                setProgress(Math.max(progress, Math.min(94, 12 + 82 * event.loaded / event.total)));
+            }
+            if (tracked) {
+                activeRequests++;
+                start();
+                xhr.addEventListener('loadend', complete);
+                xhr.addEventListener('progress', transferred);
+            }
             try { return originalSend.apply(xhr, arguments); }
             catch (error) { complete(); throw error; }
         };

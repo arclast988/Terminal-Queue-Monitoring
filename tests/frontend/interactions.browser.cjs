@@ -15,6 +15,7 @@ let browser, server, origin;
 const metrics = {};
 const fixture = `<!doctype html><html><head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<style>${fs.readFileSync(path.join(root, 'app/Views/partials/interaction_policy.php'), 'utf8').match(/<style>([\s\S]*?)<\/style>/)[1]}</style>
 <script>${fs.readFileSync(path.join(root, 'public/assets/js/interaction-motion.js'), 'utf8')}</script>
 <link rel="stylesheet" href="/assets/css/interaction-motion.css">
 <style>body{font:16px Arial;margin:40px}.login-card{width:340px}.field{margin:12px 0}.btn{position:relative;padding:12px 20px;color:white;background:#b91c1c;border:0;border-radius:8px;min-height:42px}#table{position:relative;min-height:180px}</style>
@@ -179,10 +180,11 @@ test('table skeleton feedback does not block table actions or race on reuse', as
   assert.equal(await page.locator('.table-loader-overlay').count(), 1); await context.close();
 });
 
-test('phone loading indicators keep moving in lite mode and stop for reduced motion', async () => {
+test('installed phone loading indicators keep moving in lite mode and stop for reduced motion', async () => {
   for (const mode of ['full', 'lite', 'reduced']) {
     const { page, context, errors } = await pageFor(mode, true);
     const styles = await page.evaluate(() => {
+      Object.defineProperty(navigator,'standalone',{configurable:true,value:true});
       const button = document.querySelector('#submit'); GlobalLoader.showButtonSpinner(button, 'Saving', true); GlobalLoader.start(true);
       const samples = ['spinner-border', 'table-loader-spinner', 'fa-spin'];
       const nodes = samples.map(className => { const el = document.createElement('span'); el.className = className; document.body.appendChild(el); return el; });
@@ -242,7 +244,7 @@ test('a phone relies on browser navigation feedback without a second site bar', 
   for (let i = 0; i < 300 && (navigations.length === count || navigationReports.length === reportCount); i++) await new Promise(resolve => setTimeout(resolve, 10));
   assert.equal(navigations.length, count + 1); assert.equal(navigationReports.length, reportCount + 1);
   assert.deepEqual(navigationReports[reportCount], { visible: false, mode: 'lite', display: 'block', animation: 'none' });
-  navigations[count].setHeader('Content-Type', 'text/html'); navigations[count].end('<p>Schedules ready</p>');
+  navigations[count].setHeader('Content-Type', 'text/html'); navigations[count].end(fixture);
   await page.waitForURL(origin + '/slow-navigation'); assert.deepEqual(errors, []);
 });
 

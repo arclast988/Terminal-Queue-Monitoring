@@ -44,11 +44,12 @@ function report(kind,event){
     active:bar.classList.contains('is-active'),count:document.querySelectorAll('#global-progress-bar').length,
     pointerEvents:getComputedStyle(bar).pointerEvents,width:bar.getBoundingClientRect().width,
     viewport:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,
+    fill:bar.querySelector('.global-progress-bar-inner').getBoundingClientRect().width/innerWidth,
     prevented:event.defaultPrevented,busy:button.getAttribute('aria-busy'),disabled:button.disabled}));
 }
 document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener('click',function(event){
-    if(event.target.closest('#navigate'))queueMicrotask(function(){report('link-start',event);setTimeout(function(){report('link',event);},600);});
+    if(event.target.closest('#navigate'))queueMicrotask(function(){report('link-start',event);setTimeout(function(){report('link',event);},600);setTimeout(function(){report('link-progress',event);},1600);});
   });
   document.addEventListener('submit',function(event){
     queueMicrotask(function(){report('form-start',event);setTimeout(function(){report('form',event);},600);});
@@ -186,7 +187,7 @@ test('desktop page and form arrivals fill the visible progress bar to the right 
   }
 });
 
-test('mobile in-page fetch and XHR operations retain progress and local loading feedback', { timeout: 30000 }, async t => {
+test('mobile in-page fetch and XHR retain local feedback without a redundant top bar', { timeout: 30000 }, async t => {
   for (const profile of [profiles[0], profiles[2], profiles[3]]) {
     const { id, page, context, errors } = await open(t, profile);
     await page.evaluate(id => {
@@ -199,7 +200,7 @@ test('mobile in-page fetch and XHR operations retain progress and local loading 
       });
     }, id);
     const fetchRequest = await waitEntry(pending, id + ':/slow-fetch');
-    await page.waitForFunction(() => GlobalLoader.isVisible());
+    assert.equal(await page.evaluate(()=>GlobalLoader.isVisible()),false);
     assert.equal(await page.locator('.gl-btn-feedback').count(), 1);
     assert.equal(await page.locator('.table-loader-overlay').count(), 1);
     fetchRequest.res.end('Fetched');
@@ -212,8 +213,22 @@ test('mobile in-page fetch and XHR operations retain progress and local loading 
       xhr.onload = () => window.xhrDone = true; xhr.send('original-payload');
     }, id);
     const xhrRequest = await waitEntry(pending, id + ':/slow-xhr');
-    await page.waitForFunction(() => GlobalLoader.isVisible()); assert.equal(xhrRequest.body, 'original-payload');
+    assert.equal(await page.evaluate(()=>GlobalLoader.isVisible()),false); assert.equal(xhrRequest.body, 'original-payload');
     xhrRequest.res.end('Updated'); await page.waitForFunction(() => window.xhrDone && !GlobalLoader.isVisible());
     assert.deepEqual(errors, []); results.requests.push({ profile: profile.name, passed: true }); await context.close();
   }
+});
+
+
+test('desktop progress visibly advances while waiting for the page response', {timeout:30000}, async t => {
+  const profile=profiles.find(profile=>profile.name==='desktop');
+  const {id,page,context,errors}=await open(t,profile);
+  await click(page,'#navigate');
+  const navigation=await waitEntry(pending,id+':/slow-link');
+  const first=await waitEntry(reports,id+':link');
+  const second=await waitEntry(reports,id+':link-progress');
+  assert.ok(first.fill>0 && second.fill>first.fill+0.04 && second.fill<0.95,JSON.stringify({first,second}));
+  assert.equal(second.running,true);
+  navigation.res.end('Loaded');await page.waitForURL(origin+'/slow-link?id='+id);
+  assert.deepEqual(errors,[]);await context.close();
 });

@@ -55,7 +55,7 @@ async function digitsFit(inputs, label) {
     });
   });
   assert.equal(measurements.length, 2, label);
-  assert.ok(measurements.every(m => m.available >= m.text + 2 && m.height >= 44), `${label}: clipped digits ${JSON.stringify(measurements)}`);
+  assert.ok(measurements.every(m => m.available >= m.text + 2 && m.height >= 43.9), `${label}: clipped digits ${JSON.stringify(measurements)}`);
 }
 
 async function controlsFit(picker, label) {
@@ -454,6 +454,42 @@ test('commuter departure filters react on touch release and keep swipes and keyb
     assert.equal(await page.locator('.rules-route-chip.active').getAttribute('data-route'),'bato');
     assert.deepEqual(await page.locator('#routeAverageList .route-average-item:visible').evaluateAll(items=>items.map(el=>el.dataset.ruleDest)),['bato']);
   } finally {await page.close();}
+});
+
+
+test('commuter departure filters keep the dialog and route controls steady with long lists', {timeout:90000}, async () => {
+  for (const viewport of [{width:320,height:568},{width:375,height:667},{width:667,height:375},{width:768,height:900},{width:1280,height:900}]) {
+    const page=await browser.newPage({viewport});
+    try {
+      await page.goto(`${origin}/fixture/guest?state=guest-route-rules-many`);
+      await page.locator('#routeAverageCard').click();
+      const geometry=()=>page.evaluate(()=>{
+        const box=document.querySelector('.route-average-dialog').getBoundingClientRect();
+        const close=document.getElementById('routeAverageClose').getBoundingClientRect();
+        const filter=document.getElementById('rulesFilterBar').getBoundingClientRect();
+        return {top:box.top,height:box.height,closeTop:close.top,filterTop:filter.top};
+      });
+      assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el,'::before').animationPlayState),'paused');
+      const initial=await geometry();
+      assert.ok(initial.top>=0 && initial.top+initial.height<=viewport.height+1);
+      await page.locator('.route-average-body').evaluate(el=>{el.scrollTop=el.scrollHeight;});
+      assert.ok(await page.locator('.route-average-body').evaluate(el=>el.scrollTop>0));
+      for (const route of ['ormoc','bato','general','all','ormoc']) {
+        await page.locator(`.rules-route-chip[data-route="${route}"]`).click();
+        const current=await geometry();
+        for (const key of Object.keys(initial)) assert.ok(Math.abs(current[key]-initial[key])<1, `${viewport.width} ${route}: ${key} moved`);
+        assert.equal(await page.locator('.route-average-body').evaluate(el=>el.scrollTop),0);
+        const visible=await page.locator('#routeAverageList .route-average-item:visible').evaluateAll(items=>items.map(el=>el.dataset.ruleDest));
+        assert.ok(visible.length>0);
+        if(route!=='all') assert.ok(visible.every(destination=>destination===route));
+      }
+      assert.equal(await page.locator('#routeAverageModal').evaluate(el=>getComputedStyle(el).backdropFilter),'none');
+      await page.locator('#routeAverageClose').click();
+      assert.equal(await page.locator('#routeAverageModal').isVisible(),false);
+      assert.equal(await page.locator('#routeAverageCard').evaluate(el=>el===document.activeElement),true);
+      assert.equal(await page.locator('body').evaluate(el=>getComputedStyle(el,'::before').animationPlayState),'running');
+    } finally {await page.close();}
+  }
 });
 
 

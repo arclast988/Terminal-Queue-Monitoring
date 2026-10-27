@@ -12,7 +12,7 @@ function loaded(options = {}) {
     userAgent: options.ua || desktop,
     platform: options.platform || '',
     maxTouchPoints: options.touchPoints || 0,
-    ...(options.mobileHint === undefined ? {} : { userAgentData: { mobile: options.mobileHint } }),
+    ...(options.mobileHint === undefined && !options.hintPlatform ? {} : { userAgentData: { mobile: options.mobileHint, platform: options.hintPlatform } }),
     ...(options.iosStandalone ? { standalone: true } : {})
   });
   h.window.top = options.embedded ? {} : h.window;
@@ -53,6 +53,7 @@ test('known mobile browser profiles leave ordinary link navigation to browser fe
 test('client hints and iPad desktop profiles use the mobile navigation fallback', async () => {
   for (const options of [
     { ua: desktop, mobileHint: true },
+    { ua: desktop.replace('Windows NT 10.0; Win64; x64','X11; Linux x86_64'), mobileHint: false, hintPlatform: 'Android', touchPoints: 5 },
     { ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15', platform: 'MacIntel', touchPoints: 5 }
   ]) {
     const h = loaded(options); await navigate(h); assert.equal(visible(h), false);
@@ -110,23 +111,26 @@ test('mobile native form submission preserves fields and button feedback without
   assert.equal(button.getAttribute('aria-busy'), null);
 });
 
-test('in-page fetch and XHR requests still receive loading feedback on mobile', async () => {
+test('mobile browser in-page requests retain local feedback without the rainbow bar', async () => {
   const h = loaded({ ua: android });
   const response = { ok: true };
+  const button=h.document.body.appendChild(new h.Element('button'));
+  h.window.GlobalLoader.showButtonSpinner(button,'Saving',true);
   const request = h.window.fetch('/api/vehicles'); h.tick(501);
-  assert.equal(visible(h), true);
+  assert.equal(visible(h), false);
+  assert.equal(button.getAttribute('aria-busy'),'true');
   h.requests[0].resolve(response); assert.equal(await request, response); h.tick(500);
   assert.equal(visible(h), false);
   const xhr = new h.window.XMLHttpRequest(); xhr.open('POST', '/api/vehicles'); xhr.send('original');
-  h.tick(501); assert.equal(visible(h), true);
+  h.tick(501); assert.equal(visible(h), false);
   assert.deepEqual(xhr.sendArgs, ['original']);
   xhr.emit('loadend'); h.tick(500); assert.equal(visible(h), false);
 });
 
-test('a mobile navigation clears an existing site bar without changing the pending request', async () => {
+test('mobile navigation and concurrent requests do not introduce a redundant bar', async () => {
   const h = loaded({ ua: android });
   const response = { ok: true };
-  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), true);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), false);
   await navigate(h); assert.equal(visible(h), false);
   h.requests[0].resolve(response); assert.equal(await request, response); h.tick(500);
   assert.equal(visible(h), false);
@@ -186,7 +190,7 @@ test('reinitialization and restored pages preserve one loader and usable feedbac
   const h = loaded({ ua: android }); h.load(loader);
   assert.equal(h.document.querySelectorAll('#global-progress-bar').length, 1);
   await navigate(h); h.window.emit('pageshow', { persisted: true });
-  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), true);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), false);
   h.requests[0].resolve({ ok: true }); await request; h.tick(500); assert.equal(visible(h), false);
 });
 
@@ -198,7 +202,7 @@ test('late in-page requests cannot restart a second bar during browser navigatio
   h.requests[0].resolve({ ok: true }); await request;
   h.window.emit('pageshow', { persisted: true });
   const next = h.window.fetch('/api/vehicles'); h.tick(501);
-  assert.equal(visible(h), true);
+  assert.equal(visible(h), false);
   h.requests[1].resolve({ ok: true }); await next;
 });
 
@@ -212,6 +216,45 @@ test('programmatic navigation uses the same browser policy and abort restores fe
   const event = navigation.emit('navigate', { destination: { sameDocument: false }, signal });
   await flush(); assert.equal(event.defaultPrevented, false);
   const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), false);
-  signal.emit('abort'); h.tick(501); assert.equal(visible(h), true);
+  signal.emit('abort'); h.tick(501); assert.equal(visible(h), false);
   h.requests[0].resolve({ ok: true }); await request;
+});
+
+function fill(h) { return Number(h.document.querySelector('.global-progress-bar-inner').style.transform.match(/scaleX\(([^)]+)\)/)[1]); }
+
+test('slow loads advance repeatedly and complete only when every tracked request finishes', async () => {
+  const h=loaded();
+  const first=h.window.fetch('/save'), second=h.window.fetch('/search');
+  h.tick(500);const start=fill(h);
+  h.tick(160);const next=fill(h);
+  h.tick(1000);const later=fill(h);
+  assert.ok(start>0 && next>start && later>next && later<1);
+  h.requests[0].resolve({ok:true});await first;
+  h.tick(2000);assert.equal(visible(h),true);assert.ok(fill(h)>later && fill(h)<1);
+  h.tick(60000);assert.ok(fill(h)<=0.94);assert.equal(h.window.GlobalLoader.isRunning(),true);
+  h.requests[1].resolve({ok:true});await second;h.tick(500);
+  assert.equal(visible(h),false);assert.equal(h.timers.size,0);
+});
+
+test('navigation fill advances before the destination responds and leaves no work after pagehide', async () => {
+  const h=loaded();await navigate(h);h.tick(500);const start=fill(h);
+  h.tick(1000);assert.ok(fill(h)>start && fill(h)<1);
+  h.window.emit('pagehide');assert.equal(h.timers.size,0);
+  const saved=JSON.parse(h.window.sessionStorage.getItem('gl_navigation_progress'));
+  assert.ok(saved.progress>start*100 && saved.progress<100);
+});
+
+test('known XHR transfer totals advance the fill and stale events cannot affect a later operation', () => {
+  const h=loaded(),xhr=new h.window.XMLHttpRequest();
+  xhr.open('GET','/download');xhr.send();h.tick(500);
+  const initial=fill(h);
+  xhr.emit('progress',{lengthComputable:true,loaded:75,total:100});
+  assert.ok(fill(h)>initial && fill(h)>=0.735 && fill(h)<1);
+  xhr.emit('progress',{lengthComputable:false,loaded:0,total:0});
+  assert.ok(fill(h)>=0.735);
+  xhr.emit('loadend');h.tick(500);assert.equal(h.timers.size,0);
+  h.window.GlobalLoader.start(true);const next=fill(h);
+  xhr.emit('progress',{lengthComputable:true,loaded:100,total:100});
+  assert.equal(fill(h),next);assert.equal(xhr.count('progress'),0);
+  h.window.emit('pagehide');assert.equal(h.timers.size,0);
 });

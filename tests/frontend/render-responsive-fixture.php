@@ -263,12 +263,17 @@ if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
         $fixtureData['departure_rules'][] = ['id'=>$round,'label'=>'Round schedule','round_number'=>$round,'days_label'=>'Every day','time_range'=>'12:00 AM – 11:59 PM','wait_minutes'=>$minutes,'interval_label'=>'Every '.$minutes.' min','route_scope'=>'All Routes','route_destination'=>null,'is_active_now'=>$round===1,'active_destinations'=>$round===1?['ORMOC']:[]];
     }
 }
-if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-route-rules') {
+if ($fixturePage === 'guest' && in_array(($argv[4] ?? ''), ['guest-route-rules', 'guest-route-rules-many'], true)) {
     $fixtureData['departure_rules'] = [];
     foreach ([1=>'ORMOC', 2=>'BATO', 3=>null] as $id=>$destination) {
         $fixtureData['departure_rules'][] = ['id'=>$id, 'label'=>'Daily schedule', 'round_number'=>1, 'days_label'=>'Every day',
             'time_range'=>'5:00 AM – 6:00 PM', 'wait_minutes'=>20, 'interval_label'=>'Every 20 min',
             'route_scope'=>$destination ? 'VILLABA → '.$destination : 'All Routes', 'route_destination'=>$destination, 'is_active_now'=>false];
+    }
+}
+if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-route-rules-many') {
+    foreach (range(4, 63) as $id) {
+        $fixtureData['departure_rules'][] = array_replace($fixtureData['departure_rules'][1], ['id'=>$id, 'round_number'=>$id-2]);
     }
 }
 if ($fixturePage === 'admin-announcements') $fixtureData['announcements'] = [['id' => 1, 'terminal_name' => 'Palompon', 'severity' => 'info', 'message' => $longValue, 'is_active' => true, 'created_at' => '2026-10-01 08:00:00']];

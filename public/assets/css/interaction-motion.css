@@ -21,6 +21,12 @@ html[data-tq-viewport-moving] body::before,
 html[data-tq-viewport-moving] body::after {
   animation-play-state: paused !important;
 }
+/* Dialogs get the rendering budget while the covered page is stationary. */
+html body.modal-open::before,
+html body.modal-open::after,
+html body.modal-open .advisory-bar .marquee {
+  animation-play-state: paused !important;
+}
 html[data-tq-motion="full"] body:not(.auth-page)::before,
 html[data-tq-motion="full"] body::after {
   animation-delay: var(--tq-background-delay, 0s) !important;
@@ -167,6 +173,13 @@ body :is(.input-modern, .form-control-modern, .select-modern, .form-select-moder
 @media (prefers-reduced-motion: no-preference) {
   html:not([data-tq-motion="reduced"]) body :is(.btn, .btn-modern, .vf-btn, button[type="submit"]):not(:disabled):not([aria-disabled="true"]):active {
     transform: scale(.985);
+  }
+}
+
+/* Touch browsers can retain :hover after a tap. Keep controls in place. */
+@media (hover: none), (pointer: coarse) {
+  body :is(.btn, .btn-modern, .vf-btn, .filter-chip, .rules-route-chip, .route-chip, .stat-card-button):hover:not(:active) {
+    transform: none !important;
   }
 }
 

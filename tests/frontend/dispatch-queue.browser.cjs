@@ -432,6 +432,53 @@ test('guest Active now badge moves to the dispatcher-selected round in the open 
   assert.deepEqual(errors,[]);await page.close();
 });
 
+test('guest live departure rules preserve route focus, scroll and unchanged cards', async()=>{
+  const page=await browser.newPage({viewport:{width:375,height:667}}),errors=[];
+  page.on('pageerror',error=>errors.push(error.message));
+  const html=fixture('guest','guest-route-rules-many');
+  let rows=JSON.parse(html.match(/var departureRules = ([^\n]+);/)[1]);
+  await page.route('**/guest-rules-live',route=>route.fulfill({contentType:'text/html',body:html}));
+  await page.route('**/status?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({active_queue:[],routes:[],departure_rules:rows,sync_token:JSON.stringify(rows)})}));
+  // Keep the real polling code while avoiding an external WebSocket connection.
+  await page.addInitScript(()=>{window.QueueWS={_isLoaded:true,init(){},isConnected(){return true}};});
+  await page.goto(origin+'/guest-rules-live');
+  await page.locator('#routeAverageCard').click();
+  await page.locator('.rules-route-chip[data-route="bato"]').click();
+  await page.locator('.route-average-body').evaluate(el=>{el.scrollTop=150;});
+  await page.evaluate(()=>{
+    window.savedRule=document.querySelector('[data-rule-id="4"]');
+    window.savedChip=document.querySelector('.rules-route-chip[data-route="bato"]');
+    window.savedScroll=document.querySelector('.route-average-body').scrollTop;
+  });
+  rows=rows.map(rule=>rule.id===1?{...rule,is_active_now:true}:rule);
+  await page.evaluate(()=>QueueSync.refresh(true));
+  await page.waitForSelector('[data-rule-id="1"].is-active-rule',{state:'attached'});
+  assert.deepEqual(await page.evaluate(()=>({
+    card:window.savedRule===document.querySelector('[data-rule-id="4"]'),
+    chip:window.savedChip===document.querySelector('.rules-route-chip[data-route="bato"]'),
+    focused:document.activeElement===window.savedChip,
+    scroll:document.querySelector('.route-average-body').scrollTop===window.savedScroll,
+    filter:activeRulesFilter,
+    visible:[...document.querySelectorAll('#routeAverageList .route-average-item')].filter(el=>el.style.display!=='none').every(el=>el.dataset.ruleDest==='bato')
+  })),{card:true,chip:true,focused:true,scroll:true,filter:'bato',visible:true});
+  // Deleting the selected route falls back to All Routes and removes stale cards.
+  rows=rows.filter(rule=>rule.route_destination!=='BATO');
+  await page.evaluate(()=>QueueSync.refresh(true));
+  await page.waitForFunction(()=>activeRulesFilter==='all');
+  assert.equal(await page.locator('#routeAverageList .route-average-item').count(),2);
+  assert.equal(await page.locator('.rules-route-chip.active').getAttribute('data-route'),'all');
+  assert.equal(await page.locator('.rules-route-chip.active').evaluate(el=>document.activeElement===el),true);
+  rows=[];await page.evaluate(()=>QueueSync.refresh(true));
+  await page.waitForFunction(()=>document.querySelector('#routeAverageList').textContent.includes('No departure rules configured.'));
+  assert.equal(await page.locator('#rulesFilterBar').isVisible(),false);
+  rows=[{id:80,route_destination:'ORMOC',route_scope:'VILLABA → ORMOC',time_range:'5:00 AM – 6:00 PM',interval_label:'Every 20 min'}];
+  await page.evaluate(()=>QueueSync.refresh(true));
+  await page.waitForSelector('[data-rule-id="80"]');
+  assert.equal(await page.locator('#routeAverageList .route-average-item').count(),1);
+  assert.doesNotMatch(await page.locator('#routeAverageList').innerText(),/No departure rules/);
+  assert.deepEqual(errors,[]);await page.close();
+});
+
 test('saved and live role themes recolor route tabs, queue headers and primary controls', async () => {
   for (const name of ['staff-queue', 'admin-routes', 'admin-users', 'admin-rules', 'guest']) {
     const page = await browser.newPage();

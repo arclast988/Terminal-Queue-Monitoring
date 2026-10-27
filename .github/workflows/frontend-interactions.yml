@@ -62,7 +62,7 @@ jobs:
           TQ_BASE_REF: c4048e1923aac4452526f7d9b45f7eca5192df8c
       - name: Verify saved and live role colors on production controls
         if: matrix.browser == 'chromium'
-        run: node --test --test-name-pattern='settings badges|account badges|saved and live role' tests/frontend/dispatch-queue.browser.cjs
+        run: node --test --test-name-pattern='settings badges|account badges|saved and live role|guest.*departure|guest Active now' tests/frontend/dispatch-queue.browser.cjs
       - name: Verify guest Gmail drafts and blocked popup fallback
         if: matrix.browser == 'chromium'
         run: node --test --test-name-pattern='guest|Gmail|required|production CSP' tests/frontend/guest-contact-today.browser.cjs

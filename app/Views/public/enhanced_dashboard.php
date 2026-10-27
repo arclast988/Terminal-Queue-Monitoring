@@ -541,20 +541,19 @@
             padding: 20px;
             background: rgba(15, 23, 42, 0);
             z-index: 100005 !important;
-            transition: background 0.3s ease-out;
             box-sizing: border-box;
         }
 
         .route-average-modal.is-open {
             display: flex !important;
             background: rgba(15, 23, 42, 0.65) !important;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
         }
 
         .route-average-dialog {
             width: min(580px, 94vw);
-            max-height: min(80vh, 660px);
+            height: min(80vh, 660px);
+            height: min(80dvh, 660px);
+            max-height: calc(100% - 2px);
             margin: auto;
             overflow: hidden;
             background: #ffffff;
@@ -564,7 +563,8 @@
             flex-direction: column;
             transform: scale(0.92) translateY(20px);
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.14s ease-out, opacity 0.14s ease-out;
+            contain: layout paint;
             position: relative;
             z-index: 1;
         }
@@ -683,10 +683,6 @@
             border-color: var(--primary, #D62828);
             color: var(--primary, #D62828);
             background: var(--primary-soft, rgba(214, 40, 40, 0.06));
-            transform: translateY(-1px);
-        }
-        @media (hover: none), (pointer: coarse) {
-            .rules-route-chip:hover { transform: none; }
         }
 
         .rules-route-chip.active {
@@ -720,7 +716,10 @@
 
         .route-average-body {
             padding: 20px 24px 24px;
+            min-height: 0;
             overflow-y: auto;
+            overscroll-behavior: contain;
+            scrollbar-gutter: stable;
             flex: 1;
             background: #ffffff;
         }
@@ -740,7 +739,6 @@
             border: 1px solid #e2e8f0;
             border-radius: 14px;
             background: #ffffff;
-            transition: all 0.2s ease;
         }
 
         .route-average-item.is-active-rule {
@@ -1871,7 +1869,8 @@
             }
 
             .route-average-dialog {
-                max-height: 86vh;
+                height: 86vh;
+                height: 86dvh;
                 border-radius: 18px;
             }
 
@@ -2512,6 +2511,7 @@
                         $generalCount++;
                     }
                 }
+                ksort($destMap);
             ?>
 
             <!-- Route Filter Bar (only shown when specific route rules exist) -->
@@ -2669,6 +2669,7 @@
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
         routeAverageReturnFocus = null;
+        if (typeof updateCountdowns === 'function') updateCountdowns();
     };
     var openRouteAverageModal = window.openRouteAverageModal;
     var closeRouteAverageModal = window.closeRouteAverageModal;
@@ -2704,11 +2705,15 @@
         var destinations = Object.keys(counts).filter(function(key) { return key !== 'all' && key !== 'general'; }).sort();
         if (destinations.length === 0) {
             activeRulesFilter = 'all';
+            if (group.contains(document.activeElement)) {
+                var closeButton = document.getElementById('routeAverageClose');
+                if (closeButton) closeButton.focus({preventScroll: true});
+            }
             group.replaceChildren();
             bar.style.display = 'none';
             return;
         }
-        if (activeRulesFilter !== 'all' && !Object.prototype.hasOwnProperty.call(counts, activeRulesFilter)) {
+        if (activeRulesFilter !== 'all' && !counts[activeRulesFilter]) {
             activeRulesFilter = 'all';
         }
 
@@ -2730,13 +2735,36 @@
             return button;
         }
 
-        var previousScroll = group.scrollLeft;
-        var fragment = document.createDocumentFragment();
-        fragment.appendChild(chip('all', 'All Routes', 'fa-route'));
-        destinations.forEach(function(key) { fragment.appendChild(chip(key, key.toUpperCase(), 'fa-map-marker-alt')); });
-        if (counts.general > 0) fragment.appendChild(chip('general', 'Terminal Default', 'fa-sliders-h'));
-        group.replaceChildren(fragment);
-        group.scrollLeft = previousScroll;
+        var keys = ['all'].concat(destinations, counts.general > 0 ? ['general'] : []);
+        var existing = Array.from(group.querySelectorAll('.rules-route-chip'));
+        var sameRoutes = existing.length === keys.length && existing.every(function(button, index) {
+            return button.dataset.route === keys[index];
+        });
+        if (sameRoutes) {
+            existing.forEach(function(button) {
+                var key = button.dataset.route;
+                var selected = activeRulesFilter === key;
+                button.classList.toggle('active', selected);
+                button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+                var badge = button.querySelector('.chip-count');
+                if (badge && badge.textContent !== String(counts[key])) badge.textContent = counts[key];
+            });
+        } else {
+            var previousScroll = group.scrollLeft;
+            var focusedRoute = group.contains(document.activeElement) ? document.activeElement.dataset.route : null;
+            var fragment = document.createDocumentFragment();
+            keys.forEach(function(key) {
+                var label = key === 'all' ? 'All Routes' : (key === 'general' ? 'Terminal Default' : key.toUpperCase());
+                var icon = key === 'all' ? 'fa-route' : (key === 'general' ? 'fa-sliders-h' : 'fa-map-marker-alt');
+                fragment.appendChild(chip(key, label, icon));
+            });
+            group.replaceChildren(fragment);
+            if (focusedRoute) {
+                var focusTarget = Array.from(group.children).find(function(button) { return button.dataset.route === focusedRoute; });
+                (focusTarget || group.firstElementChild).focus({preventScroll: true});
+            }
+            group.scrollLeft = previousScroll;
+        }
         bar.style.removeProperty('display');
     }
 
@@ -2756,10 +2784,10 @@
             }
 
             if (show) {
-                item.style.display = '';
+                if (item.style.display === 'none') item.style.display = '';
                 visible++;
             } else {
-                item.style.display = 'none';
+                if (item.style.display !== 'none') item.style.display = 'none';
             }
         });
 
@@ -2786,6 +2814,8 @@
             chip.setAttribute('aria-pressed', 'true');
             activeRulesFilter = route;
             applyDepartureRulesFilter();
+            var body = document.querySelector('#routeAverageModal .route-average-body');
+            if (body) body.scrollTop = 0;
         }
 
         // Respond on finger/pen release without waiting for a synthesized click.
@@ -2920,23 +2950,38 @@
             return JSON.stringify(arr);
         }
 
+        var renderedDepartureRules = new Map();
+        document.querySelectorAll('#routeAverageList [data-rule-id]').forEach(function(item, index) {
+            var rule = departureRules[index];
+            if (rule) renderedDepartureRules.set(String(rule.id || 0), {fingerprint: makeFingerprint(rule), item: item});
+        });
+
         function renderDepartureRules(rows) {
             var list = document.getElementById('routeAverageList');
             if (!list) return;
 
-            list.innerHTML = '';
             if (!rows || rows.length === 0) {
                 var empty = document.createElement('div');
                 empty.className = 'route-average-empty';
                 empty.textContent = 'No departure rules configured.';
-                list.appendChild(empty);
+                list.replaceChildren(empty);
+                renderedDepartureRules.clear();
                 var noRes = document.getElementById('rulesNoResults');
                 if (noRes) noRes.style.display = 'none';
                 renderRuleFilterChips([]);
                 return;
             }
 
-            rows.forEach(function (rule) {
+            renderRuleFilterChips(rows);
+            var nextRules = new Map();
+            var nextItems = rows.map(function (rule) {
+                var key = String(rule.id || 0);
+                var fingerprint = makeFingerprint(rule);
+                var cached = renderedDepartureRules.get(key);
+                if (cached && cached.fingerprint === fingerprint) {
+                    nextRules.set(key, cached);
+                    return cached.item;
+                }
                 var item = document.createElement('div');
                 item.className = 'route-average-item' + (rule.is_active_now ? ' is-active-rule' : '');
                 item.setAttribute('data-rule-id', String(rule.id || 0));
@@ -3005,10 +3050,19 @@
 
                 item.appendChild(leftWrap);
                 item.appendChild(rightWrap);
-                list.appendChild(item);
+                // Filter before insertion so a live update never paints other routes.
+                if (activeRulesFilter !== 'all' && ruleDestinationKey(rule) !== activeRulesFilter) item.style.display = 'none';
+                nextRules.set(key, {fingerprint: fingerprint, item: item});
+                return item;
             });
 
-            renderRuleFilterChips(rows);
+            // Patch changed cards in place; unchanged cards keep their DOM and scroll position.
+            nextItems.forEach(function(item, index) {
+                var current = list.children[index];
+                if (current !== item) list.insertBefore(item, current || null);
+            });
+            while (list.children.length > nextItems.length) list.lastElementChild.remove();
+            renderedDepartureRules = nextRules;
 
             // Re-apply active filter to maintain user's view during real-time updates
             if (typeof applyDepartureRulesFilter === 'function') {
@@ -3751,7 +3805,7 @@
             el.dataset.countdownTone = tone;
         }
         function updateCountdowns() {
-            if (document.hidden) return;
+            if (document.hidden || (routeAverageModal && routeAverageModal.classList.contains('is-open'))) return;
             var timers = document.querySelectorAll('.countdown-timer[data-departure]');
             var now = new Date();
             timers.forEach(function (el) {
