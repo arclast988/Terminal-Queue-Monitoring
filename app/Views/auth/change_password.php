@@ -355,6 +355,8 @@ SVG;
     .change-password-page .password-profile { order: 1; margin: 0 !important; }
     .change-password-page .password-form { order: 2; width: 100%; margin: 0; padding: 0; min-width: 0; }
     .change-password-page .password-guidelines { order: 3; }
+    body.staff-theme .change-password-page .password-guidelines { order: 2 !important; }
+    body.staff-theme .change-password-page .password-form { order: 3 !important; }
 }
 .change-password-page .modern-card {
     background: #ffffff !important;

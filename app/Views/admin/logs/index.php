@@ -202,7 +202,7 @@
 <!-- Search & Filters -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
-        <form method="get" action="<?= base_url('admin/logs') ?>" id="logsFilterForm" class="row g-3 align-items-end">
+        <form method="get" action="<?= base_url('admin/logs') ?>" id="logsFilterForm" class="row g-3 align-items-end record-filter-form">
             <div class="col-12 col-lg-3 col-md-6">
                 <label class="form-label-modern"><i class="bi bi-search me-1"></i> Keyword Search</label>
                 <div class="position-relative">
@@ -252,6 +252,9 @@
                     <?php endif; ?>
                 </select>
             </div>
+            <div class="col-12 col-lg-2 col-md-4">
+                <?= view('partials/record_sort_order', ['sortId' => 'logsSortOrder', 'selectedOrder' => $sort_order ?? 'desc']) ?>
+            </div>
             <div class="col-12 col-lg-1 col-md-4">
                 <button type="submit" class="btn-modern btn-modern-primary w-100" style="height: 42px;">
                     <i class="bi bi-funnel-fill"></i> Filter
@@ -268,7 +271,7 @@
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-7 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-7 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 7 Days</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-30 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-30 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 30 Days</button>
             <span id="clearFilterContainer" class="ms-auto">
-                <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($action_type) || !empty($user_id)): ?>
+                <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($action_type) || !empty($user_id) || ($sort_order ?? 'desc') === 'asc'): ?>
                     <a href="<?= base_url('admin/logs') ?>" id="clearFiltersBtn" class="btn-modern btn-modern-sm btn-modern-outline" title="Clear all filters">
                         <i class="bi bi-x-circle me-1"></i> Clear Filters
                     </a>
@@ -381,7 +384,7 @@
     </div>
 </div>
 
-<?= view('admin/modals/log_report_filter', ['actions' => $actions, 'users' => $users]) ?>
+<?= view('admin/modals/log_report_filter', ['sort_order' => $sort_order ?? 'desc', 'actions' => $actions, 'users' => $users]) ?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -486,6 +489,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 var actionInput = form ? form.querySelector('[name="action_type"]') : null;
                 var userInput = form ? form.querySelector('[name="user_id"]') : null;
 
+                var sortInput = form ? form.querySelector('[name="sort_order"]') : null;
+                if (sortInput) sortInput.value = params.get('sort_order') === 'asc' ? 'asc' : 'desc';
                 if (qInput) qInput.value = params.get('q') || '';
                 if (fromInput) fromInput.value = params.get('from_date') || '';
                 if (toInput) toInput.value = params.get('to_date') || '';

@@ -173,6 +173,10 @@ test('management pages keep long values and primary controls inside phone, table
             assert.ok(labels.every(label => label.wordWidth <= label.available + 1), `label words are squeezed: ${JSON.stringify(labels)}`);
           }
         }
+        if (name === 'admin-history') {
+          assert.deepEqual(await page.locator('#historyTable thead th').allTextContents(), ['Date & Time','Plate Number','Operator','Driver','Type','Route','Passengers']);
+          assert.equal((await page.locator('#historyTable td[data-label="Passengers"]').first().textContent()).trim(), '8');
+        }
         if (name === 'admin-rules') {
           const overlaps = await page.locator('#departure-rules-table .route-tag-pill').evaluateAll(tags => tags.flatMap(tag => {
             const cell = tag.closest('td').getBoundingClientRect(), pill = tag.getBoundingClientRect();
@@ -214,7 +218,7 @@ test('management pages keep long values and primary controls inside phone, table
 
 
 
-test('password account details precede the form on mobile with guidelines below it', { timeout: 30000 }, async t => {
+test('dispatcher password guidelines precede the form on mobile', { timeout: 30000 }, async t => {
   for (const width of [375,768,1280]) {
     const {page,context,errors} = await open(t, 'staff-password', width, 900, '');
     const positions = await page.evaluate(() => Object.fromEntries(['profile','form','guidelines'].map(name => {
@@ -222,8 +226,8 @@ test('password account details precede the form on mobile with guidelines below 
       return [name,{top:box.top,bottom:box.bottom,left:box.left,right:box.right}];
     })));
     if (width < 992) {
-      assert.ok(positions.profile.bottom <= positions.form.top, JSON.stringify(positions));
-      assert.ok(positions.form.bottom <= positions.guidelines.top, JSON.stringify(positions));
+      assert.ok(positions.profile.bottom <= positions.guidelines.top, JSON.stringify(positions));
+      assert.ok(positions.guidelines.bottom <= positions.form.top, JSON.stringify(positions));
     } else {
       assert.ok(Math.abs(positions.profile.top - positions.form.top) <= 1, JSON.stringify(positions));
       assert.ok(positions.profile.right < positions.form.left, JSON.stringify(positions));

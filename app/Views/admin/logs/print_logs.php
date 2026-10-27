@@ -232,14 +232,6 @@
             background: #fafbfc;
         }
 
-        .log-id {
-            font-family: 'Courier New', monospace;
-            font-weight: 800;
-            color: #0f172a;
-            white-space: nowrap;
-            font-size: 13px;
-        }
-
         .log-timestamp {
             white-space: nowrap;
             font-weight: 700;
@@ -620,6 +612,10 @@
     <!-- Filters Summary -->
     <div class="filter-summary">
         <div class="filter-item">
+            <span class="filter-label">Order</span>
+            <span class="filter-value"><?= record_sort_order($sort_order ?? 'desc') === 'asc' ? 'Oldest first (Ascending)' : 'Newest first (Descending)' ?></span>
+        </div>
+        <div class="filter-item">
             <span class="filter-label">Total Records</span>
             <span class="filter-value"><?= count($results ?? []) ?> Entries</span>
         </div>
@@ -664,17 +660,15 @@
         <table>
         <thead>
             <tr>
-                <th style="width: 8%;">Log ID</th>
-                <th style="width: 17%;">Timestamp</th>
-                <th style="width: 23%;">User</th>
-                <th style="width: 52%;">Details</th>
+                <th style="width: 20%;">Date &amp; Time</th>
+                <th style="width: 25%;">User</th>
+                <th style="width: 55%;">Details</th>
             </tr>
         </thead>
         <tbody>
             <?php if (!empty($results) && is_array($results)): ?>
                 <?php foreach ($results as $row): ?>
                     <tr>
-                        <td class="log-id">#<?= $row['id'] ?></td>
                         <td class="log-timestamp">
                             <div><?= !empty($row['timestamp']) ? date('M d, Y', strtotime($row['timestamp'])) : 'N/A' ?></div>
                             <div style="color: #64748b; font-size: 11.5px; font-weight: 500; font-family: monospace; margin-top: 2px;">
@@ -698,7 +692,7 @@
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 35px; color: #94a3b8; font-weight: 600;">
+                    <td colspan="3" style="text-align: center; padding: 35px; color: #94a3b8; font-weight: 600;">
                         No activity log entries match the specified filters.
                     </td>
                 </tr>

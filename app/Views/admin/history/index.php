@@ -168,7 +168,7 @@
 <!-- Search & Filters -->
 <div class="modern-card shadow-modern fade-in mb-4">
     <div class="modern-card-body">
-        <form method="get" action="<?= base_url('admin/history') ?>" id="historyFilterForm" class="row g-3 align-items-end">
+        <form method="get" action="<?= base_url('admin/history') ?>" id="historyFilterForm" class="row g-3 align-items-end record-filter-form">
             <div class="col-12 col-lg-3 col-md-6">
                 <label class="form-label-modern"><i class="bi bi-search me-1"></i> Keyword Search</label>
                 <div class="position-relative">
@@ -226,6 +226,9 @@
                     <?php endif; ?>
                 </select>
             </div>
+            <div class="col-12 col-lg-2 col-md-4">
+                <?= view('partials/record_sort_order', ['sortId' => 'historySortOrder', 'selectedOrder' => $sort_order ?? 'desc']) ?>
+            </div>
             <div class="col-12 col-lg-1 col-md-4">
                 <button type="submit" class="btn-modern btn-modern-primary w-100" style="height: 42px;">
                     <i class="bi bi-funnel-fill"></i> Filter
@@ -242,7 +245,7 @@
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-7 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-7 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 7 Days</button>
             <button type="button" class="quick-chip quick-chip-btn <?= ($from_date === date('Y-m-d', strtotime('-30 days')) && $to_date === date('Y-m-d')) ? 'active' : '' ?>" data-from="<?= date('Y-m-d', strtotime('-30 days')) ?>" data-to="<?= date('Y-m-d') ?>">Last 30 Days</button>
             <span id="clearFilterContainer" class="ms-auto">
-                <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($destination) || !empty($vehicle_type)): ?>
+                <?php if (!empty($search) || !empty($from_date) || !empty($to_date) || !empty($destination) || !empty($vehicle_type) || ($sort_order ?? 'desc') === 'asc'): ?>
                     <a href="<?= base_url('admin/history') ?>" id="clearFiltersBtn" class="btn-modern btn-modern-sm btn-modern-outline" title="Clear all filters">
                         <i class="bi bi-x-circle me-1"></i> Clear Filters
                     </a>
@@ -268,18 +271,27 @@
             <table class="table-modern" id="historyTable">
                 <thead>
                     <tr>
+                        <th style="width: 160px;">Date &amp; Time</th>
                         <th style="width: 140px;">Plate Number</th>
                         <th>Operator</th>
                         <th>Driver</th>
-                        <th>Vehicle</th>
+                        <th>Type</th>
                         <th>Route</th>
-                        <th style="width: 160px;">Departure Time</th>
+                        <th style="width: 105px;">Passengers</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($departures)): ?>
                         <?php foreach ($departures as $item): ?>
                             <tr>
+                                <td data-label="Date &amp; Time">
+                                    <div style="white-space: nowrap;">
+                                        <div style="font-weight: 700; color: var(--primary-dark); font-size: 13px;"><?= history_departure_time($item['departure_time'], 'M d, Y') ?></div>
+                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                            <i class="bi bi-clock me-1"></i><?= history_departure_time($item['departure_time']) ?>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td data-label="Plate Number">
                                     <span class="plate-number"><?= esc($item['plate_number']) ?></span>
                                 </td>
@@ -303,7 +315,7 @@
                                         <span><?= esc($item['driver_name'] ?? '—') ?></span>
                                     </div>
                                 </td>
-                                <td data-label="Vehicle">
+                                <td data-label="Type">
                                     <?php
                                         $vType = $item['vehicle_type'] ?? '';
                                         $photoUrl = vehicle_type_photo($vType);
@@ -325,21 +337,14 @@
                                         <span><?= strtoupper(esc($item['origin'] ?? '')) ?> → <?= strtoupper(esc($item['destination'] ?? '')) ?></span>
                                     </div>
                                 </td>
-                                <td data-label="Departure Time">
-                                    <div style="white-space: nowrap;">
-                                        <span style="font-weight: 700; color: var(--primary-dark); font-size: 13px;">
-                                             <?= history_departure_time($item['departure_time']) ?>
-                                        </span>
-                                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-                                            <i class="bi bi-calendar3 me-1"></i><?= history_departure_time($item['departure_time'], 'M d, Y') ?>
-                                        </div>
-                                    </div>
+                                <td data-label="Passengers">
+                                    <span class="badge-modern badge-modern-secondary"><?= (int) ($item['current_passengers'] ?? 0) ?></span>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-muted empty-state-table">
+                            <td colspan="7" class="text-center py-5 text-muted empty-state-table">
                                 <i class="bi bi-clock-history fs-1 d-block mb-3 opacity-50"></i>
                                 <div class="fw-bold fs-6 empty-state-title">No departure records found</div>
                                 <small class="empty-state-subtitle">Try adjusting your search criteria or date filters.</small>
@@ -359,7 +364,7 @@
     </div>
 </div>
 
-<?= view('admin/modals/report_filter', ['destinations' => $destinations ?? [], 'destinationVehicleTypes' => $destinationVehicleTypes ?? [], 'vehicleTypes' => $vehicleTypes ?? []]) ?>
+<?= view('admin/modals/report_filter', ['sort_order' => $sort_order ?? 'desc', 'destinations' => $destinations ?? [], 'destinationVehicleTypes' => $destinationVehicleTypes ?? [], 'vehicleTypes' => $vehicleTypes ?? []]) ?>
 <?= view('templates/footer') ?>
 
 <script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
@@ -466,6 +471,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 var destInput = form ? form.querySelector('[name="destination"]') : null;
                 var vTypeInput = form ? form.querySelector('[name="vehicle_type"]') : null;
 
+                var sortInput = form ? form.querySelector('[name="sort_order"]') : null;
+                if (sortInput) sortInput.value = params.get('sort_order') === 'asc' ? 'asc' : 'desc';
                 if (qInput) qInput.value = params.get('q') || '';
                 if (fromInput) fromInput.value = params.get('from_date') || '';
                 if (toInput) toInput.value = params.get('to_date') || '';

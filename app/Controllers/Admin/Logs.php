@@ -26,6 +26,7 @@ class Logs extends BaseController
         $toDate       = trim((string) $this->request->getGet('to_date'));
         $actionFilter = trim((string) $this->request->getGet('action_type'));
         $userFilter   = trim((string) $this->request->getGet('user_id'));
+        $sortOrder = record_sort_order($this->request->getGet('sort_order'));
 
         $todayStr = date('Y-m-d');
         $weekStr  = date('Y-m-d', strtotime('-7 days'));
@@ -51,7 +52,7 @@ class Logs extends BaseController
             ->findAll();
 
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $actionFilter, $userFilter);
-        $logs    = $builder->orderBy('audit_logs.timestamp', 'DESC')->paginate(25);
+        $logs    = $builder->orderBy('audit_logs.timestamp', strtoupper($sortOrder))->orderBy('audit_logs.id', strtoupper($sortOrder))->paginate(25);
 
         $data = [
             'title'        => 'System Activity Logs',
@@ -70,6 +71,7 @@ class Logs extends BaseController
             'to_date'      => $toDate,
             'action_type'  => $actionFilter,
             'user_id'      => $userFilter,
+            'sort_order'   => $sortOrder,
         ];
 
         return view('admin/logs/index', $data);
@@ -85,10 +87,11 @@ class Logs extends BaseController
         $toDate       = trim((string) $this->request->getGet('to_date'));
         $actionFilter = ''; // Reports include all types of activity.
         $userFilter   = trim((string) $this->request->getGet('user_id'));
+        $sortOrder = record_sort_order($this->request->getGet('sort_order'));
 
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $actionFilter, $userFilter);
         // Cap print output to avoid OOM on large log tables.
-        $results = $builder->orderBy('audit_logs.timestamp', 'DESC')->limit(5000)->findAll();
+        $results = $builder->orderBy('audit_logs.timestamp', strtoupper($sortOrder))->orderBy('audit_logs.id', strtoupper($sortOrder))->limit(5000)->findAll();
 
         $selectedUser = null;
         if (!empty($userFilter)) {
@@ -102,6 +105,7 @@ class Logs extends BaseController
             'from_date'    => $fromDate,
             'to_date'      => $toDate,
             'user_id'      => $userFilter,
+            'sort_order'   => $sortOrder,
             'selected_user'=> $selectedUser,
             'generated_at' => date('Y-m-d H:i:s'),
             'is_print'     => true

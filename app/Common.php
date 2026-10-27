@@ -1,5 +1,11 @@
 <?php
 
+/** Canonical order for record lists and their printable reports. */
+function record_sort_order(mixed $value): string
+{
+    return is_string($value) && strtolower(trim($value)) === 'asc' ? 'asc' : 'desc';
+}
+
 /** Display clock times in the format used by the current operations role. */
 function operations_time(?string $value = null): string
 {

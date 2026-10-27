@@ -32,7 +32,7 @@
 <form action="<?= base_url('staff/departures') ?>" method="get" class="modern-card shadow-modern mb-3">
     <div class="modern-card-body">
         <div class="row g-3 align-items-end">
-            <div class="col-lg-4 col-md-6">
+            <div class="col-lg-3 col-md-6">
                 <label class="form-label-modern" for="todayDepartureSearch">Search departures</label>
                 <input type="search" class="form-control" id="todayDepartureSearch" name="q" value="<?= esc($filters['q'], 'attr') ?>" placeholder="Plate, operator, driver or route…" autocomplete="off">
             </div>
@@ -45,7 +45,7 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-lg-3 col-md-6">
+            <div class="col-lg-2 col-md-4">
                 <label class="form-label-modern" for="todayDepartureType">Vehicle type</label>
                 <select class="form-select" id="todayDepartureType" name="vehicle_type">
                     <option value="">All types</option>
@@ -54,7 +54,10 @@
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="col-lg-2 col-md-6 d-flex gap-2">
+            <div class="col-lg-2 col-md-4">
+                <?= view('partials/record_sort_order', ['sortId' => 'todayDepartureSortOrder', 'selectedOrder' => $filters['sort_order'] ?? 'desc', 'selectClass' => 'form-select']) ?>
+            </div>
+            <div class="col-lg-2 col-md-4 d-flex gap-2">
                 <button type="submit" class="btn-modern btn-modern-primary flex-grow-1">Filter</button>
                 <a href="<?= base_url('staff/departures') ?>" class="btn-modern btn-modern-outline">Reset</a>
             </div>

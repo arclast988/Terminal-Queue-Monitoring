@@ -20,7 +20,7 @@ class Departures extends BaseController
         $vehicleTypes = $this->todayBuilder($today)->select('vehicles.type AS slug')->distinct()
             ->where('vehicles.type IS NOT NULL')->orderBy('vehicles.type')->findAll();
         $builder = $this->filteredBuilder($today, $filters);
-        $departures = $builder->orderBy('queue.departure_time', 'DESC')->orderBy('queue.id', 'DESC')->paginate(20);
+        $departures = $builder->orderBy('queue.departure_time', strtoupper($filters['sort_order']))->orderBy('queue.id', strtoupper($filters['sort_order']))->paginate(20);
 
         $this->response->setHeader('Cache-Control', 'no-store');
         return view('staff/departures/index', [
@@ -37,14 +37,14 @@ class Departures extends BaseController
         $today = date('Y-m-d');
         $filters = $this->filters();
         $results = $this->filteredBuilder($today, $filters)
-            ->orderBy('queue.departure_time', 'DESC')->orderBy('queue.id', 'DESC')->findAll();
+            ->orderBy('queue.departure_time', strtoupper($filters['sort_order']))->orderBy('queue.id', strtoupper($filters['sort_order']))->findAll();
         $this->response->setHeader('Cache-Control', 'no-store');
         return view('admin/history/print_history', [
             'title' => "Today's Departure Report", 'report_heading' => "Today's Departure Report",
             'today_only_report' => true, 'results' => $results,
             'search' => $filters['q'], 'destination' => $filters['destination'],
             'vehicle_type' => $filters['vehicle_type'], 'from_date' => $today, 'to_date' => $today,
-            'return_url' => base_url('staff/departures'),
+            'return_url' => base_url('staff/departures'), 'sort_order' => $filters['sort_order'],
         ]);
     }
 
@@ -55,6 +55,7 @@ class Departures extends BaseController
             $value = $this->request->getGet($key);
             $filters[$key] = is_string($value) ? mb_substr(trim($value), 0, 150) : '';
         }
+        $filters['sort_order'] = record_sort_order($this->request->getGet('sort_order'));
         return $filters;
     }
 

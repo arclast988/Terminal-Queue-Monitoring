@@ -4142,3 +4142,23 @@ html body #vehicles-table tbody tr.vehicle-route-heading.vehicle-row-hidden { di
         white-space: nowrap !important;
     }
 }
+
+
+/* Record filters share a compact layout and preserve usable field widths. */
+.record-filter-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+    gap: 16px;
+    margin: 0;
+}
+.record-filter-form > [class*="col-"] {
+    width: auto;
+    max-width: 100%;
+    min-width: 0;
+    padding: 0;
+}
+@media (min-width: 1200px) {
+    .record-filter-form {
+        grid-template-columns: minmax(180px, 1.5fr) repeat(5, minmax(0, 1fr)) auto;
+    }
+}

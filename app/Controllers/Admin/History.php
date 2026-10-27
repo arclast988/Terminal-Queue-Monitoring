@@ -19,6 +19,7 @@ class History extends BaseController
         $toDate = $this->request->getGet('to_date');
         $destFilter = $this->request->getGet('destination');
         $typeFilter = $this->request->getGet('vehicle_type');
+        $sortOrder = record_sort_order($this->request->getGet('sort_order'));
 
         // Date totals follow the five-minute time shown in history, including midnight rollover.
         $todayStart = history_departure_date_boundary(date('Y-m-d'));
@@ -58,7 +59,7 @@ class History extends BaseController
 
         // --- Departure list (paginated, searchable) ---
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $destFilter, $typeFilter);
-        $departures = $builder->orderBy('queue.departure_time', 'DESC')->paginate(20);
+        $departures = $builder->orderBy('queue.departure_time', strtoupper($sortOrder))->orderBy('queue.id', strtoupper($sortOrder))->paginate(20);
 
         $data = [
             'title'        => 'Departure History',
@@ -78,6 +79,7 @@ class History extends BaseController
             'to_date'      => $toDate,
             'destination'  => $destFilter,
             'vehicle_type' => $typeFilter,
+            'sort_order'   => $sortOrder,
         ];
 
         return view('admin/history/index', $data);
@@ -93,10 +95,11 @@ class History extends BaseController
         $toDate = $this->request->getGet('to_date');
         $destFilter = $this->request->getGet('destination');
         $typeFilter = $this->request->getGet('vehicle_type');
+        $sortOrder = record_sort_order($this->request->getGet('sort_order'));
 
         $builder = $this->_getFilteredBuilder($search, $fromDate, $toDate, $destFilter, $typeFilter);
         // Cap print output to avoid OOM on large history tables.
-        $results = $builder->orderBy('queue.departure_time', 'DESC')->limit(5000)->findAll();
+        $results = $builder->orderBy('queue.departure_time', strtoupper($sortOrder))->orderBy('queue.id', strtoupper($sortOrder))->limit(5000)->findAll();
 
         $data = [
             'title'        => 'Departure History Report',
@@ -106,6 +109,7 @@ class History extends BaseController
             'to_date'      => $toDate,
             'destination'  => $destFilter,
             'vehicle_type' => $typeFilter,
+            'sort_order'   => $sortOrder,
             'is_print'     => true
         ];
 

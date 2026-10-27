@@ -154,7 +154,7 @@ test('date filter hints include the month and follow manual input, quick filters
       assert.equal(await page.locator('#fromDate').inputValue(), expected);
       assert.equal(await page.locator('#fromDateHint').isVisible(), false);
       await chips.first().click();
-      await page.waitForFunction(() => document.querySelector('#fromDate').value === '' && location.search === '' && document.querySelector('.table-modern').closest('.modern-card').style.opacity === '1');
+      await page.waitForFunction(() => document.querySelector('#fromDate').value === '' && !new URLSearchParams(location.search).has('from_date') && document.querySelector('.table-modern').closest('.modern-card').style.opacity === '1');
       assert.equal(await page.locator('#fromDateHint').isVisible(), true);
       assert.equal(await page.locator('#toDateHint').isVisible(), true);
       await page.goBack();
@@ -163,6 +163,55 @@ test('date filter hints include the month and follow manual input, quick filters
       assert.equal(await page.locator('#fromDateHint').isVisible(), false);
       assert.deepEqual(errors, [], report.page);
     } finally { await context.close(); }
+  }
+});
+
+test('record sort follows AJAX filters, browser history, and the printable report with an optional report override', {timeout:90000}, async () => {
+  for (const report of reports) {
+    for (const width of [320, 1280]) {
+      const context = await browser.newContext({viewport:{width,height:1000}});
+      try {
+        const page = await context.newPage(), errors = [];
+        page.on('pageerror', error => errors.push(error.message));
+        await context.route(origin + report.path + '/print?**', route => route.fulfill({status:200,contentType:'text/html',body:'<title>Printable report</title>'}));
+        await page.goto(origin + '/fixture/' + report.page);
+        const form = page.locator(report.page === 'admin-logs' ? '#logsFilterForm' : '#historyFilterForm');
+        const order = form.locator('[name="sort_order"]');
+        assert.equal(await order.inputValue(), 'desc');
+        assert.equal(await order.isVisible(), true);
+        const box = await order.boundingBox();
+        assert.ok(box.x >= 0 && box.x + box.width <= width + 1, `${report.page} ${width}: order fits`);
+        for (const direction of ['asc', 'desc']) {
+          await order.selectOption(direction);
+          await form.locator('[name="q"]').fill('SORT-RECORD');
+          await form.locator('button[type="submit"]').click();
+          await page.waitForFunction(expected => new URLSearchParams(location.search).get('sort_order') === expected && document.querySelector('.table-modern').closest('.modern-card').style.opacity === '1', direction);
+          assert.equal(new URL(page.url()).searchParams.get('q'), 'SORT-RECORD');
+          await page.locator(`[data-bs-target="${report.modal}"]`).click();
+          await page.locator(report.modal + '.show').waitFor({state:'visible'});
+          const printOrder = page.locator(`${report.form} [name="sort_order"]`);
+          assert.equal(await printOrder.inputValue(), direction, `${report.page}: report inherits page order`);
+          await page.locator(`${report.form} [name="from_date"]`).fill('2026-10-01');
+          await page.locator(`${report.form} [name="to_date"]`).fill('2026-10-27');
+          for (const printDirection of [direction, direction === 'asc' ? 'desc' : 'asc']) {
+            await printOrder.selectOption(printDirection);
+            const requested = context.waitForEvent('request', request => request.url().startsWith(origin + report.path + '/print?'));
+            const opened = context.waitForEvent('page');
+            await page.locator(report.button).click();
+            const params = new URL((await requested).url()).searchParams;
+            assert.equal(params.get('sort_order'), printDirection);
+            assert.equal(params.get('from_date'), '2026-10-01');
+            assert.equal(params.get('to_date'), '2026-10-27');
+            await (await opened).close();
+          }
+          await page.locator(`${report.modal} [data-bs-dismiss="modal"]`).click();
+          await page.locator(report.modal).waitFor({state:'hidden'});
+        }
+        await page.goBack();
+        await page.waitForFunction(selector => document.querySelector(selector + ' [name="sort_order"]').value === 'asc' && document.querySelector('.table-modern').closest('.modern-card').style.opacity === '1', report.page === 'admin-logs' ? '#logsFilterForm' : '#historyFilterForm');
+        assert.deepEqual(errors, [], report.page);
+      } finally { await context.close(); }
+    }
   }
 });
 

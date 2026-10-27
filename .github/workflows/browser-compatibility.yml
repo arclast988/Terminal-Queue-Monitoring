@@ -31,11 +31,11 @@ jobs:
           coverage: none
       - run: npm ci --prefix tests/frontend --ignore-scripts --no-audit --no-fund
       - run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
-      - name: Verify vehicle route selection after native validation
+      - name: Verify vehicle route selection and dispatcher password layout
         env:
           TQ_BROWSER: ${{ matrix.browser }}
         run: >-
-          node --test --test-name-pattern='vehicle autocomplete validation'
+          node --test --test-name-pattern='vehicle autocomplete validation|dispatcher password guidelines'
           tests/frontend/responsive.browser.cjs
       - name: Verify reports, themes, selection, touch filters, and loader behavior
         env:
@@ -45,3 +45,7 @@ jobs:
           --test-name-pattern='departure rule Select|activity logs use|text fill|commuter departure filters|terminal names|daily queue clearing|phone, tablet|native form values|mobile in-page'
           tests/frontend/time-theme.browser.cjs
           tests/frontend/native-navigation-loader.browser.cjs
+      - name: Verify record order follows filters and printing
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+        run: node --test --test-name-pattern='record sort' tests/frontend/report-filters.browser.cjs

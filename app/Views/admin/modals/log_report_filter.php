@@ -158,6 +158,10 @@
                         </select>
                     </div>
 
+                    <div class="mb-4">
+                        <?= view('partials/record_sort_order', ['sortId' => 'log_modal_sort_order', 'selectedOrder' => $sort_order ?? 'desc', 'labelClass' => 'form-label small fw-bold text-muted text-uppercase', 'selectClass' => 'form-select']) ?>
+                    </div>
+
                     <div id="log-validation-msg" class="text-center small text-danger mb-0">
                         Please select a date range to generate an activity log report.
                     </div>
@@ -265,6 +269,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Smart autofill from page filters whenever modal is opened
     if (modalEl) {
         modalEl.addEventListener('show.bs.modal', function() {
+            const pageOrder = document.querySelector('#logsFilterForm [name="sort_order"]');
+            const reportOrder = document.getElementById('log_modal_sort_order');
+            if (pageOrder && reportOrder && reportOrder.dataset.pageOrder !== pageOrder.value) {
+                reportOrder.value = pageOrder.value;
+                reportOrder.dataset.pageOrder = pageOrder.value;
+            }
+
             const pageForm = document.getElementById('logsFilterForm');
             if (pageForm) {
                 const pageFrom = pageForm.querySelector('[name="from_date"]');

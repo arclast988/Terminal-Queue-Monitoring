@@ -138,4 +138,23 @@ final class StaffTodayDeparturesTest extends CIUnitTestCase
             foreach (['TODAY-01','ASSIGNED-SIBLING','UNASSIGNED-ROUTE'] as $text) $this->assertStringNotContainsString($text,$html);
         }
     }
+
+    public function testSelectedOrderReachesTheReportAndPaginationWithStableSameTimeTrips(): void
+    {
+        foreach (['asc', 'desc'] as $direction) {
+            $query = ['q'=>'TODAY-', 'sort_order'=>$direction];
+            $list = $this->page('index', $query)->getBody();
+            $report = $this->page('report', $query)->getBody();
+            $first = $direction === 'asc' ? 'TODAY-01' : 'TODAY-35';
+            $next = $direction === 'asc' ? 'TODAY-02' : 'TODAY-34';
+            foreach ([$list, $report] as $html) {
+                $this->assertLessThan(strpos($html, $next), strpos($html, $first));
+            }
+            $this->assertStringContainsString('sort_order='.$direction, $list);
+            $this->assertStringContainsString($direction === 'asc' ? 'Oldest first (Ascending)' : 'Newest first (Descending)', $report);
+            $secondPage = $this->page('index', $query + ['page'=>'2'])->getBody();
+            $this->assertStringNotContainsString($first, $secondPage);
+            $this->assertStringContainsString($direction === 'asc' ? 'TODAY-21' : 'TODAY-15', $secondPage);
+        }
+    }
 }

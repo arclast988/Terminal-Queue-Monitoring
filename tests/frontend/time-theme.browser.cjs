@@ -400,7 +400,7 @@ test('activity logs use readable labels and omit action controls from reports', 
     assert.match(await page.locator('#logsTable').textContent(), /Dispatcher signed in/);
     assert.equal(await page.locator('#logReportForm [name="action_type"]').count(), 0);
     await page.goto(`${origin}/fixture/admin-logs-report`);
-    assert.deepEqual(await page.locator('table thead th').allTextContents(), ['Log ID','Timestamp','User','Details']);
+    assert.deepEqual(await page.locator('table thead th').allTextContents(), ['Date & Time','User','Details']);
     assert.match(await page.locator('table tbody').textContent(), /Dispatcher signed in/);
   } finally {await page.close();}
 });

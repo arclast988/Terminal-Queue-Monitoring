@@ -175,6 +175,10 @@
                         </select>
                     </div>
 
+                    <div class="mb-4">
+                        <?= view('partials/record_sort_order', ['sortId' => 'modal_sort_order', 'selectedOrder' => $sort_order ?? 'desc', 'labelClass' => 'form-label small fw-bold text-muted text-uppercase', 'selectClass' => 'form-select']) ?>
+                    </div>
+
                     <div id="validation-msg" class="text-center small text-danger mb-0">
                         Please select a date range to generate a departure report.
                     </div>
@@ -250,6 +254,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalEl = document.getElementById('reportFilterModal');
     if (modalEl) {
         modalEl.addEventListener('show.bs.modal', function() {
+            const pageOrder = document.querySelector('#historyFilterForm [name="sort_order"]');
+            const reportOrder = document.getElementById('modal_sort_order');
+            if (pageOrder && reportOrder && reportOrder.dataset.pageOrder !== pageOrder.value) {
+                reportOrder.value = pageOrder.value;
+                reportOrder.dataset.pageOrder = pageOrder.value;
+            }
+
             syncDateStates();
             validateForm();
         });

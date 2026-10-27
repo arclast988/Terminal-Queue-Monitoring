@@ -257,7 +257,9 @@
         }
 
         .vehicle-type-chip {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             padding: 3px 10px;
             border-radius: 999px;
             font-size: 11px;
@@ -267,6 +269,11 @@
             letter-spacing: 0.35px;
             white-space: nowrap;
             border: 1px solid transparent;
+        }
+
+        .vehicle-type-chip > i {
+            flex-shrink: 0;
+            margin: 0 !important;
         }
 
         .vehicle-type-jeepney {
@@ -668,6 +675,10 @@
 
     <!-- Filters Summary -->
     <div class="filter-summary">
+        <div class="filter-item">
+            <span class="filter-label">Order</span>
+            <span class="filter-value"><?= record_sort_order($sort_order ?? 'desc') === 'asc' ? 'Oldest first (Ascending)' : 'Newest first (Descending)' ?></span>
+        </div>
         <div class="filter-item">
             <span class="filter-label">Total Records</span>
             <span class="filter-value"><?= count($results ?? []) ?> Departures</span>
