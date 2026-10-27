@@ -526,7 +526,7 @@ test('browsers without a snapshot use one brief arrival fade with immediately us
     if (mode !== 'full') assert.equal(state.background,'none');
     await page.locator('#username').fill('ready@example.com');
     assert.equal(await page.locator('#username').inputValue(),'ready@example.com');
-    await page.waitForFunction(() => !document.body.getAnimations().some(animation => animation.playState === 'running'));
+    await page.waitForFunction(() => getComputedStyle(document.body).opacity === '1' && !document.body.getAnimations().some(animation => animation.playState === 'running'));
     assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).opacity),'1');
     await page.reload();
     assert.equal(await page.locator('html').getAttribute('data-tq-navigation-fallback'),null,'reload does not replay arrival motion');
