@@ -3999,8 +3999,7 @@ html body table.table-modern.management-list-table .management-row-actions .acti
 
 /* Three actions: Activate above Delete, with Edit and Delete side by side. */
 html body #users-table .action-buttons-grid,
-html body #vehicles-table.management-list-table .management-actions-col > .management-row-actions.action-buttons-grid,
-html body .route-card-item .action-buttons-grid {
+html body #vehicles-table.management-list-table .management-actions-col > .management-row-actions.action-buttons-grid {
     display: grid !important;
     grid-template-columns: max-content max-content;
     gap: 6px !important;
@@ -4008,6 +4007,21 @@ html body .route-card-item .action-buttons-grid {
     justify-content: start !important;
     width: max-content;
     max-width: 100%;
+}
+html body .route-card-archived > .modern-card-header > .d-flex:last-child {
+    min-width: 0;
+    max-width: 100%;
+}
+html body .route-card-item .action-buttons-grid {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    max-width: 100%;
+    overflow-x: auto;
+}
+html body .route-card-item .action-buttons-grid > .btn-modern {
+    flex-shrink: 0;
 }
 html body .action-buttons-grid > .btn-action-activate,
 html body .action-buttons-grid > form:has(.btn-action-activate) {

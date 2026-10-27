@@ -415,14 +415,37 @@ $slotsMeta = [
     border: 0; border-radius: 6px; background: transparent; color: var(--sb-primary); cursor: pointer;
 }
 .queue-reset-picker {
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-    align-items: end; gap: 8px; margin-top: 8px; padding: 12px;
-    border: 1px solid var(--sb-border); border-radius: 8px; background: var(--sb-surface-subtle);
+    position: absolute; top: calc(100% + 4px); right: 0; z-index: 1050;
+    display: flex; align-items: center; gap: 7px; width: max-content; max-width: 100%;
+    padding: 8px 10px; box-sizing: border-box;
+    border: 1px solid #cbd5e1; border-radius: 12px; background: #fff;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,.18), 0 4px 10px -2px rgba(0,0,0,.08);
 }
 .queue-reset-picker[hidden] { display: none !important; }
-.queue-reset-picker label { min-width: 0; margin: 0; font-size: 12px; color: var(--sb-text-main); }
-.queue-reset-picker select { width: 100%; min-width: 0; margin-top: 5px; padding: 8px; border: 1px solid var(--sb-border); border-radius: 6px; background: var(--sb-surface); color: var(--sb-text-main); }
-.queue-reset-picker button { min-height: 36px; padding: 8px 12px; border: 0; border-radius: 6px; background: var(--sb-primary); color: var(--on-primary, #fff); font-weight: 600; cursor: pointer; }
+.queue-reset-picker .tp-col { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.queue-reset-picker .tp-btn {
+    display: flex; align-items: center; justify-content: center; width: 54px; height: 32px;
+    padding: 0; margin: 0; border: 1px solid #e2e8f0; border-radius: 6px;
+    background: #f8fafc; color: #475569; cursor: pointer; touch-action: manipulation;
+}
+.queue-reset-picker .tp-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.queue-reset-picker .tp-btn i { font-size: 13px; pointer-events: none; }
+.queue-reset-picker .tp-input {
+    width: 54px !important; min-width: 0; height: 44px; min-height: 44px !important;
+    margin: 0; padding: 0 !important; box-sizing: border-box; text-align: center;
+    border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; color: #1e293b;
+    font-size: 20px !important; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2;
+}
+.queue-reset-picker .tp-input:focus { outline: none; border-color: var(--sb-primary); box-shadow: 0 0 0 2px var(--sb-primary-light); }
+.queue-reset-picker .tp-sep { font-size: 24px; font-weight: 800; line-height: 1; color: #334155; }
+.queue-reset-picker .tp-set-btn {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    align-self: stretch; gap: 4px; min-height: 114px; padding: 0 14px; border: 0; border-radius: 8px;
+    background: var(--sb-primary); color: var(--on-primary, #fff); font-size: 15px; font-weight: 700;
+    cursor: pointer; touch-action: manipulation;
+}
+.queue-reset-picker .tp-set-btn i { font-size: 20px; }
+.queue-reset-picker .tp-set-btn:hover { background: var(--primary-dark, #b71c1c); }
 .contact-settings-group { min-width: 0; margin: 0; padding: 0; border: 0; }
 .contact-entry { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .contact-entry .form-input { min-width: 0; flex: 1; }
@@ -2141,13 +2164,19 @@ $slotsMeta = [
                     <div class="form-group queue-reset-time">
                         <label class="form-label" for="inputQueueResetTime">Daily clearing time (24-hour, Philippine time)</label>
                         <div class="queue-reset-time-control">
-                            <input type="text" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" placeholder="00:00" maxlength="5" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required autocomplete="off" aria-describedby="queueResetTimeHelp">
+                            <input type="text" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" placeholder="00:00" maxlength="5" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required autocomplete="off" aria-describedby="queueResetTimeHelp">
                             <button type="button" class="queue-reset-time-toggle" id="queueResetTimeToggle" aria-label="Choose daily clearing time in 24-hour format" aria-controls="queueResetTimePicker" aria-expanded="false"><i class="bi bi-clock" aria-hidden="true"></i></button>
-                        </div>
-                        <div class="queue-reset-picker" id="queueResetTimePicker" role="group" aria-label="24-hour clearing time" hidden>
-                            <label for="queueResetHour">Hour (00–23)<select id="queueResetHour" data-no-autocomplete><?php for ($hour = 0; $hour < 24; $hour++): ?><option value="<?= sprintf('%02d', $hour) ?>"><?= sprintf('%02d', $hour) ?></option><?php endfor; ?></select></label>
-                            <label for="queueResetMinute">Minute (00–59)<select id="queueResetMinute" data-no-autocomplete><?php for ($minute = 0; $minute < 60; $minute++): ?><option value="<?= sprintf('%02d', $minute) ?>"><?= sprintf('%02d', $minute) ?></option><?php endfor; ?></select></label>
-                            <button type="button" id="queueResetTimeApply">Set</button>
+                            <div class="queue-reset-picker" id="queueResetTimePicker" role="group" aria-label="24-hour clearing time" hidden>
+                                <?php foreach (['Hour' => 'hours', 'Minute' => 'minutes'] as $part => $caption): ?>
+                                <?php if ($part === 'Minute'): ?><span class="tp-sep" aria-hidden="true">:</span><?php endif; ?>
+                                <div class="tp-col">
+                                    <button type="button" class="tp-btn" data-reset-part="<?= $part ?>" data-reset-step="1" aria-label="Increase <?= $caption ?>"><i class="bi bi-chevron-up" aria-hidden="true"></i></button>
+                                    <input type="text" class="tp-input" id="queueReset<?= $part ?>" value="00" maxlength="2" inputmode="numeric" autocomplete="off" aria-label="Clearing time <?= $caption ?>">
+                                    <button type="button" class="tp-btn" data-reset-part="<?= $part ?>" data-reset-step="-1" aria-label="Decrease <?= $caption ?>"><i class="bi bi-chevron-down" aria-hidden="true"></i></button>
+                                </div>
+                                <?php endforeach; ?>
+                                <button type="button" class="tp-set-btn" id="queueResetTimeApply"><i class="bi bi-check2" aria-hidden="true"></i><span>Set</span></button>
+                            </div>
                         </div>
                         <p class="form-text" id="queueResetTimeHelp">Asia/Manila. Use HH:MM from 00:00 to 23:59. Changes begin at the next scheduled time. Default: 00:00.</p>
                     </div>
@@ -3508,25 +3537,76 @@ document.addEventListener('DOMContentLoaded', function () {
     var hours = document.getElementById('queueResetHour');
     var minutes = document.getElementById('queueResetMinute');
     if (!input || !toggle || !picker) return;
-    function closePicker() { picker.hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
-    toggle.addEventListener('click', function () {
+    var repeatDelay = null, repeatTimer = null;
+    function stopRepeat() { clearTimeout(repeatDelay); clearInterval(repeatTimer); repeatDelay = repeatTimer = null; }
+    function closePicker() { stopRepeat(); picker.hidden = true; toggle.setAttribute('aria-expanded', 'false'); }
+    function padded(value, max) { return String(Math.min(max, Math.max(0, parseInt(value, 10) || 0))).padStart(2, '0'); }
+    function step(part, delta) {
+        var field = part === 'Hour' ? hours : minutes, limit = part === 'Hour' ? 24 : 60;
+        field.value = String(((parseInt(field.value, 10) || 0) + delta + limit) % limit).padStart(2, '0');
+    }
+    <?= view('partials/time_input_format') ?>
+    input.addEventListener('input', function (event) { format24HourInput(input, event); });
+    input.addEventListener('blur', function () {
+        var value = input.value.trim();
+        if (!value) return;
+        var parts = value.split(':'), digits = value.replace(/\D/g, '');
+        if (parts.length === 1 && digits.length === 3) parts = [digits.slice(0, 1), digits.slice(1)];
+        input.value = padded(parts[0], 23) + ':' + padded(parts[1], 59);
+        input.dispatchEvent(new Event('change', {bubbles:true}));
+    });
+    toggle.addEventListener('click', function (event) {
         if (!picker.hidden) { closePicker(); return; }
         var match = input.value.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
         hours.value = match ? match[1] : '00'; minutes.value = match ? match[2] : '00';
-        picker.hidden = false; toggle.setAttribute('aria-expanded', 'true'); hours.focus();
+        picker.style.top = ''; picker.style.bottom = '';
+        picker.hidden = false; toggle.setAttribute('aria-expanded', 'true');
+        if (picker.getBoundingClientRect().bottom > (window.visualViewport ? window.visualViewport.height : window.innerHeight) - 8) {
+            picker.style.top = 'auto'; picker.style.bottom = 'calc(100% + 4px)';
+        }
+        if (event.detail === 0 || window.matchMedia('(pointer: fine)').matches) { hours.focus(); hours.select(); }
     });
-    document.getElementById('queueResetTimeApply').addEventListener('click', function () {
-        input.value = hours.value + ':' + minutes.value;
+    picker.querySelectorAll('[data-reset-step]').forEach(function (button) {
+        function change() { step(button.dataset.resetPart, Number(button.dataset.resetStep)); }
+        button.addEventListener('pointerdown', function (event) {
+            if (event.button !== 0) return;
+            event.preventDefault(); stopRepeat(); change();
+            button.setPointerCapture(event.pointerId);
+            repeatDelay = setTimeout(function () { repeatTimer = setInterval(change, 80); }, 300);
+        });
+        button.addEventListener('pointerup', stopRepeat);
+        button.addEventListener('pointercancel', stopRepeat);
+        button.addEventListener('lostpointercapture', stopRepeat);
+        button.addEventListener('click', function (event) { if (event.detail === 0) change(); });
+    });
+    [hours, minutes].forEach(function (field) {
+        field.addEventListener('input', function () { field.value = field.value.replace(/\D/g, '').slice(0, 2); });
+        field.addEventListener('change', function () { field.value = padded(field.value, field === hours ? 23 : 59); });
+        field.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+                event.preventDefault(); step(field === hours ? 'Hour' : 'Minute', event.key === 'ArrowUp' ? 1 : -1);
+            }
+        });
+        field.addEventListener('wheel', function (event) {
+            event.preventDefault(); step(field === hours ? 'Hour' : 'Minute', event.deltaY < 0 ? 1 : -1);
+        }, {passive:false});
+    });
+    function applyTime() {
+        input.value = padded(hours.value, 23) + ':' + padded(minutes.value, 59);
         input.dispatchEvent(new Event('input', {bubbles:true}));
         input.dispatchEvent(new Event('change', {bubbles:true}));
-        closePicker(); input.focus();
-    });
+        closePicker(); toggle.focus();
+    }
+    document.getElementById('queueResetTimeApply').addEventListener('click', applyTime);
     document.addEventListener('click', function (event) {
         if (!picker.contains(event.target) && !toggle.contains(event.target)) closePicker();
     });
     picker.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') { closePicker(); toggle.focus(); }
+        if (event.key === 'Enter') { event.preventDefault(); applyTime(); }
     });
+    window.addEventListener('pagehide', stopRepeat);
+
 });
 </script>
 <?= $this->include('templates/footer') ?>

@@ -52,24 +52,24 @@
         )) || window.navigator.standalone === true || Boolean(document.fullscreenElement);
     }
 
-    function preferNativeNavigationProgress() {
-        // Browsers do not expose their loading-bar visibility to a page. This is
-        // a policy for known mobile browser tabs, not native-bar detection.
-        // Installed apps, embedded pages and identifiable WebViews keep feedback.
-        if (isAppWindow() || (window.top && window.top !== window)) return false;
+    function suppressMobileProgress() {
+        // Mobile layouts use local button/table feedback instead of the top bar,
+        // including installed apps, embedded browsers and desktop-mode tabs.
         var browser = window.navigator;
         var ua = browser.userAgent || '';
-        if (/\bwv\b|FBAN|FBAV|Instagram|Line\/|WebView/i.test(ua)) return false;
-        var mobile = Boolean(browser.userAgentData && browser.userAgentData.mobile)
+        return Boolean(browser.userAgentData && browser.userAgentData.mobile)
             || /Android|iOS|iPadOS/i.test(browser.userAgentData && browser.userAgentData.platform || '')
-            || /Android|iPhone|iPad|iPod/i.test(ua)
-            || (/Mac/i.test(browser.platform || '') && browser.maxTouchPoints > 1);
-        if (!mobile) return false;
-        return /Chrome\/|Chromium\/|CriOS\/|Firefox\/|FxiOS\/|EdgA\/|EdgiOS\/|OPR\/|Opera|Safari\/|SamsungBrowser\//i.test(ua);
+            || /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua)
+            || (/Mac/i.test(browser.platform || '') && browser.maxTouchPoints > 1)
+            || Boolean(window.matchMedia && (
+                window.matchMedia('(max-width: 768px)').matches
+                || (window.matchMedia('(max-width: 1024px)').matches
+                    && (browser.maxTouchPoints > 0 || window.matchMedia('(pointer: coarse)').matches))
+            ));
     }
 
     function startNavigation() {
-        if (preferNativeNavigationProgress()) {
+        if (suppressMobileProgress()) {
             nativeNavigationPending = true;
             forceDone();
             return;
@@ -86,6 +86,8 @@
             '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; overflow:hidden; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
             '.global-progress-bar.is-active { opacity:1; }',
             '.global-progress-bar.is-done { opacity:0; }',
+            'html.gl-mobile-progress-off .global-progress-bar { display:none !important; }',
+            '@media (max-width:768px), (pointer:coarse) and (max-width:1024px) { .global-progress-bar { display:none !important; } }',
             '.global-progress-bar.gl-direct-progress .global-progress-bar-inner { transition:none !important; }',
             '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; overflow:hidden; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); box-shadow:none; transition:transform .16s linear; border-radius:0 3px 3px 0; }',
             '@keyframes gl-progress-sweep { from { transform:translateX(-100%); } to { transform:translateX(350%); } }',
@@ -118,6 +120,7 @@
 
     function ensureElements() {
         injectStyles();
+        document.documentElement.classList.toggle('gl-mobile-progress-off', suppressMobileProgress());
         if (barEl && barEl.isConnected) return;
         barEl = document.getElementById('global-progress-bar');
         if (!barEl) {
@@ -183,6 +186,7 @@
     }
 
     function renderStart() {
+        if (suppressMobileProgress()) { forceDone(); return; }
         isVisible = true;
         visibleAt = Date.now();
         barEl.classList.remove('is-done');
@@ -192,10 +196,11 @@
     }
 
     function start(immediate) {
-        // Mobile browser tabs use native page feedback and local button/table
-        // feedback for in-page work. Apps and WebViews retain their own top bar.
-        // Late background responses must not duplicate native navigation feedback.
-        if (nativeNavigationPending || preferNativeNavigationProgress()) return;
+        // Keep the top bar off throughout mobile navigation and in-page work.
+        if (nativeNavigationPending || suppressMobileProgress()) {
+            if (isRunning || isVisible) forceDone();
+            return;
+        }
         ensureElements();
         clearCompletion();
         if (safetyTimer !== null) clearTimeout(safetyTimer);
@@ -568,7 +573,7 @@
             saved = JSON.parse(window.sessionStorage.getItem(NAVIGATION_PROGRESS_KEY) || 'null');
             window.sessionStorage.removeItem(NAVIGATION_PROGRESS_KEY);
         } catch (error) { return false; }
-        if (!saved || preferNativeNavigationProgress() || saved.origin !== window.location.origin
+        if (!saved || suppressMobileProgress() || saved.origin !== window.location.origin
             || !Number.isFinite(saved.at) || Date.now() < saved.at || Date.now() - saved.at > 30000
             || !Number.isFinite(saved.progress) || saved.progress < 0 || saved.progress > 100) return false;
         start(true);
@@ -580,6 +585,10 @@
     }
 
     function setupInteractions() {
+        window.addEventListener('resize', function () {
+            if (suppressMobileProgress()) forceDone();
+            else document.documentElement.classList.remove('gl-mobile-progress-off');
+        }, { passive: true });
         // Also cover location changes and form.submit(), which do not emit the
         // click/submit events below. Observe navigation without intercepting it.
         if (window.navigation && typeof window.navigation.addEventListener === 'function') {

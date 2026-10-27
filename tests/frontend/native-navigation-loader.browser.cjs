@@ -18,10 +18,12 @@ const profiles = [
   { name: 'android-tablet', ua: androidUA, width: 768, height: 1024, touch: true, native: true },
   { name: 'desktop', ua: desktopUA, width: 1366, height: 768, native: false },
   { name: 'wide-desktop', ua: desktopUA, width: 1920, height: 1080, native: false },
-  { name: 'narrow-desktop', ua: desktopUA, width: 320, height: 640, native: false },
-  { name: 'installed-android-app', ua: androidUA, width: 390, height: 844, touch: true, standalone: true, native: false },
-  { name: 'android-webview', ua: androidUA.replace('Android 15;', 'Android 15; wv;'), width: 390, height: 844, touch: true, native: false },
-  { name: 'ios-webview', ua: iphoneUA.replace(' Safari/604.1', ''), width: 375, height: 812, touch: true, native: false }
+  { name: 'narrow-desktop', ua: desktopUA, width: 320, height: 640, native: true },
+  { name: 'installed-android-app', ua: androidUA, width: 390, height: 844, touch: true, standalone: true, native: true },
+  { name: 'android-webview', ua: androidUA.replace('Android 15;', 'Android 15; wv;'), width: 390, height: 844, touch: true, native: true },
+  { name: 'ios-webview', ua: iphoneUA.replace(' Safari/604.1', ''), width: 375, height: 812, touch: true, native: true },
+  { name: 'unknown-mobile-browser', ua: 'UnknownMobileBrowser/1.0 Mobile', width: 390, height: 844, touch: true, native: true },
+  { name: 'phone-desktop-mode', ua: desktopUA, width: 980, height: 390, touch: true, native: true }
 ];
 const reports = new Map(), pending = new Map();
 const results = { engine, profiles: [], forms: [], requests: [] };
@@ -126,7 +128,7 @@ function checkSnapshot(report, profile) {
   assert.equal(report.running, !profile.native, profile.name);
   assert.equal(report.active, !profile.native, profile.name);
   assert.equal(report.count, 1); assert.equal(report.pointerEvents, 'none');
-  assert.ok(Math.abs(report.width - report.viewport) < 1);
+  assert.ok(profile.native ? report.width === 0 : Math.abs(report.width - report.viewport) < 1);
   assert.equal(report.overflow, false); assert.equal(report.prevented, false);
 }
 function checkStart(report, profile) {
@@ -189,7 +191,7 @@ test('desktop page and form arrivals fill the visible progress bar to the right 
 });
 
 test('mobile in-page fetch and XHR retain local feedback without a redundant top bar', { timeout: 30000 }, async t => {
-  for (const profile of [profiles[0], profiles[2], profiles[3]]) {
+  for (const profile of profiles.filter(profile => profile.native)) {
     const { id, page, context, errors } = await open(t, profile);
     await page.evaluate(id => {
       GlobalLoader.setDelay(0); window.fetchDone = false;

@@ -181,7 +181,7 @@ test('round assignments reserve a destination number only on overlapping selecte
   }
 });
 
-test('24-hour picker and interval fields remain readable for Admin and SuperAdmin', { timeout: 90000 }, async () => {
+test('24-hour picker and interval fields remain readable for Admin and SuperAdmin', { timeout: 120000 }, async () => {
   for (const [name, role] of [['admin-rule-create', ''], ['admin-rule-edit', 'super_admin']]) {
     for (const width of [320, 375, 1280]) {
       const page = await browser.newPage({ viewport: { width, height: 900 } });
@@ -203,6 +203,20 @@ test('24-hour picker and interval fields remain readable for Admin and SuperAdmi
         }
         await picker.locator('.tp-set-btn').click();
         assert.equal(await page.locator(`#${field}`).inputValue(), `${hour}:${minute}`);
+        const clock = page.locator(`#${field}`);
+        await clock.fill('23:::');
+        assert.equal(await clock.inputValue(), '23:');
+        await clock.blur();
+        assert.equal(await clock.inputValue(), '23:00');
+        await clock.fill('18:88');
+        assert.equal(await clock.inputValue(), '18:59');
+        await clock.fill('99:99');
+        assert.equal(await clock.inputValue(), '23:59');
+        if (field === 'wait_duration') {
+          await clock.fill('30'); await clock.blur();
+          assert.equal(await clock.inputValue(), '00:30');
+        }
+        await clock.fill(`${hour}:${minute}`);
       }
       assert.deepEqual(errors, [], `${name} ${width}`);
       await page.close();
@@ -527,6 +541,34 @@ test('terminal contacts allow separate numbers and emails without losing the for
   }
 });
 
+test('header clock follows saved and live navigation text colors on mobile and desktop', {timeout:90000}, async () => {
+  for (const [name,role] of [['admin-settings','admin'],['staff-password','staff']]) {
+    for (const width of [375,1280]) {
+      const page=await browser.newPage({viewport:{width,height:900}});
+      try {
+        await page.goto(`${origin}/fixture/${name}?state=custom-theme`);
+        await page.addScriptTag({url:origin+'/js/ws-client.js'});
+        const clock=page.locator(width<769 ? '.profile-operations-time' : '.header-left-cluster > .operations-header-time');
+        assert.equal(await clock.isVisible(),true);
+        for (const palette of [null,{bg:'#ffffff',text:'#1e293b'},{bg:'#1e293b',text:'#fbbf24'}]) {
+          if (palette) await page.evaluate(({role,palette})=>applyLiveBranding({category:'theme',
+            [`theme_${role}_nav_bg`]:palette.bg,[`theme_${role}_nav_text`]:palette.text}),{role,palette});
+          const colors=await clock.evaluate(el=>{
+            const probe=document.createElement('span');el.appendChild(probe);
+            probe.style.color='var(--nav-text)'; const text=getComputedStyle(probe).color;
+            probe.style.color='var(--nav-text-soft)'; const icon=getComputedStyle(probe).color;probe.remove();
+            const time=getComputedStyle(el.querySelector('time'));
+            return {text,icon,color:time.color,fill:time.webkitTextFillColor,iconColor:getComputedStyle(el.querySelector('i')).color};
+          });
+          assert.equal(colors.color,colors.text,`${name} ${width}: clock text`);
+          assert.equal(colors.fill,colors.text,`${name} ${width}: clock text fill`);
+          assert.equal(colors.iconColor,colors.icon,`${name} ${width}: clock icon`);
+        }
+      } finally {await page.close();}
+    }
+  }
+});
+
 test('daily queue clearing offers an editable Philippine time and an enable switch', {timeout:90000}, async () => {
   for (const width of [320, 375, 768, 1280]) {
   const page=await browser.newPage({viewport:{width,height:850}});
@@ -545,16 +587,35 @@ test('daily queue clearing offers an editable Philippine time and an enable swit
     assert.equal(layout.fits,true);
     assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'00:00');
     assert.equal(await page.locator('#inputQueueResetTime').getAttribute('type'),'text');
+    const card = page.locator('.queue-reset-layout').locator('..');
+    const before = await card.boundingBox();
     await page.locator('#queueResetTimeToggle').click();
-    assert.equal(await page.locator('#queueResetHour option').count(),24);
-    assert.equal(await page.locator('#queueResetMinute option').count(),60);
-    await page.locator('#queueResetHour').selectOption('18');
-    await page.locator('#queueResetMinute').selectOption('30');
+    const picker = page.locator('#queueResetTimePicker');
+    assert.equal(await picker.locator('select').count(),0);
+    assert.ok(Math.abs((await card.boundingBox()).height-before.height)<1, 'Opening the picker must not enlarge the card.');
+    await digitsFit(picker.locator('.tp-input'), `Queue clearing ${width}`);
+    await controlsFit(picker, `Queue clearing ${width}`);
+    await picker.locator('[aria-label="Decrease hours"]').click();
+    assert.equal(await page.locator('#queueResetHour').inputValue(),'23');
+    await picker.locator('[aria-label="Increase hours"]').click();
+    assert.equal(await page.locator('#queueResetHour').inputValue(),'00');
+    await page.locator('#queueResetHour').fill('18');
+    await page.locator('#queueResetMinute').fill('30');
     await page.locator('#queueResetTimeApply').click();
     assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'18:30');
     assert.equal(await page.locator('#queueResetTimePicker').isVisible(),false);
     await page.locator('#inputQueueResetTime').fill('24:00');
-    assert.equal(await page.locator('#inputQueueResetTime').evaluate(el=>el.checkValidity()),false);
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'23:00');
+    assert.equal(await page.locator('#inputQueueResetTime').evaluate(el=>el.checkValidity()),true);
+    await page.locator('#inputQueueResetTime').fill('23:::');
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'23:');
+    await page.locator('#inputQueueResetTime').blur();
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'23:00');
+    await page.locator('#inputQueueResetTime').fill('11111');
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'11:11');
+    await page.locator('#inputQueueResetTime').fill('9999');
+    await page.locator('#inputQueueResetTime').blur();
+    assert.equal(await page.locator('#inputQueueResetTime').inputValue(),'23:59');
     await page.locator('#inputQueueResetTime').fill('00:00');
     if (width===375 || width===1280) {
       const dir=path.join(__dirname,'artifacts'); fs.mkdirSync(dir,{recursive:true});

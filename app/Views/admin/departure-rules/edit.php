@@ -426,17 +426,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const alertBox = document.getElementById('rule-contradiction-alert');
     const alertMsg = document.getElementById('rule-contradiction-msg');
 
+    <?= view('partials/time_input_format') ?>
+
     // 1. Text input formatting
     document.querySelectorAll('.military-time-input').forEach(function(input) {
         input.addEventListener('input', function(e) {
-            let val = input.value.replace(/[^\d:]/g, '');
-            if (!val.includes(':') && val.length === 2 && e.inputType !== 'deleteContentBackward') {
-                let hh = parseInt(val, 10);
-                if (hh > 23) hh = 23;
-                val = String(hh).padStart(2, '0') + ':';
-            }
-            if (val.length > 5) val = val.slice(0, 5);
-            input.value = val;
+            format24HourInput(input, e);
             checkContradiction();
         });
 
@@ -445,7 +440,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!val) return;
             let digits = val.replace(/\D/g, '');
 
-            if (input.id === 'wait_duration') {
+            if (val.includes(':')) {
+                let parts = val.split(':');
+                input.value = String(Math.min(23, parseInt(parts[0], 10) || 0)).padStart(2, '0') + ':'
+                    + String(Math.min(59, parseInt(parts[1], 10) || 0)).padStart(2, '0');
+            } else if (input.id === 'wait_duration') {
                 if (digits.length === 1 || digits.length === 2) {
                     let num = parseInt(digits, 10) || 0;
                     if (num <= 59) {

@@ -60,8 +60,8 @@ test('client hints and iPad desktop profiles use the mobile navigation fallback'
   }
 });
 
-test('desktop tabs show delayed site progress, including narrow and touchscreen layouts', async () => {
-  for (const options of [{}, { narrow: true }, { touchPoints: 10, mobileHint: false }]) {
+test('wide desktop tabs retain delayed site progress, including touchscreen layouts', async () => {
+  for (const options of [{}, { touchPoints: 10, mobileHint: false }]) {
     const h = loaded(options); const event = await navigate(h);
     assert.equal(event.defaultPrevented, false); assert.equal(visible(h), false);
     assert.equal(h.window.GlobalLoader.isRunning(), true);
@@ -70,26 +70,46 @@ test('desktop tabs show delayed site progress, including narrow and touchscreen 
   }
 });
 
-test('installed apps, embedded pages, WebViews and unknown browsers keep navigation feedback', async () => {
+test('all mobile modes suppress the top bar, including narrow layouts, apps and unknown browsers', async () => {
   for (const options of [
     { ua: android, standalone: true }, { ua: iphone, iosStandalone: true },
+    { ua: desktop, narrow: true },
     { ua: android, embedded: true },
     { ua: android.replace('Android 15;', 'Android 15; wv;') },
     { ua: iphone.replace(' Safari/604.1', '') },
     { ua: android + ' Instagram 999.0' },
     { ua: 'UnknownMobileBrowser/1.0 Mobile' }
   ]) {
-    const h = loaded(options); await navigate(h); h.tick(500); assert.equal(visible(h), true, JSON.stringify(options));
+    const h = loaded(options); await navigate(h); h.tick(500);
+    assert.equal(visible(h), false, JSON.stringify(options));
+    assert.equal(h.window.GlobalLoader.isRunning(), false);
+    assert.equal(h.document.documentElement.classList.contains('gl-mobile-progress-off'), true);
   }
 });
 
-test('fullscreen and minimal-ui app windows retain their own loading feedback', async () => {
+test('mobile fullscreen and minimal-ui windows also suppress the top bar', async () => {
   for (const displayMode of ['fullscreen', 'minimal-ui', 'window-controls-overlay']) {
     const h = loaded({ ua: android });
     const original = h.window.matchMedia;
     h.window.matchMedia = query => query === '(display-mode: ' + displayMode + ')' ? { matches: true } : original(query);
-    await navigate(h); h.tick(500); assert.equal(visible(h), true, displayMode);
+    await navigate(h); h.tick(500); assert.equal(visible(h), false, displayMode);
   }
+});
+
+test('entering a mobile layout stops a visible bar without unlocking a pending request button', async () => {
+  const h = loaded(), button = h.document.body.appendChild(new h.Element('button'));
+  h.window.GlobalLoader.showButtonSpinner(button, 'Saving', true);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501);
+  assert.equal(visible(h), true);
+  const original = h.window.matchMedia;
+  h.window.matchMedia = query => query === '(max-width: 768px)' ? {matches:true} : original(query);
+  h.window.emit('resize');
+  assert.equal(visible(h), false);
+  assert.equal(h.window.GlobalLoader.isRunning(), false);
+  assert.equal(button.getAttribute('aria-busy'), 'true');
+  h.requests[0].resolve({ok:true}); await request;
+  assert.equal(visible(h), false);
+  h.window.GlobalLoader.hideButtonSpinner(button);
 });
 
 test('mobile native form submission preserves fields and button feedback without the site bar', async () => {

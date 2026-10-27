@@ -234,8 +234,8 @@ test('lite completion remains smooth while the response and pending ownership fi
   assert.equal(h.timers.size,0);
 });
 
-test('navigation starts immediately while visual feedback waits without intercepting the link', async () => {
-  const h = loaded({ cores: 2, mobile: true });
+test('desktop navigation starts immediately while visual feedback waits without intercepting the link', async () => {
+  const h = loaded({ cores: 2 });
   const link = h.document.body.appendChild(new h.Element('a'));
   link.href = 'https://terminal.test/schedules'; link.setAttribute('href', '/schedules');
   const event = h.document.emit('click', { target: link, button: 0 });

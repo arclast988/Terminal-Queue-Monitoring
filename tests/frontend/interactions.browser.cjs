@@ -180,7 +180,7 @@ test('table skeleton feedback does not block table actions or race on reuse', as
   assert.equal(await page.locator('.table-loader-overlay').count(), 1); await context.close();
 });
 
-test('installed phone loading indicators keep moving in lite mode and stop for reduced motion', async () => {
+test('installed phones keep local loading feedback without a rainbow bar in every motion mode', async () => {
   for (const mode of ['full', 'lite', 'reduced']) {
     const { page, context, errors } = await pageFor(mode, true);
     const styles = await page.evaluate(() => {
@@ -197,7 +197,7 @@ test('installed phone loading indicators keep moving in lite mode and stop for r
         progressDuration: getComputedStyle(document.querySelector('.global-progress-bar-inner')).transitionDuration };
     });
     assert.equal(styles.spinner, mode === 'reduced' ? 'none' : 'gl-spin');
-    assert.notEqual(styles.barDisplay, 'none'); assert.equal(styles.sweep, mode === 'reduced' ? 'none' : 'gl-progress-sweep');
+    assert.equal(styles.barDisplay, 'none'); assert.equal(styles.sweep, 'none');
     assert.equal(styles.outsideSweep, 'none', 'no separate strip ahead of the progress');
     assert.equal(styles.clip, 'hidden', 'the shimmer stays inside the filled portion');
     assert.equal(styles.progressDuration, mode === 'reduced' ? '0s' : mode === 'lite' ? '0.1s' : '0.16s');
@@ -243,7 +243,7 @@ test('a phone relies on browser navigation feedback without a second site bar', 
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   for (let i = 0; i < 300 && (navigations.length === count || navigationReports.length === reportCount); i++) await new Promise(resolve => setTimeout(resolve, 10));
   assert.equal(navigations.length, count + 1); assert.equal(navigationReports.length, reportCount + 1);
-  assert.deepEqual(navigationReports[reportCount], { visible: false, mode: 'lite', display: 'block', animation: 'none' });
+  assert.deepEqual(navigationReports[reportCount], { visible: false, mode: 'lite', display: 'none', animation: 'none' });
   navigations[count].setHeader('Content-Type', 'text/html'); navigations[count].end(fixture);
   await page.waitForURL(origin + '/slow-navigation'); assert.deepEqual(errors, []);
 });
