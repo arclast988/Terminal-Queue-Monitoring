@@ -472,7 +472,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                 <i class="fas <?= esc($cellIco) ?>" title="<?= vehicle_type_label($vehicle['type']) ?>"></i>
                                             </span>
                                         <?php endif; ?>
-                                        <?= vehicle_type_badge($vehicle['type']) ?>
+                                        <?= vehicle_type_badge($vehicle['type'], '', false) ?>
                                     </div>
                                 </td>
                                 <td data-label="Assigned Route">
