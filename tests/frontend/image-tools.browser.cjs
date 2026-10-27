@@ -362,14 +362,17 @@ test('vehicle register keeps complete type labels and thumbnails inside their co
       const cells=page.locator('#vehicles-table .vehicle-type-cell');
       for(const el of await cells.all()) {
         await el.scrollIntoViewIfNeeded();
+        if(width>768) await el.locator('.vehicle-type-icon').hover();
         const boxes=await el.evaluate(el=>{
           const td=el.closest('td'),cell=td.getBoundingClientRect(),style=getComputedStyle(td),photo=el.querySelector('.vehicle-type-icon').getBoundingClientRect(),badge=el.querySelector('.vehicle-type-chip'),label=badge.getBoundingClientRect();
+          const image=el.querySelector('.vehicle-type-icon img').getBoundingClientRect();
           const text=[...badge.childNodes].find(node=>node.nodeType===Node.TEXT_NODE && node.textContent.trim()),range=document.createRange();range.selectNodeContents(text);
-          return {text:text.textContent.trim(),lines:range.getClientRects().length,photo:{left:photo.left,right:photo.right,top:photo.top,bottom:photo.bottom,y:photo.top+photo.height/2},label:{left:label.left,right:label.right,top:label.top,y:label.top+label.height/2},cell:{left:cell.left+parseFloat(style.paddingLeft),right:cell.right-parseFloat(style.paddingRight)}};
+          return {text:text.textContent.trim(),lines:range.getClientRects().length,image:{left:image.left,right:image.right,top:image.top,bottom:image.bottom},photo:{left:photo.left,right:photo.right,top:photo.top,bottom:photo.bottom,y:photo.top+photo.height/2},label:{left:label.left,right:label.right,top:label.top,y:label.top+label.height/2},cell:{left:cell.left+parseFloat(style.paddingLeft),right:cell.right-parseFloat(style.paddingRight)}};
         });
         const details=JSON.stringify({width,selection,...boxes});
         assert.equal(boxes.lines,1,'Vehicle type names must not split: '+details);
         assert.ok(boxes.photo.left>=boxes.cell.left-1 && boxes.photo.right<=boxes.cell.right+1,details);
+        assert.ok(boxes.image.left>=boxes.photo.left && boxes.image.right<=boxes.photo.right && boxes.image.top>=boxes.photo.top && boxes.image.bottom<=boxes.photo.bottom,'The image must stay inside its frame, including on hover: '+details);
         assert.ok(boxes.label.left>=boxes.cell.left-1 && boxes.label.right<=boxes.cell.right+1,details);
         const beside=Math.abs(boxes.photo.y-boxes.label.y)<2 && boxes.label.left>=boxes.photo.right;
         assert.ok(beside || boxes.label.top>=boxes.photo.bottom+5,'The complete badge should wrap below its thumbnail when space is limited: '+details);

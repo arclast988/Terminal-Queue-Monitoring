@@ -3776,6 +3776,29 @@ html body #vehicles-table.management-list-table .route-info > span {
 html body #vehicles-table.management-list-table .plate-number {
     font-size: 13px !important;
 }
+html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-icon {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 8px;
+}
+html body #vehicles-table.management-list-table .vehicle-type-icon img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    box-sizing: border-box;
+    filter: none;
+    transform: none !important;
+}
+html body #vehicles-table.management-list-table .vehicle-type-icon img:not(.vehicle-custom-photo) {
+    object-fit: contain !important;
+    padding: 2px;
+}
 html body #vehicles-table.management-list-table .vehicle-start-order,
 html body #departure-rules-table.management-list-table .rule-round-text {
     font-size: 12.5px !important;
@@ -3914,12 +3937,6 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         max-width: 100%;
         flex-wrap: wrap;
         gap: 6px;
-    }
-    html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-icon {
-        flex: 0 0 34px;
-        width: 34px;
-        height: 34px;
-        padding: 0;
     }
     html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-chip {
         flex: 0 1 auto;

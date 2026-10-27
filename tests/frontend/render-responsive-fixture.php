@@ -362,6 +362,7 @@ if ($fixturePage === 'admin-vehicles' && ($argv[4] ?? '') === 'vehicle-type-labe
     foreach (['minibus', 'motorcycle', 'van'] as $index => $type) {
         $fixtureData['vehicles'][] = array_replace($vehicle, ['id'=>101+$index, 'type'=>$type, 'plate_number'=>'TYPE-'.($index+1)]);
     }
+    $fixtureData['vehicles'][1]['photo'] = '/fixture-custom.svg';
 }
 if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
     $fixtureData['vehicleTypes'] = [
