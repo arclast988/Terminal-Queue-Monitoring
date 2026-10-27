@@ -258,3 +258,17 @@ test('known XHR transfer totals advance the fill and stale events cannot affect 
   assert.equal(fill(h),next);assert.equal(xhr.count('progress'),0);
   h.window.emit('pagehide');assert.equal(h.timers.size,0);
 });
+
+
+test('navigation with a stalled CSS transition uses direct progress and resets on exit', async () => {
+  const h=loaded();let measurements=0;
+  const inner=h.document.querySelector('.global-progress-bar-inner');
+  inner.getBoundingClientRect=()=>{measurements++;return {width:0};};
+  await navigate(h);h.tick(700);
+  const bar=h.document.getElementById('global-progress-bar');
+  assert.equal(bar.classList.contains('gl-direct-progress'),true);
+  const initial=fill(h);h.tick(1500);assert.ok(fill(h)>initial && fill(h)<1);
+  assert.equal(measurements,1,'only one rendering check per navigation');
+  h.window.emit('pagehide');assert.equal(bar.classList.contains('gl-direct-progress'),false);
+  assert.equal(h.timers.size,0);
+});

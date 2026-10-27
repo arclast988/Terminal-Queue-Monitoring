@@ -16,6 +16,7 @@
     var finishTimer = null;
     var fadeTimer = null;
     var progressTimer = null;
+    var navigationProgressChecked = false;
     var isRunning = false;
     var isVisible = false;
     var nativeNavigationPending = false;
@@ -85,6 +86,7 @@
             '.global-progress-bar { position:fixed !important; top:0 !important; left:0 !important; width:100% !important; height:4px !important; overflow:hidden; z-index:999999 !important; pointer-events:none !important; user-select:none !important; opacity:0; transition:opacity .16s ease; }',
             '.global-progress-bar.is-active { opacity:1; }',
             '.global-progress-bar.is-done { opacity:0; }',
+            '.global-progress-bar.gl-direct-progress .global-progress-bar-inner { transition:none !important; }',
             '.global-progress-bar-inner { position:absolute; top:0; left:0; height:100%; width:100%; overflow:hidden; transform:scaleX(0); transform-origin:left center; background:linear-gradient(90deg,#b91c1c,#ea580c 45%,#f59e0b 80%,#38bdf8); box-shadow:none; transition:transform .16s linear; border-radius:0 3px 3px 0; }',
             '@keyframes gl-progress-sweep { from { transform:translateX(-100%); } to { transform:translateX(350%); } }',
             '@media (prefers-reduced-motion:no-preference) { html:not([data-tq-motion="reduced"]) .global-progress-bar.is-active:not(.is-done) .global-progress-bar-inner::after { content:""; position:absolute; inset:0 auto 0 0; width:30%; background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent); animation:gl-progress-sweep 1.2s linear infinite !important; } }',
@@ -159,12 +161,25 @@
         if (progressTimer !== null || !isRunning || !isVisible || motionMode() === 'reduced' || progress >= 94) return;
         // Pages and fetch responses do not expose a reliable completion percentage.
         // Pace the fill while waiting; only a real completion can reach 100%.
+        var direct = barEl && barEl.classList.contains('gl-direct-progress');
+        var delay = direct ? 50 : (motionMode() === 'lite' ? 100 : 160);
         progressTimer = setTimeout(function () {
             progressTimer = null;
             if (!isRunning || !isVisible) return;
-            if (!document.hidden) setProgress(Math.min(94, progress + Math.max(0.08, (94 - progress) * 0.035)));
+            if (!document.hidden) {
+                // Some engines suspend CSS transitions while a new document is pending.
+                // Measure once, after the first tween, and use direct updates only
+                // when a positive fill still has no rendered width.
+                if (siteNavigationPending && !navigationProgressChecked && progress > 0) {
+                    navigationProgressChecked = true;
+                    if (innerEl && typeof innerEl.getBoundingClientRect === 'function' && innerEl.getBoundingClientRect().width === 0) {
+                        barEl.classList.add('gl-direct-progress');
+                    }
+                }
+                setProgress(Math.min(94, progress + Math.max(0.08, (94 - progress) * 0.035) * delay / 160));
+            }
             advanceProgress();
-        }, motionMode() === 'lite' ? 100 : 160);
+        }, delay);
     }
 
     function renderStart() {
@@ -231,7 +246,8 @@
         clearOperationTimers();
         clearCompletion();
         siteNavigationPending = false;
-        if (barEl) barEl.classList.remove('is-active', 'is-done');
+        if (barEl) barEl.classList.remove('is-active', 'is-done', 'gl-direct-progress');
+        navigationProgressChecked = false;
         setProgress(0);
         isRunning = isVisible = false;
     }

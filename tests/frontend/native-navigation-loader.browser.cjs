@@ -45,6 +45,7 @@ function report(kind,event){
     pointerEvents:getComputedStyle(bar).pointerEvents,width:bar.getBoundingClientRect().width,
     viewport:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,
     fill:bar.querySelector('.global-progress-bar-inner').getBoundingClientRect().width/innerWidth,
+    targetFill:bar.querySelector('.global-progress-bar-inner').style.transform,hidden:document.hidden,
     prevented:event.defaultPrevented,busy:button.getAttribute('aria-busy'),disabled:button.disabled}));
 }
 document.addEventListener('DOMContentLoaded',function(){
@@ -227,7 +228,7 @@ test('desktop progress visibly advances while waiting for the page response', {t
   const navigation=await waitEntry(pending,id+':/slow-link');
   const first=await waitEntry(reports,id+':link');
   const second=await waitEntry(reports,id+':link-progress');
-  assert.ok(first.fill>0 && second.fill>first.fill+0.04 && second.fill<0.95,JSON.stringify({first,second}));
+  assert.ok(first.fill>=0 && second.fill>first.fill+0.04 && second.fill<0.95,JSON.stringify({first,second}));
   assert.equal(second.running,true);
   navigation.res.end('Loaded');await page.waitForURL(origin+'/slow-link?id='+id);
   assert.deepEqual(errors,[]);await context.close();
