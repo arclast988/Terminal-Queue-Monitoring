@@ -549,8 +549,9 @@ test('browser theme and authentication button shadows follow saved and live prim
       assert.equal(await page.locator('meta[name="theme-color"]').count(),1);
       assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#2563eb');
       const manifest=new URL(await page.locator('link[data-app-manifest]').getAttribute('href'),origin);
-      assert.equal(manifest.searchParams.get('role'),'guest');
-      assert.equal(manifest.searchParams.get('theme'),'2563eb');
+      assert.equal(manifest.pathname,'/manifest.webmanifest');
+      assert.equal(manifest.search,'');
+      assert.equal(await page.locator('link[data-app-manifest]').getAttribute('crossorigin'),'use-credentials');
       const button=page.locator('form button[type="submit"]').first();
       if (name === 'verify') for (const input of await page.locator('.otp-input').all()) await input.fill('1');
       assert.equal(await button.isEnabled(),true,name);
@@ -558,7 +559,7 @@ test('browser theme and authentication button shadows follow saved and live prim
       await page.addScriptTag({url:origin+'/js/ws-client.js'});
       await page.evaluate(()=>applyLiveBranding({category:'theme',theme_guest_primary:'#7040b0'}));
       assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#7040b0');
-      assert.match(await page.locator('link[data-app-manifest]').getAttribute('href'),/theme=7040b0/);
+      assert.equal(await page.locator('link[data-app-manifest]').getAttribute('href'),manifest.pathname);
       await page.waitForFunction(()=>getComputedStyle(document.querySelector('form button[type="submit"]')).boxShadow.includes('112, 64, 176'));
       await button.hover();
       await page.waitForFunction(()=>getComputedStyle(document.querySelector('form button[type="submit"]')).boxShadow.includes('112, 64, 176'));
@@ -574,11 +575,13 @@ test('browser theme follows the current guest, dispatcher, admin and super admin
       assert.equal(await page.locator('meta[name="theme-color"]').count(),1,role);
       assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),primary,role);
       const manifest=new URL(await page.locator('link[data-app-manifest]').getAttribute('href'),origin);
-      assert.equal(manifest.searchParams.get('role'),role);
+      assert.equal(manifest.pathname,'/manifest.webmanifest');
+      assert.equal(manifest.search,'');
+      assert.equal(await page.locator('link[data-app-manifest]').getAttribute('crossorigin'),'use-credentials');
       await page.addScriptTag({url:origin+'/js/ws-client.js'});
       await page.evaluate(role=>applyLiveBranding({category:'theme',['theme_'+(role==='super_admin'?'admin':role)+'_primary']:'#c0550d'}),role);
       assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#c0550d',role);
-      assert.match(await page.locator('link[data-app-manifest]').getAttribute('href'),/theme=c0550d/,role);
+      assert.equal(await page.locator('link[data-app-manifest]').getAttribute('href'),manifest.pathname,role);
     } finally {await page.close();}
   }
 });

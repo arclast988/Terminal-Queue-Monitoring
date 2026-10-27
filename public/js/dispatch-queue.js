@@ -35,8 +35,13 @@
                 countEl.textContent = rk === 'all' ? totalQueued : (routeCounts[rk] || 0);
             }
         });
-        var empty = document.getElementById('queueRouteEmpty');
-        if (empty) empty.classList.toggle('d-none', routeFilter === 'all' || visible > 0);
+        var empty = document.getElementById('queueEmptyState');
+        if (empty) {
+            empty.classList.toggle('d-none', visible > 0);
+            var message = empty.querySelector('[data-queue-empty-message]');
+            var text = totalQueued === 0 ? 'Queue is currently empty.' : 'No vehicles queued for this route.';
+            if (message && message.textContent !== text) message.textContent = text;
+        }
         document.querySelectorAll('[data-round-route]').forEach(function (row) {
             row.classList.toggle('d-none', roundFilter !== 'all' && row.dataset.roundRoute !== roundFilter);
         });

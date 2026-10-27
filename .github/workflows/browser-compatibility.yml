@@ -49,3 +49,7 @@ jobs:
         env:
           TQ_BROWSER: ${{ matrix.browser }}
         run: node --test --test-name-pattern='record sort|record filters' tests/frontend/report-filters.browser.cjs tests/frontend/record-filters.browser.cjs
+      - name: Verify one queue empty message across route changes and live updates
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
+        run: node --test --test-name-pattern='queue empty state' tests/frontend/dispatch-queue.browser.cjs

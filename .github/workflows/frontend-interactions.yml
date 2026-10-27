@@ -46,6 +46,7 @@ jobs:
           node --check public/assets/js/image-tools.js
           node --check public/assets/js/record-filters.js
           node --check public/js/queue-sync.js
+          node --check public/js/dispatch-queue.js
           node --check public/js/ws-client.js
       - name: Run request and lifecycle regressions
         run: npm test --prefix tests/frontend

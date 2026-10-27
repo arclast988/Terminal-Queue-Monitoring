@@ -5,7 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const { execFileSync } = require('node:child_process');
-const { chromium } = require('playwright');
+const playwright = require('playwright');
+const engine = process.env.TQ_BROWSER || 'chromium';
 const { root, assetContentType, phpBinary } = require('./harness.cjs');
 let browser, server, origin, variant = '', roundRequests = [];
 function fixture(name = 'staff-queue', state = '') {
@@ -17,7 +18,7 @@ function queuePage(state) {
     <script>window.QueueWS={_isLoaded:true,init:function(c){this.config=c},updateConfig:function(c){this.config=c},isConnected:function(){return true}};</script></head>`);
 }
 test.before(async () => {
-  browser = await chromium.launch({ headless: true, ...(process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}) });
+  browser = await playwright[engine].launch({ headless: true, ...(engine === 'chromium' && process.env.TQ_BROWSER_CHANNEL ? { channel: process.env.TQ_BROWSER_CHANNEL } : {}) });
   server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://fixture');
     if (url.pathname === '/fixture.svg') {
@@ -174,7 +175,7 @@ test('route filters survive refreshes and switching rounds submits the route and
   const page = await browser.newPage(); await page.goto(origin + '/staff/queue');
   await page.locator('[data-queue-route="1|BATO"]').click();
   assert.equal(await page.locator('#queue-list .q-card:not(.d-none)').count(), 0);
-  assert.equal(await page.locator('#queueRouteEmpty').isVisible(), true);
+  assert.equal(await page.locator('#queueEmptyState').isVisible(), true);
   await page.locator('#queueRoundBtn').click();
   await page.locator('[data-dispatch-round][data-route-id="2"]').selectOption('3');
   await page.waitForFunction(() => document.getElementById('queueRoundFeedback').textContent.includes('Round updated'));
@@ -773,5 +774,48 @@ test('an occupied round shows a persistent inline warning and blocks submission 
     await page.locator('#round_number').selectOption('1');
     assert.equal(await page.locator('#rule-contradiction-alert').isVisible(),false);
     await page.close();
+  }
+});
+
+test('queue empty state stays a single centered message during route changes and live refreshes', {timeout:90000}, async () => {
+  for (const width of [375,1280]) {
+    variant = 'queue-empty';
+    const page = await browser.newPage({viewport:{width,height:900}});
+    const errors = []; page.on('pageerror', error => errors.push(error.message));
+    try {
+      await page.goto(origin+'/staff/queue');
+      const empty = page.locator('#queueEmptyState');
+      assert.equal(await empty.count(),1);
+      assert.equal(await empty.isVisible(),true);
+      assert.equal(await empty.innerText(),'Queue is currently empty.');
+      assert.equal(await page.locator('#queueRouteEmpty').count(),0);
+      await page.locator('[data-queue-route="1|BATO"]').click();
+      assert.equal(await empty.isVisible(),true);
+      assert.equal(await empty.innerText(),'Queue is currently empty.');
+      assert.equal(await empty.evaluate(el=>getComputedStyle(el).textAlign),'center');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+      const directory=path.join(__dirname,'artifacts'); fs.mkdirSync(directory,{recursive:true});
+      await page.screenshot({path:path.join(directory,`${engine}-queue-empty-${width}.png`)});
+
+      // Another route receives a trip: keep just the selected route's message.
+      variant = 'fresh';
+      await page.evaluate(()=>QueueSync.refresh(true));
+      await page.waitForSelector('#queue-list .q-card',{state:'attached'});
+      await page.waitForFunction(()=>document.querySelector('[data-queue-empty-message]').textContent==='No vehicles queued for this route.');
+      assert.equal(await empty.count(),1);
+      assert.equal(await empty.isVisible(),true);
+      await page.locator('[data-queue-route="all"]').click();
+      assert.equal(await empty.isVisible(),false);
+      assert.equal(await page.locator('#queue-list .q-card:not(.d-none)').count(),1);
+
+      // Removing the last trip brings back the same simple, global message.
+      variant = 'queue-empty';
+      await page.evaluate(()=>QueueSync.refresh(true));
+      await page.waitForFunction(()=>!document.querySelector('#queue-list .q-card'));
+      assert.equal(await empty.count(),1);
+      assert.equal(await empty.isVisible(),true);
+      assert.equal(await empty.innerText(),'Queue is currently empty.');
+      assert.deepEqual(errors,[]);
+    } finally {variant=''; await page.close();}
   }
 });

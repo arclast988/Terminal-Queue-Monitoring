@@ -322,6 +322,7 @@ if ($fixturePage === 'staff-queue') {
         $fixtureData['vehicles'][] = $newVehicle;
     }
 }
+if ($fixturePage === 'staff-queue' && ($argv[4] ?? '') === 'queue-empty') $fixtureData['queue'] = [];
 if ($fixturePage === 'staff-queue' && in_array(($argv[4] ?? ''), ['dispatch-before','dispatch-departed','dispatch-reset'], true)) {
     $fixtureData['queue'] = [];
     $fixtureData['queueRoutes'][0]['destination'] = 'ORMOC';

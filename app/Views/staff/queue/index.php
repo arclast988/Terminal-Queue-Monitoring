@@ -1131,14 +1131,6 @@ $queueOrderGroups = array_values($queueOrderGroups);
     <?php endif; ?>
 </div>
 <?= view('staff/queue/round-selection', ['queueRoutes' => $queueRoutes ?? []]) ?>
-<div id="queueRouteEmpty" class="queue-route-empty d-none" role="status" aria-atomic="true">
-    <span class="queue-route-empty-icon" aria-hidden="true"><i class="bi bi-bus-front"></i></span>
-    <div class="queue-route-empty-copy">
-        <h2>No vehicles queued</h2>
-        <p>This route has no active trips. Choose another route or add a vehicle to get started.</p>
-    </div>
-</div>
-
 <div id="undoBannerContainer" class="mb-3" style="display:none;"></div>
 
 <div class="queue-list" id="queue-list">
@@ -1295,12 +1287,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
             </div>
         <?php endforeach; ?>
-    <?php else: ?>
-        <div class="text-center text-muted py-5">
-            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-            Queue is currently empty.
-        </div>
     <?php endif; ?>
+    <div id="queueEmptyState" class="text-center text-muted py-5<?= !empty($queue) ? ' d-none' : '' ?>" role="status" aria-atomic="true">
+        <i class="bi bi-inbox fs-1 d-block mb-2" aria-hidden="true"></i>
+        <span data-queue-empty-message>Queue is currently empty.</span>
+    </div>
 </div>
 
 <!-- Dispatcher Queue Order Modal -->
