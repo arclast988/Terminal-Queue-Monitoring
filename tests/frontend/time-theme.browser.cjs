@@ -15,7 +15,7 @@ function fixture(name, state = '', role = '') {
   // Retain real picker and dialog handlers while isolating unrelated polling.
   return rendered.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (tag, attrs, code) => {
     if (/\bsrc\s*=/.test(attrs)) return /(?:bootstrap\.bundle\.min|interaction-motion|dispatch-rule-times|departure-rule-days|debounce-passengers|queue-sync)\.js/.test(attrs) ? tag : '';
-    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl|btn-toggle-select-rules|const filterBtns|window.showDeleteRuleModal|Role Theme Palettes Sync|Global modal openers for Departure Rules/.test(code) ? tag : '';
+    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl|btn-toggle-select-rules|const filterBtns|window.showDeleteRuleModal|Role Theme Palettes Sync|Global modal openers for Departure Rules|queueResetTimeToggle/.test(code) ? tag : '';
   });
 }
 
