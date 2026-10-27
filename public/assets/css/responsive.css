@@ -3777,13 +3777,14 @@ html body #vehicles-table.management-list-table .plate-number {
     font-size: 13px !important;
 }
 html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-icon {
-    flex: 0 0 34px;
-    width: 34px;
-    height: 34px;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     box-sizing: border-box;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 10px;
+    font-size: 18px;
 }
 html body #vehicles-table.management-list-table .vehicle-type-icon img {
     display: block;
