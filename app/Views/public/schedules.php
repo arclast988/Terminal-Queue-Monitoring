@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title>Vehicle Schedules · <?= esc(app_system_title()) ?></title>
-    <?= view('partials/app_install') ?>
+    <?= view('partials/app_install', ['browserThemeRole'=>'guest']) ?>
 
     <!-- Modern Fonts -->
     <?= view('partials/font_assets', ['fontIcons' => true]) ?>
@@ -1107,7 +1107,7 @@
     <div class="container">
         <!-- Filter Box -->
         <div class="filter-box">
-            <form method="get" action="<?= base_url('schedules') ?>" class="filter-form">
+            <form method="get" action="<?= base_url('schedules') ?>" class="filter-form" id="guestScheduleFilterForm">
                 <div class="form-group">
                     <label>Vehicle Type</label>
                     <select name="type" id="vehicleTypeSelect">
@@ -1131,6 +1131,7 @@
                 </div>
                 <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
             </form>
+            <div id="guestScheduleActiveFilters">
             <?php if ($vehicle_type || $destination): ?>
                 <div class="active-filters">
                     <?php if ($vehicle_type): ?>
@@ -1143,6 +1144,7 @@
                     <a href="<?= base_url('schedules') ?>" class="clear-btn"><i class="fas fa-times"></i> Clear Filters</a>
                 </div>
             <?php endif; ?>
+            </div>
         </div>
 
         <!-- Quick Route Filter Bar (Pills) placed UNDER the filter box -->
@@ -1163,7 +1165,7 @@
         </div>
 
         <!-- Schedule List -->
-        <div class="schedule-card">
+        <div class="schedule-card" id="guestScheduleResults">
             <div class="card-header">
                 <h3><i class="fas fa-list-alt"></i> Schedule Board</h3>
                 <span class="count-badge" id="scheduleCount"><?= count($schedules) ?> Found</span>
@@ -1272,6 +1274,7 @@
 
         <!-- WebSocket is the fast path; polling remains the fallback. -->
         <script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
+        <script src="<?= app_asset_url('assets/js/record-filters.js') ?>"></script>
         <script>
         var currentType = <?= json_encode((string) ($vehicle_type ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
         var currentDest = <?= json_encode(strtolower((string) ($destination ?? '')), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
@@ -1313,8 +1316,10 @@
             // Instant client-side filter
             filterTableClientSide();
 
-            // Refresh in the background. The rows already respond immediately.
-            fetchSchedulesStatus(true);
+            if (destSelect) destSelect.dispatchEvent(new Event('change', {bubbles:true}));
+            // Keep the page shell and the filter controls while updating the board.
+            if (window.guestScheduleFilters) window.guestScheduleFilters.submit();
+            else fetchSchedulesStatus(true);
         }
 
         function filterTableClientSide() {
@@ -1559,8 +1564,56 @@
             }
         }
 
+        function updateGuestScheduleActiveFilters(data, url) {
+            var container = document.getElementById('guestScheduleActiveFilters');
+            if (!container) return;
+            container.textContent = '';
+            if (!currentType && !currentDest) return;
+            var row = document.createElement('div'); row.className = 'active-filters';
+            var type = (data.vehicle_types || []).find(function(item) { return item.slug === currentType; });
+            var typeBadge = document.createElement('span'); typeBadge.className = 'filter-badge';
+            typeBadge.textContent = currentType ? (type ? type.name : currentType) : 'All Types'; row.appendChild(typeBadge);
+            if (currentDest) {
+                var destinationBadge = document.createElement('span'); destinationBadge.className = 'filter-badge';
+                destinationBadge.textContent = 'Destination: ' + currentDest.toUpperCase(); row.appendChild(destinationBadge);
+            }
+            var clear = document.createElement('a'); clear.className = 'clear-btn'; clear.href = url.pathname;
+            clear.textContent = 'Clear Filters'; row.appendChild(clear); container.appendChild(row);
+        }
+
         // Initialize real-time sync & search input listeners
         document.addEventListener('DOMContentLoaded', function() {
+            window.guestScheduleFilters = RecordFilters.init({
+                form: '#guestScheduleFilterForm', results: '#guestScheduleResults', json: true,
+                linkSelector: '#guestScheduleActiveFilters .clear-btn',
+                params: function(url) { if (currentSearch) url.searchParams.set('q', currentSearch); },
+                sync: function(url) {
+                    currentSearch = url.searchParams.get('q') || '';
+                    var search = document.getElementById('scheduleSearchInput');
+                    if (search) search.value = currentSearch;
+                    if (window.toggleGuestScheduleClear) window.toggleGuestScheduleClear(currentSearch);
+                },
+                requestUrl: function(url) {
+                    var endpoint = new URL(<?= json_encode(base_url('schedules/status')) ?>, location.href);
+                    if (url.searchParams.get('type')) endpoint.searchParams.set('type', url.searchParams.get('type'));
+                    endpoint.searchParams.set('_', Date.now());
+                    return endpoint.href;
+                },
+                started: function() {
+                    _scheduleRequestId++;
+                    if (_scheduleFetchController) _scheduleFetchController.abort();
+                    _scheduleFetchController = null; _fetchPending = true;
+                },
+                finished: function() { _fetchPending = false; },
+                render: function(data, url) {
+                    currentType = url.searchParams.get('type') || '';
+                    currentDest = (url.searchParams.get('destination') || '').toLowerCase();
+                    renderSchedules(data.schedules, data.vehicle_types || []);
+                    syncDestinationOptions(data.destinations, data.active_dest_counts, data.total_active_count);
+                    filterTableClientSide();
+                    updateGuestScheduleActiveFilters(data, url);
+                }
+            });
             var routeFilterBar = document.getElementById('routeFilterBar');
             if (routeFilterBar) {
                 routeFilterBar.addEventListener('click', function(event) {

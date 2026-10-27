@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title>Search Results · <?= esc(app_system_title()) ?></title>
-    <?= view('partials/app_install') ?>
+    <?= view('partials/app_install', ['browserThemeRole'=>'guest']) ?>
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="<?= app_asset_url('assets/vendor/fontawesome/css/all.min.css') ?>">
     <!-- Local fonts -->

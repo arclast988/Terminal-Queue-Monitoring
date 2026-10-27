@@ -53,6 +53,7 @@ jobs:
           tests/unit/ThemeConsistencyAndClearButtonTest.php
           tests/unit/ReportPreviewMobileTest.php
           tests/unit/RecordSortOrderTest.php
+          tests/unit/AppManifestThemeTest.php
           tests/unit/StaffTodayDeparturesTest.php
           tests/unit/QueueResetScheduleTest.php
           tests/unit/OperationsQueueResetTest.php

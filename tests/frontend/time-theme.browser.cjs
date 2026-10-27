@@ -15,7 +15,7 @@ function fixture(name, state = '', role = '') {
   // Retain real picker and dialog handlers while isolating unrelated polling.
   return rendered.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/g, (tag, attrs, code) => {
     if (/\bsrc\s*=/.test(attrs)) return /(?:bootstrap\.bundle\.min|interaction-motion|dispatch-rule-times|departure-rule-days|debounce-passengers|queue-sync)\.js/.test(attrs) ? tag : '';
-    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl|btn-toggle-select-rules|const filterBtns|window.showDeleteRuleModal|Role Theme Palettes Sync|Global modal openers for Departure Rules|queueResetTimeToggle/.test(code) ? tag : '';
+    return /function confirmLogout|window\.showSystemAlert|Time Picker Popover Creation|window\.TerminalMotion|var systemWarningModalEl|btn-toggle-select-rules|const filterBtns|window.showDeleteRuleModal|Role Theme Palettes Sync|Global modal openers for Departure Rules|queueResetTimeToggle|const inputs = document\.querySelectorAll\('\.otp-input'\)/.test(code) ? tag : '';
   });
 }
 
@@ -537,6 +537,48 @@ test('terminal contacts allow separate numbers and emails without losing the for
       const data=await page.locator('#formIdentity').evaluate(form=>{const values=new FormData(form);return {phones:values.getAll('contact_phones[]'),emails:values.getAll('contact_emails[]')};});
       assert.deepEqual(data,{phones:['+639171234567','(053) 555-8376','09181234567'],emails:['dispatch@example.com','extra@example.com']});
       assert.equal(await page.locator('#formIdentity').evaluate(form=>form.checkValidity()),true);
+    } finally {await page.close();}
+  }
+});
+
+test('browser theme and authentication button shadows follow saved and live primary colors', {timeout:90000}, async () => {
+  for (const name of ['login','forgot','verify','reset']) {
+    const page=await browser.newPage({viewport:{width:375,height:850}});
+    try {
+      await page.goto(`${origin}/fixture/${name}?state=blue-theme`);
+      assert.equal(await page.locator('meta[name="theme-color"]').count(),1);
+      assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#2563eb');
+      const manifest=new URL(await page.locator('link[data-app-manifest]').getAttribute('href'),origin);
+      assert.equal(manifest.searchParams.get('role'),'guest');
+      assert.equal(manifest.searchParams.get('theme'),'2563eb');
+      const button=page.locator('form button[type="submit"]').first();
+      if (name === 'verify') for (const input of await page.locator('.otp-input').all()) await input.fill('1');
+      assert.equal(await button.isEnabled(),true,name);
+      assert.match(await button.evaluate(el=>getComputedStyle(el).boxShadow),/37, 99, 235/,name);
+      await page.addScriptTag({url:origin+'/js/ws-client.js'});
+      await page.evaluate(()=>applyLiveBranding({category:'theme',theme_guest_primary:'#7040b0'}));
+      assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#7040b0');
+      assert.match(await page.locator('link[data-app-manifest]').getAttribute('href'),/theme=7040b0/);
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('form button[type="submit"]')).boxShadow.includes('112, 64, 176'));
+      await button.hover();
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('form button[type="submit"]')).boxShadow.includes('112, 64, 176'));
+    } finally {await page.close();}
+  }
+});
+
+test('browser theme follows the current guest, dispatcher, admin and super admin palette', {timeout:90000}, async () => {
+  for (const [name,role,primary] of [['guest','guest','#2563eb'],['staff-password','staff','#0d9488'],['admin-rule-create','admin','#7040b0'],['admin-rule-create','super_admin','#7040b0']]) {
+    const page=await browser.newPage({viewport:{width:375,height:850}});
+    try {
+      await page.goto(`${origin}/fixture/${name}?state=blue-theme&role=${role}`);
+      assert.equal(await page.locator('meta[name="theme-color"]').count(),1,role);
+      assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),primary,role);
+      const manifest=new URL(await page.locator('link[data-app-manifest]').getAttribute('href'),origin);
+      assert.equal(manifest.searchParams.get('role'),role);
+      await page.addScriptTag({url:origin+'/js/ws-client.js'});
+      await page.evaluate(role=>applyLiveBranding({category:'theme',['theme_'+(role==='super_admin'?'admin':role)+'_primary']:'#c0550d'}),role);
+      assert.equal(await page.locator('meta[name="theme-color"]').getAttribute('content'),'#c0550d',role);
+      assert.match(await page.locator('link[data-app-manifest]').getAttribute('href'),/theme=c0550d/,role);
     } finally {await page.close();}
   }
 });

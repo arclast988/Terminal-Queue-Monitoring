@@ -7,9 +7,8 @@
     <?= $this->include('partials/interaction_policy') ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
-    <meta name="theme-color" content="#D62828">
     <title>Sign in · <?= esc(app_system_title()) ?></title>
-    <?= view('partials/app_install') ?>
+    <?= view('partials/app_install', ['browserThemeRole'=>'guest']) ?>
     <?= view('partials/font_assets', ['fontFamily' => 'Inter']) ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= app_theme_css() ?>
@@ -21,7 +20,7 @@
         :root {
             --red: var(--primary, #D62828);
             --red-dark: var(--primary-dark, #B71C1C);
-            --red-soft: var(--primary-soft, rgba(214, 40, 40, .10));
+            --red-soft: var(--primary-soft, rgba(var(--primary-rgb, 214, 40, 40), .10));
             --white: #FFFFFF;
             --bg: #F8F9FA;
             --text: #1F2937;
@@ -47,7 +46,7 @@
             --space-16: 64px;
 
             --shadow-card: 0 24px 60px -16px rgba(15, 23, 42, .14), 0 10px 24px -12px rgba(15, 23, 42, .08);
-            --shadow-btn: 0 12px 26px -10px rgba(214, 40, 40, .5);
+            --shadow-btn: 0 12px 26px -10px rgba(var(--primary-rgb, 214, 40, 40), .5);
             --shadow-chip: 0 8px 20px -6px rgba(15, 23, 42, .18);
 
             --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -256,16 +255,16 @@
             margin-inline: auto;
             padding: 12px;
             border-radius: 20px;
-            background: radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .09), transparent 62%), rgba(255, 255, 255, .97);
-            border: 1px solid rgba(183, 28, 28, .19);
+            background: radial-gradient(circle at 50% 100%, rgba(var(--primary-rgb, 220, 38, 38), .09), transparent 62%), rgba(255, 255, 255, .97);
+            border: 1px solid rgba(var(--primary-rgb, 183, 28, 28), .19);
             border-bottom: 3px solid var(--red);
             overflow: hidden;
-            box-shadow: 0 12px 26px -18px rgba(153, 27, 27, .32), 0 0 0 3px rgba(220, 38, 38, .04);
+            box-shadow: 0 12px 26px -18px rgba(var(--primary-rgb, 153, 27, 27), .32), 0 0 0 3px rgba(var(--primary-rgb, 220, 38, 38), .04);
         }
         .hero-art:not(.has-custom-artwork) {
             margin-inline: 0 auto;
-            background: radial-gradient(circle at 50% 46%, rgba(255, 215, 125, .24), transparent 61%), radial-gradient(circle at 50% 100%, rgba(220, 38, 38, .07), transparent 64%), linear-gradient(135deg, #fff 10%, #fff9f1 55%, #fff);
-            box-shadow: 0 16px 32px -20px rgba(153, 27, 27, .4), 0 0 0 3px rgba(220, 38, 38, .045), inset 0 1px 0 rgba(255, 255, 255, .95);
+            background: radial-gradient(circle at 50% 46%, rgba(255, 215, 125, .24), transparent 61%), radial-gradient(circle at 50% 100%, rgba(var(--primary-rgb, 220, 38, 38), .07), transparent 64%), linear-gradient(135deg, #fff 10%, #fff9f1 55%, #fff);
+            box-shadow: 0 16px 32px -20px rgba(var(--primary-rgb, 153, 27, 27), .4), 0 0 0 3px rgba(var(--primary-rgb, 220, 38, 38), .045), inset 0 1px 0 rgba(255, 255, 255, .95);
         }
         .hero-art img {
             display: block;
@@ -448,8 +447,8 @@
             background: linear-gradient(150deg, var(--red), var(--red-dark));
             box-shadow: var(--shadow-btn);
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -10px rgba(214, 40, 40, .58); }
-        .btn-primary:active { transform: translateY(0); box-shadow: 0 8px 18px -8px rgba(214, 40, 40, .5); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -10px rgba(var(--primary-rgb, 214, 40, 40), .58); }
+        .btn-primary:active { transform: translateY(0); box-shadow: 0 8px 18px -8px rgba(var(--primary-rgb, 214, 40, 40), .5); }
         .btn .spinner {
             width: 18px; height: 18px;
             border-radius: 50%;

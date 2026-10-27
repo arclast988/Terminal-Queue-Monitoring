@@ -44,6 +44,7 @@ jobs:
           node --check public/assets/js/auth-background.js
           node --check public/assets/js/global-loader.js
           node --check public/assets/js/image-tools.js
+          node --check public/assets/js/record-filters.js
           node --check public/js/queue-sync.js
           node --check public/js/ws-client.js
       - name: Run request and lifecycle regressions

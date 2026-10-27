@@ -42,10 +42,10 @@ jobs:
           TQ_BROWSER: ${{ matrix.browser }}
         run: >-
           node --test
-          --test-name-pattern='departure rule Select|activity logs use|text fill|header clock follows|commuter departure filters|terminal names|daily queue clearing|24-hour picker|phone, tablet|native form values|mobile in-page'
+          --test-name-pattern='departure rule Select|activity logs use|text fill|header clock follows|browser theme|commuter departure filters|terminal names|daily queue clearing|24-hour picker|phone, tablet|native form values|mobile in-page'
           tests/frontend/time-theme.browser.cjs
           tests/frontend/native-navigation-loader.browser.cjs
       - name: Verify record order follows filters and printing
         env:
           TQ_BROWSER: ${{ matrix.browser }}
-        run: node --test --test-name-pattern='record sort' tests/frontend/report-filters.browser.cjs
+        run: node --test --test-name-pattern='record sort|record filters' tests/frontend/report-filters.browser.cjs tests/frontend/record-filters.browser.cjs

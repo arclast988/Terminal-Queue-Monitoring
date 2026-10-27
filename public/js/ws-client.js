@@ -1171,6 +1171,17 @@
                 document.head.appendChild(liveThemeStyle);
             }
             liveThemeStyle.textContent = liveThemeRules;
+            var browserTheme = getComputedStyle(document.body).getPropertyValue('--primary').trim();
+            if (/^#[0-9a-f]{6}$/i.test(browserTheme)) {
+                var themeMeta = document.querySelector('meta[name="theme-color"]');
+                if (themeMeta) themeMeta.setAttribute('content', browserTheme);
+                var appManifest = document.querySelector('link[data-app-manifest]');
+                if (appManifest) {
+                    var manifestUrl = new URL(appManifest.href, location.href);
+                    manifestUrl.searchParams.set('theme', browserTheme.slice(1));
+                    appManifest.href = manifestUrl.href;
+                }
+            }
         }
 
         // 5b. Update Universal Background Picture & Mode in Real-Time (ONLY if background category or full sync)

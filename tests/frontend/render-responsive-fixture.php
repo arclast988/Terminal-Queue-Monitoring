@@ -26,10 +26,12 @@ function app_name(): string { return $GLOBALS['fixtureLong'] ? 'PalomponTerminal
 function app_subtitle(): string { return 'Transit Terminal Monitoring System'; }
 function app_system_title(): string { return app_name(); }
 function get_system_setting(string $key, $default = null) {
-    $theme = ($GLOBALS['argv'][4] ?? '') === 'custom-theme' ? [
+    $theme = ($GLOBALS['argv'][4] ?? '') === 'blue-theme' ? [
+        'theme_guest_primary'=>'#2563eb', 'theme_staff_primary'=>'#0d9488', 'theme_admin_primary'=>'#7040b0',
+    ] : (($GLOBALS['argv'][4] ?? '') === 'custom-theme' ? [
         'theme_staff_primary'=>'#155e75', 'theme_staff_nav_bg'=>'#164e63',
         'theme_admin_primary'=>'#7040b0', 'theme_admin_nav_bg'=>'#563084',
-    ] : [];
+    ] : []);
     $contacts = ($GLOBALS['argv'][4] ?? '') === 'multiple-contacts' ? [
         'contact_email' => "office@example.com and dispatch@example.com",
         'contact_phone' => "+639171234567 / (053) 555-8376",

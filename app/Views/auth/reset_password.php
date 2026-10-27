@@ -6,9 +6,8 @@
     <?= $this->include('partials/interaction_policy') ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
-    <meta name="theme-color" content="#D62828">
     <title>Reset Password · <?= esc(app_name()) ?></title>
-    <?= view('partials/app_install') ?>
+    <?= view('partials/app_install', ['browserThemeRole'=>'guest']) ?>
     <?= view('partials/font_assets', ['fontFamily' => 'Inter']) ?>
     <link rel="stylesheet" href="<?= app_asset_url('assets/css/responsive.css') ?>">
     <?= app_theme_css() ?>
@@ -16,7 +15,7 @@
         :root {
             --red: var(--primary, #D62828);
             --red-dark: var(--primary-dark, #B71C1C);
-            --red-soft: var(--primary-soft, rgba(214, 40, 40, .10));
+            --red-soft: var(--primary-soft, rgba(var(--primary-rgb, 214, 40, 40), .10));
             --white: #FFFFFF;
             --bg: #F8F9FA;
             --text: #1F2937;
@@ -33,7 +32,7 @@
             --space-6: 24px;
             --space-8: 32px;
             --shadow-card: 0 24px 60px -16px rgba(15, 23, 42, .14), 0 10px 24px -12px rgba(15, 23, 42, .08);
-            --shadow-btn: 0 12px 26px -10px rgba(214, 40, 40, .5);
+            --shadow-btn: 0 12px 26px -10px rgba(var(--primary-rgb, 214, 40, 40), .5);
             --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -191,7 +190,7 @@
             transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
         }
         .btn svg { width: 18px; height: 18px; }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -10px rgba(214, 40, 40, .58); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 16px 32px -10px rgba(var(--primary-rgb, 214, 40, 40), .58); }
         .btn:active { transform: translateY(0); }
         .btn .spinner {
             width: 18px; height: 18px;

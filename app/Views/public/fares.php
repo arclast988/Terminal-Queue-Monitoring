@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="only light">
     <title>Route Fares · <?= esc(app_system_title()) ?></title>
-    <?= view('partials/app_install') ?>
+    <?= view('partials/app_install', ['browserThemeRole'=>'guest']) ?>
 
     <!-- Modern Fonts -->
     <?= view('partials/font_assets', ['fontIcons' => true]) ?>

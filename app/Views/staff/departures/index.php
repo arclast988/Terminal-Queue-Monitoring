@@ -5,7 +5,7 @@
         <h1 class="page-title-modern mb-1"><i class="bi bi-clock-history"></i> Today Departures</h1>
         <p class="text-muted small mb-0"><?= esc(date('F j, Y', strtotime($today))) ?> &bull; Your assigned routes</p>
     </div>
-    <a class="btn-modern btn-modern-primary" href="<?= esc(base_url('staff/departures/print') . '?' . http_build_query(array_filter($filters, static fn($value) => $value !== ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text"></i> Generate Report</a>
+    <a id="todayDepartureReport" class="btn-modern btn-modern-primary" href="<?= esc(base_url('staff/departures/print') . '?' . http_build_query(array_filter($filters, static fn($value) => $value !== ''))) ?>" target="_blank" rel="noopener"><i class="bi bi-file-earmark-text"></i> Generate Report</a>
 </div>
 
 <div class="row mb-4 today-departure-stats">
@@ -29,7 +29,7 @@
     </div>
 </div>
 
-<form action="<?= base_url('staff/departures') ?>" method="get" class="modern-card shadow-modern mb-3">
+<form id="todayDepartureFilterForm" action="<?= base_url('staff/departures') ?>" method="get" class="modern-card shadow-modern mb-3">
     <div class="modern-card-body">
         <div class="row g-3 align-items-end">
             <div class="col-lg-3 col-md-6">
@@ -59,12 +59,13 @@
             </div>
             <div class="col-lg-2 col-md-4 d-flex gap-2">
                 <button type="submit" class="btn-modern btn-modern-primary flex-grow-1">Filter</button>
-                <a href="<?= base_url('staff/departures') ?>" class="btn-modern btn-modern-outline">Reset</a>
+                <a href="<?= base_url('staff/departures') ?>" data-record-filter-link class="btn-modern btn-modern-outline">Reset</a>
             </div>
         </div>
     </div>
 </form>
 
+<div id="todayDepartureResults">
 <div class="modern-card shadow-modern">
     <div class="table-responsive">
         <table class="table-modern" id="today-departures-table">
@@ -90,4 +91,13 @@
 </div>
 <?php if ($pager && $pager->getPageCount() > 1): ?><div class="mt-3"><?= $pager->links() ?></div><?php endif; ?>
 
+</div>
 <?= view('templates/footer') ?>
+<script src="<?= app_asset_url('assets/js/record-filters.js') ?>"></script>
+<script>
+RecordFilters.init({
+    form: '#todayDepartureFilterForm', results: '#todayDepartureResults',
+    links: ['#todayDepartureReport'],
+    linkSelector: '[data-record-filter-link], #todayDepartureResults .pagination a'
+});
+</script>

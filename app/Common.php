@@ -1312,6 +1312,15 @@ if (! function_exists('app_contact_recipient')) {
     }
 }
 
+/** Match the browser/app chrome to the primary color of the current role. */
+function app_browser_theme_color(?string $role = null): string
+{
+    $role ??= session()->get('role');
+    $key = match ($role) { 'admin', 'super_admin' => 'admin', 'staff' => 'staff', default => 'guest' };
+    $fallback = ['guest'=>'#C62828', 'staff'=>'#15803d', 'admin'=>'#B71C1C'][$key];
+    return app_theme_color_helper((string) get_system_setting('theme_'.$key.'_primary', $fallback))['hex'];
+}
+
 if (! function_exists('app_theme_color_helper')) {
     /**
      * Internal helper to compute derived color tokens (dark, soft, contrast, alpha).

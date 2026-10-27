@@ -261,6 +261,7 @@
                 </button>
             </div>
         </form>
+        <div id="sharedScheduleActiveFilters">
         <?php if ($vehicle_type || $destination): ?>
             <div class="mt-3 pt-3 border-top d-flex gap-2 align-items-center flex-wrap">
                 <span style="font-size:13px; font-weight:600; color:#64748b; text-transform:uppercase;">Active Filters:</span>
@@ -270,14 +271,16 @@
                 <?php if ($destination): ?>
                     <span class="badge-modern badge-modern-info"><?= strtoupper(esc($destination)) ?></span>
                 <?php endif; ?>
-                <a href="<?= base_url('schedules') ?>" class="btn-modern btn-modern-sm btn-modern-outline ms-2">
+                <a href="<?= base_url('schedules') ?>" data-record-filter-link class="btn-modern btn-modern-sm btn-modern-outline ms-2">
                     <i class="bi bi-x-circle"></i> Clear Filters
                 </a>
             </div>
         <?php endif; ?>
+        </div>
     </div>
 </div>
 
+<div id="sharedScheduleResults">
 <!-- Quick Route Filter Bar (Pill Chips) placed UNDER the filter inputs -->
 <div class="route-filter-wrapper fade-in">
     <div class="route-filter-label">
@@ -436,11 +439,15 @@
     </div>
 </div>
 
+</div>
+
 <?= $this->include('templates/footer') ?>
 
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
 <script src="<?= app_asset_url('js/queue-sync.js') ?>"></script>
+<script src="<?= app_asset_url('assets/js/record-filters.js') ?>"></script>
 <script>
+    var currentSharedTypeFilter = <?= json_encode($vehicle_type ?? '') ?>;
     var currentSharedDestFilter = '<?= esc(strtolower($destination ?? 'all')) ?>';
 
     function filterSharedSchedules(dest, btn) {
@@ -468,7 +475,9 @@
             }
         }
 
-        applySharedFilter();
+        if (destSelect) destSelect.dispatchEvent(new Event('change', {bubbles:true}));
+        if (window.sharedScheduleFilters) window.sharedScheduleFilters.submit();
+        else applySharedFilter();
     }
 
     function applySharedFilter() {
@@ -477,7 +486,9 @@
 
         rows.forEach(function(row) {
             var rowDest = (row.getAttribute('data-destination') || '').toLowerCase();
-            var matches = (currentSharedDestFilter === 'all' || !currentSharedDestFilter || rowDest === currentSharedDestFilter);
+            var rowType = (row.getAttribute('data-type') || '').toLowerCase();
+            var matches = (!currentSharedTypeFilter || rowType === currentSharedTypeFilter.toLowerCase())
+                && (currentSharedDestFilter === 'all' || !currentSharedDestFilter || rowDest === currentSharedDestFilter);
 
             if (matches) {
                 row.style.removeProperty('display');
@@ -538,11 +549,21 @@
         }
     }
 
+    window.sharedScheduleFilters = RecordFilters.init({
+        form: '#sharedFilterForm', results: '#sharedScheduleResults',
+        regions: ['#sharedScheduleResults', '#sharedScheduleActiveFilters'], text: ['#statTodayDepartures'],
+        updated: function(doc, url) {
+            currentSharedDestFilter = (url.searchParams.get('destination') || 'all').toLowerCase();
+            currentSharedTypeFilter = url.searchParams.get('type') || '';
+            applySharedFilter();
+        }
+    });
+
     // Initialize real-time sync (adaptive polling + WebSocket)
     QueueSync.init({
         apiUrl:        '<?= base_url('schedules/status') ?>',
         pollInterval:  4000,
-        refreshUrl:    window.location.href,
+        refreshUrl:    function() { return window.location.href; },
         tableSelector: '#sharedScheduleTableBody',
         customWSHandler: handleSharedLiveQueueUpdate,
         extraRefresh:  function(newDoc) {
