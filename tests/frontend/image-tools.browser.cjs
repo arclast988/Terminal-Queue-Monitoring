@@ -177,7 +177,9 @@ test('Cancel and Escape keep the previous staged photo and Use original preserve
   await input.setInputFiles({...file,name:'second.png'});await page.getByRole('button',{name:'Cancel',exact:true}).click();
   await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
   assert.equal(await input.evaluate(input=>input.files[0].name),'photo.png');
-  await input.setInputFiles({...file,name:'third.png'});await page.keyboard.press('Escape');
+  await input.setInputFiles({...file,name:'third.png'});
+  await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'visible'});
+  await page.keyboard.press('Escape');
   await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
   assert.equal(await input.evaluate(input=>input.files[0].name),'photo.png');assert.equal(await page.locator('dialog[open]').count(),0);assert.deepEqual(errors,[]);
 });
