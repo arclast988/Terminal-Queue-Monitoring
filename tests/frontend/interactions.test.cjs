@@ -231,13 +231,16 @@ test('lite completion remains smooth while the response and pending ownership fi
   assert.equal(h.timers.size,0);
 });
 
-test('navigation feedback starts immediately without deferring or intercepting the link', async () => {
+test('navigation starts immediately while visual feedback waits without intercepting the link', async () => {
   const h = loaded({ cores: 2, mobile: true });
   const link = h.document.body.appendChild(new h.Element('a'));
   link.href = 'https://terminal.test/schedules'; link.setAttribute('href', '/schedules');
   const event = h.document.emit('click', { target: link, button: 0 });
   await flush();
   assert.equal(event.defaultPrevented, false);
+  assert.equal(h.window.GlobalLoader.isVisible(), false);
+  assert.equal(h.window.GlobalLoader.isRunning(), true);
+  h.tick(500);
   assert.equal(h.window.GlobalLoader.isVisible(), true);
   assert.equal([...h.timers.values()].filter(timer => timer.interval).length, 0);
   h.window.emit('pagehide'); assert.equal(h.timers.size, 0);

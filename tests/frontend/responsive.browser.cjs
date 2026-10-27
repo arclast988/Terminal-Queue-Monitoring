@@ -300,13 +300,8 @@ test('management actions align with their headers and scroll as normal columns l
       }));
       assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
       if (width > 768) {
-        if (name === 'admin-vehicles') {
-          assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), 'Vehicle actions should stack like User Management: ' + JSON.stringify(targets));
-          assert.ok(targets.every(target => Math.abs(target.left - targets[0].left) <= 1), 'Vehicle actions should share their left edge');
-        }
-        if (targets.some(target => target.label === 'Delete')) {
-          assert.ok(Math.abs(targets[0].top - targets[1].top) <= 1, name + ' Edit and Delete should share a row: ' + JSON.stringify(targets));
-        }
+        assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' actions should stack vertically: ' + JSON.stringify(targets));
+        assert.ok(targets.every(target => Math.abs(target.left - targets[0].left) <= 1), name + ' actions should share their left edge');
       } else {
         const layout = await cell.evaluate(el => {
           const group = el.querySelector('.management-row-actions'), box = el.getBoundingClientRect(), style = getComputedStyle(el);

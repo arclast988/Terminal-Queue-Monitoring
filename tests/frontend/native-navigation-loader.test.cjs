@@ -59,10 +59,13 @@ test('client hints and iPad desktop profiles use the mobile navigation fallback'
   }
 });
 
-test('Chrome tabs use browser progress with desktop, narrow, and touch profiles', async () => {
+test('desktop tabs show delayed site progress, including narrow and touchscreen layouts', async () => {
   for (const options of [{}, { narrow: true }, { touchPoints: 10, mobileHint: false }]) {
     const h = loaded(options); const event = await navigate(h);
     assert.equal(event.defaultPrevented, false); assert.equal(visible(h), false);
+    assert.equal(h.window.GlobalLoader.isRunning(), true);
+    h.tick(499); assert.equal(visible(h), false);
+    h.tick(1); assert.equal(visible(h), true);
   }
 });
 
@@ -75,7 +78,7 @@ test('installed apps, embedded pages, WebViews and unknown browsers keep navigat
     { ua: android + ' Instagram 999.0' },
     { ua: 'UnknownMobileBrowser/1.0 Mobile' }
   ]) {
-    const h = loaded(options); await navigate(h); assert.equal(visible(h), true, JSON.stringify(options));
+    const h = loaded(options); await navigate(h); h.tick(500); assert.equal(visible(h), true, JSON.stringify(options));
   }
 });
 
@@ -84,7 +87,7 @@ test('fullscreen and minimal-ui app windows retain their own loading feedback', 
     const h = loaded({ ua: android });
     const original = h.window.matchMedia;
     h.window.matchMedia = query => query === '(display-mode: ' + displayMode + ')' ? { matches: true } : original(query);
-    await navigate(h); assert.equal(visible(h), true, displayMode);
+    await navigate(h); h.tick(500); assert.equal(visible(h), true, displayMode);
   }
 });
 
@@ -110,12 +113,12 @@ test('mobile native form submission preserves fields and button feedback without
 test('in-page fetch and XHR requests still receive loading feedback on mobile', async () => {
   const h = loaded({ ua: android });
   const response = { ok: true };
-  const request = h.window.fetch('/api/vehicles'); h.tick(251);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501);
   assert.equal(visible(h), true);
   h.requests[0].resolve(response); assert.equal(await request, response); h.tick(500);
   assert.equal(visible(h), false);
   const xhr = new h.window.XMLHttpRequest(); xhr.open('POST', '/api/vehicles'); xhr.send('original');
-  h.tick(251); assert.equal(visible(h), true);
+  h.tick(501); assert.equal(visible(h), true);
   assert.deepEqual(xhr.sendArgs, ['original']);
   xhr.emit('loadend'); h.tick(500); assert.equal(visible(h), false);
 });
@@ -123,7 +126,7 @@ test('in-page fetch and XHR requests still receive loading feedback on mobile', 
 test('a mobile navigation clears an existing site bar without changing the pending request', async () => {
   const h = loaded({ ua: android });
   const response = { ok: true };
-  const request = h.window.fetch('/api/vehicles'); h.tick(251); assert.equal(visible(h), true);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), true);
   await navigate(h); assert.equal(visible(h), false);
   h.requests[0].resolve(response); assert.equal(await request, response); h.tick(500);
   assert.equal(visible(h), false);
@@ -132,28 +135,43 @@ test('a mobile navigation clears an existing site bar without changing the pendi
 test('canceled links, downloads and excluded links remain untouched', async () => {
   for (const setup of [link => link.setAttribute('download', ''), link => link.setAttribute('data-no-loader', '')]) {
     const h = loaded(); const event = await navigate(h, setup);
-    assert.equal(event.defaultPrevented, false); assert.equal(visible(h), false);
+    h.tick(1000); assert.equal(event.defaultPrevented, false); assert.equal(visible(h), false);
   }
   const h = loaded(); h.document.addEventListener('click', event => event.preventDefault());
-  const event = await navigate(h); assert.equal(event.defaultPrevented, true); assert.equal(visible(h), false);
+  const event = await navigate(h); h.tick(1000); assert.equal(event.defaultPrevented, true); assert.equal(visible(h), false);
+});
+
+test('a fast desktop page change never flashes a bar after the page has left', async () => {
+  const h = loaded();
+  await navigate(h); h.tick(100); h.window.emit('pagehide'); h.tick(1000);
+  assert.equal(visible(h), false); assert.equal(h.timers.size, 0);
+});
+
+test('a background response cannot finish a pending desktop navigation indicator', async () => {
+  const h = loaded();
+  const request = h.window.fetch('/api/vehicles');
+  await navigate(h);
+  h.requests[0].resolve({ ok: true }); await request; h.tick(600);
+  assert.equal(visible(h), true);
+  h.window.emit('pagehide'); assert.equal(visible(h), false);
 });
 
 test('reinitialization and restored pages preserve one loader and usable feedback', async () => {
   const h = loaded({ ua: android }); h.load(loader);
   assert.equal(h.document.querySelectorAll('#global-progress-bar').length, 1);
   await navigate(h); h.window.emit('pageshow', { persisted: true });
-  const request = h.window.fetch('/api/vehicles'); h.tick(251); assert.equal(visible(h), true);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), true);
   h.requests[0].resolve({ ok: true }); await request; h.tick(500); assert.equal(visible(h), false);
 });
 
 test('late in-page requests cannot restart a second bar during browser navigation', async () => {
   const h = loaded({ ua: android });
   await navigate(h);
-  const request = h.window.fetch('/api/vehicles'); h.tick(251);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501);
   assert.equal(visible(h), false);
   h.requests[0].resolve({ ok: true }); await request;
   h.window.emit('pageshow', { persisted: true });
-  const next = h.window.fetch('/api/vehicles'); h.tick(251);
+  const next = h.window.fetch('/api/vehicles'); h.tick(501);
   assert.equal(visible(h), true);
   h.requests[1].resolve({ ok: true }); await next;
 });
@@ -167,7 +185,7 @@ test('programmatic navigation uses the same browser policy and abort restores fe
   const signal = new h.Element('signal');
   const event = navigation.emit('navigate', { destination: { sameDocument: false }, signal });
   await flush(); assert.equal(event.defaultPrevented, false);
-  const request = h.window.fetch('/api/vehicles'); h.tick(251); assert.equal(visible(h), false);
-  signal.emit('abort'); h.tick(251); assert.equal(visible(h), true);
+  const request = h.window.fetch('/api/vehicles'); h.tick(501); assert.equal(visible(h), false);
+  signal.emit('abort'); h.tick(501); assert.equal(visible(h), true);
   h.requests[0].resolve({ ok: true }); await request;
 });

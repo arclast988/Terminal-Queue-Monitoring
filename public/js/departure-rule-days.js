@@ -82,7 +82,7 @@
             if (n === selected) opt.selected = true;
             roundSelect.appendChild(opt);
         });
-        var single = choices.length === 1 && configured.length === 0;
+        var single = choices.length === 1;
         roundSelect.hidden = single;
         roundSelect.classList.toggle('d-none', single);
         if (display) {

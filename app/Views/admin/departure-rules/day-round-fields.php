@@ -50,7 +50,7 @@ $roundChoices = array_values(array_unique($roundChoices));
 sort($roundChoices);
 if ($allowNewRound && old('round_number') === null) $selectedRound = $newRound;
 if (!in_array($selectedRound, $roundChoices, true)) $selectedRound = $roundChoices[0] ?? 0;
-$singleRound = count($roundChoices) === 1 && !$configuredRounds;
+$singleRound = count($roundChoices) === 1;
 ?>
 <div class="departure-rule-schedule mb-4">
     <fieldset class="rule-days-fieldset" id="ruleDays" aria-describedby="ruleDaysSummary">

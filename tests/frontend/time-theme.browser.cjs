@@ -119,7 +119,10 @@ test('moving an edited departure rule offers the destination next round and subm
         assert.deepEqual(await data(), { route: '2', round: '1' });
         await page.locator('#route_id').selectOption('1');
         assert.deepEqual(await round.locator('option').allTextContents(), ['New round 2']);
-        assert.equal(await round.isVisible(), true);
+        assert.equal(await round.isVisible(), false);
+        assert.equal(await page.locator('#round_number_display').isVisible(), true);
+        assert.equal(await page.locator('#round_number_display').inputValue(), 'New round 2');
+        assert.equal(await page.locator('#round_number_label').getAttribute('for'), 'round_number_display');
         assert.deepEqual(await data(), { route: '1', round: '2' });
         assert.equal(await page.locator('#rule-contradiction-alert').isVisible(), false);
         assert.deepEqual(await round.locator('option').evaluateAll(options => options.map(option => option.value)), ['2']);
@@ -132,6 +135,16 @@ test('moving an edited departure rule offers the destination next round and subm
         assert.equal(await page.locator('#round_number_display').isVisible(), true);
         await page.locator('#route_id').selectOption('1');
         assert.deepEqual(await data(), { route: '1', round: '2' });
+        await page.goto(`${origin}/fixture/${name}?role=${role}`);
+        assert.equal(await round.locator('option').count(), 1);
+        assert.equal(await round.isVisible(), false);
+        assert.equal(await page.locator('#round_number_display').inputValue(), 'Round 1');
+        assert.equal((await data()).round, '1');
+        await page.goto(`${origin}/fixture/${name}?state=scoped-rounds&role=${role}`);
+        assert.equal(await round.isVisible(), true);
+        assert.equal(await page.locator('#round_number_display').isVisible(), false);
+        await round.selectOption('1');
+        assert.deepEqual(await data(), { route: '2', round: '1' });
         assert.deepEqual(errors, [], `${name} ${role} ${width}`);
       } finally { await page.close(); }
     }

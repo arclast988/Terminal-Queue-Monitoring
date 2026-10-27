@@ -16,9 +16,9 @@ const profiles = [
   { name: 'iphone-safari', ua: iphoneUA, width: 375, height: 812, touch: true, native: true },
   { name: 'ipad-desktop-profile', ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15', width: 1024, height: 768, touch: true, platform: 'MacIntel', touchPoints: 5, native: true },
   { name: 'android-tablet', ua: androidUA, width: 768, height: 1024, touch: true, native: true },
-  { name: 'desktop', ua: desktopUA, width: 1366, height: 768, native: true },
-  { name: 'wide-desktop', ua: desktopUA, width: 1920, height: 1080, native: true },
-  { name: 'narrow-desktop', ua: desktopUA, width: 320, height: 640, native: true },
+  { name: 'desktop', ua: desktopUA, width: 1366, height: 768, native: false },
+  { name: 'wide-desktop', ua: desktopUA, width: 1920, height: 1080, native: false },
+  { name: 'narrow-desktop', ua: desktopUA, width: 320, height: 640, native: false },
   { name: 'installed-android-app', ua: androidUA, width: 390, height: 844, touch: true, standalone: true, native: false },
   { name: 'android-webview', ua: androidUA.replace('Android 15;', 'Android 15; wv;'), width: 390, height: 844, touch: true, native: false },
   { name: 'ios-webview', ua: iphoneUA.replace(' Safari/604.1', ''), width: 375, height: 812, touch: true, native: false }
@@ -48,10 +48,10 @@ function report(kind,event){
 }
 document.addEventListener('DOMContentLoaded',function(){
   document.addEventListener('click',function(event){
-    if(event.target.closest('#navigate'))queueMicrotask(function(){report('link',event);});
+    if(event.target.closest('#navigate'))queueMicrotask(function(){report('link-start',event);setTimeout(function(){report('link',event);},600);});
   });
   document.addEventListener('submit',function(event){
-    queueMicrotask(function(){report('form',event);});
+    queueMicrotask(function(){report('form-start',event);setTimeout(function(){report('form',event);},600);});
   });
 });</script></body></html>`;
 }
@@ -127,12 +127,22 @@ function checkSnapshot(report, profile) {
   assert.ok(Math.abs(report.width - report.viewport) < 1);
   assert.equal(report.overflow, false); assert.equal(report.prevented, false);
 }
+function checkStart(report, profile) {
+  assert.equal(report.visible, false, profile.name + ' should not flash a bar immediately');
+  assert.equal(report.running, !profile.native, profile.name);
+  assert.equal(report.prevented, false);
+}
 test('phone, tablet, desktop and installed-app link navigation use the intended feedback', { timeout: 60000 }, async t => {
   for (const profile of profiles) {
     const { id, page, context, errors } = await open(t, profile);
     await click(page, '#navigate');
+    checkStart(await waitEntry(reports, id + ':link-start'), profile);
     const report = await waitEntry(reports, id + ':link'); checkSnapshot(report, profile);
     const navigation = await waitEntry(pending, id + ':/slow-link');
+    if(engine==='chromium' && profile.name==='desktop') {
+      fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
+      await page.screenshot({path:path.join(__dirname,'artifacts','desktop-navigation-loader.png')});
+    }
     assert.equal(navigation.method, 'GET'); navigation.res.end('Next page');
     await page.waitForURL(origin + '/slow-link?id=' + id);
     assert.deepEqual(errors, []);
@@ -140,10 +150,11 @@ test('phone, tablet, desktop and installed-app link navigation use the intended 
     await context.close();
   }
 });
-test('native form values and button feedback survive mobile-browser and app navigation', { timeout: 30000 }, async t => {
+test('native form values and button feedback survive mobile, desktop and app navigation', { timeout: 30000 }, async t => {
   for (const profile of [profiles[0], profiles[5], profiles[8]]) {
     const { id, page, context, errors } = await open(t, profile);
     await click(page, '#submit');
+    checkStart(await waitEntry(reports, id + ':form-start'), profile);
     const report = await waitEntry(reports, id + ':form'); checkSnapshot(report, profile);
     assert.equal(report.busy, 'true'); assert.equal(report.disabled, false);
     const submission = await waitEntry(pending, id + ':/slow-form');
@@ -151,6 +162,10 @@ test('native form values and button feedback survive mobile-browser and app navi
     const fields = new URLSearchParams(submission.body);
     assert.equal(fields.get('csrf_fixture'), 'unchanged');
     assert.equal(fields.get('vehicle'), 'fixture-vehicle'); assert.equal(fields.get('action'), 'save');
+    if(engine==='chromium' && profile.name==='desktop') {
+      fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
+      await page.screenshot({path:path.join(__dirname,'artifacts','desktop-form-loader.png')});
+    }
     submission.res.end('Saved'); await page.waitForURL(origin + '/slow-form?id=' + id);
     assert.deepEqual(errors, []); results.forms.push({ profile: profile.name, passed: true }); await context.close();
   }

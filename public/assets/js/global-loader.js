@@ -18,12 +18,13 @@
     var isRunning = false;
     var isVisible = false;
     var nativeNavigationPending = false;
+    var siteNavigationPending = false;
     var barEl = null;
     var innerEl = null;
     var pendingButtons = new Map();
     var pendingForms = new Set();
     var tableContainers = new Set();
-    var SHOW_DELAY = 250;
+    var SHOW_DELAY = 500;
     var MIN_VISIBLE = 100;
     var BUTTON_DELAY = 200;
     var TABLE_DELAY = 200;
@@ -50,12 +51,16 @@
 
     function preferNativeNavigationProgress() {
         // Browsers do not expose their loading-bar visibility to a page. This is
-        // a policy for known browser tabs, not native-bar detection.
+        // a policy for known mobile browser tabs, not native-bar detection.
         // Installed apps, embedded pages and identifiable WebViews keep feedback.
         if (isAppWindow() || (window.top && window.top !== window)) return false;
         var browser = window.navigator;
         var ua = browser.userAgent || '';
         if (/\bwv\b|FBAN|FBAV|Instagram|Line\/|WebView/i.test(ua)) return false;
+        var mobile = Boolean(browser.userAgentData && browser.userAgentData.mobile)
+            || /Android|iPhone|iPad|iPod/i.test(ua)
+            || (/Mac/i.test(browser.platform || '') && browser.maxTouchPoints > 1);
+        if (!mobile) return false;
         return /Chrome\/|Chromium\/|CriOS\/|Firefox\/|FxiOS\/|EdgA\/|EdgiOS\/|OPR\/|Opera|Safari\/|SamsungBrowser\//i.test(ua);
     }
 
@@ -65,7 +70,8 @@
             forceDone();
             return;
         }
-        start(true);
+        siteNavigationPending = true;
+        start();
     }
 
     function injectStyles() {
@@ -169,7 +175,7 @@
     }
 
     function done() {
-        if (!isRunning) return;
+        if (!isRunning || siteNavigationPending) return;
         isRunning = false;
         clearOperationTimers();
         clearCompletion();
@@ -191,6 +197,7 @@
     function forceDone() {
         clearOperationTimers();
         clearCompletion();
+        siteNavigationPending = false;
         if (barEl) barEl.classList.remove('is-active', 'is-done');
         setProgress(0);
         isRunning = isVisible = false;
@@ -199,7 +206,7 @@
     function finishRequest(epoch) {
         if (epoch !== requestEpoch) return;
         activeRequests = Math.max(0, activeRequests - 1);
-        if (activeRequests === 0) done();
+        if (activeRequests === 0 && !siteNavigationPending) done();
     }
 
     function isSilentRequest(url, headers) {

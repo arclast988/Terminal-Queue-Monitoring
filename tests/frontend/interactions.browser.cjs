@@ -66,7 +66,7 @@ test.after(async () => {
   fs.writeFileSync(path.join(dir, 'performance-' + engine + '.json'), JSON.stringify(metrics, null, 2));
 });
 async function pageFor(mode = 'full', mobile = false) {
-  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, reducedMotion: mode === 'reduced' ? 'reduce' : 'no-preference' });
+  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, reducedMotion: mode === 'reduced' ? 'reduce' : 'no-preference', ...(mobile ? {userAgent:'Mozilla/5.0 (Linux; Android 15; Mobile) AppleWebKit/537.36 Chrome/143.0.0.0 Mobile Safari/537.36'} : {}) });
   await context.addInitScript(({ mode }) => {
     Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { configurable: true, get: () => mode === 'lite' ? 2 : 8 });
     Object.defineProperty(Navigator.prototype, 'deviceMemory', { configurable: true, get: () => mode === 'lite' ? 2 : 8 });
@@ -235,7 +235,7 @@ test('a phone relies on browser navigation feedback without a second site bar', 
       const bar = document.querySelector('#global-progress-bar');
       navigator.sendBeacon('/navigation-state', JSON.stringify({ visible: GlobalLoader.isVisible(), mode: TerminalMotion.getMode(),
         display: getComputedStyle(bar).display, animation: getComputedStyle(bar.querySelector('.global-progress-bar-inner'), '::after').animationName }));
-    }, 80), { once: true });
+    }, 650), { once: true });
   });
   const box = await page.locator('#navigation').boundingBox(); assert.ok(box);
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
