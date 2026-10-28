@@ -470,6 +470,44 @@ test('commuter departure filters react on touch release and keep swipes and keyb
   } finally {await page.close();}
 });
 
+test('commuter departure filters preserve keyboard focus when the dialog opening frame is delayed', {timeout:30000}, async () => {
+  const page=await browser.newPage({viewport:{width:375,height:850}});
+  try {
+    await page.goto(`${origin}/fixture/guest?state=guest-route-rules`);
+    await page.locator('#routeAverageCard').click();
+    await page.waitForFunction(() => document.activeElement===document.getElementById('routeAverageClose'));
+    await page.locator('#routeAverageClose').click();
+    await page.evaluate(() => {
+      const requestFrame=window.requestAnimationFrame;
+      window.pendingRouteOpeningFrames=[];
+      window.requestAnimationFrame=callback=>window.pendingRouteOpeningFrames.push(callback);
+      try { window.openRouteAverageModal(); }
+      finally { window.requestAnimationFrame=requestFrame; }
+    });
+    const bato=page.locator('.rules-route-chip[data-route="bato"]');
+    await bato.focus();
+    await page.evaluate(() => window.pendingRouteOpeningFrames.splice(0).forEach(callback=>callback(performance.now())));
+    assert.equal(await bato.evaluate(el=>el===document.activeElement),true,'opening autofocus must preserve a control the user already focused');
+    await page.keyboard.press('Enter');
+    assert.equal(await page.locator('.rules-route-chip.active').getAttribute('data-route'),'bato');
+    assert.deepEqual(await page.locator('#routeAverageList .route-average-item:visible').evaluateAll(items=>items.map(el=>el.dataset.ruleDest)),['bato']);
+
+    await page.evaluate(() => {
+      window.closeRouteAverageModal();
+      const requestFrame=window.requestAnimationFrame;
+      const pending=[];
+      window.requestAnimationFrame=callback=>pending.push(callback);
+      try {
+        window.openRouteAverageModal();
+        window.closeRouteAverageModal();
+      } finally { window.requestAnimationFrame=requestFrame; }
+      pending.forEach(callback=>callback(performance.now()));
+    });
+    assert.equal(await page.locator('#routeAverageModal').isVisible(),false);
+    assert.equal(await page.locator('#routeAverageCard').evaluate(el=>el===document.activeElement),true,'a closed dialog must not reclaim focus on its opening frame');
+  } finally {await page.close();}
+});
+
 
 test('commuter departure filters keep the dialog and route controls steady with long lists', {timeout:90000}, async () => {
   for (const viewport of [{width:320,height:568},{width:375,height:667},{width:667,height:375},{width:768,height:900},{width:1280,height:900}]) {

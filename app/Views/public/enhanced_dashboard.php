@@ -2632,6 +2632,8 @@
         if (typeof scheduleFetchStatus === 'function') scheduleFetchStatus(0);
 
         window.requestAnimationFrame(function() {
+            // Keep focus on a dialog control the user reached before this frame.
+            if (!modal.classList.contains('is-open') || modal.contains(document.activeElement)) return;
             var closeButton = document.getElementById('routeAverageClose');
             if (closeButton) {
                 try {
