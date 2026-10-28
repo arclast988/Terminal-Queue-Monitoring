@@ -681,20 +681,23 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     await page.locator('#plate_number').fill('hold-1234');
     await routeInput.evaluate(input => {
       window.fixtureRouteClicks = 0;
-      window.fixtureRoutePointerDown = false;
+      window.fixtureRoutePointerDown = null;
       input.addEventListener('click', () => window.fixtureRouteClicks++);
       document.addEventListener('pointerdown', event => {
-        window.fixtureRoutePointerDown = event.target === input;
-      }, { capture: true, once: true });
-      input.scrollIntoView({ block: 'center', behavior: 'instant' });
+        const rect = input.getBoundingClientRect(), target = event.target;
+        window.fixtureRoutePointerDown = {
+          onInput: target === input,
+          target: target.tagName + (target.id ? '#' + target.id : '') + (target.className ? '.' + String(target.className).trim().replace(/\s+/g, '.') : ''),
+          pointer: { x: event.clientX, y: event.clientY },
+          input: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
+        };
+      }, { capture: true, once: true, passive: true });
     });
-    // Let Firefox commit the scroll before freezing the pointer coordinates.
-    // This remains below the 400ms debounce, which must fire during the hold.
-    await page.clock.runFor(50);
-    const rect = await routeInput.boundingBox();
-    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    // Let Playwright scroll and verify the visible hit target without clicking.
+    await routeInput.hover();
     await page.mouse.down();
-    assert.equal(await page.evaluate(() => window.fixtureRoutePointerDown), true, `${name} ${width}: the gesture must start on the route input`);
+    const pointerDown = await page.evaluate(() => window.fixtureRoutePointerDown);
+    assert.equal(pointerDown?.onInput, true, `${name} ${width}: the gesture must start on the route input: ` + JSON.stringify(pointerDown));
     const checking = nextCheck();
     await page.clock.runFor(400);
     await page.clock.resume();
