@@ -139,8 +139,16 @@ chown -R www-data:www-data "$APP_ROOT/writable" "$APP_ROOT/public/uploads" /tmp/
 chmod -R u=rwX,g=rwX,o=rX "$APP_ROOT/writable" "$APP_ROOT/public/uploads" 2>/dev/null || true
 
 echo "[DB] Checking schema and migrations..."
-php "$APP_ROOT/import_schema.php" || echo "[DB] Schema import check skipped or already complete."
-php "$APP_ROOT/spark" migrate --all 2>&1 || echo "[DB] Migrations already complete or unavailable."
+if ! php "$APP_ROOT/import_schema.php"; then
+    echo "[FATAL] Database initialization failed; startup stopped." >&2
+    exit 1
+fi
+# Spark's migrate command can catch migration exceptions and still exit zero.
+# The deployment runner checks both the result and the recorded migration history.
+if ! php "$APP_ROOT/deploy/migrate.php"; then
+    echo "[FATAL] Database migrations failed; startup stopped." >&2
+    exit 1
+fi
 if [ "${RUN_DEFAULT_SEEDERS:-false}" = "true" ] && [ "${CI_ENVIRONMENT:-production}" != "production" ]; then
     php "$APP_ROOT/spark" db:seed UserSeeder 2>&1 || echo "[DB] Initial seed not required."
 elif [ "${RUN_DEFAULT_SEEDERS:-false}" = "true" ]; then

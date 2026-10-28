@@ -255,18 +255,14 @@ class VehicleTypes extends BaseController
         $newSlug = strtolower((string) preg_replace('/[^a-z0-9]+/i', '_', $name));
         $newSlug = trim($newSlug, '_');
 
+        if ($newSlug === '' || strlen($newSlug) > 50) {
+            return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Enter a vehicle type name that produces a valid identifier of up to 50 characters.');
+        }
+
         // Check for duplicate slug on other types
         $existing = $types->where('slug', $newSlug)->where('id !=', $id)->first();
         if ($existing) {
             return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'A vehicle type with that name/slug already exists.');
-        }
-
-        $db = \Config\Database::connect();
-        $db->transStart();
-
-        if ($oldSlug !== $newSlug) {
-            $db->table('routes')->where('vehicle_type', $oldSlug)->update(['vehicle_type' => $newSlug]);
-            $db->table('vehicles')->where('type', $oldSlug)->update(['type' => $newSlug]);
         }
 
         $color = trim((string) $this->request->getPost('color'));
@@ -363,17 +359,40 @@ class VehicleTypes extends BaseController
             return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('info', 'No changes detected — nothing was updated.');
         }
 
-        $types->update($id, [
-            'name'  => $name,
-            'slug'  => $newSlug,
-            'color' => $color,
-            'icon'  => $icon,
-            'photo' => $photoRelPath,
-        ]);
+        $db = \Config\Database::connect();
+        $saved = false;
+        $committed = false;
+        $started = $db->transBegin();
+        if ($started) {
+            try {
+                // Updating the parent first lets ON UPDATE CASCADE rename its references.
+                $saved = $types->update($id, [
+                    'name'  => $name,
+                    'slug'  => $newSlug,
+                    'color' => $color,
+                    'icon'  => $icon,
+                    'photo' => $photoRelPath,
+                ]);
 
-        $db->transComplete();
+                if ($saved && $oldSlug !== $newSlug) {
+                    // Older installations without the constraints still need their references updated.
+                    $saved = $db->table('routes')->where('vehicle_type', $oldSlug)->update(['vehicle_type' => $newSlug])
+                        && $db->table('vehicles')->where('type', $oldSlug)->update(['type' => $newSlug]);
+                }
 
-        if ($db->transStatus() === false) {
+                if ($saved && $db->transStatus()) {
+                    $committed = $db->transCommit();
+                }
+                if (! $committed) {
+                    $db->transRollback();
+                }
+            } catch (\Throwable $e) {
+                $db->transRollback();
+                log_message('error', 'Vehicle type update failed: {message}', ['message' => $e->getMessage()]);
+            }
+        }
+
+        if (! $committed) {
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(500)->setJSON([
                     'success'    => false,
