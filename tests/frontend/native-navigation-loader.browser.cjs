@@ -166,7 +166,7 @@ test('native form values and button feedback survive mobile, desktop and app nav
     assert.deepEqual(errors, []); results.forms.push({ profile: profile.name, passed: true }); await context.close();
   }
 });
-test('desktop page and form arrivals fill the visible progress bar to the right before fading', {timeout:30000}, async t => {
+async function checkDesktopArrival(t, delayedPaint = false) {
   for (const [selector,destination,kind] of [['#navigate','/slow-link','link'],['#submit','/slow-form','form']]) {
     const profile=profiles.find(profile=>profile.name==='desktop');
     const {id,page,context,errors}=await open(t,profile);
@@ -181,13 +181,20 @@ test('desktop page and form arrivals fill the visible progress bar to the right 
         }else requestAnimationFrame(sample);
       }requestAnimationFrame(sample);
     });<\/script>`;
-    navigation.res.setHeader('Content-Type','text/html'); navigation.res.end(fixture(id).replace('</body>',probe+'</body>'));
+    const delay = delayedPaint ? '<style>.global-progress-bar-inner{transition-delay:300ms!important}</style>' : '';
+    navigation.res.setHeader('Content-Type','text/html'); navigation.res.end(fixture(id).replace('</body>',delay+probe+'</body>'));
     const finished=await waitEntry(reports,id+':finished');
     assert.ok(finished.right>=finished.width-1 && finished.opacity>0.8,JSON.stringify(finished));
     await page.waitForURL(origin+destination+'?id='+id);
     await page.waitForFunction(()=>!GlobalLoader.isVisible()&&!GlobalLoader.isRunning());
     assert.deepEqual(errors,[]); await context.close();
   }
+}
+test('desktop page and form arrivals fill the visible progress bar to the right before fading', {timeout:30000}, async t => {
+  await checkDesktopArrival(t);
+});
+test('desktop arrival completion waits for a delayed paint before fading', {timeout:30000}, async t => {
+  await checkDesktopArrival(t, true);
 });
 
 test('mobile in-page fetch and XHR retain local feedback without a redundant top bar', { timeout: 30000 }, async t => {

@@ -206,6 +206,50 @@ test('a visible desktop navigation resumes on arrival and fills completely befor
   assert.equal(arrival.window.sessionStorage.getItem('gl_navigation_progress'),null);
 });
 
+test('desktop completion waits for the rendered fill and opacity when the browser delays painting', () => {
+  const h = loaded();
+  h.window.GlobalLoader.start(true);
+  const bar = h.document.getElementById('global-progress-bar');
+  const inner = bar.querySelector('.global-progress-bar-inner');
+  let width = 200, opacity = 1;
+  bar.getBoundingClientRect = () => ({ width: 1366 });
+  inner.getBoundingClientRect = () => ({ width });
+  h.window.getComputedStyle = () => ({ opacity: String(opacity) });
+  h.window.GlobalLoader.done();
+  h.tick(500);
+  assert.equal(inner.style.transform, 'scaleX(1)');
+  assert.equal(bar.classList.contains('is-done'), false, 'a target of 100% is not a painted fill');
+  width = 1366; opacity = 0.5;
+  h.tick(64);
+  assert.equal(bar.classList.contains('is-done'), false, 'the full bar must also be visible');
+  opacity = 1;
+  h.tick(16);
+  assert.equal(bar.classList.contains('is-done'), false, 'leave a visible completion frame');
+  h.tick(34);
+  assert.equal(bar.classList.contains('is-done'), true);
+  h.tick(160);
+  assert.equal(visible(h), false);
+  assert.equal(h.timers.size, 0);
+});
+
+test('a new request cancels an older completion check and stalled painting has a bounded fallback', () => {
+  const h = loaded();
+  h.window.GlobalLoader.start(true);
+  const bar = h.document.getElementById('global-progress-bar');
+  const inner = bar.querySelector('.global-progress-bar-inner');
+  bar.getBoundingClientRect = () => ({ width: 1366 });
+  inner.getBoundingClientRect = () => ({ width: 200 });
+  h.window.getComputedStyle = () => ({ opacity: '1' });
+  h.window.GlobalLoader.done(); h.tick(200);
+  h.window.GlobalLoader.start(true); h.tick(1500);
+  assert.equal(visible(h), true);
+  assert.equal(h.window.GlobalLoader.isRunning(), true);
+  assert.equal(bar.classList.contains('is-done'), false);
+  h.window.GlobalLoader.done(); h.tick(1500);
+  assert.equal(visible(h), false);
+  assert.equal(h.timers.size, 0);
+});
+
 test('reinitialization and restored pages preserve one loader and usable feedback', async () => {
   const h = loaded({ ua: android }); h.load(loader);
   assert.equal(h.document.querySelectorAll('#global-progress-bar').length, 1);

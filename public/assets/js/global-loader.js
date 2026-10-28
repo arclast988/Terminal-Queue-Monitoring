@@ -231,18 +231,35 @@
         finishTimer = setTimeout(function () {
             finishTimer = null;
             setProgress(100);
-            // Finish the fill before fading. One layout read starts the CSS
-            // transition now, so its full-width frame can actually be painted.
-            if (innerEl && typeof innerEl.getBoundingClientRect === 'function') innerEl.getBoundingClientRect();
-            fadeTimer = setTimeout(function () {
+            var mode = motionMode();
+            var fillStartedAt = Date.now();
+            var fillDuration = mode === 'reduced' ? 0 : mode === 'lite' ? 100 : 160;
+            function fade() {
                 barEl.classList.add('is-done');
                 fadeTimer = setTimeout(function () {
                     fadeTimer = null;
                     barEl.classList.remove('is-active', 'is-done');
                     isVisible = false;
                     setProgress(0);
-                }, motionMode() === 'reduced' ? 0 : motionMode() === 'lite' ? 100 : 160);
-            }, motionMode() === 'reduced' ? 0 : (motionMode() === 'lite' ? 100 : 160) + 34);
+                }, mode === 'reduced' ? 0 : mode === 'lite' ? 100 : 160);
+            }
+            function waitForFill() {
+                finishTimer = null;
+                var filled = mode === 'reduced' || document.hidden;
+                if (!filled && innerEl && typeof innerEl.getBoundingClientRect === 'function'
+                    && typeof barEl.getBoundingClientRect === 'function') {
+                    var bar = barEl.getBoundingClientRect();
+                    filled = bar.width > 0 && innerEl.getBoundingClientRect().width >= bar.width - 1
+                        && Number(window.getComputedStyle(barEl).opacity) >= 0.99;
+                } else if (!filled) filled = Date.now() - fillStartedAt >= fillDuration;
+                // WebKit may defer a new document's first transition. Wait for
+                // its rendered fill, then leave a painted frame before fading.
+                // The deadline also settles feedback in a suspended document.
+                if (filled || Date.now() - fillStartedAt >= 1000) {
+                    fadeTimer = setTimeout(fade, mode === 'reduced' || document.hidden ? 0 : 34);
+                } else finishTimer = setTimeout(waitForFill, 16);
+            }
+            waitForFill();
         }, wait);
     }
 
