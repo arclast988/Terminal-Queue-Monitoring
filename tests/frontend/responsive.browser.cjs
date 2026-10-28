@@ -673,6 +673,7 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     await page.locator('#route_id').selectOption('');
     const routeInput = page.locator('#route_id + input');
     const routeWrapper = page.locator('#route_id').locator('..');
+    await page.evaluate(() => document.fonts.ready);
     // Freeze the real debounce until the pointer is down, then let its actual
     // checking UI and the server's longest error arrive before pointerup.
     await page.clock.install();
@@ -680,12 +681,20 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     await page.locator('#plate_number').fill('hold-1234');
     await routeInput.evaluate(input => {
       window.fixtureRouteClicks = 0;
+      window.fixtureRoutePointerDown = false;
       input.addEventListener('click', () => window.fixtureRouteClicks++);
+      document.addEventListener('pointerdown', event => {
+        window.fixtureRoutePointerDown = event.target === input;
+      }, { capture: true, once: true });
       input.scrollIntoView({ block: 'center', behavior: 'instant' });
     });
+    // Let Firefox commit the scroll before freezing the pointer coordinates.
+    // This remains below the 400ms debounce, which must fire during the hold.
+    await page.clock.runFor(50);
     const rect = await routeInput.boundingBox();
     await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
     await page.mouse.down();
+    assert.equal(await page.evaluate(() => window.fixtureRoutePointerDown), true, `${name} ${width}: the gesture must start on the route input`);
     const checking = nextCheck();
     await page.clock.runFor(400);
     await page.clock.resume();
