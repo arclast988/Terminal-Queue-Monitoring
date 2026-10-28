@@ -60,11 +60,19 @@ final class AppManifestThemeTest extends CIUnitTestCase
         $this->assertSame($first['id'], $updated['id']);
     }
 
-    public function testPreviousManifestAddressStillWorksForExistingInstallations(): void
+    public function testExistingInstallationsIgnoreObsoleteRoleAndThemeParameters(): void
     {
-        $response = $this->withSession(['role'=>'staff', 'isLoggedIn'=>true])
-            ->get('/app-manifest.webmanifest?role=guest&theme=2563eb')->response();
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('#2563eb', json_decode($response->getBody(), true)['theme_color']);
+        $template = json_decode(file_get_contents(APPPATH.'Config/app.webmanifest'), true);
+        foreach (['/manifest.webmanifest', '/app-manifest.webmanifest'] as $address) {
+            foreach (['guest'=>'#2563eb','staff'=>'#0d9488','admin'=>'#7040b0','super_admin'=>'#7040b0'] as $role=>$expected) {
+                $previousRole = $role === 'guest' ? 'admin' : 'guest';
+                $response = $this->withSession(['role'=>$role, 'isLoggedIn'=>$role!=='guest'])
+                    ->get($address.'?role='.$previousRole.'&theme=2563eb')->response();
+                $manifest = json_decode($response->getBody(), true);
+                $this->assertSame(200, $response->getStatusCode());
+                $this->assertSame($expected, $manifest['theme_color'], $address.' '.$role);
+                foreach (['id','start_url','scope','icons','display'] as $key) $this->assertSame($template[$key], $manifest[$key]);
+            }
+        }
     }
 }
