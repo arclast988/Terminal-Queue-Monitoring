@@ -125,7 +125,10 @@ select.form-select {
                         </button>
                         <span id="plate-validation-icon" class="plate-validation-icon" style="display: none;"></span>
                     </div>
-                    <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
+                    <div class="plate-validation-slot">
+                        <div class="plate-validation-feedback plate-validation-size" aria-hidden="true"><i class="bi bi-exclamation-triangle me-1"></i>This plate number is already registered. Please enter a different plate number.</div>
+                        <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
+                    </div>
                     <div class="form-text-modern">Unique identifier (required)</div>
                 </div>
                 <div class="col-md-4 mb-3">
@@ -457,6 +460,20 @@ function updateEditTypeFallback(select) {
     }
     .plate-col-wrapper {
         position: relative;
+    }
+    /* Keep async validation from moving controls during a click or tap. */
+    .plate-validation-slot {
+        display: grid;
+        min-width: 0;
+    }
+    .plate-validation-slot > .plate-validation-feedback {
+        grid-area: 1 / 1;
+        align-self: start;
+    }
+    .plate-validation-size {
+        visibility: hidden;
+        pointer-events: none;
+        user-select: none;
     }
     .plate-validation-feedback {
         position: relative !important;

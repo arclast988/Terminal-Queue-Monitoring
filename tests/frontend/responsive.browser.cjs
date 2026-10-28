@@ -11,7 +11,8 @@ const root = path.resolve(__dirname, '../..');
 const engine = process.env.TQ_BROWSER || 'chromium';
 const managementPages = ['admin-users', 'admin-vehicles', 'admin-routes', 'admin-terminals', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
 const routeFormPages = ['admin-route-create', 'admin-route-edit'];
-const pages = ['login', 'forgot', 'reset', 'verify', 'guest', 'fares', 'schedules', 'search', 'staff-queue', 'staff-schedules', 'staff-password', 'admin-schedules', ...managementPages, ...routeFormPages];
+const vehicleFormPages = ['admin-vehicle-edit'];
+const pages = ['login', 'forgot', 'reset', 'verify', 'guest', 'fares', 'schedules', 'search', 'staff-queue', 'staff-schedules', 'staff-password', 'admin-schedules', ...managementPages, ...routeFormPages, ...vehicleFormPages];
 const authPages = new Set(pages.slice(0, 4));
 const cache = new Map();
 const report = { engine, fixtures: 'production PHP views with seeded helper/data values', cases: [], beforeAfter: {} };
@@ -22,7 +23,7 @@ function fixture(name, long, baseline, state = '') {
   if (!cache.has(key)) {
     const rendered = execFileSync(phpBinary(), [path.join(__dirname, 'render-responsive-fixture.php'), name, long ? 'long' : 'normal', 'theme', state], { encoding: 'utf8', maxBuffer: 2 * 1024 * 1024 });
     let scripts;
-    if (authPages.has(name) || managementPages.includes(name) || routeFormPages.includes(name)) scripts = scriptsOf(rendered);
+    if (authPages.has(name) || managementPages.includes(name) || routeFormPages.includes(name) || vehicleFormPages.includes(name)) scripts = scriptsOf(rendered);
     else if (!name.startsWith('staff') && !name.startsWith('admin')) {
       // Keep actual guest navigation/announcement controls; isolate realtime reads.
       const header = fs.readFileSync(path.join(root, 'app/Views/templates/guest_header.php'), 'utf8');
@@ -645,6 +646,83 @@ test('vehicle autocomplete validation stays closed until the field is used and p
     assert.deepEqual(errors, []); assert.deepEqual(posts, []);
     if (width === 320 && mode === 'full') await screenshot(page, 'vehicle-autocomplete-validation', false);
     report.cases.push({ page: 'vehicle autocomplete validation and payload', width, height, mode, passed: true });
+    await context.close();
+  }
+});
+
+test('vehicle autocomplete validation preserves a pointer gesture while plate feedback changes', { timeout: 60000 }, async t => {
+  const duplicate = 'This plate number is already registered. Please enter a different plate number.';
+  for (const name of ['admin-vehicles', 'admin-vehicle-edit']) for (const width of [320, 1280]) {
+    const { page, context, errors } = await open(t, name, width, width === 320 ? 568 : 800, '', 'reduced');
+    const checks = [], arrivals = [];
+    const nextCheck = () => checks.length ? Promise.resolve(checks.shift()) : new Promise(resolve => arrivals.push(resolve));
+    await page.route('**/admin/vehicles/check-plate?**', route => {
+      if (arrivals.length) arrivals.shift()(route);
+      else checks.push(route);
+    });
+    await page.addScriptTag({ path: path.join(root, 'public/assets/js/autocomplete-search.js') });
+    if (name === 'admin-vehicles') {
+      await page.locator('[data-bs-target="#registerVehicleModal"]').click();
+      await page.waitForFunction(() => document.querySelector('#registerVehicleModal').dataset.fixtureShown === '1');
+    }
+    const form = page.locator(name === 'admin-vehicles' ? '#registerVehicleForm' : '#editVehicleForm');
+    await page.locator('#operator_name').fill('fixture operator');
+    await page.locator('#driver_name').fill('Fixture Driver');
+    await page.locator('#capacity').fill('16');
+    await page.locator('#type').selectOption('jeepney');
+    await page.locator('#route_id').selectOption('');
+    const routeInput = page.locator('#route_id + input');
+    const routeWrapper = page.locator('#route_id').locator('..');
+    // Freeze the real debounce until the pointer is down, then let its actual
+    // checking UI and the server's longest error arrive before pointerup.
+    await page.clock.install();
+    await page.clock.pauseAt(new Date(Date.now() + 1000));
+    await page.locator('#plate_number').fill('hold-1234');
+    await routeInput.evaluate(input => {
+      window.fixtureRouteClicks = 0;
+      input.addEventListener('click', () => window.fixtureRouteClicks++);
+      input.scrollIntoView({ block: 'center', behavior: 'instant' });
+    });
+    const rect = await routeInput.boundingBox();
+    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    await page.mouse.down();
+    const checking = nextCheck();
+    await page.clock.runFor(400);
+    await page.clock.resume();
+    const request = await checking;
+    assert.equal(await page.locator('#plate-validation-feedback').textContent(), 'Checking availability...');
+    await request.fulfill({ json: { available: false, message: duplicate } });
+    await page.waitForFunction(text => document.getElementById('plate-validation-feedback').textContent === text, duplicate);
+    await page.mouse.up();
+    assert.equal(await page.evaluate(() => window.fixtureRouteClicks), 1, `${name} ${width}: plate feedback moved the route input during the click`);
+    await routeWrapper.locator('.autocomplete-dropdown').waitFor({ state: 'visible', timeout: 3000 });
+    await routeWrapper.locator('.autocomplete-item[data-value="1"]').click();
+    assert.equal(await page.locator('#route_id').inputValue(), '1');
+    const feedbackBounds = await page.locator('#plate-validation-feedback').evaluate(el => {
+      const text = document.createRange(); text.selectNodeContents(el);
+      const content = text.getBoundingClientRect(), box = el.getBoundingClientRect();
+      return { fits: content.left >= box.left && content.right <= box.right && content.bottom <= box.bottom, text: el.textContent };
+    });
+    assert.deepEqual(feedbackBounds, { fits: true, text: duplicate }, `${name} ${width}: the wrapped error must stay readable`);
+    assert.equal(await page.locator('.plate-validation-size').getAttribute('aria-hidden'), 'true');
+    const available = nextCheck();
+    await page.locator('#plate_number').fill('free-5678');
+    await (await available).fulfill({ json: { available: true } });
+    await page.waitForFunction(() => document.getElementById('plate-validation-feedback').classList.contains('feedback-success'));
+    await form.evaluate(el => {
+      window.fixturePlatePayload = null;
+      el.addEventListener('submit', event => {
+        event.preventDefault();
+        const values = new FormData(el);
+        window.fixturePlatePayload = Object.fromEntries(['csrf_fixture', 'plate_number', 'operator_name', 'driver_name', 'type', 'route_id', 'capacity', 'status'].map(key => [key, values.get(key)]));
+      });
+    });
+    assert.equal(await form.evaluate(el => el.checkValidity()), true);
+    await form.locator('button[type="submit"]').click();
+    await page.waitForFunction(() => window.fixturePlatePayload !== null);
+    assert.deepEqual(await page.evaluate(() => window.fixturePlatePayload), { csrf_fixture: 'unchanged', plate_number: 'FREE-5678', operator_name: 'FIXTURE OPERATOR', driver_name: 'Fixture Driver', type: 'jeepney', route_id: '1', capacity: '16', status: 'active' });
+    assert.deepEqual(errors, []);
+    report.cases.push({ page: 'vehicle plate feedback gesture', name, width, passed: true });
     await context.close();
   }
 });
