@@ -34,7 +34,7 @@ final class AppManifestThemeTest extends CIUnitTestCase
         parent::tearDown();
     }
 
-    public function testManifestUsesSavedRoleColorsAndPreservesTheInstalledAppIdentity(): void
+    public function testInstalledAppUsesSystemNavigationColorAndPreservesItsIdentity(): void
     {
         $template = json_decode(file_get_contents(APPPATH.'Config/app.webmanifest'), true);
         foreach (['guest'=>'#2563eb','staff'=>'#0d9488','admin'=>'#7040b0','super_admin'=>'#7040b0'] as $role=>$expected) {
@@ -43,20 +43,22 @@ final class AppManifestThemeTest extends CIUnitTestCase
             $this->assertSame(200, $response->getStatusCode());
             $this->assertStringContainsString('application/manifest+json', $response->getHeaderLine('Content-Type'));
             $this->assertStringContainsString('no-store', $response->getHeaderLine('Cache-Control'));
-            $this->assertSame($expected, $manifest['theme_color']);
+            $this->assertArrayNotHasKey('theme_color', $manifest);
+            $this->assertSame($expected, app_browser_theme_color($role));
             foreach (['id','start_url','scope','icons','display'] as $key) $this->assertSame($template[$key], $manifest[$key]);
         }
     }
 
-    public function testOriginalInstallAddressReflectsThemeChangesWithoutChangingItsUrl(): void
+    public function testLivePageThemeChangesDoNotBakeANewNavigationColorIntoTheApp(): void
     {
         $this->withSession(['role'=>'guest']);
         $first = json_decode($this->get('/manifest.webmanifest')->response()->getBody(), true);
         $this->themeDb->table('system_settings')->where('setting_key', 'theme_guest_primary')->update(['setting_value'=>'#7040b0']);
         get_all_system_settings(true);
         $updated = json_decode($this->get('/manifest.webmanifest')->response()->getBody(), true);
-        $this->assertSame('#2563eb', $first['theme_color']);
-        $this->assertSame('#7040b0', $updated['theme_color']);
+        $this->assertArrayNotHasKey('theme_color', $first);
+        $this->assertArrayNotHasKey('theme_color', $updated);
+        $this->assertSame('#7040b0', app_browser_theme_color('guest'));
         $this->assertSame($first['id'], $updated['id']);
     }
 
@@ -70,7 +72,8 @@ final class AppManifestThemeTest extends CIUnitTestCase
                     ->get($address.'?role='.$previousRole.'&theme=2563eb')->response();
                 $manifest = json_decode($response->getBody(), true);
                 $this->assertSame(200, $response->getStatusCode());
-                $this->assertSame($expected, $manifest['theme_color'], $address.' '.$role);
+                $this->assertArrayNotHasKey('theme_color', $manifest, $address.' '.$role);
+                $this->assertSame($expected, app_browser_theme_color($role));
                 foreach (['id','start_url','scope','icons','display'] as $key) $this->assertSame($template[$key], $manifest[$key]);
             }
         }
