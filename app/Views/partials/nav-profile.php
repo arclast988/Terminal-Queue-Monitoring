@@ -96,7 +96,6 @@ SVG;
             <div class="profile-header-meta">
                 <div class="profile-header-name-row">
                     <strong class="profile-user-fullname"><?= esc($fullName) ?></strong>
-                    <span class="profile-online-badge"><span class="online-dot"></span> Online</span>
                 </div>
                 <div class="profile-user-handle"><?= str_starts_with($username, '@') ? esc($username) : (str_contains($username, '@') ? esc($username) : '@' . esc($username)) ?></div>
                 <div class="profile-role-badge-row">
