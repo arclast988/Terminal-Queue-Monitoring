@@ -30,7 +30,7 @@ final class ProfileDropdownTest extends CIUnitTestCase
         $this->assertStringContainsString('profile-dropdown-card', $html);
         $this->assertStringContainsString('Super Admin', $html);
         $this->assertStringContainsString('@admin', $html);
-        $this->assertStringContainsString('Online', $html);
+        $this->assertStringNotContainsString('profile-online-badge', $html);
 
         // Admin should NOT have Change Password in dropdown (dispatcher-only)
         $this->assertStringContainsString('Activity Logs', $html);
@@ -98,6 +98,7 @@ final class ProfileDropdownTest extends CIUnitTestCase
         // Check Dropdown
         $this->assertStringContainsString('Dispatcher', $html);
         $this->assertStringContainsString('@staff', $html);
+        $this->assertStringNotContainsString('profile-online-badge', $html);
         $this->assertStringContainsString('Queue Management', $html);
         $this->assertStringContainsString('Change Password', $html);
         $this->assertStringContainsString('change-password', $html);
