@@ -168,6 +168,7 @@ if ! command -v nginx >/dev/null 2>&1; then
 fi
 
 RUNTIME_NGINX_CONFIG="/tmp/jeepneynvans-nginx.conf"
+echo "[NGINX] Runtime: $(nginx -v 2>&1)"
 sed \
     -e "s/__RAILWAY_PORT__/${PORT}/g" \
     -e "s/__WEBSOCKET_PORT__/${WEBSOCKET_PORT}/g" \
