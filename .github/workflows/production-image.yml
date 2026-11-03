@@ -1,4 +1,4 @@
-name: Production PHP image
+name: Production PHP and Nginx image
 
 on:
   push:
@@ -33,6 +33,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build the production image
         run: docker build --pull -t jeepneynvans-production:test .
+      - name: Verify the pinned stable Nginx release
+        run: |
+          expected_version="$(sed -n 's/^ARG NGINX_VERSION=//p' Dockerfile)"
+          actual_version="$(docker run --rm --entrypoint nginx jeepneynvans-production:test -v 2>&1)"
+          echo "$actual_version"
+          test "$actual_version" = "nginx version: nginx/$expected_version"
       - name: Verify patched PHP and required extensions
         run: |
           docker run --rm --entrypoint php jeepneynvans-production:test -r '
@@ -65,6 +71,9 @@ jobs:
           test "$ready" = 1
           curl --fail --silent --show-error --header 'Host: production.example.test' --header 'X-Forwarded-Proto: https' --output /dev/null http://127.0.0.1:8080/
           curl --fail --silent --show-error --header 'Host: production.example.test' --header 'X-Forwarded-Proto: https' --output /dev/null http://127.0.0.1:8080/login
+          docker exec --user www-data production-smoke sh -c \
+            'printf "nginx-upload-smoke-test\n" > /app/public/uploads/avatars/nginx-smoke.txt'
+          test "$(curl --fail --silent --show-error http://127.0.0.1:8080/uploads/avatars/nginx-smoke.txt)" = "nginx-upload-smoke-test"
           python3 - <<'PY'
           import socket
           with socket.create_connection(('127.0.0.1', 8080), timeout=10) as connection:
