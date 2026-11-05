@@ -14,8 +14,14 @@
         var root = container;
         var layers = root.querySelectorAll('img');
         if (layers.length < 2) return function () {};
-        var slides = config.slides.slice();
+        var mode = config.mode || 'slideshow';
+        var slides = mode === 'none' ? [] : config.slides.slice();
         var defaults = config.defaults;
+        root.style.display = mode === 'none' ? 'none' : '';
+        if (mode === 'none') {
+            layers[0].removeAttribute('src');
+            layers[1].removeAttribute('src');
+        }
         var preference = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
         var current = 0;
         var index = 0;
@@ -30,7 +36,7 @@
         var incomingImage = null;
 
         function canAnimate() {
-            return active && !document.hidden && !(preference && preference.matches)
+            return active && mode !== 'none' && !document.hidden && !(preference && preference.matches)
                 && (!window.TerminalMotion || window.TerminalMotion.getMode() === 'full');
         }
 
@@ -102,14 +108,27 @@
             var data = /** @type {CustomEvent<import('../../../types/interaction-contracts').AuthBackgroundUpdate>} */ (event).detail || {};
             if (data.category && data.category !== 'background' && data.category !== 'all') return;
             if (!data.app_bg_mode && !data.app_bg_slideshow && !data.app_background_image) return;
-            var single = data.app_bg_mode === 'single';
+            var nextMode = data.app_bg_mode;
+            if (nextMode !== 'none' && nextMode !== 'single' && nextMode !== 'slideshow') nextMode = mode;
+            if (nextMode === 'none') {
+                cancelPending();
+                mode = 'none';
+                slides = [];
+                root.style.display = 'none';
+                layers[0].removeAttribute('src');
+                layers[1].removeAttribute('src');
+                return;
+            }
+            var single = nextMode === 'single';
             var urls = single ? [data.app_background_image || defaults[0]]
                 : (Array.isArray(data.app_bg_slideshow) && data.app_bg_slideshow.length ? data.app_bg_slideshow : defaults);
             var valid = urls.filter(function (url) { return typeof url === 'string' && url.length > 0; });
             if (!valid.length) return;
             cancelPending();
+            mode = nextMode;
             slides = valid;
             current = index = 0;
+            root.style.display = '';
             layers[0].src = slides[0];
             layers[0].classList.add('is-active');
             layers[1].classList.remove('is-active');

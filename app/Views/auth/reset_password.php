@@ -55,11 +55,12 @@
 
         <?php
         $bgMode = app_bg_mode();
+        $useNone = ($bgMode === 'none');
         $useSingle = ($bgMode === 'single');
         $defaultAuthSlides = array_values(app_bg_slideshow());
-        $authSlides = $useSingle
+        $authSlides = $useNone ? [] : ($useSingle
             ? [app_has_custom_bg() ? app_bg_image() : ($defaultAuthSlides[0] ?? app_bg_image())]
-            : $defaultAuthSlides;
+            : $defaultAuthSlides);
         ?>
         body.auth-page::after { content: none !important; display: none !important; }
         .auth-bg-slideshow {
@@ -242,8 +243,8 @@
     <?= $this->include('partials/interaction_assets') ?>
 </head>
 <body class="auth-page">
-    <div class="auth-bg-slideshow" id="authBgSlideshow" aria-hidden="true" style="opacity: <?= $useSingle ? '0.28' : '0.22' ?>">
-        <img class="auth-bg-slide is-active" src="<?= esc($authSlides[0], 'attr') ?>" alt="" decoding="async">
+    <div class="auth-bg-slideshow" id="authBgSlideshow" aria-hidden="true" style="opacity: <?= $useSingle ? '0.28' : '0.22' ?>;<?= $useNone ? ' display: none;' : '' ?>">
+        <img class="auth-bg-slide is-active"<?php if (!$useNone): ?> src="<?= esc($authSlides[0], 'attr') ?>"<?php endif; ?> alt="" decoding="async">
         <img class="auth-bg-slide" alt="" decoding="async">
     </div>
 

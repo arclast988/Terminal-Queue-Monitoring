@@ -1188,7 +1188,9 @@
                 slides = [bgUrl];
             }
 
-            if (bgMode === 'single' || slides.length <= 1) {
+            if (bgMode === 'none') {
+                liveBgRules = 'body:not(.auth-page)::before, body::after { content: none !important; background-image: none; animation: none !important; }';
+            } else if (bgMode === 'single' || slides.length <= 1) {
                 var singleTarget = bgUrl || (slides.length > 0 ? slides[0] : '');
                 liveBgRules += `
                     body:not(.auth-page)::before {

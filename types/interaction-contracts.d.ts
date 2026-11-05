@@ -2,12 +2,13 @@
 export type MotionMode = 'full' | 'lite' | 'reduced';
 export interface TerminalMotionAPI { getMode(): MotionMode; }
 export interface AuthBackgroundConfig {
+  mode?: 'slideshow' | 'single' | 'none';
   slides: readonly string[];
   defaults: readonly string[];
 }
 export interface AuthBackgroundUpdate {
   category?: string;
-  app_bg_mode?: string;
+  app_bg_mode?: 'slideshow' | 'single' | 'none';
   app_background_image?: string;
   app_bg_slideshow?: string[];
 }

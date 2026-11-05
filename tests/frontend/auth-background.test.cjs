@@ -22,11 +22,52 @@ function fixture(options = {}) {
   }
   h.load('public/assets/js/interaction-motion.js');
   h.load('public/assets/js/auth-background.js');
-  const config = { slides: ['/first.webp', '/second.webp', '/third.webp'], defaults: ['/default.webp'] };
+  const config = { mode: options.mode || 'slideshow', slides: ['/first.webp', '/second.webp', '/third.webp'], defaults: ['/default.webp'] };
   const dispose = h.window.TerminalAuthBackground.mount(config);
   return { ...h, root, layers, config, dispose };
 }
 function branding(h, data) { h.document.emit('pttm:branding-applied', { detail: data }); }
+
+test('plain mode starts without images or slideshow work and stays disabled across lifecycle events', () => {
+  const h = fixture({ mode: 'none' });
+  assert.equal(h.root.style.display, 'none');
+  for (const layer of h.layers) assert.equal(layer.getAttribute('src'), null);
+  assert.equal(h.timers.size, 0);
+  h.document.emit('visibilitychange');
+  h.window.emit('pagehide', { persisted: true });
+  h.window.emit('pageshow', { persisted: true });
+  branding(h, { category: 'identity', app_bg_mode: 'single', app_background_image: '/ignored.webp' });
+  h.tick(60000);
+  assert.equal(h.root.style.display, 'none');
+  assert.equal(h.timers.size, 0);
+  h.dispose();
+});
+
+test('plain mode cancels in-flight photos and supports switching back to single and slideshow modes', () => {
+  const h = fixture();
+  h.tick(6000);
+  const staleLoad = h.layers[1].onload;
+  branding(h, { category: 'background', app_bg_mode: 'none' });
+  staleLoad();
+  h.tick(60000);
+  assert.equal(h.root.style.display, 'none');
+  for (const layer of h.layers) assert.equal(layer.getAttribute('src'), null);
+  assert.equal(h.timers.size, 0);
+  branding(h, { category: 'background', app_bg_mode: 'single', app_background_image: '/custom.webp' });
+  assert.equal(h.root.style.display, '');
+  assert.equal(h.layers[0].src, '/custom.webp');
+  assert.equal(h.root.style.opacity, '0.28');
+  assert.equal(h.timers.size, 0);
+  branding(h, { category: 'all', app_bg_mode: 'none' });
+  branding(h, { category: 'all', app_bg_mode: 'slideshow', app_bg_slideshow: ['/new.webp', '/next.webp'] });
+  assert.equal(h.root.style.display, '');
+  assert.equal(h.layers[0].src, '/new.webp');
+  assert.equal(h.root.style.opacity, '0.22');
+  assert.equal(h.timers.size, 1);
+  h.tick(6000);
+  assert.equal(h.layers[1].src, '/next.webp');
+  h.dispose();
+});
 
 test('constrained and reduced modes retain the photo and live branding without slideshow wakeups', () => {
   for (const options of [{ cores: 2 }, { memory: 2 }, { reduced: true }]) {

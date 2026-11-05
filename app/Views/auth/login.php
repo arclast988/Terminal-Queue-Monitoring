@@ -75,11 +75,12 @@
         /* Image layers keep the first photo visible even when animation is unavailable. */
         <?php
         $bgMode = app_bg_mode();
+        $useNone = ($bgMode === 'none');
         $useSingle = ($bgMode === 'single');
         $defaultLoginSlides = array_values(app_bg_slideshow());
-        $loginSlides = $useSingle
+        $loginSlides = $useNone ? [] : ($useSingle
             ? [app_has_custom_bg() ? app_bg_image() : ($defaultLoginSlides[0] ?? app_bg_image())]
-            : $defaultLoginSlides;
+            : $defaultLoginSlides);
         ?>
         body.auth-page::after { content: none !important; display: none !important; }
         .auth-bg-slideshow {
@@ -700,8 +701,8 @@
     <?= $this->include('partials/interaction_assets') ?>
 </head>
 <body class="auth-page">
-    <div class="auth-bg-slideshow" id="authBgSlideshow" aria-hidden="true" style="opacity: <?= $useSingle ? '0.28' : '0.22' ?>">
-        <img class="auth-bg-slide is-active" src="<?= esc($loginSlides[0], 'attr') ?>" alt="" decoding="async">
+    <div class="auth-bg-slideshow" id="authBgSlideshow" aria-hidden="true" style="opacity: <?= $useSingle ? '0.28' : '0.22' ?>;<?= $useNone ? ' display: none;' : '' ?>">
+        <img class="auth-bg-slide is-active"<?php if (!$useNone): ?> src="<?= esc($loginSlides[0], 'attr') ?>"<?php endif; ?> alt="" decoding="async">
         <img class="auth-bg-slide" alt="" decoding="async">
     </div>
 

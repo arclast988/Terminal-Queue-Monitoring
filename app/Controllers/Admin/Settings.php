@@ -698,7 +698,7 @@ class Settings extends BaseController
         $model->setSetting('app_background_image', $relPath);
 
         $mode = $this->request->getPost('mode');
-        if ($mode && in_array($mode, ['slideshow', 'single'], true)) {
+        if ($mode && in_array($mode, ['slideshow', 'single', 'none'], true)) {
             $model->setSetting('app_bg_mode', $mode);
         }
 
@@ -753,7 +753,7 @@ class Settings extends BaseController
     }
 
     /**
-     * Update background display mode ('slideshow' or 'single').
+     * Update background display mode ('slideshow', 'single', or 'none').
      */
     public function updateBackgroundMode()
     {
@@ -762,7 +762,7 @@ class Settings extends BaseController
         }
 
         $mode = $this->request->getPost('mode');
-        if (! in_array($mode, ['slideshow', 'single'], true)) {
+        if (! in_array($mode, ['slideshow', 'single', 'none'], true)) {
             $mode = 'slideshow';
         }
 
@@ -779,7 +779,11 @@ class Settings extends BaseController
             'app_bg_mode'          => $mode,
             'app_background_image' => app_bg_image(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
-            'message'              => 'Background mode switched to ' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . '.',
+            'message'              => 'Background mode switched to ' . match ($mode) {
+                'none' => 'No Background',
+                'single' => 'Single Hero Background',
+                default => 'Dynamic Rotating Slideshow',
+            } . '.',
             'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
             'csrf_hash'            => csrf_hash(),
@@ -796,7 +800,7 @@ class Settings extends BaseController
         }
 
         $mode = $this->request->getPost('mode');
-        if (! in_array($mode, ['slideshow', 'single'], true)) {
+        if (! in_array($mode, ['slideshow', 'single', 'none'], true)) {
             $mode = 'slideshow';
         }
 
@@ -813,7 +817,11 @@ class Settings extends BaseController
             'app_bg_mode'          => $mode,
             'app_background_image' => app_bg_image(),
             'app_bg_slideshow'     => array_values(app_bg_slideshow()),
-            'message'              => 'Background display mode (' . ($mode === 'slideshow' ? 'Dynamic Rotating Slideshow' : 'Single Hero Background') . ') saved successfully.',
+            'message'              => 'Background display mode (' . match ($mode) {
+                'none' => 'No Background',
+                'single' => 'Single Hero Background',
+                default => 'Dynamic Rotating Slideshow',
+            } . ') saved successfully.',
             'data'                 => app_full_branding_payload('background'),
             'csrf_token'           => csrf_token(),
             'csrf_hash'            => csrf_hash(),

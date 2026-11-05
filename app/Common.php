@@ -1116,7 +1116,7 @@ if (! function_exists('app_footer_copyright')) {
 
 if (! function_exists('app_bg_mode')) {
     /**
-     * Get active background mode ('slideshow' or 'single').
+     * Get active background mode ('slideshow', 'single', or 'none').
      */
     function app_bg_mode(): string
     {
@@ -1397,7 +1397,9 @@ if (! function_exists('app_theme_css')) {
         $slides = array_values(app_bg_slideshow());
         $slidesJson = json_encode($slides);
 
-        if ($bgMode === 'single' || count($slides) <= 1) {
+        if ($bgMode === 'none') {
+            $bgLayerCss = 'body:not(.auth-page)::before, body::after { content: none !important; background-image: none; animation: none !important; }';
+        } elseif ($bgMode === 'single' || count($slides) <= 1) {
             $singleTarget = $bgImg ?: ($slides[0] ?? '');
             $bgLayerCss = <<<BGCSS
 /* --- Universal Single/System Background Layer across all pages --- */
@@ -2543,7 +2545,9 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
             document.head.appendChild(bgStyle);
         }
 
-        if (mode === 'single' || slides.length <= 1) {
+        if (mode === 'none') {
+            bgStyle.textContent = 'body:not(.auth-page)::before, body::after { content: none !important; background-image: none; animation: none !important; }';
+        } else if (mode === 'single' || slides.length <= 1) {
             var target = bgUrl || (slides.length ? slides[0] : '');
             var rule = "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.12 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; } " +
                        "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + target + "') !important; opacity: 0.28 !important; animation: none !important; z-index: 0 !important; pointer-events: none !important; }";

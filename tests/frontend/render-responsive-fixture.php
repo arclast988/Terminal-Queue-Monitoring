@@ -63,7 +63,7 @@ if (!function_exists('media_url')) {
     }
 }
 function app_logo(): string { return '/fixture.svg'; }
-function app_bg_mode(): string { return ($GLOBALS['argv'][5] ?? '') === 'slideshow' ? 'slideshow' : 'single'; }
+function app_bg_mode(): string { return in_array($GLOBALS['argv'][5] ?? '', ['slideshow', 'none'], true) ? $GLOBALS['argv'][5] : 'single'; }
 function app_has_custom_bg(): bool { return false; }
 function app_bg_image(): string { return '/fixture.svg'; }
 function app_bg_slideshow(): array { return app_bg_mode() === 'slideshow' ? ['/fixture.svg', '/fixture-second.svg', '/fixture-third.svg'] : ['/fixture.svg']; }

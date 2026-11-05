@@ -705,7 +705,7 @@ $slotsMeta = [
 /* Mode Switcher Radio Card */
 .bg-mode-selector {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -735,12 +735,15 @@ $slotsMeta = [
 }
 
 .bg-mode-card input[type="radio"] {
+    flex-shrink: 0;
     margin-top: 3px;
     accent-color: var(--sb-primary);
     width: 18px;
     height: 18px;
     cursor: pointer;
 }
+
+.bg-mode-info { min-width: 0; }
 
 .bg-mode-info h4 {
     font-size: 14.5px;
@@ -755,6 +758,34 @@ $slotsMeta = [
     margin: 0;
     line-height: 1.4;
 }
+
+.bg-save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    margin: 18px 0 24px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid var(--sb-border);
+    border-radius: var(--sb-radius-md);
+}
+
+.bg-save-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 300px;
+    min-width: 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--sb-text-muted);
+}
+
+.bg-save-notice > i { flex-shrink: 0; }
+.bg-save-notice.pending { color: #b45309; font-weight: 600; }
+.bg-save-bar .btn-save { flex-shrink: 0; }
 
 /* Upload Zone */
 .upload-zone {
@@ -1630,7 +1661,7 @@ $slotsMeta = [
                 <div class="card-icon"><i class="fas fa-panorama"></i></div>
                 <div>
                     <h3>Authentication & Login Background Pictures</h3>
-                    <p>Choose between a dynamic 5-photo rotating crossfade slideshow or a single static hero image for all staff and dispatcher sign-in portals.</p>
+                    <p>Choose rotating photos, a single image, or a plain background for sign-in screens and system pages.</p>
                 </div>
             </div>
 
@@ -1650,16 +1681,24 @@ $slotsMeta = [
                         <p>Shows one static high-resolution artwork or custom terminal hero photo behind sign-in screens.</p>
                     </div>
                 </label>
+                <label class="bg-mode-card <?= $bgMode === 'none' ? 'active' : '' ?>" id="modeCardNone">
+                    <input type="radio" name="bg_display_mode" value="none" <?= $bgMode === 'none' ? 'checked' : '' ?>>
+                    <div class="bg-mode-info">
+                        <h4><i class="fas fa-ban" style="color:#64748b; margin-right:6px;"></i> No Background</h4>
+                        <p>Uses a plain page background with no slideshow, photo, or background logo.</p>
+                    </div>
+                </label>
             </div>
 
             <!-- Explicit Save Button for Background & Display Mode -->
-            <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 18px; margin-bottom: 24px; padding: 12px 16px; background: #f8fafc; border: 1px solid var(--sb-border); border-radius: var(--sb-radius-md); flex-wrap: wrap; gap: 10px;">
-                <span id="bgPendingNotice" style="font-size: 12.5px; color: #b45309; font-weight: 600; margin-right: auto; display: none;">
-                    <i class="fas fa-clock"></i> Background changes staged. Click "Save Background & Display Mode" to apply.
+            <div class="bg-save-bar">
+                <span id="bgPendingNotice" class="bg-save-notice pending" style="display: none;" role="status">
+                    <i class="fas fa-clock" aria-hidden="true"></i>
+                    <span>Background changes staged. Click "Save Background & Display Mode" to apply.</span>
                 </span>
-                <span id="bgIdleNotice" style="font-size: 13px; color: var(--sb-text-muted); margin-right: auto;">
-                    <i class="fas fa-info-circle text-primary" style="margin-right: 4px;"></i>
-                    Click to persist your background mode and broadcast live to all active screens.
+                <span id="bgIdleNotice" class="bg-save-notice">
+                    <i class="fas fa-info-circle text-primary" aria-hidden="true"></i>
+                    <span>Choose an option, then save your background settings.</span>
                 </span>
                 <button type="button" id="btnSaveBgSettings" class="btn-save" style="background: var(--sb-primary); color: #ffffff; padding: 9px 20px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 3px 10px color-mix(in srgb, var(--sb-primary) 25%, transparent);">
                     <i class="fas fa-save"></i> Save Background & Display Mode
@@ -2618,13 +2657,11 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // =========================================================================
-    // 5. Background Mode Switcher (Slideshow vs Single) & Save
+    // 5. Background Mode Switcher & Save
     // =========================================================================
     var modeRadios    = document.querySelectorAll('input[name="bg_display_mode"]');
     var secSlideshow  = document.getElementById('sectionSlideshowManager');
     var secSingle     = document.getElementById('sectionSingleBgManager');
-    var cardSlideshow = document.getElementById('modeCardSlideshow');
-    var cardSingle    = document.getElementById('modeCardSingle');
     var bgPendingNotice = document.getElementById('bgPendingNotice');
     var bgIdleNotice    = document.getElementById('bgIdleNotice');
     var initialBgMode   = '<?= esc($bgMode) ?>';
@@ -2649,17 +2686,11 @@ document.addEventListener('DOMContentLoaded', function() {
     modeRadios.forEach(function(radio) {
         radio.addEventListener('change', function() {
             var mode = radio.value;
-            if (mode === 'slideshow') {
-                secSlideshow.style.display = 'block';
-                secSingle.style.display    = 'none';
-                cardSlideshow.classList.add('active');
-                cardSingle.classList.remove('active');
-            } else {
-                secSlideshow.style.display = 'none';
-                secSingle.style.display    = 'block';
-                cardSingle.classList.add('active');
-                cardSlideshow.classList.remove('active');
-            }
+            secSlideshow.style.display = mode === 'slideshow' ? 'block' : 'none';
+            secSingle.style.display = mode === 'single' ? 'block' : 'none';
+            modeRadios.forEach(function(option) {
+                option.closest('.bg-mode-card').classList.toggle('active', option.checked);
+            });
 
             // Do NOT upload or apply globally until Save Background & Display Mode is clicked!
             updateBgPendingState();
