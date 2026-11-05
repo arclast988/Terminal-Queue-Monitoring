@@ -1670,8 +1670,8 @@ $slotsMeta = [
                 <label class="bg-mode-card <?= $bgMode === 'slideshow' ? 'active' : '' ?>" id="modeCardSlideshow">
                     <input type="radio" name="bg_display_mode" value="slideshow" <?= $bgMode === 'slideshow' ? 'checked' : '' ?>>
                     <div class="bg-mode-info">
-                        <h4><i class="fas fa-images" style="color:#f59e0b; margin-right:6px;"></i> Dynamic Slideshow Mode (5 Rotating Photos)</h4>
-                        <p>Rotates through 5 landmark photos of the terminal and town with smooth 30-second crossfade transitions on login screens. (Recommended)</p>
+                        <h4><i class="fas fa-images" style="color:#f59e0b; margin-right:6px;"></i> Dynamic Slideshow Mode</h4>
+                        <p>Rotates through your selected background photos with smooth crossfade transitions. (Recommended)</p>
                     </div>
                 </label>
                 <label class="bg-mode-card <?= $bgMode === 'single' ? 'active' : '' ?>" id="modeCardSingle">
@@ -1710,10 +1710,10 @@ $slotsMeta = [
                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                     <div>
                         <h4 style="font-size:15px; font-weight:700; margin:0; color:var(--sb-text-main);"><i class="fas fa-film" style="color:var(--sb-primary);"></i> Dynamic Slideshow Gallery (Rotating Photos)</h4>
-                        <span style="font-size:12px; color:var(--sb-text-muted);">Configure 1, 2, 3, 4, 5, or more rotating photos. Click "Change Photo" on any slot, delete with the trash icon, or click "+ Add Slideshow Photo".</span>
+                        <span style="font-size:12px; color:var(--sb-text-muted);">Choose your slideshow photos. Click "Change Photo" on any slot, delete with the trash icon, or click "+ Add Slideshow Photo".</span>
                     </div>
                     <button type="button" class="btn-reset-media" id="btnResetAllSlideshow">
-                        <i class="fas fa-rotate-left"></i> Reset to Default 5 Photos
+                        <i class="fas fa-rotate-left"></i> Reset to Default Photos
                     </button>
                 </div>
 
@@ -3382,11 +3382,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof window.confirmAction === 'function') {
                 window.confirmAction({
                     title: 'Reset All Slideshow Photos',
-                    message: 'Are you sure you want to restore the default 5 slideshow pictures?',
+                    message: 'Are you sure you want to restore the default slideshow photos?',
                     confirmText: 'Reset All Photos',
                     onConfirm: doResetAll
                 });
-            } else if (confirm('Are you sure you want to restore the default 5 slideshow pictures?')) {
+            } else if (confirm('Are you sure you want to restore the default slideshow photos?')) {
                 doResetAll();
             }
         });

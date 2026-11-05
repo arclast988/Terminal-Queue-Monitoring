@@ -142,7 +142,7 @@
             <i class="bi bi-journal-text"></i> System Activity Logs
         </h1>
         <div class="retention-pill">
-            <i class="bi bi-shield-check"></i> Auto-Retention: Logs are automatically kept for 60 days
+            <i class="bi bi-shield-check"></i> Auto-Retention: Logs follow your configured retention settings
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-wrap">

@@ -231,7 +231,7 @@ final class AdminUsersViewTest extends CIUnitTestCase
             'pager'       => null,
         ]);
 
-        $this->assertStringContainsString('Auto-Retention: Logs are automatically kept for 60 days', $logsHtml);
+        $this->assertStringContainsString('Auto-Retention: Logs follow your configured retention settings', $logsHtml);
         $this->assertStringContainsString('retention-pill', $logsHtml);
 
         $historyHtml = view('admin/history/index', [
@@ -252,7 +252,7 @@ final class AdminUsersViewTest extends CIUnitTestCase
             'filterSearch' => '',
         ]);
 
-        $this->assertStringContainsString('Auto-Retention: Departure records are automatically kept for 60 days', $historyHtml);
+        $this->assertStringContainsString('Auto-Retention: Departure records follow your configured retention settings', $historyHtml);
         $this->assertStringContainsString('retention-pill', $historyHtml);
     }
 
