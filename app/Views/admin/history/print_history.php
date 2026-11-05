@@ -668,7 +668,7 @@
             <?php if (!empty($today_only_report)): ?>
             <p><strong>Report Scope:</strong> Today's departures on your assigned routes</p>
             <?php else: ?>
-            <p><strong>Retention Policy:</strong> 60 Days Automatic Cleanup</p>
+            <p><strong>Retention Policy:</strong> Configured Retention Settings</p>
             <?php endif; ?>
         </div>
     </div>
@@ -695,7 +695,7 @@
                 <?php elseif (!empty($to_date)): ?>
                     Until <?= date('M d, Y', strtotime($to_date)) ?>
                 <?php else: ?>
-                    All Active Records (Last 60 Days)
+                    All Available Records
                 <?php endif; ?>
             </span>
         </div>
