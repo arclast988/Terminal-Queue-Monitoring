@@ -58,9 +58,13 @@ test.after(async () => {
   if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 });
 
-async function open(t, name, mode, width = 1280) {
-  const context = await browser.newContext({ viewport: { width, height: 900 } });
+async function open(t, name, mode, width = 1280, motion = 'full') {
+  const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: motion === 'reduced' ? 'reduce' : 'no-preference' });
   t.after(() => context.close());
+  await context.addInitScript(({ constrained }) => {
+    Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { configurable: true, get: () => constrained ? 2 : 8 });
+    Object.defineProperty(Navigator.prototype, 'deviceMemory', { configurable: true, get: () => constrained ? 2 : 8 });
+  }, { constrained: motion === 'lite' });
   await context.route('**/*', route => new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
   const page = await context.newPage(), errors = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -99,22 +103,33 @@ test('plain backgrounds render without decorative images on sign-in, recovery, a
   }
 });
 
-test('a saved plain background can switch back to a rotating background through both live update paths', { timeout: 15000 }, async t => {
-  const { page, errors } = await open(t, 'admin-settings', 'none');
-  for (const method of ['applyLiveBgMode', 'applyLiveBranding']) {
-    await page.evaluate(method => {
-      if (method === 'applyLiveBgMode') window[method]('slideshow', '/fixture.svg', ['/fixture.svg', '/fixture-second.svg']);
-      else window[method]({ category: 'background', app_bg_mode: 'slideshow', app_bg_slideshow: ['/fixture.svg', '/fixture-second.svg'] });
-      const animation = document.getAnimations().find(item => /BgSlideshowLive$/.test(item.animationName));
-      if (!animation) throw new Error('Slideshow did not resume');
-      animation.pause(); animation.currentTime = 6000;
-    }, method);
-    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
-    assert.match((await background(page))[0].image, /fixture-second\.svg/);
-    await page.evaluate(method => method === 'applyLiveBgMode' ? window[method]('none') : window[method]({ category: 'background', app_bg_mode: 'none' }), method);
-    for (const style of await background(page)) assert.equal(style.content, 'none');
+test('a saved plain background can restore photos in every motion mode through both live update paths', { timeout: 30000 }, async t => {
+  for (const motion of ['full', 'lite', 'reduced']) {
+    const { page, context, errors } = await open(t, 'admin-settings', 'none', 1280, motion);
+    assert.equal(await page.evaluate(() => window.TerminalMotion.getMode()), motion);
+    for (const method of ['applyLiveBgMode', 'applyLiveBranding']) {
+      await page.evaluate(method => {
+        if (method === 'applyLiveBgMode') window[method]('slideshow', '/fixture.svg', ['/fixture.svg', '/fixture-second.svg']);
+        else window[method]({ category: 'background', app_bg_mode: 'slideshow', app_bg_slideshow: ['/fixture.svg', '/fixture-second.svg'] });
+      }, method);
+      if (motion === 'full') {
+        await page.waitForFunction(() => document.getAnimations().some(item => /BgSlideshowLive$/.test(item.animationName)));
+        await page.evaluate(() => {
+          const animation = document.getAnimations().find(item => /BgSlideshowLive$/.test(item.animationName));
+          animation.pause(); animation.currentTime = 6000;
+        });
+      }
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const style = (await background(page))[0];
+      assert.match(style.image, motion === 'full' ? /fixture-second\.svg/ : /fixture\.svg/, motion + ': ' + method);
+      assert.notEqual(style.content, 'none', motion + ': ' + method);
+      if (motion !== 'full') assert.equal(style.animation, 'none');
+      await page.evaluate(method => method === 'applyLiveBgMode' ? window[method]('none') : window[method]({ category: 'background', app_bg_mode: 'none' }), method);
+      for (const hiddenStyle of await background(page)) assert.equal(hiddenStyle.content, 'none');
+    }
+    assert.deepEqual(errors, [], motion);
+    await context.close();
   }
-  assert.deepEqual(errors, []);
 });
 
 test('the third option waits for Save, persists on reload, and keeps notice and button aligned', { timeout: 30000 }, async t => {

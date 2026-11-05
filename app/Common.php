@@ -2571,9 +2571,10 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
             kf     += "100% { opacity: 0.12; } } ";
             kfAuth += "100% { opacity: 0.22; } } ";
 
+            // Keep the first photo visible when the motion policy disables keyframes.
             var rule = kf + kfAuth +
-                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.12 !important; animation: terminalBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; } " +
-                       "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; opacity: 0.22 !important; animation: terminalBgSlideshowAuthLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }";
+                       "body:not(.auth-page)::before { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + slides[0] + "'); opacity: 0.12 !important; animation: terminalBgSlideshowLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; } " +
+                       "body::after { content: '' !important; position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; background-repeat: no-repeat !important; background-position: center center !important; background-size: cover !important; background-image: url('" + slides[0] + "'); opacity: 0.22 !important; animation: terminalBgSlideshowAuthLive " + duration + "s infinite ease-in-out !important; z-index: 0 !important; pointer-events: none !important; }";
             bgStyle.textContent = rule;
         }
     };
