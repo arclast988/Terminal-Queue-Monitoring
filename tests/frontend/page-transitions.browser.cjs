@@ -76,7 +76,7 @@ test.after(async () => {
   if (server) await new Promise(resolve => server.close(resolve));
 });
 
-async function open(t, mode = 'full', captureFrames = false, viewport = { width: 1365, height: 900 }) {
+async function open(t, mode = 'full', captureFrames = false, viewport = { width: 1536, height: 900 }) {
   const context = await browser.newContext({ viewport, reducedMotion: mode === 'reduced' ? 'reduce' : 'no-preference' });
   t.after(() => context.close());
   await context.route('**/*', route => route.request().url().startsWith(origin) || route.request().url().startsWith('data:') ? route.continue() : route.abort());
@@ -105,6 +105,7 @@ async function open(t, mode = 'full', captureFrames = false, viewport = { width:
           duration: getComputedStyle(document.documentElement, '::view-transition-new(root)').animationDuration,
           oldOpacity: getComputedStyle(document.documentElement, '::view-transition-old(root)').opacity,
           oldAnimation: getComputedStyle(document.documentElement, '::view-transition-old(root)').animationName,
+          incomingOpacity: getComputedStyle(document.documentElement, '::view-transition-new(root)').opacity,
           entry: document.querySelector('.main-content, .auth .card, .login-card .card-head, .guest-theme > .container') && getComputedStyle(document.querySelector('.main-content, .auth .card, .login-card .card-head, .guest-theme > .container')).animationName,
         };
         window.transitionRecords.push(record);
@@ -304,7 +305,10 @@ test('refresh keeps content fully painted and preserves the current background p
   await context.addInitScript(now => { Date.now = () => now; }, Date.now());
   await page.goto(origin + '/staff/dashboard?slideshow=1');
   // Start in the middle of the second photo, without sleeping for a slideshow cycle.
-  await page.evaluate(() => sessionStorage.setItem('tq-background-epoch', String(Date.now() - 7500)));
+  await page.evaluate(() => {
+    const fingerprint=JSON.stringify(['/fixture.svg','/fixture-second.svg','/fixture-third.svg']);
+    localStorage.setItem('tq-background-timeline:'+fingerprint,JSON.stringify({fingerprint,epoch:Date.now()-7500}));
+  });
   await page.reload();
   await page.evaluate(() => document.getAnimations().filter(animation => animation.animationName === 'terminalBgSlideshow').forEach(animation => { animation.pause(); animation.currentTime = 0; }));
   assert.equal(await page.locator('html').getAttribute('data-tq-navigation-reveal'), '');
@@ -388,6 +392,46 @@ test('profile, management menu and drawer animate both directions without moving
   }
 });
 
+test('laptop drawer supports navigation, focus return, Escape, overlay and desktop resizing', { timeout:20000 }, async t => {
+  for (const [from, to] of [['/admin/dashboard','/admin/routes'], ['/staff/dashboard','/staff/queue']]) {
+    const { page, context, errors } = await open(t, 'full', false, {width:1365,height:768});
+    await page.goto(origin + from);
+    const button = page.locator('#siteNavHamburgerBtn');
+    const drawer = page.locator('#siteSidebarDrawer');
+    async function showDrawer() {
+      await button.click();
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('#siteSidebarDrawer')).transform === 'matrix(1, 0, 0, 1, 0, 0)');
+      assert.equal(await drawer.getAttribute('aria-hidden'), 'false');
+      assert.equal(await drawer.getAttribute('inert'), null);
+    }
+    async function assertClosed() {
+      await page.waitForFunction(() => getComputedStyle(document.querySelector('#siteSidebarDrawer')).visibility === 'hidden');
+      assert.equal(await button.getAttribute('aria-expanded'), 'false');
+      assert.equal(await drawer.getAttribute('inert'), '');
+      assert.equal(await page.locator('body').evaluate(el => el.classList.contains('drawer-open')), false);
+    }
+    await showDrawer();
+    await drawer.locator(`a[href="${to}"]`).focus();
+    await page.keyboard.press('Escape');
+    await assertClosed();
+    assert.equal(await button.evaluate(el => el === document.activeElement), true, 'closing returns keyboard focus to the menu button');
+    await showDrawer();
+    await page.locator('#sidebarDrawerOverlay').click({position:{x:1300,y:300}});
+    await assertClosed();
+    await showDrawer();
+    await page.setViewportSize({width:1535,height:768});
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    assert.equal(await drawer.getAttribute('aria-hidden'), 'false', 'laptop resizing keeps the usable drawer open');
+    await page.setViewportSize({width:1536,height:768});
+    await assertClosed();
+    await page.setViewportSize({width:1365,height:768});
+    await navigate(page, to);
+    await page.waitForURL(origin + to);
+    assert.deepEqual(errors, []);
+    await context.close();
+  }
+});
+
 test('phone, tablet, landscape and laptop page changes stay stable with usable menus', { timeout: 120000 }, async t => {
   for (const [width, height, mode, throttle] of [[320,568,'lite',4], [390,844,'full',0], [414,896,'reduced',0], [768,1024,'full',0], [844,390,'lite',0], [1365,768,'full',6]]) {
     t.diagnostic(`${engine}: ${width}×${height}, ${mode}${nativeOnly && throttle ? ', CPU/connection limited' : ''}`);
@@ -416,7 +460,7 @@ test('phone, tablet, landscape and laptop page changes stay stable with usable m
   }
 });
 
-test('public, authentication and management navigation uses one short native page fade', { timeout: 30000, skip: !nativeOnly }, async t => {
+test('public, authentication and management navigation uses one opaque native arrival', { timeout: 30000, skip: !nativeOnly }, async t => {
   const { page, errors } = await open(t);
   for (const [from, to] of [['/guest', '/fares'], ['/fares', '/schedules'], ['/guest', '/login'], ['/login', '/forgot-password'], ['/staff/dashboard', '/staff/queue'], ['/admin/dashboard', '/admin/routes']]) {
     t.diagnostic(`${from} → ${to}`);
@@ -428,8 +472,9 @@ test('public, authentication and management navigation uses one short native pag
     const record = await page.evaluate(() => window.transitionRecords.find(record => record.duration));
     assert.ok(record, JSON.stringify(await page.evaluate(() => window.transitionRecords)));
     assert.equal(record.duration, '0.18s', `${from} → ${to}`);
-    assert.equal(record.oldOpacity, '1', `${from} → ${to}: never expose a blank canvas`);
-    assert.equal(record.oldAnimation, 'none', `${from} → ${to}: keep the outgoing frame solid`);
+    assert.equal(record.oldOpacity, '0', `${from} → ${to}: the outgoing page must not show through the destination`);
+    assert.equal(record.incomingOpacity, '1', `${from} → ${to}: reveal the complete destination`);
+    assert.equal(record.oldAnimation, 'none', `${from} → ${to}: the outgoing page must not launch another animation`);
     // pagereveal can precede body parsing on faster runners. Inspect the actual
     // destination content once it exists, independently of snapshot readiness.
     assert.equal(await page.locator('.main-content, .auth .card, .login-card .card-head, .guest-theme > .container').first().evaluate(el => getComputedStyle(el).animationName), 'none', `${from} → ${to}: avoid stacked entry animations`);
@@ -452,7 +497,8 @@ test('reduced motion and constrained devices keep the old frame until the destin
     await page.waitForFunction(() => window.transitionRecords.length > 0);
     const record = await page.evaluate(() => window.transitionRecords[0]);
     assert.equal(record.duration, mode === 'lite' ? '0.12s' : '0s');
-    assert.equal(record.oldOpacity, '1');
+    assert.equal(record.oldOpacity, '0');
+    assert.equal(record.incomingOpacity, '1');
     assert.equal(await page.locator('.login-card .card-head').evaluate(el => getComputedStyle(el).animationName), 'none');
     await page.locator('#username').fill('dispatcher@example.com');
     assert.equal(await page.locator('#username').inputValue(), 'dispatcher@example.com');
@@ -467,7 +513,6 @@ test('the dispatcher header never brightens or disappears between rendered trans
   await page.locator('a[href="/staff/queue"]:visible').first().click();
   await page.waitForURL(origin + '/staff/queue');
   await page.waitForFunction(() => window.heldTransitions?.length > 0);
-  let previousOpacity = 0;
   for (const time of [0, 45, 90, 135, 180]) {
     const opacity = await page.evaluate(time => {
       window.heldTransitions.forEach(animation => animation.currentTime = time);
@@ -476,30 +521,81 @@ test('the dispatcher header never brightens or disappears between rendered trans
         incoming: Number(getComputedStyle(document.documentElement, '::view-transition-new(root)').opacity),
       };
     }, time);
-    assert.equal(opacity.old, '1', `old frame at ${time}ms`);
-    assert.ok(opacity.incoming >= previousOpacity && opacity.incoming <= 1);
-    if (time === 0) assert.equal(opacity.incoming, 0, 'begin with the complete outgoing page, not an almost-opaque new snapshot');
-    if (time === 180) assert.equal(opacity.incoming, 1, 'the destination is fully painted within the short motion budget');
-    previousOpacity = opacity.incoming;
+    assert.equal(opacity.old, '0', `outgoing content hidden after destination readiness at ${time}ms`);
+    assert.equal(opacity.incoming, 1, `incoming page stays fully painted at ${time}ms`);
     const png = await page.screenshot({ animations: 'allow' });
-    // Sample an unchanged part of the actual production header. A transparent
-    // outgoing frame would blend this blue area toward the white page canvas.
-    const pixel = await page.evaluate(async png => {
+    // Include the top edge: translating the opaque snapshot exposes the canvas
+    // there even while the rest of the header is fully painted.
+    const pixels = await page.evaluate(async png => {
       const image = new Image(); image.src = 'data:image/png;base64,' + png; await image.decode();
       const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
       const context = canvas.getContext('2d'); context.drawImage(image, 0, 0);
-      return Array.from(context.getImageData(700, 20, 1, 1).data);
+      return [0, 1, 20].map(y => ({ y, pixel: Array.from(context.getImageData(700, y, 1, 1).data) }));
     }, png.toString('base64'));
     // Linux and Windows compositors can round a blended channel by one level.
     // A fade into a white canvas differs by dozens of levels and still fails.
-    assert.equal(pixel[3], 255, `opaque header at ${time}ms`);
-    assert.ok(pixel.slice(0, 3).every((channel, index) => Math.abs(channel - [22, 78, 99][index]) <= 1), `header pixels at ${time}ms: ${pixel}`);
+    for (const { y, pixel } of pixels) {
+      assert.equal(pixel[3], 255, `opaque header y${y} at ${time}ms`);
+      assert.ok(pixel.slice(0, 3).every((channel, index) => Math.abs(channel - [22, 78, 99][index]) <= 1), `header pixels y${y} at ${time}ms: ${pixel}`);
+    }
   }
   await page.evaluate(() => window.heldTransitions.forEach(animation => animation.finish()));
   assert.deepEqual(errors, []);
 });
 
-test('browsers without a snapshot use one brief arrival fade with immediately usable Login fields', {timeout:30000}, async t => {
+test('Guest to Login arrival never mixes the outgoing page into the incoming surface', {timeout:20000, skip:!nativeOnly}, async t => {
+  const {page, errors} = await open(t, 'full', true);
+  const baseline = await open(t, 'full');
+  const points = [[8,60], [8,300], [1528,300], [768,8]];
+  async function pixels(png) {
+    return page.evaluate(async ({png,points}) => {
+      const image = new Image(); image.src = 'data:image/png;base64,' + png; await image.decode();
+      const canvas = document.createElement('canvas'); canvas.width = image.width; canvas.height = image.height;
+      const context = canvas.getContext('2d'); context.drawImage(image,0,0);
+      return points.map(([x,y]) => Array.from(context.getImageData(x,y,1,1).data));
+    }, {png:png.toString('base64'),points});
+  }
+  await baseline.page.goto(origin+'/login');
+  await baseline.page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {})));
+  });
+  const reference = await pixels(await baseline.page.screenshot({animations:'allow'}));
+  await page.goto(origin+'/guest');
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished.catch(() => {})));
+  });
+  await page.evaluate(() => {
+    // A recognizable outgoing surface makes even faint old-page bleed measurable.
+    const marker = document.createElement('div'); marker.id='outgoing-page-marker';
+    marker.style.cssText='position:fixed;inset:0;background:#ff00ff;pointer-events:none;z-index:2147483647';
+    document.body.appendChild(marker);
+  });
+  const outgoing = await pixels(await page.screenshot({animations:'allow'}));
+  assert.ok(outgoing.every(pixel => pixel[0]===255 && pixel[1]===0 && pixel[2]===255), 'outgoing marker must be painted before navigation');
+  await page.locator('a[href="/login"]:visible').first().click();
+  await page.waitForURL(origin+'/login');
+  await page.waitForFunction(() => window.heldTransitions?.length > 0);
+  const dir=path.join(__dirname,'artifacts'); fs.mkdirSync(dir,{recursive:true});
+  for (const time of [0,90,165]) {
+    await page.evaluate(time => window.heldTransitions.forEach(animation => animation.currentTime=time),time);
+    const state=await page.evaluate(() => ({old:getComputedStyle(document.documentElement,'::view-transition-old(root)').opacity,incoming:getComputedStyle(document.documentElement,'::view-transition-new(root)').opacity}));
+    assert.deepEqual(state,{old:'0',incoming:'1'});
+    const png=await page.screenshot({animations:'allow'}), sample=await pixels(png);
+    sample.forEach((pixel,index) => {
+      assert.equal(pixel[3],255);
+      assert.ok(pixel.slice(0,3).every((channel,c) => Math.abs(channel-reference[index][c]) <= 6), `destination surface at ${time}ms: ${JSON.stringify({pixel,reference:reference[index]})}`);
+    });
+    fs.writeFileSync(path.join(dir,`opaque-guest-login-${time}ms.png`),png);
+  }
+  await page.evaluate(() => window.heldTransitions.forEach(animation => animation.finish()));
+  await page.locator('#username').fill('ready@example.com');
+  assert.equal(await page.locator('#username').inputValue(),'ready@example.com');
+  assert.deepEqual(errors,[]);
+});
+
+test('browsers without a snapshot paint Login without a fade and keep fields immediately usable', {timeout:30000}, async t => {
   for (const mode of ['full', 'lite', 'reduced']) {
     const {page,context,errors} = await open(t, mode);
     // Exercise the same fallback on every engine, including unavailable/skipped snapshots.
@@ -514,14 +610,18 @@ test('browsers without a snapshot use one brief arrival fade with immediately us
       fallback:document.documentElement.hasAttribute('data-tq-navigation-fallback'),
       animation:getComputedStyle(document.body).animationName,
       duration:getComputedStyle(document.body).animationDuration,
+      opacity:getComputedStyle(document.body).opacity,
+      transform:getComputedStyle(document.body).transform,
       child:getComputedStyle(document.querySelector('.login-card .card-head')).animationName,
       focused:document.activeElement === document.querySelector('#username'),
       background:getComputedStyle(document.body,'::before').animationName,
     }));
     assert.equal(state.fallback,true);
-    assert.equal(state.animation,mode === 'reduced' ? 'none' : 'tq-content-fade');
-    assert.equal(state.duration,mode === 'reduced' ? '0s' : mode === 'lite' ? '0.1s' : '0.14s');
-    assert.equal(state.child,'none','the arrival fade does not stack with login field entrances');
+    assert.equal(state.animation,'none');
+    assert.equal(state.duration,'0s');
+    assert.equal(state.opacity,'1','the destination is fully painted immediately');
+    assert.equal(state.transform,'none','fixed controls keep the viewport as their containing block');
+    assert.equal(state.child,'none','the arrival does not stack with login field entrances');
     assert.equal(state.focused,true);
     if (mode !== 'full') assert.equal(state.background,'none');
     await page.locator('#username').fill('ready@example.com');
@@ -535,7 +635,7 @@ test('browsers without a snapshot use one brief arrival fade with immediately us
   }
 });
 
-test('browser history preserves form values and clears pending feedback after a page fade', { timeout: 15000, skip: !nativeOnly }, async t => {
+test('browser history preserves form values and clears pending feedback after arrival', { timeout: 15000, skip: !nativeOnly }, async t => {
   const { page, errors } = await open(t);
   await page.goto(origin + '/login');
   await page.locator('#username').fill('saved@example.com');

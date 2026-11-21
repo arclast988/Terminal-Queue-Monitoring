@@ -329,6 +329,7 @@ $termsUpdatedLabel = $termsUpdatedRaw && strtotime($termsUpdatedRaw)
 <script src="<?= base_url('assets/js/autocomplete-search.js?v=20261002a') ?>"></script>
 <script src="<?= app_asset_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
 <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
+<?= view('partials/background_sync') ?>
 <script src="<?= app_asset_url('js/vehicle-type-live.js') ?>"></script>
 <script src="<?= base_url('assets/js/managed-content.js?v=20260920') ?>"></script>
 <script src="<?= app_asset_url('assets/js/contact-gmail.js') ?>" defer></script>

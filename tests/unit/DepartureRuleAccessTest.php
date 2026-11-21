@@ -214,6 +214,27 @@ final class DepartureRuleAccessTest extends CIUnitTestCase
         $this->assertStringNotContainsString('/staff/departure-rules/edit/5', $html);
     }
 
+    public function testListShowsJoinedTerminalNamesAndExplainsMissingTerminalsWithoutReassigningRules(): void
+    {
+        session()->set('role', 'admin');
+        ScopedDepartureRulesHarness::$testDb->table('departure_rules')->insert([
+            'id' => 6, 'terminal_id' => 99, 'route_id' => null,
+        ]);
+        $result = $this->withUri('http://localhost/admin/departure-rules')
+            ->controller(ScopedDepartureRulesHarness::class)->execute('index');
+        $this->assertSame(200, $result->response()->getStatusCode());
+        $document = new \DOMDocument();
+        @$document->loadHTML($result->response()->getBody());
+        $xpath = new \DOMXPath($document);
+        $terminalLabels = array_map(static fn(\DOMNode $node): string => trim(preg_replace('/\s+/', ' ', $node->textContent)),
+            iterator_to_array($xpath->query('//table[@id="departure-rules-table"]//td[@data-label="Terminal"]')));
+        $this->assertContains('VILLABA', $terminalLabels);
+        $this->assertContains('OTHER TERMINAL', $terminalLabels);
+        $this->assertContains('Terminal unavailable (#99) Choose a terminal in Edit.', $terminalLabels);
+        $this->assertSame(99, (int) ScopedDepartureRulesHarness::$testDb->table('departure_rules')
+            ->where('id', 6)->get()->getRowArray()['terminal_id']);
+    }
+
     public function testDispatcherCreateAndEditFormsAllowBlankDestination(): void
     {
         foreach (['create', 'edit'] as $action) {

@@ -24,11 +24,13 @@ class Vehicles extends BaseController
     public function index()
     {
         $vehicles = $this->vehicleModel->getRegisterVehicles();
+        $routes = $this->routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll();
 
         $data = [
             'title' => 'Vehicle Register',
             'vehicles' => $vehicles,
-            'routes' => $this->routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routes,
+            'routeDispatchOrders' => $this->vehicleModel->getDispatchOrderCounts($routes),
             'vehicleTypes' => $this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(),
         ];
 
@@ -148,7 +150,13 @@ class Vehicles extends BaseController
                     'in_list' => 'Status must be active, maintenance, or archived.',
                 ],
             ],
-            'dispatch_order' => ['rules' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[9999]'],
+            'dispatch_order' => [
+                'rules' => 'permit_empty|integer|greater_than[0]',
+                'errors' => [
+                    'integer' => 'Enter a whole-number route order.',
+                    'greater_than' => 'Route order must be at least 1.',
+                ],
+            ],
             'route_id'      => [
                 'rules'  => 'required|integer',
                 'errors' => [
@@ -184,7 +192,7 @@ class Vehicles extends BaseController
             return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
         }
         if ($route && $route['vehicle_type'] !== $vehicleType) {
-            return redirect()->back()->withInput()->with('error', 'Vehicle type (' . ucfirst($vehicleType) . ') must match the route type (' . ucfirst($route['vehicle_type']) . ').');
+            return redirect()->back()->withInput()->with('error', 'Vehicle type (' . vehicle_type_label($vehicleType) . ') must match the route type (' . vehicle_type_label($route['vehicle_type']) . ').');
         }
 
         // Driver and Operator must not be the same person
@@ -197,6 +205,9 @@ class Vehicles extends BaseController
         $status = $this->request->getPost('status');
         if (!in_array($status, ['active', 'maintenance'], true)) {
             $status = 'active';
+        }
+        if ($message = $this->dispatchOrderError($route, $status)) {
+            return redirect()->back()->withInput()->with('errors', ['dispatch_order' => $message]);
         }
 
         // Handle vehicle photo upload
@@ -246,12 +257,12 @@ class Vehicles extends BaseController
             'default_route_id' => $routeId,
             'photo'            => $photoRelPath,
             'dispatch_order'   => $this->request->getPost('dispatch_order'),
-        ])) {
+        ], null, true)) {
             return redirect()->back()->withInput()->with('error', 'The vehicle could not be saved. Please try again.');
         }
 
         $routeLabel = $route ? (strtoupper($route['origin']) . ' → ' . strtoupper($route['destination'])) : 'N/A';
-        $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $rawPlate . ' (' . $vehicleType . ') - Operator: ' . $rawOperator . ' - Driver: ' . $driverName . ' - Route: ' . $routeLabel);
+        $this->logActivity('Assign vehicle to route', 'Registered vehicle ' . $rawPlate . ' (' . vehicle_type_label($vehicleType) . ') - Operator: ' . $rawOperator . ' - Driver: ' . $driverName . ' - Route: ' . $routeLabel);
         $this->broadcastUpdate('queue_update', ['action' => 'vehicle_created']);
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle registered successfully.');
@@ -272,10 +283,12 @@ class Vehicles extends BaseController
             }
         }
 
+        $routes = $this->routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll();
         $data = [
             'title' => 'Edit Vehicle',
             'vehicle' => $vehicle,
-            'routes' => $this->routeModel->withActiveFare()->orderBy('destination', 'ASC')->findAll(),
+            'routes' => $routes,
+            'routeDispatchOrders' => $this->vehicleModel->getDispatchOrderCounts($routes, (int) $id),
             'vehicleTypes' => $this->vehicleTypeModel->where('is_active', 1)->orderBy('name', 'ASC')->findAll(),
         ];
 
@@ -335,14 +348,25 @@ class Vehicles extends BaseController
                     'greater_than' => 'Capacity must be at least 1 passenger.',
                 ],
             ],
-            'status'        => [
-                'rules'  => 'required|in_list[active,maintenance,archived]',
+            'dispatch_order' => [
+                'rules' => 'permit_empty|integer|greater_than[0]',
                 'errors' => [
-                    'required' => 'Please select a vehicle status.',
-                    'in_list'  => 'Vehicle status must be active, maintenance, or archived.',
+                    'integer' => 'Enter a whole-number route order.',
+                    'greater_than' => 'Route order must be at least 1.',
                 ],
             ],
-            'dispatch_order' => ['rules' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[9999]'],
+            'current_dispatch_position' => [
+                'rules' => 'permit_empty|integer|greater_than[0]|less_than_equal_to[9999]',
+                'errors' => [
+                    'integer' => 'Enter a whole-number order from 1 to 9999.',
+                    'greater_than' => 'Enter a whole-number order from 1 to 9999.',
+                    'less_than_equal_to' => 'Enter a whole-number order from 1 to 9999.',
+                ],
+            ],
+            'sync_current_order' => [
+                'rules' => 'permit_empty|in_list[0,1]',
+                'errors' => ['in_list' => 'Please refresh the form and try again.'],
+            ],
             'route_id'      => [
                 'rules'  => 'required|integer',
                 'errors' => [
@@ -374,12 +398,29 @@ class Vehicles extends BaseController
         }
         $vehicleType = $this->request->getPost('type');
 
+        $dispatchOrder = $this->request->getPost('dispatch_order');
+        if ($dispatchOrder === null) {
+            $dispatchOrder = (int) $routeId === (int) ($vehicle['default_route_id'] ?? 0)
+                ? ($vehicle['dispatch_order'] ?? '') : '';
+        }
+        $syncCurrentOrder = (string) $this->request->getPost('sync_current_order') === '1';
+        if ((int) $routeId !== (int) ($vehicle['default_route_id'] ?? 0)) {
+            $oldRoute = $this->routeModel->find((int) ($vehicle['default_route_id'] ?? 0));
+            $syncCurrentOrder = $syncCurrentOrder || !$oldRoute
+                || (int) $oldRoute['terminal_id'] !== (int) $route['terminal_id']
+                || $oldRoute['destination'] !== $route['destination'];
+        }
+
         if (!$this->vehicleTypeModel->where('slug', $vehicleType)->where('is_active', 1)->first()) {
             return redirect()->back()->withInput()->with('error', 'Please select a valid active vehicle type.');
         }
 
         if ($route && $route['vehicle_type'] !== $vehicleType) {
-            return redirect()->back()->withInput()->with('error', 'Vehicle type (' . ucfirst($vehicleType) . ') must match the route type (' . ucfirst($route['vehicle_type']) . ').');
+            return redirect()->back()->withInput()->with('error', 'Vehicle type (' . vehicle_type_label($vehicleType) . ') must match the route type (' . vehicle_type_label($route['vehicle_type']) . ').');
+        }
+
+        if ($message = $this->dispatchOrderError($route, $vehicle['status'], (int) $id)) {
+            return redirect()->back()->withInput()->with('errors', ['dispatch_order' => $message]);
         }
 
         // Driver and Operator must not be the same person
@@ -447,13 +488,12 @@ class Vehicles extends BaseController
             }
         }
 
-        if (!$photoChanged && $this->inputsUnchanged([
+        if (!$photoChanged && !$syncCurrentOrder && $this->inputsUnchanged([
             'plate_number'     => strtoupper(trim((string) ($vehicle['plate_number'] ?? ''))),
             'operator_name'    => strtoupper(trim((string) ($vehicle['operator_name'] ?? ''))),
             'driver_name'      => trim((string) ($vehicle['driver_name'] ?? '')),
             'type'             => $vehicle['type'] ?? '',
             'capacity'         => $vehicle['capacity'] ?? '',
-            'status'           => $vehicle['status'] ?? '',
             'default_route_id' => $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '',
             'dispatch_order'   => $vehicle['dispatch_order'] ?? '',
         ], [
@@ -462,9 +502,8 @@ class Vehicles extends BaseController
             'driver_name'      => $driverName,
             'type'             => $vehicleType,
             'capacity'         => $this->request->getPost('capacity'),
-            'status'           => $this->request->getPost('status'),
             'default_route_id' => $routeId,
-            'dispatch_order'   => $this->request->getPost('dispatch_order') ?? ($vehicle['dispatch_order'] ?? ''),
+            'dispatch_order'   => $dispatchOrder,
         ])) {
             return $this->noChangesResponse();
         }
@@ -476,11 +515,10 @@ class Vehicles extends BaseController
             'driver_name'      => $driverName,
             'type'             => $vehicleType,
             'capacity'         => $this->request->getPost('capacity'),
-            'status'           => $this->request->getPost('status'),
             'default_route_id' => $routeId,
             'photo'            => $photoRelPath,
-            'dispatch_order'   => $this->request->getPost('dispatch_order') ?? ($vehicle['dispatch_order'] ?? ''),
-        ], (int) $id)) {
+            'dispatch_order'   => $dispatchOrder,
+        ], (int) $id, $syncCurrentOrder)) {
             return redirect()->back()->withInput()->with('error', 'The vehicle could not be saved. Please try again.');
         }
 
@@ -516,6 +554,74 @@ class Vehicles extends BaseController
         ]);
 
         return redirect()->to('/admin/vehicles')->with('success', 'Vehicle updated successfully.');
+    }
+
+    /** Availability changes are separate from vehicle details and archiving. */
+    public function updateStatus($id)
+    {
+        if (!$this->request->is('post')) {
+            return $this->response->setStatusCode(405)->setHeader('Allow', 'POST');
+        }
+        $status = $this->request->getPost('status');
+        $expected = $this->request->getPost('current_status');
+        if (!in_array($status, ['active', 'maintenance'], true)
+            || !in_array($expected, ['active', 'maintenance'], true)) {
+            return redirect()->to('/admin/vehicles')->with('error', 'Choose Active or Maintenance for the vehicle status.');
+        }
+
+        $db = db_connect();
+        $db->transBegin();
+        try {
+            // Share the queue-order lock with dispatch so a vehicle cannot be
+            // added to a trip while it is being taken out of service.
+            if (str_contains(strtolower($db->DBDriver), 'postgre')) {
+                $key = crc32('queue_recalc_0');
+                $db->query('SELECT pg_advisory_xact_lock(?)', [$key > 2147483647 ? $key - 4294967296 : $key]);
+            }
+            $vehicle = $this->vehicleModel->find($id);
+            if (!$vehicle || !in_array($vehicle['status'], ['active', 'maintenance'], true)) {
+                $db->transRollback();
+                return redirect()->to('/admin/vehicles')->with('error', $vehicle ? 'Use Activate to restore an archived vehicle.' : 'Vehicle not found.');
+            }
+            if ($vehicle['status'] !== $expected) {
+                $db->transRollback();
+                return redirect()->to('/admin/vehicles')->with('error', 'This vehicle status has changed. Review its current status and try again.');
+            }
+            if ($vehicle['status'] === $status) {
+                $db->transRollback();
+                return redirect()->to('/admin/vehicles')->with('info', 'This vehicle already has the selected status.');
+            }
+            if (!$this->vehicleModel->saveInDispatchOrder(['status' => $status], (int) $id)) {
+                throw new \RuntimeException('Vehicle status could not be saved.');
+            }
+            $canceled = 0;
+            if ($status === 'maintenance') {
+                $queueModel = new \App\Models\QueueModel($db);
+                $activeTrips = $queueModel->where('vehicle_id', $id)->whereIn('status', ['waiting', 'boarding'])->findAll();
+                if ($activeTrips) {
+                    $db->table('queue')->whereIn('id', array_column($activeTrips, 'id'))->update([
+                        'status' => 'canceled', 'position' => 0, 'boarding_start' => null, 'estimated_departure' => null,
+                    ]);
+                    $canceled = count($activeTrips);
+                    foreach (array_unique(array_column($activeTrips, 'route_id')) as $routeId) {
+                        $queueModel->recalculateSchedule((int) $routeId);
+                    }
+                }
+            }
+            if (!$db->transStatus()) throw new \RuntimeException('Vehicle status transaction failed.');
+            $db->transCommit();
+        } catch (\Throwable $error) {
+            $db->transRollback();
+            log_message('error', 'Vehicle status update failed: {message}', ['message' => $error->getMessage()]);
+            return redirect()->to('/admin/vehicles')->with('error', 'The vehicle status could not be updated. Please try again.');
+        }
+
+        $label = $status === 'maintenance' ? 'Maintenance' : 'Active';
+        $this->logActivity('Update vehicle status', 'Changed vehicle ' . $vehicle['plate_number'] . ' from ' . $vehicle['status'] . ' to ' . $status . ($canceled ? '; canceled ' . $canceled . ' active trip(s).' : '.'));
+        $this->broadcastUpdate('queue_update', ['action' => 'vehicle_updated', 'id' => (int) $id, 'status' => $status]);
+        $message = 'Vehicle "' . $vehicle['plate_number'] . '" is now ' . $label . '.';
+        if ($canceled) $message .= ' Its waiting and boarding trips were canceled.';
+        return redirect()->to('/admin/vehicles')->with('success', $message);
     }
 
     public function delete($id)
@@ -666,5 +772,18 @@ class Vehicles extends BaseController
         }
 
         return redirect()->to('/admin/vehicles' . ($redirectTab ? '?tab=' . $redirectTab : ''))->with('error', 'Invalid bulk action.');
+    }
+
+    private function dispatchOrderError(array $route, string $status, ?int $excludeId = null): ?string
+    {
+        $requested = $this->request->getPost('dispatch_order');
+        if ($requested === null || $requested === '') return null;
+        $counts = $this->vehicleModel->getDispatchOrderCounts([$route], $excludeId)[(int) $route['id']];
+        $active = $status === 'active';
+        $minimum = $active ? 1 : $counts['active_count'] + 1;
+        $maximum = ($active ? $counts['active_count'] : $counts['total_count']) + 1;
+        return (int) $requested < $minimum || (int) $requested > $maximum
+            ? 'Choose a route order from ' . $minimum . ' to ' . $maximum . ', or leave it blank to place this vehicle last.'
+            : null;
     }
 }

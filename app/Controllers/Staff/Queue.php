@@ -115,6 +115,7 @@ class Queue extends BaseController
     /** Read only the active trips the current dispatcher is allowed to manage. */
     public function cancelSelection()
     {
+        $this->releaseReadOnlySession();
         $queue = $this->activeSelectionRows($this->getAssignedRouteIds());
         return $this->response->setHeader('Cache-Control', 'no-store')->setJSON([
             'success' => true,
@@ -159,6 +160,11 @@ class Queue extends BaseController
 
     public function index()
     {
+        // Full navigation can persist profile/flash metadata in the header.
+        // A background HTML refresh only needs the already authenticated data.
+        if ($this->request->isAJAX()) {
+            $this->releaseReadOnlySession();
+        }
         $this->advanceAutomaticBoarding();
         $assignedRouteIds = $this->getAssignedRouteIds();
         $queue = $this->activeSelectionRows($assignedRouteIds);
@@ -314,8 +320,17 @@ class Queue extends BaseController
 
     public function tick()
     {
+        $this->releaseReadOnlySession();
         $this->advanceAutomaticBoarding();
         return $this->response->setJSON(['success' => true, 'service_date' => date('Y-m-d'), 'csrf' => csrf_hash()]);
+    }
+
+    /** Background reads must not keep action requests waiting on the session lock. */
+    private function releaseReadOnlySession(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
     }
 
     public function setRound()
@@ -394,6 +409,7 @@ class Queue extends BaseController
         $routeCache = [];
         $terminalStates = [];
         $destinationPositions = [];
+        $affectedQueueLines = [];
         $ruleCache = [];
 
         $db = \Config\Database::connect();
@@ -414,6 +430,12 @@ class Queue extends BaseController
                 $errors[] = 'Vehicle not found.';
                 continue;
             }
+            // A modal opened before an admin's availability change can still
+            // submit this ID. Check the current status under the ordering lock.
+            if (($vehicle['status'] ?? 'active') !== 'active') {
+                $errors[] = 'Vehicle ' . $vehicle['plate_number'] . ' is unavailable for dispatch. Set it to Active before adding it to the queue.';
+                continue;
+            }
 
             $routeId = $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? null;
             if (empty($routeId)) {
@@ -422,11 +444,19 @@ class Queue extends BaseController
             }
 
             if (!array_key_exists($routeId, $routeCache)) {
-                $routeCache[$routeId] = $this->routeModel->find($routeId);
+                $routeCache[$routeId] = $this->routeModel->withOrigin()->find($routeId);
             }
             $route = $routeCache[$routeId];
             if (!$route) {
                 $errors[] = 'The route assigned to vehicle ' . $vehicle['plate_number'] . ' no longer exists.';
+                continue;
+            }
+            if (($route['status'] ?? 'active') !== 'active') {
+                $errors[] = 'The route assigned to vehicle ' . $vehicle['plate_number'] . ' is archived. Restore the route before adding the vehicle.';
+                continue;
+            }
+            if (RouteModel::sameLocation((string) ($route['origin'] ?? ''), (string) $route['destination'])) {
+                $errors[] = 'The route assigned to vehicle ' . $vehicle['plate_number'] . ' has the same origin and destination. Correct the route before adding the vehicle.';
                 continue;
             }
 
@@ -544,6 +574,7 @@ class Queue extends BaseController
             ]);
 
             $destinationPositions[$positionKey] = $nextPosition;
+            $affectedQueueLines[$positionKey] = (int) $routeId;
             $terminalStates[$terminalId]['active']++;
             $selectionIndex++;
             $addedCount++;
@@ -554,9 +585,13 @@ class Queue extends BaseController
             $this->logActivity('Add to queue', 'Added ' . ($vehicle['plate_number'] ?? 'vehicle') . ' to queue for ' . ($route['destination'] ?? 'route') . '. (Operator: ' . ($opName ?: 'N/A') . ', Driver: ' . ($drName ?: 'N/A') . '). Rule: ' . $ruleLabel . ' (' . $waitMinutes . ' min).');
         }
 
-        // Order the active queue by departure
+        // The usual one-line addition must not recalculate other terminals.
         if ($addedCount > 0) {
-            $this->queueModel->reorderByDeparture();
+            if (count($affectedQueueLines) === 1) {
+                $this->queueModel->recalculateSchedule((int) reset($affectedQueueLines));
+            } else {
+                $this->queueModel->reorderByDeparture();
+            }
         }
 
         $db->transComplete();
@@ -594,8 +629,9 @@ class Queue extends BaseController
     public function updateStatus($id, $status)
     {
         $this->resetDailyQueue();
+        $existingItem = $this->queueModel->find($id);
         // Server-side route authorization check
-        if (!$this->hasQueueAccess((int) $id)) {
+        if (!$existingItem || !$this->hasRouteAccess((int) $existingItem['route_id'])) {
             $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to update status of queue #' . $id . ' on an unassigned route.');
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(403)->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
@@ -618,7 +654,6 @@ class Queue extends BaseController
             return redirect()->back()->with('error', 'Invalid status.');
         }
 
-        $existingItem = $this->queueModel->find($id);
         if (! $existingItem) {
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Queue item not found.']);
@@ -630,7 +665,7 @@ class Queue extends BaseController
         if ($status == 'departed') {
             $data['departure_time'] = date('Y-m-d H:i:s');
             $data['position'] = 0; // Remove from active positions
-            $qItem = $this->queueModel->find($id);
+            $qItem = $existingItem;
             if ($qItem) {
                 $veh = (new \App\Models\VehicleModel())->find($qItem['vehicle_id']);
                 if ($veh) {
@@ -716,7 +751,9 @@ class Queue extends BaseController
             $this->vehicleModel->rotateAfterDeparture((int) $lockedItem['vehicle_id'], (int) $lockedItem['route_id']);
             $this->queueModel->recalculateSchedule((int) $existingItem['route_id'], true, strtotime($data['departure_time']));
         } else {
-            $this->queueModel->reorderByDeparture();
+            // Only this destination's shared line can change. Recalculating
+            // every terminal here holds the ordering lock for unrelated trips.
+            $this->queueModel->recalculateSchedule((int) $existingItem['route_id']);
         }
 
         $db->transComplete();
@@ -729,20 +766,16 @@ class Queue extends BaseController
         }
 
 
-        $item = $this->queueModel->select('vehicles.plate_number, vehicles.operator_name, vehicles.driver_name, terminals.name as origin, routes.destination')
+        // Reuse the committed row for the log, broadcast and response rather
+        // than issuing the same joined lookup again before returning success.
+        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.operator_name as vehicle_operator_name, vehicles.driver_name as vehicle_driver_name, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, vehicles.capacity, terminals.name as origin, routes.destination')
             ->withFullJoins()
             ->where('queue.id', $id)
             ->first();
-        $label = $item ? $item['plate_number'] . ' (' . $item['destination'] . ')' : 'queue #' . $id;
-        $opDriver = $item ? ' (Operator: ' . ($item['operator_name'] ?: 'N/A') . ', Driver: ' . ($item['driver_name'] ?: 'N/A') . ')' : '';
+        $label = $updatedItem ? $updatedItem['plate_number'] . ' (' . $updatedItem['destination'] . ')' : 'queue #' . $id;
+        $opDriver = $updatedItem ? ' (Operator: ' . ($updatedItem['vehicle_operator_name'] ?: 'N/A') . ', Driver: ' . ($updatedItem['vehicle_driver_name'] ?: 'N/A') . ')' : '';
         $actionLabel = $status === 'boarding' ? 'Start Boarding' : ($status === 'departed' ? 'Depart Vehicle' : ($status === 'canceled' ? 'Cancel Trip' : $status));
         $this->logActivity($actionLabel, $actionLabel . ' for ' . $label . '.' . $opDriver);
-
-        // Fetch updated queue item for broadcast
-        $updatedItem = $this->queueModel->select('queue.*, vehicles.plate_number, vehicles.type as vehicle_type, vehicles.photo as vehicle_photo, vehicles.capacity, terminals.name as origin, routes.destination')
-            ->withFullJoins()
-            ->where('queue.id', $id)
-            ->first();
 
         $this->broadcastUpdate('queue_update', [
             'action' => 'status_change',
@@ -758,7 +791,8 @@ class Queue extends BaseController
                 'status' => $status,
                 'id' => (int) $id,
                 'plate_number' => $updatedItem['plate_number'] ?? '',
-                'vehicle_type' => vehicle_type_label($updatedItem['vehicle_type'] ?? '')
+                'vehicle_type' => vehicle_type_label($updatedItem['vehicle_type'] ?? ''),
+                'queue_item' => $updatedItem,
             ]);
         }
 
@@ -810,7 +844,12 @@ class Queue extends BaseController
             $this->queueModel->whereIn('id', $ids)->set([
                 'status' => 'canceled', 'estimated_departure' => null, 'boarding_start' => null,
             ])->update();
-            $this->queueModel->reorderByDeparture();
+            $affectedRouteIds = array_values(array_unique(array_column($items, 'route_id')));
+            if (count($affectedRouteIds) === 1) {
+                $this->queueModel->recalculateSchedule((int) $affectedRouteIds[0]);
+            } else {
+                $this->queueModel->reorderByDeparture();
+            }
             if (!$db->transStatus()) throw new \RuntimeException('Selected cancellation transaction failed.');
             $db->transCommit();
         } catch (\Throwable $error) {
@@ -1068,10 +1107,12 @@ class Queue extends BaseController
 
         $finalOrder = array_merge($boardingIds, $waitingIds);
         foreach ($finalOrder as $index => $queueId) {
-            $this->queueModel->update($queueId, ['position' => $index + 1]);
+            if ((int) ($currentById[$queueId]['position'] ?? 0) !== $index + 1) {
+                $this->queueModel->update($queueId, ['position' => $index + 1]);
+            }
         }
 
-        $this->queueModel->reorderByDeparture();
+        $this->queueModel->recalculateSchedule((int) $currentItems[0]['route_id']);
         $db->transComplete();
 
         if ($db->transStatus() === false) {
@@ -1096,13 +1137,13 @@ class Queue extends BaseController
     public function undoCancel($id)
     {
         $this->resetDailyQueue();
+        $queueItem = $this->queueModel->find($id);
         // Server-side route authorization check
-        if (!$this->hasQueueAccess((int) $id)) {
+        if (!$queueItem || !$this->hasRouteAccess((int) $queueItem['route_id'])) {
             $this->logActivity('Unauthorized queue action attempt', 'Dispatcher "' . session()->get('username') . '" tried to undo cancel on unassigned route queue #' . $id . '.');
             return $this->response->setJSON(['success' => false, 'message' => "You don't have access to this route."]);
         }
 
-        $queueItem = $this->queueModel->find($id);
         if (!$queueItem) {
             return $this->response->setJSON(['success' => false, 'message' => 'Queue item not found.']);
         }
@@ -1130,30 +1171,37 @@ class Queue extends BaseController
             ]);
         }
 
-        // Validate vehicle is active (not archived or in maintenance)
-        $vehicle = $this->vehicleModel->find($vehicleId);
-        if (!$vehicle || ($vehicle['status'] ?? 'active') !== 'active') {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Cannot restore trip: This vehicle is currently inactive or archived.'
-            ]);
-        }
-
-        // Validate route is active (not archived)
-        $routeModel = new \App\Models\RouteModel();
-        $route = $routeModel->find($queueItem['route_id']);
-        if (!$route || ($route['status'] ?? 'active') !== 'active') {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Cannot restore trip: The assigned route is currently inactive or archived.'
-            ]);
-        }
-
         // Restore to waiting
         $db = \Config\Database::connect();
         $db->transStart();
         $this->acquireQueueOrderingLock($db);
         $this->queueModel->resetForNewDay();
+
+        // Check availability after locking: an admin may have completed a
+        // Maintenance change while this restore request was waiting its turn.
+        $vehicle = $this->vehicleModel->find($vehicleId);
+        if (!$vehicle || ($vehicle['status'] ?? 'active') !== 'active') {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => 'Cannot restore trip: This vehicle is in maintenance or archived. Set it to Active before restoring the trip.',
+            ]);
+        }
+        $route = $this->routeModel->withOrigin()->find($queueItem['route_id']);
+        if (!$route || ($route['status'] ?? 'active') !== 'active') {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => 'Cannot restore trip: The assigned route is currently inactive or archived.',
+            ]);
+        }
+        if (RouteModel::sameLocation((string) ($route['origin'] ?? ''), (string) $route['destination'])) {
+            $db->transRollback();
+            return $this->response->setStatusCode(409)->setJSON([
+                'success' => false,
+                'message' => 'Cannot restore trip: Its origin and destination are the same. Correct the route first.',
+            ]);
+        }
 
         $resetCutoff = \App\Libraries\QueueResetSchedule::configuredCutoff();
         if ($resetCutoff !== null && $queueItem['arrival_time'] < $resetCutoff) {
@@ -1218,8 +1266,12 @@ class Queue extends BaseController
             'arrival_time' => !empty($queueItem['arrival_time']) ? $queueItem['arrival_time'] : date('Y-m-d H:i:s'),
         ]);
 
+        $savedPositions = array_column($activeItems, 'position', 'id');
+        $savedPositions[(int) $id] = $savedPosition;
         foreach ($activeIds as $index => $queueId) {
-            $this->queueModel->update($queueId, ['position' => $index + 1]);
+            if ((int) ($savedPositions[$queueId] ?? 0) !== $index + 1) {
+                $this->queueModel->update($queueId, ['position' => $index + 1]);
+            }
         }
 
         // Recalculate schedule starting from now on the 5-minute grid so the restored
@@ -1252,6 +1304,7 @@ class Queue extends BaseController
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Trip for ' . $plateNumber . ' has been restored to the queue.',
+                'status' => $updatedItem['status'] ?? 'waiting',
                 'id' => (int) $id,
                 'plate_number' => $plateNumber,
                 'queue_item' => $updatedItem

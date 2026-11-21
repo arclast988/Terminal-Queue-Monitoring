@@ -19,6 +19,17 @@ class RouteModel extends Model
     protected $createdField  = 'created_at';
     protected $updatedField  = '';
 
+    /** Compare place names without case or incidental Unicode spacing. */
+    public static function sameLocation(string $origin, string $destination): bool
+    {
+        $normalize = static fn(string $value): string => mb_strtoupper(
+            trim((string) preg_replace('/[\s\p{Z}]+/u', ' ', $value)),
+            'UTF-8'
+        );
+        $normalizedOrigin = $normalize($origin);
+        return $normalizedOrigin !== '' && $normalizedOrigin === $normalize($destination);
+    }
+
     /**
      * All vehicle-type routes sharing one terminal/destination queue line.
      * Departure rules use a representative route ID for this whole line.

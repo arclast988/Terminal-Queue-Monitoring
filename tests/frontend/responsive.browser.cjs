@@ -17,7 +17,12 @@ const authPages = new Set(pages.slice(0, 4));
 const cache = new Map();
 const report = { engine, fixtures: 'production PHP views with seeded helper/data values', cases: [], beforeAfter: {} };
 let browser, server, origin, beforeCSS;
-function scriptsOf(html) { return [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).filter(Boolean); }
+function scriptsOf(html) {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(match => {
+    const type = match[1].match(/\btype\s*=\s*["']([^"']+)["']/i);
+    return !type || /^(?:module|(?:text|application)\/(?:java|ecma)script)$/i.test(type[1]);
+  }).map(match => match[2]).filter(Boolean);
+}
 function fixture(name, long, baseline, state = '') {
   const key = name + ':' + long + ':' + state;
   if (!cache.has(key)) {
@@ -217,6 +222,28 @@ test('management pages keep long values and primary controls inside phone, table
   assert.deepEqual(failures, []);
 });
 
+test('departure rule terminal defaults stay inside their destination column at readable text sizes', {timeout:60000}, async t => {
+  for (const width of [320,375,768,844,1280,1366]) {
+    const {page,context,errors} = await open(t,'admin-rules',width,900,'state=bulk-rules');
+    try {
+      const labels = await page.locator('#departure-rules-table .rule-default-tag').evaluateAll(tags => tags.map(tag => {
+        const cell = tag.closest('td').getBoundingClientRect(), pill = tag.getBoundingClientRect();
+        const range = document.createRange(); range.selectNodeContents(tag.querySelector('span'));
+        return {text:tag.textContent.trim(),font:parseFloat(getComputedStyle(tag).fontSize),
+          fits:pill.left>=cell.left-1 && pill.right<=cell.right+1 && [...range.getClientRects()].every(line=>line.left>=cell.left-1 && line.right<=cell.right+1)};
+      }));
+      assert.equal(labels.length,2);
+      assert.ok(labels.every(label=>label.fits && label.font>=15),JSON.stringify({width,labels}));
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true,'page overflow at '+width);
+      assert.deepEqual(errors,[]);
+      if (width===375 || width===1366) {
+        await page.locator('#departure-rules-table').scrollIntoViewIfNeeded();
+        await screenshot(page,'departure-rule-default-'+width,false);
+      }
+    } finally { await context.close(); }
+  }
+});
+
 
 
 test('dispatcher password guidelines precede the form on mobile', { timeout: 30000 }, async t => {
@@ -327,9 +354,10 @@ test('management actions align with their headers and scroll as normal columns l
         const alignment = await cell.evaluate(el => {
           const header = el.closest('table').querySelector('thead .management-actions-col');
           return { header:header.getBoundingClientRect().left + parseFloat(getComputedStyle(header).paddingLeft),
+            group:el.querySelector('.management-row-actions').getBoundingClientRect().left,
             buttons:[...el.querySelectorAll('.btn-modern')].map(button => button.getBoundingClientRect().left) };
         });
-        assert.ok(Math.abs(alignment.buttons[0] - alignment.header) <= 1, JSON.stringify({name,width,alignment}));
+        assert.ok(Math.abs((name === 'admin-vehicles' ? alignment.group : alignment.buttons[0]) - alignment.header) <= 1, JSON.stringify({name,width,alignment}));
         assert.equal(await cell.evaluate(el => getComputedStyle(el).boxShadow), 'none');
         await cell.hover();
         const highlight = await cell.evaluate(el => ({ background:getComputedStyle(el).backgroundColor, image:getComputedStyle(el).backgroundImage }));
@@ -343,7 +371,13 @@ test('management actions align with their headers and scroll as normal columns l
         return { left:box.left, top:box.top, bottom:box.bottom, height:box.height, label:label?.textContent.trim(), visibleLabel:label && getComputedStyle(label).display !== 'none' };
       }));
       assert.ok(targets.length >= 2 && targets.every(target => target.visibleLabel && target.height >= (width <= 768 ? 40 : 31) - 1), JSON.stringify({name,width,targets}));
-      if (width > 768) {
+      if (name === 'admin-vehicles') {
+        assert.equal(await actions.evaluate(el => getComputedStyle(el).display), 'grid');
+        assert.ok(targets[0].bottom + 5 <= targets[2].top, 'Availability must sit above Deactivate');
+        assert.ok(Math.abs(targets[1].top - targets[2].top) <= 1, 'Edit and Deactivate must share a row');
+        assert.ok(Math.abs(targets[0].left - targets[2].left) <= 1, 'Availability and Deactivate must share a column');
+        assert.ok(targets[1].left < targets[2].left, 'Edit must sit left of Deactivate');
+      } else if (width > 768) {
         assert.ok(targets.every((target, index) => index === 0 || target.top >= targets[index - 1].bottom + 5), name + ' actions should stack vertically: ' + JSON.stringify(targets));
         assert.ok(targets.every(target => Math.abs(target.left - targets[0].left) <= 1), name + ' actions should share their left edge');
       } else {
@@ -567,6 +601,117 @@ test('vehicle modals preserve native fields, validation, focus and dismissal at 
   }
 });
 
+test('route creation explains missing vehicle types beside the choices and keeps error messages readable', { timeout: 30000 }, async t => {
+  for (const width of [375, 1280]) {
+    const { page, context, errors } = await open(t, 'admin-route-create', width, 900, '');
+    const form = page.locator('form[action="/admin/routes/store"]');
+    const message = page.locator('#routeVehicleTypesError');
+    const posts = []; page.on('request', request => { if (request.method() === 'POST') posts.push(request.url()); });
+    assert.equal(await message.isVisible(), false, 'an untouched form should not show a warning');
+    await page.locator('#destination').fill('ISABEL');
+    await form.locator('button[type="submit"]').click();
+    assert.equal(await message.isVisible(), true);
+    assert.equal(await message.textContent(), 'Select at least one vehicle type for this route.');
+    assert.equal(await form.locator('.vt-checkbox').first().evaluate(input => input.validationMessage), 'Select at least one vehicle type for this route.');
+    assert.deepEqual(posts, []);
+    await form.locator('.vt-checkbox').first().check();
+    assert.equal(await message.isVisible(), false);
+    await form.evaluate(el => {
+      window.fixtureRouteSubmits = [];
+      el.addEventListener('submit', event => {
+        event.preventDefault();
+        const data = new FormData(el);
+        window.fixtureRouteSubmits.push({ action: data.get('form_action'), destination: data.get('destination'), types: data.getAll('vehicle_types[]') });
+      });
+    });
+    await form.locator('button[type="submit"]').click();
+    assert.deepEqual(await page.evaluate(() => window.fixtureRouteSubmits), [{ action: 'create_route', destination: 'ISABEL', types: ['jeepney'] }]);
+    assert.deepEqual(errors, []);
+    await page.goto(`${origin}/admin-route-create?state=validation-error`);
+    const alert = page.locator('.alert-modern[role="alert"]');
+    assert.match(await alert.textContent(), /Please check the route details/);
+    assert.match(await alert.textContent(), /Select at least one vehicle type for this route/);
+    assert.doesNotMatch(await alert.textContent(), /fare field|Validation Errors/);
+    checkBounds(await bounds(page, ['.alert-modern[role="alert"]']), `route validation alert ${width}`);
+    if (width === 375) await screenshot(page, 'route-validation-message', false);
+    report.cases.push({ page: 'route creation validation', width, passed: true });
+    await context.close();
+  }
+});
+
+test('vehicle plate feedback stays clear for empty, reset and reopened registration fields', { timeout: 30000 }, async t => {
+  const { page, context, errors } = await open(t, 'admin-vehicles', 1280, 800, '');
+  const checks = [];
+  let resolveHeldRequest;
+  const heldRequest = new Promise(resolve => { resolveHeldRequest = resolve; });
+  const duplicate = { available: false, status: 'duplicate', message: 'This plate number is already registered. Please enter a different plate number.' };
+  await page.route('**/admin/vehicles/check-plate?*', async route => {
+    const plate = new URL(route.request().url()).searchParams.get('plate');
+    checks.push(plate);
+    if (plate === 'RACE-123') { resolveHeldRequest(route); return; }
+    await route.fulfill({ json: plate === 'FREE-123' ? { available: true, status: 'available' } : duplicate });
+  });
+  const plate = page.locator('#plate_number');
+  const feedback = page.locator('#plate-validation-feedback');
+  const trigger = page.locator('[data-bs-target="#registerVehicleModal"]');
+  async function openModal() {
+    await trigger.click();
+    await page.waitForFunction(() => document.querySelector('#registerVehicleModal').dataset.fixtureShown === '1');
+  }
+  async function assertEmptyFeedback(reason) {
+    await page.waitForFunction(() => {
+      const input = document.querySelector('#plate_number');
+      const message = document.querySelector('#plate-validation-feedback');
+      const icon = document.querySelector('#plate-validation-icon');
+      return input.value === '' && getComputedStyle(message).display === 'none' &&
+        getComputedStyle(icon).display === 'none' && !input.matches('.plate-valid, .plate-invalid');
+    }, null, { timeout: 3000 });
+    assert.equal(await feedback.textContent(), '', reason + ': stale feedback text must be cleared');
+    assert.equal(await page.locator('#registerVehicleModal .plate-validation-feedback:visible').count(), 0, reason + ': sizing placeholders must not display a warning');
+    assert.equal(await page.locator('#registerVehicleModal .plate-validation-slot').evaluate(el => el.hidden && el.getBoundingClientRect().height === 0), true, reason + ': empty feedback must not reserve a blank gap');
+  }
+  async function showDuplicate() {
+    await plate.fill('DUP-123');
+    await page.waitForFunction(() => document.querySelector('#plate_number').classList.contains('plate-invalid'));
+    assert.equal(await feedback.isVisible(), true);
+    assert.match(await feedback.textContent(), /already registered/);
+  }
+
+  await openModal();
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 500)));
+  await assertEmptyFeedback('fresh form');
+  assert.deepEqual(checks, [], 'an untouched empty plate must not contact the duplicate-check endpoint');
+
+  await showDuplicate();
+  await page.locator('#registerVehicleForm').evaluate(form => form.reset());
+  await assertEmptyFeedback('native reset');
+
+  await plate.fill('FREE-123');
+  await page.waitForFunction(() => document.querySelector('#plate_number').classList.contains('plate-valid'));
+  assert.match(await feedback.textContent(), /available/);
+  await plate.fill('');
+  await assertEmptyFeedback('cleared available plate');
+
+  await showDuplicate();
+  await page.locator('#registerVehicleModal .btn-close').click();
+  await page.waitForFunction(() => !document.querySelector('#registerVehicleModal').classList.contains('show') && !document.querySelector('.modal-backdrop'));
+  await plate.evaluate(input => { input.value = ''; }); // Browser restoration can change a value without an input event.
+  await openModal();
+  await assertEmptyFeedback('reopened empty form');
+
+  await plate.fill('RACE-123');
+  const pendingRoute = await heldRequest;
+  await plate.evaluate(input => { input.value = ''; });
+  const responsePromise = page.waitForResponse(response => response.url().includes('/admin/vehicles/check-plate?') && new URL(response.url()).searchParams.get('plate') === 'RACE-123');
+  await pendingRoute.fulfill({ json: duplicate });
+  await (await responsePromise).finished();
+  await assertEmptyFeedback('outdated duplicate response');
+  assert.ok(checks.every(checkedPlate => checkedPlate && checkedPlate.trim() !== ''), 'empty plates must never be checked');
+  assert.deepEqual(errors, []);
+  report.cases.push({ page: 'empty plate validation lifecycle', passed: true });
+  await context.close();
+});
+
 test('vehicle autocomplete validation stays closed until the field is used and preserves registration payloads', { timeout: 60000 }, async t => {
   for (const [width, height, mode, touch] of [[320, 568, 'full'], [844, 390, 'full'], [1280, 800, 'full'], [320, 568, 'lite'], [320, 568, 'reduced'], [390, 844, 'full', true]]) {
     t.diagnostic(`vehicle registration: ${width}x${height}, ${mode}${touch ? ', touch' : ''}`);
@@ -652,8 +797,8 @@ test('vehicle autocomplete validation stays closed until the field is used and p
 
 test('vehicle autocomplete validation preserves a pointer gesture while plate feedback changes', { timeout: 60000 }, async t => {
   const duplicate = 'This plate number is already registered. Please enter a different plate number.';
-  for (const name of ['admin-vehicles', 'admin-vehicle-edit']) for (const width of [320, 1280]) {
-    const { page, context, errors } = await open(t, name, width, width === 320 ? 568 : 800, '', 'reduced');
+  for (const [name, width, height] of [['admin-vehicles', 320, 568], ['admin-vehicles', 797, 681], ['admin-vehicles', 1280, 800], ['admin-vehicle-edit', 320, 568], ['admin-vehicle-edit', 1280, 800]]) {
+    const { page, context, errors } = await open(t, name, width, height, '', 'reduced');
     const checks = [], arrivals = [];
     const nextCheck = () => checks.length ? Promise.resolve(checks.shift()) : new Promise(resolve => arrivals.push(resolve));
     await page.route('**/admin/vehicles/check-plate?**', route => {
@@ -666,6 +811,33 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
       await page.waitForFunction(() => document.querySelector('#registerVehicleModal').dataset.fixtureShown === '1');
     }
     const form = page.locator(name === 'admin-vehicles' ? '#registerVehicleForm' : '#editVehicleForm');
+    const visibleFeedback = form.locator('.plate-validation-feedback:visible');
+    const sizingFeedback = form.locator('.plate-validation-size');
+    const plate = page.locator('#plate_number');
+    async function assertCompactPlate(reason) {
+      const layout = await plate.evaluate(input => {
+        const column = input.closest('.plate-col-wrapper');
+        const helper = column.querySelector('.form-text-modern');
+        const slot = column.querySelector('.plate-validation-slot');
+        return { gap: helper.getBoundingClientRect().top - input.getBoundingClientRect().bottom, slotHeight: slot.getBoundingClientRect().height, collapsed: slot.hidden, helperBeforeSlot: !!(helper.compareDocumentPosition(slot) & Node.DOCUMENT_POSITION_FOLLOWING) };
+      });
+      assert.ok(layout.gap >= -1 && layout.gap <= 8, `${name} ${width}: ${reason} helper must sit directly below the plate input: ` + JSON.stringify(layout));
+      assert.deepEqual({ slotHeight: layout.slotHeight, collapsed: layout.collapsed, helperBeforeSlot: layout.helperBeforeSlot }, { slotHeight: 0, collapsed: true, helperBeforeSlot: true }, `${name} ${width}: ${reason} must not leave an empty validation gap`);
+    }
+    await assertCompactPlate('initial blank or unchanged field');
+    await plate.fill('');
+    assert.equal(await visibleFeedback.count(), 0, `${name} ${width}: an empty plate must have no visible feedback, including the layout placeholder`);
+    await assertCompactPlate('empty field');
+    assert.deepEqual(await sizingFeedback.evaluate(el => ({ visibility: getComputedStyle(el).visibility, opacity: getComputedStyle(el).opacity, pointerEvents: getComputedStyle(el).pointerEvents, reservesSpace: el.getBoundingClientRect().height > 0 })), { visibility: 'hidden', opacity: '0', pointerEvents: 'none', reservesSpace: false }, `${name} ${width}: an empty field must not reserve warning space`);
+    if (name === 'admin-vehicles' && width === 797) await screenshot(page, 'plate-helper-spacing-797', false);
+    await plate.fill('1');
+    assert.equal(await visibleFeedback.count(), 1, `${name} ${width}: show only the real length warning`);
+    assert.match(await visibleFeedback.textContent(), /at least 4 characters/);
+    assert.doesNotMatch(await visibleFeedback.textContent(), /already registered/);
+    assert.equal(await sizingFeedback.evaluate(el => el.getBoundingClientRect().height > 0), true, `${name} ${width}: typing must open the validation reservation immediately`);
+    await plate.fill('');
+    assert.equal(await visibleFeedback.count(), 0);
+    await assertCompactPlate('cleared length warning');
     await page.locator('#operator_name').fill('fixture operator');
     await page.locator('#driver_name').fill('Fixture Driver');
     await page.locator('#capacity').fill('16');
@@ -679,6 +851,7 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     await page.clock.install();
     await page.clock.pauseAt(new Date(Date.now() + 1000));
     await page.locator('#plate_number').fill('hold-1234');
+    assert.equal(await sizingFeedback.evaluate(el => el.getBoundingClientRect().height > 0), true, `${name} ${width}: reserve space before the debounce or pointer gesture begins`);
     await routeInput.evaluate(input => {
       window.fixtureRouteClicks = 0;
       window.fixtureRoutePointerDown = null;
@@ -705,6 +878,7 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     assert.equal(await page.locator('#plate-validation-feedback').textContent(), 'Checking availability...');
     await request.fulfill({ json: { available: false, message: duplicate } });
     await page.waitForFunction(text => document.getElementById('plate-validation-feedback').textContent === text, duplicate);
+    assert.equal(await visibleFeedback.count(), 1, `${name} ${width}: show only one duplicate warning`);
     await page.mouse.up();
     assert.equal(await page.evaluate(() => window.fixtureRouteClicks), 1, `${name} ${width}: plate feedback moved the route input during the click`);
     await routeWrapper.locator('.autocomplete-dropdown').waitFor({ state: 'visible', timeout: 3000 });
@@ -717,10 +891,30 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     });
     assert.deepEqual(feedbackBounds, { fits: true, text: duplicate }, `${name} ${width}: the wrapped error must stay readable`);
     assert.equal(await page.locator('.plate-validation-size').getAttribute('aria-hidden'), 'true');
+    await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 1000));
     const available = nextCheck();
     await page.locator('#plate_number').fill('free-5678');
-    await (await available).fulfill({ json: { available: true } });
+    await routeInput.hover();
+    await page.mouse.down();
+    const routeBeforeSuccess = await routeInput.boundingBox();
+    await page.clock.runFor(400);
+    await page.clock.resume();
+    const availableRequest = await available;
+    await availableRequest.fulfill({ json: { available: true } });
     await page.waitForFunction(() => document.getElementById('plate-validation-feedback').classList.contains('feedback-success'));
+    const routeDuringSuccess = await routeInput.boundingBox();
+    assert.ok(Math.abs(routeDuringSuccess.y-routeBeforeSuccess.y)<=1, `${name} ${width}: compact success must wait until the pressed field receives its click`);
+    await page.mouse.up();
+    assert.equal(await page.evaluate(() => window.fixtureRouteClicks), 2, `${name} ${width}: success feedback must preserve the route click`);
+    await page.waitForFunction(() => document.querySelector('.plate-validation-slot').style.minHeight === '');
+    const successSpacing = await page.locator('#plate-validation-feedback').evaluate(el => {
+      const slot = el.closest('.plate-validation-slot');
+      return {empty:slot.getBoundingClientRect().bottom-el.getBoundingClientRect().bottom,
+        placeholder:getComputedStyle(slot.querySelector('.plate-validation-size')).display};
+    });
+    assert.ok(successSpacing.empty<=5, `${name} ${width}: available plate must not reserve the longer duplicate message: `+JSON.stringify(successSpacing));
+    assert.equal(successSpacing.placeholder,'none');
+    await routeWrapper.locator('.autocomplete-item[data-value="1"]').click();
     await form.evaluate(el => {
       window.fixturePlatePayload = null;
       el.addEventListener('submit', event => {
@@ -732,7 +926,11 @@ test('vehicle autocomplete validation preserves a pointer gesture while plate fe
     assert.equal(await form.evaluate(el => el.checkValidity()), true);
     await form.locator('button[type="submit"]').click();
     await page.waitForFunction(() => window.fixturePlatePayload !== null);
-    assert.deepEqual(await page.evaluate(() => window.fixturePlatePayload), { csrf_fixture: 'unchanged', plate_number: 'FREE-5678', operator_name: 'FIXTURE OPERATOR', driver_name: 'Fixture Driver', type: 'jeepney', route_id: '1', capacity: '16', status: 'active' });
+    assert.deepEqual(await page.evaluate(() => window.fixturePlatePayload), { csrf_fixture: 'unchanged', plate_number: 'FREE-5678', operator_name: 'FIXTURE OPERATOR', driver_name: 'Fixture Driver', type: 'jeepney', route_id: '1', capacity: '16', status: name === 'admin-vehicles' ? 'active' : null });
+    if (name === 'admin-vehicle-edit') assert.equal(await form.locator('[name="status"]').count(), 0, 'editing vehicle details must not change its availability');
+    await plate.fill('');
+    assert.equal(await visibleFeedback.count(), 0, `${name} ${width}: clearing the plate removes every visible warning`);
+    await assertCompactPlate('cleared availability feedback');
     assert.deepEqual(errors, []);
     report.cases.push({ page: 'vehicle plate feedback gesture', name, width, passed: true });
     await context.close();

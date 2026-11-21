@@ -35,8 +35,35 @@ class VehicleModel extends Model
         return self::sortForRegister($vehicles, $today ?? date('Y-m-d'));
     }
 
+    /** Preview insertion slots using the same shared destination lines as saving. */
+    public function getDispatchOrderCounts(array $routes, ?int $excludeId = null): array
+    {
+        if (!$routes) return [];
+        $counts = [];
+        $builder = $this->db->table('vehicles')
+            ->select('routes.terminal_id, routes.destination, routes.status AS route_status, vehicles.status')
+            ->join('routes', 'routes.id = vehicles.default_route_id');
+        if ($excludeId !== null) $builder->where('vehicles.id !=', $excludeId);
+        foreach ($builder->get()->getResultArray() as $row) {
+            $key = $row['terminal_id'] . '|' . $row['destination'];
+            $counts[$key] ??= ['active_count' => 0, 'total_count' => 0];
+            $counts[$key]['total_count']++;
+            if ($row['status'] === 'active' && $row['route_status'] === 'active') {
+                $counts[$key]['active_count']++;
+            }
+        }
+
+        $orders = [];
+        foreach ($routes as $route) {
+            $key = $route['terminal_id'] . '|' . $route['destination'];
+            $orders[(int) $route['id']] = ($counts[$key] ?? ['active_count' => 0, 'total_count' => 0])
+                + ['route_key' => $key];
+        }
+        return $orders;
+    }
+
     /** Save one position and shift its neighbours within the destination queue line. */
-    public function saveInDispatchOrder(array $data, ?int $id = null): bool
+    public function saveInDispatchOrder(array $data, ?int $id = null, bool $syncCurrentOrder = false): bool
     {
         $this->db->transStart();
         $this->lockDispatchOrder();
@@ -47,6 +74,11 @@ class VehicleModel extends Model
         $oldRouteIds = $old ? $this->dispatchRouteIds((int) $old['default_route_id']) : [];
         $this->lockRoutes(array_merge($routeIds, $oldRouteIds));
         $rows = $this->dispatchVehicleRows($routeIds, $id);
+        $today = date('Y-m-d');
+        $currentIds = $syncCurrentOrder ? array_map('intval', array_column(self::sortForDispatch(
+            array_values(array_filter($rows, static fn(array $row): bool => $row['status'] === 'active' && $row['route_status'] === 'active')),
+            $today
+        ), 'id')) : [];
         $ids = array_map('intval', array_column($rows, 'id'));
         $activeCount = count(array_filter($rows, static fn(array $row): bool => $row['status'] === 'active' && $row['route_status'] === 'active'));
         $route = $routeId ? $this->db->table('routes')->where('id', $routeId)->get()->getRowArray() : null;
@@ -65,6 +97,15 @@ class VehicleModel extends Model
             $id ??= (int) $this->getInsertID();
             array_splice($ids, $position - 1, 0, [$id]);
             $this->writeDispatchPositions($ids);
+            if ($syncCurrentOrder && $active) {
+                array_splice($currentIds, $position - 1, 0, [$id]);
+                // These tickets control today's lineup; departed badges come from trip history.
+                foreach ($currentIds as $index => $currentId) {
+                    $this->db->table('vehicles')->where('id', $currentId)->update([
+                        'dispatch_rotation' => $index + 1, 'dispatch_rotation_date' => $today,
+                    ]);
+                }
+            }
             if ($oldRouteIds && $oldRouteIds !== $routeIds) $this->writeDispatchPositions($this->dispatchVehicleIds($oldRouteIds, $id));
         }
         $this->db->transComplete();
@@ -239,7 +280,7 @@ class VehicleModel extends Model
     private function dispatchVehicleRows(array $routeIds, ?int $exclude): array
     {
         if (!$routeIds) return [];
-        $builder = $this->db->table('vehicles')->select('vehicles.id, vehicles.dispatch_order, vehicles.status, routes.status as route_status')
+        $builder = $this->db->table('vehicles')->select('vehicles.id, vehicles.dispatch_order, vehicles.status, vehicles.type, vehicles.plate_number, vehicles.dispatch_rotation, vehicles.dispatch_rotation_date, routes.status as route_status, routes.terminal_id as route_terminal_id, routes.destination as route_destination')
             ->join('routes', 'routes.id = vehicles.default_route_id')->whereIn('vehicles.default_route_id', $routeIds);
         if ($exclude) $builder->where('vehicles.id !=', $exclude);
         return $builder

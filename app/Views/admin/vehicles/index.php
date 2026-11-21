@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <?= view('templates/header', ['title' => $title, 'body_class' => ' vehicle-register-page']) ?>
 
 <div class="page-header-modern fade-in">
@@ -503,7 +504,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     </div>
                                 </td>
                                 <td data-label="Action" class="management-actions-col">
-                                    <div class="d-flex gap-2 justify-content-end flex-nowrap management-row-actions<?= ($vehicle['status'] ?? 'active') === 'archived' ? ' action-buttons-grid' : '' ?>">
+                                    <div class="d-flex gap-2 justify-content-end flex-nowrap management-row-actions action-buttons-grid">
                                         <?php 
                                             $modalRouteLabel = (!empty($vehicle['route_destination']) && ($vehicle['route_status'] ?? 'active') === 'active')
                                                 ? strtoupper($vehicle['route_origin']) . ' → ' . strtoupper($vehicle['route_destination'])
@@ -544,6 +545,18 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                                 </button>
                                             </form>
                                         <?php else: ?>
+                                            <button type="button" class="btn-modern btn-modern-sm <?= $vehicle['status'] === 'active' ? 'btn-action-maintenance' : 'btn-action-activate' ?>" data-action="vehicle-status"
+                                                data-bs-toggle="modal" data-bs-target="#vehicleStatusConfirmModal"
+                                                data-vehicle-id="<?= (int) $vehicle['id'] ?>" data-plate="<?= esc($vehicle['plate_number'], 'attr') ?>"
+                                                data-type-label="<?= esc(vehicle_type_label($vehicle['type']), 'attr') ?>"
+                                                data-type-color="<?= esc(vehicle_type_color($vehicle['type']), 'attr') ?>"
+                                                data-type-icon="<?= esc(vehicle_type_icon($vehicle['type']), 'attr') ?>"
+                                                data-driver="<?= esc($vehicle['driver_name'] ?? '', 'attr') ?>" data-route="<?= esc($modalRouteLabel, 'attr') ?>"
+                                                data-current-status="<?= esc($vehicle['status'], 'attr') ?>" data-next-status="<?= $vehicle['status'] === 'active' ? 'maintenance' : 'active' ?>"
+                                                title="<?= $vehicle['status'] === 'active' ? 'Set vehicle to Maintenance' : 'Set vehicle to Active' ?>">
+                                                <i class="bi <?= $vehicle['status'] === 'active' ? 'bi-tools' : 'bi-check-circle' ?>"></i>
+                                                <span class="action-label"><?= $vehicle['status'] === 'active' ? 'Maintenance' : 'Set Active' ?></span>
+                                            </button>
                                             <a href="<?= base_url('admin/vehicles/edit/' . $vehicle['id']) ?>"
                                                 class="btn-modern btn-action-edit btn-modern-sm" title="Edit vehicle">
                                                 <i class="bi bi-pencil"></i> <span class="action-label">Edit</span>
@@ -1513,14 +1526,21 @@ table:not(.selection-mode-active) .bulk-select-cell {
         display: grid;
         min-width: 0;
     }
+    .plate-validation-slot[hidden] {
+        display: none !important;
+    }
     .plate-validation-slot > .plate-validation-feedback {
         grid-area: 1 / 1;
         align-self: start;
     }
-    .plate-validation-size {
-        visibility: hidden;
-        pointer-events: none;
+    .plate-validation-slot > .plate-validation-size {
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
         user-select: none;
+    }
+    .plate-validation-slot:has(.feedback-success) > .plate-validation-size {
+        display: none;
     }
     .plate-validation-feedback {
         position: relative !important;
@@ -1618,6 +1638,8 @@ table:not(.selection-mode-active) .bulk-select-cell {
         var input = document.getElementById('plate_number');
         var icon = document.getElementById('plate-validation-icon');
         var feedback = document.getElementById('plate-validation-feedback');
+        var feedbackSlot = feedback.closest('.plate-validation-slot');
+        if (feedbackSlot) feedbackSlot.hidden = plate === '';
 
         // Clear previous timer
         plateRequestId++;
@@ -1629,10 +1651,13 @@ table:not(.selection-mode-active) .bulk-select-cell {
         input.classList.remove('plate-valid', 'plate-invalid');
         icon.style.display = 'none';
         icon.className = 'plate-validation-icon';
+        icon.textContent = '';
+        feedback.style.display = 'none';
+        feedback.className = 'plate-validation-feedback';
+        feedback.textContent = '';
+        plateIsValid = true;
 
         if (plate === '') {
-            feedback.style.display = 'none';
-            plateIsValid = true;
             return;
         }
 
@@ -1665,6 +1690,10 @@ table:not(.selection-mode-active) .bulk-select-cell {
         plateCheckTimer = setTimeout(function() {
             plateCheckTimer = null;
             if (requestId !== plateRequestId) return;
+            if (input.value.trim().toUpperCase() !== plate) {
+                validatePlateRealtime(input.value);
+                return;
+            }
             feedback.style.display = 'block';
             feedback.className = 'plate-validation-feedback feedback-checking';
             feedback.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Checking availability...';
@@ -1681,6 +1710,11 @@ table:not(.selection-mode-active) .bulk-select-cell {
             xhr.onreadystatechange = function() {
                 if (xhr.readyState !== 4 || requestId !== plateRequestId || xhr !== plateCheckXhr) return;
                 plateCheckXhr = null;
+                // A form reset or browser restoration may change the field without an input event.
+                if (input.value.trim().toUpperCase() !== plate) {
+                    validatePlateRealtime(input.value);
+                    return;
+                }
                 icon.classList.remove('spinning');
 
                 if (xhr.status === 200) {
@@ -1723,6 +1757,30 @@ table:not(.selection-mode-active) .bulk-select-cell {
     document.addEventListener('DOMContentLoaded', function() {
         var form = document.getElementById('registerVehicleForm');
         if (form) {
+            var feedbackSlot = form.querySelector('.plate-validation-slot');
+            var feedbackPointer = null, feedbackFrame = null;
+            function releaseFeedbackSpace() {
+                if (feedbackFrame !== null) window.cancelAnimationFrame(feedbackFrame);
+                feedbackFrame = null; feedbackPointer = null;
+                if (feedbackSlot) feedbackSlot.style.minHeight = '';
+            }
+            // Let a settled success use one line. If its response arrives while
+            // another field is being pressed, wait until that click completes.
+            form.addEventListener('pointerdown', function(event) {
+                releaseFeedbackSpace();
+                if (feedbackSlot && !feedbackSlot.hidden) {
+                    feedbackSlot.style.minHeight = feedbackSlot.getBoundingClientRect().height + 'px';
+                    feedbackPointer = event.pointerId;
+                }
+            }, true);
+            document.addEventListener('pointerup', function(event) {
+                if (event.pointerId === feedbackPointer) feedbackFrame = window.requestAnimationFrame(releaseFeedbackSpace);
+            }, true);
+            document.addEventListener('pointercancel', function(event) {
+                if (event.pointerId === feedbackPointer) releaseFeedbackSpace();
+            }, true);
+            form.addEventListener('reset', releaseFeedbackSpace);
+            window.addEventListener('pagehide', releaseFeedbackSpace);
             form.addEventListener('submit', function(e) {
                 if (!plateIsValid) {
                     e.preventDefault();
@@ -1746,17 +1804,30 @@ table:not(.selection-mode-active) .bulk-select-cell {
             });
         }
 
-        // Trigger validation if there's already a value (e.g. from old() after failed submission)
         var plateInput = document.getElementById('plate_number');
-        if (plateInput && plateInput.value.trim() !== '') {
-            validatePlateRealtime(plateInput.value);
+        function syncPlateValidation() {
+            if (plateInput) validatePlateRealtime(plateInput.value);
         }
+
+        // Always reconcile feedback with the actual field, including an empty restored form.
+        syncPlateValidation();
+        if (plateInput) {
+            plateInput.addEventListener('change', syncPlateValidation);
+        }
+        if (form) {
+            form.addEventListener('reset', function() {
+                // Reset values are applied after the reset event finishes.
+                setTimeout(syncPlateValidation, 0);
+            });
+        }
+        window.addEventListener('pageshow', syncPlateValidation);
 
         if (typeof window.initVehicleInputClearBtns === 'function') {
             window.initVehicleInputClearBtns(document);
         }
         var regModal = document.getElementById('registerVehicleModal');
         if (regModal) {
+            regModal.addEventListener('show.bs.modal', syncPlateValidation);
             regModal.addEventListener('shown.bs.modal', function() {
                 if (typeof window.initVehicleInputClearBtns === 'function') {
                     window.initVehicleInputClearBtns(regModal);
@@ -2186,7 +2257,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
 
     function updateAddVtPreview() {
         var nameInput = document.getElementById('vehicle_type_name');
-        var name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'New Vehicle';
+        var name = ((nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'New Vehicle').toUpperCase();
         var color = (document.getElementById('add_vt_color') && document.getElementById('add_vt_color').value) ? document.getElementById('add_vt_color').value : '#1565c0';
         var icon = (document.getElementById('add_vt_icon') && document.getElementById('add_vt_icon').value) ? document.getElementById('add_vt_icon').value : 'fa-bus-simple';
         var contrastColor = getContrastTextColor(color);
@@ -2201,7 +2272,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         var titleColor = isLightColor ? '#0f172a' : color;
 
         if (card) card.style.borderTop = '3.5px solid ' + cardTopBorder;
-        if (title) { title.style.color = titleColor; title.textContent = name + ' Routes'; }
+        if (title) { title.style.color = titleColor; title.textContent = name.toUpperCase() + ' ROUTES'; }
         if (iconEl) {
             iconEl.style.setProperty('background-color', color, 'important');
             iconEl.style.setProperty('color', contrastColor, 'important');
@@ -2282,7 +2353,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
 
     function updateEditVtPreview(id) {
         var nameInput = document.getElementById('edit_vehicle_type_name_' + id);
-        var name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'Vehicle';
+        var name = ((nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'Vehicle').toUpperCase();
         var color = document.getElementById('edit_vt_color_' + id).value;
         var icon = document.getElementById('edit_vt_icon_' + id).value;
         var contrastColor = getContrastTextColor(color);
@@ -2297,7 +2368,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
         var titleColor = isLightColor ? '#0f172a' : color;
 
         if (card) card.style.borderTop = '3.5px solid ' + cardTopBorder;
-        if (title) { title.style.color = titleColor; title.textContent = name + ' Routes'; }
+        if (title) { title.style.color = titleColor; title.textContent = name.toUpperCase() + ' ROUTES'; }
         if (iconEl) {
             iconEl.style.setProperty('background-color', color, 'important');
             iconEl.style.setProperty('color', contrastColor, 'important');
@@ -2751,11 +2822,11 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                 </button>
                                 <span id="plate-validation-icon" class="plate-validation-icon" style="display: none;"></span>
                             </div>
-                            <div class="plate-validation-slot">
+                            <div class="form-text-modern" style="font-size:11px;">Unique identifier</div>
+                            <div class="plate-validation-slot" hidden>
                                 <div class="plate-validation-feedback plate-validation-size" aria-hidden="true"><i class="bi bi-exclamation-triangle me-1"></i>This plate number is already registered. Please enter a different plate number.</div>
                                 <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
                             </div>
-                            <div class="form-text-modern" style="font-size:11px;">Unique identifier</div>
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="operator_name" class="form-label-modern">Operator Name <span class="text-danger">*</span></label>
@@ -2832,7 +2903,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                     </div>
 
                     <div class="row g-3 mt-1">
-                        <?= view('admin/vehicles/dispatch-order-field', ['dispatchOrder' => '']) ?>
+                        <?= view('admin/vehicles/dispatch-order-field', ['dispatchOrder' => '', 'routeDispatchOrders' => $routeDispatchOrders ?? []]) ?>
                     </div>
                     <input type="hidden" name="status" value="active">
                 </div>
@@ -2976,7 +3047,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                             <!-- Name -->
                             <div class="mb-2">
                                 <label for="edit_vehicle_type_name_<?= $vt['id'] ?>" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
-                                <input id="edit_vehicle_type_name_<?= $vt['id'] ?>" name="name" type="text" class="form-control form-control-sm" value="<?= esc($vt['name']) ?>" maxlength="80" required oninput="updateEditVtPreview(<?= $vt['id'] ?>)">
+                                <input id="edit_vehicle_type_name_<?= $vt['id'] ?>" name="name" type="text" class="form-control form-control-sm text-uppercase" value="<?= esc($vt['name']) ?>" maxlength="80" required oninput="updateEditVtPreview(<?= $vt['id'] ?>)">
                                 <div class="form-text mt-0" style="font-size: 11px;">Updates display name and slug across vehicles and routes.</div>
                             </div>
 
@@ -3068,7 +3139,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                                 <img id="edit_vt_preview_photo_<?= $vt['id'] ?>" src="<?= esc($vtPhotoUrl) ?>" alt="Photo" style="width: 100%; height: 100%; object-fit: cover; <?= empty($vtPhotoUrl) ? 'display: none;' : '' ?>">
                                                 <i class="fas <?= esc($curIcon) ?>" id="edit_vt_preview_icon_i_<?= $vt['id'] ?>" style="color: <?= esc($curContrast) ?> !important; <?= !empty($vtPhotoUrl) ? 'display: none;' : '' ?>"></i>
                                             </span>
-                                            <strong id="edit_vt_preview_title_<?= $vt['id'] ?>" style="color: <?= esc($curColor) ?>; font-size: 13px;"><?= esc($vt['name']) ?> Routes</strong>
+                                            <strong id="edit_vt_preview_title_<?= $vt['id'] ?>" style="color: <?= esc($curColor) ?>; font-size: 13px;"><?= esc(strtoupper($vt['name'])) ?> ROUTES</strong>
                                         </div>
                                         <span id="edit_vt_preview_badge_<?= $vt['id'] ?>" class="badge rounded-pill" style="background-color: <?= esc($curColor) ?>18; color: <?= esc($curColor) ?>; border: 1px solid <?= esc($curColor) ?>40; font-size: 11px;">
                                             <?= esc($vt['name']) ?>
@@ -3101,7 +3172,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                     <!-- Vehicle Type Name -->
                     <div class="mb-2">
                         <label for="vehicle_type_name" class="form-label fw-semibold mb-1" style="font-size: 13px;">Vehicle Type Name</label>
-                        <input id="vehicle_type_name" name="name" type="text" class="form-control form-control-sm" placeholder="e.g. Bus, Tricycle, Taxi" maxlength="80" required oninput="updateAddVtPreview()">
+                        <input id="vehicle_type_name" name="name" type="text" class="form-control form-control-sm text-uppercase" placeholder="e.g. BUS, TRICYCLE, TAXI" maxlength="80" required oninput="updateAddVtPreview()">
                         <div class="form-text mt-0" style="font-size: 11px;">It will be available in Vehicle Register and as a new Route Fares card.</div>
                     </div>
 
@@ -3191,7 +3262,7 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
                                         <img id="add_vt_preview_photo" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
                                         <i class="fas fa-bus-simple" id="add_vt_preview_icon_i" style="color: <?= esc($sugContrast) ?> !important;"></i>
                                     </span>
-                                    <strong id="add_vt_preview_title" style="color: <?= esc($suggestedColor) ?>; font-size: 13px;">New Vehicle Routes</strong>
+                                    <strong id="add_vt_preview_title" style="color: <?= esc($suggestedColor) ?>; font-size: 13px;">NEW VEHICLE ROUTES</strong>
                                 </div>
                                 <span id="add_vt_preview_badge" class="badge rounded-pill" style="background-color: <?= esc($suggestedColor) ?>18; color: <?= esc($suggestedColor) ?>; border: 1px solid <?= esc($suggestedColor) ?>40; font-size: 11px;">
                                     New Vehicle
@@ -3210,6 +3281,35 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
 </div>
 
 <!-- ══════════════════════════════════════════════════ -->
+<!--  Vehicle Availability Confirmation Modal            -->
+<div class="modal fade" id="vehicleStatusConfirmModal" tabindex="-1" aria-labelledby="vehicleStatusConfirmLabel" aria-describedby="vehicleStatusDescription" aria-hidden="true" data-next-status="maintenance">
+    <div class="modal-dialog modal-dialog-centered delete-vehicle-modal-dialog" style="max-width: 440px; margin: 1.75rem auto;">
+        <form class="modal-content delete-vehicle-modal-content" id="vehicleStatusForm" method="post" action="<?= base_url('admin/vehicles') ?>">
+            <div class="vehicle-status-stripe" aria-hidden="true"></div>
+            <?= csrf_field() ?>
+            <input type="hidden" name="status" id="vehicleStatusValue" value="">
+            <input type="hidden" name="current_status" id="vehicleCurrentStatusValue" value="">
+            <div class="modal-body text-center p-4">
+                <div class="delete-vehicle-icon-wrapper vehicle-status-icon-wrapper" aria-hidden="true">
+                    <i class="bi bi-tools" id="vehicleStatusBadgeIcon"></i>
+                </div>
+                <h4 class="delete-vehicle-modal-title" id="vehicleStatusConfirmLabel">Change Vehicle Status?</h4>
+                <p class="delete-vehicle-modal-desc" id="vehicleStatusDescription"></p>
+                <div class="delete-vehicle-item-chip">
+                    <i class="fas fa-bus" id="vehicleStatusIcon" aria-hidden="true"></i>
+                    <span id="vehicleStatusPlate" class="fw-bold" style="font-family: monospace; letter-spacing: 0.5px; font-size: 0.95rem;">PLATE</span>
+                    <span class="delete-vehicle-type-tag" id="vehicleStatusTypeTag">TYPE</span>
+                </div>
+                <div id="vehicleStatusSubInfo" class="mt-2 text-muted" style="font-size: 0.825rem;"></div>
+            </div>
+            <div class="modal-footer delete-vehicle-modal-footer">
+                <button type="button" class="btn delete-vehicle-btn-cancel" data-bs-dismiss="modal"><i class="fas fa-times me-1" aria-hidden="true"></i> Cancel</button>
+                <button type="submit" class="btn delete-vehicle-btn-confirm" id="vehicleStatusSubmit"><i class="bi bi-tools me-1" id="vehicleStatusSubmitIcon" aria-hidden="true"></i><span id="vehicleStatusSubmitLabel">Confirm</span></button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!--  Deactivate Vehicle Confirmation Modal             -->
 <!-- ══════════════════════════════════════════════════ -->
 <div class="modal fade" id="deactivateVehicleConfirmModal" tabindex="-1" aria-labelledby="deactivateVehicleConfirmLabel" aria-hidden="true" data-bs-backdrop="true">
@@ -3538,6 +3638,83 @@ $suggestedColor = !empty($availableColors) ? $availableColors[0] : '#ea580c';
     opacity: 0.75 !important;
 }
 
+/* Availability dialogs share the archive dialogs' layout and action colors. */
+#vehicleStatusConfirmModal {
+    --vehicle-status-start: #dc2626;
+    --vehicle-status-end: #b91c1c;
+    --vehicle-status-soft: #fef2f2;
+    --vehicle-status-ring: #fff1f2;
+    --vehicle-status-shadow: rgba(220, 38, 38, 0.28);
+}
+#vehicleStatusConfirmModal[data-next-status="active"] {
+    --vehicle-status-start: #10b981;
+    --vehicle-status-end: #059669;
+    --vehicle-status-soft: #ecfdf5;
+    --vehicle-status-ring: #f0fdf4;
+    --vehicle-status-shadow: rgba(16, 185, 129, 0.3);
+}
+#vehicleStatusConfirmModal .vehicle-status-stripe {
+    height: 4px;
+    width: 100%;
+    background: linear-gradient(90deg, var(--vehicle-status-start), var(--vehicle-status-end));
+}
+#vehicleStatusConfirmModal .vehicle-status-icon-wrapper {
+    background: var(--vehicle-status-soft);
+    color: var(--vehicle-status-end);
+    box-shadow: 0 0 0 8px var(--vehicle-status-ring);
+}
+#vehicleStatusConfirmModal .vehicle-status-icon-wrapper i {
+    color: var(--vehicle-status-end) !important;
+    -webkit-text-fill-color: var(--vehicle-status-end) !important;
+}
+#vehicleStatusConfirmModal #vehicleStatusSubmit {
+    gap: 4px;
+    background: linear-gradient(135deg, var(--vehicle-status-start), var(--vehicle-status-end)) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    box-shadow: 0 4px 12px var(--vehicle-status-shadow) !important;
+}
+#vehicleStatusConfirmModal #vehicleStatusSubmit :is(i, span) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+#vehicleStatusConfirmModal #vehicleStatusSubmit:hover,
+#vehicleStatusConfirmModal #vehicleStatusSubmit:focus {
+    filter: brightness(0.95);
+}
+#vehicleStatusConfirmModal .delete-vehicle-modal-footer {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: stretch !important;
+}
+#vehicleStatusConfirmModal .delete-vehicle-modal-footer > .btn {
+    margin: 0 !important;
+}
+#vehicleStatusConfirmModal .delete-vehicle-btn-cancel {
+    flex: 0 0 35% !important;
+    min-width: 0;
+    gap: 4px;
+    padding: 10px 12px !important;
+}
+#vehicleStatusConfirmModal #vehicleStatusSubmit {
+    min-width: 0;
+    padding: 10px 12px !important;
+    white-space: normal;
+}
+#vehicleStatusConfirmModal #vehicleStatusSubmitIcon {
+    flex: 0 0 auto;
+    margin: 0 !important;
+}
+#vehicleStatusConfirmModal #vehicleStatusSubmitLabel {
+    min-width: 0;
+    overflow-wrap: normal;
+}
+@media (max-width: 575.98px) {
+    #vehicleStatusConfirmModal .delete-vehicle-modal-footer {
+        padding-inline: 16px !important;
+    }
+}
+
 /* Ensure modal paints above fixed navbar */
 body.modal-open #deleteVehicleConfirmModal,
 #deleteVehicleConfirmModal,
@@ -3765,6 +3942,40 @@ body.modal-open [id^="editVehicleTypeModal"],
 <script>
 (function() {
     var _deleteVehicleFormId = null;
+
+    document.getElementById('vehicleStatusConfirmModal').addEventListener('show.bs.modal', function(event) {
+        var button = event.relatedTarget;
+        if (!button || button.dataset.action !== 'vehicle-status') return;
+        var maintenance = button.dataset.nextStatus === 'maintenance';
+        event.currentTarget.dataset.nextStatus = button.dataset.nextStatus;
+        document.getElementById('vehicleStatusForm').action = '<?= base_url('admin/vehicles/status') ?>/' + button.dataset.vehicleId;
+        document.getElementById('vehicleStatusValue').value = button.dataset.nextStatus;
+        document.getElementById('vehicleCurrentStatusValue').value = button.dataset.currentStatus;
+        document.getElementById('vehicleStatusPlate').textContent = button.dataset.plate;
+        var typeColor = /^#[0-9a-f]{6}$/i.test(button.dataset.typeColor || '') ? button.dataset.typeColor : '#64748b';
+        var typeTag = document.getElementById('vehicleStatusTypeTag');
+        typeTag.textContent = button.dataset.typeLabel || 'VEHICLE';
+        typeTag.style.backgroundColor = typeColor + '20';
+        typeTag.style.color = typeColor;
+        typeTag.style.border = '1px solid ' + typeColor + '45';
+        var typeIcon = document.getElementById('vehicleStatusIcon');
+        typeIcon.className = 'fas ' + (button.dataset.typeIcon || 'fa-bus');
+        typeIcon.style.color = typeColor;
+        var parts = [];
+        if (button.dataset.driver && button.dataset.driver !== '—') parts.push('Driver: ' + button.dataset.driver);
+        if (button.dataset.route) parts.push(button.dataset.route);
+        var subInfo = document.getElementById('vehicleStatusSubInfo');
+        subInfo.textContent = parts.join(' · ');
+        subInfo.hidden = parts.length === 0;
+        document.getElementById('vehicleStatusConfirmLabel').textContent = maintenance ? 'Set Vehicle to Maintenance?' : 'Set Vehicle to Active?';
+        document.getElementById('vehicleStatusDescription').textContent = maintenance
+            ? 'This vehicle will be unavailable for dispatch. Its waiting and boarding trips will be canceled. It will stay in Vehicle Register.'
+            : 'This vehicle will be available for dispatch again. Canceled trips will stay canceled.';
+        var actionIcon = maintenance ? 'bi-tools' : 'bi-check-circle';
+        document.getElementById('vehicleStatusBadgeIcon').className = 'bi ' + (maintenance ? actionIcon : 'bi-check-circle-fill');
+        document.getElementById('vehicleStatusSubmitIcon').className = 'bi ' + actionIcon + ' me-1';
+        document.getElementById('vehicleStatusSubmitLabel').textContent = maintenance ? 'Set Maintenance' : 'Set Active';
+    });
 
     window.showDeactivateVehicleModal = function(opts) {
         opts = opts || {};

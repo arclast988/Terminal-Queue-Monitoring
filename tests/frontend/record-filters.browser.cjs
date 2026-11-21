@@ -63,6 +63,8 @@ test('record filters update only schedule results for Guest, Dispatcher, Admin a
       await form.locator('button[type="submit"]').click();await ready(page,results);
       assert.equal(new URL(page.url()).searchParams.get('destination'),'BATO');
       assert.deepEqual(await page.locator(results+' tr[data-queue-id]:visible').getAttribute('data-plate').then(value=>[value]),['BATO-2']);
+      assert.deepEqual((await page.locator(results+' tr[data-queue-id]:visible .vehicle-type-chip').allTextContents()).map(text=>text.trim()),['VAN'],'Live and initial type names must remain uppercase.');
+      if(guest)assert.equal((await page.locator('#guestScheduleActiveFilters .filter-badge').first().textContent()).trim(),'VAN','Mixed-case cached metadata must not change the displayed type name.');
       await page.locator(guest?'#guestScheduleActiveFilters .clear-btn':'#sharedScheduleActiveFilters a').click();await ready(page,results);
       assert.equal(new URL(page.url()).search,'');
       assert.equal(await page.locator(results+' tr[data-queue-id]:visible').count(),3);
@@ -74,6 +76,110 @@ test('record filters update only schedule results for Guest, Dispatcher, Admin a
     } finally {await context.close();}
   }
 });
+test('schedule loading feedback covers only the table card across repeated filters',{timeout:120000},async()=>{
+  for(const role of ['staff','admin','super_admin'])for(const width of [375,1280]) {
+    const {page,context,errors,navigations}=await open(role,width);
+    try {
+      for(const type of ['van','jeepney']) {
+        let release;
+        const waiting=new Promise(resolve=>{release=resolve;});
+        const handler=async route=>{
+          const query=Object.fromEntries(new URL(route.request().url()).searchParams);
+          await waiting;
+          await route.fulfill({contentType:'text/html',body:fixture(role,query)}).catch(()=>{});
+        };
+        await context.route(origin+'/schedules?**',handler);
+        try {
+          const form=page.locator('#sharedFilterForm');
+          await form.locator('[name="type"]').selectOption(type);
+          await form.locator('button[type="submit"]').click();
+          await page.locator('#sharedScheduleCard > .table-loader-overlay').waitFor({state:'visible'});
+          const bounds=await page.evaluate(()=>{
+            const card=document.querySelector('#sharedScheduleCard');
+            const box=element=>{
+              const r=element.getBoundingClientRect();
+              return {top:r.top,bottom:r.bottom,left:r.left,right:r.right};
+            };
+            return {card:box(card),overlay:box(card.querySelector('.table-loader-overlay')),
+              routes:box(document.querySelector('#sharedRouteFilterBar').closest('.route-filter-wrapper'))};
+          });
+          const label=JSON.stringify({role,width,type,bounds});
+          assert.ok(bounds.overlay.top>=bounds.routes.bottom-1,'Route destinations must remain outside the loading overlay: '+label);
+          for(const edge of ['top','bottom','left','right'])assert.ok(Math.abs(bounds.overlay[edge]-bounds.card[edge])<=1,'Loading overlay must fit Today’s Schedules: '+label);
+          assert.equal(await page.locator('.table-loader-overlay').count(),1,'A filter must have one local loading overlay.');
+          release();await ready(page,'#sharedScheduleResults');
+          assert.equal(await page.locator('.table-loader-overlay').count(),0,'The loading overlay must be removed after results update.');
+          assert.equal(await page.locator('#sharedScheduleTableBody tr[data-queue-id]:visible').count(),type==='van'?2:1);
+        } finally {release();await context.unroute(origin+'/schedules?**',handler);}
+      }
+      await shell(page,navigations);assert.deepEqual(errors,[],role+' '+width);
+    } finally {await context.close();}
+  }
+});
+
+test('schedule route chips keep their viewport position when filtering a shorter list',{timeout:120000},async()=>{
+  for(const role of ['guest','staff','admin','super_admin'])for(const width of [375,1280])for(const height of [600,1000]) {
+    const {page,context,errors,navigations}=await open(role,width);
+    try {
+      await page.setViewportSize({width,height});
+      await page.evaluate(()=>Promise.all(document.getAnimations().filter(animation=>animation.effect?.getTiming().iterations!==Infinity).map(animation=>animation.finished.catch(()=>{}))));
+      const guest=role==='guest',bar=guest?'#routeFilterBar':'#sharedRouteFilterBar',results=guest?'#guestScheduleResults':'#sharedScheduleResults';
+      // Exercise a scrolled page even when the desktop board is shorter than a tall viewport.
+      await page.evaluate(()=>{const space=document.createElement('div');space.style.height='400px';originalFilter.before(space);});
+      // Leave the chips near the top while the longer result list extends below us.
+      await page.evaluate(bar=>{
+        const anchor=document.querySelector(bar);
+        let scroller=anchor.parentElement;
+        while(scroller&&scroller!==document.scrollingElement&&(!/^(auto|scroll)$/.test(getComputedStyle(scroller).overflowY)||scroller.scrollHeight<=scroller.clientHeight))scroller=scroller.parentElement;
+        if(!scroller)scroller=document.scrollingElement;
+        window.fixtureScheduleScroller=scroller;
+        const pageScroll=scroller===document.scrollingElement,top=pageScroll?0:scroller.getBoundingClientRect().top+scroller.clientTop;
+        (pageScroll?window:scroller).scrollBy({top:anchor.getBoundingClientRect().top-top-300,behavior:'instant'});
+      },bar);
+      await page.waitForTimeout(100);
+      const snapshot=()=>page.locator(bar).evaluate(el=>{
+        const scroller=fixtureScheduleScroller,viewportTop=scroller===document.scrollingElement?0:scroller.getBoundingClientRect().top+scroller.clientTop;
+        const card=document.querySelector('#guestScheduleResults,#sharedScheduleResults'),box=card.getBoundingClientRect();
+        return {top:el.getBoundingClientRect().top,y:scroller.scrollTop,viewportTop,viewportHeight:scroller===document.scrollingElement?innerHeight:scroller.clientHeight,resultTop:box.top,resultHeight:box.height,minHeight:parseFloat(card.style.minHeight)||0,tail:Math.max(0,scroller.scrollHeight-(scroller.scrollTop+box.bottom-viewportTop))};
+      });
+      const before=await snapshot();
+      await page.locator(bar+' [data-dest="bato"]').click();await ready(page,results);
+      await page.waitForTimeout(100);
+      const after=await snapshot();
+      assert.ok(Math.abs(after.top-before.top)<=1,'Filtering must keep the visible route chips in place: '+JSON.stringify({role,width,height,before,after}));
+      // Rounded scroll offsets and an integer minimum height can differ by two CSS pixels.
+      assert.ok(after.minHeight<=Math.max(0,after.viewportTop+after.viewportHeight-after.resultTop-after.tail)+2,'Retained space must be limited to the current viewport: '+JSON.stringify({role,width,height,after}));
+      assert.equal(await page.locator(results+' tr[data-queue-id]:visible').count(),1);
+      // Restore all rows, then move deliberately while a later filter is pending.
+      await page.locator(bar+' [data-dest="all"]').click();await ready(page,results);
+      let release;
+      const waiting=new Promise(resolve=>{release=resolve;});
+      const handler=async route=>{
+        await waiting;
+        if(guest)await route.continue().catch(()=>{});
+        else await route.fulfill({contentType:'text/html',body:fixture(role,{destination:'BATO'})}).catch(()=>{});
+      };
+      const endpoint=guest?origin+'/schedules/status?**':origin+'/schedules?**';
+      await context.route(endpoint,handler);
+      try {
+        const beforePending=await snapshot();
+        await page.locator(bar+' [data-dest="bato"]').click();
+        await page.waitForFunction(results=>document.querySelector(results).getAttribute('aria-busy')==='true',results);
+        const pending=await snapshot();
+        assert.ok(Math.abs(pending.top-beforePending.top)<=1,'Instant filtering must keep the route chips in place before the response: '+JSON.stringify({role,width,height,beforePending,pending}));
+        await page.evaluate(()=>fixtureScheduleScroller.scrollBy({top:-150,behavior:'instant'}));await page.waitForTimeout(100);
+        const moved=await snapshot();
+        assert.ok(pending.y-moved.y>=50,'The delayed-response check must include deliberate user scrolling: '+JSON.stringify({role,width,height,pending,moved}));
+        release();await ready(page,results);await page.waitForTimeout(100);
+        const finished=await snapshot();
+        const movement=moved.top>=moved.viewportTop?Math.abs(finished.top-moved.top):Math.abs(finished.y-moved.y);
+        assert.ok(movement<=1,'A late response must not undo deliberate scrolling: '+JSON.stringify({role,width,height,moved,finished}));
+      } finally {release();await context.unroute(endpoint,handler);}
+      await shell(page,navigations);assert.deepEqual(errors,[],role+' '+width);
+    } finally {await context.close();}
+  }
+});
+
 test('record filters keep Today Departures local and its print report synchronized',{timeout:90000},async()=>{
   for(const width of [375,1280]) {
     const {page,context,errors,navigations}=await open('staff',width,true);

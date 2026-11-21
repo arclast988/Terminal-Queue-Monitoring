@@ -6,11 +6,12 @@
     <script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
     <script src="<?= base_url('assets/js/autocomplete-search.js?v=' . (defined('FCPATH') && file_exists(FCPATH . 'assets/js/autocomplete-search.js') ? filemtime(FCPATH . 'assets/js/autocomplete-search.js') : '20260927_1')) ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
-    <script src="<?= base_url('assets/js/no-change-guard.js?v=20260909') ?>"></script>
+    <script src="<?= app_asset_url('assets/js/no-change-guard.js') ?>"></script>
     <?php if (session()->get('isLoggedIn')): ?>
     <script src="<?= app_asset_url('assets/js/session-guard.js') ?>" data-status-url="<?= base_url('auth/session-status') ?>" data-login-url="<?= base_url('login') ?>"></script>
     <?php endif; ?>
     <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
+    <?= view('partials/background_sync') ?>
     <script src="<?= app_asset_url('js/vehicle-type-live.js') ?>"></script>
 
     <script>

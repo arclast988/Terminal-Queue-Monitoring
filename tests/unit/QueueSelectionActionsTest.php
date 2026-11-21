@@ -38,14 +38,14 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $db = QueueSelectionHarness::$db;
         $db->query('CREATE TABLE terminals (id INTEGER PRIMARY KEY, name TEXT, capacity INTEGER)');
         $db->query('CREATE TABLE routes (id INTEGER PRIMARY KEY, terminal_id INTEGER, destination TEXT, status TEXT)');
-        $db->query('CREATE TABLE vehicles (id INTEGER PRIMARY KEY, plate_number TEXT, driver_name TEXT, operator_name TEXT, owner_name TEXT, type TEXT, photo TEXT, capacity INTEGER)');
+        $db->query("CREATE TABLE vehicles (id INTEGER PRIMARY KEY, plate_number TEXT, driver_name TEXT, operator_name TEXT, owner_name TEXT, type TEXT, photo TEXT, capacity INTEGER, status TEXT DEFAULT 'active', default_route_id INTEGER)");
         $db->query('CREATE TABLE departure_rules (id INTEGER PRIMARY KEY, terminal_id INTEGER, route_id INTEGER, time_from TEXT, time_to TEXT, wait_minutes INTEGER, day_of_week INTEGER, days_of_week TEXT, round_number INTEGER)');
         $db->query('CREATE TABLE dispatch_rounds (id INTEGER PRIMARY KEY, terminal_id INTEGER, destination TEXT, service_date TEXT, round_number INTEGER)');
         $db->query('CREATE TABLE queue (id INTEGER PRIMARY KEY, vehicle_id INTEGER, route_id INTEGER, status TEXT, position INTEGER, arrival_time TEXT, estimated_departure TEXT, departure_time TEXT, boarding_start TEXT, round_number INTEGER, current_passengers INTEGER, plate_number TEXT, operator_name TEXT, driver_name TEXT)');
         $db->table('terminals')->insert(['id'=>1,'name'=>'VILLABA','capacity'=>50]);
         foreach ([1=>'ORMOC', 2=>'TACLOBAN', 3=>'OTHER'] as $id=>$destination) $db->table('routes')->insert(['id'=>$id,'terminal_id'=>1,'destination'=>$destination,'status'=>'active']);
         for ($id=1; $id<=4; $id++) {
-            $db->table('vehicles')->insert(['id'=>$id,'plate_number'=>'ABC-'.$id,'type'=>'minibus','capacity'=>20]);
+            $db->table('vehicles')->insert(['id'=>$id,'plate_number'=>'ABC-'.$id,'type'=>'minibus','capacity'=>20,'default_route_id'=>$id===4?3:($id===3?2:1)]);
             $db->table('queue')->insert(['id'=>$id,'vehicle_id'=>$id,'route_id'=>$id===4?3:($id===3?2:1),'status'=>$id===1?'boarding':'waiting','position'=>$id===2?2:1,'arrival_time'=>date('Y-m-d H:i:s'),'estimated_departure'=>date('Y-m-d H:i:s',time()+1800),'boarding_start'=>date('Y-m-d H:i:s'),'round_number'=>1]);
         }
         session()->set(['role'=>'staff','isLoggedIn'=>true,'id'=>123]);
@@ -90,7 +90,7 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertStringContainsString('value="3"', $data['html']);
         $this->assertStringNotContainsString('value="2"', $data['html']);
         $this->assertStringNotContainsString('value="4"', $data['html']);
-        foreach (['TRIP-ONE', 'Snapshot Driver', 'Minibus', 'VILLABA', 'ORMOC', 'TACLOBAN', '&lt;SCRIPT&gt;'] as $detail) $this->assertStringContainsString($detail, $data['html']);
+        foreach (['TRIP-ONE', 'Snapshot Driver', 'MINIBUS', 'VILLABA', 'ORMOC', 'TACLOBAN', '&lt;SCRIPT&gt;'] as $detail) $this->assertStringContainsString($detail, $data['html']);
         $this->assertStringNotContainsString('<script>', $data['html']);
         $this->assertSame($before, $db->table('queue')->get()->getResultArray());
     }
@@ -268,8 +268,39 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $this->assertLessThan(2100, $departure - $start);
         $this->assertSame(0, (int) date('i', $departure) % 5);
         $this->assertSame('00', date('s', $departure));
+        $this->assertSame($row['status'], $data['queue_item']['status']);
+        $this->assertSame($row['boarding_start'], $data['queue_item']['boarding_start']);
+        $this->assertSame($row['estimated_departure'], $data['queue_item']['estimated_departure']);
         $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('updateStatus',1,'boarding');
         $this->assertSame($row,QueueSelectionHarness::$db->table('queue')->where('id',1)->get()->getRowArray());
+    }
+    public function testSingleStatusChangesLeaveOtherDestinationsUntouched(): void
+    {
+        $db = QueueSelectionHarness::$db;
+        // A full-terminal recalculation would repair this unrelated line and
+        // extend the ordering lock; this action only affects the ORMOC line.
+        $db->table('queue')->where('id', 3)->update(['position' => 9, 'boarding_start' => null, 'estimated_departure' => null]);
+        $unrelated = $db->table('queue')->where('id', 3)->get()->getRowArray();
+        $request = service('request')->setMethod('POST')->setHeader('X-Requested-With', 'XMLHttpRequest')->setBody('');
+        $response = $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('updateStatus', 1, 'canceled')->response();
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue(json_decode($response->getBody(), true)['success']);
+        $this->assertSame($unrelated, $db->table('queue')->where('id', 3)->get()->getRowArray());
+        $this->assertSame(1, (int) $db->table('queue')->where('id', 2)->get()->getRowArray()['position']);
+    }
+    public function testSelectionRefreshReleasesSessionAndKeepsAuthorizationReadable(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+        $this->assertTrue(session_start(['use_cookies' => false, 'cache_limiter' => '']));
+        session()->set(['role' => 'staff', 'isLoggedIn' => true, 'id' => 123]);
+        $this->assertSame(PHP_SESSION_ACTIVE, session_status());
+        $response = $this->controller(QueueSelectionHarness::class)->execute('cancelSelection')->response();
+        $this->assertSame(PHP_SESSION_NONE, session_status());
+        $this->assertSame('staff', session()->get('role'));
+        $this->assertSame(200, $response->getStatusCode());
+        $data = json_decode($response->getBody(), true);
+        $this->assertTrue($data['success']);
+        $this->assertStringNotContainsString('ABC-4', $data['html']);
     }
     public function testManualBoardingCannotSkipTheVehicleAhead(): void
     {
@@ -279,6 +310,56 @@ final class QueueSelectionActionsTest extends CIUnitTestCase
         $data=json_decode($response->getBody(),true);
         $this->assertSame('warning',$data['variant']);
         $this->assertStringContainsString('vehicle is ahead',$data['message']);
+    }
+    public function testStaleAddSelectionCannotDispatchUnavailableVehiclesOrArchivedRoutes(): void
+    {
+        $db = QueueSelectionHarness::$db;
+        $db->table('queue')->whereIn('vehicle_id', [1,2,3])->delete();
+        $db->table('vehicles')->where('id',1)->update(['status'=>'maintenance']);
+        $db->table('vehicles')->where('id',2)->update(['status'=>'archived']);
+        $db->table('routes')->where('id',2)->update(['status'=>'archived']);
+        $before = $db->table('queue')->orderBy('id')->get()->getResultArray();
+        $post = ['vehicle_ids'=>['1','2','3']];
+        $this->request->setMethod('POST')->setGlobal('post',$post)->setGlobal('request',$post);
+        $response = $this->controller(QueueSelectionHarness::class)->execute('add')->response();
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertStringContainsString('unavailable for dispatch', session()->getFlashdata('error'));
+        $this->assertStringContainsString('route assigned to vehicle ABC-3 is archived', session()->getFlashdata('error'));
+        $this->assertSame($before, $db->table('queue')->orderBy('id')->get()->getResultArray());
+    }
+    public function testRestoreRejectsMaintenanceAndArchivedVehiclesWithoutChangingTheLine(): void
+    {
+        $db = QueueSelectionHarness::$db;
+        $db->table('queue')->where('id',1)->update(['status'=>'canceled']);
+        $request = service('request')->setMethod('POST')->setHeader('X-Requested-With','XMLHttpRequest')->setBody('');
+        $before = $db->table('queue')->orderBy('id')->get()->getResultArray();
+        foreach (['maintenance','archived'] as $status) {
+            $db->table('vehicles')->where('id',1)->update(['status'=>$status]);
+            $response = $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('undoCancel',1)->response();
+            $this->assertSame(409, $response->getStatusCode());
+            $data = json_decode($response->getBody(),true);
+            $this->assertFalse($data['success']);
+            $this->assertStringContainsString('Set it to Active', $data['message']);
+            $this->assertSame($before, $db->table('queue')->orderBy('id')->get()->getResultArray());
+        }
+    }
+
+    public function testSameLocationRouteCannotBeAddedOrRestored(): void
+    {
+        $db = QueueSelectionHarness::$db;
+        $db->table('terminals')->where('id', 1)->update(['name'=>'  ormoc  ']);
+        $db->table('queue')->where('id', 1)->update(['status'=>'canceled']);
+        $before = $db->table('queue')->orderBy('id')->get()->getResultArray();
+        $post = ['vehicle_ids'=>['1']];
+        $this->withUri('http://localhost/staff/queue/add');
+        $this->request->setMethod('POST')->setGlobal('post', $post)->setGlobal('request', $post);
+        $this->controller(QueueSelectionHarness::class)->execute('add');
+        $this->assertSame($before, $db->table('queue')->orderBy('id')->get()->getResultArray());
+        $request = service('request')->setMethod('POST')->setHeader('X-Requested-With', 'XMLHttpRequest')->setBody('');
+        $response = $this->withRequest($request)->controller(QueueSelectionHarness::class)->execute('undoCancel', 1)->response();
+        $this->assertSame(409, $response->getStatusCode());
+        $this->assertStringContainsString('origin and destination are the same', json_decode($response->getBody(), true)['message']);
+        $this->assertSame($before, $db->table('queue')->orderBy('id')->get()->getResultArray());
     }
     public function testClockParsingAndDisplayRespectTheRole(): void
     {

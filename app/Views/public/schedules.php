@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1314,7 +1315,8 @@
             }
 
             // Instant client-side filter
-            filterTableClientSide();
+            if (window.guestScheduleFilters) window.guestScheduleFilters.preserveView(filterTableClientSide);
+            else filterTableClientSide();
 
             if (destSelect) destSelect.dispatchEvent(new Event('change', {bubbles:true}));
             // Keep the page shell and the filter controls while updating the board.
@@ -1450,7 +1452,7 @@
                 var hasCustom = !!(s.has_custom_photo || s.vehicle_photo || s.photo);
                 var rawVehPhoto = s.photo_url || s.vehicle_photo || s.photo || '';
                 var photoUrl = (rawVehPhoto ? (String(rawVehPhoto).startsWith('http') ? rawVehPhoto : ('/' + String(rawVehPhoto).replace(/^\/?/, ''))) : '') || typeMeta.photo || '';
-                var typeLabel = typeMeta.name || (s.vehicle_type ? s.vehicle_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, function(char) { return char.toUpperCase(); }) : 'Van');
+                var typeLabel = String(typeMeta.name || (s.vehicle_type ? s.vehicle_type.replace(/[_-]+/g, ' ') : 'Van')).toUpperCase();
                 var statusClass = statusClassMap[s.status] || 'status-waiting';
                 function escHtml(v) {
                     if (v === null || v === undefined) return '';
@@ -1572,7 +1574,7 @@
             var row = document.createElement('div'); row.className = 'active-filters';
             var type = (data.vehicle_types || []).find(function(item) { return item.slug === currentType; });
             var typeBadge = document.createElement('span'); typeBadge.className = 'filter-badge';
-            typeBadge.textContent = currentType ? (type ? type.name : currentType) : 'All Types'; row.appendChild(typeBadge);
+            typeBadge.textContent = currentType ? String(type ? type.name : currentType).toUpperCase() : 'All Types'; row.appendChild(typeBadge);
             if (currentDest) {
                 var destinationBadge = document.createElement('span'); destinationBadge.className = 'filter-badge';
                 destinationBadge.textContent = 'Destination: ' + currentDest.toUpperCase(); row.appendChild(destinationBadge);
@@ -1585,6 +1587,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             window.guestScheduleFilters = RecordFilters.init({
                 form: '#guestScheduleFilterForm', results: '#guestScheduleResults', json: true,
+                scrollAnchor: '#routeFilterBar',
                 linkSelector: '#guestScheduleActiveFilters .clear-btn',
                 params: function(url) { if (currentSearch) url.searchParams.set('q', currentSearch); },
                 sync: function(url) {

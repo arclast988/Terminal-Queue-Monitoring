@@ -3152,13 +3152,13 @@
                 contrast: '#ffffff',
                 photo: null,
                 icon: 'fa-bus',
-                label: vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van'
+                label: vType ? vType.replace(/[_-]/g, ' ').toUpperCase() : 'VAN'
             };
             var posColor = vMeta.color || '#1565c0';
             var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
             var rawVehPhoto = item.photo_url || item.vehicle_photo || item.photo || '';
             var photoUrl = (rawVehPhoto ? (String(rawVehPhoto).startsWith('http') ? rawVehPhoto : ('/' + String(rawVehPhoto).replace(/^\/?/, ''))) : '') || vMeta.photo || '';
-            var vTypeLabel = vMeta.label || (vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van');
+            var vTypeLabel = (vMeta.label || (vType ? vType.replace(/[_-]/g, ' ') : 'VAN')).toUpperCase();
             var posContrast = vMeta.contrast || (typeof getContrastTextColor === 'function' ? getContrastTextColor(posColor) : '#ffffff');
             var isLight = (posContrast === '#0f172a');
             var pillBorder = isLight ? 'border: 2px solid #cbd5e1;' : 'border: 2px solid #ffffff;';
@@ -3331,7 +3331,7 @@
                     contrast: '#ffffff',
                     photo: null,
                     icon: 'fa-bus',
-                    label: vType ? (vType.charAt(0).toUpperCase() + vType.slice(1)) : 'Van'
+                    label: vType ? vType.replace(/[_-]/g, ' ').toUpperCase() : 'VAN'
                 };
                 var posColor = vMeta.color || '#1565c0';
                 var hasCustom = !!(item.has_custom_photo || item.vehicle_photo || item.photo);
@@ -3496,7 +3496,7 @@
                                         document.documentElement.style.setProperty('--vehicle-' + k + '-soft', color + '18');
                                     } catch (e) { /* ignore */ }
                                 }
-                                if (vt.name) vehicleTypeMeta[k].label = vt.name;
+                                if (vt.name) vehicleTypeMeta[k].label = vt.name.toUpperCase();
                                 if (vt.icon) vehicleTypeMeta[k].icon = vt.icon;
                                 if (vt.photo) {
                                     vehicleTypeMeta[k].photo = vt.photo;

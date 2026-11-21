@@ -79,7 +79,7 @@
         $useSingle = ($bgMode === 'single');
         $defaultLoginSlides = array_values(app_bg_slideshow());
         $loginSlides = $useNone ? [] : ($useSingle
-            ? [app_has_custom_bg() ? app_bg_image() : ($defaultLoginSlides[0] ?? app_bg_image())]
+            ? [app_bg_image()]
             : $defaultLoginSlides);
         ?>
         body.auth-page::after { content: none !important; display: none !important; }
@@ -698,13 +698,15 @@
             .login-card { padding-top: 24px; padding-bottom: 24px; }
         }
     </style>
+    <?= view('partials/auth_background_style', ['authFallbackImage' => $loginSlides[0] ?? app_bg_image()]) ?>
     <?= $this->include('partials/interaction_assets') ?>
 </head>
 <body class="auth-page">
     <div class="auth-bg-slideshow" id="authBgSlideshow" aria-hidden="true" style="opacity: <?= $useSingle ? '0.28' : '0.22' ?>;<?= $useNone ? ' display: none;' : '' ?>">
-        <img class="auth-bg-slide is-active"<?php if (!$useNone): ?> src="<?= esc($loginSlides[0], 'attr') ?>"<?php endif; ?> alt="" decoding="async">
+        <img class="auth-bg-slide<?= $useSingle ? ' is-active' : '' ?>"<?php if (!$useNone): ?> src="<?= esc($loginSlides[0], 'attr') ?>"<?php endif; ?> alt="" decoding="async">
         <img class="auth-bg-slide" alt="" decoding="async">
     </div>
+    <?= view('partials/auth_background', ['authSlides' => $loginSlides, 'defaultAuthSlides' => $defaultLoginSlides]) ?>
 
 
     <div class="page">
@@ -863,10 +865,10 @@
 
     </div>
 
-    <?= view('partials/auth_background', ['authSlides' => $loginSlides, 'defaultAuthSlides' => $defaultLoginSlides]) ?>
     <script src="<?= app_asset_url('assets/js/global-loader.js') ?>"></script>
     <script src="<?= base_url('assets/js/auto-dismiss-alerts.js') ?>"></script>
     <script src="<?= app_asset_url('js/ws-client.js') ?>"></script>
+    <?= view('partials/background_sync') ?>
     <script>
     // Keep the editable login copy in sync with Superadmin's identity settings.
     document.addEventListener('pttm:branding-applied', function (e) {

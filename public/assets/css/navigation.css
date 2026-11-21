@@ -949,7 +949,7 @@ body.staff-theme .logo-text p {
   transition-delay: 0s;
 }
 
-@media (min-width: 1281px) {
+@media (min-width: 1536px) {
   .sidebar-drawer,
   .sidebar-drawer-overlay {
     display: none !important;
@@ -2149,6 +2149,96 @@ body.admin-theme .nav-menu .dropdown-content a.active i,
 body.staff-theme .nav-menu .dropdown-content a.active i {
   color: var(--primary, #C62828) !important;
   -webkit-text-fill-color: var(--primary, #C62828) !important;
+}
+
+/* Keep the main navigation menus readable beside their category chips. */
+html body #site-header .nav-menu .dropdown-content {
+  width: max-content;
+  min-width: min(300px, calc(100vw - 24px)) !important;
+  max-width: calc(100vw - 24px) !important;
+}
+
+html body #site-header #managementDropdownMenu,
+html body #site-header #recordsDropdownMenu {
+  min-width: 0 !important;
+}
+
+html body #site-header .nav-menu .dropdown-content a {
+  min-height: 44px !important;
+  padding: 11px 18px !important;
+  font-size: 15px !important;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+html body #site-header .nav-menu .dropdown-content a i {
+  font-size: 16px !important;
+}
+
+html body #site-header .dropdown-content .nav-badge-chip {
+  flex: 0 0 auto;
+  font-size: 13px !important;
+  line-height: 1.4;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+html body #site-header #recordsDropdownMenu a {
+  padding-inline: 12px !important;
+}
+
+/* Make the terminal name the clear heading in the navigation drawer. */
+html body #siteSidebarDrawer .sidebar-drawer-header {
+  height: var(--site-header-visual-height, var(--site-header-height, 84px)) !important;
+  min-height: var(--site-header-visual-height, var(--site-header-height, 84px)) !important;
+  max-height: var(--site-header-visual-height, var(--site-header-height, 84px)) !important;
+}
+
+html body #siteSidebarDrawer .drawer-close-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+
+html body #site-header .nav-hamburger-btn {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+}
+
+html body #site-header .nav-hamburger-btn i {
+  font-size: 22px !important;
+}
+
+html body #site-header .nav-hamburger-btn:focus-visible,
+html body #siteSidebarDrawer .drawer-close-btn:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -3px;
+}
+
+html body #siteSidebarDrawer .drawer-logo {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+}
+
+html body #siteSidebarDrawer .drawer-brand-title {
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+}
+
+html body #siteSidebarDrawer .drawer-brand-subtitle {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+
+@media (max-width: 768px) {
+  html body #siteSidebarDrawer .sidebar-drawer-header {
+    padding: 6px 12px;
+  }
+  html body #siteSidebarDrawer .drawer-brand-subtitle {
+    -webkit-line-clamp: 1;
+  }
 }
 
 

@@ -187,6 +187,11 @@
 
     function init() {
         document.querySelectorAll('form[data-no-change-guard]').forEach(attach);
+        var notice = document.querySelector('form[data-no-change-notice]');
+        if (notice) {
+            notice.removeAttribute('data-no-change-notice');
+            showPopup();
+        }
     }
 
     if (document.readyState === 'complete') {

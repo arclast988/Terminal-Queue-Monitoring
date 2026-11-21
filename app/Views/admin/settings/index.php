@@ -2,6 +2,10 @@
 
 <?php
 $s = $settings ?? [];
+$operationValue = static function (string $key, string $default) use ($s): string {
+    $value = old($key, $s[$key] ?? $default);
+    return is_scalar($value) ? (string) $value : (string) ($s[$key] ?? $default);
+};
 $logoUrl        = app_logo();
 $bgUrl          = app_bg_image();
 $bgMode         = app_bg_mode();
@@ -1625,7 +1629,7 @@ $slotsMeta = [
             </div>
 
             <div class="media-preview-card" id="logoPreviewCard">
-                <img src="<?= esc($logoUrl) ?>" alt="Current Logo" id="logoPreviewImg">
+                <img src="<?= esc($logoUrl) ?>" alt="Current Logo" id="logoPreviewImg" data-image-preview>
                 <div class="media-preview-info">
                     <div class="filename" id="logoFilename"><?= $hasCustomLogo ? basename($s['app_logo']) : 'Default Seal (logo.webp)' ?></div>
                     <div class="filemeta">
@@ -1823,7 +1827,7 @@ $slotsMeta = [
             </div>
 
             <div class="media-preview-card bg-type" id="loginCardPreviewCard" style="margin-top: 14px;">
-                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" style="width: 140px; height: 90px; object-fit: contain; background: #f8fafc; padding: 6px; border-radius: 10px;">
+                <img src="<?= esc($loginCardUrl) ?>" alt="Login Hero Artwork" id="loginCardActiveImg" data-image-preview style="width: 140px; height: 90px; object-fit: contain; background: #f8fafc; padding: 6px; border-radius: 10px;">
                 <div class="media-preview-info">
                     <div class="filename" id="loginCardFilename"><?= $hasCustomLoginCard ? basename($s['app_login_card_image']) : 'System logo' ?></div>
                     <div class="filemeta">
@@ -2135,7 +2139,7 @@ $slotsMeta = [
             <?= csrf_field() ?>
 
             <!-- Card 1: Vehicle Queue Re-Entry Cooldown -->
-            <div class="settings-card">
+            <div class="settings-card" data-operations-section="cooldown">
                 <div class="settings-card-header">
                     <div class="card-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
                         <i class="fas fa-stopwatch"></i>
@@ -2154,7 +2158,7 @@ $slotsMeta = [
                         </label>
                         <div style="display: flex; gap: 10px; align-items: center; max-width: 480px;">
                             <input type="number" name="vehicle_cooldown_minutes" class="form-input" id="inputCooldownMinutes"
-                                value="<?= esc($s['vehicle_cooldown_minutes'] ?? '30') ?>" min="0" max="10080" step="1" required
+                                value="<?= esc($operationValue('vehicle_cooldown_minutes', '30')) ?>" min="0" max="10080" step="1" required
                                 style="font-weight: 700; font-size: 16px;">
                             <span style="font-size: 13.5px; font-weight: 600; color: var(--sb-text-muted); white-space: nowrap;">minutes</span>
                         </div>
@@ -2178,9 +2182,14 @@ $slotsMeta = [
                         </div>
                     </div>
                 </div>
+                <div class="form-action-row">
+                    <button type="submit" class="btn-save" name="operations_section" value="cooldown" formnovalidate>
+                        <i class="fas fa-save"></i> Save Queue Cooldown
+                    </button>
+                </div>
             </div>
 
-            <div class="settings-card">
+            <div class="settings-card" data-operations-section="daily_clear">
                 <div class="settings-card-header">
                     <div class="card-icon"><i class="fas fa-clock"></i></div>
                     <div>
@@ -2193,7 +2202,7 @@ $slotsMeta = [
                 <div class="form-grid queue-reset-layout">
                     <div class="form-group">
                         <label class="queue-reset-option" for="inputQueueResetEnabled">
-                            <input type="checkbox" class="form-check-input" id="inputQueueResetEnabled" name="queue_reset_enabled" value="1" aria-describedby="queueResetEnabledHelp" <?= ($s['queue_reset_enabled'] ?? '1') === '1' ? 'checked' : '' ?>>
+                            <input type="checkbox" class="form-check-input" id="inputQueueResetEnabled" name="queue_reset_enabled" value="1" aria-describedby="queueResetEnabledHelp" <?= $operationValue('queue_reset_enabled', '1') === '1' ? 'checked' : '' ?>>
                             <span class="queue-reset-copy">
                                 <span class="queue-reset-option-title">Clear the queue automatically every day</span>
                                 <span class="form-text" id="queueResetEnabledHelp">Removes waiting and boarding vehicles from the active queue.</span>
@@ -2203,7 +2212,7 @@ $slotsMeta = [
                     <div class="form-group queue-reset-time">
                         <label class="form-label" for="inputQueueResetTime">Daily clearing time (24-hour, Philippine time)</label>
                         <div class="queue-reset-time-control">
-                            <input type="text" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($s['queue_reset_time'] ?? '00:00') ?>" placeholder="00:00" maxlength="5" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required autocomplete="off" aria-describedby="queueResetTimeHelp">
+                            <input type="text" class="form-input" id="inputQueueResetTime" name="queue_reset_time" value="<?= esc($operationValue('queue_reset_time', '00:00')) ?>" placeholder="00:00" maxlength="5" inputmode="numeric" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" required autocomplete="off" aria-describedby="queueResetTimeHelp">
                             <button type="button" class="queue-reset-time-toggle" id="queueResetTimeToggle" aria-label="Choose daily clearing time in 24-hour format" aria-controls="queueResetTimePicker" aria-expanded="false"><i class="bi bi-clock" aria-hidden="true"></i></button>
                             <div class="queue-reset-picker" id="queueResetTimePicker" role="group" aria-label="24-hour clearing time" hidden>
                                 <?php foreach (['Hour' => 'hours', 'Minute' => 'minutes'] as $part => $caption): ?>
@@ -2220,10 +2229,15 @@ $slotsMeta = [
                         <p class="form-text" id="queueResetTimeHelp">Asia/Manila. Use HH:MM from 00:00 to 23:59. Changes begin at the next scheduled time. Default: 00:00.</p>
                     </div>
                 </div>
+                <div class="form-action-row">
+                    <button type="submit" class="btn-save" name="operations_section" value="daily_clear" formnovalidate>
+                        <i class="fas fa-save"></i> Save Daily Queue Clearing
+                    </button>
+                </div>
             </div>
 
             <!-- Card 2: System Audit Logs Retention Policy -->
-            <div class="settings-card">
+            <div class="settings-card" data-operations-section="audit_retention">
                 <div class="settings-card-header">
                     <div class="card-icon" style="background: rgba(59, 130, 246, 0.12); color: #2563eb;">
                         <i class="fas fa-clipboard-list"></i>
@@ -2242,7 +2256,7 @@ $slotsMeta = [
                         </label>
                         <div style="display: flex; gap: 10px; align-items: center; max-width: 480px;">
                             <input type="number" name="log_retention_days" class="form-input" id="inputLogRetention"
-                                value="<?= esc($s['log_retention_days'] ?? '60') ?>" min="1" max="3650" step="1" required
+                                value="<?= esc($operationValue('log_retention_days', '60')) ?>" min="1" max="3650" step="1" required
                                 style="font-weight: 700; font-size: 16px;">
                             <span style="font-size: 13.5px; font-weight: 600; color: var(--sb-text-muted); white-space: nowrap;">days</span>
                         </div>
@@ -2263,10 +2277,15 @@ $slotsMeta = [
                         </div>
                     </div>
                 </div>
+                <div class="form-action-row">
+                    <button type="submit" class="btn-save" name="operations_section" value="audit_retention" formnovalidate>
+                        <i class="fas fa-save"></i> Save Audit Log Retention
+                    </button>
+                </div>
             </div>
 
             <!-- Card 3: Departure History Retention Policy -->
-            <div class="settings-card">
+            <div class="settings-card" data-operations-section="departure_retention">
                 <div class="settings-card-header">
                     <div class="card-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
                         <i class="fas fa-clock-rotate-left"></i>
@@ -2285,7 +2304,7 @@ $slotsMeta = [
                         </label>
                         <div style="display: flex; gap: 10px; align-items: center; max-width: 480px;">
                             <input type="number" name="departure_retention_days" class="form-input" id="inputDepRetention"
-                                value="<?= esc($s['departure_retention_days'] ?? '60') ?>" min="1" max="3650" step="1" required
+                                value="<?= esc($operationValue('departure_retention_days', '60')) ?>" min="1" max="3650" step="1" required
                                 style="font-weight: 700; font-size: 16px;">
                             <span style="font-size: 13.5px; font-weight: 600; color: var(--sb-text-muted); white-space: nowrap;">days</span>
                         </div>
@@ -2306,14 +2325,13 @@ $slotsMeta = [
                         </div>
                     </div>
                 </div>
+                <div class="form-action-row">
+                    <button type="submit" class="btn-save" name="operations_section" value="departure_retention" formnovalidate>
+                        <i class="fas fa-save"></i> Save Departure History Retention
+                    </button>
+                </div>
             </div>
 
-            <!-- Save Action Button -->
-            <div class="form-action-row" style="margin-top: 0; margin-bottom: 24px;">
-                <button type="submit" class="btn-save" id="btnSaveOperations">
-                    <i class="fas fa-save"></i> Save Retention & Queue Rules
-                </button>
-            </div>
         </form>
     </div>
 
@@ -2748,8 +2766,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         btnSaveBgSettings.innerHTML = originalHtml;
                         if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                         if (data.success) {
-                            initialBgMode = mode;
+                            initialBgMode = data.app_bg_mode || mode;
                             updateBgPendingState();
+                            if (data.no_change) {
+                                showToast(data.message || 'No changes detected — background settings are already up to date.', 'warning');
+                                return;
+                            }
                             showToast(data.message || 'Background display mode saved successfully!', 'success');
                             if (data.data) {
                                 if (typeof window.broadcastLiveBranding === 'function') {
@@ -3398,18 +3420,59 @@ document.addEventListener('DOMContentLoaded', function() {
     function bindAjaxForm(formId, defaultSuccessMsg) {
         var form = document.getElementById(formId);
         if (!form) return;
+        var lastOperationSubmitter = null;
+        if (formId === 'formOperations') {
+            form.addEventListener('click', function(e) {
+                var button = e.target.closest && e.target.closest('button[type="submit"][name="operations_section"]');
+                if (button && form.contains(button)) lastOperationSubmitter = button;
+            });
+            form.addEventListener('keydown', function(e) {
+                if (e.key !== 'Enter' || e.isComposing || !e.target.matches('input[name]')) return;
+                var card = e.target.closest('[data-operations-section]');
+                if (card) {
+                    e.preventDefault();
+                    var button = card.querySelector('button[type="submit"]');
+                    if (typeof form.requestSubmit === 'function') form.requestSubmit(button);
+                    else button.click();
+                }
+            });
+        }
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            var submitBtn = form.querySelector('button[type="submit"]');
-            var originalText = submitBtn ? submitBtn.innerHTML : '';
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            if (form.dataset.saving === '1') return;
+            var focusedCard = formId === 'formOperations' && form.contains(document.activeElement)
+                ? document.activeElement.closest('[data-operations-section]') : null;
+            var submitBtn = e.submitter || (focusedCard && focusedCard.querySelector('button[type="submit"]'))
+                || (formId === 'formOperations' && lastOperationSubmitter) || form.querySelector('button[type="submit"]');
+            var operationSection = formId === 'formOperations' ? submitBtn.value : null;
+            var selectedCard = operationSection ? form.querySelector('[data-operations-section="' + operationSection + '"]') : null;
+            if (selectedCard) {
+                // Other cards may contain unfinished drafts; validate only this card.
+                var invalid = Array.from(selectedCard.querySelectorAll('input, select, textarea')).find(function(input) { return !input.checkValidity(); });
+                if (invalid) { invalid.reportValidity(); return; }
             }
-
             var fd = new FormData(form);
+            if (selectedCard) {
+                var selectedNames = Array.from(selectedCard.querySelectorAll('[name]')).map(function(input) { return input.name; });
+                Array.from(fd.keys()).forEach(function(name) {
+                    if (name !== currentCsrfToken && selectedNames.indexOf(name) === -1) fd.delete(name);
+                });
+            }
+            if (operationSection) fd.set('operations_section', operationSection);
             if (!fd.has(currentCsrfToken)) {
                 fd.append(currentCsrfToken, currentCsrfHash);
+            }
+            var originalText = submitBtn ? submitBtn.innerHTML : '';
+            var submitButtons = form.querySelectorAll('button[type="submit"]');
+            form.dataset.saving = '1';
+            submitButtons.forEach(function(button) { button.disabled = true; });
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            }
+            function restoreSubmitButtons() {
+                delete form.dataset.saving;
+                submitButtons.forEach(function(button) { button.disabled = false; });
+                if (submitBtn) submitBtn.innerHTML = originalText;
             }
 
             fetch(form.action, {
@@ -3421,10 +3484,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(function(res) { return res.json(); })
             .then(function(data) {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                }
+                restoreSubmitButtons();
                 if (data.csrf_hash) updateCsrf(data.csrf_token, data.csrf_hash);
                 if (data.success) {
                     if (data.no_change) {
@@ -3445,9 +3505,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(function() {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                restoreSubmitButtons();
+                if (operationSection) {
+                    // form.submit() omits the clicked submitter, so keep the card scope.
+                    var sectionInput = form.querySelector('input[name="operations_section"]');
+                    if (!sectionInput) {
+                        sectionInput = document.createElement('input');
+                        sectionInput.type = 'hidden'; sectionInput.name = 'operations_section';
+                        form.appendChild(sectionInput);
+                    }
+                    sectionInput.value = operationSection;
                 }
                 form.submit(); // fallback to standard post
             });

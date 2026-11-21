@@ -18,7 +18,8 @@ jobs:
     name: Interactions (${{ matrix.browser }})
     # Keep the runner compatible with the locked Playwright browser dependencies.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # A cold WebKit runner must finish the full production-view suite after setup.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -43,6 +44,7 @@ jobs:
         run: |
           node --check public/assets/js/interaction-motion.js
           node --check public/assets/js/auth-background.js
+          node --check public/assets/js/background-sync.js
           node --check public/assets/js/global-loader.js
           node --check public/assets/js/image-tools.js
           node --check public/assets/js/record-filters.js
@@ -51,8 +53,17 @@ jobs:
           node --check public/js/ws-client.js
       - name: Run request and lifecycle regressions
         run: npm test --prefix tests/frontend
+      - name: Configure reliable Ubuntu package downloads
+        run: |
+          sudo python3 tests/frontend/configure-browser-runner.py
+          apt-config dump Acquire::Retries Acquire::http::Timeout Acquire::https::Timeout
       - name: Install test browser
+        timeout-minutes: 10
         run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Verify fare selection and validation retry
+        run: node --test --test-timeout=90000 tests/frontend/fare-multiselect.browser.cjs
+        env:
+          TQ_BROWSER: ${{ matrix.browser }}
       - name: Verify static backgrounds and live branding in every motion mode
         run: npm run --prefix tests/frontend test:background
         env:

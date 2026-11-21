@@ -51,6 +51,7 @@ $routes->post('change-password/update', 'Auth::updateChangedPassword', ['filter'
 $routes->get('api/queue-status', 'Api\QueueStatus::index');
 $routes->get('api/check-vehicle-availability/(:num)', 'Api\QueueStatus::checkAvailability/$1');
 $routes->get('api/announcements', 'Api\Announcements::index');
+$routes->get('api/system-branding', 'Api\SystemBranding::index');
 
 // Route & Fare Management — Admin only (route CRUD + fare/discount management)
 $routes->group('admin/routes', ['filter' => 'auth:admin'], function ($routes) {
@@ -80,6 +81,7 @@ $routes->group('admin/vehicles', ['filter' => 'auth:admin'], function ($routes) 
     $routes->get('edit/(:num)', 'Admin\Vehicles::edit/$1');
     $routes->post('store', 'Admin\Vehicles::store');
     $routes->post('update/(:num)', 'Admin\Vehicles::update/$1');
+    $routes->post('status/(:num)', 'Admin\Vehicles::updateStatus/$1');
     $routes->post('delete/(:num)', 'Admin\Vehicles::delete/$1');
     $routes->post('deactivate/(:num)', 'Admin\Vehicles::deactivate/$1');
     $routes->post('activate/(:num)', 'Admin\Vehicles::activate/$1');

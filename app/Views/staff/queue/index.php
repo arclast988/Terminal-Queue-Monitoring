@@ -1141,11 +1141,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 $isBoarding = $item['status'] === 'boarding';
                 $isWaiting  = $item['status'] === 'waiting';
             ?>
-            <div class="q-card mb-3" id="card-<?= $item['id'] ?>" data-queue-route-key="<?= esc(($item['terminal_id'] ?? 0) . '|' . ($item['destination'] ?? ''), 'attr') ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
+            <div class="q-card mb-3" id="card-<?= $item['id'] ?>" data-queue-status="<?= esc($item['status'], 'attr') ?>" data-queue-route-key="<?= esc(($item['terminal_id'] ?? 0) . '|' . ($item['destination'] ?? ''), 'attr') ?>" data-destination="<?= esc(strtolower($item['destination'] ?? '')) ?>" data-vehicle-type="<?= esc(strtolower($item['vehicle_type'] ?? '')) ?>">
 
                 <!-- Header row: position badge + plate + status -->
                 <div class="q-card-header d-flex align-items-center gap-2 px-3 py-2 border-bottom">
-                    <span class="badge-modern badge-modern-primary">#<?= $item['position'] ?></span><span class="badge-modern badge-modern-primary">Round <?= (int) ($item['round_number'] ?? 1) ?></span>
+                    <span class="badge-modern badge-modern-primary" data-queue-position>#<?= $item['position'] ?></span><span class="badge-modern badge-modern-primary" data-queue-round>Round <?= (int) ($item['round_number'] ?? 1) ?></span>
                     <?php
                         $vType = $item['vehicle_type'] ?? '';
                         $vtPhoto = vehicle_resolved_photo($item, $vType);
@@ -1165,11 +1165,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <?= vehicle_type_badge($vType) ?>
                     </span>
                     <?php if ($isWaiting): ?>
-                        <span class="badge-modern badge-modern-warning">
+                        <span class="badge-modern badge-modern-warning" data-queue-status>
                             <i class="bi bi-hourglass-split me-1"></i>Waiting
                         </span>
                     <?php else: ?>
-                        <span class="badge-modern badge-modern-success">
+                        <span class="badge-modern badge-modern-success" data-queue-status>
                             <i class="bi bi-play-circle-fill me-1"></i>Boarding
                         </span>
                     <?php endif; ?>
@@ -1185,12 +1185,12 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         <div class="text-muted small">Arrived</div>
                         <div class="fw-semibold small"><?= operations_time($item['arrival_time']) ?></div>
                     </div>
-                    <div class="col-6 py-1">
+                    <div class="col-6 py-1" data-queue-departure>
                         <div class="text-muted small">Estimated departure (AM/PM)</div>
-                        <div class="fw-semibold small text-primary">
+                        <div class="fw-semibold small text-primary" data-queue-departure-time>
                             <?= !empty($item['estimated_departure']) ? operations_time($item['estimated_departure']) : 'TBA' ?>
                         </div>
-                        <?php if (!empty($item['boarding_start']) && $isWaiting): ?><div class="small text-muted">Boarding <?= operations_time($item['boarding_start']) ?></div><?php endif; ?>
+                        <?php if (!empty($item['boarding_start']) && $isWaiting): ?><div class="small text-muted" data-queue-boarding-time>Boarding <?= operations_time($item['boarding_start']) ?></div><?php endif; ?>
                         <?php if (!empty($item['estimated_departure']) && $item['status'] === 'boarding'): ?>
                             <div class="countdown-timer" data-departure="<?= date('c', strtotime($item['estimated_departure'])) ?>"></div>
                         <?php endif; ?>
@@ -2541,10 +2541,14 @@ $queueOrderGroups = array_values($queueOrderGroups);
                         throw new Error(result.data.message || 'Failed to save the queue order.');
                     }
 
-                    showFeedback(result.data.message || 'Queue order saved.', 'success');
-                    window.setTimeout(function() {
-                        window.location.reload();
-                    }, 350);
+                    var savedList = panel.querySelector('.queue-order-list');
+                    if (savedList) savedList.setAttribute('data-original-order', queueIds.join(','));
+                    if (typeof bootstrap !== 'undefined') bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                    if (window.QueueActions) window.QueueActions.notice('Queue order saved', result.data.message || 'Queue order saved.', 'success');
+                    if (window.QueueSync) window.QueueSync.refresh(true);
+                    else window.location.reload();
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Save Order';
                 })
                 .catch(function(error) {
                     showFeedback(error.message || 'Failed to save the queue order.', 'danger');
@@ -2577,6 +2581,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
     function updateStatus(id, status, modalId, btn) {
         if (btn && btn.disabled) return;
+        var actionToken = QueueActions.beginStatus(id);
         var originalButton = btn ? btn.innerHTML : '';
         if (btn) {
             btn.disabled = true;
@@ -2599,19 +2604,16 @@ $queueOrderGroups = array_values($queueOrderGroups);
             if (!data.success) {
                 throw new Error(data.message || 'Status update failed');
             }
-            if (window.QueueOrderManager) {
-                window.QueueOrderManager.setStatus(id, data.status || status);
-            }
-            if (typeof syncQueueHeaderActions === 'function') {
-                syncQueueHeaderActions();
-            }
+            var applied = QueueActions.applyStatus(id, data.status || status, data.queue_item, actionToken);
+            if (applied !== 'applied') return;
             if (window.QueueSync) {
-                window.QueueSync.refresh();
+                window.QueueSync.refresh(true);
             } else {
                 window.location.reload();
             }
         })
         .catch(function(error) {
+            if (!QueueActions.isCurrentStatusAction(id, actionToken, true)) return;
             console.error('[Queue] Status update error:', error);
             QueueActions.notice(status === 'boarding' ? 'Boarding not ready' : 'Could not update the trip', error.message, error.variant || 'danger');
             if (window.QueueSync) window.QueueSync.refresh();
@@ -2739,21 +2741,24 @@ $queueOrderGroups = array_values($queueOrderGroups);
                 : null;
             var updateUrl = '<?= base_url('staff/queue/update') ?>/' + queueId + '/canceled';
 
+            var actionToken = QueueActions.beginStatus(queueId);
+            QueueActions.rememberCard(queueId);
             QueueActions.request(updateUrl)
             .then(function(data) {
                 if (!data.success) {
                     throw new Error(data.message || 'Trip cancellation failed');
                 }
-                if (window.QueueOrderManager) {
-                    window.QueueOrderManager.setStatus(queueId, 'canceled');
+                var applied = QueueActions.applyStatus(queueId, 'canceled', data.queue_item, actionToken);
+                if (!QueueActions.isCurrentStatusAction(queueId, actionToken)) return;
+                if (modal && currentCancelQueueId === queueId) modal.hide();
+                if (!applied) return;
+                if (applied === 'applied' && window.QueueSync) {
+                    window.QueueSync.refresh(true);
                 }
-                if (window.QueueSync) {
-                    window.QueueSync.refresh();
-                }
-                if (modal) modal.hide();
                 showUndoBanner(queueId, plateNumber, vehicleType, 10000);
             })
             .catch(function(err) {
+                if (!QueueActions.isCurrentStatusAction(queueId, actionToken, true)) return;
                 console.error('[Queue] Cancel error:', err);
                 QueueActions.notice('Could not cancel this trip', err.message, err.variant || 'danger', document.getElementById('cancelTripFeedback'));
                 if (window.QueueSync) window.QueueSync.refresh();
@@ -2865,6 +2870,8 @@ $queueOrderGroups = array_values($queueOrderGroups);
         }
 
         if (undoBtn) {
+            undoBtn.dataset.expiresAt = String(expiresAt);
+            undoBtn.dataset.vehicleType = vehicleType || '';
             undoBtn.addEventListener('click', function() {
                 executeUndo(queueId, plateNumber);
             });
@@ -2872,10 +2879,14 @@ $queueOrderGroups = array_values($queueOrderGroups);
     }
 
     function executeUndo(queueId, plateNumber) {
+        var undoBtn = document.getElementById('undoTripBtn');
+        if (undoBtn && undoBtn.disabled) return;
+        var expiresAt = undoBtn ? Number(undoBtn.dataset.expiresAt) : 0;
+        var vehicleType = undoBtn ? undoBtn.dataset.vehicleType : '';
+        var actionToken = QueueActions.beginStatus(queueId);
         if (_undoTimer) { clearTimeout(_undoTimer); _undoTimer = null; }
         if (_undoInterval) { clearInterval(_undoInterval); _undoInterval = null; }
 
-        var undoBtn = document.getElementById('undoTripBtn');
         if (undoBtn) {
             undoBtn.disabled = true;
             undoBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Restoring...';
@@ -2883,12 +2894,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         QueueActions.request('<?= base_url('staff/queue/undoCancel') ?>/' + queueId)
         .then(function(data) {
-            try { sessionStorage.removeItem('pendingUndoTrip'); } catch(e) {}
-
             if (data.success) {
-                if (window.QueueOrderManager) {
-                    window.QueueOrderManager.setStatus(queueId, 'waiting');
+                var applied = QueueActions.applyStatus(queueId, data.status || (data.queue_item && data.queue_item.status) || 'waiting', data.queue_item, actionToken, true);
+                if (!applied) {
+                    if (QueueActions.isCurrentStatusAction(queueId, actionToken)) hideUndoBanner();
+                    return;
                 }
+                try { sessionStorage.removeItem('pendingUndoTrip'); } catch(e) {}
                 var bannerContainer = document.getElementById('undoBannerContainer');
                 if (bannerContainer) {
                     bannerContainer.innerHTML =
@@ -2912,9 +2924,9 @@ $queueOrderGroups = array_values($queueOrderGroups);
                     }, 3000);
                 }
 
-                if (window.QueueSync) {
-                    window.QueueSync.refresh();
-                } else {
+                if (applied === 'applied' && window.QueueSync) {
+                    window.QueueSync.refresh(true);
+                } else if (!window.QueueSync) {
                     window.location.reload();
                 }
             } else {
@@ -2925,9 +2937,12 @@ $queueOrderGroups = array_values($queueOrderGroups);
             }
         })
         .catch(function(err) {
+            if (!QueueActions.isCurrentStatusAction(queueId, actionToken, true)) return;
             console.error('[Queue] Undo error:', err);
             QueueActions.notice('Could not restore this trip', err.message, err.variant || 'danger');
-            hideUndoBanner();
+            var remaining = expiresAt - Date.now();
+            if (remaining > 0) showUndoBanner(queueId, plateNumber, vehicleType, remaining);
+            else hideUndoBanner();
         });
     }
 
@@ -3046,6 +3061,7 @@ $queueOrderGroups = array_values($queueOrderGroups);
 
         // Defensive check: If there are 0 queue cards (or empty state is showing), ensure Manage Order button is hidden
         var queueCards = document.querySelectorAll('#queue-list .q-card');
+        if (cancelSelectionBtn && !newCancelSelectionBtn) cancelSelectionBtn.disabled = queueCards.length === 0;
         var manageBtn = document.getElementById('manageQueueBtn') || document.querySelector('[data-bs-target="#manageQueueModal"]');
         if (manageBtn) {
             if (queueCards.length === 0) {
@@ -3060,6 +3076,11 @@ $queueOrderGroups = array_values($queueOrderGroups);
             }
         }
     }
+
+    document.addEventListener('queue-status-applied', function() {
+        updateCountdowns();
+        syncQueueHeaderActions();
+    });
 
     // Initialize real-time sync (polling + WebSocket)
     // NOTE: this page uses card divs (#queue-list), NOT a <table> — the sync
@@ -3085,36 +3106,13 @@ $queueOrderGroups = array_values($queueOrderGroups);
     });
     syncQueueHeaderActions();
 
-    // Universal WebSocket document event listeners for full real-time reactivity
+    // Patch confirmed status broadcasts immediately. QueueSync owns the single
+    // reconciliation request and passenger-count updates for these messages.
     document.addEventListener('pttm:ws-queue_update', function(e) {
         var detail = (e && e.detail) ? e.detail : {};
         var data = detail.data || detail;
-        if (data && data.action === 'status_change' && data.id && data.status && window.QueueOrderManager) {
-            window.QueueOrderManager.setStatus(data.id, data.status);
-        }
-        if (data && (data.action === 'passenger_change' || data.type === 'passenger_change')) {
-            if (window.QueueSync && window.QueueSync.updatePassengerUI) {
-                var id = data.id;
-                var newCount = parseInt(data.new_count, 10);
-                var capacity = parseInt(data.capacity, 10);
-                if (id && !isNaN(newCount) && !isNaN(capacity)) {
-                    window.QueueSync.updatePassengerUI(id, newCount, capacity);
-                }
-            }
-            return;
-        }
-        if (window.QueueSync && window.QueueSync.refresh) {
-            window.QueueSync.refresh();
-        }
-    });
-    document.addEventListener('pttm:ws-vehicle_type_update', function() {
-        if (window.QueueSync && window.QueueSync.refresh) {
-            window.QueueSync.refresh();
-        }
-    });
-    document.addEventListener('pttm:ws-fare_update', function() {
-        if (window.QueueSync && window.QueueSync.refresh) {
-            window.QueueSync.refresh();
+        if (data && data.action === 'status_change' && data.id && data.status && window.QueueActions) {
+            window.QueueActions.applyStatus(data.id, data.status, data.queue_item, null, data.status === 'waiting');
         }
     });
     document.addEventListener('pttm:ws-operational_settings_updated', function() {

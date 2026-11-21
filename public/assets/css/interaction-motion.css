@@ -31,20 +31,25 @@ html[data-tq-motion="full"] body:not(.auth-page)::before,
 html[data-tq-motion="full"] body::after {
   animation-delay: var(--tq-background-delay, 0s) !important;
 }
-@keyframes tq-page-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tq-page-in {
+  from { opacity: 1; transform: none; }
+  to { opacity: 1; transform: none; }
+}
 
-/* Keep a solid outgoing snapshot beneath the incoming page. Fading both
-   snapshots with normal blending exposes the canvas as a white flash. */
-::view-transition-group(root) { animation-duration: .18s; }
+/* The browser holds the outgoing document until the destination is ready.
+   Show the ready destination as one opaque surface: cross-fading two pages
+   makes unrelated headers and text show through each other. */
+::view-transition-group(root) { animation: none; }
 ::view-transition-image-pair(root) { isolation: isolate; }
 /* Snapshots are visual only; the newly loaded page remains interactive. */
 ::view-transition { pointer-events: none; }
 ::view-transition-old(root) {
   animation: none;
-  opacity: 1;
+  opacity: 0;
   mix-blend-mode: normal;
 }
 ::view-transition-new(root) {
+  opacity: 1;
   animation: tq-page-in .18s cubic-bezier(.2, .8, .2, 1) both;
   mix-blend-mode: normal;
 }
@@ -71,14 +76,12 @@ html[data-tq-motion="lite"]::view-transition-new(root) { animation-duration: .12
   to { opacity: 1; }
 }
 
-/* A single opacity fade also works in browsers without page snapshots. It
-   never hides the destination, holds a click, or staggers nested controls. */
+/* Without snapshots, render the destination fully painted on arrival.
+   Moving or fading the body would flash its canvas or reposition fixed UI. */
 @media (prefers-reduced-motion: no-preference) {
   html[data-tq-navigation-fallback]:not([data-tq-motion="reduced"]) body {
-    animation: tq-content-fade .14s ease-out backwards !important;
-  }
-  html[data-tq-navigation-fallback][data-tq-motion="lite"] body {
-    animation-duration: .1s !important;
+    animation: none !important;
+    opacity: 1 !important;
   }
 }
 
@@ -296,7 +299,7 @@ html[data-tq-motion="reduced"] :is(.login-card, .modal-backdrop, .support-modal-
   backdrop-filter: none !important;
 }
 
-/* A browser page fade already reveals this content; avoid a second entrance. */
+/* Navigation already reveals this content; avoid a second entrance. */
 html[data-tq-navigation-reveal] body :is(.fade-in, .form-entry-page, .main-content),
 html[data-tq-navigation-reveal] .guest-theme > :is(.hero, .container),
 html[data-tq-navigation-reveal] .guest-theme :is(.stat-card, .queue-section),

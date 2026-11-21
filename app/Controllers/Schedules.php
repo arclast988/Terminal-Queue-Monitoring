@@ -20,6 +20,7 @@ class Schedules extends BaseController
                 ->findAll();
 
             foreach ($types as &$type) {
+                $type['name'] = vehicle_type_display_name($type['name']);
                 $type['photo'] = vehicle_type_photo($type['slug']);
                 $type['image'] = vehicle_type_image($type['slug']);
             }

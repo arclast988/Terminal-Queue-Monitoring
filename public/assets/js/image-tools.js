@@ -24,10 +24,16 @@
     }
 
     function buildCropper() {
+        var handles = [
+            ['nw','top-left corner'], ['n','top edge'], ['ne','top-right corner'], ['e','right edge'],
+            ['se','bottom-right corner'], ['s','bottom edge'], ['sw','bottom-left corner'], ['w','left edge']
+        ].map(function (handle) {
+            return '<button type="button" class="tq-crop-handle" data-crop-handle="' + handle[0] + '" aria-label="Resize crop ' + handle[1] + '" aria-describedby="tq-crop-help"></button>';
+        }).join('');
         var dialog = makeDialog('tq-image-cropper', 'Crop image',
-            '<p class="tq-image-help" id="tq-crop-help">Drag the crop area to move it. Drag the lower-right corner to resize. Arrow keys move it; Shift + arrow keys resize it.</p>' +
+            '<p class="tq-image-help" id="tq-crop-help">Drag the crop area to move it, or drag any edge or corner to resize. Arrow keys move the area; Shift + arrow keys resize it. Focus a handle and use arrow keys to adjust that edge.</p>' +
             '<div class="tq-image-toolbar"><label for="tq-crop-ratio">Crop shape</label><select id="tq-crop-ratio" data-no-autocomplete><option value="free">Free crop</option><option value="original">Original ratio</option><option value="1">1:1 · Square</option><option value="1.3333333333">4:3 · Landscape</option><option value="1.7777777778">16:9 · Wide</option><option value=".75">3:4 · Portrait</option><option value=".5625">9:16 · Tall</option></select><button type="button" class="tq-image-action" data-reset>Reset</button></div>' +
-            '<div class="tq-crop-stage"><div class="tq-crop-image-wrap"><img class="tq-crop-image" alt="Image to crop" draggable="false"><div class="tq-crop-selection" tabindex="0" role="group" aria-label="Crop area" aria-describedby="tq-crop-help"><button type="button" class="tq-crop-handle" aria-label="Resize crop area"></button></div></div></div>' +
+            '<div class="tq-crop-stage"><div class="tq-crop-image-wrap"><img class="tq-crop-image" alt="Image to crop" draggable="false"><div class="tq-crop-selection" tabindex="0" role="group" aria-label="Crop area" aria-describedby="tq-crop-help">' + handles + '</div></div></div>' +
             '<p class="tq-image-message" role="status"></p><div class="tq-image-actions"><button type="button" class="tq-image-action" data-cancel>Cancel</button><button type="button" class="tq-image-action" data-original>Use original</button><button type="button" class="tq-image-action tq-image-primary" data-apply>Use crop</button></div>');
         var image = dialog.querySelector('img'), wrap = dialog.querySelector('.tq-crop-image-wrap');
         var box = dialog.querySelector('.tq-crop-selection'), ratio = dialog.querySelector('select');
@@ -48,48 +54,79 @@
         function selectedRatio() {
             return ratio.value === 'free' ? 0 : ratio.value === 'original' ? image.naturalWidth / image.naturalHeight : Number(ratio.value);
         }
+        function stopGesture() {
+            var id = gesture ? gesture.id : null;
+            gesture = null;
+            if (id !== null && box.hasPointerCapture(id)) box.releasePointerCapture(id);
+        }
         function reset() {
             if (!state || !image.naturalWidth) return;
+            stopGesture();
             var w = image.naturalWidth, h = image.naturalHeight, shape = selectedRatio();
             if (shape && w / h > shape) w = h * shape;
             else if (shape) h = w / shape;
             state.rect = {x:(image.naturalWidth-w)/2, y:(image.naturalHeight-h)/2, w:w, h:h};
             paint();
         }
-        function resize(r, dx, dy) {
-            var maxW = image.naturalWidth - r.x, maxH = image.naturalHeight - r.y;
-            var minW = Math.min(16, maxW), minH = Math.min(16, maxH), shape = selectedRatio();
-            var w = clamp(r.w + dx, minW, maxW), h = clamp(r.h + dy, minH, maxH);
-            if (shape) {
-                w = Math.abs(dx) >= Math.abs(dy * shape) ? w : h * shape;
-                w = clamp(w, Math.min(16, maxW, maxH * shape), Math.min(maxW, maxH * shape));
-                h = w / shape;
+        function resize(r, dx, dy, handle) {
+            handle = handle || 'se';
+            var west = handle.includes('w'), east = handle.includes('e');
+            var north = handle.includes('n'), south = handle.includes('s');
+            var width = image.naturalWidth, height = image.naturalHeight, shape = selectedRatio();
+            var left = r.x, top = r.y, right = r.x+r.w, bottom = r.y+r.h;
+            var minW = Math.min(16, width), minH = Math.min(16, height);
+            if (west) left = clamp(left+dx,0,right-minW);
+            if (east) right = clamp(right+dx,left+minW,width);
+            if (north) top = clamp(top+dy,0,bottom-minH);
+            if (south) bottom = clamp(bottom+dy,top+minH,height);
+            var w = right-left, h = bottom-top;
+            if (handle.length === 1) {
+                // A side handle moves only its own edge. Reflect the changed
+                // proportions in the existing shape control without resetting it.
+                if (shape && Math.abs(w/h-shape) > 0.000001) ratio.value = 'free';
+                shape = 0;
             }
-            return {x:r.x, y:r.y, w:w, h:h};
+            if (shape) {
+                var centerX = r.x+r.w/2, centerY = r.y+r.h/2;
+                var anchorX = west ? r.x+r.w : r.x, anchorY = north ? r.y+r.h : r.y;
+                var maxW = west ? anchorX : east ? width-anchorX : 2*Math.min(centerX,width-centerX);
+                var maxH = north ? anchorY : south ? height-anchorY : 2*Math.min(centerY,height-centerY);
+                // Corners keep the opposite corner fixed and retain the selected ratio.
+                w = west || east ? (north || south) && Math.abs(dy*shape)>Math.abs(dx) ? h*shape : w : h*shape;
+                w = clamp(w,Math.min(16,maxW,maxH*shape),Math.min(maxW,maxH*shape));
+                h = w / shape;
+                left = west ? anchorX-w : east ? anchorX : centerX-w/2;
+                top = north ? anchorY-h : south ? anchorY : centerY-h/2;
+            }
+            return {x:left, y:top, w:w, h:h};
         }
         box.addEventListener('pointerdown', function (event) {
             if (!state || !image.naturalWidth || event.button !== 0) return;
             event.preventDefault();
-            var bounds = wrap.getBoundingClientRect();
+            var bounds = wrap.getBoundingClientRect(), handle = event.target.closest('.tq-crop-handle');
             gesture = {id:event.pointerId, x:event.clientX, y:event.clientY, sx:image.naturalWidth/bounds.width, sy:image.naturalHeight/bounds.height,
-                resize:!!event.target.closest('.tq-crop-handle'), rect:Object.assign({}, state.rect)};
+                handle:handle && handle.dataset.cropHandle, rect:Object.assign({}, state.rect)};
+            (handle || box).focus({preventScroll:true});
             box.setPointerCapture(event.pointerId);
         });
         box.addEventListener('pointermove', function (event) {
             if (!gesture || gesture.id !== event.pointerId || !state) return;
+            // A release outside the browser may not deliver pointerup. End the
+            // old drag before a returning pointer can capture another control.
+            if (!(event.buttons & 1)) { stopGesture(); return; }
             var dx = (event.clientX-gesture.x)*gesture.sx, dy = (event.clientY-gesture.y)*gesture.sy, r = gesture.rect;
-            state.rect = gesture.resize ? resize(r,dx,dy) : {x:clamp(r.x+dx,0,image.naturalWidth-r.w), y:clamp(r.y+dy,0,image.naturalHeight-r.h), w:r.w, h:r.h};
+            state.rect = gesture.handle ? resize(r,dx,dy,gesture.handle) : {x:clamp(r.x+dx,0,image.naturalWidth-r.w), y:clamp(r.y+dy,0,image.naturalHeight-r.h), w:r.w, h:r.h};
             paint();
         });
-        ['pointerup','pointercancel','lostpointercapture'].forEach(function (name) { box.addEventListener(name,function () { gesture=null; }); });
+        ['pointerup','pointercancel','lostpointercapture'].forEach(function (name) { box.addEventListener(name,stopGesture); });
         box.addEventListener('keydown', function (event) {
             if (!state || !['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
             event.preventDefault();
             var step = Math.max(1, Math.round(Math.min(image.naturalWidth,image.naturalHeight)/100));
             var dx = event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0;
             var dy = event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0;
-            var r = state.rect;
-            state.rect = event.shiftKey ? resize(r,dx,dy) : {x:clamp(r.x+dx,0,image.naturalWidth-r.w), y:clamp(r.y+dy,0,image.naturalHeight-r.h), w:r.w, h:r.h};
+            var r = state.rect, handle = event.target.closest('.tq-crop-handle');
+            state.rect = handle || event.shiftKey ? resize(r,dx,dy,handle && handle.dataset.cropHandle) : {x:clamp(r.x+dx,0,image.naturalWidth-r.w), y:clamp(r.y+dy,0,image.naturalHeight-r.h), w:r.w, h:r.h};
             paint();
         });
         function finish(file) {

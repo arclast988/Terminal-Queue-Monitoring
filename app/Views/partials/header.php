@@ -958,7 +958,7 @@ SVG;
 
     // Clean up dropdowns and close drawer on resize to desktop
     window.addEventListener('resize', function () {
-        if (window.innerWidth > 1024) {
+        if (window.innerWidth >= 1536) {
             closeSidebarDrawer();
         }
         closeNavDropdowns();

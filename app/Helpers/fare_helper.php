@@ -1,13 +1,28 @@
 <?php
 
 use App\Models\FareModel;
+use App\Models\FareDiscountModel;
+
+if (!function_exists('discounted_fare_amount')) {
+    /** Round configured, two-decimal money and percentage values using integer arithmetic. */
+    function discounted_fare_amount(float $fare, float $percent): float
+    {
+        $cents = (int) round($fare * 100);
+        $basisPoints = (int) round($percent * 100);
+        $numerator = $cents * (10000 - $basisPoints);
+        $discountedCents = $numerator >= 0
+            ? intdiv($numerator + 5000, 10000)
+            : -intdiv(-$numerator + 5000, 10000);
+        return $discountedCents / 100;
+    }
+}
 
 if (!function_exists('enrich_routes_with_discounts')) {
     /**
      * Attach standard 'fare' and a 'discounted_fares' array to every route row.
      *
      * @param array $routes    Rows from RouteModel
-     * @param array $discounts Active fare_discounts rows (unused now, kept for signature compatibility)
+     * @param array $discounts Active fare_discounts rows; loaded by terminal when omitted.
      * @return array
      */
     function enrich_routes_with_discounts(array $routes, array $discounts = []): array
@@ -17,6 +32,31 @@ if (!function_exists('enrich_routes_with_discounts')) {
         $routeIds = array_column($routes, 'id');
         if (empty($routeIds)) {
             return $routes;
+        }
+
+        // Older routes may have a regular fare without materialized discount rows.
+        // Display their configured terminal discounts without writing on a read.
+        if (func_num_args() < 2) {
+            $terminalIds = array_values(array_unique(array_filter(array_map(
+                static fn(array $route): int => (int) ($route['terminal_id'] ?? 0), $routes
+            ))));
+            if ($terminalIds) {
+                try {
+                    $discounts = (new FareDiscountModel())
+                        ->whereIn('terminal_id', $terminalIds)
+                        ->where('is_active', 1)->where('type !=', 'regular')
+                        ->orderBy('type', 'ASC')->findAll();
+                } catch (\Throwable $e) {
+                    $discounts = [];
+                }
+            }
+        }
+        $discountsByTerminal = [];
+        foreach ($discounts as $discount) {
+            if (($discount['type'] ?? 'regular') === 'regular' || (int) ($discount['is_active'] ?? 0) !== 1) continue;
+            $percent = (float) ($discount['discount_percent'] ?? -1);
+            if ($percent < 0 || $percent > 100 || !is_finite($percent)) continue;
+            $discountsByTerminal[(int) ($discount['terminal_id'] ?? 0)][$discount['type']] = $discount;
         }
 
         $faresGrouped = [];
@@ -54,6 +94,16 @@ if (!function_exists('enrich_routes_with_discounts')) {
                         'amount'           => (float)$f['amount'],
                     ];
                 }
+            }
+
+            if ($r['fare'] <= 0) continue;
+            foreach ($discountsByTerminal[(int) ($r['terminal_id'] ?? 0)] ?? [] as $type => $discount) {
+                if (isset($r['discounted_fares'][$type])) continue;
+                $r['discounted_fares'][$type] = [
+                    'label' => $discount['label'],
+                    'discount_percent' => (float) $discount['discount_percent'],
+                    'amount' => discounted_fare_amount($r['fare'], (float) $discount['discount_percent']),
+                ];
             }
         }
         unset($r);

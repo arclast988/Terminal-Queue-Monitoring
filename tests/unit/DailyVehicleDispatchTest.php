@@ -80,6 +80,36 @@ final class DailyVehicleDispatchTest extends CIUnitTestCase
         $this->assertSame(['C','A'], $this->platesForRoute([1,2]));
     }
 
+    public function testDestinationPreviewCountsExcludeThisVehicleAndShareSiblingTypesOnlyWithinTheSameTerminal(): void
+    {
+        $this->dispatchDb->table('routes')->insert(['id'=>5, 'terminal_id'=>1, 'destination'=>'TACLOBAN', 'status'=>'active']);
+        $routes = $this->dispatchDb->table('routes')->orderBy('id')->get()->getResultArray();
+        $counts = $this->vehicles->getDispatchOrderCounts($routes, 2);
+        $this->assertSame(['active_count'=>2, 'total_count'=>2, 'route_key'=>'1|ORMOC'], $counts[1]);
+        $this->assertSame($counts[1], $counts[2]);
+        $this->assertSame(['active_count'=>1, 'total_count'=>1, 'route_key'=>'2|ORMOC'], $counts[4]);
+        $this->assertSame(['active_count'=>0, 'total_count'=>0, 'route_key'=>'1|TACLOBAN'], $counts[5]);
+
+        $this->vehicles->update(3, ['status'=>'maintenance']);
+        $this->dispatchDb->table('routes')->where('id', 2)->update(['status'=>'archived']);
+        $counts = $this->vehicles->getDispatchOrderCounts($routes);
+        $this->assertSame(['active_count'=>1, 'total_count'=>3, 'route_key'=>'1|ORMOC'], $counts[1]);
+    }
+
+    public function testMovingToAnEmptyDestinationStartsAtOneAndManualPositionOverridesAppend(): void
+    {
+        $this->dispatchDb->table('routes')->insert(['id'=>5, 'terminal_id'=>1, 'destination'=>'TACLOBAN', 'status'=>'active']);
+        $this->assertTrue($this->vehicles->saveInDispatchOrder(['default_route_id'=>5, 'dispatch_order'=>''], 2));
+        $this->assertSame(['B'], $this->platesForRoute([5]));
+        $this->assertSame([1], $this->positionsForRoute([5]));
+        $this->assertSame([1,2], $this->positionsForRoute([1,2]));
+
+        $this->assertTrue($this->vehicles->saveInDispatchOrder(['default_route_id'=>5, 'dispatch_order'=>1], 3));
+        $this->assertSame(['C','B'], $this->platesForRoute([5]));
+        $this->assertSame([1,2], $this->positionsForRoute([5]));
+        $this->assertSame([1], $this->positionsForRoute([1,2]));
+    }
+
     public function testEveryDepartureMovesTheVehicleToTheEndEvenWithinOneSecond(): void
     {
         $now = strtotime('2026-10-07 10:00:00');
@@ -92,6 +122,51 @@ final class DailyVehicleDispatchTest extends CIUnitTestCase
         $this->assertSame([1,2,3], $this->positionsForRoute([1,2]));
         $this->assertSame(0, (int) $this->vehicles->find(4)['dispatch_rotation']);
         $this->assertSame(0, (int) $this->vehicles->find(5)['dispatch_rotation']);
+    }
+
+    public function testManualOrderChangesTodayAndTheDailyStartWithoutChangingTripHistory(): void
+    {
+        $today = date('Y-m-d');
+        $this->vehicles->rotateAfterDeparture(1, 1);
+        $this->dispatchDb->table('queue')->insert([
+            'vehicle_id'=>1, 'route_id'=>1, 'status'=>'departed', 'position'=>0,
+            'arrival_time'=>$today . ' 08:00:00', 'departure_time'=>$today . ' 08:15:00',
+        ]);
+        $trip = $this->dispatchDb->table('queue')->get()->getRowArray();
+        $this->assertSame(['B','C','A'], $this->dispatchPlates($today));
+
+        $this->assertTrue($this->vehicles->saveInDispatchOrder(['dispatch_order'=>1], 3, true));
+        $this->assertSame(['C','B','A'], $this->dispatchPlates($today));
+        $this->assertSame(['C','A','B'], $this->platesForRoute([1,2]));
+        $this->assertSame($trip, $this->dispatchDb->table('queue')->get()->getRowArray());
+
+        $this->vehicles->rotateAfterDeparture(3, 1);
+        $this->assertSame(['B','A','C'], $this->dispatchPlates($today));
+        $this->assertSame(['C','A','B'], $this->dispatchPlates(date('Y-m-d', strtotime('tomorrow'))));
+    }
+
+    public function testSyncingAnUnchangedDailyNumberStillMovesTodaysPositionAndBlankAppends(): void
+    {
+        $today = date('Y-m-d');
+        $this->vehicles->rotateAfterDeparture(1, 1);
+        $this->assertTrue($this->vehicles->saveInDispatchOrder(['dispatch_order'=>2], 2, true));
+        $this->assertSame(['C','B','A'], $this->dispatchPlates($today));
+        $this->assertSame(['A','B','C'], $this->platesForRoute([1,2]));
+        $this->assertTrue($this->vehicles->saveInDispatchOrder(['dispatch_order'=>''], 3, true));
+        $this->assertSame(['B','A','C'], $this->dispatchPlates($today));
+        $this->assertSame(['A','B','C'], $this->platesForRoute([1,2]));
+    }
+
+    public function testRouteTransferAppendsAfterTodaysDeparturesWhenCurrentOrderIsSynced(): void
+    {
+        $today = date('Y-m-d');
+        $this->vehicles->rotateAfterDeparture(4, 3);
+        $this->assertTrue($this->vehicles->saveInDispatchOrder(['default_route_id'=>3, 'dispatch_order'=>''], 2, true));
+        $rows = $this->vehicles->select('vehicles.*, routes.terminal_id as route_terminal_id, routes.destination as route_destination')
+            ->join('routes', 'routes.id = vehicles.default_route_id')->where('default_route_id', 3)->findAll();
+        $this->assertSame(['D','B'], array_column(VehicleModel::sortForDispatch($rows, $today), 'plate_number'));
+        $this->assertSame(['D','B'], $this->platesForRoute([3]));
+        $this->assertSame([1,2], $this->positionsForRoute([1,2]));
     }
 
     public function testRouteReassignmentClearsTheOldRotationButSiblingVehicleTypesKeepIt(): void

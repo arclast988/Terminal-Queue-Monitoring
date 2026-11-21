@@ -467,33 +467,44 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
         position: relative;
         max-width: 480px;
         width: 100%;
+        height: 44px;
+        box-sizing: border-box;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 24px;
+        background: #ffffff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .route-search-group .input-group-text {
-        height: 40px;
-        background: #f8fafc;
-        border: 1.5px solid #cbd5e1;
-        border-right: none;
-        border-radius: 20px 0 0 20px;
+        align-self: stretch;
+        min-height: 0 !important;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        background: transparent;
+        border: 0 !important;
+        border-radius: 0;
         color: #64748b;
-        padding: 0 14px;
-        font-size: 14px;
+        padding: 0 0 0 12px;
+        font-size: 16px;
     }
-    .route-search-input {
-        height: 40px;
-        width: 100%;
+    .route-search-group .route-search-input {
+        height: 100%;
+        min-height: 0 !important;
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 1%;
+        box-sizing: border-box;
         padding: 6px 36px 6px 10px;
-        font-size: 13.5px;
+        font-size: 16px;
         font-family: inherit;
-        border: 1.5px solid #cbd5e1;
-        border-left: none;
-        background: #ffffff;
+        border: 0 !important;
+        background: transparent;
         color: #1e293b;
-        border-radius: 0 20px 20px 0;
-        outline: none;
-        transition: all 0.2s ease;
+        border-radius: 0;
+        outline: none !important;
+        box-shadow: none !important;
     }
-    .route-search-group:focus-within .input-group-text,
-    .route-search-group:focus-within .route-search-input {
+    .route-search-group:focus-within {
         border-color: var(--primary, #b71c1c);
         box-shadow: 0 0 0 3px var(--primary-soft);
     }

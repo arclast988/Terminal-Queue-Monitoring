@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -748,7 +749,7 @@
                                 <i class="fas <?= esc($vanIcon) ?>" style="color: <?= esc($vanIconColor) ?> !important;"></i>
                             </span>
                         <?php endif; ?>
-                        Van Routes
+                        VAN ROUTES
                     </h3>
                 </div>
                 <div class="fare-list">
@@ -812,7 +813,7 @@
                                 <i class="fas <?= esc($jeepIcon) ?>" style="color: <?= esc($jeepIconColor) ?> !important;"></i>
                             </span>
                         <?php endif; ?>
-                        Jeepney Routes
+                        JEEPNEY ROUTES
                     </h3>
                 </div>
                 <div class="fare-list">
@@ -876,7 +877,7 @@
                                 <i class="fas <?= esc($minibusIcon) ?>" style="color: <?= esc($minibusIconColor) ?> !important;"></i>
                             </span>
                         <?php endif; ?>
-                        Minibus Routes
+                        MINIBUS ROUTES
                     </h3>
                 </div>
                 <div class="fare-list">
@@ -942,7 +943,7 @@
                                     <i class="fas <?= esc($vtIcon) ?>" style="color: <?= esc($vtIconColor) ?> !important;"></i>
                                 </span>
                             <?php endif; ?>
-                            <?= esc($vehicleType['name']) ?> Routes
+                            <?= esc(strtoupper($vehicleType['name'])) ?> ROUTES
                         </h3>
                     </div>
                     <div class="fare-list">
@@ -976,7 +977,7 @@
                         <?php else: ?>
                             <div class="fare-empty-state">
                                 <i class="fas fa-route"></i>
-                                <span>No <?= esc(strtolower($vehicleType['name'])) ?> fares listed.</span>
+                                <span>No <?= esc($vehicleType['name']) ?> fares listed.</span>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1119,6 +1120,12 @@
     var _fareFingerprint = '';
     var _fareFetchPending = false;
     var _cardFingerprints = {};
+    var _serverFareRoutes = <?= json_encode($routesByType ?? [
+        'van'=>$van_routes ?? [], 'jeepney'=>$jeepney_routes ?? [], 'minibus'=>$minibus_routes ?? [],
+    ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
+    Object.keys(_serverFareRoutes).forEach(function(type) {
+        _cardFingerprints[type] = makeTypeRoutesFingerprint(_serverFareRoutes[type]);
+    });
     var _discountFingerprint = '';
     var _vehicleTypesFingerprint = null;
     var _isAdmin = <?= in_array(session()->get('role'), ['super_admin', 'admin'], true) ? 'true' : 'false' ?>;
@@ -1159,8 +1166,9 @@
         }));
     }
 
-    function formatFare(n) {
-        return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    function formatFare(n, fractionDigits) {
+        var digits = fractionDigits || 0;
+        return '₱' + Number(n).toLocaleString('en-PH', { minimumFractionDigits: digits, maximumFractionDigits: digits });
     }
 
     function escapeHtml(value) {
@@ -1202,7 +1210,7 @@
                             + '<i class="fas fa-tag" style="font-size: 12px; color: #64748b; margin-right: 6px;"></i>'
                             + escapeHtml(df.label) + ' <span style="color: #64748b; font-size: 12.5px; font-weight: 500;">(' + Number(df.discount_percent).toFixed(0) + '% off)</span>'
                             + '</span>'
-                            + '<span style="font-size: 14px; font-weight: 700; color: #16a34a;">' + formatFare(df.amount) + '</span>'
+                            + '<span style="font-size: 14px; font-weight: 700; color: #16a34a;">' + formatFare(df.amount, 2) + '</span>'
                             + '</div>';
                     });
                     html += '</div>';
@@ -1211,7 +1219,7 @@
                 html += '</div>';
             });
         } else {
-            var typeName = escapeHtml(label.replace(/\s*routes$/i, '').trim().toLowerCase());
+            var typeName = escapeHtml(label.replace(/\s*routes$/i, '').trim().toUpperCase());
             html += '<div class="fare-empty-state">'
                 + '<i class="fas fa-route"></i>'
                 + '<span>No ' + typeName + ' fares listed.</span>'
@@ -1277,24 +1285,17 @@
             var globalFp = makeContentFingerprint(data);
 
             var vehicleTypes = Array.isArray(data.vehicle_types) ? data.vehicle_types : [];
+            vehicleTypes.forEach(function(type) { if (type.name) type.name = String(type.name).toUpperCase(); });
             var currentTypesFp = JSON.stringify(vehicleTypes.map(function(v) {
                 return v.slug + ':' + (v.photo || '') + ':' + (v.icon || '') + ':' + (v.color || '');
             }));
             var newDiscFp = JSON.stringify(data.discounts || []);
 
-            // First fetch: seed the fingerprints without re-rendering server-rendered DOM
+            // Compare the first response with the routes actually rendered by PHP.
+            // Matching cards keep their nodes; fresher quotes update immediately.
             if (_fareFingerprint === '') {
-                _fareFingerprint = globalFp;
                 _vehicleTypesFingerprint = currentTypesFp;
                 _discountFingerprint = newDiscFp;
-                vehicleTypes.forEach(function(vehicleType) {
-                    var slug = vehicleType.slug;
-                    var routes = (data.routes_by_type && data.routes_by_type[slug])
-                        || data[slug + '_routes']
-                        || [];
-                    _cardFingerprints[slug] = makeTypeRoutesFingerprint(routes);
-                });
-                return;
             }
 
             // If absolutely nothing changed, do nothing!
@@ -1320,7 +1321,7 @@
                         var cardIcon = vehicleType.icon || 'fa-bus';
                         return buildFareCard(
                             vehicleType.slug,
-                            escapeHtml(vehicleType.name) + ' Routes',
+                            escapeHtml(vehicleType.name.toUpperCase()) + ' ROUTES',
                             '',
                             cardPhoto,
                             routes,
@@ -1349,7 +1350,7 @@
                             var fareList = cardEl.querySelector('.fare-list');
                             if (fareList) {
                                 // Smoothly update only the fare list of this card
-                                fareList.innerHTML = buildFareListContent(escapeHtml(vehicleType.name) + ' Routes', routes);
+                                fareList.innerHTML = buildFareListContent(escapeHtml(vehicleType.name.toUpperCase()) + ' ROUTES', routes);
                             }
                         } else {
                             var temp = document.createElement('div');
@@ -1357,7 +1358,7 @@
                             var cardIcon = vehicleType.icon || 'fa-bus';
                             temp.innerHTML = buildFareCard(
                                 slug,
-                                escapeHtml(vehicleType.name) + ' Routes',
+                                escapeHtml(vehicleType.name.toUpperCase()) + ' ROUTES',
                                 '',
                                 cardPhoto,
                                 routes,

@@ -99,7 +99,9 @@ final class RecordSortOrderTest extends CIUnitTestCase
                 foreach (['index', 'print'] as $method) {
                     $html = $this->page($controller, $method, $query);
                     $this->assertSame($expected, $this->rowMarkers($html), "$controller $method $direction");
-                    $this->assertStringContainsString($direction === 'asc' ? 'Oldest first (Ascending)' : 'Newest first (Descending)', $html);
+                    $label = $direction === 'asc' ? 'Oldest first' : 'Newest first';
+                    if ($method === 'print') $label .= $direction === 'asc' ? ' (Ascending)' : ' (Descending)';
+                    $this->assertStringContainsString($label, $html);
                 }
             }
         }

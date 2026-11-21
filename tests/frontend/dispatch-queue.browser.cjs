@@ -106,17 +106,19 @@ test('compact route filters and Round dialog fit phones, landscape and desktop s
     await page.goto(origin + '/staff/queue');
     assert.equal(await page.locator('[data-dispatch-round]:visible').count(), 0);
     assert.equal(await page.locator('#queueRouteControls [data-dispatch-round]').count(),0);
-    assert.ok(await page.locator('#queueRouteControls').evaluate(el=>el.getBoundingClientRect().height<160));
+    assert.ok(await page.locator('#queueRouteControls').evaluate(el=>el.getBoundingClientRect().height<220));
     assert.equal(await page.locator('#queueRouteControls #cancelSelectionBtn').count(),1);
     assert.equal(await page.locator('#queueRouteControls #queueRoundBtn').count(),1);
     assert.doesNotMatch(await page.locator('#cancelSelectionBtn').getAttribute('class'),/btn-modern-danger/);
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     const buttons=await page.locator('.queue-selection-actions').evaluate(el=>{
       const select=el.querySelector('#cancelSelectionBtn').getBoundingClientRect(),round=el.querySelector('#queueRoundBtn').getBoundingClientRect();
-      return {selectBottom:select.bottom,roundTop:round.top,roundBottom:round.bottom,roundHeight:round.height};
+      const parent=el.getBoundingClientRect();
+      return {selectHeight:select.height,roundHeight:round.height,
+        fits:[select,round].every(button=>button.left>=parent.left-1 && button.right<=parent.right+1)};
     });
-    assert.ok(buttons.roundTop<buttons.selectBottom && buttons.roundBottom>buttons.selectBottom-1);
-    assert.ok(buttons.roundHeight>=33 && buttons.roundHeight<42);
+    assert.ok(buttons.fits, 'selection actions stay inside their group when they wrap');
+    assert.ok(buttons.selectHeight>=44 && buttons.roundHeight>=44);
     const directory = path.join(__dirname, 'artifacts'); fs.mkdirSync(directory, {recursive:true});
     if(width===375 || width===1280)await page.screenshot({path:path.join(directory, `queue-route-controls-${width}.png`)});
     await page.locator('[data-queue-route="1|BATO"]').click();
@@ -627,8 +629,16 @@ test('settings badges, hover highlights, focus rings and queue selections follow
       } else if (name === 'admin-history' || name === 'admin-logs') {
         await page.locator('.quick-chip:not(.active)').first().hover();
         await page.waitForFunction(soft => getComputedStyle(document.querySelector('.quick-chip:hover')).backgroundColor === soft, colors.soft);
+      } else if (name === 'admin-routes') {
+        await page.locator('.route-search-input').focus();
+        await page.waitForFunction(({primary,soft}) => {
+          const style = getComputedStyle(document.querySelector('.route-search-group'));
+          return style.borderTopColor === primary && style.boxShadow.includes(soft);
+        }, colors);
+        assert.equal(await page.locator('.route-search-group').evaluate(el => getComputedStyle(el).borderTopColor), colors.primary);
+        assert.ok((await page.locator('.route-search-group').evaluate(el => getComputedStyle(el).boxShadow)).includes(colors.soft), name);
       } else {
-        const field = page.locator(name === 'admin-routes' ? '.route-search-input' : '.vehicle-search-input');
+        const field = page.locator('.vehicle-search-input');
         await field.focus();
         await field.evaluate(el => Promise.all(el.getAnimations().map(animation => animation.finished)));
         assert.ok((await field.evaluate(el => getComputedStyle(el).boxShadow)).includes(colors.soft), name);
@@ -718,6 +728,210 @@ test('boarding warnings are readable in-page and canceled trips restore their ac
   assert.equal(cancelRequests,1);
   const directory=path.join(__dirname,'artifacts');await page.screenshot({path:path.join(directory,'queue-cancellation-warning-mobile.png')});
   await page.close();
+});
+
+test('confirmed boarding, cancel, restore and depart update before a slow queue refresh finishes', { timeout:30000 }, async t => {
+  variant = 'fresh';
+  const page = await browser.newPage({ viewport:{width:1280,height:900}, reducedMotion:'reduce' });
+  const heldRefreshes = [], counts = { boarding:0, canceled:0, departed:0, restored:0 }, errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  t.after(async () => {
+    for (const route of heldRefreshes) await route.abort().catch(() => {});
+    await page.close();
+  });
+  let releaseBoarding, boardingPosted, restoreSucceeds = false;
+  const boardingGate = new Promise(resolve => { releaseBoarding = resolve; });
+  const firstBoarding = new Promise(resolve => { boardingPosted = resolve; });
+  const item = status => ({ id:101, status, position:1, round_number:1, current_passengers:8,
+    boarding_start:'2026-10-01 09:00:00', estimated_departure:'2026-10-01 09:30:00' });
+  await page.route('**/staff/queue/update/101/*', async route => {
+    const status = new URL(route.request().url()).pathname.split('/').pop();
+    counts[status]++;
+    if (status === 'boarding' && counts.boarding === 1) { boardingPosted(); await boardingGate; }
+    await route.fulfill({ contentType:'application/json', body:JSON.stringify({ success:true, status, queue_item:item(status) }) });
+  });
+  await page.route('**/staff/queue/undoCancel/101', async route => {
+    counts.restored++;
+    await route.fulfill({ status:restoreSucceeds ? 200 : 503, contentType:'application/json', body:JSON.stringify(restoreSucceeds
+      ? { success:true, status:'waiting', queue_item:item('waiting') }
+      : { success:false, message:'The connection is temporarily unavailable. Try restoring again.' }) });
+  });
+  await page.goto(origin + '/staff/queue');
+  await page.waitForLoadState('networkidle');
+  // This isolated queue fixture omits the shared footer. Include its real loader
+  // so a pending button can carry the same delayed overlay as the live page.
+  await page.addScriptTag({url:origin + '/assets/js/global-loader.js'});
+  await page.route('**/staff/queue', route => {
+    if (route.request().isNavigationRequest()) return route.continue();
+    heldRefreshes.push(route);
+  });
+  // Consecutive clicks must share the pending mutation and leave the displayed
+  // status untouched until the server confirms that boarding started.
+  await page.evaluate(() => {
+    const button = document.querySelector('#card-101 [data-action="update-status"]');
+    button.click(); button.click();
+  });
+  await firstBoarding;
+  assert.equal(counts.boarding, 1);
+  assert.equal(await page.locator('#card-101 [data-action="update-status"]').isDisabled(), true);
+  assert.match(await page.locator('#card-101 .q-card-header').innerText(), /Waiting/i);
+  await page.evaluate(() => GlobalLoader.showButtonSpinner(document.querySelector('#card-101 [data-action="update-status"]')));
+  await page.locator('#card-101 [data-action="update-status"].gl-btn-loading').waitFor({ state:'attached', timeout:1500 });
+  releaseBoarding();
+  await page.waitForFunction(() => document.querySelector('#card-101 [data-action="open-depart-modal"]'), null, { timeout:1500 });
+  assert.match(await page.locator('#card-101 [data-queue-status]').innerText(), /Boarding/i);
+  assert.equal(await page.locator('#card-101 [data-action="update-status"]').count(), 0);
+  const departState = await page.locator('#card-101 [data-action="open-depart-modal"]').evaluate(button => ({
+    disabled:button.disabled, ariaDisabled:button.getAttribute('aria-disabled'), ariaBusy:button.getAttribute('aria-busy'),
+    loading:button.matches('.gl-btn-pending, .gl-btn-loading'), feedback:button.querySelectorAll('.gl-btn-feedback').length,
+    color:button.style.getPropertyValue('color'), fill:button.style.getPropertyValue('-webkit-text-fill-color')
+  }));
+  assert.deepEqual(departState, { disabled:false, ariaDisabled:null, ariaBusy:null, loading:false, feedback:0, color:'', fill:'' },
+    'the confirmed Depart action must not inherit disabled, busy or transparent loader styling');
+  await page.locator('#card-101 [data-action="open-depart-modal"]').click({trial:true});
+
+  await page.locator('#card-101 [data-action="open-cancel-modal"]').click();
+  await page.locator('#confirmCancelTripBtn').click();
+  await page.waitForFunction(() => !document.getElementById('card-101') && !!document.getElementById('undoTripBtn'), null, { timeout:1500 });
+  assert.equal(counts.canceled, 1);
+  assert.equal(await page.locator('[data-queue-route="all"] .chip-count').innerText(), '0');
+
+  await page.locator('#undoTripBtn').click();
+  await page.waitForFunction(() => document.getElementById('queueActionFeedback')?.textContent.includes('temporarily unavailable')
+    && !document.getElementById('undoTripBtn')?.disabled, null, { timeout:1500 });
+  assert.equal(await page.locator('#card-101').count(), 0, 'failed restore must not revive a trip before confirmation');
+  assert.equal(await page.locator('#undoTripBtn').isEnabled(), true, 'failed restore remains available to retry');
+  restoreSucceeds = true;
+  await page.locator('#undoTripBtn').click();
+  await page.waitForFunction(() => document.querySelector('#card-101 [data-action="update-status"]'), null, { timeout:1500 });
+  assert.equal(counts.restored, 2);
+  assert.match(await page.locator('#card-101 [data-queue-status]').innerText(), /Waiting/i);
+  assert.equal(await page.locator('[data-queue-route="all"] .chip-count').innerText(), '1');
+  assert.equal(await page.locator('#card-101 [data-action="update-status"]').isEnabled(), true);
+
+  await page.locator('#card-101 [data-action="update-status"]').click();
+  await page.waitForFunction(() => document.querySelector('#card-101 [data-action="open-depart-modal"]'), null, { timeout:1500 });
+  await page.locator('#card-101 [data-action="open-depart-modal"]').click();
+  await page.locator('#confirmDepartSubmitBtn').click();
+  await page.waitForFunction(() => !document.getElementById('card-101'), null, { timeout:1500 });
+  assert.equal(counts.departed, 1);
+  assert.equal(await page.locator('[data-queue-route="all"] .chip-count').innerText(), '0');
+  assert.ok(heldRefreshes.length > 0, 'authoritative queue reconciliation is still running in the background');
+  assert.deepEqual(errors, []);
+});
+
+test('a late boarding response cannot undo a newer confirmed cancellation or restore', { timeout:30000 }, async t => {
+  variant = 'fresh';
+  for (const restore of [false, true]) {
+    const page = await browser.newPage({ viewport:{width:1280,height:900}, reducedMotion:'reduce' });
+    const heldRefreshes = [];
+    t.after(async () => {
+      for (const route of heldRefreshes) await route.abort().catch(() => {});
+      await page.close();
+    });
+    let releaseBoarding, boardingPosted;
+    const boardingGate = new Promise(resolve => { releaseBoarding = resolve; });
+    const firstBoarding = new Promise(resolve => { boardingPosted = resolve; });
+    const item = status => ({ id:101, status, position:1, round_number:1,
+      boarding_start:'2026-10-01 09:00:00', estimated_departure:'2026-10-01 09:30:00' });
+    await page.route('**/staff/queue/update/101/boarding', async route => {
+      boardingPosted(); await boardingGate;
+      await route.fulfill({ contentType:'application/json', body:JSON.stringify({success:true,status:'boarding',queue_item:item('boarding')}) });
+    });
+    await page.route('**/staff/queue/update/101/canceled', route => route.fulfill({
+      contentType:'application/json', body:JSON.stringify({success:true,status:'canceled',queue_item:item('canceled')})
+    }));
+    await page.route('**/staff/queue/undoCancel/101', async route => {
+      // Production broadcasts the commit before returning its HTTP response.
+      await page.evaluate(queueItem => document.dispatchEvent(new CustomEvent('pttm:ws-queue_update', {
+        detail:{data:{action:'status_change',id:101,status:'waiting',queue_item:queueItem}}
+      })), item('waiting'));
+      await route.fulfill({contentType:'application/json', body:JSON.stringify({success:true,status:'waiting',queue_item:item('waiting')})});
+    });
+    await page.goto(origin + '/staff/queue');
+    await page.waitForLoadState('networkidle');
+    await page.route('**/staff/queue', route => {
+      if (route.request().isNavigationRequest()) return route.continue();
+      heldRefreshes.push(route);
+    });
+    await page.locator('#card-101 [data-action="update-status"]').click();
+    await firstBoarding;
+    await page.evaluate(queueItem => document.dispatchEvent(new CustomEvent('pttm:ws-queue_update', {
+      detail:{data:{action:'status_change',id:101,status:'boarding',queue_item:queueItem}}
+    })), item('boarding'));
+    await page.waitForFunction(() => document.querySelector('#card-101 [data-action="open-depart-modal"]'), null, {timeout:1500});
+    await page.locator('#card-101 [data-action="open-cancel-modal"]').click();
+    await page.locator('#confirmCancelTripBtn').click();
+    await page.waitForFunction(() => !document.getElementById('card-101') && !!document.getElementById('undoTripBtn'), null, {timeout:1500});
+    if (restore) {
+      await page.locator('#undoTripBtn').click();
+      await page.waitForFunction(() => document.querySelector('#card-101 [data-action="update-status"]'), null, {timeout:1500});
+    }
+    await page.evaluate(() => {
+      const original = window.QueueActions.applyStatus;
+      window.__lateBoardingHandled = false;
+      window.QueueActions.applyStatus = function(id, status, item, token) {
+        const result = original(id, status, item, token);
+        if (status === 'boarding') window.__lateBoardingHandled = true;
+        return result;
+      };
+    });
+    releaseBoarding();
+    await page.waitForFunction(() => window.__lateBoardingHandled, null, {timeout:1500});
+    if (restore) {
+      assert.match(await page.locator('#card-101 [data-queue-status]').innerText(), /Waiting/i,
+        'the delayed boarding result must not replace a newer restored Waiting status');
+      assert.equal(await page.locator('#card-101 [data-action="update-status"]').count(), 1);
+    } else {
+      assert.equal(await page.locator('#card-101').count(), 0, 'the delayed boarding result must not resurrect a canceled trip');
+    }
+    await page.close();
+  }
+});
+
+test('saving queue order closes promptly, retains the reviewed order and refreshes once without navigation', { timeout:15000 }, async t => {
+  variant = 'many';
+  const page = await browser.newPage({viewport:{width:1280,height:900}, reducedMotion:'reduce'});
+  const heldRefreshes = [];
+  let submitted;
+  t.after(async () => {
+    for (const route of heldRefreshes) await route.abort().catch(() => {});
+    await page.close();
+  });
+  await page.route('**/staff/queue/reorder', async route => {
+    submitted = route.request().postDataJSON();
+    await route.fulfill({contentType:'application/json', body:JSON.stringify({success:true,message:'Queue order saved.'})});
+  });
+  await page.goto(origin + '/staff/queue');
+  await page.waitForLoadState('networkidle');
+  await page.locator('#manageQueueBtn').click();
+  await page.locator('.queue-order-item[data-queue-id="103"] [data-queue-move="up"]').click();
+  const expected = [101,103,102,104,105];
+  const order = () => page.locator('.queue-order-panel:not(.d-none) .queue-order-item').evaluateAll(items => items.map(item => Number(item.dataset.queueId)));
+  assert.deepEqual(await order(), expected);
+  await page.route('**/staff/queue', route => {
+    if (route.request().isNavigationRequest()) return route.continue();
+    heldRefreshes.push(route);
+  });
+  await page.evaluate(() => {
+    const original = window.QueueSync.refresh;
+    window.__orderRefreshCalls = [];
+    window.QueueSync.refresh = function(force) { window.__orderRefreshCalls.push(force); return original(force); };
+  });
+  let navigations = 0;
+  page.on('framenavigated', frame => { if (frame === page.mainFrame()) navigations++; });
+  await page.locator('#saveQueueOrderBtn').click();
+  await page.waitForFunction(() => !document.getElementById('manageQueueModal').classList.contains('show')
+    && document.getElementById('queueActionFeedback').textContent.includes('Queue order saved'), null, {timeout:1500});
+  assert.deepEqual(submitted, {queue_ids:expected});
+  assert.equal(await page.locator('.queue-order-panel:not(.d-none) .queue-order-list').getAttribute('data-original-order'), expected.join(','));
+  assert.deepEqual(await page.evaluate(() => window.__orderRefreshCalls), [true]);
+  await page.locator('#manageQueueBtn').click();
+  assert.deepEqual(await order(), expected, 'reopening the dialog retains the order that was just saved');
+  // The previous implementation forced a navigation after 350ms.
+  await page.waitForTimeout(500);
+  assert.equal(navigations, 0);
+  assert.equal(heldRefreshes.length, 1);
 });
 
 test('dispatcher clocks, forms and schedule labels use AM/PM while administrators retain 24-hour time', async () => {
