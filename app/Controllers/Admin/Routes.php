@@ -151,6 +151,7 @@ class Routes extends BaseController
 
     private function replaceRouteFares(int $routeId, int $terminalId, float $baseFare): void
     {
+        helper('fare');
         $fareModel = new FareModel();
         $db = \Config\Database::connect();
         $db->transStart();
@@ -161,7 +162,7 @@ class Routes extends BaseController
         foreach ($this->getDiscountsForFareCalculation($terminalId) as $discount) {
             $amount = ($discount['type'] === 'regular')
                 ? $baseFare
-                : round($baseFare * (1 - ((float) $discount['discount_percent'] / 100)), 2);
+                : discounted_fare_amount($baseFare, (float) $discount['discount_percent']);
 
             $rows[] = [
                 'route_id'         => $routeId,
@@ -218,6 +219,7 @@ class Routes extends BaseController
 
     private function recalculateFaresForDiscount(array $discount): void
     {
+        helper('fare');
         if ($discount['type'] === 'regular') {
             return;
         }
@@ -229,7 +231,7 @@ class Routes extends BaseController
 
         foreach ($routes as $route) {
             $baseFare = $this->getRegularFare((int) $route['id']);
-            $amount = round($baseFare * (1 - ((float) $discount['discount_percent'] / 100)), 2);
+            $amount = discounted_fare_amount($baseFare, (float) $discount['discount_percent']);
             $existing = $fareModel
                 ->where('route_id', $route['id'])
                 ->where('fare_discount_id', $discount['id'])

@@ -127,15 +127,16 @@ test('a saved plain background can restore photos in every motion mode through b
     assert.equal(await page.evaluate(() => window.TerminalMotion.getMode()), motion);
     for (const method of ['applyLiveBgMode', 'applyLiveBranding']) {
       await page.evaluate(method => {
+        // Seed the shared clock so lifecycle realignment preserves this phase.
+        // Seeking one CSS animation is temporary when the viewport settles.
+        const slides = ['/fixture.svg', '/fixture-second.svg'];
+        const fingerprint = JSON.stringify(slides);
+        localStorage.setItem('tq-background-timeline:' + fingerprint, JSON.stringify({fingerprint, epoch:Date.now() - 6500}));
         if (method === 'applyLiveBgMode') window[method]('slideshow', '/fixture.svg', ['/fixture.svg', '/fixture-second.svg']);
         else window[method]({ category: 'background', app_bg_mode: 'slideshow', app_bg_slideshow: ['/fixture.svg', '/fixture-second.svg'] });
       }, method);
       if (motion === 'full') {
         await page.waitForFunction(() => document.getAnimations().some(item => /BgSlideshowLive$/.test(item.animationName)));
-        await page.evaluate(() => {
-          const animation = document.getAnimations().find(item => /BgSlideshowLive$/.test(item.animationName));
-          animation.pause(); animation.currentTime = 6500 + Number(animation.effect.getTiming().delay);
-        });
         await page.waitForFunction(()=>getComputedStyle(document.body,'::before').backgroundImage.includes('fixture-second.svg'));
       }
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));

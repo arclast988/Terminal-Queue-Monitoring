@@ -3,6 +3,20 @@
 use App\Models\FareModel;
 use App\Models\FareDiscountModel;
 
+if (!function_exists('discounted_fare_amount')) {
+    /** Round configured, two-decimal money and percentage values using integer arithmetic. */
+    function discounted_fare_amount(float $fare, float $percent): float
+    {
+        $cents = (int) round($fare * 100);
+        $basisPoints = (int) round($percent * 100);
+        $numerator = $cents * (10000 - $basisPoints);
+        $discountedCents = $numerator >= 0
+            ? intdiv($numerator + 5000, 10000)
+            : -intdiv(-$numerator + 5000, 10000);
+        return $discountedCents / 100;
+    }
+}
+
 if (!function_exists('enrich_routes_with_discounts')) {
     /**
      * Attach standard 'fare' and a 'discounted_fares' array to every route row.
@@ -88,7 +102,7 @@ if (!function_exists('enrich_routes_with_discounts')) {
                 $r['discounted_fares'][$type] = [
                     'label' => $discount['label'],
                     'discount_percent' => (float) $discount['discount_percent'],
-                    'amount' => round($r['fare'] * (1 - ((float) $discount['discount_percent'] / 100)), 2),
+                    'amount' => discounted_fare_amount($r['fare'], (float) $discount['discount_percent']),
                 ];
             }
         }
