@@ -106,7 +106,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                         <?php if ($isAdmin): ?>
                         <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
-                        <th class="management-id-col">ID</th>
+                        <th class="management-id-col">#</th>
                         <th class="management-name-col">Name</th>
                         <th>Location</th>
                         <th class="management-count-col">Capacity</th>
@@ -125,7 +125,7 @@ $isAdmin = in_array(session()->get('role'), ['super_admin', 'admin'], true);
                                     <input type="checkbox" class="form-check-input terminal-row-checkbox" value="<?= $terminal['id'] ?>" data-id="<?= $terminal['id'] ?>" data-name="<?= esc(addslashes($terminal['name'])) ?>" data-location="<?= esc(addslashes($terminal['location'] ?? '')) ?>" title="Select terminal <?= esc($terminal['name']) ?>">
                                 </td>
                                 <?php endif; ?>
-                                <td data-label="ID"><strong>#<?= $terminal['id'] ?></strong></td>
+                                <td data-label="#"><strong>#<?= $terminal['id'] ?></strong></td>
                                 <td data-label="Name"><?= esc($terminal['name']) ?></td>
                                 <td data-label="Location"><?= esc($terminal['location']) ?></td>
                                 <td data-label="Capacity"><span class="badge-modern badge-modern-primary"><?= (int) $terminal['capacity'] ?> vehicles</span></td>

@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <?= view('templates/header', ['title' => $title]) ?>
 
 

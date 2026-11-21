@@ -274,75 +274,61 @@ class Settings extends BaseController
             return redirect()->back()->with('error', 'Unauthorized.');
         }
 
-        $rawCooldown     = $this->request->getPost('vehicle_cooldown_minutes');
-        $rawCooldownUnit = $this->request->getPost('vehicle_cooldown_unit') ?? 'minutes';
-        $rawLogDays      = $this->request->getPost('log_retention_days');
-        $rawDepDays      = $this->request->getPost('departure_retention_days');
-
-        // Convert hours to minutes if unit is hours
-        $cooldownVal = (int) $rawCooldown;
-        if ($rawCooldownUnit === 'hours') {
-            $cooldownVal = (int) round(((float) $rawCooldown) * 60);
-        }
-
-        if ($cooldownVal < 0 || $cooldownVal > 10080) { // Max 7 days
-            $errMsg = 'Vehicle queue cooldown must be between 0 minutes and 7 days (10,080 minutes).';
+        $validationError = function (string $message) {
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(400)->setJSON([
-                    'success'    => false,
-                    'message'    => $errMsg,
-                    'csrf_token' => csrf_token(),
-                    'csrf_hash'  => csrf_hash(),
+                    'success' => false, 'message' => $message,
+                    'csrf_token' => csrf_token(), 'csrf_hash' => csrf_hash(),
                 ]);
             }
-            return redirect()->back()->withInput()->with('error', $errMsg);
-        }
-
-        $logDaysVal = (int) $rawLogDays;
-        if ($logDaysVal < 1 || $logDaysVal > 3650) {
-            $errMsg = 'System logs retention must be between 1 and 3,650 days (10 years).';
-            if ($this->request->isAJAX()) {
-                return $this->response->setStatusCode(400)->setJSON([
-                    'success'    => false,
-                    'message'    => $errMsg,
-                    'csrf_token' => csrf_token(),
-                    'csrf_hash'  => csrf_hash(),
-                ]);
-            }
-            return redirect()->back()->withInput()->with('error', $errMsg);
-        }
-
-        $depDaysVal = (int) $rawDepDays;
-        if ($depDaysVal < 1 || $depDaysVal > 3650) {
-            $errMsg = 'Departure history retention must be between 1 and 3,650 days (10 years).';
-            if ($this->request->isAJAX()) {
-                return $this->response->setStatusCode(400)->setJSON([
-                    'success'    => false,
-                    'message'    => $errMsg,
-                    'csrf_token' => csrf_token(),
-                    'csrf_hash'  => csrf_hash(),
-                ]);
-            }
-            return redirect()->back()->withInput()->with('error', $errMsg);
-        }
-
-        $fields = [
-            'vehicle_cooldown_minutes' => (string) $cooldownVal,
-            'log_retention_days'       => (string) $logDaysVal,
-            'departure_retention_days' => (string) $depDaysVal,
+            return redirect()->to('/admin/settings#operations')->withInput()->with('error', $message);
+        };
+        // Missing section preserves the existing Save All/native API contract.
+        $section = $this->request->getPost('operations_section') ?? 'all';
+        $sectionLabels = [
+            'all' => 'Operational & retention rules',
+            'cooldown' => 'Vehicle queue cooldown',
+            'daily_clear' => 'Daily queue clearing',
+            'audit_retention' => 'Audit log retention',
+            'departure_retention' => 'Departure history retention',
         ];
+        if (!is_string($section) || !array_key_exists($section, $sectionLabels)) {
+            return $validationError('Choose a valid settings card to save.');
+        }
 
         $currentSettings = get_all_system_settings();
-        if ($this->request->getPost('queue_reset_configured') === '1') {
+        $fields = [];
+        if (in_array($section, ['all', 'cooldown'], true)) {
+            $raw = $this->request->getPost('vehicle_cooldown_minutes');
+            $unit = $this->request->getPost('vehicle_cooldown_unit') ?? 'minutes';
+            if (!is_scalar($raw) || !is_numeric($raw) || !in_array($unit, ['minutes', 'hours'], true)
+                || !is_finite((float) $raw) || (float) $raw < 0
+                || ($unit === 'minutes' && !preg_match('/^\d+$/', (string) $raw))) {
+                return $validationError('Vehicle queue cooldown must be between 0 minutes and 7 days (10,080 minutes).');
+            }
+            $minutes = (float) $raw * ($unit === 'hours' ? 60 : 1);
+            if ($minutes > 10080) {
+                return $validationError('Vehicle queue cooldown must be between 0 minutes and 7 days (10,080 minutes).');
+            }
+            $fields['vehicle_cooldown_minutes'] = (string) (int) round($minutes);
+        }
+        foreach ([
+            'audit_retention' => ['log_retention_days', 'System logs'],
+            'departure_retention' => ['departure_retention_days', 'Departure history'],
+        ] as $group => [$key, $label]) {
+            if (!in_array($section, ['all', $group], true)) continue;
+            $raw = $this->request->getPost($key);
+            if (!is_scalar($raw) || !preg_match('/^\d+$/', (string) $raw) || (int) $raw < 1 || (int) $raw > 3650) {
+                return $validationError($label . ' retention must be between 1 and 3,650 days (10 years).');
+            }
+            $fields[$key] = (string) (int) $raw;
+        }
+        if ($section === 'daily_clear' || ($section === 'all' && $this->request->getPost('queue_reset_configured') === '1')) {
             $enabled = $this->request->getPost('queue_reset_enabled');
             $clock = $this->request->getPost('queue_reset_time');
             if (!is_scalar($enabled) || !in_array((string) $enabled, ['0', '1'], true)
                 || !is_string($clock) || !preg_match('/^(?:[01]\d|2[0-3]):[0-5]\d$/', $clock)) {
-                $message = 'Choose a valid daily queue clearing time.';
-                if ($this->request->isAJAX()) {
-                    return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $message, 'csrf_token' => csrf_token(), 'csrf_hash' => csrf_hash()]);
-                }
-                return redirect()->back()->withInput()->with('error', $message);
+                return $validationError('Choose a valid daily queue clearing time.');
             }
             $fields['queue_reset_enabled'] = (string) $enabled;
             $fields['queue_reset_time'] = $clock;
@@ -370,7 +356,7 @@ class Settings extends BaseController
                     'csrf_hash'  => csrf_hash(),
                 ]);
             }
-            return $this->noChangesResponse();
+            return redirect()->to('/admin/settings#operations')->withInput()->with('info', 'No changes detected — nothing was updated.');
         }
 
         $model = new SystemSettingModel();
@@ -383,53 +369,57 @@ class Settings extends BaseController
             if ($this->request->isAJAX()) {
                 return $this->response->setStatusCode(500)->setJSON(['success' => false, 'message' => $message, 'csrf_token' => csrf_token(), 'csrf_hash' => csrf_hash()]);
             }
-            return redirect()->back()->withInput()->with('error', $message);
+            return redirect()->to('/admin/settings#operations')->withInput()->with('error', $message);
         }
         get_all_system_settings(true);
 
-        // Opportunistically run purges with new retention rules immediately
+        // A card save only applies that card's retention maintenance.
         try {
-            (new \App\Models\LogModel())->purgeOldLogs($logDaysVal);
-            (new \App\Models\QueueModel())->purgeOldDepartures($depDaysVal);
+            if (isset($fields['log_retention_days'])) {
+                (new \App\Models\LogModel())->purgeOldLogs((int) $fields['log_retention_days']);
+            }
+            if (isset($fields['departure_retention_days'])) {
+                (new \App\Models\QueueModel())->purgeOldDepartures((int) $fields['departure_retention_days']);
+            }
         } catch (\Throwable $e) {
             // Silently continue
         }
 
-        // Notify queue sync across sockets if daemon active
+        $effective = array_replace($currentSettings, $fields);
+        $eventData = [
+            'vehicle_cooldown_minutes' => (int) ($effective['vehicle_cooldown_minutes'] ?? 30),
+            'log_retention_days' => (int) ($effective['log_retention_days'] ?? 60),
+            'departure_retention_days' => (int) ($effective['departure_retention_days'] ?? 60),
+            'queue_reset_enabled' => ($effective['queue_reset_enabled'] ?? '1') === '1',
+            'queue_reset_time' => $effective['queue_reset_time'] ?? '00:00',
+        ];
+        // Notify queue sync with the effective saved values, never other submitted drafts.
         try {
-            $this->broadcastUpdate('operational_settings_updated', [
-                'vehicle_cooldown_minutes' => $cooldownVal,
-                'log_retention_days'       => $logDaysVal,
-                'departure_retention_days' => $depDaysVal,
-                'queue_reset_enabled' => ($fields['queue_reset_enabled'] ?? $currentSettings['queue_reset_enabled'] ?? '1') === '1',
-                'queue_reset_time' => $fields['queue_reset_time'] ?? $currentSettings['queue_reset_time'] ?? '00:00',
-            ]);
+            $this->broadcastUpdate('operational_settings_updated', $eventData);
         } catch (\Throwable $e) {
             // Silently continue if daemon offline
         }
 
-        $resetLabel = ($fields['queue_reset_enabled'] ?? $currentSettings['queue_reset_enabled'] ?? '1') === '1'
-            ? ($fields['queue_reset_time'] ?? $currentSettings['queue_reset_time'] ?? '00:00') . ' (Asia/Manila)'
-            : 'turned off';
-        $this->logActivity('System Settings', "Changed operating settings: vehicles can rejoin the waiting line after {$cooldownVal} minutes; activity logs are kept for {$logDaysVal} days; departure history is kept for {$depDaysVal} days. Daily queue clearing: {$resetLabel}.");
+        $descriptions = [];
+        if (isset($fields['vehicle_cooldown_minutes'])) $descriptions[] = 'vehicles can rejoin the waiting line after ' . $fields['vehicle_cooldown_minutes'] . ' minutes';
+        if (isset($fields['log_retention_days'])) $descriptions[] = 'activity logs are kept for ' . $fields['log_retention_days'] . ' days';
+        if (isset($fields['departure_retention_days'])) $descriptions[] = 'departure history is kept for ' . $fields['departure_retention_days'] . ' days';
+        if (isset($fields['queue_reset_enabled'])) $descriptions[] = 'daily queue clearing is ' . ($fields['queue_reset_enabled'] === '1' ? $fields['queue_reset_time'] . ' (Asia/Manila)' : 'turned off');
+        $this->logActivity('System Settings', 'Changed operating settings: ' . implode('; ', $descriptions) . '.');
+        $message = $sectionLabels[$section] . ' updated successfully.';
 
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success'    => true,
-                'message'    => 'Operational & retention rules updated successfully.',
+                'message'    => $message,
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
-                'data'       => [
-                    'vehicle_cooldown_minutes' => $cooldownVal,
-                    'log_retention_days'       => $logDaysVal,
-                    'departure_retention_days' => $depDaysVal,
-                    'queue_reset_enabled' => ($fields['queue_reset_enabled'] ?? $currentSettings['queue_reset_enabled'] ?? '1') === '1',
-                    'queue_reset_time' => $fields['queue_reset_time'] ?? $currentSettings['queue_reset_time'] ?? '00:00',
-                ],
+                'data'       => array_intersect_key($eventData, $fields),
             ]);
         }
 
-        return redirect()->to('/admin/settings#operations')->with('success', 'Operational & retention rules updated successfully.');
+        $redirect = redirect()->to('/admin/settings#operations')->with('success', $message);
+        return $section === 'all' ? $redirect : $redirect->withInput();
     }
 
     /**
@@ -495,7 +485,9 @@ class Settings extends BaseController
         }
 
         if ($updates === []) {
-            return redirect()->to('/admin/settings/content')->with('info', 'No content changes were detected.');
+            return redirect()->to('/admin/settings/content')
+                ->with('content_no_changes', true)
+                ->with('info', 'No changes detected — nothing was updated.');
         }
 
         if ($termsChanged) {
@@ -805,6 +797,19 @@ class Settings extends BaseController
         }
 
         $model = new SystemSettingModel();
+        $savedMode = $model->getSetting('app_bg_mode', 'slideshow');
+        if (! in_array($savedMode, ['slideshow', 'single', 'none'], true)) $savedMode = 'slideshow';
+        if ($mode === $savedMode) {
+            return $this->response->setJSON([
+                'success' => true,
+                'no_change' => true,
+                'mode' => $savedMode,
+                'app_bg_mode' => $savedMode,
+                'message' => 'No changes detected — background settings are already up to date.',
+                'csrf_token' => csrf_token(),
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
         $model->setSetting('app_bg_mode', $mode);
         get_all_system_settings(true);
         $this->broadcastBrandingChange('background');

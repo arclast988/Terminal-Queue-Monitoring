@@ -31,7 +31,13 @@ jobs:
           php-version: '8.2'
           coverage: none
       - run: npm ci --prefix tests/frontend --ignore-scripts --no-audit --no-fund
-      - run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
+      - name: Configure reliable Ubuntu package downloads
+        run: |
+          sudo python3 tests/frontend/configure-browser-runner.py
+          apt-config dump Acquire::Retries Acquire::http::Timeout Acquire::https::Timeout
+      - name: Install test browser
+        timeout-minutes: 10
+        run: tests/frontend/node_modules/.bin/playwright install --with-deps ${{ matrix.browser }}
       - name: Verify vehicle route selection and dispatcher password layout
         env:
           TQ_BROWSER: ${{ matrix.browser }}

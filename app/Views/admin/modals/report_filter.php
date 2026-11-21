@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <!-- Report Filter Modal (Reusable Partial) -->
 <style>
 .report-filter-modal,

@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <?= view('templates/header', ['title' => $title]) ?>
 
 <div class="page-header-modern fade-in">
@@ -403,33 +404,44 @@ if (!empty($recent_departures)) {
         max-width: 420px;
         min-width: 240px;
         width: 100%;
+        height: 44px;
+        box-sizing: border-box;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 24px;
+        background: #ffffff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
     .departure-search-group .input-group-text {
-        height: 36px;
-        padding: 6px 12px;
-        background: #ffffff;
-        border: 1.5px solid #cbd5e1;
-        border-right: none;
-        border-radius: 20px 0 0 20px;
+        align-self: stretch;
+        min-height: 0 !important;
+        display: inline-flex;
+        align-items: center;
+        flex: 0 0 auto;
+        padding: 0 0 0 12px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         color: #64748b;
-        font-size: 14px;
+        font-size: 16px;
     }
     .departure-search-input {
-        height: 36px;
-        width: 100%;
+        height: 100%;
+        min-height: 0 !important;
+        flex: 1 1 auto;
+        min-width: 0;
+        width: 1%;
+        box-sizing: border-box;
         padding: 6px 36px 6px 8px;
-        font-size: 13.5px;
+        font-size: 16px;
         font-family: inherit;
-        border: 1.5px solid #cbd5e1;
-        border-left: none;
-        background: #ffffff;
+        border: 0 !important;
+        background: transparent;
         color: #1e293b;
-        border-radius: 0 20px 20px 0;
+        border-radius: 0;
         outline: none;
-        transition: all 0.2s ease;
+        box-shadow: none !important;
     }
-    .departure-search-group:focus-within .input-group-text,
-    .departure-search-group:focus-within .departure-search-input {
+    .departure-search-group:focus-within {
         border-color: var(--primary, #15803d);
         box-shadow: 0 0 0 3px var(--primary-soft, rgba(21, 128, 61, 0.14));
     }

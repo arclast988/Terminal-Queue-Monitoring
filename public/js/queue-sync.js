@@ -54,6 +54,8 @@
     // In-flight refresh guards and debounce to prevent concurrent DOMParser/HTML memory bloat
     var _refreshPending = false;
     var _refreshQueued = false;
+    var _refreshQueuedImmediate = false;
+    var _refreshRevision = 0;
     var _lastRefreshTime = 0;
     var _refreshTimer = null;
     var _queueSyncBc = null;
@@ -386,23 +388,35 @@
         return true;
     }
 
-    function ajaxRefresh() {
+    function ajaxRefresh(immediate) {
         if (_config && typeof _config.customRefresh === 'function') {
             _config.customRefresh();
             return;
         }
         if (!_config || !_config.refreshUrl) return;
 
+        if (immediate) {
+            // A confirmed action supersedes any HTML requested before it.
+            // Keep the existing request coalesced, but never let it undo the
+            // confirmed card update while the latest snapshot is loading.
+            _refreshRevision++;
+            if (_refreshTimer) {
+                clearTimeout(_refreshTimer);
+                _refreshTimer = null;
+            }
+        }
+
         // In-flight lock: coalesce overlapping requests
         if (_refreshPending) {
             _refreshQueued = true;
+            _refreshQueuedImmediate = _refreshQueuedImmediate || !!immediate;
             return;
         }
 
         // Debounce guard: throttle rapid successive refreshes
         var now = Date.now();
         var timeSinceLast = now - _lastRefreshTime;
-        if (timeSinceLast < REFRESH_DEBOUNCE_MS) {
+        if (!immediate && timeSinceLast < REFRESH_DEBOUNCE_MS) {
             if (!_refreshTimer) {
                 _refreshTimer = setTimeout(function() {
                     _refreshTimer = null;
@@ -417,6 +431,7 @@
         _refreshPending = true;
         var refreshedServiceDate = _pendingServiceDate;
         var generation = _generation;
+        var revision = _refreshRevision;
         _refreshController = typeof window.AbortController === 'function' ? new window.AbortController() : null;
 
         fetch(refreshUrl, {
@@ -430,7 +445,7 @@
             return r.text();
         })
         .then(function(html) {
-            if (!_config || generation !== _generation) return;
+            if (!_config || generation !== _generation || revision !== _refreshRevision) return;
             // A filter or page change can overtake an earlier live refresh.
             if (typeof _config.refreshUrl === 'function' && refreshUrl !== _config.refreshUrl()) {
                 _refreshQueued = true;
@@ -499,8 +514,10 @@
             _refreshPending = false;
             _lastRefreshTime = Date.now();
             if (_refreshQueued) {
+                var immediate = _refreshQueuedImmediate;
                 _refreshQueued = false;
-                ajaxRefresh();
+                _refreshQueuedImmediate = false;
+                ajaxRefresh(immediate);
             }
         });
     }
@@ -864,7 +881,7 @@
             // Structural change (add/remove/status/vehicle-type/fare/
             // announcement) — fetch full HTML so new rows AND new colors
             // appear immediately. pollAPI() alone only patches counts.
-            ajaxRefresh();
+            ajaxRefresh(data.action === 'status_change');
         }
 
         // Reset the poll timer since we just got fresh data
@@ -986,12 +1003,12 @@
         /** Manually update passenger count in the UI */
         updatePassengerUI: updatePassengerUI,
 
-        /** Manually trigger a full refresh */
+        /** Manually refresh; true reconciles a confirmed action without debounce. */
         refresh: function(forceAjax) {
             if (_config && _config.customRefresh) {
                 _config.customRefresh();
             } else if (forceAjax || (_config && _config.refreshUrl)) {
-                ajaxRefresh();
+                ajaxRefresh(!!forceAjax);
             } else {
                 doRefresh();
             }
@@ -1006,6 +1023,8 @@
             abortReads();
             _pollController = _refreshController = null;
             _pollPending = _pollQueued = _refreshPending = _refreshQueued = false;
+            _refreshQueuedImmediate = false;
+            _refreshRevision = 0;
             _lastRefreshTime = _lastPollTimestamp = 0;
             stopPolling();
             if (_connectedRefreshTimer) {

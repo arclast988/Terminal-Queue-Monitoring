@@ -60,9 +60,9 @@ final class StaffQueueOrderingTest extends CIUnitTestCase
         $this->assertStringContainsString('-webkit-text-fill-color: #ffffff !important;', $view);
         $this->assertStringContainsString('window.QueueOrderManager', $view);
         $this->assertStringContainsString('syncFromDocument: syncFromDocument', $view);
-        $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'canceled');", $view);
-        $this->assertStringContainsString("window.QueueOrderManager.setStatus(queueId, 'waiting');", $view);
-        $this->assertStringContainsString('window.QueueOrderManager.setStatus(id, data.status || status);', $view);
+        $this->assertStringContainsString("QueueActions.applyStatus(queueId, 'canceled', data.queue_item,", $view);
+        $this->assertStringContainsString('QueueActions.applyStatus(queueId, data.status ||', $view);
+        $this->assertStringContainsString('QueueActions.applyStatus(id, data.status || status, data.queue_item,', $view);
         $this->assertStringContainsString('data-queue-drag-handle', $view);
         $this->assertStringContainsString('draggable="false"', $view);
         $this->assertStringNotContainsString("modalEl.addEventListener('dragstart'", $view);

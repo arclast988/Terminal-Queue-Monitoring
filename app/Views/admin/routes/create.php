@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <?= $this->include('templates/header') ?>
 
 
@@ -117,14 +118,16 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
             <?php if (session()->getFlashdata('errors')): ?>
-                <div class="alert-modern alert-modern-danger mb-4">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Validation Errors:</strong>
-                    <ul class="mb-0 mt-2">
-                        <?php foreach (session()->getFlashdata('errors') as $error): ?>
-                            <li><?= esc($error) ?></li>
-                        <?php endforeach; ?>
-                    </ul>
+                <div class="alert-modern alert-modern-danger mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0" aria-hidden="true"></i>
+                    <div>
+                        <strong>Please check the route details</strong>
+                        <ul class="mb-0 mt-2 ps-3">
+                            <?php foreach (session()->getFlashdata('errors') as $error): ?>
+                                <li><?= esc($error) ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -135,6 +138,7 @@
                 <div class="card-body-modern">
                     <form action="<?= base_url('admin/routes/store') ?>" method="post">
                         <?= csrf_field() ?>
+                        <input type="hidden" name="form_action" value="create_route">
 
                         <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
                         <div class="mb-4">
@@ -142,7 +146,7 @@
                                 <?php $singleTerminal = reset($terminals); ?>
                                 <label for="terminal_name_display" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
                                 <input type="text" id="terminal_name_display" class="input-modern" value="<?= esc($singleTerminal['name']) ?> (<?= esc($singleTerminal['location']) ?>)" readonly style="background-color: var(--surface-sunken, #f8fafc); cursor: not-allowed;">
-                                <input type="hidden" name="terminal_id" id="terminal_id" value="<?= $singleTerminal['id'] ?>">
+                                <input type="hidden" name="terminal_id" id="terminal_id" value="<?= $singleTerminal['id'] ?>" data-name="<?= esc($singleTerminal['name'], 'attr') ?>">
                             <?php else: ?>
                                 <label for="terminal_id" class="form-label-modern">Terminal <span class="text-danger">*</span></label>
                                 <select class="select-modern" id="terminal_id" name="terminal_id" required>
@@ -164,10 +168,11 @@
                         <div class="mb-4">
                             <label for="destination" class="form-label-modern">Destination <span class="text-danger">*</span></label>
                             <input type="text" class="input-modern autocomplete-location" id="destination" name="destination"
-                                   value="<?= old('destination') ?>" placeholder="Search or type destination (e.g. ORMOC, TACLOBAN)..."
-                                   required minlength="2" maxlength="100" autocomplete="off" autocapitalize="characters" data-uppercase
+                                   value="<?= esc(old('destination', '', false)) ?>" placeholder="Search or type destination (e.g. ORMOC, TACLOBAN)..."
+                                   required minlength="2" maxlength="100" autocomplete="off" autocapitalize="characters" data-uppercase aria-describedby="routeDestinationError"
                                    data-suggestions="<?= esc(json_encode($all_locations ?? [])) ?>">
                             <div class="form-text-modern"><i class="bi bi-search me-1"></i>Type to search existing locations or enter a new destination name.</div>
+                            <div id="routeDestinationError" class="text-danger mt-2" hidden role="alert">Choose a destination different from the origin terminal.</div>
                         </div>
 
                         <div class="mb-4">
@@ -196,6 +201,7 @@
                                     </div>
                                 <?php endforeach; ?>
                             </div>
+                            <div id="routeVehicleTypesError" class="text-danger mt-2" hidden role="alert">Select at least one vehicle type for this route.</div>
                         </div>
 
                         <div class="d-flex flex-column flex-sm-row gap-2 mt-4 mt-md-5 form-actions-modern">
@@ -223,6 +229,11 @@
                             selectAll.disabled = boxes.length === 0;
                             selectAll.checked = boxes.length > 0 && selected === boxes.length;
                             selectAll.indeterminate = selected > 0 && selected < boxes.length;
+                            if (boxes[0]) boxes[0].setCustomValidity(selected ? '' : 'Select at least one vehicle type for this route.');
+                            if (selected) {
+                                document.getElementById('routeVehicleTypesError').hidden = true;
+                                group.removeAttribute('aria-invalid');
+                            }
                         }
                         selectAll.addEventListener('change', function() {
                             boxes.forEach(function(cb) { cb.checked = selectAll.checked; });
@@ -231,6 +242,10 @@
                         group.addEventListener('change', function(event) {
                             if (event.target.classList.contains('vt-checkbox')) syncVehicleSelection();
                         });
+                        group.addEventListener('invalid', function() {
+                            document.getElementById('routeVehicleTypesError').hidden = false;
+                            group.setAttribute('aria-invalid', 'true');
+                        }, true);
                         syncVehicleSelection();
                     });
                     </script>
@@ -239,5 +254,6 @@
         </div>
     </div>
 
+<script src="<?= app_asset_url('assets/js/route-destination.js') ?>"></script>
 <?= $this->include('templates/footer') ?>
 

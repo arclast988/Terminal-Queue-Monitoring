@@ -3,6 +3,7 @@
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Models\RouteModel;
 use App\Models\TerminalModel;
 
 class Terminals extends BaseController
@@ -91,6 +92,16 @@ class Terminals extends BaseController
             'capacity' => $terminal['capacity'] ?? '',
         ], $newData)) {
             return $this->noChangesResponse();
+        }
+
+        $activeRoutes = (new RouteModel())->select('destination')
+            ->where('terminal_id', (int) $id)->where('status', 'active')->findAll();
+        foreach ($activeRoutes as $route) {
+            if (RouteModel::sameLocation($newData['name'], (string) $route['destination'])) {
+                return redirect()->back()->withInput()->with('errors', [
+                    'name' => 'Choose a terminal name different from its active route destinations. Update those routes first if this name is required.',
+                ]);
+            }
         }
 
         $this->terminalModel->update($id, $newData);

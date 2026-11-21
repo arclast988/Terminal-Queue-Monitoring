@@ -3,6 +3,7 @@
 <?php
 $groups   = $groups ?? [];
 $settings = $settings ?? [];
+$contentNoChanges = (bool) session()->getFlashdata('content_no_changes');
 ?>
 
 <style>
@@ -244,13 +245,17 @@ body.admin-theme a.content-manager-back:not(.btn):not(.nav-link) {
         <span class="content-manager-badge"><i class="fas fa-shield-halved"></i> Super Admin Only</span>
     </section>
 
-    <?= view('partials/flash_notices') ?>
+    <?php if ($contentNoChanges): ?>
+        <noscript><?= view('partials/flash_notices') ?></noscript>
+    <?php else: ?>
+        <?= view('partials/flash_notices') ?>
+    <?php endif; ?>
     <div class="content-manager-note">
         <i class="fas fa-circle-info"></i>
         <div><strong>Safe editing:</strong> fields accept plain text only. Leave any field blank to keep the built-in wording and its original rich formatting. Only the section you replace changes.</div>
     </div>
 
-    <form method="post" action="<?= base_url('admin/settings/content') ?>" id="managedContentForm">
+    <form method="post" action="<?= base_url('admin/settings/content') ?>" id="managedContentForm" data-no-change-guard<?= $contentNoChanges ? ' data-no-change-notice' : '' ?>>
         <?= csrf_field() ?>
         <?php foreach ($groups as $groupKey => $group): ?>
             <details class="content-group" id="content-<?= esc($groupKey) ?>">

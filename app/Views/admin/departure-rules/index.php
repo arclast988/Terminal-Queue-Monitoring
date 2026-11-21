@@ -149,6 +149,24 @@
 }
 .route-tag-pill > i { flex: 0 0 auto; }
 .route-tag-text { min-width: 0; overflow-wrap: anywhere; }
+.rule-default-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal !important;
+}
+.rule-default-tag > i { flex: 0 0 auto; }
+.rule-default-tag > span { min-width: 0; overflow-wrap: normal; }
+.rule-terminal-label, .rule-terminal-hint {
+    display: block;
+    overflow-wrap: anywhere;
+}
+.rule-terminal-hint { margin-top: 4px; color: #64748b; line-height: 1.4; }
+#departure-rules-table :is(.route-tag-pill, .rule-default-tag, .rule-terminal-label) {
+    font-size: 15px !important;
+}
 
 .rule-day-round-cell {
     display: inline-flex;
@@ -442,7 +460,12 @@
                 <tbody>
                     <?php if (!empty($rules) && is_array($rules)): ?>
                         <?php foreach ($rules as $rule): ?>
-                            <?php $destSlug = !empty($rule['route_destination']) && $rule['route_destination'] !== '-' ? strtolower($rule['route_destination']) : 'general'; ?>
+                            <?php
+                                $destSlug = !empty($rule['route_destination']) && $rule['route_destination'] !== '-' ? strtolower($rule['route_destination']) : 'general';
+                                $terminalName = trim((string) ($rule['terminal_name'] ?? ''));
+                                $terminalLabel = $terminalName !== '' ? strtoupper($terminalName)
+                                    : (!empty($rule['terminal_id']) ? 'Terminal unavailable (#' . (int) $rule['terminal_id'] . ')' : 'No terminal assigned');
+                            ?>
                             <tr class="rule-row" data-destination="<?= esc($destSlug) ?>" data-route-id="<?= esc($rule['route_id'] ?? '') ?>">
                                 <td data-label="Select" class="rule-select-cell bulk-col bulk-select-cell">
                                     <?php if (!empty($rule['can_manage']) || session()->get('role') !== 'staff'): ?>
@@ -450,15 +473,18 @@
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Terminal">
-                                    <span class="fw-bold" style="color: var(--text-main, #0f172a); font-size: 13.5px;">
-                                        <i class="bi bi-building me-1 text-muted"></i><?= strtoupper(esc($rule['terminal_name'] ?? '-')) ?>
+                                    <span class="fw-bold rule-terminal-label" style="color: var(--text-main, #0f172a); font-size: 13.5px;">
+                                        <i class="bi bi-building me-1 text-muted"></i><?= esc($terminalLabel) ?>
                                     </span>
+                                    <?php if ($terminalName === '' && (!empty($rule['can_manage']) || session()->get('role') !== 'staff')): ?>
+                                        <span class="rule-terminal-hint">Choose a terminal in Edit.</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td data-label="Destination">
                                     <?php if (!empty($rule['route_destination']) && $rule['route_destination'] !== '-'): ?>
                                         <span class="route-tag-pill"><i class="bi bi-geo-alt-fill text-danger"></i><span class="route-tag-text"><?= strtoupper(esc($rule['route_destination'])) ?></span></span>
                                     <?php else: ?>
-                                        <span class="badge-modern badge-modern-secondary"><i class="bi bi-sliders"></i> Terminal Default</span>
+                                        <span class="badge-modern badge-modern-secondary rule-default-tag"><i class="bi bi-sliders"></i><span>Terminal Default</span></span>
                                     <?php endif; ?>
                                 </td>
                                 <td data-label="Day / Round">

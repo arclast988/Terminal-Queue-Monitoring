@@ -64,8 +64,8 @@ if (!isset($countActive)) {
     <div class="modern-card-body p-3 p-md-4">
         <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3">
             <div class="user-search-group position-relative">
-                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." oninput="filterUsers(currentFilter)" autocomplete="off">
+                <span class="input-group-text" aria-hidden="true"><i class="bi bi-search"></i></span>
+                <input type="text" class="user-search-input" id="user-search" placeholder="Search name or username..." aria-label="Search users by name or username" oninput="filterUsers(currentFilter)" autocomplete="off">
                 <button type="button" class="btn-clear-search" id="clear-user-search" onclick="clearUserSearch()" style="display: none !important;" title="Clear search">
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
@@ -690,43 +690,52 @@ table:not(.selection-mode-active) .bulk-select-cell {
         align-items: center !important;
         max-width: 280px;
         width: 100%;
+        min-width: 0;
+        height: 44px;
+        box-sizing: border-box;
         position: relative;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 24px;
+        background: var(--card-bg, #fff);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .user-search-group .input-group-text {
-        height: 40px !important;
+        align-self: stretch;
+        min-height: 0 !important;
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        padding: 6px 0 6px 14px !important;
-        border: 2px solid #cbd5e1 !important;
-        border-right: none !important;
-        border-top-left-radius: 9999px !important;
-        border-bottom-left-radius: 9999px !important;
-        background-color: var(--card-bg, #fff) !important;
+        flex: 0 0 auto;
+        padding: 0 0 0 12px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
         color: #64748b !important;
-        font-size: 15px !important;
-        transition: border-color 0.2s ease;
+        font-size: 16px !important;
     }
 
     .user-search-group .user-search-input {
-        height: 40px !important;
-        border: 2px solid #cbd5e1 !important;
-        border-left: none !important;
-        border-top-right-radius: 9999px !important;
-        border-bottom-right-radius: 9999px !important;
-        padding: 6px 14px 6px 6px !important;
-        font-size: 14px !important;
+        height: 100% !important;
+        min-height: 0 !important;
+        min-width: 0;
+        flex: 1 1 auto;
+        width: 1% !important;
+        box-sizing: border-box;
+        border: 0 !important;
+        border-radius: 0 !important;
+        padding: 6px 36px 6px 10px !important;
+        font-size: 16px !important;
+        font-family: inherit;
         outline: none !important;
-        background-color: var(--card-bg, #fff) !important;
+        box-shadow: none !important;
+        background: transparent !important;
         color: var(--text-main, #1e293b) !important;
-        width: 100% !important;
-        transition: border-color 0.2s ease;
     }
 
-    .user-search-group:focus-within .input-group-text,
-    .user-search-group:focus-within .user-search-input {
-        border-color: var(--primary-red, #dc2626) !important;
+    .user-search-group:focus-within {
+        border-color: var(--primary, #b71c1c);
+        box-shadow: 0 0 0 3px var(--primary-soft, rgba(183, 28, 28, 0.12));
     }
 
     @media (max-width: 768px) {
@@ -906,14 +915,6 @@ table:not(.selection-mode-active) .bulk-select-cell {
             min-height: 34px !important;
         }
 
-        .user-search-group .input-group-text {
-            height: 42px !important;
-            font-size: 15px !important;
-        }
-        .user-search-group .user-search-input {
-            height: 42px !important;
-        }
-
         .vf-divider {
             display: none !important;
         }
@@ -992,6 +993,21 @@ table:not(.selection-mode-active) .bulk-select-cell {
         background: #475569 !important;
         border-color: #475569 !important;
         color: #fff !important;
+    }
+    .user-filter-bar .vf-btn { --user-filter-accent: var(--admin-primary, #b71c1c); }
+    .user-filter-bar .vf-dispatcher { --user-filter-accent: var(--staff-primary, #15803d); }
+    .user-filter-bar .vf-archive { --user-filter-accent: #475569; }
+    .user-filter-bar .vf-btn:not(.active):is(:hover, :focus-visible) {
+        background: #f1f5f9 !important;
+        background: color-mix(in srgb, var(--user-filter-accent) 12%, white) !important;
+        border-color: var(--user-filter-accent) !important;
+        color: #1e293b !important;
+        color: color-mix(in srgb, var(--user-filter-accent) 35%, #0f172a) !important;
+    }
+    .user-filter-bar .vf-btn:focus-visible {
+        outline: 2px solid var(--user-filter-accent) !important;
+        outline-color: color-mix(in srgb, var(--user-filter-accent) 35%, #0f172a) !important;
+        outline-offset: 3px;
     }
 
     .user-filter-controls {

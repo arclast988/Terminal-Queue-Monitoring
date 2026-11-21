@@ -50,6 +50,12 @@ jobs:
           tests/unit/DepartureIntervalTest.php
           tests/unit/StaffQueueOrderingTest.php
           tests/unit/QueueSelectionActionsTest.php
+          tests/unit/VehicleStatusActionsTest.php
+          tests/unit/RouteGroupUpdateTest.php
+          tests/unit/RouteCreationValidationTest.php
+          tests/unit/EditFareMultiSelectTest.php
+          tests/unit/TerminalRenameRouteValidationTest.php
+          tests/unit/ArchiveSameLocationRoutesTest.php
           tests/unit/ThemeConsistencyAndClearButtonTest.php
           tests/unit/ReportPreviewMobileTest.php
           tests/unit/RecordSortOrderTest.php

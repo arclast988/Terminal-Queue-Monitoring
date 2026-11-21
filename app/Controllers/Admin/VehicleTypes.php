@@ -83,12 +83,13 @@ class VehicleTypes extends BaseController
             'is_active' => 1,
         ]);
 
-        $this->logActivity('Add vehicle type', 'Added vehicle type ' . $name . ' (' . $color . ', ' . $icon . ').');
+        $displayName = vehicle_type_display_name($name);
+        $this->logActivity('Add vehicle type', 'Added vehicle type ' . $displayName . ' (' . $color . ', ' . $icon . ').');
         get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', [
             'action' => 'create',
             'slug'   => $slug,
-            'name'   => $name,
+            'name'   => $displayName,
             'color'  => $color,
             'icon'   => $icon,
             'photo'  => $photoRelPath ? media_url($photoRelPath) : null,
@@ -98,11 +99,11 @@ class VehicleTypes extends BaseController
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success'    => true,
-                'message'    => $name . ' was added successfully.',
+                'message'    => $displayName . ' was added successfully.',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'data'       => [
-                    'name'  => $name,
+                    'name'  => $displayName,
                     'slug'  => $slug,
                     'color' => $color,
                     'icon'  => $icon,
@@ -111,7 +112,7 @@ class VehicleTypes extends BaseController
             ]);
         }
 
-        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', $name . ' was added. It is now available for vehicles and fares.');
+        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', $displayName . ' was added. It is now available for vehicles and fares.');
     }
 
     public function delete($id)
@@ -124,7 +125,7 @@ class VehicleTypes extends BaseController
         }
 
         $slug = $type['slug'];
-        $name = $type['name'];
+        $name = vehicle_type_display_name($type['name']);
 
         $db = \Config\Database::connect();
 
@@ -404,14 +405,15 @@ class VehicleTypes extends BaseController
             return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('error', 'Failed to update vehicle type.');
         }
 
-        $this->logActivity('Update vehicle type', 'Updated vehicle type ' . $type['name'] . ' to ' . $name . '.');
+        $displayName = vehicle_type_display_name($name);
+        $this->logActivity('Update vehicle type', 'Updated vehicle type ' . vehicle_type_display_name($type['name']) . ' to ' . $displayName . '.');
         get_db_vehicle_types(true);
         $this->broadcastUpdate('vehicle_type_update', [
             'action'   => 'update',
             'id'       => (int) $id,
             'old_slug' => $oldSlug,
             'new_slug' => $newSlug,
-            'name'     => $name,
+            'name'     => $displayName,
             'color'    => $color,
             'icon'     => $icon,
             'photo'    => $photoRelPath ? media_url($photoRelPath) : null,
@@ -421,12 +423,12 @@ class VehicleTypes extends BaseController
         if ($this->request->isAJAX()) {
             return $this->response->setJSON([
                 'success'    => true,
-                'message'    => 'Vehicle type updated successfully to "' . $name . '".',
+                'message'    => 'Vehicle type updated successfully to "' . $displayName . '".',
                 'csrf_token' => csrf_token(),
                 'csrf_hash'  => csrf_hash(),
                 'data'       => [
                     'id'    => (int) $id,
-                    'name'  => $name,
+                    'name'  => $displayName,
                     'slug'  => $newSlug,
                     'color' => $color,
                     'icon'  => $icon,
@@ -435,6 +437,6 @@ class VehicleTypes extends BaseController
             ]);
         }
 
-        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', 'Vehicle type updated successfully to "' . $name . '".');
+        return redirect()->to('/admin/vehicles?manage_types=1')->with('manage_vehicle_types_open', true)->with('success', 'Vehicle type updated successfully to "' . $displayName . '".');
     }
 }

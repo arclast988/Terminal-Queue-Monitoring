@@ -2,6 +2,158 @@
     'use strict';
     var script = document.currentScript;
     var pending = new Map();
+    var canceledCards = new Map();
+    var statusActions = new Map();
+
+    function statusState(id) {
+        id = String(id);
+        if (!statusActions.has(id)) statusActions.set(id, {action:0, confirmation:0, status:null});
+        return statusActions.get(id);
+    }
+
+    function beginStatus(id) {
+        var state = statusState(id);
+        return {action:++state.action, confirmation:state.confirmation};
+    }
+
+    function isCurrentStatusAction(id, token, unconfirmed) {
+        var state = statusState(id);
+        return token && token.action === state.action && (!unconfirmed || token.confirmation === state.confirmation);
+    }
+
+    function rememberCard(id) {
+        var card = document.getElementById('card-' + id);
+        if (!card) return;
+        canceledCards.set(String(id), {card:card.cloneNode(true), nextId:card.nextElementSibling && card.nextElementSibling.id});
+        while (canceledCards.size > 30) canceledCards.delete(canceledCards.keys().next().value);
+    }
+
+    function departureDate(value) {
+        if (!value) return null;
+        var date = String(value).replace(' ', 'T');
+        if (!/(?:Z|[+-]\d{2}:?\d{2})$/i.test(date)) date += '+08:00';
+        var result = new Date(date);
+        return Number.isNaN(result.getTime()) ? null : result;
+    }
+
+    // Apply only a server-confirmed change. The background refresh reconciles
+    // route positions and other trips without delaying the acted-on card.
+    function applyStatus(id, status, item, token, restore) {
+        id = String(id);
+        var state = statusState(id);
+        if (token) {
+            if (!isCurrentStatusAction(id, token)) return false;
+            // A newer broadcast is already visible. Its matching status can
+            // complete local feedback, but an older response cannot rewrite it.
+            if (token.confirmation !== state.confirmation) return state.status === status ? 'confirmed' : false;
+        }
+        state.confirmation++;
+        state.status = status;
+        var list = document.getElementById('queue-list');
+        if (!list) return 'applied';
+        var card = document.getElementById('card-' + id);
+        if (status === 'departed' || status === 'canceled') {
+            if (card) {
+                if (status === 'canceled') {
+                    rememberCard(id);
+                }
+                card.remove();
+            }
+        } else if (status === 'waiting' || status === 'boarding') {
+            if (!card && status === 'waiting' && (!token || restore) && canceledCards.has(id)) {
+                var saved = canceledCards.get(id);
+                card = saved.card;
+                list.insertBefore(card, saved.nextId ? document.getElementById(saved.nextId) : null);
+                canceledCards.delete(id);
+            }
+            if (card) {
+                card.dataset.queueStatus = status;
+                if (item) {
+                    var position = card.querySelector('[data-queue-position]');
+                    var round = card.querySelector('[data-queue-round]');
+                    if (position && item.position != null) position.textContent = '#' + item.position;
+                    if (round && item.round_number != null) round.textContent = 'Round ' + item.round_number;
+                    if (item.terminal_id != null && item.destination != null) card.dataset.queueRouteKey = item.terminal_id + '|' + item.destination;
+                    if (window.QueueSync && item.current_passengers != null && item.capacity != null) {
+                        window.QueueSync.updatePassengerUI(id, item.current_passengers, item.capacity);
+                    }
+                }
+                var badge = card.querySelector('[data-queue-status]');
+                if (badge) {
+                    badge.className = 'badge-modern badge-modern-' + (status === 'boarding' ? 'success' : 'warning');
+                    var icon = document.createElement('i');
+                    icon.className = 'bi me-1 ' + (status === 'boarding' ? 'bi-play-circle-fill' : 'bi-hourglass-split');
+                    badge.replaceChildren(icon, document.createTextNode(status === 'boarding' ? 'Boarding' : 'Waiting'));
+                }
+                var current = card.querySelector('[data-action="update-status"], [data-action="open-depart-modal"]');
+                if (current) {
+                    // Replacing the pending button prevents its completion handler
+                    // from restoring the old label over the newly confirmed action.
+                    var action = document.createElement('button');
+                    action.type = 'button';
+                    action.style.whiteSpace = 'nowrap';
+                    var cancel = card.querySelector('[data-action="open-cancel-modal"]');
+                    var passengers = card.querySelector('.passenger-count-num');
+                    var counter = document.getElementById('passenger-count-' + id);
+                    action.disabled = false;
+                    action.className = 'btn-modern flex-fill btn-modern-' + (status === 'boarding' ? 'success' : 'primary');
+                    action.dataset.action = status === 'boarding' ? 'open-depart-modal' : 'update-status';
+                    action.dataset.id = id;
+                    action.textContent = status === 'boarding' ? 'Depart' : 'Start boarding now';
+                    if (status === 'boarding') {
+                        delete action.dataset.status;
+                        action.dataset.plate = item && item.plate_number || cancel && cancel.dataset.plate || '';
+                        action.dataset.type = cancel && cancel.dataset.type || '';
+                        action.dataset.passengers = item && item.current_passengers != null ? item.current_passengers : passengers ? passengers.textContent.trim() : '0';
+                        action.dataset.capacity = item && item.capacity != null ? item.capacity : counter ? counter.dataset.capacity : '0';
+                    } else {
+                        action.dataset.status = 'boarding';
+                    }
+                    current.replaceWith(action);
+                }
+                var timing = card.querySelector('[data-queue-departure]');
+                if (timing) {
+                    timing.querySelectorAll('.countdown-timer, [data-queue-boarding-time]').forEach(el => el.remove());
+                    if (item) {
+                        var departure = departureDate(item.estimated_departure);
+                        var value = timing.querySelector('[data-queue-departure-time]');
+                        if (value) value.textContent = departure ? departure.toLocaleTimeString('en-US', {timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'}) : 'TBA';
+                        if (departure && status === 'boarding') {
+                            var countdown = document.createElement('div');
+                            countdown.className = 'countdown-timer';
+                            countdown.dataset.departure = departure.toISOString();
+                            timing.append(countdown);
+                        }
+                        var boarding = departureDate(item.boarding_start);
+                        if (boarding && status === 'waiting') {
+                            var boardingTime = document.createElement('div');
+                            boardingTime.className = 'small text-muted';
+                            boardingTime.dataset.queueBoardingTime = '';
+                            boardingTime.textContent = 'Boarding ' + boarding.toLocaleTimeString('en-US', {timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit'});
+                            timing.append(boardingTime);
+                        }
+                    }
+                }
+            }
+        }
+        var empty = document.getElementById('queueEmptyState');
+        if (!empty) {
+            empty = document.createElement('div');
+            empty.id = 'queueEmptyState';
+            empty.className = 'text-center text-muted py-5';
+            empty.setAttribute('role', 'status');
+            var message = document.createElement('span');
+            message.dataset.queueEmptyMessage = '';
+            message.textContent = 'Queue is currently empty.';
+            empty.append(message);
+            list.append(empty);
+        }
+        empty.classList.toggle('d-none', !!list.querySelector('.q-card'));
+        if (window.QueueOrderManager) window.QueueOrderManager.setStatus(id, status);
+        if (window.DispatchQueue) window.DispatchQueue.applyFilters();
+        document.dispatchEvent(new CustomEvent('queue-status-applied', {detail:{id:id,status:status}}));
+        return 'applied';
+    }
     async function request(url, body) {
         // Share an in-flight mutation so double clicks cannot send duplicate requests.
         var key = url + ':' + (body ? body.toString() : '');
@@ -48,7 +200,7 @@
         container.append(icon,copy,close);
         container.scrollIntoView({block:'nearest',behavior:'smooth'});
     }
-    var modal = document.getElementById('cancelSelectionModal'), refreshing = false, busy = false;
+    var modal = document.getElementById('cancelSelectionModal'), refreshing = false, busy = false, skipHiddenRefresh = false;
     function selection() { return modal ? Array.from(modal.querySelectorAll('[name="cancel_queue_ids[]"]:checked')).map(box=>box.value) : []; }
     function updateSelection() {
         if (!modal) return;
@@ -138,23 +290,33 @@
             if (filter.syncAutocompleteValue) filter.syncAutocompleteValue();
             updateSelection();
         });
-        modal.addEventListener('hidden.bs.modal',function(){if(window.QueueSync)window.QueueSync.refresh(true);});
+        modal.addEventListener('hidden.bs.modal',function(){
+            if (skipHiddenRefresh) { skipHiddenRefresh = false; return; }
+            if(window.QueueSync)window.QueueSync.refresh(true);
+        });
         modal.querySelector('#refreshCancelSelection').addEventListener('click',refreshSelection);
         modal.querySelector('#cancelSelectedSubmit').addEventListener('click',async function(){
             if (busy || refreshing || !selection().length) return;
             var ids=selection(), body=new URLSearchParams(); ids.forEach(id=>body.append('queue_ids[]',id));
+            var actionTokens = new Map(ids.map(id=>[String(id),beginStatus(id)]));
+            ids.forEach(rememberCard);
             busy=true; updateSelection();
             modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection,#clearCancelVehicleSearch').forEach(el=>{el.disabled=true;});
             try {
                 var data=await request(script.dataset.cancelUrl,body);
-                (data.queue_ids || ids).forEach(id=>{if(window.QueueOrderManager)window.QueueOrderManager.setStatus(id,'canceled');});
+                var needsRefresh = false;
+                (data.queue_ids || ids).forEach(id=>{
+                    var token = actionTokens.get(String(id));
+                    if (token && applyStatus(id,'canceled',null,token) === 'applied') needsRefresh = true;
+                });
+                skipHiddenRefresh = true;
                 bootstrap.Modal.getOrCreateInstance(modal).hide();
                 notice('Trips canceled',data.message,'success');
-                if(window.QueueSync)window.QueueSync.refresh(true);
+                if(needsRefresh && window.QueueSync)window.QueueSync.refresh(true);
             } catch(error){notice('Could not cancel the selection',error.message,error.variant,modal.querySelector('#cancelSelectionFeedback'));}
             finally {busy=false;modal.querySelectorAll('input,select,[data-bs-dismiss],#refreshCancelSelection,#clearCancelVehicleSearch').forEach(el=>{el.disabled=false;});updateSelection();}
         });
         updateSelection();
     }
-    window.QueueActions={request:request,notice:notice,sync:sync};
+    window.QueueActions={request:request,notice:notice,sync:sync,applyStatus:applyStatus,rememberCard:rememberCard,beginStatus:beginStatus,isCurrentStatusAction:isCurrentStatusAction};
 })();

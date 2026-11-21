@@ -470,7 +470,9 @@
                 }
 
                 const cleanQuery = query.trim().toUpperCase();
-                const filtered = suggestions.filter(loc => loc.toUpperCase().includes(cleanQuery)).slice(0, MAX_DROPDOWN_ITEMS);
+                const excluded = input.dataset.excludeLocation || '';
+                const filtered = suggestions.filter(loc => loc.toUpperCase().includes(cleanQuery)
+                    && (!excluded || loc.replace(/[\s\p{Z}]+/gu, ' ').trim().toUpperCase() !== excluded)).slice(0, MAX_DROPDOWN_ITEMS);
 
                 if (filtered.length === 0) {
                     closeDropdown(wrapper, dropdown);
@@ -647,6 +649,7 @@
             else if (fieldName.includes('destination')) placeholderText = 'Search destination...';
             searchInput.placeholder = selectEl.dataset.autocompletePlaceholder || placeholderText;
             if (selectEl.hasAttribute('aria-label')) searchInput.setAttribute('aria-label', selectEl.getAttribute('aria-label'));
+            if (selectEl.hasAttribute('aria-describedby')) searchInput.setAttribute('aria-describedby', selectEl.getAttribute('aria-describedby'));
             searchInput.autocomplete = 'off';
             searchInput.style.paddingRight = '32px';
 
@@ -717,20 +720,22 @@
 
             function getAvailableOptions() {
                 return Array.from(selectEl.options)
-                    .filter(opt => !opt.disabled && opt.style.display !== 'none')
-                    .map(opt => ({
+                    .map((opt, optionIndex) => ({
+                        optionIndex,
                         value: opt.value,
                         text: opt.text.trim(),
                         selected: opt.selected,
                         color: opt.getAttribute('data-color') || '',
                         icon: opt.getAttribute('data-icon') || '',
                         isPlaceholder: isPlaceholderOption(opt),
-                        isDeparted: opt.getAttribute('data-departed') === 'true' || opt.text.toUpperCase().includes('DEPARTED')
-                    }));
+                        isDeparted: opt.getAttribute('data-departed') === 'true',
+                        available: !opt.disabled && opt.style.display !== 'none'
+                    }))
+                    .filter(opt => opt.available);
             }
 
             function updateInputValue() {
-                const currentSelected = Array.from(selectEl.options).find(o => o.value === selectEl.value);
+                const currentSelected = selectEl.options[selectEl.selectedIndex];
                 if (currentSelected && !isPlaceholderOption(currentSelected)) {
                     searchInput.value = currentSelected.text.trim();
                     // Tint the input with the option color (e.g. vehicle type)
@@ -885,7 +890,7 @@
                     }
 
                     return `
-                        <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-index="${idx}"
+                        <div class="autocomplete-item" data-value="${opt.value}" data-text="${opt.text}" data-option-index="${opt.optionIndex}" data-index="${idx}"
                              style="cursor: pointer; font-size: 13.5px; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 8px; transition: background 0.15s ease;">
                             <span class="autocomplete-item-text" style="display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 <i class="${itemIcon}" style="color: ${itemColor}; font-size: 15px; flex-shrink: 0;"></i>
@@ -922,7 +927,7 @@
                         e.preventDefault();
                         e.stopPropagation();
                         isPickingOption = false;
-                        selectOption(item.dataset.value, item.dataset.text);
+                        selectOption(Number(item.dataset.optionIndex));
                     });
                     item.addEventListener('mouseenter', () => {
                         dropdown.querySelectorAll('.autocomplete-item').forEach(i => i.classList.remove('active-item'));
@@ -931,19 +936,13 @@
                 });
             }
 
-            function selectOption(val, text) {
-                selectEl.value = val;
-                const optObj = Array.from(selectEl.options).find(o => o.value === val);
-                if (optObj && isPlaceholderOption(optObj)) {
-                    searchInput.value = '';
-                    searchInput.style.color = '';
-                    searchInput.style.borderColor = '';
-                } else {
-                    searchInput.value = text;
-                    const optColor = optObj ? optObj.getAttribute('data-color') : '';
-                    searchInput.style.color = optColor || '';
-                    searchInput.style.borderColor = optColor || '';
-                }
+            function selectOption(optionIndex) {
+                const optObj = selectEl.options[optionIndex];
+                if (!optObj || optObj.disabled || optObj.style.display === 'none') return;
+                // Values may repeat across route terminals. Keep the option the
+                // user picked instead of selecting the first equal value.
+                selectEl.selectedIndex = optionIndex;
+                updateInputValue();
                 searchInput.classList.remove('is-invalid');
                 if (typeof selectEl.setCustomValidity === 'function') {
                     selectEl.setCustomValidity('');
@@ -987,12 +986,14 @@
 
             searchInput.addEventListener('blur', () => {
                 if (isClearing || isPickingOption) return;
+                const previousIndex = selectEl.selectedIndex;
                 const query = (searchInput.value || '').trim().toUpperCase();
                 const available = getAvailableOptions().filter(o => !o.isPlaceholder);
                 if (query) {
-                    const exactMatch = available.find(o => o.text.toUpperCase() === query);
+                    const exactMatches = available.filter(o => o.text.toUpperCase() === query);
+                    const exactMatch = exactMatches.find(o => o.optionIndex === previousIndex) || exactMatches[0];
                     if (exactMatch) {
-                        selectEl.value = exactMatch.value;
+                        selectEl.selectedIndex = exactMatch.optionIndex;
                         searchInput.value = exactMatch.text;
                         searchInput.classList.remove('is-invalid');
                         if (typeof selectEl.setCustomValidity === 'function') {
@@ -1007,6 +1008,10 @@
                 } else {
                     selectEl.value = '';
                     updateInputValue();
+                }
+                if (selectEl.selectedIndex !== previousIndex) {
+                    selectEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    selectEl.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 if (selectEl.hasAttribute('data-queue-route-search')) {
                     // Inline mobile menus change a centered dialog's height. Let
@@ -1046,7 +1051,7 @@
                 } else if (e.key === 'Enter') {
                     if (activeIndex >= 0 && items[activeIndex]) {
                         e.preventDefault();
-                        selectOption(items[activeIndex].dataset.value, items[activeIndex].dataset.text);
+                        selectOption(Number(items[activeIndex].dataset.optionIndex));
                     }
                 } else if (e.key === 'Escape') {
                     closeDropdown(wrapper, dropdown);

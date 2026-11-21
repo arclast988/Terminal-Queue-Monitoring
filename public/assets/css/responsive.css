@@ -57,8 +57,13 @@ body.auth-page .brand > :not(.brand-mark) {
     overflow-wrap: anywhere;
 }
 
-/* Keep the original logo artwork visible inside the decorative round frame. */
+/* Show authentication logos in their original shape without a decorative frame. */
 body.auth-page .brand-mark {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
     overflow: visible;
 }
 
@@ -1722,6 +1727,7 @@ input[type="submit"].btn-modern[title*="delete" i],
 input[type="submit"].btn-modern[value*="delete" i],
 a.btn-action-delete,
 button.btn-action-delete,
+button.btn-action-maintenance,
 a[title*="delete" i].btn-modern-outline {
   background: var(--danger-light, #FEE2E2) !important;
   color: var(--danger-dark, #dc2626) !important;
@@ -1731,6 +1737,7 @@ a[title*="delete" i].btn-modern-outline {
 
 .btn-modern[title*="delete" i] i,
 .btn-action-delete i,
+.btn-action-maintenance i,
 .btn-modern .bi.bi-trash,
 .btn-modern .bi-trash-fill,
 .btn-action-delete .bi {
@@ -1741,7 +1748,8 @@ a[title*="delete" i].btn-modern-outline {
 button.btn-modern[title*="delete" i]:hover,
 input[type="submit"].btn-modern[title*="delete" i]:hover,
 a.btn-action-delete:hover,
-button.btn-action-delete:hover {
+button.btn-action-delete:hover,
+button.btn-action-maintenance:hover {
   background: linear-gradient(135deg, var(--danger-dark, #dc2626) 0%, var(--danger, #ef4444) 100%) !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
@@ -1823,14 +1831,24 @@ a.btn-action-activate:hover,
 button.btn-action-activate:hover,
 a.btn-action-activate:active,
 button.btn-action-activate:active,
-a.btn-action-activate:focus,
-button.btn-action-activate:focus,
 .btn-action-activate:hover,
 .btn-modern.btn-action-activate:hover {
   background: #16a34a !important;
   color: #fff !important;
   -webkit-text-fill-color: #fff !important;
   border-color: #16a34a !important;
+}
+
+/* Keyboard focus keeps the pale surface; only hover/press uses a solid fill. */
+.btn-modern.btn-action-activate:focus:not(:hover):not(:active) {
+  background: #dcfce7 !important;
+  border-color: #15803d !important;
+  color: #15803d !important;
+  -webkit-text-fill-color: #15803d !important;
+}
+.btn-modern.btn-action-activate:focus-visible {
+  outline: 2px solid #15803d !important;
+  outline-offset: 2px;
 }
 
 /* Force Deactivate / Activate Button Icons & Text to turn White on Hover */
@@ -1929,6 +1947,7 @@ a[title*="delete" i]:hover .bi,
 .btn-action-delete:hover i,
 .btn-action-delete:hover .bi,
 .btn-action-delete:hover .fa,
+.btn-action-maintenance:hover i,
 .btn-modern-outline-danger:hover i,
 .btn-modern-outline-danger:hover .bi,
 .btn-modern-outline-danger:hover .fa {
@@ -3742,12 +3761,12 @@ a[title*="delete" i]:hover .bi,
 
 /* Management actions use the same normal column layout as User Management. */
 html body table.table-modern.management-list-table {
-    --management-action-height: 31px;
+    --management-action-height: 44px;
     font-family: var(--font-body, 'Outfit', sans-serif);
 }
 html body table.table-modern.management-list-table th,
 html body #vehicles-table.management-list-table th {
-    font-size: 12px !important;
+    font-size: 14px !important;
     font-weight: 700;
     line-height: 1.35;
     letter-spacing: 0.04em;
@@ -3755,12 +3774,12 @@ html body #vehicles-table.management-list-table th {
 }
 html body table.table-modern.management-list-table td,
 html body #vehicles-table.management-list-table td {
-    font-size: 14px !important;
+    font-size: 15px !important;
     line-height: 1.45;
 }
 html body #vehicles-table.management-list-table .driver-cell,
 html body #vehicles-table.management-list-table .route-info {
-    font-size: 13.5px !important;
+    font-size: 15px !important;
     max-width: 100%;
     white-space: normal !important;
     overflow-wrap: anywhere;
@@ -3774,7 +3793,7 @@ html body #vehicles-table.management-list-table .route-info > span {
     overflow-wrap: anywhere;
 }
 html body #vehicles-table.management-list-table .plate-number {
-    font-size: 13px !important;
+    font-size: 15px !important;
 }
 html body #vehicles-table.management-list-table .vehicle-type-cell .vehicle-type-icon {
     flex: 0 0 40px;
@@ -3802,12 +3821,12 @@ html body #vehicles-table.management-list-table .vehicle-type-icon img:not(.vehi
 }
 html body #vehicles-table.management-list-table .vehicle-start-order,
 html body #departure-rules-table.management-list-table .rule-round-text {
-    font-size: 12.5px !important;
+    font-size: 15px !important;
     line-height: 1.4;
 }
 html body table.table-modern.management-list-table td .badge-modern,
 html body #vehicles-table.management-list-table td .badge-modern {
-    font-size: 12px !important;
+    font-size: 13px !important;
 }
 html body table.table-modern.management-list-table .management-message {
     white-space: normal !important;
@@ -3844,7 +3863,7 @@ html body #vehicles-table.management-list-table .management-row-actions .btn-mod
     max-width: 100%;
     padding: 5px 9px !important;
     border-radius: 6px !important;
-    font-size: 12px !important;
+    font-size: 15px !important;
     font-weight: 600 !important;
     line-height: 1.5 !important;
     white-space: nowrap !important;
@@ -3878,18 +3897,19 @@ html body table.table-modern.management-list-table .management-row-actions .acti
     html body #terminals-table.management-list-table .management-count-col { width: 145px; }
     html body #terminals-table.management-list-table .management-date-col { width: 156px; }
     html body #vehicles-table.management-list-table .management-id-col { width: 4%; }
-    html body #vehicles-table.management-list-table .management-plate-col { width: 9%; }
+    html body #vehicles-table.management-list-table .management-plate-col { width: 8.5%; }
     html body #vehicles-table.management-list-table .management-person-col { width: 8.75%; }
-    html body #vehicles-table.management-list-table .management-type-col { width: 12%; }
-    html body #vehicles-table.management-list-table .management-route-col { width: 14%; }
-    html body #vehicles-table.management-list-table .management-count-col { width: 7.5%; }
-    html body #vehicles-table.management-list-table .management-status-col { width: 10%; }
-    html body #vehicles-table.management-list-table .management-date-col { width: 10%; }
-    html body #departure-rules-table.management-list-table .management-terminal-col { width: 130px; }
-    html body #departure-rules-table.management-list-table .management-destination-col { width: 150px; }
-    html body #departure-rules-table.management-list-table .management-day-col { width: 140px; }
-    html body #departure-rules-table.management-list-table .management-clock-col { width: 118px; }
-    html body #departure-rules-table.management-list-table .management-interval-col { width: 135px; }
+    html body #vehicles-table.management-list-table .management-type-col { width: 12.5%; }
+    html body #vehicles-table.management-list-table .management-route-col { width: 9.5%; }
+    html body #vehicles-table.management-list-table .management-count-col { width: 8.5%; }
+    html body #vehicles-table.management-list-table .management-status-col { width: 9.5%; }
+    html body #vehicles-table.management-list-table .management-date-col { width: 9.5%; }
+    html body #departure-rules-table.management-list-table { min-width: 1200px !important; }
+    html body #departure-rules-table.management-list-table .management-terminal-col { width: 150px; }
+    html body #departure-rules-table.management-list-table .management-destination-col { width: 176px; }
+    html body #departure-rules-table.management-list-table .management-day-col { width: 150px; }
+    html body #departure-rules-table.management-list-table .management-clock-col { width: 126px; }
+    html body #departure-rules-table.management-list-table .management-interval-col { width: 140px; }
     html body #announcements-table.management-list-table .management-terminal-col { width: 120px; }
     html body #announcements-table.management-list-table .management-severity-col { width: 115px; }
     html body #announcements-table.management-list-table .management-status-col { width: 120px; }
@@ -3917,8 +3937,11 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         box-sizing: border-box;
         padding: 12px 8px !important;
     }
+    html body #vehicles-table.management-list-table th.management-date-col {
+        padding: 12px 4px !important;
+    }
     html body #vehicles-table.management-list-table .management-actions-col {
-        width: 16% !important;
+        width: 20.5% !important;
         min-width: 0 !important;
         max-width: none !important;
         padding: 12px 10px !important;
@@ -3964,17 +3987,17 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         max-width: none !important;
     }
     html body #vehicles-table.management-list-table.selection-mode-active .management-id-col { width: 3.84%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-plate-col { width: 8.64%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-plate-col { width: 8.16%; }
     html body #vehicles-table.management-list-table.selection-mode-active .management-person-col { width: 8.4%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-type-col { width: 11.52%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-route-col { width: 13.44%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-count-col { width: 7.2%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-status-col { width: 9.6%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-date-col { width: 9.6%; }
-    html body #vehicles-table.management-list-table.selection-mode-active .management-actions-col { width: 15.36% !important; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-type-col { width: 12%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-route-col { width: 9.12%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-count-col { width: 8.16%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-status-col { width: 9.12%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-date-col { width: 9.12%; }
+    html body #vehicles-table.management-list-table.selection-mode-active .management-actions-col { width: 19.68% !important; }
 }
 @media (max-width: 768px) {
-    html body table.table-modern.management-list-table { --management-action-height: 40px; }
+    html body table.table-modern.management-list-table { --management-action-height: 44px; }
     html body table.table-modern.management-list-table .management-actions-col {
         position: static;
         white-space: normal !important;
@@ -3994,6 +4017,12 @@ html body table.table-modern.management-list-table .management-row-actions .acti
         flex-wrap: wrap !important;
         justify-content: flex-end !important;
         align-items: center !important;
+    }
+    html body #vehicles-table.management-list-table .management-actions-col {
+        flex-wrap: wrap !important;
+    }
+    html body #vehicles-table.management-list-table .management-actions-col > .management-row-actions.action-buttons-grid {
+        flex: 0 0 auto !important;
     }
 }
 
@@ -4024,6 +4053,7 @@ html body .route-card-item .action-buttons-grid > .btn-modern {
     flex-shrink: 0;
 }
 html body .action-buttons-grid > .btn-action-activate,
+html body #vehicles-table .action-buttons-grid > [data-action="vehicle-status"],
 html body .action-buttons-grid > form:has(.btn-action-activate) {
     grid-area: 1 / 2;
     justify-self: stretch;
@@ -4032,6 +4062,7 @@ html body .action-buttons-grid > .btn-action-edit {
     grid-area: 2 / 1;
 }
 html body .action-buttons-grid > .btn-action-delete,
+html body #vehicles-table .action-buttons-grid > .btn-action-deactivate,
 html body .action-buttons-grid > form:has(.btn-action-delete) {
     grid-area: 2 / 2;
     justify-self: stretch;
@@ -4175,4 +4206,261 @@ html body #vehicles-table tbody tr.vehicle-route-heading.vehicle-row-hidden { di
     .record-filter-form {
         grid-template-columns: minmax(180px, 1.5fr) repeat(5, minmax(0, 1fr)) auto;
     }
+}
+
+/* Readable text and comfortable controls at every screen size. Keep these
+   shared rules after compact page styles so phones retain the same text size. */
+:root {
+    --readable-body: 1rem;
+    --readable-secondary: .9375rem;
+    --readable-caption: .875rem;
+    --readable-badge: .8125rem;
+}
+
+html body {
+    font-size: var(--readable-body);
+    line-height: 1.5;
+}
+
+html body :is(.small, small, .form-text, .form-text-modern, .field__hint, .field__error,
+    .form-label, .form-label-modern, .field__label, .page-subtitle-modern,
+    .stat-card-label, .card__label, .queue-order-details, .queue-order-note,
+    .preview-nav-link, .breadcrumb-section, .user-avatar-hint) {
+    font-size: var(--readable-secondary) !important;
+    line-height: 1.5 !important;
+}
+
+html body :is(.main-content, .modal, .auth, .page) :is(.btn, .btn-modern, .btn--sm,
+    .filter-chip, .route-chip, .rules-route-chip, .vf-btn, .quick-chip,
+    .btn-counter, .btn-counter-max, .page-link, .tab-btn, .form-tab,
+    button[class*="btn-bulk-"], .btn-select-mode) {
+    min-height: 44px !important;
+    font-size: var(--readable-secondary) !important;
+    line-height: 1.4 !important;
+    padding-block: 10px !important;
+}
+
+html body :is(.main-content, .modal) :is(.btn-modern, .btn):not(.btn-modern-sm):not(.btn-sm) {
+    font-size: var(--readable-body) !important;
+}
+
+html body :is(.form-control, .form-control-modern, .form-select, .form-input,
+    .autocomplete-input, .search-input, .search-input-modern, .field__input) {
+    font-size: var(--readable-body) !important;
+    min-height: 44px;
+}
+html body .main-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea),
+html body .search-bar input {
+    font-size: var(--readable-body) !important;
+    min-height: 44px;
+}
+html body :is(#filter-label, .queue-control-label, .queue-control-footer,
+    .queue-round-origin, .rule-every-day, .rule-day-option, .rule-days-summary,
+    .queue-round-choice label) {
+    font-size: var(--readable-secondary) !important;
+}
+
+html body :is(.badge, .badge-modern, .vehicle-type-chip, .profile-badge-chip,
+    .profile-role, .profile-role-badge, .nav-badge) {
+    font-size: var(--readable-badge) !important;
+    line-height: 1.4 !important;
+}
+
+html body :is(.table-modern, .table--card, .modern-table) :is(th, td),
+html body :is(#vehicles-table, #users-table, #departure-rules-table) :is(th, td) {
+    font-size: var(--readable-secondary) !important;
+    line-height: 1.5 !important;
+}
+
+html body :is(.table-modern, .modern-table) :is(td, th) :is(small, code, .badge-modern),
+html body #vehicles-table :is(.vehicle-route-heading-label, .vehicle-type-label) {
+    font-size: var(--readable-caption) !important;
+}
+
+html body .stat-card-label { letter-spacing: .025em; }
+html body .stat-card-link:not(.stat-card) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: var(--readable-secondary) !important;
+}
+
+html body #queue-list .q-card :is(.small, small, [data-queue-departure-time],
+    [data-queue-boarding-time], .passenger-count-display) {
+    font-size: var(--readable-body) !important;
+}
+html body #queue-list .q-card :is(.btn-modern, .btn-counter, .btn-counter-max),
+html body #queueRouteControls :is(.btn-modern, button) {
+    min-height: 44px !important;
+    font-size: var(--readable-body) !important;
+    line-height: 1.4 !important;
+    padding-block: 10px !important;
+}
+html body #queue-list .q-card .btn-counter {
+    min-width: 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+}
+html body .queue-selection-actions {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 100%;
+}
+html body #queueRouteControls { height: auto !important; }
+html body #queue-list .countdown-timer { font-size: var(--readable-caption) !important; }
+
+/* Navigation uses larger labels, with the drawer available when they no longer
+   fit across a laptop header. Dropdowns stay scrollable on short screens. */
+html body #site-header .nav-menu > a,
+html body #site-header .nav-menu > .dropdown > .dropbtn,
+html body .guest-header .nav-menu > a,
+html body :is(.profile-trigger-name, .profile-header-name, .profile-user-fullname, .drawer-nav-item,
+    .drawer-brand-title, .profile-dropdown-item, .dropdown-content a, .avatar-mini-item) {
+    font-size: var(--readable-body) !important;
+}
+html body :is(.profile-dropdown-item, .dropdown-content a, .avatar-mini-item,
+    .drawer-nav-item, .drawer-logout-btn),
+html body #site-header :is(.dropbtn, .profile-trigger-btn, .nav-hamburger-btn),
+html body .guest-header :is(.nav-menu > a, .mobile-toggle) {
+    min-height: 44px !important;
+}
+html body :is(.profile-header-email, .profile-user-handle, .profile-section-label, .drawer-section-label,
+    .profile-avatar-status, .drawer-brand-subtitle, .profile-trigger-role) {
+    font-size: var(--readable-caption) !important;
+    line-height: 1.4 !important;
+}
+html body :is(.profile-dropdown-card, .dropdown-content) .item-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+html body #site-header .logo-section .logo-text h1 { font-size: 22px !important; }
+html body #site-header .logo-section .logo-text p { font-size: 14px !important; }
+html body .guest-header .logo-text p { font-size: 13px !important; }
+html body #site-header .operations-header-time { font-size: 15px; }
+html body #site-header .profile-operations-time {
+    font-size: 13px !important;
+    height: 18px;
+    width: auto !important;
+    min-width: 60px;
+    transform: none;
+}
+html body :is(.profile-role-pill, .profile-online-badge, .dropdown-badge) {
+    font-size: var(--readable-badge) !important;
+}
+html body:is(.admin-theme, .staff-theme) :is(footer, .footer) { font-size: 15px !important; }
+html body #site-header .nav-menu :is(a, .dropbtn) > i { font-size: 16px; }
+html body #vehicles-table tbody tr td[data-label="Action"] :is(.btn-modern, .action-label) {
+    font-size: var(--readable-secondary) !important;
+    line-height: 1.4 !important;
+}
+html body #vehicles-table tbody tr td[data-label="Action"] .btn-modern {
+    min-height: 44px !important;
+    padding-block: 10px !important;
+}
+
+@media (min-width: 1281px) and (max-width: 1535px) {
+    html body #site-header .nav-hamburger-btn { display: flex !important; }
+    html body #site-header .nav-menu > a,
+    html body #site-header .nav-menu > .dropdown { display: none !important; }
+}
+
+@media (max-width: 768px) {
+    html body:is(.admin-theme, .staff-theme) {
+        --site-header-height: 76px;
+    }
+    html body:is(.admin-theme, .staff-theme).layout-lock header#site-header {
+        height: 76px !important;
+        max-height: 76px !important;
+        padding: 4px 10px !important;
+        gap: 8px !important;
+    }
+    html body #site-header .header-left-cluster {
+        max-width: calc(100% - 70px) !important;
+        gap: 8px !important;
+    }
+    html body #site-header .logo-section {
+        gap: 8px !important;
+        transform: none !important;
+    }
+    html body #site-header .nav-hamburger-btn {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+        transform: none !important;
+    }
+    html body #site-header .logo { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+    html body #site-header .logo-section .logo-text h1 { font-size: clamp(16px, 4.8vw, 18px) !important; }
+    html body #site-header .logo-section .logo-text p {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+        -webkit-line-clamp: 1 !important;
+    }
+    html body #site-header .nav-menu { right: 10px !important; top: 50%; }
+    html body #site-header .profile-trigger-btn { width: 44px !important; height: 44px !important; min-width: 44px !important; }
+    html body #site-header .nav-menu .user-profile-dropdown {
+        grid-template-rows: 16px 44px;
+        justify-items: center;
+    }
+    html body #site-header .profile-operations-time { height: 16px; }
+    html body .guest-header .logo-text p { font-size: 12px !important; }
+    html body .guest-header .logo-text h1 { font-size: 16px !important; }
+    html body :is(.table-modern, .modern-table) td[data-label]::before {
+        font-size: var(--readable-caption) !important;
+        line-height: 1.5 !important;
+    }
+    html body #queue-list .q-card .text-truncate {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+    }
+    html body #vehicles-table .management-row-actions { flex-wrap: wrap !important; }
+    html body :is(#users-table, #vehicles-table) tbody tr[data-status="archived"] td[data-label="Action"] .btn-modern {
+        min-height: 44px !important;
+        font-size: var(--readable-secondary) !important;
+    }
+}
+@media (max-width: 575.98px) {
+    html body .page-header-modern .btn-modern { white-space: normal !important; }
+    html body .queue-header-actions { flex-direction: column; width: 100%; }
+    html body .queue-header-actions .btn-modern { width: 100%; white-space: normal; }
+}
+
+/* Shorter summary cards on phones without reducing text or touch targets. */
+@media (max-width: 768px) {
+    html body .stat-card-modern {
+        padding: 12px 14px !important;
+    }
+    html body .stat-card-modern > .stat-card-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
+        margin-bottom: 6px !important;
+    }
+    html body .stat-card-modern > .stat-card-value {
+        margin-bottom: 2px;
+    }
+}
+
+/* Keep both role-specific help guides readable at every screen size. */
+html body .help-guide-wrapper .help-header-title {
+    font-size: 24px !important;
+    line-height: 1.3;
+}
+html body .help-guide-wrapper .accordion-header-text {
+    font-size: 18px !important;
+    line-height: 1.4;
+}
+html body .help-guide-wrapper :is(.accordion-body, .step-box, .help-tip) {
+    font-size: 16px !important;
+    line-height: 1.65 !important;
+    overflow-wrap: anywhere;
+}
+html body .help-guide-wrapper :is(.role-badge, .status-badge) {
+    font-size: 14px !important;
+    line-height: 1.4;
+}
+@media (max-width: 768px) {
+    html body .help-guide-wrapper .help-header-title { font-size: 20px !important; }
+    html body .help-guide-wrapper .accordion-header-text { font-size: 17px !important; }
 }

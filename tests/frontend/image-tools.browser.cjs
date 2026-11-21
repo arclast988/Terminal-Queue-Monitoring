@@ -72,6 +72,142 @@ async function applyCrop(page) {
 async function readyPhoto(viewer) {
   const photo=viewer.locator('img[data-photo-ready]');await photo.waitFor({state:'visible'});await photo.evaluate(img=>img.decode());
 }
+async function cropRect(page) {
+  return page.locator('.tq-crop-selection').evaluate(el=>{
+    const image=el.parentElement.querySelector('img');
+    return {x:parseFloat(el.style.left)*image.naturalWidth/100,y:parseFloat(el.style.top)*image.naturalHeight/100,
+      w:parseFloat(el.style.width)*image.naturalWidth/100,h:parseFloat(el.style.height)*image.naturalHeight/100};
+  });
+}
+async function dragCropHandle(page,handle,dx,dy) {
+  const target=page.locator('[data-crop-handle="'+handle+'"]'),bounds=await target.boundingBox();
+  const scale=await page.locator('.tq-crop-image-wrap').evaluate(el=>{const b=el.getBoundingClientRect(),image=el.querySelector('img');return {x:b.width/image.naturalWidth,y:b.height/image.naturalHeight};});
+  assert.ok(bounds);
+  // Firefox rounds mouse event coordinates. Start and finish on whole display
+  // pixels so two fractional truncations do not amplify in source-image space.
+  const x=Math.round(bounds.x+bounds.width/2),y=Math.round(bounds.y+bounds.height/2),viewport=page.viewportSize();
+  const endX=Math.max(2,Math.min(viewport.width-2,Math.round(x+dx*scale.x)));
+  const endY=Math.max(2,Math.min(viewport.height-2,Math.round(y+dy*scale.y)));
+  await page.mouse.move(x,y);await page.mouse.down();
+  // Boundary tests overshoot the photo while staying in the browser, where
+  // every engine can deliver the corresponding pointerup.
+  await page.mouse.move(endX,endY,{steps:3});await page.mouse.up();
+}
+
+test('all eight crop handles adjust their own edges, support keyboard input, and export the selected pixels',{timeout:90000},async t=>{
+  for(const width of [320,375,1365]) {
+    const {page,context,errors}=await open(t,'admin-settings',width);
+    const input=page.locator('#logoFileInput');
+    const file=await page.evaluate(()=>{
+      const canvas=document.createElement('canvas');canvas.width=800;canvas.height=600;
+      const ctx=canvas.getContext('2d'),pixels=ctx.createImageData(800,600);
+      for(let y=0;y<600;y++)for(let x=0;x<800;x++) {const i=(y*800+x)*4;pixels.data.set([Math.round(x/799*255),Math.round(y/599*255),100,255],i);}
+      ctx.putImageData(pixels,0,0);return canvas.toDataURL('image/png').split(',')[1];
+    });
+    await input.setInputFiles({name:'gradient.png',mimeType:'image/png',buffer:Buffer.from(file,'base64')});
+    await page.getByLabel('Crop shape').selectOption('free');
+    assert.equal(await page.locator('.tq-crop-handle').count(),8);
+    for(const handle of ['nw','n','ne','e','se','s','sw','w']) {
+      await page.getByRole('button',{name:'Reset',exact:true}).click();
+      const dx=handle.includes('w')?100:handle.includes('e')?-100:0,dy=handle.includes('n')?80:handle.includes('s')?-80:0;
+      const target=page.locator('[data-crop-handle="'+handle+'"]');
+      assert.match(await target.getAttribute('aria-label'),/^Resize crop /);
+      await dragCropHandle(page,handle,dx,dy);
+      const rect=await cropRect(page),expected={x:handle.includes('w')?100:0,y:handle.includes('n')?80:0,w:dx?700:800,h:dy?520:600};
+      for(const key of Object.keys(expected)) assert.ok(Math.abs(rect[key]-expected[key])<=2,JSON.stringify({width,handle,rect,expected}));
+      await target.focus();
+      const key=handle.includes('w')?'ArrowRight':handle.includes('e')?'ArrowLeft':handle==='n'?'ArrowDown':'ArrowUp';
+      await target.press(key);const after=await cropRect(page);
+      assert.ok(key.includes('Left')||key.includes('Right')?after.w<rect.w:after.h<rect.h,'keyboard adjusts '+handle);
+    }
+    await page.getByRole('button',{name:'Reset',exact:true}).click();
+    for(const [handle,dx,dy] of [['w',100,0],['e',-100,0],['n',0,80],['s',0,-80]]) await dragCropHandle(page,handle,dx,dy);
+    const selected=await cropRect(page);assert.ok(Math.abs(selected.w-600)<=2 && Math.abs(selected.h-440)<=2);
+    const geometry=await page.locator('.tq-image-cropper').evaluate(el=>{const r=el.getBoundingClientRect();return {left:r.left,right:r.right,scroll:el.scrollWidth,client:el.clientWidth};});
+    assert.ok(geometry.left>=0 && geometry.right<=width && geometry.scroll<=geometry.client+1,JSON.stringify(geometry));
+    if(width===375 && engine==='chromium') {fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});await page.screenshot({path:path.join(__dirname,'artifacts','crop-eight-handles-mobile.png')});}
+    await applyCrop(page);
+    const exported=await input.evaluate(async el=>{
+      const image=await createImageBitmap(el.files[0]),canvas=document.createElement('canvas');canvas.width=image.width;canvas.height=image.height;
+      const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);
+      return {w:image.width,h:image.height,first:Array.from(ctx.getImageData(0,0,1,1).data),last:Array.from(ctx.getImageData(image.width-1,image.height-1,1,1).data)};
+    });
+    assert.ok(Math.abs(exported.w-600)<=2 && Math.abs(exported.h-440)<=2,JSON.stringify(exported));
+    for(const [pixel,expected] of [[exported.first,[32,34,100,255]],[exported.last,[223,221,100,255]]]) pixel.forEach((value,index)=>assert.ok(Math.abs(value-expected[index])<=2,JSON.stringify({pixel,expected})));
+    assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('side handles move only their own edge and release Original ratio for dragging and keyboard input',{timeout:60000},async t=>{
+  for(const width of [320,1365]) {
+    const {page,context,errors}=await open(t,'admin-settings',width);
+    const input=page.locator('#logoFileInput');await input.setInputFiles(await imageFile(page));
+    for(const [handle,dx,dy,key] of [['n',0,80,'ArrowDown'],['e',-100,0,'ArrowLeft'],['s',0,-80,'ArrowUp'],['w',100,0,'ArrowRight']]) {
+      await page.getByLabel('Crop shape').selectOption('original');
+      const before=await cropRect(page);
+      const fixed=rect=>handle==='n'?[rect.x,rect.x+rect.w,rect.y+rect.h]:handle==='s'?[rect.x,rect.x+rect.w,rect.y]:handle==='e'?[rect.x,rect.y,rect.y+rect.h]:[rect.x+rect.w,rect.y,rect.y+rect.h];
+      await dragCropHandle(page,handle,dx,dy);
+      const after=await cropRect(page);
+      assert.ok(handle==='n'||handle==='s'?after.h<before.h:after.w<before.w,JSON.stringify({width,handle,before,after}));
+      fixed(after).forEach((edge,index)=>assert.ok(Math.abs(edge-fixed(before)[index])<.0001,JSON.stringify({width,handle,before,after})));
+      assert.equal(await page.getByLabel('Crop shape').inputValue(),'free');
+      await page.getByLabel('Crop shape').selectOption('original');
+      await page.locator('[data-crop-handle="'+handle+'"]').press(key);
+      const keyboard=await cropRect(page);
+      fixed(keyboard).forEach((edge,index)=>assert.ok(Math.abs(edge-fixed(before)[index])<.0001,JSON.stringify({width,handle,before,keyboard})));
+      assert.ok(handle==='n'||handle==='s'?keyboard.h<before.h:keyboard.w<before.w);
+      assert.equal(await page.getByLabel('Crop shape').inputValue(),'free');
+    }
+    const selected=await cropRect(page);await applyCrop(page);const exported=await fileInfo(page,'#logoFileInput');
+    assert.ok(Math.abs(exported.width-selected.w)<=1 && Math.abs(exported.height-selected.h)<=1,JSON.stringify({selected,exported}));
+    assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('corner resizing preserves original square and wide ratios and stays inside the photo',{timeout:90000},async t=>{
+  for(const width of [320,1365]) {
+    const {page,context,errors}=await open(t,'admin-settings',width);
+    const input=page.locator('#logoFileInput'),source=await imageFile(page);
+    for(const ratio of ['original','1','1.7777777778']) {
+      await input.setInputFiles(source);
+      await page.getByLabel('Crop shape').selectOption(ratio);
+      const shape=ratio==='original'?4/3:Number(ratio);
+      for(const handle of ['nw','ne','se','sw']) {
+        await page.getByRole('button',{name:'Reset',exact:true}).click();
+        const before=await cropRect(page),dx=handle.includes('w')?100:handle.includes('e')?-100:0,dy=handle.includes('n')?80:handle.includes('s')?-80:0;
+        assert.ok(Math.abs(before.w-(ratio==='1'?600:800))<.01 && Math.abs(before.h-(ratio==='1.7777777778'?450:600))<.01,'Reset restores the complete selected shape');
+        await dragCropHandle(page,handle,dx,dy);
+        const after=await cropRect(page);
+        assert.ok(after.w<before.w && after.h<before.h,JSON.stringify({width,ratio,handle,before,after}));
+        assert.ok(Math.abs(after.w/after.h-shape)<.0001);
+        assert.equal(await page.getByLabel('Crop shape').inputValue(),ratio);
+        await dragCropHandle(page,handle,-dx*30,-dy*30);
+        const clamped=await cropRect(page);
+        assert.ok(clamped.x>=-.01 && clamped.y>=-.01 && clamped.x+clamped.w<=800.01 && clamped.y+clamped.h<=600.01,JSON.stringify({width,ratio,handle,clamped}));
+        assert.ok(Math.abs(clamped.w/clamped.h-shape)<.0001);
+      }
+      await page.getByRole('button',{name:'Reset',exact:true}).click();
+      await dragCropHandle(page,'se',-120,-80);
+      const selected=await cropRect(page);await applyCrop(page);const exported=await fileInfo(page,'#logoFileInput');
+      assert.ok(Math.abs(exported.width-selected.w)<=1 && Math.abs(exported.height-selected.h)<=1,JSON.stringify({width,ratio,selected,exported}));
+      assert.ok(Math.abs(exported.width/exported.height-shape)<.005,'bottom-right exports retain the selected proportions');
+    }
+    assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('a crop drag released outside the window cannot capture the next Reset click',{timeout:30000},async t=>{
+  const {page,errors}=await open(t,'admin-settings',375);
+  await page.locator('#logoFileInput').setInputFiles(await imageFile(page));
+  await page.getByLabel('Crop shape').selectOption('1');
+  await dragCropHandle(page,'ne',-100,80);
+  const handle=await page.locator('[data-crop-handle="ne"]').boundingBox();assert.ok(handle);
+  await page.mouse.move(Math.round(handle.x+handle.width/2),Math.round(handle.y+handle.height/2));await page.mouse.down();
+  await page.mouse.move(1375,-1000);await page.mouse.up();
+  await page.getByRole('button',{name:'Reset',exact:true}).click();
+  assert.deepEqual(await cropRect(page),{x:100,y:0,w:600,h:600});
+  await page.getByRole('button',{name:'Cancel',exact:true}).click();assert.deepEqual(errors,[]);
+});
 
 test('crop shapes change real pixels and stage only the confirmed logo without an early upload',{timeout:60000},async t=>{
   for(const [width,mode] of [[320,'lite'],[1365,'full'],[375,'reduced']]) {
@@ -104,7 +240,7 @@ test('free crop supports touch resizing, preserves transparency and keeps native
   await page.evaluate(()=>bootstrap.Modal.getOrCreateInstance(document.querySelector('#registerVehicleModal')).show());
   const input=page.locator('#reg_veh_photo_input');await input.setInputFiles(await imageFile(page,800,600,true));
   await page.getByLabel('Crop shape').selectOption('free');
-  const box=page.locator('.tq-crop-selection'),handle=page.getByRole('button',{name:'Resize crop area'});
+  const box=page.locator('.tq-crop-selection'),handle=page.getByRole('button',{name:'Resize crop bottom-right corner'});
   const bounds=await handle.boundingBox();assert.ok(bounds);
   if(engine==='chromium') {
     const touch=await context.newCDPSession(page);
@@ -294,6 +430,53 @@ test('upload thumbnails open above their edit dialogs without submitting or disc
     }),editorPosition,'closing retains every scroll position inside the editor');
     assert.match(await page.locator('#'+inputId).evaluate(el=>el.files[0].name),/-cropped\.png$/);
     assert.equal(uploads.length,before,'viewing never submits the upload');assert.deepEqual(errors,[]);await context.close();
+  }
+});
+
+test('Settings logo and login artwork open their current saved or staged image without triggering an upload',{timeout:60000},async t=>{
+  for(const width of [375,1366]) {
+    const {page,context,errors}=await open(t,'admin-settings',width),before=uploads.length;
+    let filePickers=0;page.on('filechooser',()=>filePickers++);
+    const viewer=page.locator('dialog.tq-image-viewer');
+    async function preview(id,keyboard=false) {
+      const thumbnail=page.locator('#'+id);await thumbnail.scrollIntoViewIfNeeded();
+      const source=await thumbnail.evaluate(el=>el.src);
+      if(keyboard) {await thumbnail.focus();await thumbnail.press('Enter');} else await thumbnail.click();
+      await viewer.waitFor({state:'visible'});await readyPhoto(viewer);
+      assert.equal(await viewer.locator('img').getAttribute('src'),source);
+      assert.equal(await viewer.locator('img').evaluate(el=>getComputedStyle(el).borderRadius),'0px','branding images are not masked into an avatar circle');
+      const geometry=await viewer.locator('img').evaluate(el=>{const box=el.getBoundingClientRect();return {ratio:box.width/box.height,natural:el.naturalWidth/el.naturalHeight,left:box.left,right:box.right,top:box.top,bottom:box.bottom,width:innerWidth,height:innerHeight};});
+      assert.ok(Math.abs(geometry.ratio-geometry.natural)<.001,'the preview preserves the saved image proportions');
+      assert.ok(geometry.left>=0 && geometry.right<=geometry.width && geometry.top>=0 && geometry.bottom<=geometry.height,JSON.stringify(geometry));
+      if(width===375 && id==='logoPreviewImg' && source.endsWith('/fixture.svg') && engine==='chromium') {
+        fs.mkdirSync(path.join(__dirname,'artifacts'),{recursive:true});
+        await page.screenshot({path:path.join(__dirname,'artifacts','settings-logo-viewer-375.png')});
+      }
+      await viewer.getByRole('button',{name:'Zoom in',exact:true}).click();
+      assert.equal(await viewer.locator('.tq-viewer-stage').getAttribute('data-zoomed'),'');
+      await viewer.getByRole('button',{name:'Zoom out',exact:true}).click();
+      if(keyboard) await page.keyboard.press('Escape');else await viewer.getByRole('button',{name:'Close',exact:true}).click();
+      await viewer.waitFor({state:'hidden'});
+      assert.equal(await thumbnail.evaluate(el=>el===document.activeElement),true,'closing returns focus to the saved preview');
+      assert.equal(filePickers,0);assert.equal(uploads.length,before,'viewing cannot save media');
+    }
+    assert.equal(await page.locator('#loginCardActiveImg').getAttribute('src'),await page.locator('#logoPreviewImg').getAttribute('src'),'default login artwork uses the system logo');
+    await preview('logoPreviewImg');await preview('loginCardActiveImg',true);
+    // Live branding and saved custom artwork replace src on the existing nodes.
+    await page.locator('#logoPreviewImg').evaluate(el=>el.src='/fixture-updated.svg');
+    await page.locator('#loginCardActiveImg').evaluate(el=>el.src='/fixture-custom.svg');
+    await preview('logoPreviewImg',true);await preview('loginCardActiveImg');
+    for(const [inputId,previewId] of [['logoFileInput','logoPreviewImg'],['loginCardFileInput','loginCardActiveImg']]) {
+      await page.locator('#'+inputId).setInputFiles(await imageFile(page,800,450));
+      await page.getByRole('button',{name:'Use original',exact:true}).click();
+      await page.getByRole('dialog',{name:'Crop image'}).waitFor({state:'hidden'});
+      await page.waitForFunction(id=>document.getElementById(id).getAttribute('src').startsWith('blob:'),previewId);
+      await preview(previewId,true);
+      assert.equal(await page.locator('#'+inputId).evaluate(el=>el.files[0].name),'photo.png','viewing keeps the staged upload intact');
+    }
+    assert.equal(await page.locator('#btnSaveLogo').isEnabled(),true);
+    assert.equal(await page.locator('#btnSaveLoginCard').isEnabled(),true);
+    assert.deepEqual(errors,[]);await context.close();
   }
 });
 

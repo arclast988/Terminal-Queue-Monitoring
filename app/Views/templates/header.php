@@ -548,6 +548,7 @@
             var headerFrame = null;
             var lastWidth = null;
             var lastHeight = null;
+            var lastVisualHeight = null;
             function measureHeaderHeight() {
                 headerFrame = null;
                 var hdr = document.getElementById('site-header');
@@ -561,6 +562,10 @@
                     var maxCap = isMobile ? 82 : 84;
                     var h = Math.min(Math.max(bounds.height, 48), maxCap);
                     // Read layout once, then write only values that changed.
+                    if (bounds.height !== lastVisualHeight) {
+                        document.documentElement.style.setProperty('--site-header-visual-height', bounds.height + 'px');
+                        lastVisualHeight = bounds.height;
+                    }
                     if (width !== lastWidth) {
                         document.documentElement.style.setProperty('--tq-viewport-width', width + 'px');
                         lastWidth = width;

@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <?= $this->include('templates/header') ?>
 
 
@@ -125,11 +126,11 @@ select.form-select {
                         </button>
                         <span id="plate-validation-icon" class="plate-validation-icon" style="display: none;"></span>
                     </div>
-                    <div class="plate-validation-slot">
+                    <div class="form-text-modern">Unique identifier (required)</div>
+                    <div class="plate-validation-slot" hidden>
                         <div class="plate-validation-feedback plate-validation-size" aria-hidden="true"><i class="bi bi-exclamation-triangle me-1"></i>This plate number is already registered. Please enter a different plate number.</div>
                         <div id="plate-validation-feedback" class="plate-validation-feedback" style="display: none;"></div>
                     </div>
-                    <div class="form-text-modern">Unique identifier (required)</div>
                 </div>
                 <div class="col-md-4 mb-3">
                     <label for="operator_name" class="form-label-modern">Operator Name <span class="text-danger">*</span></label>
@@ -196,30 +197,18 @@ select.form-select {
                     </div>
                     <div class="form-text-modern">Filtered by selected vehicle type</div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="status" class="form-label-modern">Status <span class="text-danger">*</span></label>
-                    <div class="position-relative">
-                        <select class="form-select select-modern" id="status" name="status" required>
-                            <option value="active" <?= (old('status') ?? $vehicle['status']) == 'active' ? 'selected' : '' ?>>Active</option>
-                            <option value="maintenance" <?= (old('status') ?? $vehicle['status']) == 'maintenance' ? 'selected' : '' ?>>Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="form-text-modern">Accessible to Admin and Super Admin</div>
-                </div>
             </div>
 
             <div class="row g-3">
-                <div class="col-12 col-md-6 vehicle-current-order-field">
-                    <label for="current_dispatch_position" class="form-label-modern">Today's route order (#)</label>
-                    <input type="text" class="input-modern" id="current_dispatch_position"
-                        value="<?= esc((string) ($vehicle['dispatch_position'] ?? 'Not in active route order')) ?>"
-                        readonly aria-describedby="current-dispatch-order-help">
-                    <div id="current-dispatch-order-help" class="form-text-modern">
-                        Matches the # in Vehicle Register for the saved route. Changes as vehicles depart.
-                    </div>
-                </div>
-                <?= view('admin/vehicles/dispatch-order-field', ['dispatchOrder' => $vehicle['dispatch_order'] ?? '']) ?>
+                <?= view('admin/vehicles/dispatch-order-field', [
+                    'dispatchOrder' => $vehicle['dispatch_order'] ?? '',
+                    'dispatchRouteId' => $vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '',
+                    'dispatchOrderStatus' => $vehicle['status'],
+                    'routeDispatchOrders' => $routeDispatchOrders ?? [],
+                    'currentDispatchPosition' => $vehicle['dispatch_position'] ?? null,
+                ]) ?>
             </div>
+            <input type="hidden" id="sync_current_order" name="sync_current_order" value="<?= esc((string) (old('sync_current_order') ?? '0')) ?>">
             <div class="d-flex flex-wrap gap-2 mt-4">
                 <button type="submit" class="btn-modern btn-modern-primary">
                     <i class="bi bi-check-lg"></i> Update Vehicle
@@ -332,6 +321,73 @@ document.addEventListener('DOMContentLoaded', function() {
         updateEditTypeFallback(typeSelect);
     }
     <?php endif; ?>
+});
+
+// Keep the proposed order tied to the selected destination, rather than the saved route.
+document.addEventListener('DOMContentLoaded', function() {
+    var routeSelect = document.getElementById('route_id');
+    var startingOrder = document.getElementById('dispatch_order');
+    var syncOrder = document.getElementById('sync_current_order');
+    var help = document.getElementById('dispatch-order-help');
+    var currentNote = document.getElementById('vehicle-current-order-note');
+    var activeHelp = help ? help.textContent.trim() : '';
+    var routeOrders = <?= json_encode($routeDispatchOrders ?? [], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    var savedRouteId = <?= json_encode((string) ($vehicle['default_route_id'] ?? $vehicle['route_id'] ?? '')) ?>;
+    var savedStatus = <?= json_encode((string) $vehicle['status']) ?>;
+    var savedCurrentOrder = <?= json_encode((string) ($vehicle['dispatch_position'] ?? '')) ?>;
+    var savedStartingOrder = <?= json_encode((string) ($vehicle['dispatch_order'] ?? '')) ?>;
+    if (!routeSelect || !startingOrder || !syncOrder) return;
+
+    function scopeOf(routeId) {
+        return routeOrders[routeId] ? routeOrders[routeId].route_key : String(routeId);
+    }
+
+    var lastScope = scopeOf(routeSelect.value);
+
+    function updateHelp() {
+        var active = savedStatus === 'active' && routeSelect.value !== '';
+        if (help) {
+            help.textContent = active
+                ? activeHelp
+                : 'Sets the daily starting position. Only active vehicles have a place in today\'s lineup. Leave blank to put this vehicle last.';
+        }
+        if (currentNote) {
+            currentNote.hidden = !(active && savedStatus === 'active' && syncOrder.value === '0'
+                && scopeOf(routeSelect.value) === scopeOf(savedRouteId)
+                && savedCurrentOrder !== '' && savedCurrentOrder !== savedStartingOrder);
+        }
+    }
+
+    function updateRouteOrder() {
+        var scope = scopeOf(routeSelect.value);
+        var status = savedStatus;
+        if (scope === lastScope) return;
+        lastScope = scope;
+
+        if (!routeSelect.value) {
+            startingOrder.value = '';
+            syncOrder.value = '1';
+        } else if (scope === scopeOf(savedRouteId) && status === savedStatus) {
+            startingOrder.value = savedStartingOrder;
+            syncOrder.value = '0';
+        } else if (routeOrders[routeSelect.value]) {
+            var counts = routeOrders[routeSelect.value];
+            var active = status === 'active';
+            var position = Number(active ? counts.active_count : counts.total_count) + 1;
+            startingOrder.value = String(position);
+            syncOrder.value = '1';
+        }
+        updateHelp();
+    }
+
+    function syncManualOrder() {
+        syncOrder.value = '1';
+        updateHelp();
+    }
+
+    routeSelect.addEventListener('change', updateRouteOrder);
+    startingOrder.addEventListener('input', syncManualOrder);
+    updateHelp();
 });
 
 function previewEditVehPhoto(input) {
@@ -466,14 +522,21 @@ function updateEditTypeFallback(select) {
         display: grid;
         min-width: 0;
     }
+    .plate-validation-slot[hidden] {
+        display: none !important;
+    }
     .plate-validation-slot > .plate-validation-feedback {
         grid-area: 1 / 1;
         align-self: start;
     }
-    .plate-validation-size {
-        visibility: hidden;
-        pointer-events: none;
+    .plate-validation-slot > .plate-validation-size {
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
         user-select: none;
+    }
+    .plate-validation-slot:has(.feedback-success) > .plate-validation-size {
+        display: none;
     }
     .plate-validation-feedback {
         position: relative !important;
@@ -562,6 +625,8 @@ function updateEditTypeFallback(select) {
         var input = document.getElementById('plate_number');
         var icon = document.getElementById('plate-validation-icon');
         var feedback = document.getElementById('plate-validation-feedback');
+        var feedbackSlot = feedback.closest('.plate-validation-slot');
+        if (feedbackSlot) feedbackSlot.hidden = plate === '' || plate === originalPlate;
 
         if (plateCheckTimer) clearTimeout(plateCheckTimer);
         if (plateCheckXhr) { plateCheckXhr.abort(); plateCheckXhr = null; }
@@ -659,6 +724,30 @@ function updateEditTypeFallback(select) {
     document.addEventListener('DOMContentLoaded', function() {
         var form = document.getElementById('editVehicleForm');
         if (form) {
+            var feedbackSlot = form.querySelector('.plate-validation-slot');
+            var feedbackPointer = null, feedbackFrame = null;
+            function releaseFeedbackSpace() {
+                if (feedbackFrame !== null) window.cancelAnimationFrame(feedbackFrame);
+                feedbackFrame = null; feedbackPointer = null;
+                if (feedbackSlot) feedbackSlot.style.minHeight = '';
+            }
+            // Let a settled success use one line. If its response arrives while
+            // another field is being pressed, wait until that click completes.
+            form.addEventListener('pointerdown', function(event) {
+                releaseFeedbackSpace();
+                if (feedbackSlot && !feedbackSlot.hidden) {
+                    feedbackSlot.style.minHeight = feedbackSlot.getBoundingClientRect().height + 'px';
+                    feedbackPointer = event.pointerId;
+                }
+            }, true);
+            document.addEventListener('pointerup', function(event) {
+                if (event.pointerId === feedbackPointer) feedbackFrame = window.requestAnimationFrame(releaseFeedbackSpace);
+            }, true);
+            document.addEventListener('pointercancel', function(event) {
+                if (event.pointerId === feedbackPointer) releaseFeedbackSpace();
+            }, true);
+            form.addEventListener('reset', releaseFeedbackSpace);
+            window.addEventListener('pagehide', releaseFeedbackSpace);
             form.addEventListener('submit', function(e) {
                 if (!plateIsValid) {
                     e.preventDefault();

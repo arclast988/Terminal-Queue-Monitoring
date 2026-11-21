@@ -1,3 +1,10 @@
+<?php
+$vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []);
+$addFareHasErrors = old('form_action') === 'assign_fare'
+    && (session()->getFlashdata('error') || session()->getFlashdata('errors'));
+$addDiscountHasErrors = old('form_action') === 'create_discount'
+    && (session()->getFlashdata('error') || session()->getFlashdata('errors'));
+?>
 <?= $this->include('templates/header') ?>
 
 
@@ -351,6 +358,9 @@ body.admin-theme .fare-search-group:focus-within {
     width: 0;
     height: 0;
 }
+#editFareModal .vt-select-chip { position: relative; }
+#editFareModal .vt-chip-checkbox { width: 1px; height: 1px; }
+#editFareModal .vt-select-chip:focus-within .vt-chip-body { outline: 2px solid #2563eb; outline-offset: 2px; }
 .vt-chip-body {
     display: inline-flex;
     align-items: center;
@@ -526,7 +536,7 @@ $fareTypes = array_map(static fn(array $type) => [
     'key' => $type['slug'],
     'type' => $type['slug'],
     'name' => $type['name'],
-    'label' => $type['name'] . ' Routes',
+    'label' => strtoupper($type['name']) . ' ROUTES',
     'color' => !empty($type['color']) ? $type['color'] : vehicle_type_color($type['slug']),
     'icon' => !empty($type['icon']) ? $type['icon'] : vehicle_type_icon($type['slug']),
     'bi_icon' => vehicle_type_bi_icon($type['slug'], $type['icon'] ?? null),
@@ -788,8 +798,8 @@ $isManager = $isAdmin;
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <?php if ((session()->getFlashdata('error') || session()->getFlashdata('errors')) && old('destination')): ?>
-        <div class="alert alert-danger py-2 px-3 small mb-3" style="border-radius: 8px;">
+        <?php if ($addFareHasErrors): ?>
+        <div class="alert alert-danger py-2 px-3 small mb-3" role="alert" style="border-radius: 8px;">
           <i class="fas fa-exclamation-triangle me-1"></i>
           <?= esc(session()->getFlashdata('error') ?? (is_array(session()->getFlashdata('errors')) ? implode(', ', session()->getFlashdata('errors')) : '')) ?>
         </div>
@@ -797,6 +807,7 @@ $isManager = $isAdmin;
 
         <form id="addFareForm" action="<?= base_url('admin/routes/store') ?>" method="post">
           <?= csrf_field() ?>
+          <input type="hidden" name="form_action" value="assign_fare">
 
           <?php $onlyTerminal = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
@@ -806,13 +817,14 @@ $isManager = $isAdmin;
               <input type="text" id="add_fare_terminal_name" class="form-control" value="<?= esc($singleTerminal['name']) ?>" readonly style="background-color: var(--bs-secondary-bg, #e9ecef); cursor: not-allowed;">
               <input type="hidden" name="terminal_id" id="add_fare_terminal_id" value="<?= $singleTerminal['id'] ?>">
             <?php else: ?>
-              <select name="terminal_id" id="add_fare_terminal_id" class="form-select" required>
+              <select name="terminal_id" id="add_fare_terminal_id" class="form-select" required aria-describedby="add_fare_terminal_error">
                 <option value="">— Select Terminal —</option>
                 <?php foreach ($terminals as $t): ?>
                   <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
                 <?php endforeach; ?>
               </select>
             <?php endif; ?>
+            <div id="add_fare_terminal_error" class="invalid-feedback" role="alert"></div>
           </div>
 
           <!-- Destination Route Card (Relocated with updated label and options) -->
@@ -821,7 +833,7 @@ $isManager = $isAdmin;
               <span><i class="bi bi-geo-alt-fill me-1"></i>Destination Route:</span>
               <span class="badge bg-light text-muted border px-2 py-0.5" style="font-size: 11px; font-weight: 500;">Existing Routes Only</span>
             </label>
-            <select name="destination" id="add_destination" class="form-select form-select-sm" required>
+            <select name="destination" id="add_destination" class="form-select form-select-sm" required aria-describedby="add_destination_error">
               <option value="">— Select an existing route destination —</option>
               <?php foreach (($availableDestinations ?? []) as $destGroup): ?>
                 <option value="<?= esc($destGroup['destination']) ?>"
@@ -832,6 +844,7 @@ $isManager = $isAdmin;
                 </option>
               <?php endforeach; ?>
             </select>
+            <div id="add_destination_error" class="invalid-feedback" role="alert"></div>
             <!-- Compact inline warning / feedback container below destination select -->
             <div id="add_fare_route_feedback" style="display: none;"></div>
           </div>
@@ -890,6 +903,11 @@ $isManager = $isAdmin;
       <div class="modal-body">
         <form id="editFareForm" method="post" data-no-change-guard>
           <?= csrf_field() ?>
+          <input type="hidden" name="form_action" value="update_fares">
+          <input type="hidden" name="edit_source_id" id="edit_fare_source_id" value="">
+          <?php if (old('form_action') === 'update_fares' && (session()->getFlashdata('error') || session()->getFlashdata('errors'))): ?>
+            <div class="alert alert-danger py-2 small" role="alert"><?= esc(session()->getFlashdata('error') ?? implode(' ', (array) session()->getFlashdata('errors'))) ?></div>
+          <?php endif; ?>
 
           <?php $onlyTerminalEdit = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
@@ -924,8 +942,9 @@ $isManager = $isAdmin;
           </div>
 
           <div class="mb-4">
-            <label class="form-label fw-semibold mb-2">Vehicle Type</label>
-            <div class="vt-chip-group">
+            <label class="form-label fw-semibold mb-2">Vehicle Types</label>
+            <div class="form-text mb-2" id="editFareVehicleTypesHelp">Apply this amount to the selected vehicle types for this destination. Other fares stay as they are.</div>
+            <div class="vt-chip-group" id="editFareVehicleTypes">
               <?php foreach (($vehicleTypes ?? []) as $vehicleType): ?>
                 <?php
                     $vtSlug = $vehicleType['slug'];
@@ -933,7 +952,7 @@ $isManager = $isAdmin;
                     $vtIco  = !empty($vehicleType['icon']) ? $vehicleType['icon'] : vehicle_type_icon($vtSlug);
                 ?>
                 <label class="vt-select-chip" style="--vt-color: <?= esc($vtCol) ?>;">
-                  <input type="radio" name="vehicle_type" id="edit_vt_<?= esc($vtSlug) ?>" value="<?= esc($vtSlug) ?>" class="vt-chip-radio">
+                  <input type="checkbox" name="vehicle_types[]" id="edit_vt_<?= esc($vtSlug) ?>" value="<?= esc($vtSlug) ?>" class="vt-chip-checkbox" aria-describedby="editFareVehicleTypesHelp editFareVehicleTypesError">
                   <span class="vt-chip-body">
                     <i class="fas <?= esc($vtIco) ?> vt-chip-icon" style="color: <?= esc($vtCol) ?>;"></i>
                     <span class="vt-chip-name"><?= esc($vehicleType['name']) ?></span>
@@ -942,6 +961,7 @@ $isManager = $isAdmin;
                 </label>
               <?php endforeach; ?>
             </div>
+            <div id="editFareVehicleTypesError" class="text-danger mt-2" hidden role="alert">Select at least one vehicle type to update its fare.</div>
           </div>
 
           <div class="d-grid mt-2">
@@ -1004,8 +1024,15 @@ $isManager = $isAdmin;
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
+        <?php if ($addDiscountHasErrors): ?>
+        <div class="alert alert-danger py-2 px-3 small mb-3" role="alert" style="border-radius: 8px;">
+          <i class="fas fa-exclamation-triangle me-1"></i>
+          <?= esc(session()->getFlashdata('error') ?? (is_array(session()->getFlashdata('errors')) ? implode(', ', session()->getFlashdata('errors')) : '')) ?>
+        </div>
+        <?php endif; ?>
         <form action="<?= base_url('admin/routes/discounts/store') ?>" method="post" id="addDiscountForm">
           <?= csrf_field() ?>
+          <input type="hidden" name="form_action" value="create_discount">
           <?php $onlyTerminalDisc = (is_array($terminals) && count($terminals) === 1); ?>
           <div class="mb-3">
             <label for="<?= $onlyTerminalDisc ? 'add_terminal_disc_name' : 'add_terminal_id' ?>" class="form-label fw-semibold">Terminal</label>
@@ -1017,25 +1044,20 @@ $isManager = $isAdmin;
               <select name="terminal_id" id="add_terminal_id" class="form-select" required>
                 <option value="">— Select Terminal —</option>
                 <?php foreach ($terminals as $t): ?>
-                  <option value="<?= $t['id'] ?>"><?= esc($t['name']) ?></option>
+                  <option value="<?= $t['id'] ?>" <?= $addDiscountHasErrors && (string) old('terminal_id') === (string) $t['id'] ? 'selected' : '' ?>><?= esc($t['name']) ?></option>
                 <?php endforeach; ?>
               </select>
             <?php endif; ?>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Discount Label</label>
-            <input type="text" name="label" id="add_disc_label" class="form-control" placeholder="e.g. PWD Discount, Military Discount" required maxlength="100">
+            <label for="add_disc_label" class="form-label fw-semibold">Discount Label</label>
+            <input type="text" name="label" id="add_disc_label" class="form-control" value="<?= esc($addDiscountHasErrors ? old('label') : '') ?>" placeholder="e.g. PWD Discount, Military Discount" required maxlength="100">
             <div class="form-text">The display name shown to users.</div>
           </div>
           <div class="mb-3">
-            <label class="form-label fw-semibold">Type Key</label>
-            <input type="text" name="type" id="add_disc_type" class="form-control" placeholder="e.g. pwd, senior_citizen, military" required maxlength="50" pattern="[a-z0-9_]+" title="Only lowercase letters, numbers, and underscores">
-            <div class="form-text">Auto-generated from label. Use lowercase with underscores (e.g. <code>senior_citizen</code>).</div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Discount Percentage (%)</label>
+            <label for="add_disc_percent" class="form-label fw-semibold">Discount Percentage (%)</label>
             <div class="input-group">
-              <input type="number" name="discount_percent" class="form-control" step="0.01" min="0" max="100" placeholder="e.g. 20" required>
+              <input type="number" name="discount_percent" id="add_disc_percent" class="form-control" value="<?= esc($addDiscountHasErrors ? old('discount_percent') : '') ?>" step="0.01" min="0" max="100" placeholder="e.g. 20" required>
               <span class="input-group-text">%</span>
             </div>
             <div class="form-text">Enter a value between 0 and 100.</div>
@@ -1325,11 +1347,17 @@ function validateAddFareForm() {
 
     if (!feedbackEl) return true;
 
+    const selectedDestination = destSelect ? destSelect.options[destSelect.selectedIndex] : null;
+    if (dest && (!selectedDestination || selectedDestination.disabled
+        || (terminalId && selectedDestination.getAttribute('data-terminal') !== terminalId))) {
+        showAddFareFieldError(destSelect, 'Select a destination route for the selected terminal.');
+        return false;
+    }
+
     // No destination selected yet
     if (!dest) {
         feedbackEl.style.display = 'none';
         feedbackEl.innerHTML = '';
-        if (destSelect) destSelect.classList.remove('is-invalid');
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('opacity-50');
@@ -1481,6 +1509,7 @@ function switchToEditFare(routeId) {
         var editForm = document.getElementById('editFareForm');
         if (editForm && routeId) {
             editForm.action = '<?= base_url('admin/routes/update') ?>/' + routeId;
+            document.getElementById('edit_fare_source_id').value = routeId;
         }
         if (foundRoute) {
             if (document.getElementById('edit_fare_destination')) {
@@ -1492,10 +1521,7 @@ function switchToEditFare(routeId) {
             if (document.getElementById('edit_fare_terminal')) {
                 document.getElementById('edit_fare_terminal').value = foundRoute.terminal_id || '';
             }
-            if (editForm) {
-                var radios = editForm.querySelectorAll('input[name="vehicle_type"]');
-                radios.forEach(function(r) { r.checked = (r.value === foundRoute.vehicle_type); });
-            }
+            selectEditFareTypes([foundRoute.vehicle_type]);
         } else {
             var editBtn = document.querySelector('[data-bs-target="#editFareModal"][data-id="' + routeId + '"]');
             if (editBtn) populateFareModal(editBtn);
@@ -1535,11 +1561,31 @@ function switchToEditFare(routeId) {
 }
 
 const addForm = document.getElementById('addFareForm');
+function showAddFareFieldError(field, message) {
+    if (!field) return;
+    const errorId = field.id === 'add_fare_terminal_id' ? 'add_fare_terminal_error' : 'add_destination_error';
+    const errorEl = document.getElementById(errorId);
+    if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.toggle('d-block', Boolean(message));
+    }
+    field.classList.toggle('is-invalid', Boolean(message));
+    const visibleInput = document.getElementById(field.id + '_autocomplete_search');
+    if (visibleInput) {
+        visibleInput.classList.toggle('is-invalid', Boolean(message));
+        visibleInput.setAttribute('aria-invalid', message ? 'true' : 'false');
+    }
+}
+
 if (addForm) {
     const destSelect = document.getElementById('add_destination');
     if (destSelect) {
-        destSelect.addEventListener('change', validateAddFareForm);
-        destSelect.addEventListener('input', validateAddFareForm);
+        const validateDestination = function() {
+            showAddFareFieldError(destSelect, '');
+            validateAddFareForm();
+        };
+        destSelect.addEventListener('change', validateDestination);
+        destSelect.addEventListener('input', validateDestination);
     }
 
     const typeBoxes = addForm.querySelectorAll('input[name="vehicle_types[]"]');
@@ -1550,10 +1596,29 @@ if (addForm) {
     const terminalSelect = addForm.querySelector('select[name="terminal_id"]');
     if (terminalSelect) {
         terminalSelect.addEventListener('change', function() {
+            showAddFareFieldError(terminalSelect, '');
             filterAddDestinationOptions();
             validateAddFareForm();
         });
     }
+
+    ['add_fare_terminal_id', 'add_destination'].forEach(function(id) {
+        const field = document.getElementById(id);
+        if (!field) return;
+        field.addEventListener('invalid', function(e) {
+            e.preventDefault();
+            showAddFareFieldError(field, id === 'add_fare_terminal_id'
+                ? 'Select the terminal for this fare.'
+                : 'Select a destination route from the list for this terminal.');
+            setTimeout(function() {
+                const firstInvalid = addForm.querySelector('select.is-invalid');
+                if (firstInvalid === field) {
+                    const visibleInput = document.getElementById(id + '_autocomplete_search');
+                    (visibleInput || field).focus();
+                }
+            }, 0);
+        });
+    });
 
     addForm.addEventListener('submit', function(e) {
         if (!validateAddFareForm()) {
@@ -1565,9 +1630,26 @@ if (addForm) {
                 void feedback.offsetWidth;
                 feedback.classList.add('gl-shake');
             }
+            const invalidField = addForm.querySelector('select.is-invalid');
+            if (invalidField) (document.getElementById(invalidField.id + '_autocomplete_search') || invalidField).focus();
             return false;
         }
     });
+}
+
+function selectAddFareDestination(destination, terminalId) {
+    const destSelect = document.getElementById('add_destination');
+    if (!destSelect) return;
+    const cleanDestination = String(destination || '').trim().toUpperCase();
+    const cleanTerminal = String(terminalId || '').trim();
+    const match = Array.from(destSelect.options).findIndex(function(option) {
+        return Boolean(cleanDestination) && !option.disabled && option.style.display !== 'none'
+            && (!cleanTerminal || option.getAttribute('data-terminal') === cleanTerminal)
+            && String(option.getAttribute('data-destination') || option.value).trim().toUpperCase() === cleanDestination;
+    });
+    destSelect.selectedIndex = match >= 0 ? match : 0;
+    destSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    syncAddDestinationUI();
 }
 
 function filterAddDestinationOptions() {
@@ -1698,6 +1780,8 @@ if (addFareModalEl) {
             var cbs = addForm.querySelectorAll('input[name="vehicle_types[]"]');
             cbs.forEach(function(cb) { cb.checked = false; });
         }
+        showAddFareFieldError(document.getElementById('add_fare_terminal_id'), '');
+        showAddFareFieldError(document.getElementById('add_destination'), '');
         var destSelect = document.getElementById('add_destination');
         if (destSelect) {
             destSelect.classList.remove('is-invalid');
@@ -1749,6 +1833,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const termInput = document.getElementById('add_fare_terminal_id');
                 if (termInput) {
                     termInput.value = targetTerm;
+                    if (typeof termInput.syncAutocompleteValue === 'function') termInput.syncAutocompleteValue();
                     filterAddDestinationOptions();
                 }
             }
@@ -1759,22 +1844,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             if (targetDest) {
-                const destSelect = document.getElementById('add_destination');
-                if (destSelect) {
-                    let matched = false;
-                    for (let i = 0; i < destSelect.options.length; i++) {
-                        const optVal = (destSelect.options[i].value || '').trim().toUpperCase();
-                        const optDest = (destSelect.options[i].getAttribute('data-destination') || '').trim().toUpperCase();
-                        if (optVal === targetDest.toUpperCase() || optDest === targetDest.toUpperCase()) {
-                            destSelect.selectedIndex = i;
-                            matched = true;
-                            break;
-                        }
-                    }
-                    if (matched) {
-                        destSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                }
+                selectAddFareDestination(targetDest, targetTerm);
             }
 
             // Focus once after the modal is stable on desktop. Touch devices
@@ -1796,20 +1866,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-<?php if ((session()->getFlashdata('error') || session()->getFlashdata('errors')) && old('destination')): ?>
+<?php if ((session()->getFlashdata('error') || session()->getFlashdata('errors')) && old('form_action') === 'update_fares' && old('edit_source_id')): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('editFareForm');
+    var modalEl = document.getElementById('editFareModal');
+    if (!form || !modalEl || !window.bootstrap) return;
+    var sourceId = <?= json_encode((string) old('edit_source_id'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    form.action = '<?= base_url('admin/routes/update') ?>/' + encodeURIComponent(sourceId);
+    document.getElementById('edit_fare_source_id').value = sourceId;
+    document.getElementById('edit_fare_destination').value = <?= json_encode((string) old('destination'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    document.getElementById('edit_fare_amount').value = <?= json_encode((string) old('fare')) ?>;
+    document.getElementById('edit_fare_terminal').value = <?= json_encode((string) old('terminal_id')) ?>;
+    selectEditFareTypes(<?= json_encode((array) (old('vehicle_types') ?? []), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>);
+    bootstrap.Modal.getOrCreateInstance(modalEl).show();
+});
+<?php elseif ($addFareHasErrors): ?>
 document.addEventListener('DOMContentLoaded', function() {
     var modalEl = document.getElementById('addFareModal');
     if (modalEl && window.bootstrap) {
-        var modal = new bootstrap.Modal(modalEl);
-        modal.show();
-        var destInput = document.getElementById('add_destination');
-        if (destInput) {
-            destInput.value = <?= json_encode(old('destination')) ?>;
-            destInput.dispatchEvent(new Event('change', { bubbles: true }));
-            syncAddDestinationUI();
-        }
         var fareInput = document.querySelector('#addFareForm input[name="fare"]');
-        if (fareInput && <?= json_encode(old('fare')) ?>) {
+        if (fareInput) {
             fareInput.value = <?= json_encode(old('fare')) ?>;
         }
         var oldVehicleTypes = <?= json_encode(old('vehicle_types') ?? (old('vehicle_type') ? [old('vehicle_type')] : null)) ?>;
@@ -1819,18 +1895,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 cb.checked = oldVehicleTypes.includes(cb.value);
             });
         }
-        var oldTerminalId = <?= json_encode(old('terminal_id')) ?>;
-        if (oldTerminalId) {
-            var t = document.getElementById('add_fare_terminal_id');
-            if (t) t.value = oldTerminalId;
+        var oldTerminalId = <?= json_encode((string) old('terminal_id')) ?>;
+        var t = document.getElementById('add_fare_terminal_id');
+        if (t && (t.type !== 'hidden' || oldTerminalId)) {
+            t.value = oldTerminalId;
+            if (typeof t.syncAutocompleteValue === 'function') t.syncAutocompleteValue();
         }
         filterAddDestinationOptions();
+        selectAddFareDestination(<?= json_encode((string) old('destination'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>, oldTerminalId);
         validateAddFareForm();
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
     }
+});
+<?php elseif ($addDiscountHasErrors): ?>
+document.addEventListener('DOMContentLoaded', function() {
+    var modalEl = document.getElementById('addDiscountModal');
+    if (modalEl && window.bootstrap) bootstrap.Modal.getOrCreateInstance(modalEl).show();
 });
 <?php endif; ?>
 
 // Populate edit fare modal synchronously on click/mousedown/show.bs.modal to avoid input flash
+function updateEditFareTypeValidity(showError) {
+    var form = document.getElementById('editFareForm');
+    if (!form) return true;
+    var boxes = Array.from(form.querySelectorAll('input[name="vehicle_types[]"]'));
+    var selected = boxes.some(function(box) { return box.checked; });
+    if (boxes[0]) boxes[0].setCustomValidity(selected ? '' : 'Select at least one vehicle type to update its fare.');
+    var message = document.getElementById('editFareVehicleTypesError');
+    if (message) message.hidden = selected || !showError;
+    return selected;
+}
+
+function selectEditFareTypes(types) {
+    var form = document.getElementById('editFareForm');
+    if (!form) return;
+    form.querySelectorAll('input[name="vehicle_types[]"]').forEach(function(box) {
+        box.checked = types.includes(box.value);
+    });
+    updateEditFareTypeValidity(false);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var group = document.getElementById('editFareVehicleTypes');
+    if (!group) return;
+    group.addEventListener('change', function() { updateEditFareTypeValidity(true); });
+    group.addEventListener('invalid', function(event) {
+        // The group has its own visible error; native popups over the hidden input
+        // can intercept subsequent chip clicks in Firefox.
+        event.preventDefault();
+        updateEditFareTypeValidity(true);
+        event.target.focus({ preventScroll: true });
+    }, true);
+    updateEditFareTypeValidity(false);
+});
+
 function populateFareModal(btn) {
     if (!btn) return;
     var target = (btn.closest && btn.closest('[data-id]')) ? btn.closest('[data-id]') : btn;
@@ -1841,13 +1959,11 @@ function populateFareModal(btn) {
     var terminalId  = target.getAttribute('data-terminal-id');
     var form        = document.getElementById('editFareForm');
     if (form && id) form.action = '<?= base_url('admin/routes/update') ?>/' + id;
+    if (document.getElementById('edit_fare_source_id')) document.getElementById('edit_fare_source_id').value = id || '';
     if (document.getElementById('edit_fare_destination')) document.getElementById('edit_fare_destination').value = destination || '';
     if (document.getElementById('edit_fare_amount')) document.getElementById('edit_fare_amount').value = fare || '';
     if (document.getElementById('edit_fare_terminal')) document.getElementById('edit_fare_terminal').value = terminalId || '';
-    if (form) {
-        var radios = form.querySelectorAll('input[name="vehicle_type"]');
-        radios.forEach(function(r) { r.checked = (r.value === vehicleType); });
-    }
+    selectEditFareTypes([vehicleType]);
 }
 
 function populateDiscountModal(btn) {
@@ -1994,19 +2110,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('fareSearch');
     toggleFareClearBtn(input ? input.value : '');
 });
-
-// Auto-generate type key from discount label
-var addDiscLabel = document.getElementById('add_disc_label');
-var addDiscType  = document.getElementById('add_disc_type');
-if (addDiscLabel && addDiscType) {
-    addDiscLabel.addEventListener('input', function() {
-        addDiscType.value = this.value
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9\s]/g, '')
-            .replace(/\s+/g, '_');
-    });
-}
 
 // ── Delete Confirmation Modal Logic ──
 var _deleteFormId = null;

@@ -1,3 +1,4 @@
+<?php $vehicleTypes = vehicle_types_for_display($vehicleTypes ?? []); ?>
 <?= $this->include('templates/header') ?>
 
 
@@ -282,7 +283,7 @@
 
 <div id="sharedScheduleResults">
 <!-- Quick Route Filter Bar (Pill Chips) placed UNDER the filter inputs -->
-<div class="route-filter-wrapper fade-in">
+<div class="route-filter-wrapper">
     <div class="route-filter-label">
         <i class="bi bi-geo-alt-fill" style="color: var(--primary, #1565C0);"></i> Route Destinations:
     </div>
@@ -301,7 +302,7 @@
 </div>
 
 <!-- Schedules Table -->
-<div class="modern-card shadow-modern fade-in">
+<div class="modern-card shadow-modern fade-in" id="sharedScheduleCard">
     <div class="modern-card-header">
         <span class="modern-card-title">
             <i class="bi bi-list-task" style="color: var(--primary-red);"></i>
@@ -551,6 +552,8 @@
 
     window.sharedScheduleFilters = RecordFilters.init({
         form: '#sharedFilterForm', results: '#sharedScheduleResults',
+        scrollAnchor: '#sharedRouteFilterBar',
+        loadingTarget: '#sharedScheduleCard',
         regions: ['#sharedScheduleResults', '#sharedScheduleActiveFilters'], text: ['#statTodayDepartures'],
         updated: function(doc, url) {
             currentSharedDestFilter = (url.searchParams.get('destination') || 'all').toLowerCase();

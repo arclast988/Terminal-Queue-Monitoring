@@ -1,7 +1,12 @@
 /** Existing public contracts: types add no runtime fields or API requirements. */
 export type MotionMode = 'full' | 'lite' | 'reduced';
-export interface TerminalMotionAPI { getMode(): MotionMode; }
+export interface TerminalMotionAPI {
+  getMode(): MotionMode;
+  getBackgroundPhase(slides: readonly string[]): {elapsed: number; index: number; remaining: number};
+  syncBackground(mode: string, slides: readonly string[]): void;
+}
 export interface AuthBackgroundConfig {
+  image?: string;
   mode?: 'slideshow' | 'single' | 'none';
   slides: readonly string[];
   defaults: readonly string[];

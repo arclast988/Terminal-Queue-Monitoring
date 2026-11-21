@@ -164,6 +164,26 @@ if (! function_exists('vehicle_type_key')) {
     }
 }
 
+if (! function_exists('vehicle_type_display_name')) {
+    function vehicle_type_display_name(?string $name): string
+    {
+        return mb_strtoupper((string) $name, 'UTF-8');
+    }
+}
+
+if (! function_exists('vehicle_types_for_display')) {
+    function vehicle_types_for_display(array $types): array
+    {
+        foreach ($types as &$type) {
+            if (is_array($type) && isset($type['name'])) {
+                $type['name'] = vehicle_type_display_name($type['name']);
+            }
+        }
+        unset($type);
+        return $types;
+    }
+}
+
 if (! function_exists('get_db_vehicle_types')) {
     function get_db_vehicle_types(bool $forceRefresh = false): array
     {
@@ -176,7 +196,7 @@ if (! function_exists('get_db_vehicle_types')) {
         } elseif ($cache) {
             $fromCache = $cache->get($cacheKey);
             if (is_array($fromCache)) {
-                return $fromCache;
+                return vehicle_types_for_display($fromCache);
             }
         }
 
@@ -202,7 +222,7 @@ if (! function_exists('get_db_vehicle_types')) {
                             }
                         }
                         $cached[$key] = [
-                            'name'  => $r['name'],
+                            'name'  => vehicle_type_display_name($r['name']),
                             'slug'  => $r['slug'],
                             'color' => $r['color'] ?? null,
                             'icon'  => $r['icon'] ?? null,
@@ -230,7 +250,7 @@ if (! function_exists('vehicle_type_label')) {
         $typeKey = vehicle_type_key($type);
         $dbTypes = get_db_vehicle_types();
         if (!empty($dbTypes[$typeKey]['name'])) {
-            return $dbTypes[$typeKey]['name'];
+            return vehicle_type_display_name($dbTypes[$typeKey]['name']);
         }
 
         $labels = [
@@ -246,7 +266,7 @@ if (! function_exists('vehicle_type_label')) {
             'car'         => 'Car',
         ];
 
-        return $labels[$typeKey] ?? ucwords(str_replace(['_', '-'], ' ', $typeKey));
+        return vehicle_type_display_name($labels[$typeKey] ?? str_replace(['_', '-'], ' ', $typeKey));
     }
 }
 
@@ -2149,8 +2169,7 @@ body.staff-theme .card-header .card-title i:not(.text-danger):not(.text-warning)
 body.staff-theme .route-breakdown-card {
     border-left-color: var(--primary) !important;
 }
-body.staff-theme .departure-search-group:focus-within .input-group-text,
-body.staff-theme .departure-search-group:focus-within .departure-search-input {
+body.staff-theme .departure-search-group:focus-within {
     border-color: var(--primary) !important;
     box-shadow: 0 0 0 3px var(--primary-soft) !important;
 }
@@ -2530,6 +2549,9 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
 </style>
 <script id="app-dynamic-slideshow-script">
 (function() {
+    if (window.TerminalMotion && window.TerminalMotion.syncBackground) {
+        window.TerminalMotion.syncBackground('{$bgMode}', {$slidesJson});
+    }
     window.applyLiveBgMode = function(mode, bgUrl, slides) {
         mode = mode || 'slideshow';
         bgUrl = bgUrl || '{$bgImg}';
@@ -2537,6 +2559,7 @@ body.staff-theme .nav-menu .dropdown-content a.active i {
         if (!slides || !slides.length) {
             if (bgUrl) slides = [bgUrl];
         }
+        if (window.TerminalMotion && window.TerminalMotion.syncBackground) window.TerminalMotion.syncBackground(mode, slides);
 
         var bgStyle = document.getElementById('app-live-bg-overrides');
         if (!bgStyle) {

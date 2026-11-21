@@ -144,7 +144,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                         <?php if (in_array(session()->get('role'), ['super_admin', 'admin', 'staff'], true)): ?>
                         <th class="bulk-col" style="display: none; width: 44px; text-align: center;"></th>
                         <?php endif; ?>
-                        <th class="management-id-col">No.</th>
+                        <th class="management-id-col">#</th>
                         <th class="management-terminal-col">Terminal</th>
                         <th class="management-severity-col">Severity</th>
                         <th class="management-message-col">Message</th>
@@ -164,7 +164,7 @@ table:not(.selection-mode-active) .bulk-select-cell {
                                     <input type="checkbox" class="form-check-input announcement-row-checkbox" value="<?= $a['id'] ?>" data-id="<?= $a['id'] ?>" data-message="<?= esc(strlen($a['message']) > 60 ? substr($a['message'], 0, 60) . '…' : $a['message']) ?>" data-terminal="<?= esc($a['terminal_name'] ?? '—') ?>" title="Select announcement #<?= $a['id'] ?>">
                                 </td>
                                 <?php endif; ?>
-                                <td data-label="No."><strong><?= $rowNumber + 1 ?></strong></td>
+                                <td data-label="#"><strong><?= $rowNumber + 1 ?></strong></td>
                                 <td data-label="Terminal"><span class="badge-modern badge-modern-primary"><?= strtoupper(esc($a['terminal_name'] ?? '—')) ?></span></td>
                                 <td data-label="Severity">
                                     <?php

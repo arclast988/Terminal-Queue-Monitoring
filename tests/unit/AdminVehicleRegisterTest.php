@@ -120,12 +120,37 @@ final class AdminVehicleRegisterTest extends CIUnitTestCase
         $this->assertSame('ORMOC', $this->viewData['vehicle']['route_destination']);
     }
 
-    private function controller(VehicleModel $vehicles, string $view = 'admin/vehicles/index', string $result = 'Vehicle Register'): Vehicles
+    public function testEditProvidesDestinationInsertionCountsWithoutCountingTheEditedVehicle(): void
+    {
+        $this->registerDb->table('terminals')->insertBatch([['id'=>1, 'name'=>'VILLABA'], ['id'=>2, 'name'=>'PALOMPON']]);
+        $routes = [
+            ['id'=>1, 'terminal_id'=>1, 'destination'=>'ORMOC', 'vehicle_type'=>'van', 'status'=>'active'],
+            ['id'=>2, 'terminal_id'=>1, 'destination'=>'ORMOC', 'vehicle_type'=>'jeepney', 'status'=>'active'],
+            ['id'=>3, 'terminal_id'=>1, 'destination'=>'TACLOBAN', 'vehicle_type'=>'van', 'status'=>'active'],
+            ['id'=>4, 'terminal_id'=>2, 'destination'=>'ORMOC', 'vehicle_type'=>'van', 'status'=>'active'],
+            ['id'=>5, 'terminal_id'=>1, 'destination'=>'ORMOC', 'vehicle_type'=>'minibus', 'status'=>'archived'],
+        ];
+        $this->registerDb->table('routes')->insertBatch($routes);
+        foreach ([[1,1,'active'], [2,2,'active'], [3,1,'maintenance'], [4,5,'active'], [5,4,'active']] as [$id,$routeId,$status]) {
+            $this->registerDb->table('vehicles')->insert([
+                'id'=>$id, 'plate_number'=>'COUNT-'.$id, 'type'=>'van', 'status'=>$status,
+                'default_route_id'=>$routeId, 'dispatch_order'=>$id,
+            ]);
+        }
+        $this->controller(new VehicleModel($this->registerDb), 'admin/vehicles/edit', 'Edit Vehicle', array_slice($routes, 0, 4))->edit(1);
+        $counts = $this->viewData['routeDispatchOrders'];
+        $this->assertSame(['active_count'=>1, 'total_count'=>3, 'route_key'=>'1|ORMOC'], $counts[1]);
+        $this->assertSame($counts[1], $counts[2]);
+        $this->assertSame(['active_count'=>0, 'total_count'=>0, 'route_key'=>'1|TACLOBAN'], $counts[3]);
+        $this->assertSame(['active_count'=>1, 'total_count'=>1, 'route_key'=>'2|ORMOC'], $counts[4]);
+    }
+
+    private function controller(VehicleModel $vehicles, string $view = 'admin/vehicles/index', string $result = 'Vehicle Register', array $routeRows = []): Vehicles
     {
         $routes = $this->getMockBuilder(RouteModel::class)
             ->setConstructorArgs([$this->registerDb])->onlyMethods(['withActiveFare', 'findAll'])->getMock();
         $routes->method('withActiveFare')->willReturnSelf();
-        $routes->method('findAll')->willReturn([]);
+        $routes->method('findAll')->willReturn($routeRows);
         $types = $this->getMockBuilder(VehicleTypeModel::class)
             ->setConstructorArgs([$this->registerDb])->onlyMethods(['findAll'])->getMock();
         $types->method('findAll')->willReturn([]);

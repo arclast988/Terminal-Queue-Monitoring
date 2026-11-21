@@ -7,7 +7,7 @@ define('FCPATH', dirname(__DIR__, 2) . '/public/');
 $fixturePage = $argv[1] ?? 'login';
 if (in_array($fixturePage, ['staff-departures', 'staff-departures-report', 'staff-dashboard'], true)) date_default_timezone_set('Asia/Manila');
 $fixtureLong = ($argv[2] ?? '') === 'long';
-$fixtureRole = $fixturePage === 'admin-settings' ? 'super_admin' : (str_starts_with($fixturePage, 'staff') ? 'staff' : (str_starts_with($fixturePage, 'admin') ? 'admin' : null));
+$fixtureRole = in_array($fixturePage, ['admin-settings', 'admin-content'], true) ? 'super_admin' : (str_starts_with($fixturePage, 'staff') ? 'staff' : (str_starts_with($fixturePage, 'admin') ? 'admin' : null));
 if (($argv[6] ?? '') === 'super_admin' && str_starts_with($fixturePage, 'admin')) $fixtureRole = 'super_admin';
 set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
     throw new ErrorException($message, 0, $severity, $file, $line);
@@ -17,7 +17,24 @@ function base_url(string $path = ''): string { return '/' . ltrim($path, '/'); }
 function current_url(): string { return '/guest'; }
 function uri_string(): string { return 'guest'; }
 function url_is(string $path): bool { return false; }
-function old(string $key, $default = null) { return $default; }
+function old(string $key, $default = null) {
+    if ($GLOBALS['fixturePage'] === 'admin-fares' && ($GLOBALS['argv'][4] ?? '') === 'discount-add-error') {
+        return ['form_action'=>'create_discount','terminal_id'=>'2','label'=>'PWD Discount','discount_percent'=>'20.50'][$key] ?? $default;
+    }
+    if ($GLOBALS['fixturePage'] === 'admin-fares' && ($GLOBALS['argv'][4] ?? '') === 'fare-edit-error') {
+        return ['form_action'=>'update_fares','edit_source_id'=>'1','terminal_id'=>'1','destination'=>'ISABEL','fare'=>'165.00','vehicle_types'=>['minibus','bus']][$key] ?? $default;
+    }
+    if ($GLOBALS['fixturePage'] === 'admin-fares' && str_starts_with($GLOBALS['argv'][4] ?? '', 'fare-add-error')) {
+        $state = $GLOBALS['argv'][4];
+        return [
+            'form_action'=>'assign_fare',
+            'terminal_id'=>$state === 'fare-add-error-missing-terminal' ? '' : '2',
+            'destination'=>$state === 'fare-add-error-missing-destination' ? '' : 'ISABEL',
+            'fare'=>'155.50', 'vehicle_types'=>['minibus','van'],
+        ][$key] ?? $default;
+    }
+    return $default;
+}
 function csrf_field(): string { return '<input type="hidden" name="csrf_fixture" value="unchanged">'; }
 function csrf_token(): string { return 'csrf_fixture'; }
 function csrf_hash(): string { return 'unchanged'; }
@@ -66,7 +83,10 @@ function app_logo(): string { return '/fixture.svg'; }
 function app_bg_mode(): string { return in_array($GLOBALS['argv'][5] ?? '', ['slideshow', 'none'], true) ? $GLOBALS['argv'][5] : 'single'; }
 function app_has_custom_bg(): bool { return false; }
 function app_bg_image(): string { return '/fixture.svg'; }
-function app_bg_slideshow(): array { return app_bg_mode() === 'slideshow' ? ['/fixture.svg', '/fixture-second.svg', '/fixture-third.svg'] : ['/fixture.svg']; }
+function app_bg_slideshow(): array {
+    if (($GLOBALS['argv'][4] ?? '') === 'distinct-backgrounds') return ['/fixture-second.svg', '/fixture-third.svg'];
+    return app_bg_mode() === 'slideshow' ? ['/fixture.svg', '/fixture-second.svg', '/fixture-third.svg'] : ['/fixture.svg'];
+}
 function app_has_custom_login_card(): bool { return false; }
 function app_login_card_image(): string { return '/fixture.svg'; }
 function login_kicker(): string { return 'Terminal operations'; }
@@ -83,7 +103,7 @@ function vehicle_type_color(string $type): string { return '#1565c0'; }
 function contrast_text_color(string $color): string { return '#ffffff'; }
 function vehicle_type_icon(string $type): string { return 'fa-bus'; }
 function vehicle_type_key(string $type): string { return strtolower($type); }
-function vehicle_type_label(string $type): string { return ucfirst($type); }
+function vehicle_type_label(string $type): string { return vehicle_type_display_name(str_replace(['_', '-'], ' ', $type)); }
 function vehicle_type_class(string $type): string { return 'vehicle-type-' . esc(strtolower($type)); }
 function vehicle_type_photo(string $type): string { return '/fixture.svg'; }
 function vehicle_resolved_photo(array $item, string $type): string {
@@ -105,7 +125,24 @@ function session(): object {
                 default => null,
             };
         }
-        public function getFlashdata(string $key) { return null; }
+        public function getFlashdata(string $key) {
+            if ($key === 'error' && $GLOBALS['fixturePage'] === 'admin-fares' && ($GLOBALS['argv'][4] ?? '') === 'discount-add-error') {
+                return 'A discount named "PWD Discount" already exists for the selected terminal. Edit the existing discount instead.';
+            }
+            if ($GLOBALS['fixturePage'] === 'admin-content' && ($GLOBALS['argv'][4] ?? '') === 'content-no-change') {
+                return ['content_no_changes' => true, 'info' => 'No changes detected — nothing was updated.'][$key] ?? null;
+            }
+            if ($key === 'errors' && $GLOBALS['fixturePage'] === 'admin-fares' && ($GLOBALS['argv'][4] ?? '') === 'fare-edit-error') {
+                return ['vehicle_types' => 'No active route is registered for Bus. Create or restore that route in Route Management first.'];
+            }
+            if ($key === 'errors' && $GLOBALS['fixturePage'] === 'admin-fares' && str_starts_with($GLOBALS['argv'][4] ?? '', 'fare-add-error')) {
+                return ['destination'=>'Select the route destination for this fare.'];
+            }
+            if ($key === 'errors' && $GLOBALS['fixturePage'] === 'admin-route-create' && ($GLOBALS['argv'][4] ?? '') === 'validation-error') {
+                return ['vehicle_types' => 'Select at least one vehicle type for this route.'];
+            }
+            return null;
+        }
         public function has(string $key): bool { return false; }
     };
 }
@@ -137,7 +174,7 @@ $item = [
 $route = ['id' => 1, 'terminal_id' => 1, 'origin' => 'Palompon', 'destination' => $longValue, 'fare' => 100, 'vehicle_type' => 'jeepney'];
 $terminal = ['id' => 1, 'name' => $longValue, 'location' => $longValue, 'capacity' => 20, 'created_at' => '2026-10-01 08:00:00'];
 $user = ['id' => 2, 'username' => 'fixture-dispatcher', 'full_name' => $longValue, 'email' => 'fixture@example.com', 'role' => 'staff', 'status' => 'active', 'created_at' => '2026-10-01 08:00:00', 'assigned_routes' => $longValue, 'profile_image' => null];
-$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-route-create', 'admin-route-edit', 'admin-terminals', 'admin-terminal-create', 'admin-terminal-edit', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings'];
+$managementPages = ['admin-users', 'admin-user-edit', 'admin-vehicles', 'admin-vehicle-edit', 'admin-routes', 'admin-route-create', 'admin-route-edit', 'admin-fares', 'admin-terminals', 'admin-terminal-create', 'admin-terminal-edit', 'admin-announcements', 'admin-rules', 'admin-history', 'admin-logs', 'admin-settings', 'admin-content'];
 $vehicle = $item + ['type' => 'jeepney', 'photo' => null, 'route_origin' => 'Palompon', 'route_destination' => $longValue, 'created_at' => '2026-10-01 08:00:00'];
 $vehicle['status'] = 'active';
 $fixtureData = [
@@ -187,6 +224,7 @@ if (in_array($fixturePage, ['staff-departures', 'staff-departures-report'], true
     }
 }
 if ($fixturePage === 'staff-dashboard') $fixtureData['active_queue_count'] = 1;
+if ($fixturePage === 'admin-dashboard') $fixtureData['stats'] = ['vehicles'=>9, 'routes'=>4, 'users'=>5, 'logs'=>637];
 if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules', 'admin-rule-create', 'admin-rule-edit'], true) || ($fixturePage === 'admin-rules' && ($argv[4] ?? '') === 'bulk-rules')) {
     $fixtureData['prefix'] = str_starts_with($fixturePage, 'staff') ? 'staff' : 'admin';
     $fixtureData['title'] = 'Departure Rules';
@@ -222,6 +260,65 @@ if (in_array($fixturePage, ['staff-rule-create', 'staff-rule-edit', 'staff-rules
         $fixtureData['selectedRouteId'] = 2;
     }
 }
+if ($fixturePage === 'fares' && in_array(($argv[4] ?? ''), ['route-discounts','route-discounts-legacy'], true)) {
+    $fixtureData['vehicleTypes'] = [
+        ['id'=>1,'slug'=>'van','name'=>'VAN','color'=>'#c62828','icon'=>'fa-van-shuttle','photo'=>null],
+        ['id'=>2,'slug'=>'minibus','name'=>'MINIBUS','color'=>'#2e7d32','icon'=>'fa-bus','photo'=>null],
+    ];
+    $fixtureData['discounts'] = [
+        ['id'=>1,'terminal_id'=>3,'type'=>'pwd','label'=>'PWD Discount','discount_percent'=>20,'is_active'=>1],
+        ['id'=>2,'terminal_id'=>3,'type'=>'student','label'=>'Student Discount','discount_percent'=>15,'is_active'=>1],
+        ['id'=>3,'terminal_id'=>3,'type'=>'senior_citizen','label'=>'Senior Citizen Discount','discount_percent'=>20,'is_active'=>1],
+    ];
+    $fixtureData['routesByType'] = [];
+    foreach (['van','minibus'] as $index => $type) {
+        $fixtureData['routesByType'][$type] = [];
+        foreach (['ISABEL'=>150, 'ORMOC'=>80, 'PALOMPON'=>100] as $destination => $amount) {
+            $fareRoute = ['id'=>count($fixtureData['routesByType'][$type])+1+$index*3, 'terminal_id'=>3,
+                'vehicle_type'=>$type, 'origin'=>'VILLABA', 'destination'=>$destination, 'fare'=>$amount, 'discounted_fares'=>[]];
+            foreach ($fixtureData['discounts'] as $discount) {
+                $fareRoute['discounted_fares'][$discount['type']] = ['label'=>$discount['label'],
+                    'discount_percent'=>$discount['discount_percent'], 'amount'=>round($amount*(1-$discount['discount_percent']/100),2)];
+            }
+            if (($argv[4] ?? '') === 'route-discounts-legacy' && $destination !== 'PALOMPON') $fareRoute['discounted_fares'] = [];
+            $fixtureData['routesByType'][$type][] = $fareRoute;
+        }
+        $fixtureData[$type . '_routes'] = $fixtureData['routesByType'][$type];
+    }
+    $fixtureData['jeepney_routes'] = [];
+}
+if ($fixturePage === 'admin-fares') {
+    $fixtureData['title'] = 'Fare Management';
+    $fixtureData['vehicleTypes'] = [];
+    $fixtureData['routesByType'] = [];
+    $fixtureData['allActiveRoutes'] = [];
+    foreach (['minibus','van','jeepney','bus'] as $index=>$type) {
+        $fixtureData['vehicleTypes'][] = ['id'=>$index+1,'slug'=>$type,'name'=>ucfirst($type),'color'=>'#1565c0','icon'=>'fa-bus','photo'=>null];
+        if ($type === 'bus') continue;
+        $fareRoute = array_replace($route, ['id'=>$index+1,'origin'=>'VILLABA','destination'=>'ISABEL','vehicle_type'=>$type,'fare'=>120+$index*10,'status'=>'active','has_fare'=>true]);
+        $fixtureData['routesByType'][$type] = [$fareRoute];
+        $fixtureData['allActiveRoutes'][] = $fareRoute;
+    }
+    $fixtureData['availableDestinations'] = [['terminal_id'=>1,'origin'=>'VILLABA','destination'=>'ISABEL','label'=>'VILLABA → ISABEL']];
+    $fixtureData['all_locations'] = ['ISABEL'];
+    $fixtureData['terminals'] = [array_replace($terminal, ['name'=>'VILLABA','location'=>'Villaba, Leyte'])];
+    if (($argv[4] ?? '') === 'discount-add-error') {
+        $fixtureData['terminals'][] = array_replace($terminal, ['id'=>2,'name'=>'PALOMPON','location'=>'Palompon, Leyte']);
+    }
+    if (str_starts_with($argv[4] ?? '', 'fare-add-')) {
+        $fixtureData['terminals'][] = array_replace($terminal, ['id'=>2,'name'=>'PALOMPON','location'=>'Palompon, Leyte']);
+        $fixtureData['routesByType'] = [];
+        $fixtureData['availableDestinations'] = [];
+        $fixtureData['allActiveRoutes'] = [];
+        foreach ([1=>'VILLABA',2=>'PALOMPON'] as $terminalId=>$origin) {
+            $fixtureData['availableDestinations'][] = ['terminal_id'=>$terminalId,'origin'=>$origin,'destination'=>'ISABEL','label'=>$origin . ' → ISABEL'];
+            foreach (['minibus','van'] as $index=>$type) {
+                $fixtureData['allActiveRoutes'][] = array_replace($route, ['id'=>$terminalId*10+$index,'terminal_id'=>$terminalId,'origin'=>$origin,'destination'=>'ISABEL','vehicle_type'=>$type,'fare'=>0,'status'=>'active','has_fare'=>false]);
+            }
+        }
+        $fixtureData['unassignedRoutes'] = $fixtureData['allActiveRoutes'];
+    }
+}
 if ($fixturePage === 'admin-vehicles') $fixtureData['vehicles'] = [$vehicle];
 if ($fixturePage === 'admin-settings' && ($argv[4] ?? '') === 'multiple-contacts') {
     $fixtureData['settings'] = ['contact_email'=>'office@example.com and dispatch@example.com','contact_phone'=>'+639171234567 / (053) 555-8376'];
@@ -230,6 +327,15 @@ if (in_array($fixturePage, ['admin-route-create', 'admin-route-edit'], true)) {
     $fixtureData['route'] = $route;
     $fixtureData['fares'] = ['jeepney' => 100];
     $fixtureData['all_locations'] = ($argv[4] ?? '') === 'empty-route-suggestions' ? [] : ['ORMOC', 'TACLOBAN', 'PEÑA'];
+}
+if (in_array($fixturePage, ['admin-route-create', 'admin-route-edit'], true)
+    && in_array(($argv[4] ?? ''), ['route-origin-single', 'route-origin-multiple'], true)) {
+    $fixtureData['terminals'] = [array_replace($terminal, ['name'=>'ORMOC', 'location'=>'Ormoc City'])];
+    if (($argv[4] ?? '') === 'route-origin-multiple') {
+        $fixtureData['terminals'][] = array_replace($terminal, ['id'=>2, 'name'=>'Tacloban   City', 'location'=>'Leyte']);
+    }
+    $fixtureData['all_locations'] = ['ORMOC', 'Tacloban City', 'VILLABA'];
+    $fixtureData['route'] = array_replace($route, ['terminal_id'=>1, 'destination'=>'ORMOC']);
 }
 if (($argv[4] ?? '') === 'archived-actions') {
     if ($fixturePage === 'admin-users') $fixtureData['users'] = [array_replace($user, ['status' => 'archived'])];
@@ -247,6 +353,7 @@ if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($a
         array_replace($vehicle,['id'=>203,'plate_number'=>'BATO-003','route_terminal_id'=>1,'route_destination'=>'BATO','dispatch_order'=>1]),
         array_replace($vehicle,['id'=>204,'plate_number'=>'NO-ROUTE','status'=>'archived','route_destination'=>null,'route_origin'=>null]),
     ];
+    if ($fixturePage === 'admin-vehicle-edit') $fixtureData['vehicle'] = array_replace($fixtureData['vehicles'][1], ['default_route_id'=>1,'dispatch_position'=>2]);
 }
 
 if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($argv[4] ?? '') === 'dispatch-order-difference') {
@@ -258,6 +365,27 @@ if (in_array($fixturePage, ['admin-vehicles','admin-vehicle-edit'], true) && ($a
             'dispatch_rotation'=>$order <= 6 ? $order : 0, 'dispatch_rotation_date'=>date('Y-m-d')]);
     }
     $fixtureData['vehicle'] = end($fixtureData['vehicles']);
+}
+
+if ($fixturePage === 'admin-vehicle-edit' && ($argv[4] ?? '') === 'route-order-change') {
+    $fixtureData['vehicleTypes'][] = ['id'=>2, 'slug'=>'van', 'name'=>'Van', 'color'=>'#b71c1c', 'icon'=>'fa-bus', 'photo'=>null];
+    $fixtureData['routes'] = [];
+    foreach ([1=>'ORMOC', 3=>'BATO', 5=>'TACLOBAN', 7=>'TACLOBAN'] as $firstId => $destination) {
+        foreach (['jeepney', 'van'] as $offset => $type) {
+            $fixtureData['routes'][] = array_replace($route, ['id'=>$firstId+$offset, 'terminal_id'=>$firstId === 7 ? 2 : 1,
+                'origin'=>$firstId === 7 ? 'Villaba' : 'Palompon', 'destination'=>$destination, 'vehicle_type'=>$type, 'status'=>'active']);
+        }
+    }
+    $fixtureData['vehicle'] = array_replace($vehicle, ['id'=>209, 'default_route_id'=>1, 'dispatch_order'=>9,
+        'dispatch_position'=>3, 'route_terminal_id'=>1, 'route_origin'=>'Palompon', 'route_destination'=>'ORMOC']);
+    // Counts exclude the edited vehicle and combine sibling types in each terminal's destination line.
+    $routeCounts = ['1|ORMOC'=>[8,8], '1|BATO'=>[0,0], '1|TACLOBAN'=>[2,4], '2|TACLOBAN'=>[1,1]];
+    $fixtureData['routeDispatchOrders'] = [];
+    foreach ($fixtureData['routes'] as $dispatchRoute) {
+        $routeKey = $dispatchRoute['terminal_id'] . '|' . $dispatchRoute['destination'];
+        [$activeCount, $totalCount] = $routeCounts[$routeKey];
+        $fixtureData['routeDispatchOrders'][$dispatchRoute['id']] = ['route_key'=>$routeKey, 'active_count'=>$activeCount, 'total_count'=>$totalCount];
+    }
 }
 
 if ($fixturePage === 'guest' && ($argv[4] ?? '') === 'guest-rounds') {
@@ -391,20 +519,42 @@ if (($argv[4] ?? '') === 'vehicle-type-edit-photos') {
         ['id'=>3, 'slug'=>'jeepney', 'name'=>'Jeepney', 'color'=>'#1565c0', 'icon'=>'fa-truck-front', 'photo'=>null],
     ];
 }
+if ($fixturePage === 'admin-content') {
+    $fixtureData['groups'] = ['contact' => [
+        'label' => 'Contact Us', 'description' => 'Public support information',
+        'fields' => ['content_contact_intro' => ['label' => 'Introduction', 'type' => 'textarea', 'placeholder' => 'Built-in introduction']],
+    ]];
+    $fixtureData['settings'] = ['content_contact_intro' => 'Saved support introduction.'];
+}
+if (in_array($fixturePage, ['admin-vehicles', 'admin-vehicle-edit'], true) && !isset($fixtureData['routeDispatchOrders'])) {
+    $fixtureData['routeDispatchOrders'] = [];
+    foreach ($fixtureData['routes'] as $dispatchRoute) {
+        $activeCount = $totalCount = 0;
+        foreach ($fixtureData['vehicles'] as $dispatchVehicle) {
+            if ($fixturePage === 'admin-vehicle-edit' && (int) $dispatchVehicle['id'] === (int) $fixtureData['vehicle']['id']) continue;
+            $sameLine = (string) ($dispatchVehicle['route_destination'] ?? '') === (string) $dispatchRoute['destination']
+                && (int) ($dispatchVehicle['route_terminal_id'] ?? 0) === (int) $dispatchRoute['terminal_id'];
+            if (!$sameLine && (int) ($dispatchVehicle['default_route_id'] ?? 0) !== (int) $dispatchRoute['id']) continue;
+            $totalCount++;
+            if (($dispatchVehicle['status'] ?? '') === 'active' && ($dispatchVehicle['route_status'] ?? 'active') === 'active') $activeCount++;
+        }
+        $fixtureData['routeDispatchOrders'][(int) $dispatchRoute['id']] = ['route_key'=>$dispatchRoute['terminal_id'].'|'.$dispatchRoute['destination'], 'active_count'=>$activeCount, 'total_count'=>$totalCount];
+    }
+}
 $views = [
     'login' => 'auth/login', 'forgot' => 'auth/forgot_password', 'reset' => 'auth/reset_password', 'verify' => 'auth/verify_code',
-    'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
+    'guest' => 'public/enhanced_dashboard', 'fares' => 'public/fares', 'admin-fares' => 'shared/fares', 'schedules' => 'public/schedules', 'search' => 'public/search',
     'guest-contact-draft' => 'public/enhanced_dashboard',
     'staff-queue' => 'staff/queue/index', 'staff-schedules' => 'shared/schedules', 'admin-schedules' => 'shared/schedules',
     'staff-password' => 'auth/change_password', 'staff-guide' => 'help/dispatcher', 'admin-guide' => 'help/admin',
     'staff-manual' => 'manual/staff', 'admin-manual' => 'manual/admin',
-    'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
+    'admin-dashboard' => 'admin/dashboard', 'staff-dashboard' => 'staff/dashboard', 'staff-departures' => 'staff/departures/index', 'staff-departures-report' => 'admin/history/print_history',
     'admin-users' => 'admin/users/index', 'admin-user-edit' => 'admin/users/edit', 'admin-vehicles' => 'admin/vehicles/index', 'admin-vehicle-edit' => 'admin/vehicles/edit', 'admin-routes' => 'admin/routes/index',
     'admin-terminal-create' => 'admin/terminals/create', 'admin-terminal-edit' => 'admin/terminals/edit',
     'admin-route-create' => 'admin/routes/create', 'admin-route-edit' => 'admin/routes/edit',
     'admin-terminals' => 'admin/terminals/index', 'admin-announcements' => 'admin/announcements/index', 'admin-rules' => 'admin/departure-rules/index',
     'admin-logs-report' => 'admin/logs/print_logs',
-    'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index',
+    'admin-history' => 'admin/history/index', 'admin-logs' => 'admin/logs/index', 'admin-settings' => 'admin/settings/index', 'admin-content' => 'admin/settings/content',
     'staff-rule-create' => 'admin/departure-rules/create', 'staff-rule-edit' => 'admin/departure-rules/edit', 'staff-rules' => 'admin/departure-rules/index',
     'admin-rule-create' => 'admin/departure-rules/create', 'admin-rule-edit' => 'admin/departure-rules/edit',
 ];

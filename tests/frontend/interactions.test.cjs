@@ -293,6 +293,43 @@ test('queue polling coalesces overlap and retains one trailing reconciliation', 
   h.window.QueueSync.destroy(); assert.equal(h.timers.size, 0);
 });
 
+test('confirmed queue actions bypass refresh debounce and discard pre-action HTML', async () => {
+  const h = harness(), applied = [];
+  h.window.DOMParser = class {
+    parseFromString(html) { return { html, getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] }; }
+  };
+  h.window.QueueWS = { init(config) { this.config = config; } };
+  h.load(sync);
+  h.window.QueueSync.init({ refreshUrl: '/staff/queue', extraRefresh: doc => applied.push(doc.html) });
+  const complete = async (request, html) => {
+    request.resolve({ ok: true, text: async () => html });
+    await flush();
+  };
+
+  h.window.QueueSync.refresh();
+  await complete(h.requests[0], 'initial queue');
+  h.window.QueueSync.refresh();
+  assert.equal(h.requests.length, 1, 'background refresh stays debounced');
+  h.window.QueueSync.refresh(true);
+  assert.equal(h.requests.length, 2, 'confirmed action refresh starts immediately');
+  await complete(h.requests[1], 'boarding queue');
+  h.tick(500);
+  assert.equal(h.requests.length, 2, 'superseded debounce does not fetch again');
+
+  h.window.QueueSync.refresh();
+  assert.equal(h.requests.length, 3);
+  h.window.QueueWS.config.onQueueUpdate({ data: { action: 'status_change' } });
+  h.window.QueueSync.refresh(true);
+  assert.equal(h.requests.length, 3, 'overlapping refreshes remain coalesced');
+  await complete(h.requests[2], 'stale pre-cancellation queue');
+  assert.deepEqual(applied, ['initial queue', 'boarding queue']);
+  assert.equal(h.requests.length, 4, 'latest snapshot starts without another debounce');
+  await complete(h.requests[3], 'restored queue');
+  assert.deepEqual(applied, ['initial queue', 'boarding queue', 'restored queue']);
+  h.window.QueueSync.destroy();
+  assert.equal(h.timers.size, 0);
+});
+
 test('live record refresh resolves the current filters and discards a response overtaken by a sort change', async () => {
   const h = harness(); h.load(sync);
   let url = '/admin/history?sort_order=desc', parsed = 0, applied = 0;

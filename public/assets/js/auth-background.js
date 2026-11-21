@@ -17,6 +17,8 @@
         var mode = config.mode || 'slideshow';
         var slides = mode === 'none' ? [] : config.slides.slice();
         var defaults = config.defaults;
+        var singleImage = config.image || (mode === 'single' ? slides[0] : defaults[0]);
+        var slideshowImages = defaults.slice();
         root.style.display = mode === 'none' ? 'none' : '';
         if (mode === 'none') {
             layers[0].removeAttribute('src');
@@ -34,6 +36,11 @@
         var frameUsesRAF = false;
         /** @type {HTMLImageElement | null} */
         var incomingImage = null;
+
+        function initialPhotoReady() {
+            root.setAttribute('data-bg-ready', '');
+            layers[0].removeEventListener('load', initialPhotoReady);
+        }
 
         function canAnimate() {
             return active && mode !== 'none' && !document.hidden && !(preference && preference.matches)
@@ -58,14 +65,20 @@
 
         function schedule() {
             cancelPending();
-            if (canAnimate() && slides.length > 1) timer = window.setTimeout(advance, 6000);
+            if (canAnimate() && slides.length > 1) {
+                var phase = window.TerminalMotion && window.TerminalMotion.getBackgroundPhase
+                    ? window.TerminalMotion.getBackgroundPhase(slides) : null;
+                if (phase && phase.index !== index) advance();
+                else timer = window.setTimeout(advance, phase ? phase.remaining : 6000);
+            }
         }
 
         function advance() {
             timer = null;
             if (!canAnimate()) return;
             var cycle = generation;
-            var nextIndex = (index + 1) % slides.length;
+            var nextIndex = window.TerminalMotion && window.TerminalMotion.getBackgroundPhase
+                ? window.TerminalMotion.getBackgroundPhase(slides).index : (index + 1) % slides.length;
             var incoming = layers[1 - current];
             var outgoing = layers[current];
             var finished = false;
@@ -110,6 +123,8 @@
             if (!data.app_bg_mode && !data.app_bg_slideshow && !data.app_background_image) return;
             var nextMode = data.app_bg_mode;
             if (nextMode !== 'none' && nextMode !== 'single' && nextMode !== 'slideshow') nextMode = mode;
+            if (data.app_background_image) singleImage = data.app_background_image;
+            if (Array.isArray(data.app_bg_slideshow) && data.app_bg_slideshow.length) slideshowImages = data.app_bg_slideshow;
             if (nextMode === 'none') {
                 cancelPending();
                 mode = 'none';
@@ -120,16 +135,18 @@
                 return;
             }
             var single = nextMode === 'single';
-            var urls = single ? [data.app_background_image || defaults[0]]
-                : (Array.isArray(data.app_bg_slideshow) && data.app_bg_slideshow.length ? data.app_bg_slideshow : defaults);
+            var urls = single ? [singleImage] : slideshowImages;
             var valid = urls.filter(function (url) { return typeof url === 'string' && url.length > 0; });
             if (!valid.length) return;
+            if (nextMode === mode && JSON.stringify(valid) === JSON.stringify(slides)) return;
             cancelPending();
             mode = nextMode;
             slides = valid;
-            current = index = 0;
+            current = 0;
+            index = !single && canAnimate() && window.TerminalMotion && window.TerminalMotion.getBackgroundPhase
+                ? window.TerminalMotion.getBackgroundPhase(slides).index : 0;
             root.style.display = '';
-            layers[0].src = slides[0];
+            layers[0].src = slides[index];
             layers[0].classList.add('is-active');
             layers[1].classList.remove('is-active');
             layers[1].removeAttribute('src');
@@ -157,6 +174,7 @@
             active = false;
             cancelPending();
             unsubscribe();
+            layers[0].removeEventListener('load', initialPhotoReady);
             window.removeEventListener('pagehide', onPageHide);
             window.removeEventListener('pageshow', onPageShow);
             if (unmount === dispose) unmount = null;
@@ -176,6 +194,21 @@
             schedule();
         }
         unmount = dispose;
+        if (mode === 'slideshow' && canAnimate() && slides.length > 1 && window.TerminalMotion && window.TerminalMotion.getBackgroundPhase) {
+            index = window.TerminalMotion.getBackgroundPhase(slides).index;
+            layers[0].src = slides[index];
+        }
+        if (mode !== 'none') {
+            // The parser may paint before this initializer arrives. Reveal only
+            // the selected photo, without fading in from an uninitialized layer.
+            var initialTransition = layers[0].style.transition;
+            layers[0].style.transition = 'none';
+            layers[0].classList.add('is-active');
+            void window.getComputedStyle(layers[0]).opacity;
+            layers[0].style.transition = initialTransition || '';
+        }
+        if (layers[0].complete && layers[0].naturalWidth > 0) initialPhotoReady();
+        else layers[0].addEventListener('load', initialPhotoReady);
         subscribe();
         window.addEventListener('pagehide', onPageHide);
         window.addEventListener('pageshow', onPageShow);

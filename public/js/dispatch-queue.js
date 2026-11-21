@@ -107,7 +107,6 @@
             if (!response.ok || !result.success) throw new Error(result.message || 'The queue could not be updated.');
         }
         if (result.csrf) csrfValue = result.csrf;
-        if (window.QueueSync) window.QueueSync.refresh(true);
         return result;
     }
 
@@ -151,7 +150,6 @@
         } catch (error) {
             if (select.tagName === 'SELECT') select.value = previousRound;
             if (window.QueueActions) window.QueueActions.notice('Round could not be changed', error.message, error.variant || 'danger', feedback);
-            if (window.QueueSync) window.QueueSync.refresh(true);
         } finally {
             posting = false;
             document.querySelectorAll('[data-dispatch-round]').forEach(function (choice) { choice.disabled = choice.dataset.roundUnavailable === 'true'; });
@@ -184,9 +182,9 @@
         if (document.hidden || posting) return;
         try {
             var result = await post(script.dataset.tickUrl);
+            if (window.QueueSync) window.QueueSync.refresh(true);
             if (result.service_date && result.service_date !== serviceDate) {
                 serviceDate = result.service_date;
-                if (window.QueueSync) window.QueueSync.refresh(true);
             }
         } catch (error) { /* The next boundary/visible refresh retries. */ }
     }

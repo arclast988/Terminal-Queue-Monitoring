@@ -14,6 +14,11 @@
     var viewportTimer = 0;
     var viewportMoving = false;
     var viewport = window.visualViewport;
+    var backgroundMode = 'none';
+    /** @type {readonly string[]} */
+    var backgroundSlides = [];
+    /** @type {{fingerprint: string, epoch: number}|null} */
+    var backgroundTimeline = null;
     var constrained = (typeof cores === 'number' && cores > 0 && cores <= 4)
         || (typeof memory === 'number' && memory > 0 && memory <= 4);
 
@@ -24,12 +29,14 @@
 
     function applyPreference() {
         root.setAttribute('data-tq-motion', getMode());
+        realignBackground();
     }
 
     function applyVisibility() {
         if (document.hidden) root.setAttribute('data-tq-page-hidden', '');
         else root.removeAttribute('data-tq-page-hidden');
         if (document.hidden) stopViewportMotion();
+        else realignBackground();
     }
 
     function stopViewportMotion() {
@@ -37,6 +44,7 @@
         viewportTimer = 0;
         viewportMoving = false;
         root.removeAttribute('data-tq-viewport-moving');
+        realignBackground();
     }
 
     // Decorative photos can wait while scrolling, pinch zoom or resizing uses
@@ -51,18 +59,61 @@
         viewportTimer = setTimeout(stopViewportMotion, 250);
     }
 
-    // Keep decorative photos on the same timeline across pages and refreshes.
-    // Storage is optional; private/blocked storage must never affect navigation.
-    function applyBackgroundPhase() {
-        try {
-            var now = Date.now();
-            var epoch = Number(window.sessionStorage.getItem('tq-background-epoch'));
-            if (!Number.isFinite(epoch) || epoch <= 0 || epoch > now) {
-                epoch = now;
-                window.sessionStorage.setItem('tq-background-epoch', String(epoch));
-            }
-            root.style.setProperty('--tq-background-delay', '-' + ((now - epoch) / 1000) + 's');
-        } catch (error) { /* Static backgrounds and input remain available. */ }
+    /** @param {readonly string[]} slides */
+    function getBackgroundPhase(slides) {
+        var now = Date.now(), fingerprint = JSON.stringify(slides);
+        var storageKey = 'tq-background-timeline:' + fingerprint;
+        var timeline = backgroundTimeline;
+        // Local storage shares the epoch across tabs; session storage also works
+        // when persistent storage is blocked. Only a changed picture list resets it.
+        [function () { return window.localStorage; }, function () { return window.sessionStorage; }].some(function (getStorage) {
+            try {
+                var saved = JSON.parse(getStorage().getItem(storageKey) || 'null');
+                if (saved && saved.fingerprint === fingerprint && Number.isFinite(saved.epoch) && saved.epoch > 0 && saved.epoch <= now) {
+                    timeline = saved; return true;
+                }
+            } catch (error) { /* Storage is optional presentation state. */ }
+            return false;
+        });
+        if (!timeline || timeline.fingerprint !== fingerprint || timeline.epoch > now) timeline = {fingerprint: fingerprint, epoch: now};
+        backgroundTimeline = timeline;
+        [function () { return window.localStorage; }, function () { return window.sessionStorage; }].forEach(function (getStorage) {
+            try { getStorage().setItem(storageKey, JSON.stringify(timeline)); } catch (error) {}
+        });
+        var elapsed = Math.max(0, now - timeline.epoch);
+        return {elapsed: elapsed, index: slides.length ? Math.floor(elapsed / 6000) % slides.length : 0, remaining: 6000 - elapsed % 6000};
+    }
+
+    // Rejoin the shared clock after a modal, gesture, or hidden tab paused CSS.
+    // No frame loop or extra recurring timer is needed.
+    function realignBackground() {
+        if (backgroundMode !== 'slideshow' || backgroundSlides.length < 2 || getMode() !== 'full' || document.hidden) return;
+        var phase = getBackgroundPhase(backgroundSlides);
+        if (typeof document.getAnimations !== 'function') return;
+        document.getAnimations().forEach(function (animation) {
+            if (!('animationName' in animation) || !/BgSlideshow(?:Auth)?(?:Live)?$/.test(String(animation.animationName)) || !animation.effect) return;
+            var delay = Number(animation.effect.getTiming().delay) || 0;
+            animation.currentTime = Math.max(0, phase.elapsed + delay);
+        });
+    }
+
+    /** @param {string} mode @param {readonly string[]} slides */
+    function syncBackground(mode, slides) {
+        backgroundMode = mode;
+        backgroundSlides = slides;
+        if (mode !== 'slideshow' || slides.length < 2) return;
+        var phase = getBackgroundPhase(slides);
+        root.style.setProperty('--tq-background-photo', 'url(' + JSON.stringify(slides[getMode() === 'full' ? phase.index : 0]) + ')');
+        root.style.setProperty('--tq-background-delay', '-' + (phase.elapsed / 1000) + 's');
+        realignBackground();
+    }
+
+    /** @param {Event} event */
+    function onBackgroundBranding(event) {
+        var data = /** @type {CustomEvent<import('../../../types/interaction-contracts').AuthBackgroundUpdate>} */ (event).detail || {};
+        if (data.category && data.category !== 'background' && data.category !== 'all') return;
+        if (!data.app_bg_mode && !data.app_bg_slideshow) return;
+        syncBackground(data.app_bg_mode || backgroundMode, data.app_bg_slideshow || backgroundSlides);
     }
 
     function subscribe() {
@@ -71,6 +122,8 @@
         if (subscribed) return;
         subscribed = true;
         document.addEventListener('visibilitychange', applyVisibility);
+        document.addEventListener('pttm:branding-applied', onBackgroundBranding);
+        document.addEventListener('hidden.bs.modal', realignBackground);
         ['scroll', 'wheel', 'touchmove', 'resize'].forEach(function (name) {
             window.addEventListener(name, markViewportMotion, { passive: true });
         });
@@ -86,6 +139,8 @@
     function unsubscribe() {
         subscribed = false;
         document.removeEventListener('visibilitychange', applyVisibility);
+        document.removeEventListener('pttm:branding-applied', onBackgroundBranding);
+        document.removeEventListener('hidden.bs.modal', realignBackground);
         ['scroll', 'wheel', 'touchmove', 'resize'].forEach(function (name) {
             window.removeEventListener(name, markViewportMotion);
         });
@@ -99,9 +154,9 @@
         else if (preference.removeListener) preference.removeListener(applyPreference);
     }
 
-    window.TerminalMotion = Object.freeze({ getMode: getMode });
+    window.TerminalMotion = Object.freeze({ getMode: getMode, getBackgroundPhase: getBackgroundPhase, syncBackground: syncBackground });
     subscribe();
-    applyBackgroundPhase();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', realignBackground, {once: true});
     // Reload timing is not exposed early by every browser. Remember only the
     // public path (never query parameters) so revisits also render fully painted.
     try {
@@ -113,8 +168,8 @@
             window.sessionStorage.setItem('tq-last-document-path', path);
         }
     } catch (error) { /* Optional presentation state only. */ }
-    // Internal navigation gets one reveal. Browsers without a usable snapshot
-    // use a short arrival fade, set before content can be painted.
+    // Internal navigation gets one opaque reveal. Browsers without a usable
+    // snapshot render fully painted, with nested entrances disabled before paint.
     try {
         var navigation = window.performance && /** @type {PerformanceNavigationTiming|undefined} */ (window.performance.getEntriesByType('navigation')[0]);
         // Some engines publish the modern entry only after load. The legacy
@@ -146,7 +201,7 @@
         if (!event.viewTransition) return;
         observeTransition(event.viewTransition);
         root.removeAttribute('data-tq-navigation-fallback');
-        // Retain for this document so entry animations do not restart after the fade.
+        // Retain for this document so entry animations do not restart after arrival.
         root.setAttribute('data-tq-navigation-reveal', '');
     });
     window.addEventListener('pagehide', unsubscribe);

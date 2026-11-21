@@ -125,6 +125,7 @@
             _retryDelay = MIN_RETRY;
             stopPolling();
             logOk('WS', 'Connected to ' + url);
+            document.dispatchEvent(new CustomEvent('pttm:ws-connected', { detail: connectionInfo }));
 
             if (_config && _config.onConnected) {
                 _config.onConnected(connectionInfo);

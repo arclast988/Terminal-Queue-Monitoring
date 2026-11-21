@@ -4,14 +4,57 @@
         init: function (options) {
             var form = document.querySelector(options.form);
             if (!form || form.recordFilters) return form && form.recordFilters;
-            var sequence = 0, controller = null, pending = false;
+            var sequence = 0, controller = null, pending = false, loadingTarget = null;
             var button = form.querySelector('button[type="submit"]');
             var results = document.querySelector(options.results);
             if (!results) return null;
+            var initialMinHeight = results.style.minHeight;
             var error = document.createElement('div');
             error.className = 'alert-modern alert-modern-danger mt-3';
             error.setAttribute('role', 'alert'); error.hidden = true; error.style.display = 'none';
             form.insertAdjacentElement('afterend', error);
+
+            function preserveView(update) {
+                var anchor = options.scrollAnchor && document.querySelector(options.scrollAnchor);
+                if (!anchor) return update();
+                var scroller = anchor.parentElement;
+                while (scroller && scroller !== document.scrollingElement && (!/^(auto|scroll)$/.test(getComputedStyle(scroller).overflowY) || scroller.scrollHeight <= scroller.clientHeight)) scroller = scroller.parentElement;
+                if (!scroller) scroller = document.scrollingElement || document.documentElement;
+                var pageScroll = scroller === document.scrollingElement;
+                var viewportTop = pageScroll ? 0 : scroller.getBoundingClientRect().top + scroller.clientTop;
+                var viewportHeight = pageScroll ? window.innerHeight : scroller.clientHeight;
+                var scrollTop = pageScroll ? window.scrollY : scroller.scrollTop;
+                var before = anchor.getBoundingClientRect();
+                var resultBox = results.getBoundingClientRect();
+                var tail = Math.max(0, scroller.scrollHeight - (scrollTop + resultBox.bottom - viewportTop));
+                // Keep only enough result space to avoid clamping the current viewport.
+                // A short filtered list must not reserve the entire previous list's height.
+                var floor = Math.max(0, viewportTop + viewportHeight - resultBox.top - tail);
+                results.style.minHeight = floor > 0 ? Math.ceil(floor) + 'px' : initialMinHeight;
+                var overflowAnchor = scroller.style.overflowAnchor;
+                scroller.style.overflowAnchor = 'none';
+                try {
+                    return update();
+                } finally {
+                    var updatedAnchor = document.querySelector(options.scrollAnchor);
+                    var after = updatedAnchor && updatedAnchor.getBoundingClientRect();
+                    var shift = 0;
+                    if (after && before.top >= viewportTop && before.bottom <= viewportTop + viewportHeight) {
+                        shift = after.top - before.top;
+                    }
+                    var currentTop = pageScroll ? window.scrollY : scroller.scrollTop;
+                    var restoreTop = currentTop + shift;
+                    var renderedBox = results.getBoundingClientRect();
+                    var renderedTail = Math.max(0, scroller.scrollHeight - (currentTop + renderedBox.bottom - viewportTop));
+                    // Footer spacing can change with the shorter board, so use its final geometry.
+                    floor = Math.max(0, viewportTop + viewportHeight - renderedBox.top - renderedTail + shift);
+                    results.style.minHeight = floor > 0 ? Math.ceil(floor) + 'px' : initialMinHeight;
+                    if (Math.abs((pageScroll ? window.scrollY : scroller.scrollTop) - restoreTop) > 0.5) {
+                        (pageScroll ? window : scroller).scrollTo({ top: restoreTop, behavior: 'instant' });
+                    }
+                    scroller.style.overflowAnchor = overflowAnchor;
+                }
+            }
 
             function syncForm(url) {
                 var params = new URL(url, location.href).searchParams;
@@ -33,10 +76,14 @@
                 if (!window.GlobalLoader) return;
                 if (active) {
                     if (button) GlobalLoader.showButtonSpinner(button, 'Filtering\u2026', true);
-                    GlobalLoader.showTableLoader(results, 'Loading records\u2026');
+                    var nextTarget = (options.loadingTarget && document.querySelector(options.loadingTarget)) || results;
+                    if (loadingTarget && loadingTarget !== nextTarget) GlobalLoader.hideTableLoader(loadingTarget, true);
+                    loadingTarget = nextTarget;
+                    GlobalLoader.showTableLoader(loadingTarget, 'Loading records\u2026');
                 } else {
                     if (button) GlobalLoader.hideButtonSpinner(button);
-                    GlobalLoader.hideTableLoader(results, true);
+                    GlobalLoader.hideTableLoader(loadingTarget || results, true);
+                    loadingTarget = null;
                 }
             }
             function formUrl() {
@@ -58,26 +105,28 @@
                     if (!response.ok) throw new Error('Filter request failed');
                     var doc = options.json ? await response.json() : new DOMParser().parseFromString(await response.text(), 'text/html');
                     if (request !== sequence) return false;
-                    if (options.json) {
-                        if (!doc.success || !Array.isArray(doc.schedules)) throw new Error('Missing results');
-                        options.render(doc, url);
-                    } else {
-                        var regions = (options.regions || [options.results]).map(function (selector) {
-                            return { current: document.querySelector(selector), incoming: doc.querySelector(selector) };
-                        });
-                        if (regions.some(function (region) { return !region.current || !region.incoming; })) throw new Error('Missing results');
-                        regions.forEach(function (region) { region.current.innerHTML = region.incoming.innerHTML; });
-                        (options.text || []).forEach(function (selector) {
-                            var current = document.querySelector(selector), incoming = doc.querySelector(selector);
-                            if (current && incoming) current.textContent = incoming.textContent;
-                        });
-                        (options.links || []).forEach(function (selector) {
-                            var current = document.querySelector(selector), incoming = doc.querySelector(selector);
-                            if (current && incoming) current.href = incoming.href;
-                        });
-                    }
-                    if (push !== false && url.href !== location.href) history.pushState({}, '', url.href);
-                    if (options.updated) options.updated(doc, url);
+                    preserveView(function () {
+                        if (options.json) {
+                            if (!doc.success || !Array.isArray(doc.schedules)) throw new Error('Missing results');
+                            options.render(doc, url);
+                        } else {
+                            var regions = (options.regions || [options.results]).map(function (selector) {
+                                return { current: document.querySelector(selector), incoming: doc.querySelector(selector) };
+                            });
+                            if (regions.some(function (region) { return !region.current || !region.incoming; })) throw new Error('Missing results');
+                            regions.forEach(function (region) { region.current.innerHTML = region.incoming.innerHTML; });
+                            (options.text || []).forEach(function (selector) {
+                                var current = document.querySelector(selector), incoming = doc.querySelector(selector);
+                                if (current && incoming) current.textContent = incoming.textContent;
+                            });
+                            (options.links || []).forEach(function (selector) {
+                                var current = document.querySelector(selector), incoming = doc.querySelector(selector);
+                                if (current && incoming) current.href = incoming.href;
+                            });
+                        }
+                        if (push !== false && url.href !== location.href) history.pushState({}, '', url.href);
+                        if (options.updated) options.updated(doc, url);
+                    });
                     return true;
                 } catch (failure) {
                     if (request === sequence && failure.name !== 'AbortError') {
@@ -109,7 +158,7 @@
                 sequence++; if (controller) controller.abort(); controller = null; feedback(false);
                 if (options.finished) options.finished();
             });
-            form.recordFilters = { load: load, submit: function () { return load(formUrl(), true); }, isLoading: function () { return pending; } };
+            form.recordFilters = { load: load, submit: function () { return load(formUrl(), true); }, preserveView: preserveView, isLoading: function () { return pending; } };
             return form.recordFilters;
         }
     };

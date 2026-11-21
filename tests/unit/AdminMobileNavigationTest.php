@@ -33,7 +33,7 @@ final class AdminMobileNavigationTest extends CIUnitTestCase
         $this->assertStringContainsString('transform: translate3d(0, 0, 0);', $css);
         $this->assertStringContainsString('touch-action: pan-y;', $css);
         $this->assertStringContainsString('width: min(288px, 86vw);', $css);
-        $this->assertStringContainsString('@media (min-width: 1281px)', $css);
+        $this->assertStringContainsString('@media (min-width: 1536px)', $css);
         $this->assertStringContainsString('min-height: 70px;', $css);
         $this->assertStringContainsString('min-height: 66px;', $css);
     }
